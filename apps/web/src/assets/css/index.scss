@@ -1,0 +1,4 @@
+
+@use "govuk-frontend/dist/govuk/index" with (
+  $govuk-suppressed-warnings: ("import-using-all")
+);

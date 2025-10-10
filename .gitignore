@@ -1,0 +1,40 @@
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+build/
+public/build/
+database/build
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env.*.local
+.env.local
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Testing
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+lcov.info
+.playwright-mcp/
+
+# Turborepo
+.turbo/
+
+# Yarn
+.yarn/
+
+# intellij
+.idea/
+
+# agentic env vars
+.mcp.env
+.claude/claude.env

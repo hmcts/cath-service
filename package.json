@@ -1,0 +1,60 @@
+{
+  "name": "expressjs-monorepo-template",
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "e2e-tests",
+    "libs/*"
+  ],
+  "scripts": {
+    "test": "turbo test",
+    "test:force": "turbo test --force",
+    "test:coverage": "turbo test -- --coverage",
+    "test:changed": "turbo test --filter='...[HEAD^1]'",
+    "test:e2e": "yarn workspace e2e-tests run test:e2e",
+    "format": "turbo format",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "lint:fix:changed": "turbo lint:fix --filter='...[HEAD^1]'",
+    "lint:changed": "turbo lint --filter='...[HEAD^1]'",
+    "build": "turbo build",
+    "build:force": "turbo build --force",
+    "clean": "find . -name '*.tsbuildinfo' -delete && find apps libs -name 'dist' -type d -prune -exec rm -rf {} +",
+    "start": "yarn dev:up && concurrently \"yarn:start:api\" \"yarn:start:web\"",
+    "start:api": "NODE_ENV=production NODE_OPTIONS='--conditions=production' yarn workspace @hmcts/api run start",
+    "start:web": "NODE_ENV=production NODE_OPTIONS='--conditions=production' yarn workspace @hmcts/web run start",
+    "dev": "yarn dev:up && concurrently -n \"api,web\" \"yarn:dev:api\" \"yarn:dev:web\"",
+    "dev:nowatch": "yarn dev:up && concurrently -n \"api,web\" \"yarn:dev:api\" \"yarn:dev:web:nowatch\"",
+    "dev:api": "yarn workspace @hmcts/api run dev",
+    "dev:web": "yarn workspace @hmcts/web run dev",
+    "dev:web:nowatch": "yarn workspace @hmcts/web run dev:nowatch",
+    "dev:up": "docker compose up -d && yarn db:migrate:dev",
+    "dev:down": "docker compose down",
+    "db:migrate": "yarn workspace @hmcts/postgres run migrate",
+    "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
+    "db:generate": "yarn workspace @hmcts/postgres run generate",
+    "db:studio": "yarn workspace @hmcts/postgres run studio",
+    "db:drop": "yarn workspace @hmcts/postgres run migrate:reset"
+  },
+  "keywords": [],
+  "author": "HMCTS",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@biomejs/biome": "2.2.5",
+    "@types/node": "24.7.1",
+    "@types/supertest": "6.0.3",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
+    "concurrently": "9.2.1",
+    "supertest": "7.1.4",
+    "tsx": "4.20.6",
+    "turbo": "2.5.8",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  },
+  "packageManager": "yarn@4.10.3",
+  "resolutions": {
+    "vite": "7.1.9"
+  }
+}

@@ -1,0 +1,153 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint Changed Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22.20.0'
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+            node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-lint-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-lint-
+
+      - name: Run lint for changed packages
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx turbo lint --filter="...[origin/${{ github.base_ref }}]"
+          else
+            npx turbo lint
+          fi
+
+  test:
+    name: Test Changed Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22.20.0'
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+            node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate Prisma client
+        run: yarn db:generate
+
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-test-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-test-
+
+      - name: Run unit tests for changed packages
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx turbo test --filter="...[origin/${{ github.base_ref }}]" -- --coverage
+          else
+            # Run full test suite on master pushes to ensure coverage data
+            npx turbo test -- --coverage
+          fi
+
+      - name: Merge coverage reports
+        run: npx lcov-result-merger **/coverage/lcov.info lcov.info --prepend-source-files
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports-${{ github.run_id }}
+          path: 'lcov.info'
+          retention-days: 1
+          if-no-files-found: ignore
+
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: coverage-reports-${{ github.run_id }}
+
+      - name: Setup SonarCloud Project
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          .github/scripts/setup-sonarcloud-project.sh
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

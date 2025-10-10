@@ -1,0 +1,37 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env", "**/.env.*"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "build/**"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["package.json", "**/*.ts", "**/*.tsx", "**/*.prisma"],
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "lint:fix": {
+      "outputs": []
+    },
+    "format": {
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "db:generate": {
+      "outputs": ["node_modules/.prisma/**"],
+      "cache": false
+    },
+    "db:migrate": {
+      "dependsOn": ["db:generate"],
+      "cache": false
+    }
+  }
+}

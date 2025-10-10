@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "src/assets/**/*"],
+  "references": [{ "path": "../../libs/express-govuk-starter" }, { "path": "../../libs/cloud-native-platform" }, { "path": "../postgres" }]
+}

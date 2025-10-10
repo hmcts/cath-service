@@ -1,0 +1,12 @@
+{
+  "port": "PORT",
+  "redis": {
+    "url": "REDIS_URL"
+  },
+  "session": {
+    "secret": "SESSION_SECRET"
+  },
+  "applicationInsights": {
+    "connectionString": "APPLICATION_INSIGHTS_CONNECTION_STRING"
+  }
+}
