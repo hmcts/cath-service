@@ -37,7 +37,7 @@ The HMCTS Express Monorepo Template is a production-ready, cloud-native applicat
 │                         Data Layer                               │
 │    ┌────────────────────┐           ┌─────────────────────┐      │
 │    │  PostgreSQL        │           │     Redis           │      │
-│    │  - Port: 5432      │           │  - Port: 6379       │      │
+│    │  - Port: 5433      │           │  - Port: 6380       │      │
 │    │  - Prisma ORM      │           │  - Session Store    │      │
 │    └────────────────────┘           └─────────────────────┘      │
 └──────────────────────────────────────────────────────────────────┘
