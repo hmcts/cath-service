@@ -29,8 +29,8 @@ test.describe('Cookie Management', () => {
     });
 
     test('should not display cookie banner on cookies page', async ({ page }) => {
-      await page.goto('/cookies');
-      
+      await page.goto('/cookie-preferences');
+
       // Cookie banner should not be visible on the cookies page itself
       const cookieBanner = page.locator('.govuk-cookie-banner');
       await expect(cookieBanner).not.toBeVisible();
@@ -57,9 +57,9 @@ test.describe('Cookie Management', () => {
       expect(policyValue).toContain('"analytics":"on"');
       
       // Navigate to another page
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       await page.goto('/');
-      
+
       // Banner should still be hidden when returning to homepage
       const cookieBanner = page.locator('.govuk-cookie-banner');
       await expect(cookieBanner).not.toBeVisible();
@@ -67,26 +67,26 @@ test.describe('Cookie Management', () => {
 
     test('should hide banner after rejecting cookies', async ({ page }) => {
       await page.goto('/');
-      
+
       // Wait for JavaScript to load
       await page.waitForLoadState('networkidle');
-      
+
       // Click reject button
       const rejectButton = page.locator('button:has-text("Reject analytics cookies")');
       await rejectButton.click();
-      
+
       // Wait for cookies to be set
       await page.waitForTimeout(1000);
-      
+
       // Check that cookie policy was set with rejected state
       const cookies = await page.context().cookies();
       const cookiePolicy = cookies.find(c => c.name === 'cookie_policy');
       expect(cookiePolicy).toBeDefined();
       const policyValue = decodeURIComponent(cookiePolicy!.value);
       expect(policyValue).toContain('"analytics":"off"');
-      
+
       // Navigate to another page
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       await page.goto('/');
       
       // Banner should still be hidden when returning to homepage
@@ -96,14 +96,14 @@ test.describe('Cookie Management', () => {
 
     test('should navigate to cookie preferences page', async ({ page }) => {
       await page.goto('/');
-      
+
       // Click "View cookies" link
       const viewCookiesLink = page.locator('.govuk-cookie-banner a:has-text("View cookies")');
       await viewCookiesLink.click();
-      
+
       // Should navigate to cookies page
-      await expect(page).toHaveURL('/cookies');
-      
+      await expect(page).toHaveURL('/cookie-preferences');
+
       // Check page title
       await expect(page.locator('h1')).toHaveText('Cookie preferences');
     });
@@ -111,7 +111,7 @@ test.describe('Cookie Management', () => {
 
   test.describe('Cookie Preferences Page', () => {
     test('should display cookie preferences form', async ({ page }) => {
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       
       // Check page title
       await expect(page.locator('h1')).toHaveText('Cookie preferences');
@@ -145,7 +145,7 @@ test.describe('Cookie Management', () => {
     });
 
     test('should save cookie preferences', async ({ page }) => {
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       
       // Select analytics yes, preferences no
       await page.locator('#analytics-yes').check();
@@ -171,14 +171,14 @@ test.describe('Cookie Management', () => {
 
     test('should reflect current cookie preferences', async ({ page }) => {
       // First set some preferences
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       await page.locator('#analytics-no').check();
       await page.locator('#preferences-yes').check();
       await page.locator('button:has-text("Save cookie preferences")').click();
-      
+
       // Navigate away and come back
       await page.goto('/');
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       
       // Check that the radio buttons reflect the saved preferences
       await expect(page.locator('#analytics-no')).toBeChecked();
@@ -189,7 +189,7 @@ test.describe('Cookie Management', () => {
 
     test('should work with Welsh language', async ({ page }) => {
       // Switch to Welsh
-      await page.goto('/cookies?lng=cy');
+      await page.goto('/cookie-preferences?lng=cy');
       
       // Check Welsh translations
       await expect(page.locator('h1')).toHaveText('Dewisiadau cwcis');
@@ -270,7 +270,7 @@ test.describe('Cookie Management', () => {
     });
 
     test('cookie preferences page should be accessible', async ({ page }) => {
-      await page.goto('/cookies');
+      await page.goto('/cookie-preferences');
       
       // Check for proper form structure
       const form = page.locator('form');

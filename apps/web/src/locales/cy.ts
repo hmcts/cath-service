@@ -14,7 +14,8 @@ export const content: Translations = {
     privacyPolicy: "Preifatrwydd",
     accessibility: "Datganiad hygyrchedd",
     termsAndConditions: "Telerau ac amodau",
-    contactUs: "Cysylltu"
+    contactUs: "Cysylltu",
+    language: "Cymraeg"
   },
   language: {
     switchPhaseBanner: "English"

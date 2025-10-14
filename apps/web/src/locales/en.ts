@@ -11,7 +11,8 @@ export const content = {
     privacyPolicy: "Privacy",
     accessibility: "Accessibility statement",
     termsAndConditions: "Terms and conditions",
-    contactUs: "Contact"
+    contactUs: "Contact",
+    language: "Welsh"
   },
   language: {
     switchPhaseBanner: "Cymraeg"

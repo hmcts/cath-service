@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { createSimpleRouter } from "@hmcts/simple-router";
 import {
   configureCookieManager,
   configureGovuk,
@@ -11,7 +12,6 @@ import {
   notFoundHandler,
   pageRoutes
 } from "@hmcts/web-core";
-import { createSimpleRouter } from "@hmcts/simple-router";
 import compression from "compression";
 import config from "config";
 import cookieParser from "cookie-parser";
@@ -50,6 +50,7 @@ export async function createApp(): Promise<Express> {
   });
 
   await configureCookieManager(app, {
+    preferencesPath: "/cookie-preferences",
     categories: {
       essential: ["connect.sid"],
       analytics: ["_ga", "_gid", "dtCookie", "dtSa", "rxVisitor", "rxvt"],
