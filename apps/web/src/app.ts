@@ -9,7 +9,8 @@ import {
   errorHandler,
   expressSessionRedis,
   footerPageRoutes,
-  notFoundHandler
+  notFoundHandler,
+  pageRoutes
 } from "@hmcts/shared";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import compression from "compression";
@@ -37,7 +38,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, footerPageRoutes.path];
+  const modulePaths = [__dirname, footerPageRoutes.path, pageRoutes.path];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -57,7 +58,7 @@ export async function createApp(): Promise<Express> {
     }
   });
 
-  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, footerPageRoutes));
+  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes, footerPageRoutes));
   app.use(notFoundHandler());
   app.use(errorHandler());
 

@@ -25,4 +25,5 @@ export type { ExpressSessionRedisOptions } from "./session-stores/redis-store.js
 export { expressSessionRedis } from "./session-stores/redis-store.js";
 
 // Footer pages module configuration
-export const footerPageRoutes = { path: path.join(__dirname, "govuk-frontend/views") };
+export const footerPageRoutes = { path: path.join(__dirname, "views") };
+export const pageRoutes = { path: path.join(__dirname, "pages") };

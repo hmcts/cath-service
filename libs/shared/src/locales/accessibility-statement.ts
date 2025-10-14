@@ -1,6 +1,4 @@
-import type { Request, Response } from "express";
-
-const en = {
+export const en = {
   title: "Accessibility statement",
   sections: {
     intro: {
@@ -110,7 +108,7 @@ const en = {
   }
 };
 
-const cy = {
+export const cy = {
   title: "Datganiad hygyrchedd",
   sections: {
     intro: {
@@ -219,8 +217,4 @@ const cy = {
       ]
     }
   }
-};
-
-export const GET = async (_req: Request, res: Response) => {
-  res.render("accessibility-statement", { backLink: "/", en, cy });
 };

@@ -14,7 +14,7 @@
     }
   },
   "scripts": {
-    "build": "tsc && cp -r src/govuk-frontend/views dist/govuk-frontend/",
+    "build": "tsc && cp -r src/views dist/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
