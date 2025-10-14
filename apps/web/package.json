@@ -21,7 +21,6 @@
   "dependencies": {
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
-    "@hmcts/footer-pages": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/shared": "workspace:*",
     "@hmcts/simple-router": "workspace:*",

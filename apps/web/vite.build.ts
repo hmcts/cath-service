@@ -1,6 +1,5 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { assets as footerPagesAssets } from "@hmcts/footer-pages";
 import { createBaseViteConfig } from "@hmcts/shared/src/assets/vite-config.js";
 import { defineConfig, mergeConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -8,7 +7,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const baseConfig = createBaseViteConfig([path.join(__dirname, "src", "assets"), footerPagesAssets]);
+const baseConfig = createBaseViteConfig([path.join(__dirname, "src", "assets")]);
 
 export default defineConfig(
   mergeConfig(baseConfig, {

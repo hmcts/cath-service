@@ -1,3 +1,9 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export type { AssetOptions } from "./assets/assets.js";
 export { createBaseViteConfig } from "./assets/vite-config.js";
 export type { CookieManagerOptions, CookieManagerState, CookiePreferences } from "./cookies/cookie-manager-middleware.js";
@@ -17,3 +23,6 @@ export { PostgresStore } from "./session-stores/postgres-store.js";
 // Session stores - these have optional peer dependencies
 export type { ExpressSessionRedisOptions } from "./session-stores/redis-store.js";
 export { expressSessionRedis } from "./session-stores/redis-store.js";
+
+// Footer pages module configuration
+export const footerPageRoutes = { path: path.join(__dirname, "govuk-frontend/views") };

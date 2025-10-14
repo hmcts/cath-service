@@ -646,16 +646,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/footer-pages@workspace:*, @hmcts/footer-pages@workspace:libs/footer-pages":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/footer-pages@workspace:libs/footer-pages"
-  dependencies:
-    "@types/express": "npm:5.0.3"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
@@ -720,7 +710,6 @@ __metadata:
   dependencies:
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
-    "@hmcts/footer-pages": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/shared": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
