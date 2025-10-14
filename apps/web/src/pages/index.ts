@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 
-const en = {
+export const en = {
   title: "HMCTS Express Monorepo Template",
   subtitle: "Production-ready Node.js starter with cloud-native capabilities",
   intro:
@@ -114,7 +114,7 @@ const en = {
   exampleFormLinkText: "See example form"
 };
 
-const cy = {
+export const cy = {
   title: "Templed Monorepo Express HMCTS",
   subtitle: "Dechreuwr Node.js barod i gynhyrchu gyda galluoedd cwmwl-gynhenid",
   intro:

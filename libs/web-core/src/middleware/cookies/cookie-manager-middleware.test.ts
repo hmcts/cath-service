@@ -28,10 +28,8 @@ describe("configureCookieManager", () => {
   });
 
   describe("middleware behavior", () => {
-    it("should set up middleware and routes", async () => {
+    it("should set up middleware", async () => {
       const useSpy = vi.spyOn(app, "use");
-      const postSpy = vi.spyOn(app, "post");
-      const getSpy = vi.spyOn(app, "get");
 
       await configureCookieManager(app, {
         categories: { analytics: ["_ga"] }
@@ -39,25 +37,6 @@ describe("configureCookieManager", () => {
 
       // Should register middleware
       expect(useSpy).toHaveBeenCalledTimes(1);
-
-      // Should register POST route for save-preferences
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("/cookies/save-preferences", expect.any(Function));
-
-      // Should register GET route for preferences page
-      expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("/cookies", expect.any(Function));
-    });
-
-    it("should use custom preferences path", async () => {
-      const getSpy = vi.spyOn(app, "get");
-
-      await configureCookieManager(app, {
-        categories: { analytics: ["_ga"] },
-        preferencesPath: "/custom-cookies"
-      });
-
-      expect(getSpy).toHaveBeenCalledWith("/custom-cookies", expect.any(Function));
     });
   });
 
@@ -146,81 +125,6 @@ describe("configureCookieManager", () => {
       middleware(req, res, next);
 
       expect(res.locals?.cookieManager?.cookiePreferences).toEqual({});
-    });
-  });
-
-  describe("save preferences handler", () => {
-    it("should save selected preferences", async () => {
-      const postSpy = vi.spyOn(app, "post");
-
-      await configureCookieManager(app, {
-        categories: {
-          analytics: ["_ga"],
-          preferences: ["lang"]
-        }
-      });
-
-      // Get the save preferences handler (first post call)
-      const saveHandler = postSpy.mock.calls[0][1] as any;
-      req.body = {
-        analytics: "on",
-        preferences: "off"
-      };
-
-      saveHandler(req, res);
-
-      expect(res.cookie).toHaveBeenCalledWith("cookie_policy", "%7B%22analytics%22%3Atrue%2C%22preferences%22%3Afalse%7D", expect.any(Object));
-      expect(res.redirect).toHaveBeenCalledWith("/cookies?saved=true");
-    });
-
-    it("should redirect to custom preferences path", async () => {
-      const postSpy = vi.spyOn(app, "post");
-
-      await configureCookieManager(app, {
-        categories: { analytics: ["_ga"] },
-        preferencesPath: "/custom-cookies"
-      });
-
-      const saveHandler = postSpy.mock.calls[0][1] as any;
-      req.body = { analytics: "on" };
-
-      saveHandler(req, res);
-
-      expect(res.redirect).toHaveBeenCalledWith("/custom-cookies?saved=true");
-    });
-  });
-
-  describe("preferences page", () => {
-    it("should render the preferences page", async () => {
-      const getSpy = vi.spyOn(app, "get");
-
-      await configureCookieManager(app, {
-        categories: {
-          analytics: ["_ga"],
-          preferences: ["lang"]
-        }
-      });
-
-      // Get the preferences page handler
-      const preferencesHandler = getSpy.mock.calls[0][1] as any;
-      req.cookies = { cookie_policy: "%7B%22analytics%22%3Atrue%2C%22preferences%22%3Afalse%7D" };
-      req.query = { saved: "true" };
-
-      preferencesHandler(req, res);
-
-      expect(res.render).toHaveBeenCalledWith("cookie-preferences", {
-        en: expect.objectContaining({
-          title: "Cookie preferences",
-          analyticsTitle: "Analytics cookies"
-        }),
-        cy: expect.objectContaining({
-          title: "Dewisiadau cwcis",
-          analyticsTitle: "Cwcis dadansoddi"
-        }),
-        cookiePreferences: { analytics: true, preferences: false },
-        categories: { analytics: ["_ga"], preferences: ["lang"] },
-        saved: true
-      });
     });
   });
 

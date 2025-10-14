@@ -8,7 +8,7 @@
       "@hmcts/crons": ["apps/crons/src"],
       "@hmcts/postgres": ["apps/database/src"],
       "@hmcts/web": ["apps/web/src"],
-      "@hmcts/shared": ["libs/shared/src"],
+      "@hmcts/web-core": ["libs/web-core/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],
       "@hmcts/simple-router": ["libs/simple-router/src"]
     },

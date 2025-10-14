@@ -656,9 +656,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/shared@workspace:*, @hmcts/shared@workspace:libs/shared":
+"@hmcts/simple-router@workspace:*, @hmcts/simple-router@workspace:libs/simple-router":
   version: 0.0.0-use.local
-  resolution: "@hmcts/shared@workspace:libs/shared"
+  resolution: "@hmcts/simple-router@workspace:libs/simple-router"
+  dependencies:
+    "@types/express": "npm:5.0.3"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/web-core@workspace:*, @hmcts/web-core@workspace:libs/web-core":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/web-core@workspace:libs/web-core"
   dependencies:
     "@types/express": "npm:5.0.3"
     "@types/express-session": "npm:1.18.2"
@@ -694,16 +704,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/simple-router@workspace:*, @hmcts/simple-router@workspace:libs/simple-router":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/simple-router@workspace:libs/simple-router"
-  dependencies:
-    "@types/express": "npm:5.0.3"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/web@workspace:apps/web":
   version: 0.0.0-use.local
   resolution: "@hmcts/web@workspace:apps/web"
@@ -711,8 +711,8 @@ __metadata:
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/postgres": "workspace:*"
-    "@hmcts/shared": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
+    "@hmcts/web-core": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/config": "npm:3.3.5"
     "@types/cookie-parser": "npm:1.4.9"

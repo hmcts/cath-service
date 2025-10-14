@@ -1,4 +1,4 @@
-{% extends "layouts/default.njk" %}
+{% extends "layouts/base-template.njk" %}
 
 {% macro cookiesList(cookies) %}
 <details class="govuk-details govuk-!-margin-top-2" data-module="govuk-details">
@@ -39,7 +39,7 @@
     
     <p class="govuk-body">{{ intro }}</p>
 
-    <form action="/cookies/save-preferences" method="POST" class="cookie-preferences-form">
+    <form action="/cookie-preferences" method="POST" class="cookie-preferences-form">
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       
       <h2 class="govuk-heading-m">{{ essentialTitle }}</h2>

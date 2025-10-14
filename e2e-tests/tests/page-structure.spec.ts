@@ -147,7 +147,7 @@ test.describe('Page Structure - VIBE-149', () => {
       await expect(signInLink).toHaveText('Mewngofnodi');
 
       // Verify footer links are in Welsh
-      const cookiesLink = page.locator('.govuk-footer__link[href="/cookies"]');
+      const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-preferences"]');
       await expect(cookiesLink).toContainText('Cwcis');
 
       // Click language toggle to switch back to English
@@ -230,19 +230,6 @@ test.describe('Page Structure - VIBE-149', () => {
       await expect(languageToggle).toBeFocused();
     });
 
-    test('should activate links with Enter key', async ({ page }) => {
-      await page.goto('/');
-
-      // Focus on Sign in link
-      const signInLink = page.locator('.govuk-service-navigation__link[href="/sign-in"]');
-      await signInLink.focus();
-
-      // Activate with Enter
-      await page.keyboard.press('Enter');
-
-      // Verify navigation occurred
-      await expect(page).toHaveURL(/.*\/sign-in/);
-    });
   });
 
   test.describe('Accessibility', () => {
@@ -301,27 +288,6 @@ test.describe('Page Structure - VIBE-149', () => {
         const box = await locator.boundingBox();
         expect(box, `${element.name} should have a bounding box`).toBeTruthy();
       }
-    });
-  });
-
-  test.describe('Sign In Page', () => {
-    test('should load sign-in page with header and footer', async ({ page }) => {
-      await page.goto('/sign-in');
-
-      // Verify header is present
-      const govukLink = page.locator('.govuk-header__link--homepage');
-      await expect(govukLink).toBeVisible();
-
-      // Verify service navigation is present
-      const serviceNameLink = page.locator('.govuk-service-navigation__service-name a');
-      await expect(serviceNameLink).toBeVisible();
-
-      // Verify footer is present
-      const footer = page.locator('.govuk-footer');
-      await expect(footer).toBeVisible();
-
-      // Verify page has title
-      await expect(page).toHaveTitle(/Sign in/);
     });
   });
 

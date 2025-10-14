@@ -3,8 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Express, NextFunction, Request, Response } from "express";
 import nunjucks from "nunjucks";
-import type { AssetOptions } from "../assets/assets.js";
-import { configureAssets } from "../assets/configure-assets.js";
+import type { AssetOptions } from "../../assets/assets.js";
+import { configureAssets } from "../../assets/configure-assets.js";
 import { localeMiddleware, renderInterceptorMiddleware, translationMiddleware } from "../i18n/locale-middleware.js";
 import { loadTranslationsFromMultiplePaths } from "../i18n/translation-loader.js";
 import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, timeFilter } from "./filters/index.js";
@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 export async function configureGovuk(app: Express, paths: string[], options: GovukSetupOptions): Promise<nunjucks.Environment> {
   const { mergedViewPaths, mergedI18nPaths } = mergeConfigs(paths);
   const govukFrontendPath = "../../node_modules/govuk-frontend/dist";
-  const sharedViews = path.join(__dirname, "../views");
+  const sharedViews = path.join(__dirname, "../../views");
   const allViewPaths = [govukFrontendPath, sharedViews, ...mergedViewPaths];
 
   const env = nunjucks.configure(allViewPaths, {
@@ -77,6 +77,9 @@ function mergeConfigs(paths: string[]): {
 
     if (existsSync(path.join(actualModulePath, "pages"))) {
       mergedViewPaths.push(`${actualModulePath}/pages`);
+    }
+    if (existsSync(path.join(actualModulePath, "views"))) {
+      mergedViewPaths.push(`${actualModulePath}/views`);
     }
     if (existsSync(path.join(actualModulePath, "locales"))) {
       mergedI18nPaths.push(`${actualModulePath}/locales`);
