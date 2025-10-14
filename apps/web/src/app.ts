@@ -1,17 +1,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import {
-  configureCookieManager,
-  configureGovuk,
-  configureHelmet,
-  configureNonce,
-  errorHandler,
-  expressSessionRedis,
-  notFoundHandler
-} from "@hmcts/express-govuk-starter";
 import { pageRoutes as footerPages } from "@hmcts/footer-pages";
-import { pageRoutes as onboardingPages } from "@hmcts/onboarding";
+import { configureCookieManager, configureGovuk, configureHelmet, configureNonce, errorHandler, expressSessionRedis, notFoundHandler } from "@hmcts/shared";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import compression from "compression";
 import config from "config";
@@ -38,7 +29,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, `${onboardingPages.path}/../`, `${footerPages.path}/../`];
+  const modulePaths = [__dirname, `${footerPages.path}/../`];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -58,7 +49,7 @@ export async function createApp(): Promise<Express> {
     }
   });
 
-  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, onboardingPages, footerPages));
+  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, footerPages));
   app.use(notFoundHandler());
   app.use(errorHandler());
 

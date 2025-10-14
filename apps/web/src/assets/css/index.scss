@@ -2,3 +2,15 @@
 @use "govuk-frontend/dist/govuk/index" with (
   $govuk-suppressed-warnings: ("import-using-all")
 );
+
+.govuk-service-navigation__item {
+  margin-left: auto;
+}
+
+.govuk-phase-banner__content > span {
+  width: 100%;
+}
+
+.govuk-phase-banner {
+  border-bottom-color: #8eb8dc;
+}

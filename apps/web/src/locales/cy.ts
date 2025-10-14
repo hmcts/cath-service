@@ -3,33 +3,40 @@ type Translations = typeof import("./en.js").content;
 
 export const content: Translations = {
   welcome: "Croeso i Wasanaeth Monorepo Express",
-  serviceName: "Gwasanaeth Monorepo Express",
+  serviceName: "Gwrandawiadau llys a thribiwnlys",
   phase: "beta",
   govUk: "GOV.UK",
   back: "Yn ôl",
   navigation: {
     home: "Hafan",
     about: "Amdanom",
-    contact: "Cysylltu â ni"
+    contact: "Cysylltu â ni",
+    signIn: "Mewngofnodi"
   },
   footer: {
     cookies: "Cwcis",
-    privacyPolicy: "Polisi preifatrwydd",
+    privacyPolicy: "Preifatrwydd",
     accessibility: "Datganiad hygyrchedd",
     termsAndConditions: "Telerau ac amodau",
-    contactUs: "Cysylltu â ni"
+    contactUs: "Cysylltu"
   },
   language: {
     switch: "English",
+    switchPhaseBanner: "English",
     current: "Cymraeg",
     ariaLabel: "Newid iaith i Saesneg"
   },
   feedback: {
-    part1: "Mae hwn yn wasanaeth newydd – ",
-    part2: "rhowch adborth",
-    part3: " i'n helpu i'w wella.",
+    part1: "Mae hwn yn wasanaeth newydd – bydd eich ",
+    part2: "adborth",
+    part3: " yn ein helpu i'w wella.",
     ariaLabel: "Rhoi adborth am y dudalen hon",
-    link: "/feedback?page="
+    link: "https://www.smartsurvey.co.uk/s/FBSPI22/?pageurl="
+  },
+  oglAttribution: {
+    text: 'Pan fyddwch yn defnyddio\'r wybodaeth hon o dan yr OGL, dylech gynnwys y briodoliad canlynol: Yn cynnwys gwybodaeth sector cyhoeddus wedi\'i thrwyddedu o dan y <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Drwydded Llywodraeth Agored f3.0</a>',
+    personalData:
+      'Nid yw\'r <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Drwydded Llywodraeth Agored f3.0</a> yn cwmpasu defnydd o unrhyw ddata personol yn y gwasanaeth Gwrandawiadau llys a thribiwnlys. Mae data personol yn destun deddfau diogelu data perthnasol.'
   },
   common: {
     email: "E-bost",

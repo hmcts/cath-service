@@ -1,0 +1,51 @@
+{% from "govuk/components/footer/macro.njk" import govukFooter %}
+
+{{ govukFooter({
+  rebrand: true,
+  meta: {
+    items: [
+      {
+        href: "https://www.gov.uk/help",
+        text: "Help"
+      },
+      {
+        href: "/privacy-policy",
+        text: footer.privacyPolicy
+      },
+      {
+        href: "/cookies",
+        text: footer.cookies
+      },
+      {
+        href: "/accessibility-statement",
+        text: footer.accessibility
+      },
+      {
+        href: "/contact-us",
+        text: footer.contactUs
+      },
+      {
+        href: "/terms-and-conditions",
+        text: footer.termsAndConditions
+      },
+      {
+        href: languageToggle.link,
+        text: languageToggle.text
+      },
+      {
+        href: "https://www.gov.uk/government/organisations/government-digital-service",
+        text: "Government Digital Service"
+      },
+      {
+        href: "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+        text: "Open Government Licence"
+      }
+    ]
+  },
+  contentLicence: {
+    html: 'All content is available under the <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>, except where otherwise stated'
+  },
+  copyright: {
+    html: '<a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/">© Crown copyright</a>'
+  }
+}) }}

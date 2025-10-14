@@ -596,7 +596,6 @@ __metadata:
   resolution: "@hmcts/api@workspace:apps/api"
   dependencies:
     "@hmcts/cloud-native-platform": "workspace:*"
-    "@hmcts/onboarding": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
     "@types/compression": "npm:1.8.1"
@@ -647,9 +646,29 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/express-govuk-starter@workspace:*, @hmcts/express-govuk-starter@workspace:libs/express-govuk-starter":
+"@hmcts/footer-pages@workspace:*, @hmcts/footer-pages@workspace:libs/footer-pages":
   version: 0.0.0-use.local
-  resolution: "@hmcts/express-govuk-starter@workspace:libs/express-govuk-starter"
+  resolution: "@hmcts/footer-pages@workspace:libs/footer-pages"
+  dependencies:
+    "@types/express": "npm:5.0.3"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/postgres@workspace:apps/postgres"
+  dependencies:
+    "@prisma/client": "npm:6.17.0"
+    glob: "npm:11.0.3"
+    prisma: "npm:6.17.0"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/shared@workspace:*, @hmcts/shared@workspace:libs/shared":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/shared@workspace:libs/shared"
   dependencies:
     "@types/express": "npm:5.0.3"
     "@types/express-session": "npm:1.18.2"
@@ -685,37 +704,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/footer-pages@workspace:*, @hmcts/footer-pages@workspace:libs/footer-pages":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/footer-pages@workspace:libs/footer-pages"
-  dependencies:
-    "@types/express": "npm:5.0.3"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/onboarding@workspace:*, @hmcts/onboarding@workspace:libs/onboarding":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/onboarding@workspace:libs/onboarding"
-  dependencies:
-    zod: "npm:4.1.12"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/postgres@workspace:apps/postgres"
-  dependencies:
-    "@hmcts/onboarding": "workspace:*"
-    "@prisma/client": "npm:6.17.0"
-    glob: "npm:11.0.3"
-    prisma: "npm:6.17.0"
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/simple-router@workspace:*, @hmcts/simple-router@workspace:libs/simple-router":
   version: 0.0.0-use.local
   resolution: "@hmcts/simple-router@workspace:libs/simple-router"
@@ -732,10 +720,9 @@ __metadata:
   dependencies:
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
-    "@hmcts/express-govuk-starter": "workspace:*"
     "@hmcts/footer-pages": "workspace:*"
-    "@hmcts/onboarding": "workspace:*"
     "@hmcts/postgres": "workspace:*"
+    "@hmcts/shared": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/config": "npm:3.3.5"
@@ -5775,12 +5762,5 @@ __metadata:
     y18n: "npm:^5.0.5"
     yargs-parser: "npm:^21.1.1"
   checksum: 10c0/ccd7e723e61ad5965fffbb791366db689572b80cca80e0f96aad968dfff4156cd7cd1ad18607afe1046d8241e6fb2d6c08bf7fa7bfb5eaec818735d8feac8f05
-  languageName: node
-  linkType: hard
-
-"zod@npm:4.1.12":
-  version: 4.1.12
-  resolution: "zod@npm:4.1.12"
-  checksum: 10c0/b64c1feb19e99d77075261eaf613e0b2be4dfcd3551eff65ad8b4f2a079b61e379854d066f7d447491fcf193f45babd8095551a9d47973d30b46b6d8e2c46774
   languageName: node
   linkType: hard

@@ -1,32 +1,39 @@
 export const content = {
   welcome: "Welcome to the Express Monorepo Service",
-  serviceName: "Express Monorepo Template",
+  serviceName: "Court and tribunal hearings",
   phase: "beta",
   govUk: "GOV.UK",
   back: "Back",
   navigation: {
     home: "Home",
     about: "About",
-    contact: "Contact us"
+    contact: "Contact us",
+    signIn: "Sign in"
   },
   footer: {
     cookies: "Cookies",
-    privacyPolicy: "Privacy policy",
+    privacyPolicy: "Privacy",
     accessibility: "Accessibility statement",
     termsAndConditions: "Terms and conditions",
-    contactUs: "Contact us"
+    contactUs: "Contact"
   },
   language: {
-    switch: "Cymraeg",
+    switch: "Welsh",
+    switchPhaseBanner: "Cymraeg",
     current: "English",
     ariaLabel: "Change language to Welsh"
   },
   feedback: {
-    part1: "This is a new service – ",
-    part2: "give feedback",
-    part3: " to help us improve it.",
+    part1: "This is a new service – your ",
+    part2: "feedback",
+    part3: " will help us to improve it.",
     ariaLabel: "Give feedback about this page",
-    link: "/feedback?page="
+    link: "https://www.smartsurvey.co.uk/s/FBSPI22/?pageurl="
+  },
+  oglAttribution: {
+    text: 'When you use this information under the OGL, you should include the following attribution: Contains public sector information licensed under the <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>',
+    personalData:
+      'The <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a> does not cover use of any personal data in the Court and tribunal hearings service. Personal data is subject to applicable data protection laws.'
   },
   common: {
     email: "Email",
