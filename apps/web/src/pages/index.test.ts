@@ -14,31 +14,41 @@ describe("index page", () => {
   });
 
   describe("GET", () => {
-    it("should render index template with language-specific content", async () => {
+    it("should render index template with landing page content", async () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith("index", {
         en: expect.objectContaining({
-          title: "HMCTS Express Monorepo Template",
-          subtitle: "Production-ready Node.js starter with cloud-native capabilities",
-          intro:
-            "A comprehensive monorepo template that demonstrates best practices for building HMCTS digital services using Express.js, TypeScript, and GOV.UK Design System.",
-          cloudNativeTitle: "Cloud Native Platform",
-          govukStarterTitle: "GOV.UK Starter",
-          architectureTitle: "Monorepo Architecture",
-          gettingStartedTitle: "Getting Started",
-          learnMoreTitle: "Learn More"
+          heading: "Court and tribunal hearings",
+          hearingsList: expect.arrayContaining([
+            expect.stringContaining("civil and family courts"),
+            expect.stringContaining("First Tier and Upper Tribunals"),
+            expect.stringContaining("Royal Courts of Justice"),
+            expect.stringContaining("Single Justice Procedure")
+          ]),
+          additionalInfo: "More courts and tribunals will become available over time.",
+          continueButton: "Continue"
         }),
         cy: expect.objectContaining({
-          title: "Templed Monorepo Express HMCTS",
-          subtitle: "Dechreuwr Node.js barod i gynhyrchu gyda galluoedd cwmwl-gynhenid",
-          cloudNativeTitle: "Platfform Cwmwl Cynhenid",
-          govukStarterTitle: "Dechreuwr GOV.UK",
-          architectureTitle: "Pensaernïaeth Monorepo",
-          gettingStartedTitle: "Dechrau Arni",
-          learnMoreTitle: "Dysgu Mwy"
+          heading: "Gwrandawiadau llys a thribiwnlys",
+          hearingsList: expect.arrayContaining([
+            expect.stringContaining("Lysoedd Sifil a Theulu"),
+            expect.stringContaining("Tribiwnlys Haen Gyntaf"),
+            expect.stringContaining("Llys Barn Brenhinol"),
+            expect.stringContaining("Gweithdrefn Un Ynad")
+          ]),
+          additionalInfo: "Bydd mwy o lysoedd a thribiwnlysoedd ar gael gydag amser.",
+          continueButton: "Parhau"
         })
       });
+    });
+
+    it("should provide exactly 4 hearings in the list", async () => {
+      await GET(req as Request, res as Response);
+
+      const callArgs = (res.render as any).mock.calls[0][1];
+      expect(callArgs.en.hearingsList).toHaveLength(4);
+      expect(callArgs.cy.hearingsList).toHaveLength(4);
     });
 
     it("should be an async function", () => {
