@@ -17,7 +17,7 @@ A simple, dependency-light file-system router for Express applications, inspired
 ### Basic Setup
 
 ```typescript
-import { createSimpleRouter } from "@hmcts/express-govuk-starter";
+import { createSimpleRouter } from "@hmcts/simple-router";
 import express from "express";
 import path from "path";
 

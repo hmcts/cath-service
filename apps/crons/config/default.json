@@ -1,5 +1,5 @@
 {
-  "serviceName": "expressjs-monorepo-template-crons",
+  "serviceName": "cath-crons",
   "applicationInsights": {
     "enabled": false
   }

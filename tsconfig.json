@@ -8,11 +8,9 @@
       "@hmcts/crons": ["apps/crons/src"],
       "@hmcts/postgres": ["apps/database/src"],
       "@hmcts/web": ["apps/web/src"],
-      "@hmcts/express-govuk-starter": ["libs/express-govuk-starter/src"],
+      "@hmcts/web-core": ["libs/web-core/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],
-      "@hmcts/simple-router": ["libs/simple-router/src"],
-      "@hmcts/footer-pages": ["libs/footer-pages/src"],
-      "@hmcts/onboarding": ["libs/onboarding/src"]
+      "@hmcts/simple-router": ["libs/simple-router/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

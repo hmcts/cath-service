@@ -35,6 +35,9 @@ lcov.info
 # intellij
 .idea/
 
+# vscode
+.vscode/
+
 # agentic env vars
 .mcp.env
 .claude/claude.env

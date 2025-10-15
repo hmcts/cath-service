@@ -8,10 +8,10 @@ job:
   aadIdentityName: nfdiv
   environment:
     NODE_ENV: 'production'
-    DATABASE_URL: 'postgresql://user:password@postgres:5432/database'
+    DATABASE_URL: 'postgresql://user:password@postgres:5433/database'
     SCRIPT_NAME: 'example'
   keyVaults:
-    rpe:
+    cath:
       secrets:
         - app-insights-connection-string
         - dynatrace-url

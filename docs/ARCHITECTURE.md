@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Note that this is an example architecture document for the expressjs-monorepo-template. It should be adapted to fit the specific architecture of your project.
+Note that this is an example architecture document for the CaTH service. It should be adapted to fit the specific architecture of your project.
 
 ## Executive Summary
 
@@ -37,7 +37,7 @@ The HMCTS Express Monorepo Template is a production-ready, cloud-native applicat
 │                         Data Layer                               │
 │    ┌────────────────────┐           ┌─────────────────────┐      │
 │    │  PostgreSQL        │           │     Redis           │      │
-│    │  - Port: 5432      │           │  - Port: 6379       │      │
+│    │  - Port: 5433      │           │  - Port: 6380       │      │
 │    │  - Prisma ORM      │           │  - Session Store    │      │
 │    └────────────────────┘           └─────────────────────┘      │
 └──────────────────────────────────────────────────────────────────┘
@@ -48,7 +48,7 @@ The HMCTS Express Monorepo Template is a production-ready, cloud-native applicat
 The project uses Yarn Workspaces with Turborepo for efficient monorepo management:
 
 ```
-expressjs-monorepo-template/
+cath-service/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API service
 │   ├── web/                    # Web frontend application

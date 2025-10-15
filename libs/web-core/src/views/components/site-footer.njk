@@ -1,0 +1,51 @@
+{% from "govuk/components/footer/macro.njk" import govukFooter %}
+
+{{ govukFooter({
+  rebrand: true,
+  meta: {
+    items: [
+      {
+        href: "https://www.gov.uk/help",
+        text: footer.help
+      },
+      {
+        href: "https://www.gov.uk/help/privacy-notice",
+        text: footer.privacyPolicy
+      },
+      {
+        href: "/cookie-preferences",
+        text: footer.cookies
+      },
+      {
+        href: "/accessibility-statement",
+        text: footer.accessibility
+      },
+      {
+        href: "https://www.gov.uk/contact",
+        text: footer.contactUs
+      },
+      {
+        href: "https://www.gov.uk/help/terms-conditions",
+        text: footer.termsAndConditions
+      },
+      {
+        href: "https://www.gov.uk/cymraeg",
+        text: footer.language
+      },
+      {
+        href: "https://www.gov.uk/government/organisations/government-digital-service",
+        text: footer.governmentDigitalService
+      },
+      {
+        href: "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+        text: footer.openGovernmentLicence
+      }
+    ]
+  },
+  contentLicence: {
+    html: footer.contentLicence.text + ' <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">' + footer.contentLicence.linkText + '</a>' + footer.contentLicence.suffix
+  },
+  copyright: {
+    html: '<a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/">© Crown copyright</a>'
+  }
+}) }}

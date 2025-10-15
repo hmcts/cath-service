@@ -81,7 +81,7 @@ A lightweight file-system router for Express applications, inspired by Next.js r
 ## Project Structure
 
 ```
-expressjs-monorepo-template/
+cath-service/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API server (Express 5.x)
 │   ├── web/                    # Web frontend (Express 5.x + Nunjucks)
@@ -119,6 +119,25 @@ yarn install
 
 # Run development server
 yarn dev
+```
+
+### Docker Services
+
+The development environment uses Docker Compose for PostgreSQL and Redis. Note that **non-standard ports** are used to avoid conflicts with local installations:
+
+| Service | Port | Standard Port |
+|---------|------|---------------|
+| PostgreSQL | 5433 | 5432 |
+| Redis | 6380 | 6379 |
+
+If you need to connect to these services directly:
+
+```bash
+# PostgreSQL
+psql -h localhost -p 5433 -U postgres -d postgres
+
+# Redis CLI
+redis-cli -p 6380
 ```
 
 ### Services

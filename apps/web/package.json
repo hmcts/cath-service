@@ -21,11 +21,9 @@
   "dependencies": {
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
-    "@hmcts/express-govuk-starter": "workspace:*",
-    "@hmcts/footer-pages": "workspace:*",
-    "@hmcts/onboarding": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
+    "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
     "config": "4.1.1",
     "connect-redis": "9.0.0",
