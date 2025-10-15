@@ -13,7 +13,12 @@ export const en = {
     contactUs: "Contact",
     language: "Welsh",
     governmentDigitalService: "Government Digital Service",
-    openGovernmentLicence: "Open Government Licence"
+    openGovernmentLicence: "Open Government Licence",
+    contentLicence: {
+      text: "All content is available under the",
+      linkText: "Open Government Licence v3.0",
+      suffix: ", except where otherwise stated"
+    }
   },
   language: {
     switchPhaseBanner: "Cymraeg"
@@ -24,9 +29,6 @@ export const en = {
     part3: " will help us to improve it.",
     ariaLabel: "Give feedback about this page",
     link: "https://www.smartsurvey.co.uk/s/FBSPI22/?pageurl="
-  },
-  oglAttribution: {
-    text: 'When you use this information under the OGL, you should include the following attribution: Contains public sector information licensed under the <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>'
   }
 };
 
@@ -45,7 +47,12 @@ export const cy = {
     contactUs: "Cysylltwch",
     language: "Cymraeg",
     governmentDigitalService: "Gwasanaeth Digidol y Llywodraeth",
-    openGovernmentLicence: "Open Government Licence"
+    openGovernmentLicence: "Open Government Licence",
+    contentLicence: {
+      text: "All content is available under the",
+      linkText: "Open Government Licence v3.0",
+      suffix: ", except where otherwise stated"
+    }
   },
   language: {
     switchPhaseBanner: "English"
@@ -56,8 +63,5 @@ export const cy = {
     part3: " yn ein helpu i'w wella.",
     ariaLabel: "Rhoi adborth am y dudalen hon",
     link: "https://www.smartsurvey.co.uk/s/FBSPI22/?pageurl="
-  },
-  oglAttribution: {
-    text: 'Pan fyddwch yn defnyddio\'r wybodaeth hon o dan yr OGL, dylech gynnwys y briodoliad canlynol: Yn cynnwys gwybodaeth sector cyhoeddus wedi\'i thrwyddedu o dan y <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Drwydded Llywodraeth Agored f3.0</a>'
   }
 };
