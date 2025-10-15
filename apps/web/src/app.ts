@@ -10,7 +10,8 @@ import {
   errorHandler,
   expressSessionRedis,
   notFoundHandler,
-  pageRoutes
+  pageRoutes,
+  moduleRoot as webCoreModuleRoot
 } from "@hmcts/web-core";
 import compression from "compression";
 import config from "config";
@@ -37,7 +38,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, pageRoutes.path];
+  const modulePaths = [__dirname, webCoreModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {

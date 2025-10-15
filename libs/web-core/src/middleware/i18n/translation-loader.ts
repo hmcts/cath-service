@@ -36,26 +36,50 @@ export async function loadTranslations(localesPath: string): Promise<Translation
   const translations: Translations = {};
   const supportedLocales = ["en", "cy"];
 
+  // Initialize empty objects for each locale
   for (const locale of supportedLocales) {
-    const tsFilePath = join(localesPath, `${locale}.ts`);
-    const jsFilePath = join(localesPath, `${locale}.js`);
+    translations[locale] = {};
+  }
 
-    // Check for .ts or .js file (compiled version)
+  // First, load any files that export both en and cy (e.g., shared.ts)
+  const sharedFiles = ["shared"];
+  for (const sharedFile of sharedFiles) {
+    const tsFilePath = join(localesPath, `${sharedFile}.ts`);
+    const jsFilePath = join(localesPath, `${sharedFile}.js`);
     const filePath = existsSync(jsFilePath) ? jsFilePath : tsFilePath;
 
     if (existsSync(filePath)) {
       try {
-        // Use file URL for dynamic import to work with absolute paths
+        const fileUrl = pathToFileURL(filePath).href;
+        const content = await import(fileUrl);
+
+        for (const locale of supportedLocales) {
+          if (content[locale]) {
+            translations[locale] = { ...translations[locale], ...content[locale] };
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to load shared translations from ${sharedFile}:`, error);
+      }
+    }
+  }
+
+  // Then load individual locale files (en.ts, cy.ts) which can override component translations
+  for (const locale of supportedLocales) {
+    const tsFilePath = join(localesPath, `${locale}.ts`);
+    const jsFilePath = join(localesPath, `${locale}.js`);
+    const filePath = existsSync(jsFilePath) ? jsFilePath : tsFilePath;
+
+    if (existsSync(filePath)) {
+      try {
         const fileUrl = pathToFileURL(filePath).href;
         const langContent = await import(fileUrl);
-        translations[locale] = langContent.content || langContent.default || {};
+        translations[locale] = { ...translations[locale], ...(langContent.content || langContent.default || {}) };
       } catch (error) {
         console.error(`Failed to load translations for ${locale}:`, error);
-        translations[locale] = {};
       }
     } else {
-      console.warn(`Translation file not found for ${locale}: ${filePath}`);
-      translations[locale] = {};
+      console.warn(`Translation file not found for ${locale}: ${tsFilePath}`);
     }
   }
 
