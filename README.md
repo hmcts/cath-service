@@ -81,7 +81,7 @@ A lightweight file-system router for Express applications, inspired by Next.js r
 ## Project Structure
 
 ```
-future-hearings-cath/
+cath-service/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API server (Express 5.x)
 │   ├── web/                    # Web frontend (Express 5.x + Nunjucks)

@@ -1,5 +1,5 @@
 {
-  "name": "future-hearings-cath",
+  "name": "cath",
   "version": "1.0.0",
   "workspaces": [
     "apps/*",

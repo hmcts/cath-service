@@ -1,5 +1,5 @@
 {
-  "serviceName": "future-hearings-cath-crons",
+  "serviceName": "cath-crons",
   "applicationInsights": {
     "enabled": false
   }

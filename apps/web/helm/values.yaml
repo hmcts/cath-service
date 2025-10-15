@@ -1,12 +1,12 @@
 nodejs:
   applicationPort: 3000
-  aadIdentityName: future-hearings
-  ingressHost: future-hearings-cath-web.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctspublic.azurecr.io/future-hearings/cath:latest'
+  aadIdentityName: cath
+  ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
-    REDIS_HOST: 'future-hearings-{{ .Values.global.environment }}.redis.cache.windows.net'
+    REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
   keyVaults:
-    future-hearings:
+    cath:
       secrets:
         - redis-access-key
         - app-insights-connection-string

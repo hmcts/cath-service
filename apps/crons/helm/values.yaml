@@ -11,7 +11,7 @@ job:
     DATABASE_URL: 'postgresql://user:password@postgres:5433/database'
     SCRIPT_NAME: 'example'
   keyVaults:
-    future-hearings:
+    cath:
       secrets:
         - app-insights-connection-string
         - dynatrace-url
