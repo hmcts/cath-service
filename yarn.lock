@@ -2950,24 +2950,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expressjs-monorepo-template@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "expressjs-monorepo-template@workspace:."
-  dependencies:
-    "@biomejs/biome": "npm:2.2.5"
-    "@types/node": "npm:24.7.1"
-    "@types/supertest": "npm:6.0.3"
-    "@vitest/coverage-v8": "npm:3.2.4"
-    "@vitest/ui": "npm:3.2.4"
-    concurrently: "npm:9.2.1"
-    supertest: "npm:7.1.4"
-    tsx: "npm:4.20.6"
-    turbo: "npm:2.5.8"
-    typescript: "npm:5.9.3"
-    vitest: "npm:3.2.4"
-  languageName: unknown
-  linkType: soft
-
 "exsolve@npm:^1.0.7":
   version: 1.0.7
   resolution: "exsolve@npm:1.0.7"
@@ -3152,6 +3134,24 @@ __metadata:
   checksum: 10c0/d8680ee1e5fcd4c197e4ac33b2b4dce03c71f4d91717292785703db200f5c21f977c568d28061226f9b5900cbcd2c84463646134fd5337e7925e0942bc3f46d5
   languageName: node
   linkType: hard
+
+"future-hearings-cath@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "future-hearings-cath@workspace:."
+  dependencies:
+    "@biomejs/biome": "npm:2.2.5"
+    "@types/node": "npm:24.7.1"
+    "@types/supertest": "npm:6.0.3"
+    "@vitest/coverage-v8": "npm:3.2.4"
+    "@vitest/ui": "npm:3.2.4"
+    concurrently: "npm:9.2.1"
+    supertest: "npm:7.1.4"
+    tsx: "npm:4.20.6"
+    turbo: "npm:2.5.8"
+    typescript: "npm:5.9.3"
+    vitest: "npm:3.2.4"
+  languageName: unknown
+  linkType: soft
 
 "get-caller-file@npm:^2.0.5":
   version: 2.0.5

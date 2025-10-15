@@ -81,7 +81,7 @@ A lightweight file-system router for Express applications, inspired by Next.js r
 ## Project Structure
 
 ```
-expressjs-monorepo-template/
+future-hearings-cath/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API server (Express 5.x)
 │   ├── web/                    # Web frontend (Express 5.x + Nunjucks)

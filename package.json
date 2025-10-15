@@ -1,5 +1,5 @@
 {
-  "name": "expressjs-monorepo-template",
+  "name": "future-hearings-cath",
   "version": "1.0.0",
   "workspaces": [
     "apps/*",

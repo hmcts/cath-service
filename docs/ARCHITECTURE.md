@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Note that this is an example architecture document for the expressjs-monorepo-template. It should be adapted to fit the specific architecture of your project.
+Note that this is an example architecture document for the future-hearings-cath. It should be adapted to fit the specific architecture of your project.
 
 ## Executive Summary
 
@@ -48,7 +48,7 @@ The HMCTS Express Monorepo Template is a production-ready, cloud-native applicat
 The project uses Yarn Workspaces with Turborepo for efficient monorepo management:
 
 ```
-expressjs-monorepo-template/
+future-hearings-cath/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API service
 │   ├── web/                    # Web frontend application
