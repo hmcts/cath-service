@@ -22,6 +22,7 @@
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/postgres": "workspace:*",
+    "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
