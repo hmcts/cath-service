@@ -1,4 +1,6 @@
 import { getAllLocations } from "@hmcts/location";
+// @ts-expect-error - accessible-autocomplete doesn't have proper TypeScript definitions
+import accessibleAutocomplete from "accessible-autocomplete/dist/accessible-autocomplete.min.js";
 
 export function initSearchAutocomplete() {
   const locationInput = document.getElementById("location") as HTMLInputElement;
@@ -7,60 +9,54 @@ export function initSearchAutocomplete() {
   const language = (document.documentElement.lang || "en") as "en" | "cy";
   const locations = getAllLocations(language);
 
-  const datalist = document.createElement("datalist");
-  datalist.id = "location-suggestions";
+  const preselectedLocationId = locationInput.getAttribute("data-location-id");
+  const preselectedValue = locationInput.value;
 
-  for (const location of locations) {
-    const option = document.createElement("option");
-    option.value = language === "cy" ? location.welshName : location.name;
-    option.setAttribute("data-location-id", location.locationId.toString());
-    datalist.appendChild(option);
-  }
+  const container = locationInput.parentElement;
+  if (!container) return;
 
-  locationInput.setAttribute("list", "location-suggestions");
-  locationInput.setAttribute("autocomplete", "off");
-  locationInput.parentElement?.appendChild(datalist);
+  const wrapper = document.createElement("div");
+  wrapper.id = "location-autocomplete-wrapper";
+  container.insertBefore(wrapper, locationInput);
+  locationInput.style.display = "none";
 
   const hiddenInput = document.createElement("input");
   hiddenInput.type = "hidden";
   hiddenInput.name = "locationId";
   hiddenInput.id = "locationId";
-  locationInput.parentElement?.appendChild(hiddenInput);
+  hiddenInput.value = preselectedLocationId || "";
+  container.appendChild(hiddenInput);
 
-  const preselectedLocationId = locationInput.getAttribute("data-location-id");
-  if (preselectedLocationId) {
-    hiddenInput.value = preselectedLocationId;
-  }
+  const locationMap = new Map(locations.map((loc) => [language === "cy" ? loc.welshName : loc.name, loc.locationId.toString()]));
 
-  locationInput.removeAttribute("name");
+  accessibleAutocomplete({
+    element: wrapper,
+    id: "location",
+    name: "location-display",
+    defaultValue: preselectedValue,
+    source: (query: string, populateResults: (results: string[]) => void) => {
+      const filteredLocations = locations
+        .filter((loc) => {
+          const name = language === "cy" ? loc.welshName : loc.name;
+          return name.toLowerCase().includes(query.toLowerCase());
+        })
+        .map((loc) => (language === "cy" ? loc.welshName : loc.name));
 
-  locationInput.addEventListener("input", () => {
-    const inputValue = locationInput.value.trim();
-
-    const matchingLocation = locations.find((loc) => {
-      const name = language === "cy" ? loc.welshName : loc.name;
-      return name.toLowerCase() === inputValue.toLowerCase();
-    });
-
-    if (matchingLocation) {
-      hiddenInput.value = matchingLocation.locationId.toString();
-    } else {
-      hiddenInput.value = "";
-    }
-  });
-
-  locationInput.addEventListener("change", () => {
-    const inputValue = locationInput.value.trim();
-
-    const matchingLocation = locations.find((loc) => {
-      const name = language === "cy" ? loc.welshName : loc.name;
-      return name.toLowerCase() === inputValue.toLowerCase();
-    });
-
-    if (matchingLocation) {
-      hiddenInput.value = matchingLocation.locationId.toString();
-    } else {
-      hiddenInput.value = "";
+      populateResults(filteredLocations);
+    },
+    minLength: 1,
+    confirmOnBlur: false,
+    onConfirm: (confirmed: string) => {
+      if (confirmed) {
+        const locationId = locationMap.get(confirmed);
+        if (locationId) {
+          hiddenInput.value = locationId;
+        } else {
+          hiddenInput.value = "";
+        }
+      } else {
+        hiddenInput.value = "";
+      }
     }
   });
 }

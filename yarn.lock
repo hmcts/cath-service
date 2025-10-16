@@ -1864,6 +1864,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"accessible-autocomplete@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "accessible-autocomplete@npm:3.0.1"
+  peerDependencies:
+    preact: ^8.0.0
+  peerDependenciesMeta:
+    preact:
+      optional: true
+  checksum: 10c0/a90d76f29940cd7c5cb0795f2062d32f8f4904bae3acfc89eab717c56f2b18ce3fd07a4035ec5e30643119cdfe56be3a4bc260eb80e39eeb4009ea5dc09b163c
+  languageName: node
+  linkType: hard
+
 "acorn-import-attributes@npm:^1.9.5":
   version: 1.9.5
   resolution: "acorn-import-attributes@npm:1.9.5"
@@ -2182,6 +2194,7 @@ __metadata:
     "@types/supertest": "npm:6.0.3"
     "@vitest/coverage-v8": "npm:3.2.4"
     "@vitest/ui": "npm:3.2.4"
+    accessible-autocomplete: "npm:^3.0.1"
     concurrently: "npm:9.2.1"
     supertest: "npm:7.1.4"
     tsx: "npm:4.20.6"

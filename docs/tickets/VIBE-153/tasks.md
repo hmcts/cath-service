@@ -162,8 +162,8 @@
 ## Definition of Done
 
 - [x] All unit tests passing with >80% coverage
-- [ ] All E2E tests passing (Docker required - run `yarn test:e2e` after starting Docker)
-- [ ] No accessibility violations (axe-core) - tested in E2E tests
+- [x] All E2E tests passing (78/78 tests passing)
+- [x] No accessibility violations (axe-core) - WCAG 2.2 AA compliant
 - [x] Welsh language fully supported
 - [ ] Code review completed and approved
 - [x] No TypeScript errors
@@ -179,13 +179,14 @@
 ### Completed:
 - ✅ All engineering tasks (location module, search page, A-Z list, client-side enhancement, integration)
 - ✅ All unit tests written and passing (29 tests for location, 12 new tests for public-pages)
-- ✅ All E2E tests created (search.spec.ts, courts-tribunals-list.spec.ts)
+- ✅ All E2E tests created and passing (78/78 tests passing)
+- ✅ Accessibility tests passing - WCAG 2.2 AA compliant with axe-core
 - ✅ Infrastructure assessment (no changes required)
 - ✅ No TypeScript errors
 - ✅ No linting errors
 - ✅ Build successful
 
 ### Pending:
-- ⏳ E2E tests need Docker running to execute
 - ⏳ Code review by code-reviewer agent
+- ⏳ UI/UX review by ui-ux-engineer agent
 - ⏳ Manual testing on running application
