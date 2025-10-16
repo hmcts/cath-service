@@ -14,3 +14,19 @@
 .govuk-phase-banner {
   border-bottom-color: #8eb8dc;
 }
+
+.govuk-footer__copyright-logo {
+  margin-bottom: 12px !important;
+  padding: 4px 0 !important;
+}
+
+.govuk-footer__copyright .govuk-footer__link:not(.govuk-footer__copyright-logo) {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  display: inline-block !important;
+}
+
+.govuk-form-group--error {
+  border-left: none !important;
+  padding-left: 0 !important;
+}

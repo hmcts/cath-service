@@ -54,8 +54,8 @@ export function createBaseViteConfig(modulesPaths: string[]): UserConfig {
             dest: "fonts"
           },
           {
-            // Copy GOV.UK Frontend images
-            src: "../../node_modules/govuk-frontend/dist/govuk/assets/images/*",
+            // Copy GOV.UK Frontend rebrand images (overrides standard images)
+            src: "../../node_modules/govuk-frontend/dist/govuk/assets/rebrand/images/*",
             dest: "images"
           },
           {

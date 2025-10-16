@@ -10,7 +10,8 @@
       "@hmcts/web": ["apps/web/src"],
       "@hmcts/web-core": ["libs/web-core/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],
-      "@hmcts/simple-router": ["libs/simple-router/src"]
+      "@hmcts/simple-router": ["libs/simple-router/src"],
+      "@hmcts/public-pages": ["libs/public-pages/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

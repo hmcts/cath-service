@@ -1,0 +1,53 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <form method="post" novalidate>
+      {{ govukRadios({
+        name: "viewOption",
+        fieldset: {
+          legend: {
+            text: title,
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        errorMessage: errorMessage,
+        items: [
+          {
+            value: "court-tribunal",
+            html: courtTribunalLabel,
+            hint: {
+              text: courtTribunalHint
+            }
+          },
+          {
+            value: "sjp-case",
+            html: sjpCaseLabel,
+            hint: {
+              text: sjpCaseHint
+            }
+          }
+        ]
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

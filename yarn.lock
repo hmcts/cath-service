@@ -656,6 +656,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/public-pages@workspace:*, @hmcts/public-pages@workspace:libs/public-pages":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/public-pages@workspace:libs/public-pages"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/simple-router@workspace:*, @hmcts/simple-router@workspace:libs/simple-router":
   version: 0.0.0-use.local
   resolution: "@hmcts/simple-router@workspace:libs/simple-router"
@@ -711,6 +719,7 @@ __metadata:
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/postgres": "workspace:*"
+    "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/compression": "npm:1.8.1"

@@ -59,6 +59,7 @@ function addFilters(env: nunjucks.Environment): void {
 
 function addGlobals(env: nunjucks.Environment, globals: Record<string, unknown> = {}): void {
   env.addGlobal("isProduction", process.env.NODE_ENV === "production");
+  env.addGlobal("assetPath", "/assets");
 
   Object.entries(globals).forEach(([key, value]) => {
     env.addGlobal(key, value);
