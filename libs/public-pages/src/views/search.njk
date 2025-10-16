@@ -1,0 +1,49 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukInput({
+        id: "location",
+        name: "locationId",
+        type: "text",
+        label: {
+          text: searchLabel
+        },
+        hint: {
+          text: searchHint
+        },
+        errorMessage: errors[0] if errors else undefined,
+        value: preselectedLocation.name if preselectedLocation else "",
+        attributes: {
+          "data-location-id": preselectedLocation.id if preselectedLocation else "",
+          "data-autocomplete": "true"
+        }
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+    <p class="govuk-body">
+      {{ azListPrefix }} <a href="/courts-tribunals-list" class="govuk-link">{{ azListLink }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

@@ -646,6 +646,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/location@workspace:libs/location":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/location@workspace:libs/location"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
