@@ -1,5 +1,4 @@
 export const cy = {
-  heading: "Gwrandawiadau llys a thribiwnlys",
   hearingsList: [
     "Gwrandawiadau yn y rhan fwyaf o Lysoedd Sifil a Theulu yn rhanbarthau De Ddwyrain a De Orllewin Lloegr",
     "Gwrandawiadau yn y Tribiwnlys Haen Gyntaf a'r Tribiwnlysoedd Uwch (gan eithrio Tribiwnlysoedd Cyflogaeth)",

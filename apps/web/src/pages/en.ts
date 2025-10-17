@@ -1,5 +1,4 @@
 export const en = {
-  heading: "Court and tribunal hearings",
   hearingsList: [
     "Hearings from most civil and family courts in the South East and South West regions",
     "Hearings in First Tier and Upper Tribunals (excluding Employment Tribunals)",
