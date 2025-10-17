@@ -1,0 +1,40 @@
+@import "accessible-autocomplete/dist/accessible-autocomplete.min.css";
+
+// Override autocomplete fonts to use GOV.UK GDS Transport
+.autocomplete__wrapper,
+.autocomplete__hint,
+.autocomplete__input,
+.autocomplete__option {
+  font-family: GDS Transport, arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Narrower input box
+.autocomplete__wrapper {
+  max-width: 30em;
+}
+
+.autocomplete__hint,
+.autocomplete__input {
+  max-width: 30em;
+}
+
+// Lighter background for alternating rows
+.autocomplete__option--odd {
+  background-color: #f8f8f8;
+}
+
+// Remove borders between items
+.autocomplete__option {
+  border: 0;
+}
+
+@media print {
+  .autocomplete__wrapper,
+  .autocomplete__hint,
+  .autocomplete__input,
+  .autocomplete__option {
+    font-family: sans-serif;
+  }
+}

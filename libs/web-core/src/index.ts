@@ -27,3 +27,4 @@ export { expressSessionRedis } from "./middleware/session-stores/redis-store.js"
 // Module configuration
 export const pageRoutes = { path: path.join(__dirname, "pages") };
 export const moduleRoot = __dirname;
+export const assets = path.join(__dirname, "assets");

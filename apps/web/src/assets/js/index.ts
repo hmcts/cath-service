@@ -1,5 +1,6 @@
 import cookieManager from "@hmcts/cookie-manager";
 import { initAll } from "govuk-frontend";
+import "@hmcts/web-core/src/assets/js/search-autocomplete.js";
 
 initAll();
 

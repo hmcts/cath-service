@@ -11,6 +11,13 @@
     "./src/assets/vite-config.js": {
       "production": "./dist/assets/vite-config.js",
       "default": "./src/assets/vite-config.ts"
+    },
+    "./src/assets/js/search-autocomplete.js": {
+      "production": "./dist/assets/js/search-autocomplete.js",
+      "default": "./src/assets/js/search-autocomplete.ts"
+    },
+    "./src/assets/css/search-autocomplete.scss": {
+      "default": "./src/assets/css/search-autocomplete.scss"
     }
   },
   "scripts": {
