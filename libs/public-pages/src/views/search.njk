@@ -21,17 +21,12 @@
         id: "location",
         name: "locationId",
         type: "text",
-        label: {
-          text: searchLabel
-        },
-        hint: {
-          text: searchHint
-        },
         errorMessage: errors[0] if errors else undefined,
-        value: preselectedLocation.name if preselectedLocation else "",
+        value: (preselectedLocation.welshName if locale === "cy" else preselectedLocation.name) if preselectedLocation else "",
         attributes: {
           "data-location-id": preselectedLocation.id if preselectedLocation else "",
-          "data-autocomplete": "true"
+          "data-autocomplete": "true",
+          "data-locale": locale
         }
       }) }}
 
@@ -41,7 +36,7 @@
     </form>
 
     <p class="govuk-body">
-      {{ azListPrefix }} <a href="/courts-tribunals-list" class="govuk-link">{{ azListLink }}</a>
+      <a href="/courts-tribunals-list" class="govuk-link">{{ azListLink }}</a>
     </p>
 
   </div>

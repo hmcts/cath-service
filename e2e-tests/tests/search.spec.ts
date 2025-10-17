@@ -20,11 +20,11 @@ test.describe('Search Page', () => {
       await expect(heading).toBeVisible();
 
       // Check for the location input field
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
       await expect(locationInput).toBeVisible();
 
-      // Check for autocomplete attribute
-      await expect(locationInput).toHaveAttribute('data-autocomplete', 'true');
+      // Check for autocomplete role (verifies autocomplete is working)
+      await expect(locationInput).toHaveAttribute('role', 'combobox');
 
       // Check for continue button
       const continueButton = page.getByRole('button', { name: /continue/i });
@@ -65,7 +65,7 @@ test.describe('Search Page', () => {
       await page.goto('/search');
 
       // Type in the search field
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
       await locationInput.fill('1');
 
       // Verify the continue button is visible
@@ -76,12 +76,12 @@ test.describe('Search Page', () => {
       // as that page will be implemented in a future ticket
     });
 
-    test('should show autocomplete data attribute when input has location', async ({ page }) => {
+    test('should show preselected location value when locationId query param is provided', async ({ page }) => {
       await page.goto('/search?locationId=1');
 
-      // Check that input has location data attribute
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
-      await expect(locationInput).toHaveAttribute('data-location-id', '1');
+      // Check that input has the preselected location value
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
     });
   });
 
@@ -177,7 +177,7 @@ test.describe('Search Page', () => {
       await expect(languageToggle).toContainText('English');
 
       // Check that page elements are still visible
-      const locationInput = page.getByLabel(/chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
       await expect(locationInput).toBeVisible();
 
       // Verify continue button is still visible
@@ -222,11 +222,8 @@ test.describe('Search Page', () => {
       await page.goto('/search?locationId=1');
 
       // Check that the location input is pre-filled
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
       await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
-
-      // Verify the data-location-id attribute is set
-      await expect(locationInput).toHaveAttribute('data-location-id', '1');
 
       // Run accessibility checks
       const accessibilityScanResults = await new AxeBuilder({ page })
@@ -243,7 +240,7 @@ test.describe('Search Page', () => {
       await page.goto('/search');
 
       // Navigate to the location input by clicking it (simulates real user interaction)
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
       await locationInput.click();
 
       // Check focus is visible
@@ -259,7 +256,7 @@ test.describe('Search Page', () => {
       await page.goto('/search');
 
       // Fill in locationId
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
+      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
       await locationInput.fill('1');
 
       // Verify continue button is visible

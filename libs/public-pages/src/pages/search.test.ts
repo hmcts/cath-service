@@ -22,7 +22,8 @@ describe("search page", () => {
           en: expect.any(Object),
           cy: expect.any(Object),
           backLink: "/view-option",
-          preselectedLocation: undefined
+          preselectedLocation: undefined,
+          locale: "en"
         })
       );
     });
@@ -49,7 +50,8 @@ describe("search page", () => {
             id: 1,
             name: "Oxford Combined Court Centre",
             welshName: "Canolfan Llysoedd Cyfun Rhydychen"
-          }
+          },
+          locale: "en"
         })
       );
     });
@@ -69,7 +71,8 @@ describe("search page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "search",
         expect.objectContaining({
-          preselectedLocation: undefined
+          preselectedLocation: undefined,
+          locale: "en"
         })
       );
     });
@@ -115,7 +118,8 @@ describe("search page", () => {
               href: "#location"
             }
           ],
-          backLink: "/view-option"
+          backLink: "/view-option",
+          locale: "en"
         })
       );
       expect(res.redirect).not.toHaveBeenCalled();

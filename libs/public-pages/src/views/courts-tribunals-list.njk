@@ -15,7 +15,7 @@
           <ul class="govuk-list">
             {% for location in locations %}
               <li>
-                <a href="/search?locationId={{ location.locationId }}" class="govuk-link">
+                <a href="/summary-of-publications?locationId={{ location.locationId }}" class="govuk-link">
                   {% if locale === "cy" %}
                     {{ location.welshName }}
                   {% else %}

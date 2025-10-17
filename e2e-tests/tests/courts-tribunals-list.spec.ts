@@ -54,27 +54,18 @@ test.describe('Courts and Tribunals List Page', () => {
   });
 
   test.describe('given user clicks on a location', () => {
-    test('should navigate back to search page with location pre-selected', async ({ page }) => {
+    test('should navigate to summary-of-publications page with locationId parameter', async ({ page }) => {
       await page.goto('/courts-tribunals-list');
 
       // Click on a location link (e.g., Oxford Combined Court Centre)
       const locationLink = page.getByRole('link', { name: /oxford combined court centre/i });
       await locationLink.click();
 
-      // Verify navigation to search page with locationId parameter
-      await expect(page).toHaveURL('/search?locationId=1');
+      // Verify navigation to summary-of-publications page with locationId parameter
+      await expect(page).toHaveURL('/summary-of-publications?locationId=1');
 
-      // Verify the location is pre-filled in the search page
-      const locationInput = page.getByLabel(/search for a court or tribunal/i);
-      await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
-
-      // Run accessibility checks after navigation
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .disableRules(['target-size', 'link-name'])
-        .analyze();
-
-      expect(accessibilityScanResults.violations).toEqual([]);
+      // Note: The summary-of-publications page will be implemented in a future ticket
+      // For now, this will show a 404 or error page
     });
   });
 
@@ -202,15 +193,15 @@ test.describe('Courts and Tribunals List Page', () => {
       await expect(page).toHaveURL('/search');
     });
 
-    test('should navigate to search page using Enter key on location link', async ({ page }) => {
+    test('should navigate to summary-of-publications page using Enter key on location link', async ({ page }) => {
       await page.goto('/courts-tribunals-list');
 
       // Click a location link to verify it's functional
       const locationLink = page.getByRole('link', { name: /oxford combined court centre/i });
       await locationLink.click();
 
-      // Verify navigation to search page with locationId
-      await expect(page).toHaveURL('/search?locationId=1');
+      // Verify navigation to summary-of-publications page with locationId
+      await expect(page).toHaveURL('/summary-of-publications?locationId=1');
     });
   });
 
@@ -230,18 +221,11 @@ test.describe('Courts and Tribunals List Page', () => {
       const locationLink = page.getByRole('link', { name: /oxford combined court centre/i });
       await locationLink.click();
 
-      // Verify navigation to search page
-      await expect(page).toHaveURL('/search?locationId=1');
+      // Verify navigation to summary-of-publications page
+      await expect(page).toHaveURL('/summary-of-publications?locationId=1');
 
-      // Final accessibility check on search page with pre-selected location
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .disableRules(['target-size', 'link-name'])
-        .analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
-
-      // Note: Continue button navigation to /summary-of-publications is not tested here
-      // as that page will be implemented in a future ticket
+      // Note: The summary-of-publications page will be implemented in a future ticket
+      // For now, this will show a 404 or error page
     });
   });
 });

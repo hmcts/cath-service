@@ -9,6 +9,7 @@ interface SearchError {
 
 export const GET = async (req: Request, res: Response) => {
   const locationId = req.query.locationId ? Number.parseInt(req.query.locationId as string, 10) : undefined;
+  const locale = res.locals.locale || "en";
 
   let preselectedLocation: { id: number; name: string; welshName: string } | undefined;
 
@@ -27,7 +28,8 @@ export const GET = async (req: Request, res: Response) => {
     en,
     cy,
     backLink: "/view-option",
-    preselectedLocation
+    preselectedLocation,
+    locale
   });
 };
 
@@ -48,7 +50,8 @@ export const POST = async (req: Request, res: Response) => {
       en,
       cy,
       errors,
-      backLink: "/view-option"
+      backLink: "/view-option",
+      locale
     });
   }
 
@@ -66,7 +69,8 @@ export const POST = async (req: Request, res: Response) => {
       en,
       cy,
       errors,
-      backLink: "/view-option"
+      backLink: "/view-option",
+      locale
     });
   }
 

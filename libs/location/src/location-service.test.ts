@@ -10,6 +10,26 @@ describe("searchLocations", () => {
       expect(results[0].name).toBe("Manchester Civil Justice Centre");
     });
 
+    it("should sort starts-with matches alphabetically", () => {
+      const results = searchLocations("court", "en");
+
+      const startsWithMatches = results.filter((loc) => loc.name.toLowerCase().startsWith("court"));
+
+      for (let i = 0; i < startsWithMatches.length - 1; i++) {
+        expect(startsWithMatches[i].name.localeCompare(startsWithMatches[i + 1].name)).toBeLessThanOrEqual(0);
+      }
+    });
+
+    it("should sort partial matches alphabetically", () => {
+      const results = searchLocations("justice", "en");
+
+      const partialMatches = results.filter((loc) => !loc.name.toLowerCase().startsWith("justice") && loc.name.toLowerCase().includes("justice"));
+
+      for (let i = 0; i < partialMatches.length - 1; i++) {
+        expect(partialMatches[i].name.localeCompare(partialMatches[i + 1].name)).toBeLessThanOrEqual(0);
+      }
+    });
+
     it("should return partial matches after starts-with matches", () => {
       const results = searchLocations("l", "en");
 

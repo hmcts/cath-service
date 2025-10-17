@@ -30,6 +30,18 @@ export function searchLocations(query: string, language: "en" | "cy"): Location[
     }
   }
 
+  startsWithMatches.sort((a, b) => {
+    const nameA = language === "cy" ? a.welshName : a.name;
+    const nameB = language === "cy" ? b.welshName : b.name;
+    return nameA.localeCompare(nameB);
+  });
+
+  partialMatches.sort((a, b) => {
+    const nameA = language === "cy" ? a.welshName : a.name;
+    const nameB = language === "cy" ? b.welshName : b.name;
+    return nameA.localeCompare(nameB);
+  });
+
   return [...startsWithMatches, ...partialMatches];
 }
 
