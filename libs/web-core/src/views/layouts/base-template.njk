@@ -1,4 +1,5 @@
 {% extends "govuk/template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 
 {% set govukRebrand = true %}
 
@@ -25,9 +26,10 @@
 {% block beforeContent %}
   {% include "components/phase-banner-content.njk" %}
   {% block backLink %}
-    {% if backLink %}
-      <a href="{{ backLink}}" class="govuk-back-link">{{ back }}</a>
-    {% endif %}
+    {{ govukBackLink({
+      text: back,
+      href: "#"
+    }) }}
   {% endblock %}
 {% endblock %}
 
@@ -49,4 +51,18 @@
 
 {% block bodyEnd %}
   {% include "components/body-end-scripts.njk" %}
+  <script nonce="{{ cspNonce }}">
+    (function() {
+      var backLink = document.querySelector('.govuk-back-link');
+      if (backLink) {
+        backLink.addEventListener('click', function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          history.back();
+          return false;
+        }, true);
+      }
+    })();
+  </script>
 {% endblock %}

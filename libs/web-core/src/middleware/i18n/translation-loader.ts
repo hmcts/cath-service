@@ -41,30 +41,7 @@ export async function loadTranslations(localesPath: string): Promise<Translation
     translations[locale] = {};
   }
 
-  // First, load any files that export both en and cy (e.g., shared.ts)
-  const sharedFiles = ["shared"];
-  for (const sharedFile of sharedFiles) {
-    const tsFilePath = join(localesPath, `${sharedFile}.ts`);
-    const jsFilePath = join(localesPath, `${sharedFile}.js`);
-    const filePath = existsSync(jsFilePath) ? jsFilePath : tsFilePath;
-
-    if (existsSync(filePath)) {
-      try {
-        const fileUrl = pathToFileURL(filePath).href;
-        const content = await import(fileUrl);
-
-        for (const locale of supportedLocales) {
-          if (content[locale]) {
-            translations[locale] = { ...translations[locale], ...content[locale] };
-          }
-        }
-      } catch (error) {
-        console.error(`Failed to load shared translations from ${sharedFile}:`, error);
-      }
-    }
-  }
-
-  // Then load individual locale files (en.ts, cy.ts) which can override component translations
+  // Load locale files (en.ts, cy.ts)
   for (const locale of supportedLocales) {
     const tsFilePath = join(localesPath, `${locale}.ts`);
     const jsFilePath = join(localesPath, `${locale}.js`);
@@ -74,7 +51,7 @@ export async function loadTranslations(localesPath: string): Promise<Translation
       try {
         const fileUrl = pathToFileURL(filePath).href;
         const langContent = await import(fileUrl);
-        translations[locale] = { ...translations[locale], ...(langContent.content || langContent.default || {}) };
+        translations[locale] = { ...translations[locale], ...(langContent[locale] || langContent.content || langContent.default || {}) };
       } catch (error) {
         console.error(`Failed to load translations for ${locale}:`, error);
       }

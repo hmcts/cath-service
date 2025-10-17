@@ -36,12 +36,12 @@
     {% endif %}
 
     <h1 class="govuk-heading-l">{{ title }}</h1>
-    
+
     <p class="govuk-body">{{ intro }}</p>
 
     <form action="/cookie-preferences" method="POST" class="cookie-preferences-form">
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-      
+
       <h2 class="govuk-heading-m">{{ essentialTitle }}</h2>
       <p class="govuk-body">{{ essentialDescription }}</p>
       {% if categories.analytics %}
@@ -79,7 +79,7 @@
         </fieldset>
       </div>
       {% endif %}
-      
+
       {% if categories.preferences %}
       <div class="govuk-form-group">
         <fieldset class="govuk-fieldset">
@@ -111,7 +111,7 @@
         </fieldset>
       </div>
       {% endif %}
-      
+
       <button type="submit" class="govuk-button" data-module="govuk-button">
         {{ saveButton }}
       </button>

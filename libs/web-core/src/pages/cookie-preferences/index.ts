@@ -1,12 +1,13 @@
 import type { Request, Response } from "express";
-import { cy, en } from "../locales/cookie-preferences.js";
-import { parseCookiePolicy, setCookieBannerSeen, setCookiePolicy } from "../middleware/cookies/cookie-helpers.js";
-import type { CookiePreferences } from "../middleware/cookies/cookie-manager-middleware.js";
+import { parseCookiePolicy, setCookieBannerSeen, setCookiePolicy } from "../../middleware/cookies/cookie-helpers.js";
+import type { CookiePreferences } from "../../middleware/cookies/cookie-manager-middleware.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const cookiePolicy = parseCookiePolicy(req.cookies?.cookie_policy);
 
-  res.render("cookie-preferences", {
+  res.render("cookie-preferences/index", {
     en,
     cy,
     cookiePreferences: cookiePolicy,

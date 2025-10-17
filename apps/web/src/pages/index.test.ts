@@ -19,7 +19,6 @@ describe("index page", () => {
 
       expect(res.render).toHaveBeenCalledWith("index", {
         en: expect.objectContaining({
-          heading: "Court and tribunal hearings",
           hearingsList: expect.arrayContaining([
             expect.stringContaining("civil and family courts"),
             expect.stringContaining("First Tier and Upper Tribunals"),
@@ -30,7 +29,6 @@ describe("index page", () => {
           continueButton: "Continue"
         }),
         cy: expect.objectContaining({
-          heading: "Gwrandawiadau llys a thribiwnlys",
           hearingsList: expect.arrayContaining([
             expect.stringContaining("Lysoedd Sifil a Theulu"),
             expect.stringContaining("Tribiwnlys Haen Gyntaf"),

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
-import { cy, en } from "../locales/view-option.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface ViewOptionError {
   text: string;
@@ -7,10 +8,9 @@ interface ViewOptionError {
 }
 
 export const GET = async (_req: Request, res: Response) => {
-  res.render("view-option", {
+  res.render("view-option/index", {
     en,
-    cy,
-    backLink: "/"
+    cy
   });
 };
 
@@ -27,11 +27,10 @@ export const POST = async (req: Request, res: Response) => {
       }
     ];
 
-    return res.render("view-option", {
+    return res.render("view-option/index", {
       en,
       cy,
-      errors,
-      backLink: "/"
+      errors
     });
   }
 
@@ -50,10 +49,9 @@ export const POST = async (req: Request, res: Response) => {
     }
   ];
 
-  res.render("view-option", {
+  res.render("view-option/index", {
     en,
     cy,
-    errors,
-    backLink: "/"
+    errors
   });
 };

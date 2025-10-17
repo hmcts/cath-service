@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pages dist/views && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\; && cd ../views && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/views/$(dirname {}) && cp {} ../../dist/views/{}' \\;",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
