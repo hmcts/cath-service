@@ -1,7 +1,7 @@
 @use "govuk-frontend/dist/govuk/index" with (
   $govuk-suppressed-warnings: ("import-using-all")
 );
-@use "../../../../../libs/public-pages/src/assets/css/search-autocomplete.scss";
+@use "@hmcts/web-core/src/assets/css/search-autocomplete.scss";
 
 .govuk-service-navigation__item {
   margin-left: auto;
