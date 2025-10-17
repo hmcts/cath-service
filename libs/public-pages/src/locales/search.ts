@@ -1,5 +1,6 @@
 export const en = {
   title: "What court or tribunal are you interested in?",
+  searchLabel: "Search for a court or tribunal",
   errorSummaryTitle: "There is a problem",
   errorMessage: "Select a court or tribunal from the list",
   continueButton: "Continue",
@@ -8,6 +9,7 @@ export const en = {
 
 export const cy = {
   title: "Ym mha lys neu dribiwnlys y mae gennych ddiddordeb?",
+  searchLabel: "Chwilio am lys neu dribiwnlys",
   errorSummaryTitle: "Mae problem",
   errorMessage: "Dewiswch lys neu dribiwnlys o'r rhestr",
   continueButton: "Parhau",

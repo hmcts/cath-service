@@ -11,6 +11,7 @@ export function initSearchAutocomplete() {
 
   const preselectedLocationId = locationInput.getAttribute("data-location-id");
   const preselectedValue = locationInput.value;
+  const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
 
   const container = locationInput.parentElement;
   if (!container) return;
@@ -21,7 +22,7 @@ export function initSearchAutocomplete() {
   const label = document.createElement("label");
   label.className = "govuk-label";
   label.htmlFor = "location";
-  label.textContent = language === "cy" ? "Chwilio am lys neu dribiwnlys" : "Search for a court or tribunal";
+  label.textContent = searchLabel;
   container.insertBefore(label, locationInput);
   container.insertBefore(wrapper, locationInput);
 

@@ -26,7 +26,8 @@
         attributes: {
           "data-location-id": preselectedLocation.id if preselectedLocation else "",
           "data-autocomplete": "true",
-          "data-locale": locale
+          "data-locale": locale,
+          "data-search-label": (cy.searchLabel if locale === "cy" else en.searchLabel)
         }
       }) }}
 
