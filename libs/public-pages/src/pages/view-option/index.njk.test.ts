@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { cy, en } from "../locales/view-option.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,7 +11,7 @@ const __dirname = path.dirname(__filename);
 describe("view-option template", () => {
   describe("Template file", () => {
     it("should exist", () => {
-      const templatePath = path.join(__dirname, "view-option.njk");
+      const templatePath = path.join(__dirname, "index.njk");
       expect(existsSync(templatePath)).toBe(true);
     });
   });

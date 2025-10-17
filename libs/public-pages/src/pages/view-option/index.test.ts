@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET, POST } from "./view-option.js";
+import { GET, POST } from "./index.js";
 
 describe("view-option page", () => {
   let req: Partial<Request>;
@@ -26,7 +26,7 @@ describe("view-option page", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "view-option",
+        "view-option/index",
         expect.objectContaining({
           en: expect.objectContaining({
             title: "What do you want to do?"
@@ -49,7 +49,7 @@ describe("view-option page", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "view-option",
+        "view-option/index",
         expect.objectContaining({
           en: expect.objectContaining({
             courtTribunalLabel: "<strong>Find a court or tribunal</strong>",
@@ -64,7 +64,7 @@ describe("view-option page", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "view-option",
+        "view-option/index",
         expect.objectContaining({
           cy: expect.objectContaining({
             courtTribunalLabel: "<strong>Dod o hyd i lys neu dribiwnlys</strong>",
@@ -104,7 +104,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: [
               {
@@ -123,7 +123,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -141,7 +141,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -159,7 +159,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -177,7 +177,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: [
               {
@@ -196,7 +196,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             backLink: "/"
           })
@@ -209,7 +209,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             en: expect.any(Object),
             cy: expect.any(Object)
@@ -226,7 +226,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: [
               {
@@ -245,7 +245,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: [
               {
@@ -263,7 +263,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -280,7 +280,7 @@ describe("view-option page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.render).toHaveBeenCalledWith(
-          "view-option",
+          "view-option/index",
           expect.objectContaining({
             en: expect.any(Object),
             cy: expect.any(Object)
