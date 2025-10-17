@@ -33,8 +33,7 @@ describe("view-option page", () => {
           }),
           cy: expect.objectContaining({
             title: "Beth ydych chi eisiau ei wneud?"
-          }),
-          backLink: "/"
+          })
         })
       );
     });
@@ -190,7 +189,7 @@ describe("view-option page", () => {
         expect(res.redirect).not.toHaveBeenCalled();
       });
 
-      it("should include backLink when rendering errors", async () => {
+      it("should include errors when rendering without selection", async () => {
         req.body = {};
 
         await POST(req as Request, res as Response);
@@ -198,7 +197,7 @@ describe("view-option page", () => {
         expect(res.render).toHaveBeenCalledWith(
           "view-option/index",
           expect.objectContaining({
-            backLink: "/"
+            errors: expect.any(Array)
           })
         );
       });

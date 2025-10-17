@@ -10,8 +10,7 @@ interface ViewOptionError {
 export const GET = async (_req: Request, res: Response) => {
   res.render("view-option/index", {
     en,
-    cy,
-    backLink: "/"
+    cy
   });
 };
 
@@ -31,8 +30,7 @@ export const POST = async (req: Request, res: Response) => {
     return res.render("view-option/index", {
       en,
       cy,
-      errors,
-      backLink: "/"
+      errors
     });
   }
 
@@ -54,7 +52,6 @@ export const POST = async (req: Request, res: Response) => {
   res.render("view-option/index", {
     en,
     cy,
-    errors,
-    backLink: "/"
+    errors
   });
 };
