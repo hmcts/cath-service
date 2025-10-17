@@ -76,7 +76,7 @@ function getEntries(modulePaths: string[]): Record<string, string> {
     const assetsPath = resolve(modulePath);
 
     if (existsSync(assetsPath)) {
-      const jsFiles = glob.sync(resolve(assetsPath, "js/*.ts")).filter((f) => !f.endsWith(".d.ts"));
+      const jsFiles = glob.sync(resolve(assetsPath, "js/*.ts")).filter((f) => !f.endsWith(".d.ts") && !f.endsWith(".test.ts"));
       const cssFiles = glob.sync(resolve(assetsPath, "css/*.scss"));
       const moduleAssets = [...jsFiles, ...cssFiles];
 
