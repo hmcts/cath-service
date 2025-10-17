@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
-import { cy, en } from "../locales/accessibility-statement.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (_req: Request, res: Response) => {
-  res.render("accessibility-statement", {
+  res.render("accessibility-statement/index", {
     backLink: "/",
     en,
     cy

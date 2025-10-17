@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET } from "./accessibility-statement.js";
+import { GET } from "./index.js";
 
 describe("accessibility-statement page", () => {
   let req: Partial<Request>;
@@ -18,7 +18,7 @@ describe("accessibility-statement page", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "accessibility-statement",
+        "accessibility-statement/index",
         expect.objectContaining({
           en: expect.objectContaining({
             title: "Accessibility statement"
