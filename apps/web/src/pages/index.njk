@@ -1,0 +1,33 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block backLink %}{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">{{ serviceName }}</h1>
+
+    <ul class="govuk-list govuk-list--bullet">
+      {% for item in hearingsList %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+
+    <p class="govuk-body">{{ additionalInfo }}</p>
+
+    <p class="govuk-body">
+      {{ signInText }} <a href="/sign-in" class="govuk-link">{{ signInLink }}</a>.
+    </p>
+
+    <div class="govuk-inset-text">
+      {{ welshAvailableText }} <a href="{{ languageToggle.link }}" class="govuk-link">{{ welshAvailableLink }}</a>.
+    </div>
+
+    {{ govukButton({
+      text: continueButton,
+      href: "/view-option"
+    }) }}
+  </div>
+</div>
+{% endblock %}
