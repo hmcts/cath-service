@@ -2,6 +2,7 @@
   "name": "@hmcts/location",
   "version": "1.0.0",
   "type": "module",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "production": "./dist/index.js",

@@ -54,6 +54,9 @@ jobs:
       - name: Generate Prisma client
         run: yarn db:generate
 
+      - name: Build packages
+        run: yarn build
+
       - name: Restore Playwright browsers cache
         uses: actions/cache/restore@v4
         id: playwright-cache
