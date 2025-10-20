@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as cookieHelpers from "../middleware/cookies/cookie-helpers.js";
-import { GET, POST } from "./cookie-preferences.js";
+import * as cookieHelpers from "../../middleware/cookies/cookie-helpers.js";
+import { GET, POST } from "./index.js";
 
-vi.mock("../middleware/cookies/cookie-helpers.js", () => ({
+vi.mock("../../middleware/cookies/cookie-helpers.js", () => ({
   parseCookiePolicy: vi.fn(),
   setCookiePolicy: vi.fn(),
   setCookieBannerSeen: vi.fn()
@@ -41,7 +41,7 @@ describe("cookie-preferences page", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "cookie-preferences",
+        "cookie-preferences/index",
         expect.objectContaining({
           en: expect.objectContaining({
             title: "Cookie preferences"
@@ -69,7 +69,7 @@ describe("cookie-preferences page", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "cookie-preferences",
+        "cookie-preferences/index",
         expect.objectContaining({
           saved: true
         })

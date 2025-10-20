@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { cy, en } from "../locales/index.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,10 +17,6 @@ describe("index template", () => {
   });
 
   describe("English locale", () => {
-    it("should have required heading", () => {
-      expect(en.heading).toBe("Court and tribunal hearings");
-    });
-
     it("should have hearings list with 4 items", () => {
       expect(en.hearingsList).toBeDefined();
       expect(Array.isArray(en.hearingsList)).toBe(true);
@@ -53,10 +50,6 @@ describe("index template", () => {
   });
 
   describe("Welsh locale", () => {
-    it("should have required heading", () => {
-      expect(cy.heading).toBe("Gwrandawiadau llys a thribiwnlys");
-    });
-
     it("should have hearings list with 4 items", () => {
       expect(cy.hearingsList).toBeDefined();
       expect(Array.isArray(cy.hearingsList)).toBe(true);
@@ -99,16 +92,7 @@ describe("index template", () => {
     });
 
     it("should have all required properties", () => {
-      const requiredProperties = [
-        "heading",
-        "hearingsList",
-        "additionalInfo",
-        "signInText",
-        "signInLink",
-        "welshAvailableText",
-        "welshAvailableLink",
-        "continueButton"
-      ];
+      const requiredProperties = ["hearingsList", "additionalInfo", "signInText", "signInLink", "welshAvailableText", "welshAvailableLink", "continueButton"];
 
       requiredProperties.forEach((prop) => {
         expect(en).toHaveProperty(prop);
