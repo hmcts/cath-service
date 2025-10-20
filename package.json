@@ -60,6 +60,5 @@
   },
   "dependencies": {
     "accessible-autocomplete": "^3.0.1"
-    "vite": "7.1.11"
   }
 }
