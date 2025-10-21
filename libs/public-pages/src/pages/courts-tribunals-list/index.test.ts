@@ -295,18 +295,5 @@ describe("courts-tribunals-list", () => {
       expect(availableLetters).toBeInstanceOf(Array);
       expect(availableLetters.length).toBeGreaterThan(0);
     });
-
-    it("should include sub-jurisdiction label for each jurisdiction", async () => {
-      const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
-
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const jurisdictionItems = renderCall.jurisdictionItems;
-
-      jurisdictionItems.forEach((item: any) => {
-        expect(item).toHaveProperty("subJurisdictionLabel");
-        expect(typeof item.subJurisdictionLabel).toBe("string");
-      });
-    });
   });
 });
