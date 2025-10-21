@@ -148,13 +148,17 @@ test.describe('Search Page', () => {
 
   test.describe('given user clicks back link', () => {
     test('should navigate to the view-option page', async ({ page }) => {
+      // Navigate to view-option first to establish history
+      await page.goto('/view-option');
+
+      // Navigate to search page
       await page.goto('/search');
 
       // Click the back link
       const backLink = page.locator('.govuk-back-link');
       await backLink.click();
 
-      // Verify navigation to the view-option page
+      // Verify navigation back to the view-option page
       await expect(page).toHaveURL('/view-option');
     });
   });
