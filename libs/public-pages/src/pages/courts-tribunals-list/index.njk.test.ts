@@ -72,7 +72,7 @@ describe("courts-tribunals-list template", () => {
     });
 
     it("should have selected filters heading", () => {
-      expect(cy.selectedFiltersHeading).toBe("Hidlyddion a ddewiswyd");
+      expect(cy.selectedFiltersHeading).toBe("Hidlwyr a ddewiswyd");
     });
 
     it("should have no filters selected text", () => {
@@ -80,11 +80,11 @@ describe("courts-tribunals-list template", () => {
     });
 
     it("should have clear filters text", () => {
-      expect(cy.clearFilters).toBe("Clirio hidlyddion");
+      expect(cy.clearFilters).toBe("Clirio hidlwyr");
     });
 
     it("should have filter heading", () => {
-      expect(cy.filterHeading).toBe("Hidlo");
+      expect(cy.filterHeading).toBe("Hidlydd");
     });
 
     it("should have jurisdiction heading", () => {
@@ -101,9 +101,9 @@ describe("courts-tribunals-list template", () => {
 
     it("should have sub-jurisdiction labels", () => {
       expect(cy.subJurisdictionLabels).toBeDefined();
-      expect(cy.subJurisdictionLabels[1]).toBe("Math o lys sifil");
-      expect(cy.subJurisdictionLabels[2]).toBe("Math o lys teulu");
-      expect(cy.subJurisdictionLabels[3]).toBe("Math o lys troseddol");
+      expect(cy.subJurisdictionLabels[1]).toBe("Math o llys sifil");
+      expect(cy.subJurisdictionLabels[2]).toBe("Math o llys teulu");
+      expect(cy.subJurisdictionLabels[3]).toBe("Math o llys troseddol");
       expect(cy.subJurisdictionLabels[4]).toBe("Math o dribiwnlys");
     });
   });
