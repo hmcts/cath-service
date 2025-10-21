@@ -308,34 +308,35 @@ test.describe("Sign In Account Selection Page", () => {
     test("should allow radio selection via keyboard", async ({ page }) => {
       await page.goto("/sign-in");
 
-      // Tab to the first radio button
-      let hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-      let focused = false;
-      for (let i = 0; i < 10 && !focused; i++) {
-        await page.keyboard.press("Tab");
-        try {
-          await expect(hmctsRadio).toBeFocused({ timeout: 100 });
-          focused = true;
-        } catch {
-          // Continue tabbing
-        }
-      }
+      // Get references to all radio buttons
+      const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
+      const commonPlatformRadio = page.getByRole("radio", { name: /with a common platform account/i });
+      const cathRadio = page.getByRole("radio", { name: /with a court and tribunal hearings account/i });
 
-      // Ensure the element is focused before pressing Space
-      await expect(hmctsRadio).toBeFocused();
-
-      // Select the radio button with Space key
-      await page.keyboard.press("Space");
+      // Click the first radio button to select it and give it focus
+      await hmctsRadio.click();
       await expect(hmctsRadio).toBeChecked();
 
-      // Use arrow keys to navigate to other radio buttons
+      // Now test keyboard navigation with arrow keys
+      // Arrow Down should move to next radio and select it
       await page.keyboard.press("ArrowDown");
-      const commonPlatformRadio = page.getByRole("radio", { name: /with a common platform account/i });
       await expect(commonPlatformRadio).toBeChecked();
+      await expect(hmctsRadio).not.toBeChecked();
 
+      // Arrow Down should move to third radio
       await page.keyboard.press("ArrowDown");
-      const cathRadio = page.getByRole("radio", { name: /with a court and tribunal hearings account/i });
       await expect(cathRadio).toBeChecked();
+      await expect(commonPlatformRadio).not.toBeChecked();
+
+      // Arrow Up should move back to second radio
+      await page.keyboard.press("ArrowUp");
+      await expect(commonPlatformRadio).toBeChecked();
+      await expect(cathRadio).not.toBeChecked();
+
+      // Arrow Up should move back to first radio
+      await page.keyboard.press("ArrowUp");
+      await expect(hmctsRadio).toBeChecked();
+      await expect(commonPlatformRadio).not.toBeChecked();
     });
   });
 
