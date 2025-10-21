@@ -1,8 +1,23 @@
 import cookieManager from "@hmcts/cookie-manager";
 import { initAll } from "govuk-frontend";
-import "@hmcts/web-core/src/assets/js/search-autocomplete.js";
+import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
+import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
+import { initBackLink } from "@hmcts/web-core/src/assets/js/back-link.js";
 
 initAll();
+
+// Initialize custom components
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    initBackLink();
+    initSearchAutocomplete();
+    initFilterPanel();
+  });
+} else {
+  initBackLink();
+  initSearchAutocomplete();
+  initFilterPanel();
+}
 
 const config = {
   userPreferences: {

@@ -101,8 +101,3 @@ export function initSearchAutocomplete() {
   }, 100);
 }
 
-if (typeof document !== "undefined") {
-  document.addEventListener("DOMContentLoaded", () => {
-    initSearchAutocomplete();
-  });
-}

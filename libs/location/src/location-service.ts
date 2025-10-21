@@ -1,3 +1,4 @@
+import type { Jurisdiction, Region, SubJurisdiction } from "./location-data.js";
 import { locationData } from "./location-data.js";
 
 export interface Location {
@@ -59,11 +60,33 @@ export function getLocationById(id: number): Location | undefined {
   return locationData.locations.find((location) => location.locationId === id);
 }
 
-export function getLocationsGroupedByLetter(language: "en" | "cy"): Record<string, Location[]> {
-  const sortedLocations = getAllLocations(language);
+export function getLocationsGroupedByLetter(
+  language: "en" | "cy",
+  filters?: {
+    regions?: number[];
+    subJurisdictions?: number[];
+  }
+): Record<string, Location[]> {
+  let locations = getAllLocations(language);
+
+  // Apply filters if provided
+  if (filters) {
+    if (filters.regions && filters.regions.length > 0) {
+      locations = locations.filter((location) =>
+        location.regions.some((regionId) => filters.regions!.includes(regionId))
+      );
+    }
+
+    if (filters.subJurisdictions && filters.subJurisdictions.length > 0) {
+      locations = locations.filter((location) =>
+        location.subJurisdictions.some((subJurisdictionId) => filters.subJurisdictions!.includes(subJurisdictionId))
+      );
+    }
+  }
+
   const grouped: Record<string, Location[]> = {};
 
-  for (const location of sortedLocations) {
+  for (const location of locations) {
     const name = language === "cy" ? location.welshName : location.name;
     const firstLetter = name.charAt(0).toUpperCase();
 
@@ -75,4 +98,20 @@ export function getLocationsGroupedByLetter(language: "en" | "cy"): Record<strin
   }
 
   return grouped;
+}
+
+export function getAllJurisdictions(): Jurisdiction[] {
+  return locationData.jurisdictions;
+}
+
+export function getAllRegions(): Region[] {
+  return locationData.regions;
+}
+
+export function getAllSubJurisdictions(): SubJurisdiction[] {
+  return locationData.subJurisdictions;
+}
+
+export function getSubJurisdictionsByJurisdiction(jurisdictionId: number): SubJurisdiction[] {
+  return locationData.subJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId);
 }

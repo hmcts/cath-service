@@ -51,18 +51,4 @@
 
 {% block bodyEnd %}
   {% include "components/body-end-scripts.njk" %}
-  <script nonce="{{ cspNonce }}">
-    (function() {
-      var backLink = document.querySelector('.govuk-back-link');
-      if (backLink && backLink.getAttribute('href') === '#') {
-        backLink.addEventListener('click', function(event) {
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
-          history.back();
-          return false;
-        }, true);
-      }
-    })();
-  </script>
 {% endblock %}

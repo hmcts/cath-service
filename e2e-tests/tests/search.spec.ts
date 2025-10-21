@@ -133,7 +133,7 @@ test.describe('Search Page', () => {
       await expect(page).toHaveURL('/courts-tribunals-list');
 
       // Check page heading
-      const heading = page.getByRole('heading', { name: /a-z list of courts and tribunals/i });
+      const heading = page.getByRole('heading', { name: /find a court or tribunal/i });
       await expect(heading).toBeVisible();
 
       // Run accessibility checks

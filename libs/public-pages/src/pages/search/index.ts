@@ -28,7 +28,6 @@ export const GET = async (req: Request, res: Response) => {
   res.render("search/index", {
     en,
     cy,
-    backLink: "/view-option",
     preselectedLocation,
     locale
   });
@@ -51,7 +50,6 @@ export const POST = async (req: Request, res: Response) => {
       en,
       cy,
       errors,
-      backLink: "/view-option",
       locale
     });
   }
@@ -70,7 +68,6 @@ export const POST = async (req: Request, res: Response) => {
       en,
       cy,
       errors,
-      backLink: "/view-option",
       locale
     });
   }
