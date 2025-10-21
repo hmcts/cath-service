@@ -89,7 +89,6 @@ describe("filter-panel", () => {
         initFilterPanel();
 
         const checkbox1 = document.querySelector('input[name="jurisdiction"][value="1"]') as HTMLInputElement;
-        const checkbox2 = document.querySelector('input[name="jurisdiction"][value="2"]') as HTMLInputElement;
         const subSection1 = document.querySelector('.sub-jurisdiction-section[data-parent-jurisdiction="1"]') as HTMLElement;
         const subSection2 = document.querySelector('.sub-jurisdiction-section[data-parent-jurisdiction="2"]') as HTMLElement;
 

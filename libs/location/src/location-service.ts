@@ -72,15 +72,11 @@ export function getLocationsGroupedByLetter(
   // Apply filters if provided
   if (filters) {
     if (filters.regions && filters.regions.length > 0) {
-      locations = locations.filter((location) =>
-        location.regions.some((regionId) => filters.regions!.includes(regionId))
-      );
+      locations = locations.filter((location) => location.regions.some((regionId) => filters.regions!.includes(regionId)));
     }
 
     if (filters.subJurisdictions && filters.subJurisdictions.length > 0) {
-      locations = locations.filter((location) =>
-        location.subJurisdictions.some((subJurisdictionId) => filters.subJurisdictions!.includes(subJurisdictionId))
-      );
+      locations = locations.filter((location) => location.subJurisdictions.some((subJurisdictionId) => filters.subJurisdictions!.includes(subJurisdictionId)));
     }
   }
 

@@ -1,4 +1,4 @@
-export { locationData, type Jurisdiction, type Region, type SubJurisdiction } from "./location-data.js";
+export { type Jurisdiction, locationData, type Region, type SubJurisdiction } from "./location-data.js";
 export {
   getAllJurisdictions,
   getAllLocations,

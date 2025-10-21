@@ -1,7 +1,7 @@
 export function initBackLink() {
-  const backLink = document.querySelector('.govuk-back-link') as HTMLAnchorElement | null;
+  const backLink = document.querySelector(".govuk-back-link") as HTMLAnchorElement | null;
 
-  if (backLink && backLink.getAttribute('href') === '#') {
+  if (backLink && backLink.getAttribute("href") === "#") {
     const handleClick = (event: Event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -9,6 +9,6 @@ export function initBackLink() {
       history.back();
     };
 
-    backLink.addEventListener('click', handleClick, true);
+    backLink.addEventListener("click", handleClick, true);
   }
 }

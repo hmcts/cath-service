@@ -22,10 +22,26 @@ vi.mock("@hmcts/location", () => ({
     { subJurisdictionId: 4, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 1 },
     { subJurisdictionId: 7, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 3 }
   ]),
-  getLocationsGroupedByLetter: vi.fn((language: string, filters?: any) => {
+  getLocationsGroupedByLetter: vi.fn((_language: string, filters?: any) => {
     const allLocations = {
-      B: [{ locationId: 2, name: "Birmingham Civil and Family Justice Centre", welshName: "Canolfan Cyfiawnder Sifil a Theulu Birmingham", regions: [2], subJurisdictions: [1, 2] }],
-      C: [{ locationId: 5, name: "Cardiff Civil and Family Justice Centre", welshName: "Canolfan Cyfiawnder Sifil a Theulu Caerdydd", regions: [5], subJurisdictions: [1, 2] }],
+      B: [
+        {
+          locationId: 2,
+          name: "Birmingham Civil and Family Justice Centre",
+          welshName: "Canolfan Cyfiawnder Sifil a Theulu Birmingham",
+          regions: [2],
+          subJurisdictions: [1, 2]
+        }
+      ],
+      C: [
+        {
+          locationId: 5,
+          name: "Cardiff Civil and Family Justice Centre",
+          welshName: "Canolfan Cyfiawnder Sifil a Theulu Caerdydd",
+          regions: [5],
+          subJurisdictions: [1, 2]
+        }
+      ],
       R: [{ locationId: 4, name: "Royal Courts of Justice", welshName: "Llysoedd Barn Brenhinol", regions: [1], subJurisdictions: [1, 4] }]
     };
 
@@ -37,7 +53,8 @@ vi.mock("@hmcts/location", () => ({
     for (const [letter, locations] of Object.entries(allLocations)) {
       const matchingLocations = locations.filter((loc: any) => {
         const regionMatch = !filters.regions || filters.regions.length === 0 || loc.regions.some((r: number) => filters.regions.includes(r));
-        const subJurisdictionMatch = !filters.subJurisdictions || filters.subJurisdictions.length === 0 || loc.subJurisdictions.some((s: number) => filters.subJurisdictions.includes(s));
+        const subJurisdictionMatch =
+          !filters.subJurisdictions || filters.subJurisdictions.length === 0 || loc.subJurisdictions.some((s: number) => filters.subJurisdictions.includes(s));
         return regionMatch && subJurisdictionMatch;
       });
       if (matchingLocations.length > 0) {

@@ -15,19 +15,21 @@ export const GET = async (req: Request, res: Response) => {
 
   const selectedRegions = Array.isArray(regionParam) ? regionParam.map(Number) : regionParam ? [Number(regionParam)] : [];
 
-  const selectedSubJurisdictions = Array.isArray(subJurisdictionParam) ? subJurisdictionParam.map(Number) : subJurisdictionParam ? [Number(subJurisdictionParam)] : [];
+  const selectedSubJurisdictions = Array.isArray(subJurisdictionParam)
+    ? subJurisdictionParam.map(Number)
+    : subJurisdictionParam
+      ? [Number(subJurisdictionParam)]
+      : [];
 
   const allJurisdictions = getAllJurisdictions();
   const allRegions = getAllRegions();
   const allSubJurisdictions = getAllSubJurisdictions();
 
   // If jurisdictions are selected but no sub-jurisdictions, include all sub-jurisdictions from selected jurisdictions
-  let effectiveSubJurisdictions = [...selectedSubJurisdictions];
+  const effectiveSubJurisdictions = [...selectedSubJurisdictions];
   if (selectedJurisdictions.length > 0 && selectedSubJurisdictions.length === 0) {
     selectedJurisdictions.forEach((jurisdictionId) => {
-      const subJuris = allSubJurisdictions
-        .filter((sub) => sub.jurisdictionId === jurisdictionId)
-        .map((sub) => sub.subJurisdictionId);
+      const subJuris = allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId).map((sub) => sub.subJurisdictionId);
       effectiveSubJurisdictions.push(...subJuris);
     });
   }

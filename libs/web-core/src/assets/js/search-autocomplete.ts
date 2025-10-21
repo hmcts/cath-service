@@ -100,4 +100,3 @@ export function initSearchAutocomplete() {
     }
   }, 100);
 }
-
