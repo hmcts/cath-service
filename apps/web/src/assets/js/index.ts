@@ -1,8 +1,8 @@
 import cookieManager from "@hmcts/cookie-manager";
-import { initAll } from "govuk-frontend";
-import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
-import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
 import { initBackLink } from "@hmcts/web-core/src/assets/js/back-link.js";
+import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
+import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
+import { initAll } from "govuk-frontend";
 
 initAll();
 
