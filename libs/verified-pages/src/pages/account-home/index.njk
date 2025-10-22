@@ -1,0 +1,33 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block pageTitle %}
+  {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <div class="account-sections-container">
+      <div class="account-section-box">
+        <h2 class="govuk-heading-s account-section-heading">
+          <a href="{{ sections.courtHearings.href }}" class="govuk-link account-section-link">{{ sections.courtHearings.title }}</a>
+        </h2>
+      </div>
+
+      <div class="account-section-box">
+        <h2 class="govuk-heading-s account-section-heading">
+          <a href="{{ sections.sjpCases.href }}" class="govuk-link account-section-link">{{ sections.sjpCases.title }}</a>
+        </h2>
+      </div>
+
+      <div class="account-section-box">
+        <h2 class="govuk-heading-s account-section-heading">
+          <a href="{{ sections.emailSubscriptions.href }}" class="govuk-link account-section-link">{{ sections.emailSubscriptions.title }}</a>
+        </h2>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

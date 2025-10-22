@@ -3,8 +3,37 @@
   $govuk-suppressed-warnings: ("import-using-all")
 );
 
-.govuk-service-navigation__item {
-  margin-left: auto;
+.govuk-service-navigation__navigation-end {
+  margin-left: auto !important;
+}
+
+.account-sections-container {
+  display: flex;
+  gap: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.account-section-box {
+  background-color: #f3f2f1;
+  border: solid 1px #b1b4b6;
+  height: 100%;
+  padding: 0 1em;
+  min-height: 150px;
+  flex: 1;
+}
+
+.account-section-heading {
+  margin-top: 1em;
+}
+
+.account-section-link {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.account-section-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 
 .govuk-phase-banner__content > span {
