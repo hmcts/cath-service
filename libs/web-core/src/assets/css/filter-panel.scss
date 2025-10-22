@@ -1,10 +1,46 @@
+// Mobile filter toggle button
+.mobile-filter-toggle {
+  display: block;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+// Desktop: hide toggle buttons and show both columns side by side
 @media (min-width: 40.0625em) {
+  .mobile-filter-toggle,
+  #show-filters-btn,
+  #hide-filters-btn {
+    display: none !important;
+  }
+
   .filter-column {
     width: 30%;
+    display: block !important;
   }
 
   .courts-column {
     width: 70%;
+    display: block !important;
+  }
+}
+
+// Mobile: hide filter panel by default
+@media (max-width: 40.0525em) {
+  .filter-column {
+    display: none;
+    width: 100%;
+  }
+
+  .filter-column.filter-visible {
+    display: block;
+  }
+
+  .courts-column {
+    width: 100%;
+  }
+
+  .courts-column.filter-visible {
+    display: none;
   }
 }
 
@@ -52,7 +88,6 @@
 .az-navigation__link,
 .az-navigation__letter--disabled {
   display: inline-block;
-  min-width: 18px;
   text-align: center;
   font-family: GDS Transport, arial, sans-serif;
   -webkit-font-smoothing: antialiased;

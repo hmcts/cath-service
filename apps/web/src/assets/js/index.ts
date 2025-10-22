@@ -1,5 +1,6 @@
 import cookieManager from "@hmcts/cookie-manager";
 import { initBackLink } from "@hmcts/web-core/src/assets/js/back-link.js";
+import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
 import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
 import { initAll } from "govuk-frontend";
@@ -12,11 +13,13 @@ if (document.readyState === "loading") {
     initBackLink();
     initSearchAutocomplete();
     initFilterPanel();
+    initBackToTop();
   });
 } else {
   initBackLink();
   initSearchAutocomplete();
   initFilterPanel();
+  initBackToTop();
 }
 
 const config = {

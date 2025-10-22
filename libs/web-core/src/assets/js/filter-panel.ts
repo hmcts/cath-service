@@ -48,4 +48,38 @@ export function initFilterPanel() {
       }
     });
   });
+
+  // Mobile filter toggle functionality
+  initMobileFilterToggle();
+}
+
+function initMobileFilterToggle() {
+  const showFiltersBtn = document.getElementById("show-filters-btn");
+  const hideFiltersBtn = document.getElementById("hide-filters-btn");
+  const filterColumn = document.querySelector(".filter-column");
+  const courtsColumn = document.querySelector(".courts-column");
+
+  if (showFiltersBtn && hideFiltersBtn && filterColumn && courtsColumn) {
+    showFiltersBtn.addEventListener("click", () => {
+      filterColumn.classList.add("filter-visible");
+      courtsColumn.classList.add("filter-visible");
+      showFiltersBtn.style.display = "none";
+      hideFiltersBtn.style.display = "block";
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+
+    hideFiltersBtn.addEventListener("click", () => {
+      filterColumn.classList.remove("filter-visible");
+      courtsColumn.classList.remove("filter-visible");
+      showFiltersBtn.style.display = "block";
+      hideFiltersBtn.style.display = "none";
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  }
 }

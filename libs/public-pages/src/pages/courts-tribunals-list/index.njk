@@ -53,6 +53,11 @@
               text: applyFilters
             }) }}
 
+            {# Mobile hide filters button #}
+            <button type="button" class="govuk-button govuk-button--secondary mobile-filter-toggle" id="hide-filters-btn" data-module="govuk-button" style="display: none;">
+              {{ hideFilters }}
+            </button>
+
             <div class="filter-section">
               <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="jurisdiction-section">
                 <span class="filter-section-heading">{{ jurisdictionHeading }}</span>
@@ -106,6 +111,11 @@
     </div>
 
     <div class="govuk-grid-column-three-quarters courts-column">
+      {# Mobile filter toggle button #}
+      <button type="button" class="govuk-button govuk-button--secondary mobile-filter-toggle" id="show-filters-btn" data-module="govuk-button">
+        {{ showFilters }}
+      </button>
+
       {# A-Z Navigation #}
       <nav aria-label="Alphabetical navigation" class="az-navigation govuk-!-margin-bottom-1">
         {% set alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"] %}
@@ -140,6 +150,12 @@
         {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ backToTop }}</a>
     </div>
   </div>
 {% endblock %}

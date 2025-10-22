@@ -8,6 +8,9 @@ export const cy = {
   jurisdictionHeading: "Awdurdodaeth",
   regionHeading: "Rhanbarth",
   applyFilters: "Rhoi hidlyddion ar waith",
+  backToTop: "Yn ôl i frig y dudalen",
+  showFilters: "Dangos hidlwyr",
+  hideFilters: "Cuddio hidlwyr",
   subJurisdictionLabels: {
     1: "Math o llys sifil",
     2: "Math o llys teulu",

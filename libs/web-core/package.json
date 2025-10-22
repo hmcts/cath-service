@@ -24,11 +24,18 @@
       "production": "./dist/assets/js/back-link.js",
       "default": "./src/assets/js/back-link.ts"
     },
+    "./src/assets/js/back-to-top.js": {
+      "production": "./dist/assets/js/back-to-top.js",
+      "default": "./src/assets/js/back-to-top.ts"
+    },
     "./src/assets/css/search-autocomplete.scss": {
       "default": "./src/assets/css/search-autocomplete.scss"
     },
     "./src/assets/css/filter-panel.scss": {
       "default": "./src/assets/css/filter-panel.scss"
+    },
+    "./src/assets/css/back-to-top.scss": {
+      "default": "./src/assets/css/back-to-top.scss"
     }
   },
   "scripts": {

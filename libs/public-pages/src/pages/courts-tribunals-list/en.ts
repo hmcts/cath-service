@@ -8,6 +8,9 @@ export const en = {
   jurisdictionHeading: "Jurisdiction",
   regionHeading: "Region",
   applyFilters: "Apply filters",
+  backToTop: "Back to top",
+  showFilters: "Show filters",
+  hideFilters: "Hide filters",
   subJurisdictionLabels: {
     1: "Type of civil court",
     2: "Type of family court",
