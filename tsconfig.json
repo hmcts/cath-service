@@ -11,7 +11,8 @@
       "@hmcts/web-core": ["libs/web-core/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],
       "@hmcts/simple-router": ["libs/simple-router/src"],
-      "@hmcts/public-pages": ["libs/public-pages/src"]
+      "@hmcts/public-pages": ["libs/public-pages/src"],
+      "@hmcts/location": ["libs/location/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
