@@ -53,6 +53,18 @@ describe("courts-tribunals-list template", () => {
       expect(en.applyFilters).toBe("Apply filters");
     });
 
+    it("should have back to top link text", () => {
+      expect(en.backToTop).toBe("Back to top");
+    });
+
+    it("should have show filters button text", () => {
+      expect(en.showFilters).toBe("Show filters");
+    });
+
+    it("should have hide filters button text", () => {
+      expect(en.hideFilters).toBe("Hide filters");
+    });
+
     it("should have sub-jurisdiction labels", () => {
       expect(en.subJurisdictionLabels).toBeDefined();
       expect(en.subJurisdictionLabels[1]).toBe("Type of civil court");
@@ -99,6 +111,18 @@ describe("courts-tribunals-list template", () => {
       expect(cy.applyFilters).toBe("Rhoi hidlyddion ar waith");
     });
 
+    it("should have back to top link text", () => {
+      expect(cy.backToTop).toBe("Yn ôl i frig y dudalen");
+    });
+
+    it("should have show filters button text", () => {
+      expect(cy.showFilters).toBe("Dangos hidlwyr");
+    });
+
+    it("should have hide filters button text", () => {
+      expect(cy.hideFilters).toBe("Cuddio hidlwyr");
+    });
+
     it("should have sub-jurisdiction labels", () => {
       expect(cy.subJurisdictionLabels).toBeDefined();
       expect(cy.subJurisdictionLabels[1]).toBe("Math o llys sifil");
@@ -124,6 +148,9 @@ describe("courts-tribunals-list template", () => {
         "jurisdictionHeading",
         "regionHeading",
         "applyFilters",
+        "backToTop",
+        "showFilters",
+        "hideFilters",
         "subJurisdictionLabels"
       ];
 
@@ -158,6 +185,9 @@ describe("courts-tribunals-list template", () => {
       expect(en.jurisdictionHeading.length).toBeGreaterThan(0);
       expect(en.regionHeading.length).toBeGreaterThan(0);
       expect(en.applyFilters.length).toBeGreaterThan(0);
+      expect(en.backToTop.length).toBeGreaterThan(0);
+      expect(en.showFilters.length).toBeGreaterThan(0);
+      expect(en.hideFilters.length).toBeGreaterThan(0);
     });
 
     it("should have non-empty strings for all Welsh content", () => {
@@ -170,6 +200,9 @@ describe("courts-tribunals-list template", () => {
       expect(cy.jurisdictionHeading.length).toBeGreaterThan(0);
       expect(cy.regionHeading.length).toBeGreaterThan(0);
       expect(cy.applyFilters.length).toBeGreaterThan(0);
+      expect(cy.backToTop.length).toBeGreaterThan(0);
+      expect(cy.showFilters.length).toBeGreaterThan(0);
+      expect(cy.hideFilters.length).toBeGreaterThan(0);
     });
 
     it("should have non-empty sub-jurisdiction labels in English", () => {

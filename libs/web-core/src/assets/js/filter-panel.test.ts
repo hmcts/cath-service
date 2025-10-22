@@ -1,15 +1,18 @@
 /**
  * @vitest-environment happy-dom
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("filter-panel", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
+    // Mock window.scrollTo
+    vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   });
 
   afterEach(() => {
     document.body.innerHTML = "";
+    vi.restoreAllMocks();
   });
 
   describe("initFilterPanel", () => {
@@ -220,6 +223,162 @@ describe("filter-panel", () => {
         const { initFilterPanel } = await import("./filter-panel.js");
 
         expect(() => initFilterPanel()).not.toThrow();
+      });
+    });
+
+    describe("mobile filter toggle", () => {
+      it("should show filter panel and hide courts column when show filters button is clicked", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn">Show filters</button>
+          <button id="hide-filters-btn" style="display: none;">Hide filters</button>
+          <div class="filter-column"></div>
+          <div class="courts-column"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+
+        const showBtn = document.getElementById("show-filters-btn") as HTMLButtonElement;
+        const hideBtn = document.getElementById("hide-filters-btn") as HTMLButtonElement;
+        const filterColumn = document.querySelector(".filter-column") as HTMLElement;
+        const courtsColumn = document.querySelector(".courts-column") as HTMLElement;
+
+        showBtn.click();
+
+        expect(filterColumn.classList.contains("filter-visible")).toBe(true);
+        expect(courtsColumn.classList.contains("filter-visible")).toBe(true);
+        expect(showBtn.style.display).toBe("none");
+        expect(hideBtn.style.display).toBe("block");
+      });
+
+      it("should hide filter panel and show courts column when hide filters button is clicked", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn" style="display: none;">Show filters</button>
+          <button id="hide-filters-btn">Hide filters</button>
+          <div class="filter-column filter-visible"></div>
+          <div class="courts-column filter-visible"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+
+        const showBtn = document.getElementById("show-filters-btn") as HTMLButtonElement;
+        const hideBtn = document.getElementById("hide-filters-btn") as HTMLButtonElement;
+        const filterColumn = document.querySelector(".filter-column") as HTMLElement;
+        const courtsColumn = document.querySelector(".courts-column") as HTMLElement;
+
+        hideBtn.click();
+
+        expect(filterColumn.classList.contains("filter-visible")).toBe(false);
+        expect(courtsColumn.classList.contains("filter-visible")).toBe(false);
+        expect(showBtn.style.display).toBe("block");
+        expect(hideBtn.style.display).toBe("none");
+      });
+
+      it("should scroll to top when show filters button is clicked", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn">Show filters</button>
+          <button id="hide-filters-btn" style="display: none;">Hide filters</button>
+          <div class="filter-column"></div>
+          <div class="courts-column"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+
+        const showBtn = document.getElementById("show-filters-btn") as HTMLButtonElement;
+
+        showBtn.click();
+
+        expect(window.scrollTo).toHaveBeenCalledWith({
+          top: 0,
+          behavior: "smooth"
+        });
+      });
+
+      it("should scroll to top when hide filters button is clicked", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn" style="display: none;">Show filters</button>
+          <button id="hide-filters-btn">Hide filters</button>
+          <div class="filter-column filter-visible"></div>
+          <div class="courts-column filter-visible"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+
+        const hideBtn = document.getElementById("hide-filters-btn") as HTMLButtonElement;
+
+        hideBtn.click();
+
+        expect(window.scrollTo).toHaveBeenCalledWith({
+          top: 0,
+          behavior: "smooth"
+        });
+      });
+
+      it("should not throw error if show filters button is missing", async () => {
+        document.body.innerHTML = `
+          <button id="hide-filters-btn">Hide filters</button>
+          <div class="filter-column"></div>
+          <div class="courts-column"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+
+        expect(() => initFilterPanel()).not.toThrow();
+      });
+
+      it("should not throw error if hide filters button is missing", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn">Show filters</button>
+          <div class="filter-column"></div>
+          <div class="courts-column"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+
+        expect(() => initFilterPanel()).not.toThrow();
+      });
+
+      it("should not throw error if filter column is missing", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn">Show filters</button>
+          <button id="hide-filters-btn">Hide filters</button>
+          <div class="courts-column"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+
+        expect(() => initFilterPanel()).not.toThrow();
+      });
+
+      it("should not throw error if courts column is missing", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn">Show filters</button>
+          <button id="hide-filters-btn">Hide filters</button>
+          <div class="filter-column"></div>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+
+        expect(() => initFilterPanel()).not.toThrow();
+      });
+
+      it("should not initialize mobile toggle if any required element is missing", async () => {
+        document.body.innerHTML = `
+          <button id="show-filters-btn">Show filters</button>
+        `;
+
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+
+        const showBtn = document.getElementById("show-filters-btn") as HTMLButtonElement;
+
+        // Should not throw error when clicked
+        expect(() => showBtn.click()).not.toThrow();
+        // window.scrollTo should not be called because handler wasn't attached
+        expect(window.scrollTo).not.toHaveBeenCalled();
       });
     });
   });
