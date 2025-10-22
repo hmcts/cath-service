@@ -13,7 +13,7 @@
 
 {{ govukServiceNavigation({
   serviceName: serviceName,
-  serviceUrl: serviceUrl | default("/"),
+  serviceUrl: "/",
   navigation: navigationItems if navigationItems.length > 0 else undefined,
   slots: {
     navigationEnd: navigationEndHtml
