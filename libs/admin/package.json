@@ -1,0 +1,28 @@
+{
+  "name": "@hmcts/admin",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./src/assets/css/index.scss": {
+      "default": "./src/assets/css/index.scss"
+    }
+  },
+  "scripts": {
+    "build": "tsc && yarn build:nunjucks && yarn build:assets",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "peerDependencies": {
+    "express": "^5.1.0"
+  }
+}

@@ -1,0 +1,55 @@
+.admin-tile {
+  display: block;
+  padding: 20px;
+  margin-bottom: 30px;
+  min-height: 150px;
+  background-color: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+  &:hover {
+    background-color: #e8e8e7;
+    border-color: #1d70b8;
+  }
+
+  &:focus {
+    outline: 3px solid #ffdd00;
+    outline-offset: 0;
+    background-color: #ffdd00;
+    border-color: #0b0c0c;
+  }
+
+  @media (min-width: 40.0625em) {
+    padding: 25px;
+  }
+}
+
+.admin-tile__heading {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #1d70b8;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: underline;
+
+  @media (min-width: 40.0625em) {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+}
+
+.admin-tile__description {
+  margin-bottom: 0;
+  color: #0b0c0c;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+
+  @media (min-width: 40.0625em) {
+    font-size: 1.1875rem;
+    line-height: 1.5;
+  }
+}
