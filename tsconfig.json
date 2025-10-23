@@ -12,7 +12,8 @@
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],
       "@hmcts/simple-router": ["libs/simple-router/src"],
       "@hmcts/public-pages": ["libs/public-pages/src"],
-      "@hmcts/verified-pages": ["libs/verified-pages/src"]
+      "@hmcts/verified-pages": ["libs/verified-pages/src"],
+      "@hmcts/location": ["libs/location/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

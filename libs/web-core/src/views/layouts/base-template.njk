@@ -54,7 +54,7 @@
   <script nonce="{{ cspNonce }}">
     (function() {
       var backLink = document.querySelector('.govuk-back-link');
-      if (backLink) {
+      if (backLink && backLink.getAttribute('href') === '#') {
         backLink.addEventListener('click', function(event) {
           event.preventDefault();
           event.stopPropagation();
