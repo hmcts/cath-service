@@ -3310,13 +3310,13 @@ __metadata:
   linkType: hard
 
 "happy-dom@npm:^20.0.5":
-  version: 20.0.5
-  resolution: "happy-dom@npm:20.0.5"
+  version: 20.0.8
+  resolution: "happy-dom@npm:20.0.8"
   dependencies:
     "@types/node": "npm:^20.0.0"
     "@types/whatwg-mimetype": "npm:^3.0.2"
     whatwg-mimetype: "npm:^3.0.0"
-  checksum: 10c0/2f726e7ce57287e07bb0f31e7f1e5d06f28367830c5e16c6c808c8e9f52ce8dce2ca9daad2af18ff9181113fc58b16ff7cfcd97750a042eaad455f9ebfe626f9
+  checksum: 10c0/2b83fabd256d032a8c2e58c17d5bd1752c87de6d8f978da69bd9399b51ddc98d948b86a7ca82ba91419f8138bc562305cad482fce6b3bb7b196585af27b6c378
   languageName: node
   linkType: hard
 
