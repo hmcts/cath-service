@@ -21,10 +21,6 @@ describe("courts-tribunals-list template", () => {
       expect(en.title).toBe("Find a court or tribunal");
     });
 
-    it("should have back link text", () => {
-      expect(en.backLinkText).toBe("Back to search");
-    });
-
     it("should have selected filters heading", () => {
       expect(en.selectedFiltersHeading).toBe("Selected filters");
     });
@@ -77,10 +73,6 @@ describe("courts-tribunals-list template", () => {
   describe("Welsh locale", () => {
     it("should have required title", () => {
       expect(cy.title).toBe("Dod o hyd i lys neu dribiwnlys");
-    });
-
-    it("should have back link text", () => {
-      expect(cy.backLinkText).toBe("Yn ôl i'r chwiliad");
     });
 
     it("should have selected filters heading", () => {
@@ -140,7 +132,6 @@ describe("courts-tribunals-list template", () => {
     it("should have all required keys", () => {
       const requiredKeys = [
         "title",
-        "backLinkText",
         "selectedFiltersHeading",
         "noFiltersSelected",
         "clearFilters",
@@ -177,7 +168,6 @@ describe("courts-tribunals-list template", () => {
   describe("Content validation", () => {
     it("should have non-empty strings for all English content", () => {
       expect(en.title.length).toBeGreaterThan(0);
-      expect(en.backLinkText.length).toBeGreaterThan(0);
       expect(en.selectedFiltersHeading.length).toBeGreaterThan(0);
       expect(en.noFiltersSelected.length).toBeGreaterThan(0);
       expect(en.clearFilters.length).toBeGreaterThan(0);
@@ -192,7 +182,6 @@ describe("courts-tribunals-list template", () => {
 
     it("should have non-empty strings for all Welsh content", () => {
       expect(cy.title.length).toBeGreaterThan(0);
-      expect(cy.backLinkText.length).toBeGreaterThan(0);
       expect(cy.selectedFiltersHeading.length).toBeGreaterThan(0);
       expect(cy.noFiltersSelected.length).toBeGreaterThan(0);
       expect(cy.clearFilters.length).toBeGreaterThan(0);
