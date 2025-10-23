@@ -10,6 +10,5 @@
   "enabledPlugins": [
     "expressjs-monorepo"
   ],
-  "enableAllProjectMcpServers": true,
-  "disableAllHooks": true
+  "enableAllProjectMcpServers": true
 }
