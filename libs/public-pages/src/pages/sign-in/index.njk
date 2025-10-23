@@ -1,0 +1,61 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <form method="post" novalidate>
+      {{ govukRadios({
+        name: "accountType",
+        fieldset: {
+          legend: {
+            text: title,
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        items: [
+          {
+            value: "hmcts",
+            text: hmctsLabel,
+            checked: data.accountType == "hmcts" if data else false
+          },
+          {
+            value: "common-platform",
+            text: commonPlatformLabel,
+            checked: data.accountType == "common-platform" if data else false
+          },
+          {
+            value: "cath",
+            text: cathLabel,
+            checked: data.accountType == "cath" if data else false
+          }
+        ],
+        errorMessage: {
+          text: errorMessage
+        } if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+    <p class="govuk-body">
+      {{ createAccountText }}
+      <a href="{{ createAccountUrl }}" class="govuk-link">{{ createAccountLink }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
