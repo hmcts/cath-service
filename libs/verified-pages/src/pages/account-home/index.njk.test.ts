@@ -42,12 +42,6 @@ describe("account-home template", () => {
       expect(en.sections.emailSubscriptions.title).toBe("Email subscriptions");
       expect(en.sections.emailSubscriptions.href).toBe("/");
     });
-
-    it("should have descriptions in locale data", () => {
-      expect(en.sections.courtHearings.description).toBeDefined();
-      expect(en.sections.sjpCases.description).toBeDefined();
-      expect(en.sections.emailSubscriptions.description).toBeDefined();
-    });
   });
 
   describe("Welsh locale", () => {
@@ -76,12 +70,6 @@ describe("account-home template", () => {
       expect(cy.sections.emailSubscriptions.title).toBe("Tanysgrifiadau e-bost");
       expect(cy.sections.emailSubscriptions.href).toBe("/");
     });
-
-    it("should have descriptions in locale data", () => {
-      expect(cy.sections.courtHearings.description).toBeDefined();
-      expect(cy.sections.sjpCases.description).toBeDefined();
-      expect(cy.sections.emailSubscriptions.description).toBeDefined();
-    });
   });
 
   describe("Locale consistency", () => {
@@ -102,7 +90,7 @@ describe("account-home template", () => {
     });
 
     it("should have all required section properties", () => {
-      const requiredProps = ["title", "description", "href"];
+      const requiredProps = ["title", "href"];
 
       for (const section of Object.values(en.sections)) {
         requiredProps.forEach((prop) => {
@@ -125,7 +113,6 @@ describe("account-home template", () => {
 
       for (const section of Object.values(en.sections)) {
         expect(section.title.length).toBeGreaterThan(0);
-        expect(section.description.length).toBeGreaterThan(0);
         expect(section.href.length).toBeGreaterThan(0);
       }
     });
@@ -136,7 +123,6 @@ describe("account-home template", () => {
 
       for (const section of Object.values(cy.sections)) {
         expect(section.title.length).toBeGreaterThan(0);
-        expect(section.description.length).toBeGreaterThan(0);
         expect(section.href.length).toBeGreaterThan(0);
       }
     });
