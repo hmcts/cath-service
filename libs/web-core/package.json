@@ -20,10 +20,6 @@
       "production": "./dist/assets/js/filter-panel.js",
       "default": "./src/assets/js/filter-panel.ts"
     },
-    "./src/assets/js/back-link.js": {
-      "production": "./dist/assets/js/back-link.js",
-      "default": "./src/assets/js/back-link.ts"
-    },
     "./src/assets/js/back-to-top.js": {
       "production": "./dist/assets/js/back-to-top.js",
       "default": "./src/assets/js/back-to-top.ts"
