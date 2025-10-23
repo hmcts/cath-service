@@ -1,4 +1,4 @@
-import { getAllJurisdictions, getAllRegions, getAllSubJurisdictions, getLocationsGroupedByLetter } from "@hmcts/location";
+import { getAllJurisdictions, getAllRegions, getAllSubJurisdictions, getLocationsGroupedByLetter, buildJurisdictionItems, buildRegionItems, buildSubJurisdictionItemsByJurisdiction, getSubJurisdictionsForJurisdiction } from "@hmcts/location";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -29,7 +29,7 @@ export const GET = async (req: Request, res: Response) => {
   const effectiveSubJurisdictions = [...selectedSubJurisdictions];
   if (selectedJurisdictions.length > 0 && selectedSubJurisdictions.length === 0) {
     selectedJurisdictions.forEach((jurisdictionId) => {
-      const subJuris = allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId).map((sub) => sub.subJurisdictionId);
+      const subJuris = getSubJurisdictionsForJurisdiction(jurisdictionId);
       effectiveSubJurisdictions.push(...subJuris);
     });
   }
@@ -41,40 +41,13 @@ export const GET = async (req: Request, res: Response) => {
   });
 
   // Build jurisdiction items
-  const jurisdictionItems = allJurisdictions
-    .map((jurisdiction) => ({
-      value: jurisdiction.jurisdictionId.toString(),
-      text: locale === "cy" ? jurisdiction.welshName : jurisdiction.name,
-      checked: selectedJurisdictions.includes(jurisdiction.jurisdictionId),
-      jurisdictionId: jurisdiction.jurisdictionId,
-      subJurisdictionLabel: content.subJurisdictionLabels[jurisdiction.jurisdictionId as keyof typeof content.subJurisdictionLabels],
-      attributes: {
-        "data-jurisdiction": jurisdiction.jurisdictionId.toString()
-      }
-    }))
-    .sort((a, b) => a.text.localeCompare(b.text));
+  const jurisdictionItems = buildJurisdictionItems(selectedJurisdictions, locale, content.subJurisdictionLabels);
 
   // Build region items
-  const regionItems = allRegions
-    .map((region) => ({
-      value: region.regionId.toString(),
-      text: locale === "cy" ? region.welshName : region.name,
-      checked: selectedRegions.includes(region.regionId)
-    }))
-    .sort((a, b) => a.text.localeCompare(b.text));
+  const regionItems = buildRegionItems(selectedRegions, locale);
 
   // Build sub-jurisdiction items grouped by jurisdiction
-  const subJurisdictionItemsByJurisdiction: Record<number, any[]> = {};
-  allJurisdictions.forEach((jurisdiction) => {
-    const subJurisdictionsForJurisdiction = allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdiction.jurisdictionId);
-    subJurisdictionItemsByJurisdiction[jurisdiction.jurisdictionId] = subJurisdictionsForJurisdiction
-      .map((sub) => ({
-        value: sub.subJurisdictionId.toString(),
-        text: locale === "cy" ? sub.welshName : sub.name,
-        checked: selectedSubJurisdictions.includes(sub.subJurisdictionId)
-      }))
-      .sort((a, b) => a.text.localeCompare(b.text));
-  });
+  const subJurisdictionItemsByJurisdiction = buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions, locale);
 
   // Build display name maps
   const jurisdictionMap: Record<number, string> = {};

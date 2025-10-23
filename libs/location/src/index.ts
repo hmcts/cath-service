@@ -5,8 +5,15 @@ export {
   getAllRegions,
   getAllSubJurisdictions,
   getLocationById,
-  getLocationsGroupedByLetter,
-  getSubJurisdictionsByJurisdiction,
-  type Location,
-  searchLocations
-} from "./location-service.js";
+  getSubJurisdictionsByJurisdiction
+} from "./repository/queries.js";
+export { getLocationsGroupedByLetter, type Location, searchLocations } from "./repository/service.js";
+export {
+  buildJurisdictionItems,
+  buildRegionItems,
+  buildSubJurisdictionItemsByJurisdiction,
+  getSubJurisdictionsForJurisdiction,
+  type JurisdictionItem,
+  type RegionItem,
+  type SubJurisdictionItem
+} from "./filtering/service.js";

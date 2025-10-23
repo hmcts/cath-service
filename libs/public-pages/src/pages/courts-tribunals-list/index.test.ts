@@ -1,27 +1,77 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const mockJurisdictions = [
+  { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
+  { jurisdictionId: 2, name: "Family", welshName: "Teulu" },
+  { jurisdictionId: 3, name: "Crime", welshName: "Trosedd" },
+  { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" }
+];
+
+const mockRegions = [
+  { regionId: 1, name: "London", welshName: "Llundain" },
+  { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
+  { regionId: 3, name: "South East", welshName: "De Ddwyrain" },
+  { regionId: 4, name: "North", welshName: "Gogledd" },
+  { regionId: 5, name: "Wales", welshName: "Cymru" }
+];
+
+const mockSubJurisdictions = [
+  { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
+  { subJurisdictionId: 2, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 2 },
+  { subJurisdictionId: 3, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
+  { subJurisdictionId: 4, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 1 },
+  { subJurisdictionId: 7, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 3 }
+];
+
 vi.mock("@hmcts/location", () => ({
-  getAllJurisdictions: vi.fn(() => [
-    { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
-    { jurisdictionId: 2, name: "Family", welshName: "Teulu" },
-    { jurisdictionId: 3, name: "Crime", welshName: "Trosedd" },
-    { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" }
-  ]),
-  getAllRegions: vi.fn(() => [
-    { regionId: 1, name: "London", welshName: "Llundain" },
-    { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
-    { regionId: 3, name: "South East", welshName: "De Ddwyrain" },
-    { regionId: 4, name: "North", welshName: "Gogledd" },
-    { regionId: 5, name: "Wales", welshName: "Cymru" }
-  ]),
-  getAllSubJurisdictions: vi.fn(() => [
-    { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
-    { subJurisdictionId: 2, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 2 },
-    { subJurisdictionId: 3, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
-    { subJurisdictionId: 4, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 1 },
-    { subJurisdictionId: 7, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 3 }
-  ]),
+  getAllJurisdictions: vi.fn(() => mockJurisdictions),
+  getAllRegions: vi.fn(() => mockRegions),
+  getAllSubJurisdictions: vi.fn(() => mockSubJurisdictions),
+  buildJurisdictionItems: vi.fn((selectedJurisdictions: number[], locale: "en" | "cy", subJurisdictionLabels?: Record<number, string>) => {
+    return mockJurisdictions
+      .map((jurisdiction) => ({
+        value: jurisdiction.jurisdictionId.toString(),
+        text: locale === "cy" ? jurisdiction.welshName : jurisdiction.name,
+        checked: selectedJurisdictions.includes(jurisdiction.jurisdictionId),
+        jurisdictionId: jurisdiction.jurisdictionId,
+        subJurisdictionLabel: subJurisdictionLabels?.[jurisdiction.jurisdictionId],
+        attributes: {
+          "data-jurisdiction": jurisdiction.jurisdictionId.toString()
+        }
+      }))
+      .sort((a, b) => a.text.localeCompare(b.text));
+  }),
+  buildRegionItems: vi.fn((selectedRegions: number[], locale: "en" | "cy") => {
+    return mockRegions
+      .map((region) => ({
+        value: region.regionId.toString(),
+        text: locale === "cy" ? region.welshName : region.name,
+        checked: selectedRegions.includes(region.regionId)
+      }))
+      .sort((a, b) => a.text.localeCompare(b.text));
+  }),
+  buildSubJurisdictionItemsByJurisdiction: vi.fn((selectedSubJurisdictions: number[], locale: "en" | "cy") => {
+    const result: Record<number, any[]> = {};
+    mockJurisdictions.forEach((jurisdiction) => {
+      const subJurisdictionsForJurisdiction = mockSubJurisdictions.filter(
+        (sub) => sub.jurisdictionId === jurisdiction.jurisdictionId
+      );
+      result[jurisdiction.jurisdictionId] = subJurisdictionsForJurisdiction
+        .map((sub) => ({
+          value: sub.subJurisdictionId.toString(),
+          text: locale === "cy" ? sub.welshName : sub.name,
+          checked: selectedSubJurisdictions.includes(sub.subJurisdictionId)
+        }))
+        .sort((a, b) => a.text.localeCompare(b.text));
+    });
+    return result;
+  }),
+  getSubJurisdictionsForJurisdiction: vi.fn((jurisdictionId: number) => {
+    return mockSubJurisdictions
+      .filter((sub) => sub.jurisdictionId === jurisdictionId)
+      .map((sub) => sub.subJurisdictionId);
+  }),
   getLocationsGroupedByLetter: vi.fn((_language: string, filters?: any) => {
     const allLocations = {
       B: [
