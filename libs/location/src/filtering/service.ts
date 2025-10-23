@@ -44,10 +44,7 @@ export function buildJurisdictionItems(
     .sort((a, b) => a.text.localeCompare(b.text));
 }
 
-export function buildRegionItems(
-  selectedRegions: number[],
-  locale: "en" | "cy"
-): RegionItem[] {
+export function buildRegionItems(selectedRegions: number[], locale: "en" | "cy"): RegionItem[] {
   const allRegions = getAllRegions();
 
   return allRegions
@@ -59,19 +56,14 @@ export function buildRegionItems(
     .sort((a, b) => a.text.localeCompare(b.text));
 }
 
-export function buildSubJurisdictionItemsByJurisdiction(
-  selectedSubJurisdictions: number[],
-  locale: "en" | "cy"
-): Record<number, SubJurisdictionItem[]> {
+export function buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions: number[], locale: "en" | "cy"): Record<number, SubJurisdictionItem[]> {
   const allJurisdictions = getAllJurisdictions();
   const allSubJurisdictions = getAllSubJurisdictions();
 
   const subJurisdictionItemsByJurisdiction: Record<number, SubJurisdictionItem[]> = {};
 
   allJurisdictions.forEach((jurisdiction) => {
-    const subJurisdictionsForJurisdiction = allSubJurisdictions.filter(
-      (sub) => sub.jurisdictionId === jurisdiction.jurisdictionId
-    );
+    const subJurisdictionsForJurisdiction = allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdiction.jurisdictionId);
 
     subJurisdictionItemsByJurisdiction[jurisdiction.jurisdictionId] = subJurisdictionsForJurisdiction
       .map((sub) => ({

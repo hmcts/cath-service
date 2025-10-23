@@ -1,4 +1,13 @@
-import { getAllJurisdictions, getAllRegions, getAllSubJurisdictions, getLocationsGroupedByLetter, buildJurisdictionItems, buildRegionItems, buildSubJurisdictionItemsByJurisdiction, getSubJurisdictionsForJurisdiction } from "@hmcts/location";
+import {
+  buildJurisdictionItems,
+  buildRegionItems,
+  buildSubJurisdictionItemsByJurisdiction,
+  getAllJurisdictions,
+  getAllRegions,
+  getAllSubJurisdictions,
+  getLocationsGroupedByLetter,
+  getSubJurisdictionsForJurisdiction
+} from "@hmcts/location";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";

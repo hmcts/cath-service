@@ -1,6 +1,5 @@
 export const cy = {
   title: "Dod o hyd i lys neu dribiwnlys",
-  backLinkText: "Yn ôl i'r chwiliad",
   selectedFiltersHeading: "Hidlwyr a ddewiswyd",
   noFiltersSelected: "Dim hidlyddion wedi'u dewis",
   clearFilters: "Clirio hidlwyr",

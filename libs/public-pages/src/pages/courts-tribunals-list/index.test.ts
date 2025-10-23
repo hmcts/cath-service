@@ -54,9 +54,7 @@ vi.mock("@hmcts/location", () => ({
   buildSubJurisdictionItemsByJurisdiction: vi.fn((selectedSubJurisdictions: number[], locale: "en" | "cy") => {
     const result: Record<number, any[]> = {};
     mockJurisdictions.forEach((jurisdiction) => {
-      const subJurisdictionsForJurisdiction = mockSubJurisdictions.filter(
-        (sub) => sub.jurisdictionId === jurisdiction.jurisdictionId
-      );
+      const subJurisdictionsForJurisdiction = mockSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdiction.jurisdictionId);
       result[jurisdiction.jurisdictionId] = subJurisdictionsForJurisdiction
         .map((sub) => ({
           value: sub.subJurisdictionId.toString(),
@@ -68,9 +66,7 @@ vi.mock("@hmcts/location", () => ({
     return result;
   }),
   getSubJurisdictionsForJurisdiction: vi.fn((jurisdictionId: number) => {
-    return mockSubJurisdictions
-      .filter((sub) => sub.jurisdictionId === jurisdictionId)
-      .map((sub) => sub.subJurisdictionId);
+    return mockSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId).map((sub) => sub.subJurisdictionId);
   }),
   getLocationsGroupedByLetter: vi.fn((_language: string, filters?: any) => {
     const allLocations = {

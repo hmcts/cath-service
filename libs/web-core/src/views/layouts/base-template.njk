@@ -30,6 +30,12 @@
       text: back,
       href: "#"
     }) }}
+    <script nonce="{{ cspNonce }}">
+      document.getElementsByClassName("govuk-back-link").item(0).addEventListener("click", function() {
+        history.back();
+        event.preventDefault();
+      });
+    </script>
   {% endblock %}
 {% endblock %}
 

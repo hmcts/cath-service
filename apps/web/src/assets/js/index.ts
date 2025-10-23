@@ -1,5 +1,4 @@
 import cookieManager from "@hmcts/cookie-manager";
-import { initBackLink } from "@hmcts/web-core/src/assets/js/back-link.js";
 import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
 import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
@@ -10,13 +9,11 @@ initAll();
 // Initialize custom components
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    initBackLink();
     initSearchAutocomplete();
     initFilterPanel();
     initBackToTop();
   });
 } else {
-  initBackLink();
   initSearchAutocomplete();
   initFilterPanel();
   initBackToTop();
