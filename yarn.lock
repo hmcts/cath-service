@@ -646,7 +646,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/location@workspace:libs/location":
+"@hmcts/location@workspace:*, @hmcts/location@workspace:libs/location":
   version: 0.0.0-use.local
   resolution: "@hmcts/location@workspace:libs/location"
   languageName: unknown
@@ -665,8 +665,17 @@ __metadata:
 "@hmcts/public-pages@workspace:*, @hmcts/public-pages@workspace:libs/public-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
+  dependencies:
+    "@hmcts/location": "workspace:*"
+    "@hmcts/publications": "workspace:*"
   peerDependencies:
     express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/publications@workspace:*, @hmcts/publications@workspace:libs/publications":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/publications@workspace:libs/publications"
   languageName: unknown
   linkType: soft
 
