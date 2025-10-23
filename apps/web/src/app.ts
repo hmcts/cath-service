@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin";
+import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages";
 import { createSimpleRouter } from "@hmcts/simple-router";

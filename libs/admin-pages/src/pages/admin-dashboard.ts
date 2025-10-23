@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import en from "./en.js";
 import cy from "./cy.js";
+import en from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
