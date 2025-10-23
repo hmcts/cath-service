@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { GET } from "./admin-dashboard.js";
+import { GET } from "./index.js";
 
 describe("admin dashboard page", () => {
   describe("GET", () => {
@@ -15,7 +15,7 @@ describe("admin dashboard page", () => {
       await GET(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "admin-dashboard",
+        "admin-dashboard/index",
         expect.objectContaining({
           pageTitle: "Admin Dashboard",
           tiles: expect.arrayContaining([
@@ -51,7 +51,7 @@ describe("admin dashboard page", () => {
       await GET(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "admin-dashboard",
+        "admin-dashboard/index",
         expect.objectContaining({
           pageTitle: "Admin Dashboard",
           tiles: expect.arrayContaining([

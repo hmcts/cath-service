@@ -4,7 +4,7 @@ import en from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
-  res.render("admin-dashboard", {
+  res.render("admin-dashboard/index", {
     pageTitle: lang.pageTitle,
     tiles: lang.tiles,
     navigation: {
