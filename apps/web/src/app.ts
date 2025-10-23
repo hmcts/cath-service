@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages";
+import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import {
   configureCookieManager,
@@ -10,10 +10,9 @@ import {
   configureNonce,
   errorHandler,
   expressSessionRedis,
-  notFoundHandler,
-  pageRoutes,
-  moduleRoot as webCoreModuleRoot
+  notFoundHandler
 } from "@hmcts/web-core";
+import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import compression from "compression";
 import config from "config";
 import cookieParser from "cookie-parser";

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createBaseViteConfig, assets as webCoreAssets } from "@hmcts/web-core";
+import { createBaseViteConfig } from "@hmcts/web-core";
+import { assets as webCoreAssets } from "@hmcts/web-core/config";
 import { defineConfig, mergeConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
