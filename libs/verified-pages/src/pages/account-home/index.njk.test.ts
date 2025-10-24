@@ -35,7 +35,9 @@ describe("account-home template", () => {
     it("should have SJP cases section", () => {
       expect(en.sections.sjpCases).toBeDefined();
       expect(en.sections.sjpCases.title).toBe("Single Justice Procedure cases");
-      expect(en.sections.sjpCases.description).toBe("Cases ready to be decided by a magistrate without a hearing. Includes TV licensing, minor traffic offences such as speeding and more.");
+      expect(en.sections.sjpCases.description).toBe(
+        "Cases ready to be decided by a magistrate without a hearing. Includes TV licensing, minor traffic offences such as speeding and more."
+      );
       expect(en.sections.sjpCases.href).toBe("/summary-of-publications?locationId=9");
     });
 
@@ -66,7 +68,9 @@ describe("account-home template", () => {
     it("should have SJP cases section", () => {
       expect(cy.sections.sjpCases).toBeDefined();
       expect(cy.sections.sjpCases.title).toBe("Achosion Gweithdrefn Ynad Unigol");
-      expect(cy.sections.sjpCases.description).toBe("Achosion sy'n barod i gael eu penderfynu gan ynad heb wrandawiad. Yn cynnwys trwyddedu teledu, mân dramgwyddau traffig fel goryrru a mwy.");
+      expect(cy.sections.sjpCases.description).toBe(
+        "Achosion sy'n barod i gael eu penderfynu gan ynad heb wrandawiad. Yn cynnwys trwyddedu teledu, mân dramgwyddau traffig fel goryrru a mwy."
+      );
       expect(cy.sections.sjpCases.href).toBe("/summary-of-publications?locationId=9");
     });
 
