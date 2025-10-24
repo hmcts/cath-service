@@ -20,8 +20,22 @@
       "production": "./dist/assets/js/search-autocomplete.js",
       "default": "./src/assets/js/search-autocomplete.ts"
     },
+    "./src/assets/js/filter-panel.js": {
+      "production": "./dist/assets/js/filter-panel.js",
+      "default": "./src/assets/js/filter-panel.ts"
+    },
+    "./src/assets/js/back-to-top.js": {
+      "production": "./dist/assets/js/back-to-top.js",
+      "default": "./src/assets/js/back-to-top.ts"
+    },
     "./src/assets/css/search-autocomplete.scss": {
       "default": "./src/assets/css/search-autocomplete.scss"
+    },
+    "./src/assets/css/filter-panel.scss": {
+      "default": "./src/assets/css/filter-panel.scss"
+    },
+    "./src/assets/css/back-to-top.scss": {
+      "default": "./src/assets/css/back-to-top.scss"
     }
   },
   "scripts": {

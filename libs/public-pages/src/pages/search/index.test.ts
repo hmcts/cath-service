@@ -21,7 +21,6 @@ describe("search page", () => {
         expect.objectContaining({
           en: expect.any(Object),
           cy: expect.any(Object),
-          backLink: "/view-option",
           preselectedLocation: undefined,
           locale: "en"
         })
@@ -45,7 +44,6 @@ describe("search page", () => {
         expect.objectContaining({
           en: expect.any(Object),
           cy: expect.any(Object),
-          backLink: "/view-option",
           preselectedLocation: {
             id: 1,
             name: "Oxford Combined Court Centre",
@@ -118,7 +116,6 @@ describe("search page", () => {
               href: "#location"
             }
           ],
-          backLink: "/view-option",
           locale: "en"
         })
       );

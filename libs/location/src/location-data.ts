@@ -138,28 +138,33 @@ export const locationData = {
     },
     {
       jurisdictionId: 3,
-      name: "Tribunals",
-      welshName: "Tribiwnlysoedd"
+      name: "Crime",
+      welshName: "Trosedd"
+    },
+    {
+      jurisdictionId: 4,
+      name: "Tribunal",
+      welshName: "Tribiwnlys"
     }
   ],
   subJurisdictions: [
     {
       subJurisdictionId: 1,
-      name: "Civil",
-      welshName: "Sifil",
+      name: "Civil Court",
+      welshName: "Llys Sifil",
       jurisdictionId: 1
     },
     {
       subJurisdictionId: 2,
-      name: "Family",
-      welshName: "Teulu",
+      name: "Family Court",
+      welshName: "Llys Teulu",
       jurisdictionId: 2
     },
     {
       subJurisdictionId: 3,
       name: "Employment Tribunal",
       welshName: "Tribiwnlys Cyflogaeth",
-      jurisdictionId: 3
+      jurisdictionId: 4
     },
     {
       subJurisdictionId: 4,
@@ -177,13 +182,13 @@ export const locationData = {
       subJurisdictionId: 6,
       name: "Immigration and Asylum Tribunal",
       welshName: "Tribiwnlys Mewnfudo a Lloches",
-      jurisdictionId: 3
+      jurisdictionId: 4
     },
     {
       subJurisdictionId: 7,
       name: "Magistrates Court",
       welshName: "Llys Ynadon",
-      jurisdictionId: 1
+      jurisdictionId: 3
     }
   ]
 };
