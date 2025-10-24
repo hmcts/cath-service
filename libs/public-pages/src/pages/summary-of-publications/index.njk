@@ -1,0 +1,39 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: error
+          }
+        ]
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    {% if publications.length > 0 %}
+      <ul class="govuk-list">
+        {% for publication in publications %}
+          <li style="margin-bottom: 15px;">
+            <a href="/publication/{{ publication.id }}" class="govuk-link">
+              {{ publication.listTypeName }} - {{ publication.formattedDate }} - {{ publication.languageLabel }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% if not error %}
+        <p class="govuk-body">{{ noPublicationsMessage }}</p>
+      {% endif %}
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

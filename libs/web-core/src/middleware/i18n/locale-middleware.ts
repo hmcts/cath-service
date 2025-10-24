@@ -52,7 +52,7 @@ export function localeMiddleware(options: LocaleMiddlewareOptions = {}) {
 }
 
 export function translationMiddleware(translations: Translations) {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const locale = res.locals.locale || "en";
     const otherLocale = locale === "en" ? "cy" : "en";
 
@@ -60,8 +60,13 @@ export function translationMiddleware(translations: Translations) {
 
     Object.assign(res.locals, currentTranslations);
 
+    // Preserve existing query parameters and update/add lng parameter
+    const queryParams = new URLSearchParams(req.query as Record<string, string>);
+    queryParams.set("lng", otherLocale);
+    const queryString = queryParams.toString();
+
     res.locals.languageToggle = {
-      link: `?lng=${otherLocale}`,
+      link: `?${queryString}`,
       text: currentTranslations.language?.switch || otherLocale.toUpperCase()
     };
 

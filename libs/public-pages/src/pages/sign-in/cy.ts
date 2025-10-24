@@ -1,5 +1,4 @@
 export const cy = {
-  back: "Yn ôl",
   title: "Sut hoffech chi fewngofnodi?",
   errorSummaryTitle: "Mae yna broblem",
   errorMessage: "Rhaid dewis opsiwn",

@@ -95,7 +95,6 @@ describe("select-account template", () => {
 
     it("should have all required keys", () => {
       const requiredKeys = [
-        "back",
         "title",
         "errorSummaryTitle",
         "errorMessage",
