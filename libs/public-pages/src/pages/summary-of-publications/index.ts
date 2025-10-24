@@ -72,7 +72,6 @@ export const GET = async (req: Request, res: Response) => {
     en,
     cy,
     title: pageTitle,
-    back: t.backLink,
     noPublicationsMessage: t.noPublicationsMessage,
     publications: publicationsWithDetails
   });
