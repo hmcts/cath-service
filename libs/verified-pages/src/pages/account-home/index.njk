@@ -9,24 +9,33 @@
   <div class="govuk-grid-column-full">
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
-    <div class="account-sections-container">
-      <div class="account-section-box">
-        <h2 class="govuk-heading-s account-section-heading">
-          <a href="{{ sections.courtHearings.href }}" class="govuk-link account-section-link">{{ sections.courtHearings.title }}</a>
+    <div class="verified-tiles-container">
+      <a href="{{ sections.courtHearings.href }}" class="verified-tile">
+        <h2 class="govuk-heading-s verified-tile-heading">
+          {{ sections.courtHearings.title }}
         </h2>
-      </div>
+        <p class="govuk-body verified-tile-description">
+          {{ sections.courtHearings.description }}
+        </p>
+      </a>
 
-      <div class="account-section-box">
-        <h2 class="govuk-heading-s account-section-heading">
-          <a href="{{ sections.sjpCases.href }}" class="govuk-link account-section-link">{{ sections.sjpCases.title }}</a>
+      <a href="{{ sections.sjpCases.href }}" class="verified-tile">
+        <h2 class="govuk-heading-s verified-tile-heading">
+          {{ sections.sjpCases.title }}
         </h2>
-      </div>
+        <p class="govuk-body verified-tile-description">
+          {{ sections.sjpCases.description }}
+        </p>
+      </a>
 
-      <div class="account-section-box">
-        <h2 class="govuk-heading-s account-section-heading">
-          <a href="{{ sections.emailSubscriptions.href }}" class="govuk-link account-section-link">{{ sections.emailSubscriptions.title }}</a>
+      <a href="{{ sections.emailSubscriptions.href }}" class="verified-tile">
+        <h2 class="govuk-heading-s verified-tile-heading">
+          {{ sections.emailSubscriptions.title }}
         </h2>
-      </div>
+        <p class="govuk-body verified-tile-description">
+          {{ sections.emailSubscriptions.description }}
+        </p>
+      </a>
     </div>
   </div>
 </div>
