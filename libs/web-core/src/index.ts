@@ -23,6 +23,7 @@ export { PostgresStore } from "./middleware/session-stores/postgres-store.js";
 // Session stores - these have optional peer dependencies
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";
+export { formatDateAndLocale } from "./utils/format-date-and-locale.js";
 
 // Module configuration
 export const pageRoutes = { path: path.join(__dirname, "pages") };

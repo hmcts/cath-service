@@ -1,7 +1,7 @@
 import { getLocationById } from "@hmcts/location";
-import { mockListTypes, mockPublications } from "@hmcts/publications";
+import { mockListTypes, mockPublications } from "@hmcts/publication";
+import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
-import { formatPublicationDate } from "../../utils/format-publication-date.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -29,7 +29,7 @@ export const GET = async (req: Request, res: Response) => {
 
   // Get location name based on locale
   const locationName = locale === "cy" ? location.welshName : location.name;
-  const pageTitle = `${t.titlePrefix} ${locationName}`;
+  const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
   // Filter publications by location
   const filteredPublications = mockPublications.filter((pub) => pub.locationId === locationId);
@@ -48,7 +48,7 @@ export const GET = async (req: Request, res: Response) => {
       listTypeId: pub.listType,
       contentDate: pub.contentDate,
       language: pub.language,
-      formattedDate: formatPublicationDate(pub.contentDate, locale),
+      formattedDate: formatDateAndLocale(pub.contentDate, locale),
       languageLabel
     };
   });

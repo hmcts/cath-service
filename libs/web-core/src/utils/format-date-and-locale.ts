@@ -1,4 +1,4 @@
-export function formatPublicationDate(dateString: string, locale: string): string {
+export function formatDateAndLocale(dateString: string, locale: string): string {
   const date = new Date(dateString);
 
   if (locale === "cy") {

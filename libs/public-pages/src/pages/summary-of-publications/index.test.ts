@@ -85,7 +85,7 @@ describe("Summary of Publications - GET handler", () => {
       expect(renderSpy).toHaveBeenCalledWith(
         "summary-of-publications/index",
         expect.objectContaining({
-          title: "What do you want to view from Single Justice Procedure"
+          title: "What do you want to view from Single Justice Procedure?"
         })
       );
     });
@@ -165,7 +165,7 @@ describe("Summary of Publications - GET handler", () => {
       expect(renderSpy).toHaveBeenCalledWith(
         "summary-of-publications/index",
         expect.objectContaining({
-          title: "Beth ydych chi eisiau edrych arno gan Gweithdrefn Ynad Unigol"
+          title: "Beth ydych chi eisiau edrych arno gan Gweithdrefn Ynad Unigol?"
         })
       );
     });

@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
-    "@hmcts/publications": "workspace:*"
+    "@hmcts/publication": "workspace:*",
+    "@hmcts/web-core": "workspace:*"
   }
 }
