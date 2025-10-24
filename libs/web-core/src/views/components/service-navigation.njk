@@ -1,6 +1,12 @@
 {% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
 
-{% set navigationEndHtml %}{% if navigation and navigation.signIn %}<li class="govuk-service-navigation__item"><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>{% endif %}{% endset %}
+{% set navigationEndHtml %}
+  {% if navigation and navigation.signIn %}
+    <li class="govuk-service-navigation__item"><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>
+  {% elif navigation and navigation.signOut %}
+    <li class="govuk-service-navigation__item"><a class="govuk-service-navigation__link" href="/sign-out">{{ navigation.signOut }}</a></li>
+  {% endif %}
+{% endset %}
 
 {{ govukServiceNavigation({
   serviceName: serviceName,

@@ -2,7 +2,8 @@ export const cy = {
   govUk: "GOV.UK",
   phase: "beta",
   navigation: {
-    signIn: "Mewngofnodi"
+    signIn: "Mewngofnodi",
+    signOut: "Allgofnodi"
   },
   footer: {
     help: "Gymorth",
