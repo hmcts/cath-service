@@ -18,8 +18,3 @@ export { PostgresStore } from "./middleware/session-stores/postgres-store.js";
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";
 export { formatDateAndLocale } from "./utils/format-date-and-locale.js";
-
-// Module configuration
-export const pageRoutes = { path: path.join(__dirname, "pages") };
-export const moduleRoot = __dirname;
-export const assets = path.join(__dirname, "assets");
