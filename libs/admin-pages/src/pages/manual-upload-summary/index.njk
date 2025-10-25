@@ -1,0 +1,143 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    <h2 class="govuk-heading-m">{{ subHeading }}</h2>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: {
+            text: courtName
+          },
+          value: {
+            text: data.courtName if data.courtName else "Example Crown Court"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: courtName
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: file
+          },
+          value: {
+            text: data.file if data.file else "example-hearing-list.pdf"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: file
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: listType
+          },
+          value: {
+            text: data.listType if data.listType else "Crown Daily List"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: listType
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: hearingStartDate
+          },
+          value: {
+            text: data.hearingStartDate if data.hearingStartDate else "23 October 2025"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: hearingStartDate
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: sensitivity
+          },
+          value: {
+            text: data.sensitivity if data.sensitivity else "Public"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: sensitivity
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: language
+          },
+          value: {
+            text: data.language if data.language else "English"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: language
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: displayFileDates
+          },
+          value: {
+            text: data.displayFileDates if data.displayFileDates else "23 October 2025"
+          },
+          actions: {
+            items: [
+              {
+                href: "/manual-upload",
+                text: change,
+                visuallyHiddenText: displayFileDates
+              }
+            ]
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: confirmButton
+      }) }}
+    </form>
+  </div>
+</div>
+{% endblock %}
