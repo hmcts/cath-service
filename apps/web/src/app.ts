@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { upload, moduleRoot as adminPagesModuleRoot, pageRoutes as adminPagesRoutes } from "@hmcts/admin-pages";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
@@ -30,7 +31,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, webCoreModuleRoot, publicPagesModuleRoot];
+  const modulePaths = [__dirname, webCoreModuleRoot, publicPagesModuleRoot, adminPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -53,6 +54,11 @@ export async function createApp(): Promise<Express> {
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
+
+  // Register admin pages with multer middleware for file upload
+  app.post("/manual-upload", upload.single("file"));
+  app.use(await createSimpleRouter(adminPagesRoutes, pageRoutes));
+
   app.use(notFoundHandler());
   app.use(errorHandler());
 

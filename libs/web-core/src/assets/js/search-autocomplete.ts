@@ -2,10 +2,8 @@ import { getAllLocations, searchLocations } from "@hmcts/location";
 // @ts-expect-error - accessible-autocomplete doesn't have proper TypeScript definitions
 import accessibleAutocomplete from "accessible-autocomplete/dist/accessible-autocomplete.min.js";
 
-export function initSearchAutocomplete() {
-  const locationInput = document.getElementById("location") as HTMLInputElement;
-  if (!locationInput) return;
-
+function initAutocompleteForInput(locationInput: HTMLInputElement) {
+  const inputId = locationInput.id;
   const language = (locationInput.getAttribute("data-locale") || "en") as "en" | "cy";
   const locations = getAllLocations(language);
 
@@ -17,22 +15,27 @@ export function initSearchAutocomplete() {
   if (!container) return;
 
   const wrapper = document.createElement("div");
-  wrapper.id = "location-autocomplete-wrapper";
+  wrapper.id = `${inputId}-autocomplete-wrapper`;
 
-  const label = document.createElement("label");
-  label.className = "govuk-label";
-  label.htmlFor = "location";
-  label.textContent = searchLabel;
-  container.insertBefore(label, locationInput);
+  const existingLabel = container.querySelector("label");
+  if (!existingLabel) {
+    const label = document.createElement("label");
+    label.className = "govuk-label";
+    label.htmlFor = inputId;
+    label.textContent = searchLabel;
+    container.insertBefore(label, locationInput);
+  }
+
   container.insertBefore(wrapper, locationInput);
 
   locationInput.style.display = "none";
+  const originalName = locationInput.getAttribute("name");
   locationInput.removeAttribute("name");
 
   const hiddenInput = document.createElement("input");
   hiddenInput.type = "hidden";
-  hiddenInput.name = "locationId";
-  hiddenInput.id = "locationId";
+  hiddenInput.name = originalName || "locationId";
+  hiddenInput.id = `${inputId}Id`;
   hiddenInput.value = preselectedLocationId || "";
   container.appendChild(hiddenInput);
 
@@ -40,8 +43,8 @@ export function initSearchAutocomplete() {
 
   accessibleAutocomplete({
     element: wrapper,
-    id: "location",
-    name: "location-display",
+    id: inputId,
+    name: `${inputId}-display`,
     defaultValue: preselectedValue,
     source: (query: string, populateResults: (results: string[]) => void) => {
       const searchResults = searchLocations(query, language);
@@ -66,7 +69,7 @@ export function initSearchAutocomplete() {
 
   // Additional fallback: listen to input changes and update hidden field
   setTimeout(() => {
-    const autocompleteInput = document.querySelector("#location") as HTMLInputElement;
+    const autocompleteInput = document.querySelector(`#${inputId}`) as HTMLInputElement;
     if (autocompleteInput) {
       const form = autocompleteInput.closest("form");
 
@@ -101,8 +104,22 @@ export function initSearchAutocomplete() {
   }, 100);
 }
 
+export function initSearchAutocomplete() {
+  const locationInput = document.getElementById("location") as HTMLInputElement;
+  if (locationInput && locationInput.getAttribute("data-autocomplete") === "true") {
+    initAutocompleteForInput(locationInput);
+  }
+}
+
+export function initAllAutocompletes() {
+  const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
+  for (const input of autocompleteInputs) {
+    initAutocompleteForInput(input);
+  }
+}
+
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
-    initSearchAutocomplete();
+    initAllAutocompletes();
   });
 }

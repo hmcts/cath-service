@@ -1,0 +1,32 @@
+{
+  "name": "@hmcts/admin-pages",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && yarn build:nunjucks",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "peerDependencies": {
+    "express": "^5.1.0"
+  },
+  "dependencies": {
+    "@hmcts/location": "workspace:*",
+    "@hmcts/redis": "workspace:*",
+    "multer": "1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@types/multer": "^1.4.12"
+  }
+}

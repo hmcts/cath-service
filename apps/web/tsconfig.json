@@ -11,6 +11,8 @@
     { "path": "../../libs/web-core" },
     { "path": "../../libs/simple-router" },
     { "path": "../../libs/cloud-native-platform" },
+    { "path": "../../libs/public-pages" },
+    { "path": "../../libs/admin-pages" },
     { "path": "../postgres" }
   ]
 }
