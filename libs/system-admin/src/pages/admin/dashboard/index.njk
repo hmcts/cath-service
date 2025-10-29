@@ -1,0 +1,64 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
+
+{% block beforeContent %}
+  {% set bannerHtml %}
+    {{ feedback.part1 }}<a class="govuk-link" aria-label="{{ feedback.ariaLabel }}" href="{{ feedback.link }}{{ pageUrl }}" target="_blank">{{ feedback.part2 }}</a>{{ feedback.part3 }}
+  {% endset %}
+  {{ govukPhaseBanner({
+    tag: {
+      text: phase
+    },
+    html: bannerHtml,
+    rebrand: true
+  }) }}
+  {% block backLink %}
+    {{ govukBackLink({
+      text: back,
+      href: "#"
+    }) }}
+  {% endblock %}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <div class="admin-dashboard-tiles">
+      {% for i in range(0, tiles.length, 2) %}
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-one-half">
+            <div class="admin-dashboard-tile">
+              <p class="govuk-body admin-dashboard-tile__heading">
+                <a href="{{ tiles[i].href }}" class="govuk-link admin-dashboard-tile__link">
+                  {{ tiles[i].title }}
+                </a>
+              </p>
+              <p class="govuk-body admin-dashboard-tile__description">
+                {{ tiles[i].description }}
+              </p>
+            </div>
+          </div>
+
+          {% if tiles[i + 1] %}
+            <div class="govuk-grid-column-one-half">
+              <div class="admin-dashboard-tile">
+                <p class="govuk-body admin-dashboard-tile__heading">
+                  <a href="{{ tiles[i + 1].href }}" class="govuk-link admin-dashboard-tile__link">
+                    {{ tiles[i + 1].title }}
+                  </a>
+                </p>
+                <p class="govuk-body admin-dashboard-tile__description">
+                  {{ tiles[i + 1].description }}
+                </p>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
