@@ -591,6 +591,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hmcts/admin-pages@workspace:libs/admin-pages":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/api@workspace:apps/api":
   version: 0.0.0-use.local
   resolution: "@hmcts/api@workspace:apps/api"
