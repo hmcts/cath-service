@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { pageRoutes, assets, moduleRoot } from "./config.js";
 import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { assets, moduleRoot, pageRoutes } from "./config.js";
 
 describe("System Admin Config", () => {
   it("should export pageRoutes with correct structure", () => {

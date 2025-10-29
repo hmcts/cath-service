@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 describe("Admin Dashboard GET handler", () => {

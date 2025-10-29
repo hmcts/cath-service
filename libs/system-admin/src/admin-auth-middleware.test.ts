@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import type { NextFunction, Request, Response } from "express";
+import { describe, expect, it, vi } from "vitest";
 import { requireSystemAdmin } from "./admin-auth-middleware.js";
 
 describe("requireSystemAdmin", () => {
