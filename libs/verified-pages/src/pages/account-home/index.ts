@@ -1,6 +1,5 @@
+import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
-import { cy as coreLocales } from "@hmcts/web-core";
-import { en as coreLocalesEn } from "@hmcts/web-core";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
