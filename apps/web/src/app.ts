@@ -62,13 +62,12 @@ export async function createApp(): Promise<Express> {
   });
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
-  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
 
   // Register admin pages with multer middleware for file upload
   const upload = createFileUpload();
   app.post("/manual-upload", upload.single("file"));
-  app.use(await createSimpleRouter(adminPagesRoutes, pageRoutes));
+  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());
   app.use(errorHandler());
