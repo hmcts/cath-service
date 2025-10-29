@@ -1,6 +1,10 @@
 import { getAllLocations } from "@hmcts/location";
+import { Language, Sensitivity } from "@hmcts/publication";
+import type { DateInput } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { storeManualUpload } from "../../manual-upload/manual-upload-storage.js";
+import { validateForm } from "../../manual-upload/validation.js";
+import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const LIST_TYPES = [
@@ -27,28 +31,19 @@ const LIST_TYPES = [
 
 const SENSITIVITY_OPTIONS = [
   { value: "", text: "" },
-  { value: "PUBLIC", text: "Public" },
-  { value: "PRIVATE", text: "Private" },
-  { value: "CLASSIFIED", text: "Classified" }
+  { value: Sensitivity.PUBLIC, text: "Public" },
+  { value: Sensitivity.PRIVATE, text: "Private" },
+  { value: Sensitivity.CLASSIFIED, text: "Classified" }
 ];
 
 const LANGUAGE_OPTIONS = [
   { value: "", text: "" },
-  { value: "ENGLISH", text: "English" },
-  { value: "WELSH", text: "Welsh" },
-  { value: "BILINGUAL", text: "Bilingual" }
+  { value: Language.ENGLISH, text: "English" },
+  { value: Language.WELSH, text: "Welsh" },
+  { value: Language.BILINGUAL, text: "Bilingual" }
 ];
 
-interface ValidationError {
-  text: string;
-  href: string;
-}
-
-interface DateInput {
-  day: string;
-  month: string;
-  year: string;
-}
+const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
 interface ManualUploadFormData {
   locationId?: string;
@@ -69,9 +64,10 @@ declare module "express-session" {
 export const GET = async (req: Request, res: Response) => {
   const data = req.session.manualUploadForm || {};
   const locale = "en";
+  const t = getTranslations(locale);
 
   res.render("manual-upload/index", {
-    ...en,
+    ...t,
     data,
     locations: getAllLocations(locale),
     listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === data.listType })),
@@ -83,8 +79,9 @@ export const GET = async (req: Request, res: Response) => {
 
 export const POST = async (req: Request, res: Response) => {
   const locale = "en";
+  const t = getTranslations(locale);
 
-  const errors = validateForm(req.body, req.file, en);
+  const errors = validateForm(req.body, req.file, t);
 
   if (errors.length > 0) {
     req.session.manualUploadForm = req.body;
@@ -97,7 +94,7 @@ export const POST = async (req: Request, res: Response) => {
     });
 
     return res.render("manual-upload/index", {
-      ...en,
+      ...t,
       errors,
       data: req.body,
       locations: getAllLocations(locale),
@@ -119,8 +116,8 @@ export const POST = async (req: Request, res: Response) => {
     });
 
     return res.status(400).render("manual-upload/index", {
-      ...en,
-      errors: [{ text: en.fileRequired, href: "#file" }],
+      ...t,
+      errors: [{ text: t.fileRequired, href: "#file" }],
       data: req.body,
       locations: getAllLocations(locale),
       listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
@@ -147,96 +144,3 @@ export const POST = async (req: Request, res: Response) => {
 
   res.redirect("/manual-upload/confirm");
 };
-
-function validateForm(body: ManualUploadFormData, file: Express.Multer.File | undefined, t: typeof en): ValidationError[] {
-  const errors: ValidationError[] = [];
-
-  // File validation
-  if (!file) {
-    errors.push({ text: t.fileRequired, href: "#file" });
-  } else {
-    const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
-    if (!allowedExtensions.test(file.originalname)) {
-      errors.push({ text: t.fileType, href: "#file" });
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      errors.push({ text: t.fileSize, href: "#file" });
-    }
-  }
-
-  // Required field validation
-  if (!body.locationId || body.locationId.trim() === "" || body.locationId.trim().length < 3) {
-    errors.push({ text: t.courtRequired, href: "#court" });
-  }
-
-  if (!body.listType || body.listType === "") {
-    errors.push({ text: t.listTypeRequired, href: "#listType" });
-  }
-
-  if (!body.sensitivity || body.sensitivity === "") {
-    errors.push({ text: t.sensitivityRequired, href: "#sensitivity" });
-  }
-
-  if (!body.language || body.language === "") {
-    errors.push({ text: t.languageRequired, href: "#language" });
-  }
-
-  // Date validation
-  const hearingStartDateError = validateDate(body.hearingStartDate, "hearingStartDate", t.hearingStartDateRequired, t.hearingStartDateInvalid);
-  if (hearingStartDateError) {
-    errors.push(hearingStartDateError);
-  }
-
-  const displayFromError = validateDate(body.displayFrom, "displayFrom", t.displayFromRequired, t.displayFromInvalid);
-  if (displayFromError) {
-    errors.push(displayFromError);
-  }
-
-  const displayToError = validateDate(body.displayTo, "displayTo", t.displayToRequired, t.displayToInvalid);
-  if (displayToError) {
-    errors.push(displayToError);
-  }
-
-  // Date comparison validation
-  if (!displayFromError && !displayToError && body.displayFrom && body.displayTo) {
-    const fromDate = parseDate(body.displayFrom);
-    const toDate = parseDate(body.displayTo);
-
-    if (fromDate && toDate && toDate < fromDate) {
-      errors.push({ text: t.displayToBeforeFrom, href: "#displayTo" });
-    }
-  }
-
-  return errors;
-}
-
-function validateDate(dateInput: DateInput | undefined, fieldName: string, requiredMessage: string, invalidMessage: string): ValidationError | null {
-  if (!dateInput || !dateInput.day || !dateInput.month || !dateInput.year) {
-    return { text: requiredMessage, href: `#${fieldName}` };
-  }
-
-  const parsedDate = parseDate(dateInput);
-  if (!parsedDate) {
-    return { text: invalidMessage, href: `#${fieldName}` };
-  }
-
-  return null;
-}
-
-function parseDate(dateInput: DateInput): Date | null {
-  const day = Number.parseInt(dateInput.day, 10);
-  const month = Number.parseInt(dateInput.month, 10);
-  const year = Number.parseInt(dateInput.year, 10);
-
-  if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) {
-    return null;
-  }
-
-  const date = new Date(year, month - 1, day);
-
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return date;
-}
