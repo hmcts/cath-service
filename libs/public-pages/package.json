@@ -24,5 +24,10 @@
   },
   "peerDependencies": {
     "express": "^5.1.0"
+  },
+  "dependencies": {
+    "@hmcts/location": "workspace:*",
+    "@hmcts/publication": "workspace:*",
+    "@hmcts/web-core": "workspace:*"
   }
 }
