@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getManualUpload, storeManualUpload } from "./manual-upload-storage.js";
 
 const mockRedisClient = {
@@ -39,11 +39,7 @@ describe("manual-upload-storage", () => {
       const uploadId = await storeManualUpload(testData);
 
       expect(uploadId).toBe("test-uuid-123");
-      expect(mockRedisClient.setEx).toHaveBeenCalledWith(
-        "manual-upload:test-uuid-123",
-        3600,
-        expect.any(String)
-      );
+      expect(mockRedisClient.setEx).toHaveBeenCalledWith("manual-upload:test-uuid-123", 3600, expect.any(String));
 
       const storedData = JSON.parse(mockRedisClient.setEx.mock.calls[0][2]);
       expect(storedData.fileName).toBe("test.pdf");

@@ -1,4 +1,4 @@
 export declare const pageRoutes: {
-    path: string;
+  path: string;
 };
 export declare const moduleRoot: string;

@@ -16,7 +16,8 @@ export const en = {
   errorSummaryTitle: "There is a problem",
   pageHelpTitle: "Page help",
   pageHelpLists: "Lists",
-  pageHelpListsText: "You must ensure that you only upload one file that contains all hearings for the Court or Tribunal name and List type. This should include all judges and court rooms in one document.",
+  pageHelpListsText:
+    "You must ensure that you only upload one file that contains all hearings for the Court or Tribunal name and List type. This should include all judges and court rooms in one document.",
   pageHelpSensitivity: "Sensitivity",
   pageHelpSensitivityText: "You need to indicate which user group your document should be available to:",
   pageHelpSensitivityPublic: "Public",
@@ -24,9 +25,11 @@ export const en = {
   pageHelpSensitivityPrivate: "Private",
   pageHelpSensitivityPrivateText: "Publication available to all verified users e.g. Legal professionals and media.",
   pageHelpSensitivityClassified: "Classified",
-  pageHelpSensitivityClassifiedText: "Publication only available to verified users who are in a group eligible to view that list e.g. SJP press list available to Media",
+  pageHelpSensitivityClassifiedText:
+    "Publication only available to verified users who are in a group eligible to view that list e.g. SJP press list available to Media",
   pageHelpDisplayFrom: "Display from",
-  pageHelpDisplayFromText: "This will be the date the publication is available from, if today's date is used it will be displayed immediately. If a date in the future is used, it will display from 00:01 of that date.",
+  pageHelpDisplayFromText:
+    "This will be the date the publication is available from, if today's date is used it will be displayed immediately. If a date in the future is used, it will display from 00:01 of that date.",
   pageHelpDisplayTo: "Display to",
   pageHelpDisplayToText: "This will be the last date the publication is available. It will be displayed until 23:59 of that date.",
   dayLabel: "Day",

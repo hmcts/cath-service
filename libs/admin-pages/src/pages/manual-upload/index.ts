@@ -1,7 +1,7 @@
 import { getAllLocations } from "@hmcts/location";
 import type { Request, Response } from "express";
-import { en } from "./en.js";
 import { storeManualUpload } from "../../manual-upload/manual-upload-storage.js";
+import { en } from "./en.js";
 
 const LIST_TYPES = [
   { value: "", text: "Please choose a list type" },
@@ -74,9 +74,9 @@ export const GET = async (req: Request, res: Response) => {
     ...en,
     data,
     locations: getAllLocations(locale),
-    listTypes: LIST_TYPES.map(item => ({ ...item, selected: item.value === data.listType })),
-    sensitivityOptions: SENSITIVITY_OPTIONS.map(item => ({ ...item, selected: item.value === data.sensitivity })),
-    languageOptions: LANGUAGE_OPTIONS.map(item => ({ ...item, selected: item.value === data.language })),
+    listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === data.listType })),
+    sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === data.sensitivity })),
+    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === data.language })),
     locale
   });
 };
@@ -101,9 +101,9 @@ export const POST = async (req: Request, res: Response) => {
       errors,
       data: req.body,
       locations: getAllLocations(locale),
-      listTypes: LIST_TYPES.map(item => ({ ...item, selected: item.value === req.body.listType })),
-      sensitivityOptions: SENSITIVITY_OPTIONS.map(item => ({ ...item, selected: item.value === req.body.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map(item => ({ ...item, selected: item.value === req.body.language })),
+      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
+      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.sensitivity })),
+      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.language })),
       locale
     });
   }
@@ -123,9 +123,9 @@ export const POST = async (req: Request, res: Response) => {
       errors: [{ text: en.fileRequired, href: "#file" }],
       data: req.body,
       locations: getAllLocations(locale),
-      listTypes: LIST_TYPES.map(item => ({ ...item, selected: item.value === req.body.listType })),
-      sensitivityOptions: SENSITIVITY_OPTIONS.map(item => ({ ...item, selected: item.value === req.body.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map(item => ({ ...item, selected: item.value === req.body.language })),
+      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
+      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.sensitivity })),
+      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.language })),
       locale
     });
   }

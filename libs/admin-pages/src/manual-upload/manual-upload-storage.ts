@@ -1,5 +1,5 @@
-import { getRedisClient } from "@hmcts/redis";
 import { randomUUID } from "node:crypto";
+import { getRedisClient } from "@hmcts/redis";
 
 const UPLOAD_TTL = 3600; // 1 hour expiry
 
