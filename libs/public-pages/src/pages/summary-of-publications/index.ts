@@ -1,8 +1,8 @@
-import type { Request, Response } from "express";
 import { getLocationById } from "@hmcts/location";
 // TODO: Re-enable when @hmcts/publication module is implemented
 // import { mockListTypes, mockPublications } from "@hmcts/publication";
-import { formatDateAndLocale } from "@hmcts/web-core";
+// import { formatDateAndLocale } from "@hmcts/web-core";
+import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

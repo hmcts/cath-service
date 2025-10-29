@@ -13,7 +13,8 @@ describe("Admin Dashboard GET handler", () => {
     await handler(req, res);
 
     expect(res.render).toHaveBeenCalledOnce();
-    expect(res.render).toHaveBeenCalledWith("admin/dashboard/index",
+    expect(res.render).toHaveBeenCalledWith(
+      "admin/dashboard/index",
       expect.objectContaining({
         title: "System Admin Dashboard",
         tiles: expect.arrayContaining([
