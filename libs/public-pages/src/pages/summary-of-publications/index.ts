@@ -1,5 +1,6 @@
 import { getLocationById } from "@hmcts/location";
-import { mockListTypes, mockPublications } from "@hmcts/publication";
+// TODO: Re-enable when @hmcts/publication module is implemented
+// import { mockListTypes, mockPublications } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -31,20 +32,22 @@ export const GET = async (req: Request, res: Response) => {
   const locationName = locale === "cy" ? location.welshName : location.name;
   const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
+  // TODO: Re-enable when @hmcts/publication module is implemented
   // Filter publications by location
-  const filteredPublications = mockPublications.filter((pub) => pub.locationId === locationId);
+  // const filteredPublications = mockPublications.filter((pub) => pub.locationId === locationId);
+  const filteredPublications: never[] = [];
 
   // Map list types and format dates first
   const publicationsWithDetails = filteredPublications.map((pub) => {
-    const listType = mockListTypes.find((lt) => lt.id === pub.listType);
-    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+    // const listType = mockListTypes.find((lt) => lt.id === pub.listType);
+    // const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
 
     // Get language label based on publication language
     const languageLabel = pub.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
     return {
       id: pub.id,
-      listTypeName,
+      listTypeName: "Unknown",
       listTypeId: pub.listType,
       contentDate: pub.contentDate,
       language: pub.language,
