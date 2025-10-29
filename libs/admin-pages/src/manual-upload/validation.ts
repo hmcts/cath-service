@@ -21,46 +21,46 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
 
   // File validation
   if (!file) {
-    errors.push({ text: t.fileRequired, href: "#file" });
+    errors.push({ text: t.errors.fileRequired, href: "#file" });
   } else {
     const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
     if (!allowedExtensions.test(file.originalname)) {
-      errors.push({ text: t.fileType, href: "#file" });
+      errors.push({ text: t.errors.fileType, href: "#file" });
     }
     if (file.size > 2 * 1024 * 1024) {
-      errors.push({ text: t.fileSize, href: "#file" });
+      errors.push({ text: t.errors.fileSize, href: "#file" });
     }
   }
 
   // Required field validation
   if (!body.locationId || body.locationId.trim() === "" || body.locationId.trim().length < 3) {
-    errors.push({ text: t.courtRequired, href: "#court" });
+    errors.push({ text: t.errors.courtRequired, href: "#court" });
   }
 
   if (!body.listType || body.listType === "") {
-    errors.push({ text: t.listTypeRequired, href: "#listType" });
+    errors.push({ text: t.errors.listTypeRequired, href: "#listType" });
   }
 
   if (!body.sensitivity || body.sensitivity === "") {
-    errors.push({ text: t.sensitivityRequired, href: "#sensitivity" });
+    errors.push({ text: t.errors.sensitivityRequired, href: "#sensitivity" });
   }
 
   if (!body.language || body.language === "") {
-    errors.push({ text: t.languageRequired, href: "#language" });
+    errors.push({ text: t.errors.languageRequired, href: "#language" });
   }
 
   // Date validation
-  const hearingStartDateError = validateDate(body.hearingStartDate, "hearingStartDate", t.hearingStartDateRequired, t.hearingStartDateInvalid);
+  const hearingStartDateError = validateDate(body.hearingStartDate, "hearingStartDate", t.errors.hearingStartDateRequired, t.errors.hearingStartDateInvalid);
   if (hearingStartDateError) {
     errors.push(hearingStartDateError);
   }
 
-  const displayFromError = validateDate(body.displayFrom, "displayFrom", t.displayFromRequired, t.displayFromInvalid);
+  const displayFromError = validateDate(body.displayFrom, "displayFrom", t.errors.displayFromRequired, t.errors.displayFromInvalid);
   if (displayFromError) {
     errors.push(displayFromError);
   }
 
-  const displayToError = validateDate(body.displayTo, "displayTo", t.displayToRequired, t.displayToInvalid);
+  const displayToError = validateDate(body.displayTo, "displayTo", t.errors.displayToRequired, t.errors.displayToInvalid);
   if (displayToError) {
     errors.push(displayToError);
   }
@@ -71,7 +71,7 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
     const toDate = parseDate(body.displayTo);
 
     if (fromDate && toDate && toDate < fromDate) {
-      errors.push({ text: t.displayToBeforeFrom, href: "#displayTo" });
+      errors.push({ text: t.errors.displayToBeforeFrom, href: "#displayTo" });
     }
   }
 

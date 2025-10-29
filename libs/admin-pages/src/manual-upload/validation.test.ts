@@ -2,20 +2,22 @@ import { describe, expect, it } from "vitest";
 import { validateDate, validateForm } from "./validation.js";
 
 const mockTranslations = {
-  fileRequired: "File is required",
-  fileType: "Invalid file type",
-  fileSize: "File too large",
-  courtRequired: "Court is required",
-  listTypeRequired: "List type is required",
-  sensitivityRequired: "Sensitivity is required",
-  languageRequired: "Language is required",
-  hearingStartDateRequired: "Hearing start date is required",
-  hearingStartDateInvalid: "Hearing start date is invalid",
-  displayFromRequired: "Display from date is required",
-  displayFromInvalid: "Display from date is invalid",
-  displayToRequired: "Display to date is required",
-  displayToInvalid: "Display to date is invalid",
-  displayToBeforeFrom: "Display to must be after display from"
+  errors: {
+    fileRequired: "File is required",
+    fileType: "Invalid file type",
+    fileSize: "File too large",
+    courtRequired: "Court is required",
+    listTypeRequired: "List type is required",
+    sensitivityRequired: "Sensitivity is required",
+    languageRequired: "Language is required",
+    hearingStartDateRequired: "Hearing start date is required",
+    hearingStartDateInvalid: "Hearing start date is invalid",
+    displayFromRequired: "Display from date is required",
+    displayFromInvalid: "Display from date is invalid",
+    displayToRequired: "Display to date is required",
+    displayToInvalid: "Display to date is invalid",
+    displayToBeforeFrom: "Display to must be after display from"
+  }
 };
 
 describe("validateDate", () => {

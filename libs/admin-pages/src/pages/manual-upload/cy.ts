@@ -36,19 +36,20 @@ export const cy = {
   monthLabel: "Mis",
   yearLabel: "Blwyddyn",
 
-  // Error messages
-  fileRequired: "Darparwch ffeil",
-  fileType: "Rhaid i'r ffeil a ddewiswyd fod yn csv, doc, docx, htm, html, json, neu pdf",
-  fileSize: "Rhaid i'r ffeil a ddewiswyd fod yn llai na 2MB",
-  courtRequired: "Rhaid i enw'r llys fod yn dri chymeriad neu fwy",
-  listTypeRequired: "Dewiswch fath o restr",
-  hearingStartDateRequired: "Rhowch ddyddiad dechrau gwrandawiad dilys",
-  hearingStartDateInvalid: "Rhowch ddyddiad dechrau gwrandawiad dilys",
-  sensitivityRequired: "Dewiswch lefel sensitifrwydd",
-  languageRequired: "Dewiswch iaith",
-  displayFromRequired: "Rhowch ddyddiad dangos y ffeil o dilys",
-  displayFromInvalid: "Rhowch ddyddiad dangos y ffeil o dilys",
-  displayToRequired: "Rhowch ddyddiad dangos y ffeil tan dilys",
-  displayToInvalid: "Rhowch ddyddiad dangos y ffeil tan dilys",
-  displayToBeforeFrom: "Rhaid i'r dyddiad dangos tan fod ar ôl y dyddiad dangos o"
+  errors: {
+    fileRequired: "Darparwch ffeil",
+    fileType: "Rhaid i'r ffeil a ddewiswyd fod yn csv, doc, docx, htm, html, json, neu pdf",
+    fileSize: "Rhaid i'r ffeil a ddewiswyd fod yn llai na 2MB",
+    courtRequired: "Rhaid i enw'r llys fod yn dri chymeriad neu fwy",
+    listTypeRequired: "Dewiswch fath o restr",
+    hearingStartDateRequired: "Rhowch ddyddiad dechrau gwrandawiad dilys",
+    hearingStartDateInvalid: "Rhowch ddyddiad dechrau gwrandawiad dilys",
+    sensitivityRequired: "Dewiswch lefel sensitifrwydd",
+    languageRequired: "Dewiswch iaith",
+    displayFromRequired: "Rhowch ddyddiad dangos y ffeil o dilys",
+    displayFromInvalid: "Rhowch ddyddiad dangos y ffeil o dilys",
+    displayToRequired: "Rhowch ddyddiad dangos y ffeil tan dilys",
+    displayToInvalid: "Rhowch ddyddiad dangos y ffeil tan dilys",
+    displayToBeforeFrom: "Rhaid i'r dyddiad dangos tan fod ar ôl y dyddiad dangos o"
+  }
 };

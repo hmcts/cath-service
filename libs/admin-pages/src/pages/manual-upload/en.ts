@@ -36,19 +36,20 @@ export const en = {
   monthLabel: "Month",
   yearLabel: "Year",
 
-  // Error messages
-  fileRequired: "Please provide a file",
-  fileType: "The selected file must be a csv, doc, docx, htm, html, json, or pdf",
-  fileSize: "The selected file must be smaller than 2MB",
-  courtRequired: "Court name must be three characters or more",
-  listTypeRequired: "Please select a list type",
-  hearingStartDateRequired: "Please enter a valid hearing start date",
-  hearingStartDateInvalid: "Please enter a valid hearing start date",
-  sensitivityRequired: "Please select a sensitivity",
-  languageRequired: "Select a language",
-  displayFromRequired: "Please enter a valid display file from date",
-  displayFromInvalid: "Please enter a valid display file from date",
-  displayToRequired: "Please enter a valid display file to date",
-  displayToInvalid: "Please enter a valid display file to date",
-  displayToBeforeFrom: "Display to date must be after display from date"
+  errors: {
+    fileRequired: "Please provide a file",
+    fileType: "The selected file must be a csv, doc, docx, htm, html, json, or pdf",
+    fileSize: "The selected file must be smaller than 2MB",
+    courtRequired: "Court name must be three characters or more",
+    listTypeRequired: "Please select a list type",
+    hearingStartDateRequired: "Please enter a valid hearing start date",
+    hearingStartDateInvalid: "Please enter a valid hearing start date",
+    sensitivityRequired: "Please select a sensitivity",
+    languageRequired: "Select a language",
+    displayFromRequired: "Please enter a valid display file from date",
+    displayFromInvalid: "Please enter a valid display file from date",
+    displayToRequired: "Please enter a valid display file to date",
+    displayToInvalid: "Please enter a valid display file to date",
+    displayToBeforeFrom: "Display to date must be after display from date"
+  }
 };
