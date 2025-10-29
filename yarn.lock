@@ -765,7 +765,6 @@ __metadata:
     "@types/express": "npm:5.0.5"
     "@types/express-session": "npm:1.18.2"
     "@types/govuk-frontend": "npm:5.11.0"
-    "@types/multer": "npm:1.4.12"
     "@types/nunjucks": "npm:3.2.6"
     "@types/supertest": "npm:6.0.3"
     compression: "npm:1.8.1"
@@ -1648,15 +1647,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/multer@npm:^1.4.12":
-  version: 1.4.13
-  resolution: "@types/multer@npm:1.4.13"
-  dependencies:
-    "@types/express": "npm:*"
-  checksum: 10c0/aed716fdc0bc8c5bfe6689bfe6569b6743b64be795140e80cab169bfe43f687027880b7fc401fca98f820dd464ad5986093ec322d865116eb31ce29a3361c469
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:*":
   version: 24.2.1
   resolution: "@types/node@npm:24.2.1"
@@ -2312,7 +2302,6 @@ __metadata:
   resolution: "cath@workspace:."
   dependencies:
     "@biomejs/biome": "npm:2.3.2"
-    "@types/multer": "npm:^1.4.12"
     "@types/node": "npm:24.9.1"
     "@types/supertest": "npm:6.0.3"
     "@vitest/coverage-v8": "npm:3.2.4"
