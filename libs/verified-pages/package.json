@@ -7,6 +7,10 @@
       "production": "./dist/index.js",
       "default": "./src/index.ts"
     },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    },
     "./src/assets/css/*": "./src/assets/css/*",
     "./dist/assets/css/*": "./dist/assets/css/*"
   },
