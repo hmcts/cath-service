@@ -9,10 +9,10 @@ import {
   configureGovuk,
   configureHelmet,
   configureNonce,
+  createFileUpload,
   errorHandler,
   expressSessionRedis,
-  notFoundHandler,
-  upload
+  notFoundHandler
 } from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import compression from "compression";
@@ -65,6 +65,7 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
 
   // Register admin pages with multer middleware for file upload
+  const upload = createFileUpload();
   app.post("/manual-upload", upload.single("file"));
   app.use(await createSimpleRouter(adminPagesRoutes, pageRoutes));
 

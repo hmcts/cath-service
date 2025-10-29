@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getManualUpload, storeManualUpload } from "./storage.js";
 
-const mockRedisClient = {
+const mockRedisClient = vi.hoisted(() => ({
   setEx: vi.fn(),
   get: vi.fn()
-};
+}));
 
 vi.mock("@hmcts/redis", () => ({
   getRedisClient: vi.fn().mockResolvedValue(mockRedisClient)
@@ -13,6 +12,8 @@ vi.mock("@hmcts/redis", () => ({
 vi.mock("node:crypto", () => ({
   randomUUID: vi.fn().mockReturnValue("test-uuid-123")
 }));
+
+import { getManualUpload, storeManualUpload } from "./storage.js";
 
 describe("manual-upload-storage", () => {
   beforeEach(() => {
