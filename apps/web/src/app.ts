@@ -1,6 +1,5 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
@@ -32,7 +31,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, publicPagesModuleRoot, systemAdminModuleRoot];
+  const modulePaths = [__dirname, webCoreModuleRoot, publicPagesModuleRoot, systemAdminModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -54,7 +53,6 @@ export async function createApp(): Promise<Express> {
   });
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
-  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(notFoundHandler());

@@ -2,7 +2,6 @@
   $govuk-suppressed-warnings: ("import-using-all")
 );
 @use "@hmcts/web-core/src/assets/css/search-autocomplete.scss";
-@use "@hmcts/admin-pages/src/assets/css/index.scss" as admin;
 @use "../../../../../libs/system-admin/src/assets/css/dashboard.scss";
 
 .govuk-service-navigation__item {
