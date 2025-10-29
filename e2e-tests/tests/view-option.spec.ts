@@ -22,6 +22,13 @@ test.describe('View Option Page', () => {
       await expect(courtTribunalRadio).toBeVisible();
       await expect(sjpCaseRadio).toBeVisible();
 
+      // Check for hint text under the radio buttons
+      const courtHintText = page.getByText(/view time, location, type of hearings and more/i);
+      await expect(courtHintText).toBeVisible();
+
+      const sjpHintText = page.getByText(/TV licensing, minor traffic offences such as speeding and more/i);
+      await expect(sjpHintText).toBeVisible();
+
       // Check for continue button
       const continueButton = page.getByRole('button', { name: /continue/i });
       await expect(continueButton).toBeVisible();
@@ -241,6 +248,30 @@ test.describe('View Option Page', () => {
       // Verify language toggle still shows English option (we're in Welsh mode)
       const languageToggle = page.locator('.language');
       await expect(languageToggle).toContainText('English');
+    });
+  });
+
+  test.describe('given user wants to provide feedback', () => {
+    test('should have a working feedback link in the phase banner', async ({ page }) => {
+      await page.goto('/view-option');
+
+      // Find the feedback link by its aria-label
+      const feedbackLink = page.getByRole('link', { name: /give feedback about this page/i });
+
+      // Verify the link is visible
+      await expect(feedbackLink).toBeVisible();
+
+      // Verify the link text
+      await expect(feedbackLink).toHaveText('feedback');
+
+      // Verify the link href contains the SmartSurvey URL with the page URL parameter
+      await expect(feedbackLink).toHaveAttribute('href', /https:\/\/www\.smartsurvey\.co\.uk\/s\/FBSPI22\/\?pageurl=.*view-option/);
+
+      // Verify the link opens in a new tab
+      await expect(feedbackLink).toHaveAttribute('target', '_blank');
+
+      // Verify the aria-label is set correctly
+      await expect(feedbackLink).toHaveAttribute('aria-label', 'Give feedback about this page');
     });
   });
 

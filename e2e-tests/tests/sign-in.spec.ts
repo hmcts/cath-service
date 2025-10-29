@@ -535,4 +535,51 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(page.getByRole("radio", { name: /with a court and tribunal hearings account/i })).toBeVisible();
     });
   });
+
+  test.describe("given user views footer information links", () => {
+    test("should display all general information links at the bottom of the page", async ({ page }) => {
+      await page.goto("/sign-in");
+
+      // Check for footer section
+      const footer = page.locator(".govuk-footer");
+      await expect(footer).toBeVisible();
+
+      // Check for all footer links
+      const helpLink = footer.getByRole("link", { name: /help/i });
+      await expect(helpLink).toBeVisible();
+      await expect(helpLink).toHaveAttribute("href", "https://www.gov.uk/help");
+
+      const privacyLink = footer.getByRole("link", { name: /privacy/i });
+      await expect(privacyLink).toBeVisible();
+      await expect(privacyLink).toHaveAttribute("href", "https://www.gov.uk/help/privacy-notice");
+
+      const cookiesLink = footer.getByRole("link", { name: /cookies/i });
+      await expect(cookiesLink).toBeVisible();
+      await expect(cookiesLink).toHaveAttribute("href", "/cookie-preferences");
+
+      const accessibilityLink = footer.getByRole("link", { name: /accessibility statement/i });
+      await expect(accessibilityLink).toBeVisible();
+      await expect(accessibilityLink).toHaveAttribute("href", "/accessibility-statement");
+
+      const contactLink = footer.getByRole("link", { name: /contact/i });
+      await expect(contactLink).toBeVisible();
+      await expect(contactLink).toHaveAttribute("href", "https://www.gov.uk/contact");
+
+      const termsLink = footer.getByRole("link", { name: /terms and conditions/i });
+      await expect(termsLink).toBeVisible();
+      await expect(termsLink).toHaveAttribute("href", "https://www.gov.uk/help/terms-conditions");
+
+      const welshLink = footer.getByRole("link", { name: /welsh/i });
+      await expect(welshLink).toBeVisible();
+      await expect(welshLink).toHaveAttribute("href", "https://www.gov.uk/cymraeg");
+
+      const gdsLink = footer.getByRole("link", { name: /government digital service/i });
+      await expect(gdsLink).toBeVisible();
+      await expect(gdsLink).toHaveAttribute("href", "https://www.gov.uk/government/organisations/government-digital-service");
+
+      const oglLink = footer.getByRole("link", { name: /open government licence/i });
+      await expect(oglLink).toBeVisible();
+      await expect(oglLink).toHaveAttribute("href", "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/");
+    });
+  });
 });
