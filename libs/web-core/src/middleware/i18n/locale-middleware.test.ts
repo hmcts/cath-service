@@ -128,7 +128,7 @@ describe("translationMiddleware", () => {
 
   it("should inject English translations into res.locals", () => {
     const middleware = translationMiddleware(translations);
-    const req = {} as Request;
+    const req = { query: {} } as Request;
     const res = {
       locals: { locale: "en" }
     } as Response;
@@ -145,7 +145,7 @@ describe("translationMiddleware", () => {
 
   it("should inject Welsh translations into res.locals", () => {
     const middleware = translationMiddleware(translations);
-    const req = {} as Request;
+    const req = { query: {} } as Request;
     const res = {
       locals: { locale: "cy" }
     } as Response;
@@ -162,7 +162,7 @@ describe("translationMiddleware", () => {
 
   it("should handle missing locale gracefully", () => {
     const middleware = translationMiddleware(translations);
-    const req = {} as Request;
+    const req = { query: {} } as Request;
     const res = {
       locals: {}
     } as Response;
@@ -172,6 +172,22 @@ describe("translationMiddleware", () => {
 
     expect(res.locals.welcome).toBe("Welcome");
     expect(res.locals.languageToggle.link).toBe("?lng=cy");
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should preserve existing query parameters when switching language", () => {
+    const middleware = translationMiddleware(translations);
+    const req = { query: { locationId: "9", filter: "active" } } as Request;
+    const res = {
+      locals: { locale: "en" }
+    } as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.languageToggle.link).toContain("locationId=9");
+    expect(res.locals.languageToggle.link).toContain("filter=active");
+    expect(res.locals.languageToggle.link).toContain("lng=cy");
     expect(next).toHaveBeenCalled();
   });
 });
