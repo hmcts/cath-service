@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { validateDate, validateForm } from "./validation.js";
 
 const mockTranslations = {
-  errors: {
+  errorMessages: {
     fileRequired: "File is required",
     fileType: "Invalid file type",
     fileSize: "File too large",

@@ -36,7 +36,7 @@ export const en = {
   monthLabel: "Month",
   yearLabel: "Year",
 
-  errors: {
+  errorMessages: {
     fileRequired: "Please provide a file",
     fileType: "The selected file must be a csv, doc, docx, htm, html, json, or pdf",
     fileSize: "The selected file must be smaller than 2MB",

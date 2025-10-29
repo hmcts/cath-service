@@ -36,7 +36,7 @@ export const cy = {
   monthLabel: "Mis",
   yearLabel: "Blwyddyn",
 
-  errors: {
+  errorMessages: {
     fileRequired: "Darparwch ffeil",
     fileType: "Rhaid i'r ffeil a ddewiswyd fod yn csv, doc, docx, htm, html, json, neu pdf",
     fileSize: "Rhaid i'r ffeil a ddewiswyd fod yn llai na 2MB",

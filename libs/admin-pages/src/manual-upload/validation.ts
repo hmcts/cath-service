@@ -21,46 +21,51 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
 
   // File validation
   if (!file) {
-    errors.push({ text: t.errors.fileRequired, href: "#file" });
+    errors.push({ text: t.errorMessages.fileRequired, href: "#file" });
   } else {
     const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
     if (!allowedExtensions.test(file.originalname)) {
-      errors.push({ text: t.errors.fileType, href: "#file" });
+      errors.push({ text: t.errorMessages.fileType, href: "#file" });
     }
     if (file.size > 2 * 1024 * 1024) {
-      errors.push({ text: t.errors.fileSize, href: "#file" });
+      errors.push({ text: t.errorMessages.fileSize, href: "#file" });
     }
   }
 
   // Required field validation
   if (!body.locationId || body.locationId.trim() === "" || body.locationId.trim().length < 3) {
-    errors.push({ text: t.errors.courtRequired, href: "#court" });
+    errors.push({ text: t.errorMessages.courtRequired, href: "#court" });
   }
 
   if (!body.listType || body.listType === "") {
-    errors.push({ text: t.errors.listTypeRequired, href: "#listType" });
+    errors.push({ text: t.errorMessages.listTypeRequired, href: "#listType" });
   }
 
   if (!body.sensitivity || body.sensitivity === "") {
-    errors.push({ text: t.errors.sensitivityRequired, href: "#sensitivity" });
+    errors.push({ text: t.errorMessages.sensitivityRequired, href: "#sensitivity" });
   }
 
   if (!body.language || body.language === "") {
-    errors.push({ text: t.errors.languageRequired, href: "#language" });
+    errors.push({ text: t.errorMessages.languageRequired, href: "#language" });
   }
 
   // Date validation
-  const hearingStartDateError = validateDate(body.hearingStartDate, "hearingStartDate", t.errors.hearingStartDateRequired, t.errors.hearingStartDateInvalid);
+  const hearingStartDateError = validateDate(
+    body.hearingStartDate,
+    "hearingStartDate",
+    t.errorMessages.hearingStartDateRequired,
+    t.errorMessages.hearingStartDateInvalid
+  );
   if (hearingStartDateError) {
     errors.push(hearingStartDateError);
   }
 
-  const displayFromError = validateDate(body.displayFrom, "displayFrom", t.errors.displayFromRequired, t.errors.displayFromInvalid);
+  const displayFromError = validateDate(body.displayFrom, "displayFrom", t.errorMessages.displayFromRequired, t.errorMessages.displayFromInvalid);
   if (displayFromError) {
     errors.push(displayFromError);
   }
 
-  const displayToError = validateDate(body.displayTo, "displayTo", t.errors.displayToRequired, t.errors.displayToInvalid);
+  const displayToError = validateDate(body.displayTo, "displayTo", t.errorMessages.displayToRequired, t.errorMessages.displayToInvalid);
   if (displayToError) {
     errors.push(displayToError);
   }
@@ -71,7 +76,7 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
     const toDate = parseDate(body.displayTo);
 
     if (fromDate && toDate && toDate < fromDate) {
-      errors.push({ text: t.errors.displayToBeforeFrom, href: "#displayTo" });
+      errors.push({ text: t.errorMessages.displayToBeforeFrom, href: "#displayTo" });
     }
   }
 

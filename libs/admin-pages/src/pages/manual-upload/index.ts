@@ -117,7 +117,7 @@ export const POST = async (req: Request, res: Response) => {
 
     return res.status(400).render("manual-upload/index", {
       ...t,
-      errors: [{ text: t.errors.fileRequired, href: "#file" }],
+      errors: [{ text: t.errorMessages.fileRequired, href: "#file" }],
       data: req.body,
       locations: getAllLocations(locale),
       listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
