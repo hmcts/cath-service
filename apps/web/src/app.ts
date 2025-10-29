@@ -1,19 +1,11 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages";
+import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import {
-  configureCookieManager,
-  configureGovuk,
-  configureHelmet,
-  configureNonce,
-  errorHandler,
-  expressSessionRedis,
-  notFoundHandler,
-  pageRoutes,
-  moduleRoot as webCoreModuleRoot
-} from "@hmcts/web-core";
+import { configureCookieManager, configureGovuk, configureHelmet, configureNonce, errorHandler, expressSessionRedis, notFoundHandler } from "@hmcts/web-core";
+import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import compression from "compression";
 import config from "config";
 import cookieParser from "cookie-parser";
@@ -39,7 +31,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, webCoreModuleRoot, publicPagesModuleRoot];
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, publicPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -61,6 +53,7 @@ export async function createApp(): Promise<Express> {
   });
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
+  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(notFoundHandler());
   app.use(errorHandler());

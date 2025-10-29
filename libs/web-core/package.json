@@ -8,6 +8,10 @@
       "production": "./dist/index.js",
       "default": "./src/index.ts"
     },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    },
     "./src/assets/vite-config.js": {
       "production": "./dist/assets/vite-config.js",
       "default": "./src/assets/vite-config.ts"
@@ -72,10 +76,10 @@
     }
   },
   "devDependencies": {
-    "@types/express": "5.0.3",
+    "@types/express": "5.0.5",
     "@types/express-session": "1.18.2",
     "@types/nunjucks": "3.2.6",
-    "@types/pg": "8.15.5",
+    "@types/pg": "8.15.6",
     "@types/pg-format": "1.0.5",
     "connect-redis": "9.0.0",
     "express-session": "1.18.2",

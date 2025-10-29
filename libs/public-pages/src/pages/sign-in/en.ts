@@ -1,5 +1,4 @@
 export const en = {
-  back: "Back",
   title: "How do you want to sign in?",
   errorSummaryTitle: "There is a problem",
   errorMessage: "Please select an option",
