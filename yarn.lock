@@ -678,8 +678,18 @@ __metadata:
 "@hmcts/public-pages@workspace:*, @hmcts/public-pages@workspace:libs/public-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
+  dependencies:
+    "@hmcts/location": "workspace:*"
+    "@hmcts/publication": "workspace:*"
+    "@hmcts/web-core": "workspace:*"
   peerDependencies:
     express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/publication@workspace:*, @hmcts/publication@workspace:libs/publication":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/publication@workspace:libs/publication"
   languageName: unknown
   linkType: soft
 
