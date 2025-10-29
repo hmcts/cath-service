@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getManualUpload, storeManualUpload } from "./manual-upload-storage.js";
+import { getManualUpload, storeManualUpload } from "./storage.js";
 
 const mockRedisClient = {
   setEx: vi.fn(),

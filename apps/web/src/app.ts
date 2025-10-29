@@ -1,10 +1,19 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { moduleRoot as adminPagesModuleRoot, pageRoutes as adminPagesRoutes, upload } from "@hmcts/admin-pages";
+import { moduleRoot as adminPagesModuleRoot, pageRoutes as adminPagesRoutes } from "@hmcts/admin-pages";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import { configureCookieManager, configureGovuk, configureHelmet, configureNonce, errorHandler, expressSessionRedis, notFoundHandler } from "@hmcts/web-core";
+import {
+  configureCookieManager,
+  configureGovuk,
+  configureHelmet,
+  configureNonce,
+  errorHandler,
+  expressSessionRedis,
+  notFoundHandler,
+  upload
+} from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import compression from "compression";
 import config from "config";

@@ -1,13 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { getRedisClient } from "@hmcts/redis";
+import type { DateInput } from "@hmcts/web-core";
 
 const UPLOAD_TTL = 3600; // 1 hour expiry
-
-interface DateInput {
-  day: string;
-  month: string;
-  year: string;
-}
 
 export interface ManualUploadData {
   file: Buffer;

@@ -2,7 +2,7 @@ import { getAllLocations } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
 import type { DateInput } from "@hmcts/web-core";
 import type { Request, Response } from "express";
-import { storeManualUpload } from "../../manual-upload/manual-upload-storage.js";
+import { storeManualUpload } from "../../manual-upload/storage.js";
 import { validateForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
