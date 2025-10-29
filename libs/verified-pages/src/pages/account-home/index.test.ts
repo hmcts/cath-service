@@ -61,7 +61,7 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items[0].text).toBe("Dashboard");
+      expect(navigation.verifiedItems[0].text).toBe("Dashboard");
       expect(navigation.signOut).toBe("Sign out");
     });
 
@@ -74,9 +74,9 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items).toHaveLength(2);
-      expect(navigation.items[0].text).toBe("Dashboard");
-      expect(navigation.items[1].text).toBe("Email subscriptions");
+      expect(navigation.verifiedItems).toHaveLength(2);
+      expect(navigation.verifiedItems[0].text).toBe("Dashboard");
+      expect(navigation.verifiedItems[1].text).toBe("Email subscriptions");
       expect(navigation.signOut).toBe("Sign out");
     });
 
@@ -89,9 +89,9 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items).toHaveLength(2);
-      expect(navigation.items[0].text).toBe("Dangosfwrdd");
-      expect(navigation.items[1].text).toBe("Tanysgrifiadau e-bost");
+      expect(navigation.verifiedItems).toHaveLength(2);
+      expect(navigation.verifiedItems[0].text).toBe("Dangosfwrdd");
+      expect(navigation.verifiedItems[1].text).toBe("Tanysgrifiadau e-bost");
       expect(navigation.signOut).toBe("Allgofnodi");
     });
 
@@ -114,9 +114,9 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items).toBeDefined();
+      expect(navigation.verifiedItems).toBeDefined();
       expect(navigation.signOut).toBeDefined();
-      expect(Array.isArray(navigation.items)).toBe(true);
+      expect(Array.isArray(navigation.verifiedItems)).toBe(true);
       expect(typeof navigation.signOut).toBe("string");
     });
 
@@ -127,8 +127,8 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items[0].current).toBe(true);
-      expect(navigation.items[0].href).toBe("/account-home");
+      expect(navigation.verifiedItems[0].current).toBe(true);
+      expect(navigation.verifiedItems[0].href).toBe("/account-home");
     });
 
     it("should set second navigation item as not current", async () => {
@@ -138,7 +138,7 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items[1].current).toBe(false);
+      expect(navigation.verifiedItems[1].current).toBe(false);
     });
 
     it("should include data-test attributes on navigation items", async () => {
@@ -148,8 +148,8 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items[0].attributes["data-test"]).toBe("dashboard-link");
-      expect(navigation.items[1].attributes["data-test"]).toBe("email-subscriptions-link");
+      expect(navigation.verifiedItems[0].attributes["data-test"]).toBe("dashboard-link");
+      expect(navigation.verifiedItems[1].attributes["data-test"]).toBe("email-subscriptions-link");
     });
 
     it("should have correct hrefs for navigation items", async () => {
@@ -159,8 +159,8 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items[0].href).toBe("/account-home");
-      expect(navigation.items[1].href).toBe("/");
+      expect(navigation.verifiedItems[0].href).toBe("/account-home");
+      expect(navigation.verifiedItems[1].href).toBe("/");
     });
 
     it("should maintain same navigation structure for Welsh locale", async () => {
@@ -172,11 +172,11 @@ describe("account-home controller", () => {
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
       const navigation = renderCall.navigation;
 
-      expect(navigation.items).toHaveLength(2);
-      expect(navigation.items[0].href).toBe("/account-home");
-      expect(navigation.items[1].href).toBe("/");
-      expect(navigation.items[0].current).toBe(true);
-      expect(navigation.items[1].current).toBe(false);
+      expect(navigation.verifiedItems).toHaveLength(2);
+      expect(navigation.verifiedItems[0].href).toBe("/account-home");
+      expect(navigation.verifiedItems[1].href).toBe("/");
+      expect(navigation.verifiedItems[0].current).toBe(true);
+      expect(navigation.verifiedItems[1].current).toBe(false);
     });
 
     it("should have consistent navigation attributes across locales", async () => {
@@ -198,12 +198,12 @@ describe("account-home controller", () => {
       const cyNav = cyCall.navigation;
 
       // Structure should be the same, only text differs
-      expect(enNav.items[0].href).toBe(cyNav.items[0].href);
-      expect(enNav.items[1].href).toBe(cyNav.items[1].href);
-      expect(enNav.items[0].current).toBe(cyNav.items[0].current);
-      expect(enNav.items[1].current).toBe(cyNav.items[1].current);
-      expect(enNav.items[0].attributes["data-test"]).toBe(cyNav.items[0].attributes["data-test"]);
-      expect(enNav.items[1].attributes["data-test"]).toBe(cyNav.items[1].attributes["data-test"]);
+      expect(enNav.verifiedItems[0].href).toBe(cyNav.verifiedItems[0].href);
+      expect(enNav.verifiedItems[1].href).toBe(cyNav.verifiedItems[1].href);
+      expect(enNav.verifiedItems[0].current).toBe(cyNav.verifiedItems[0].current);
+      expect(enNav.verifiedItems[1].current).toBe(cyNav.verifiedItems[1].current);
+      expect(enNav.verifiedItems[0].attributes["data-test"]).toBe(cyNav.verifiedItems[0].attributes["data-test"]);
+      expect(enNav.verifiedItems[1].attributes["data-test"]).toBe(cyNav.verifiedItems[1].attributes["data-test"]);
     });
 
     it("should call render exactly once", async () => {

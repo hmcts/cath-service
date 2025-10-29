@@ -17,5 +17,23 @@ export const en = {
       description: "Get emails about hearings from different courts and tribunals and manage your subscriptions.",
       href: "/"
     }
-  }
+  },
+  navigationItems: [
+    {
+      text: "Dashboard",
+      href: "/account-home",
+      current: true,
+      attributes: {
+        "data-test": "dashboard-link"
+      }
+    },
+    {
+      text: "Email subscriptions",
+      href: "/",
+      current: false,
+      attributes: {
+        "data-test": "email-subscriptions-link"
+      }
+    }
+  ]
 };

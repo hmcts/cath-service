@@ -18,3 +18,5 @@ export { PostgresStore } from "./middleware/session-stores/postgres-store.js";
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";
 export { formatDateAndLocale } from "./utils/format-date-and-locale.js";
+export { en } from "./locales/en.js";
+export { cy } from "./locales/cy.js";

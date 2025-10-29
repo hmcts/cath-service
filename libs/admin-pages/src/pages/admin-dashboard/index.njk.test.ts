@@ -21,10 +21,6 @@ describe("admin-dashboard template", () => {
       expect(en.pageTitle).toBe("Admin Dashboard");
     });
 
-    it("should have sign out text", () => {
-      expect(en.signOut).toBe("Sign out");
-    });
-
     it("should have three tiles", () => {
       expect(en.tiles).toHaveLength(3);
     });
@@ -51,11 +47,6 @@ describe("admin-dashboard template", () => {
       expect(cy.pageTitle.length).toBeGreaterThan(0);
     });
 
-    it("should have sign out text", () => {
-      expect(cy.signOut).toBeDefined();
-      expect(cy.signOut.length).toBeGreaterThan(0);
-    });
-
     it("should have three tiles", () => {
       expect(cy.tiles).toHaveLength(3);
     });
@@ -76,7 +67,7 @@ describe("admin-dashboard template", () => {
     });
 
     it("should have all required keys", () => {
-      const requiredKeys = ["pageTitle", "signOut", "tiles"];
+      const requiredKeys = ["pageTitle", "tiles"];
 
       requiredKeys.forEach((key) => {
         expect(en).toHaveProperty(key);

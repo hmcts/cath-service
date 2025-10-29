@@ -69,7 +69,7 @@ describe("admin dashboard page", () => {
             })
           ]),
           navigation: {
-            signOut: "Sign out"
+            signOut: "Allgofnodi"
           },
           hideLanguageToggle: true
         })
