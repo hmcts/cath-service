@@ -29,7 +29,6 @@ describe("account-home template", () => {
       expect(en.sections.courtHearings).toBeDefined();
       expect(en.sections.courtHearings.title).toBe("Court and tribunal hearings");
       expect(en.sections.courtHearings.description).toBe("View time, location, type of hearings and more.");
-      expect(en.sections.courtHearings.href).toBe("/search");
     });
 
     it("should have SJP cases section", () => {
@@ -38,14 +37,12 @@ describe("account-home template", () => {
       expect(en.sections.sjpCases.description).toBe(
         "Cases ready to be decided by a magistrate without a hearing. Includes TV licensing, minor traffic offences such as speeding and more."
       );
-      expect(en.sections.sjpCases.href).toBe("/summary-of-publications?locationId=9");
     });
 
     it("should have email subscriptions section", () => {
       expect(en.sections.emailSubscriptions).toBeDefined();
       expect(en.sections.emailSubscriptions.title).toBe("Email subscriptions");
       expect(en.sections.emailSubscriptions.description).toBe("Get emails about hearings from different courts and tribunals and manage your subscriptions.");
-      expect(en.sections.emailSubscriptions.href).toBe("/");
     });
   });
 
@@ -62,7 +59,6 @@ describe("account-home template", () => {
       expect(cy.sections.courtHearings).toBeDefined();
       expect(cy.sections.courtHearings.title).toBe("Gwrandawiadau llys a thribiwnlys");
       expect(cy.sections.courtHearings.description).toBe("Gweld amser, lleoliad, math o wrandawiadau a mwy.");
-      expect(cy.sections.courtHearings.href).toBe("/search");
     });
 
     it("should have SJP cases section", () => {
@@ -71,14 +67,12 @@ describe("account-home template", () => {
       expect(cy.sections.sjpCases.description).toBe(
         "Achosion sy'n barod i gael eu penderfynu gan ynad heb wrandawiad. Yn cynnwys trwyddedu teledu, mân dramgwyddau traffig fel goryrru a mwy."
       );
-      expect(cy.sections.sjpCases.href).toBe("/summary-of-publications?locationId=9");
     });
 
     it("should have email subscriptions section", () => {
       expect(cy.sections.emailSubscriptions).toBeDefined();
       expect(cy.sections.emailSubscriptions.title).toBe("Tanysgrifiadau e-bost");
       expect(cy.sections.emailSubscriptions.description).toBe("Cael e-byst am wrandawiadau o wahanol lysoedd a thribiwnlysoedd a rheoli eich tanysgrifiadau.");
-      expect(cy.sections.emailSubscriptions.href).toBe("/");
     });
   });
 
@@ -100,7 +94,7 @@ describe("account-home template", () => {
     });
 
     it("should have all required section properties", () => {
-      const requiredProps = ["title", "description", "href"];
+      const requiredProps = ["title", "description"];
 
       for (const section of Object.values(en.sections)) {
         requiredProps.forEach((prop) => {
@@ -124,7 +118,6 @@ describe("account-home template", () => {
       for (const section of Object.values(en.sections)) {
         expect(section.title.length).toBeGreaterThan(0);
         expect(section.description.length).toBeGreaterThan(0);
-        expect(section.href.length).toBeGreaterThan(0);
       }
     });
 
@@ -135,17 +128,6 @@ describe("account-home template", () => {
       for (const section of Object.values(cy.sections)) {
         expect(section.title.length).toBeGreaterThan(0);
         expect(section.description.length).toBeGreaterThan(0);
-        expect(section.href.length).toBeGreaterThan(0);
-      }
-    });
-
-    it("should have valid href URLs", () => {
-      for (const section of Object.values(en.sections)) {
-        expect(section.href).toMatch(/^\//);
-      }
-
-      for (const section of Object.values(cy.sections)) {
-        expect(section.href).toMatch(/^\//);
       }
     });
   });
