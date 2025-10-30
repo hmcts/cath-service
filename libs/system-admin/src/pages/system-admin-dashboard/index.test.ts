@@ -14,7 +14,7 @@ describe("Admin Dashboard GET handler", () => {
 
     expect(res.render).toHaveBeenCalledOnce();
     expect(res.render).toHaveBeenCalledWith(
-      "admin/dashboard/index",
+      "system-admin-dashboard/index",
       expect.objectContaining({
         title: "System Admin Dashboard",
         tiles: expect.arrayContaining([
