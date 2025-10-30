@@ -1,12 +1,7 @@
-import { locationData } from "./location-data.js";
+import { locationData } from "../location-data.js";
+import { getAllLocations, type Location } from "./queries.js";
 
-export interface Location {
-  locationId: number;
-  name: string;
-  welshName: string;
-  regions: number[];
-  subJurisdictions: number[];
-}
+export type { Location } from "./queries.js";
 
 export function searchLocations(query: string, language: "en" | "cy"): Location[] {
   if (!query || query.trim().length === 0) {
@@ -45,25 +40,29 @@ export function searchLocations(query: string, language: "en" | "cy"): Location[
   return [...startsWithMatches, ...partialMatches];
 }
 
-export function getAllLocations(language: "en" | "cy"): Location[] {
-  const locations = [...locationData.locations];
+export function getLocationsGroupedByLetter(
+  language: "en" | "cy",
+  filters?: {
+    regions?: number[];
+    subJurisdictions?: number[];
+  }
+): Record<string, Location[]> {
+  let locations = getAllLocations(language);
 
-  return locations.sort((a, b) => {
-    const nameA = language === "cy" ? a.welshName : a.name;
-    const nameB = language === "cy" ? b.welshName : b.name;
-    return nameA.localeCompare(nameB);
-  });
-}
+  // Apply filters if provided
+  if (filters) {
+    if (filters.regions && filters.regions.length > 0) {
+      locations = locations.filter((location) => location.regions.some((regionId) => filters.regions!.includes(regionId)));
+    }
 
-export function getLocationById(id: number): Location | undefined {
-  return locationData.locations.find((location) => location.locationId === id);
-}
+    if (filters.subJurisdictions && filters.subJurisdictions.length > 0) {
+      locations = locations.filter((location) => location.subJurisdictions.some((subJurisdictionId) => filters.subJurisdictions!.includes(subJurisdictionId)));
+    }
+  }
 
-export function getLocationsGroupedByLetter(language: "en" | "cy"): Record<string, Location[]> {
-  const sortedLocations = getAllLocations(language);
   const grouped: Record<string, Location[]> = {};
 
-  for (const location of sortedLocations) {
+  for (const location of locations) {
     const name = language === "cy" ? location.welshName : location.name;
     const firstLetter = name.charAt(0).toUpperCase();
 
