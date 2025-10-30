@@ -41,14 +41,6 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
     errors.push({ text: t.errorMessages.listTypeRequired, href: "#listType" });
   }
 
-  if (!body.sensitivity || body.sensitivity === "") {
-    errors.push({ text: t.errorMessages.sensitivityRequired, href: "#sensitivity" });
-  }
-
-  if (!body.language || body.language === "") {
-    errors.push({ text: t.errorMessages.languageRequired, href: "#language" });
-  }
-
   // Date validation
   const hearingStartDateError = validateDate(
     body.hearingStartDate,
@@ -58,6 +50,14 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
   );
   if (hearingStartDateError) {
     errors.push(hearingStartDateError);
+  }
+
+  if (!body.sensitivity || body.sensitivity === "") {
+    errors.push({ text: t.errorMessages.sensitivityRequired, href: "#sensitivity" });
+  }
+
+  if (!body.language || body.language === "") {
+    errors.push({ text: t.errorMessages.languageRequired, href: "#language" });
   }
 
   const displayFromError = validateDate(body.displayFrom, "displayFrom", t.errorMessages.displayFromRequired, t.errorMessages.displayFromInvalid);

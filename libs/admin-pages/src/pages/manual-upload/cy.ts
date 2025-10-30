@@ -1,7 +1,9 @@
 export const cy = {
   title: "Llwytho â llaw",
+  warningTitle: "Rhybudd",
+  warningMessage: "Cyn llwytho rhaid i chi sicrhau bod y ffeil yn addas i'w chyhoeddi e.e. bod data personol wedi'i olygu yn ystod cynhyrchu'r ffeil hon.",
   fileUploadLabel: "Llwytho ffeil csv, doc, docx, htm, html, json, neu pdf â llaw, uchafswm maint 2MB",
-  courtLabel: "Enw'r llys neu'r tribiwnlys",
+  courtLabel: "Enw'r llys neu enw'r tribiwnlys",
   listTypeLabel: "Math o restr",
   listTypePlaceholder: "Dewiswch fath o restr",
   hearingStartDateLabel: "Dyddiad dechrau'r gwrandawiad",
@@ -35,6 +37,7 @@ export const cy = {
   dayLabel: "Diwrnod",
   monthLabel: "Mis",
   yearLabel: "Blwyddyn",
+  backToTop: "Nôl i'r brig",
 
   errorMessages: {
     fileRequired: "Darparwch ffeil",

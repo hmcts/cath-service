@@ -52,3 +52,38 @@
     line-height: 1.5;
   }
 }
+
+// Ensure autocomplete input matches dropdown widths on manual-upload page
+#court-autocomplete-wrapper {
+  max-width: 66.66% !important;
+}
+
+#court-autocomplete-wrapper .autocomplete__input,
+#court-autocomplete-wrapper .autocomplete__wrapper,
+#court {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+// Manual upload warning box
+.manual-upload-warning {
+  background-color: #f3f2f1;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.manual-upload-warning__content {
+  display: flex;
+  align-items: flex-start;
+}
+
+.manual-upload-warning__icon {
+  position: static;
+  margin-top: 0;
+  margin-right: 10px;
+}
+
+.manual-upload-warning__text {
+  margin-bottom: 20px;
+  flex: 1;
+}

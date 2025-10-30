@@ -8,7 +8,7 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const LIST_TYPES = [
-  { value: "", text: "Please choose a list type" },
+  { value: "", text: "<Please choose a list type>" },
   { value: "CIVIL_DAILY_CAUSE_LIST", text: "Civil Daily Cause List" },
   { value: "FAMILY_DAILY_CAUSE_LIST", text: "Family Daily Cause List" },
   { value: "CRIMINAL_DAILY_CAUSE_LIST", text: "Criminal Daily Cause List" },
@@ -30,7 +30,7 @@ const LIST_TYPES = [
 ];
 
 const SENSITIVITY_OPTIONS = [
-  { value: "", text: "" },
+  { value: "", text: "<Please choose a sensitivity>" },
   { value: Sensitivity.PUBLIC, text: "Public" },
   { value: Sensitivity.PRIVATE, text: "Private" },
   { value: Sensitivity.CLASSIFIED, text: "Classified" }
@@ -72,7 +72,7 @@ export const GET = async (req: Request, res: Response) => {
     locations: getAllLocations(locale),
     listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === data.listType })),
     sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === data.sensitivity })),
-    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === data.language })),
+    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (data.language || Language.ENGLISH) })),
     locale
   });
 };
@@ -100,7 +100,7 @@ export const POST = async (req: Request, res: Response) => {
       locations: getAllLocations(locale),
       listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
       sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.language })),
+      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (req.body.language || Language.ENGLISH) })),
       locale
     });
   }
@@ -122,7 +122,7 @@ export const POST = async (req: Request, res: Response) => {
       locations: getAllLocations(locale),
       listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
       sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.language })),
+      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (req.body.language || Language.ENGLISH) })),
       locale
     });
   }

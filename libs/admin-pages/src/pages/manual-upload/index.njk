@@ -17,15 +17,25 @@
 {%- endmacro %}
 
 {% block page_content %}
+{% if errors %}
+  {{ govukErrorSummary({
+    titleText: errorSummaryTitle,
+    errorList: errors
+  }) }}
+{% endif %}
+
+<div class="manual-upload-warning">
+  <h2 class="govuk-heading-m">{{ warningTitle }}</h2>
+  <div class="manual-upload-warning__content">
+    <span class="govuk-warning-text__icon manual-upload-warning__icon" aria-hidden="true">!</span>
+    <p class="govuk-body manual-upload-warning__text">
+      <strong>{{ warningMessage }}</strong>
+    </p>
+  </div>
+</div>
+
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
-
-    {% if errors %}
-      {{ govukErrorSummary({
-        titleText: errorSummaryTitle,
-        errorList: errors
-      }) }}
-    {% endif %}
 
     <h1 class="govuk-heading-xl">{{ title }}</h1>
 
@@ -51,6 +61,7 @@
         id: "court",
         name: "locationId",
         type: "text",
+        classes: "govuk-!-width-two-thirds",
         label: {
           text: courtLabel
         },
@@ -68,6 +79,7 @@
         {{ govukSelect({
           id: "listType",
           name: "listType",
+          classes: "govuk-!-width-two-thirds",
           label: {
             text: listTypeLabel
           },
@@ -115,6 +127,7 @@
       {{ govukSelect({
         id: "sensitivity",
         name: "sensitivity",
+        classes: "govuk-!-width-two-thirds",
         label: {
           text: sensitivityLabel
         },
@@ -126,6 +139,7 @@
       {{ govukSelect({
         id: "language",
         name: "language",
+        classes: "govuk-!-width-two-thirds",
         label: {
           text: languageLabel
         },
@@ -204,7 +218,8 @@
       }) }}
 
       {{ govukButton({
-        text: continueButton
+        text: continueButton,
+        classes: "govuk-!-margin-top-6"
       }) }}
 
     </form>
@@ -242,6 +257,12 @@
       <h3 class="govuk-heading-s">{{ pageHelpDisplayTo }}</h3>
       <p class="govuk-body">{{ pageHelpDisplayToText }}</p>
     </aside>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ backToTop }}</a>
   </div>
 </div>
 {% endblock %}
