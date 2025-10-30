@@ -74,7 +74,7 @@ test.describe('Page Structure - VIBE-149', () => {
       await page.goto('/');
 
       // AC8: All 9 footer links present
-      // Note: The footer has 9 links including the language toggle
+      // Note: The footer has 9 links
       const footerLinks = [
         { text: 'Help', href: 'https://www.gov.uk/help' },
         { text: 'Privacy policy', href: 'https://www.gov.uk/help/privacy-notice' },
@@ -82,7 +82,7 @@ test.describe('Page Structure - VIBE-149', () => {
         { text: 'Accessibility statement', href: '/accessibility-statement' },
         { text: 'Contact us', href: 'https://www.gov.uk/contact' },
         { text: 'Terms and conditions', href: 'https://www.gov.uk/help/terms-conditions' },
-        { text: 'Welsh', href: 'https://www.gov.uk/cymraeg' }, // Welsh language toggle (footer)
+        { text: 'Welsh', href: 'https://www.gov.uk/cymraeg' },
         { text: 'Government Digital Service', href: 'https://www.gov.uk/government/organisations/government-digital-service' },
         { text: 'Open Government Licence', href: 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/' }
       ];
