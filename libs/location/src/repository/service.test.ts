@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAllLocations, getLocationById, getLocationsGroupedByLetter, searchLocations } from "./location-service.js";
+import { getLocationsGroupedByLetter, searchLocations } from "./service.js";
 
 describe("searchLocations", () => {
   describe("priority ordering", () => {
@@ -51,22 +51,14 @@ describe("searchLocations", () => {
   });
 
   describe("case insensitivity", () => {
-    it("should return results for lowercase query", () => {
-      const results = searchLocations("oxford", "en");
-      expect(results.length).toBeGreaterThan(0);
-      expect(results[0].name).toBe("Oxford Combined Court Centre");
-    });
+    it("should return results regardless of case", () => {
+      const lower = searchLocations("oxford", "en");
+      const upper = searchLocations("OXFORD", "en");
+      const mixed = searchLocations("OxFoRd", "en");
 
-    it("should return results for uppercase query", () => {
-      const results = searchLocations("OXFORD", "en");
-      expect(results.length).toBeGreaterThan(0);
-      expect(results[0].name).toBe("Oxford Combined Court Centre");
-    });
-
-    it("should return results for mixed case query", () => {
-      const results = searchLocations("OxFoRd", "en");
-      expect(results.length).toBeGreaterThan(0);
-      expect(results[0].name).toBe("Oxford Combined Court Centre");
+      expect(lower).toEqual(upper);
+      expect(upper).toEqual(mixed);
+      expect(lower[0].name).toBe("Oxford Combined Court Centre");
     });
   });
 
@@ -134,66 +126,6 @@ describe("searchLocations", () => {
   });
 });
 
-describe("getAllLocations", () => {
-  it("should return all locations", () => {
-    const results = getAllLocations("en");
-    expect(results.length).toBe(10);
-  });
-
-  it("should return locations sorted alphabetically by name", () => {
-    const results = getAllLocations("en");
-
-    for (let i = 0; i < results.length - 1; i++) {
-      expect(results[i].name.localeCompare(results[i + 1].name)).toBeLessThanOrEqual(0);
-    }
-  });
-
-  it("should return locations sorted alphabetically by Welsh name when language is cy", () => {
-    const results = getAllLocations("cy");
-
-    for (let i = 0; i < results.length - 1; i++) {
-      expect(results[i].welshName.localeCompare(results[i + 1].welshName)).toBeLessThanOrEqual(0);
-    }
-  });
-
-  it("should not mutate original data", () => {
-    const results1 = getAllLocations("en");
-    const results2 = getAllLocations("en");
-
-    expect(results1).toEqual(results2);
-  });
-});
-
-describe("getLocationById", () => {
-  it("should return location for valid ID", () => {
-    const location = getLocationById(1);
-    expect(location).toBeDefined();
-    expect(location?.locationId).toBe(1);
-    expect(location?.name).toBe("Oxford Combined Court Centre");
-  });
-
-  it("should return undefined for non-existent ID", () => {
-    const location = getLocationById(999);
-    expect(location).toBeUndefined();
-  });
-
-  it("should return Single Justice Procedure location", () => {
-    const location = getLocationById(9);
-    expect(location).toBeDefined();
-    expect(location?.name).toBe("Single Justice Procedure");
-  });
-
-  it("should return location with all properties", () => {
-    const location = getLocationById(1);
-    expect(location).toBeDefined();
-    expect(location).toHaveProperty("locationId");
-    expect(location).toHaveProperty("name");
-    expect(location).toHaveProperty("welshName");
-    expect(location).toHaveProperty("regions");
-    expect(location).toHaveProperty("subJurisdictions");
-  });
-});
-
 describe("getLocationsGroupedByLetter", () => {
   it("should group locations by first letter", () => {
     const grouped = getLocationsGroupedByLetter("en");
@@ -255,5 +187,83 @@ describe("getLocationsGroupedByLetter", () => {
     }
 
     expect(totalCount).toBe(10);
+  });
+
+  describe("filtering", () => {
+    it("should filter by region", () => {
+      const grouped = getLocationsGroupedByLetter("en", { regions: [1] }); // London
+
+      let totalCount = 0;
+      for (const letter in grouped) {
+        totalCount += grouped[letter].length;
+      }
+
+      expect(totalCount).toBeGreaterThan(0);
+      expect(totalCount).toBeLessThan(10);
+
+      // Check all locations have London region
+      for (const letter in grouped) {
+        for (const location of grouped[letter]) {
+          expect(location.regions).toContain(1);
+        }
+      }
+    });
+
+    it("should filter by subJurisdiction", () => {
+      const grouped = getLocationsGroupedByLetter("en", { subJurisdictions: [1] }); // Civil Court
+
+      let totalCount = 0;
+      for (const letter in grouped) {
+        totalCount += grouped[letter].length;
+      }
+
+      expect(totalCount).toBeGreaterThan(0);
+
+      // Check all locations have Civil Court sub-jurisdiction
+      for (const letter in grouped) {
+        for (const location of grouped[letter]) {
+          expect(location.subJurisdictions).toContain(1);
+        }
+      }
+    });
+
+    it("should filter by multiple regions", () => {
+      const grouped = getLocationsGroupedByLetter("en", { regions: [1, 5] }); // London and Wales
+
+      // Check all locations have either London or Wales region
+      for (const letter in grouped) {
+        for (const location of grouped[letter]) {
+          expect(location.regions.some((r) => r === 1 || r === 5)).toBe(true);
+        }
+      }
+    });
+
+    it("should filter by both region and subJurisdiction", () => {
+      const grouped = getLocationsGroupedByLetter("en", { regions: [1], subJurisdictions: [1] });
+
+      // Check all locations match both filters
+      for (const letter in grouped) {
+        for (const location of grouped[letter]) {
+          expect(location.regions).toContain(1);
+          expect(location.subJurisdictions).toContain(1);
+        }
+      }
+    });
+
+    it("should return empty object when no locations match filters", () => {
+      const grouped = getLocationsGroupedByLetter("en", { regions: [999] });
+      expect(Object.keys(grouped).length).toBe(0);
+    });
+
+    it("should return all locations when no filters provided", () => {
+      const grouped = getLocationsGroupedByLetter("en");
+
+      let totalCount = 0;
+      for (const letter in grouped) {
+        totalCount += grouped[letter].length;
+      }
+
+      expect(totalCount).toBe(10);
+    });
   });
 });
