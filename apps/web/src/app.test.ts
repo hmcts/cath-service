@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import type { Express } from "express";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock all dependencies before importing createApp
 vi.mock("@hmcts/cloud-native-platform", () => ({
