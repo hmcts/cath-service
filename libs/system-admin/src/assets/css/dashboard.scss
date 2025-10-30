@@ -1,0 +1,59 @@
+.admin-dashboard-tiles {
+  margin-top: 40px;
+
+  .govuk-grid-row {
+    margin-bottom: 20px;
+  }
+
+  .govuk-grid-column-one-half {
+    padding-left: 20px;
+    padding-right: 0px;
+  }
+}
+
+.admin-dashboard-tile {
+  background-color: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  padding: 20px;
+  min-height: 115px;
+  height: 100%;
+  transition: border-color 0.2s ease-in-out;
+
+  &:hover {
+    border-color: #1d70b8;
+  }
+
+  &:focus-within {
+    outline: 3px solid #ffdd00;
+    outline-offset: 0;
+  }
+}
+
+.admin-dashboard-tile__heading {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.admin-dashboard-tile__link {
+  text-decoration: underline;
+  font-weight: bold;
+  color: #1d70b8;
+
+  &:hover {
+    text-decoration: underline;
+    text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+    text-underline-offset: 0.1em;
+  }
+
+  &:focus {
+    background-color: #ffdd00;
+    box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+    color: #0b0c0c;
+    outline: 3px solid transparent;
+    text-decoration: none;
+  }
+}
+
+.admin-dashboard-tile__description {
+  margin-bottom: 0;
+}

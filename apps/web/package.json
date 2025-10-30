@@ -24,6 +24,7 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
+    "@hmcts/system-admin": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
     "config": "4.1.1",
