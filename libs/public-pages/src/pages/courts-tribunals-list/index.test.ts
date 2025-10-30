@@ -24,26 +24,6 @@ const mockSubJurisdictions = [
   { subJurisdictionId: 7, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 3 }
 ];
 
-<<<<<<< HEAD
-      expect(res.render).toHaveBeenCalledWith(
-        "courts-tribunals-list/index",
-        expect.objectContaining({
-          en: expect.any(Object),
-          cy: expect.any(Object),
-          backLink: "/search",
-          groupedLocations: expect.any(Object)
-        })
-      );
-
-      const call = res.render.mock.calls[0][1] as { groupedLocations: Record<string, unknown[]> };
-      expect(call.groupedLocations).toHaveProperty("B");
-      expect(call.groupedLocations).toHaveProperty("C");
-      expect(call.groupedLocations).toHaveProperty("L");
-      expect(call.groupedLocations).toHaveProperty("M");
-      expect(call.groupedLocations).toHaveProperty("O");
-      expect(call.groupedLocations).toHaveProperty("R");
-      expect(call.groupedLocations).toHaveProperty("S");
-=======
 vi.mock("@hmcts/location", () => ({
   getAllJurisdictions: vi.fn(() => mockJurisdictions),
   getAllRegions: vi.fn(() => mockRegions),
@@ -82,7 +62,6 @@ vi.mock("@hmcts/location", () => ({
           checked: selectedSubJurisdictions.includes(sub.subJurisdictionId)
         }))
         .sort((a, b) => a.text.localeCompare(b.text));
->>>>>>> master
     });
     return result;
   }),

@@ -28,16 +28,3 @@
   padding-bottom: 6px !important;
   display: inline-block !important;
 }
-
-// Remove the default GOV.UK red left border from all form groups by default
-.govuk-form-group--error {
-  border-left: none !important;
-  padding-left: 0 !important;
-}
-
-// Show red border when there's an actual error summary on the page
-// This indicates a real validation error (not just the class being incorrectly applied)
-body:has(.govuk-error-summary) .govuk-form-group--error {
-  border-left: 5px solid #d4351c !important;
-  padding-left: 15px !important;
-}
