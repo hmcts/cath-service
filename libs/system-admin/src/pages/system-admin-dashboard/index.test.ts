@@ -9,8 +9,7 @@ describe("Admin Dashboard GET handler", () => {
       render: vi.fn()
     } as unknown as Response;
 
-    const [_middleware, handler] = GET as [unknown, (req: Request, res: Response) => Promise<void>];
-    await handler(req, res);
+    await GET(req, res);
 
     expect(res.render).toHaveBeenCalledOnce();
     expect(res.render).toHaveBeenCalledWith(
@@ -33,8 +32,7 @@ describe("Admin Dashboard GET handler", () => {
       render: vi.fn()
     } as unknown as Response;
 
-    const [_middleware, handler] = GET as [unknown, (req: Request, res: Response) => Promise<void>];
-    await handler(req, res);
+    await GET(req, res);
 
     const renderCall = (res.render as ReturnType<typeof vi.fn>).mock.calls[0];
     const content = renderCall[1];
