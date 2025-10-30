@@ -37,6 +37,7 @@ describe("search-autocomplete", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
 
     document.body.innerHTML = "";
 
@@ -51,6 +52,8 @@ describe("search-autocomplete", () => {
   });
 
   afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
     document.body.innerHTML = "";
   });
 

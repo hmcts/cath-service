@@ -5,9 +5,10 @@
 @use "@hmcts/web-core/src/assets/css/filter-panel.scss";
 @use "@hmcts/web-core/src/assets/css/back-to-top.scss";
 @use "@hmcts/admin-pages/src/assets/css/index.scss" as admin;
+@use "@hmcts/verified-pages/src/assets/css/index.scss" as verified;
 
-.govuk-service-navigation__item {
-  margin-left: auto;
+.govuk-service-navigation__navigation-end {
+  margin-left: auto !important;
 }
 
 .govuk-phase-banner__content > span {
