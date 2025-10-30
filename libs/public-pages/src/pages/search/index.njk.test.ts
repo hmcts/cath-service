@@ -26,7 +26,7 @@ describe("search template", () => {
     });
 
     it("should have error message", () => {
-      expect(en.errorMessage).toBe("Select a court or tribunal from the list");
+      expect(en.errorMessage).toBe("There is nothing matching your criteria");
     });
 
     it("should have continue button text", () => {
@@ -48,7 +48,7 @@ describe("search template", () => {
     });
 
     it("should have error message", () => {
-      expect(cy.errorMessage).toBe("Dewiswch lys neu dribiwnlys o'r rhestr");
+      expect(cy.errorMessage).toBe("Nid oes dim sy'n cyfateb i'ch meini prawf");
     });
 
     it("should have continue button text", () => {

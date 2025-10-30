@@ -19,9 +19,13 @@ test.describe('Search Page', () => {
       const heading = page.getByRole('heading', { name: /what court or tribunal are you interested in/i });
       await expect(heading).toBeVisible();
 
-      // Check for the location input field
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      // Check for the location input field (autocomplete input)
+      const locationInput = page.getByRole('combobox');
       await expect(locationInput).toBeVisible();
+
+      // Check for hint text
+      const hintText = page.getByText(/for example, oxford combined court centre/i);
+      await expect(hintText).toBeVisible();
 
       // Check for autocomplete role (verifies autocomplete is working)
       await expect(locationInput).toHaveAttribute('role', 'combobox');
@@ -65,7 +69,7 @@ test.describe('Search Page', () => {
       await page.goto('/search');
 
       // Type in the search field
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByRole('combobox');
       await locationInput.fill('1');
 
       // Verify the continue button is visible
@@ -80,7 +84,7 @@ test.describe('Search Page', () => {
       await page.goto('/search?locationId=1');
 
       // Check that input has the preselected location value
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByRole('combobox');
       await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
     });
   });
@@ -104,12 +108,25 @@ test.describe('Search Page', () => {
       const errorSummaryHeading = errorSummary.getByRole('heading', { name: /there is a problem/i });
       await expect(errorSummaryHeading).toBeVisible();
 
-      // Check for error message link in the summary
-      const errorLink = errorSummary.getByRole('link');
+      // Check for error message link in the summary with correct text
+      const errorLink = errorSummary.getByRole('link', { name: /there is nothing matching your criteria/i });
       await expect(errorLink).toBeVisible();
 
       // Verify error link points to the location input
       await expect(errorLink).toHaveAttribute('href', '#location');
+
+      // Verify the form group has error styling (red left border/inset)
+      const formGroup = page.locator('.govuk-form-group--error');
+      await expect(formGroup).toBeVisible();
+
+      // Verify the autocomplete input has the error class (red border)
+      const autocompleteInput = page.getByRole('combobox');
+      await expect(autocompleteInput).toHaveClass(/govuk-input--error/);
+
+      // Verify error message is displayed
+      const errorMessage = page.locator('.govuk-error-message');
+      const errorMessageText = await errorMessage.textContent();
+      expect(errorMessageText?.trim()).toBe('Error: There is nothing matching your criteria');
 
       // Verify accessibility with error state
       const accessibilityScanResults = await new AxeBuilder({ page })
@@ -177,8 +194,12 @@ test.describe('Search Page', () => {
       await expect(languageToggle).toContainText('English');
 
       // Check that page elements are still visible
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByRole('combobox');
       await expect(locationInput).toBeVisible();
+
+      // Check for Welsh hint text
+      const hintText = page.getByText(/er enghraifft, oxford combined court centre/i);
+      await expect(hintText).toBeVisible();
 
       // Verify continue button is still visible
       const continueButton = page.getByRole('button', { name: /parhau|continue/i });
@@ -211,6 +232,10 @@ test.describe('Search Page', () => {
       const errorSummary = page.locator('.govuk-error-summary');
       await expect(errorSummary).toBeVisible();
 
+      // Check for Welsh error message in the summary
+      const errorLink = errorSummary.getByRole('link', { name: /nid oes dim sy'n cyfateb i'ch meini prawf/i });
+      await expect(errorLink).toBeVisible();
+
       // Verify language toggle still shows English option (we're in Welsh mode)
       const languageToggle = page.locator('.language');
       await expect(languageToggle).toContainText('English');
@@ -222,7 +247,7 @@ test.describe('Search Page', () => {
       await page.goto('/search?locationId=1');
 
       // Check that the location input is pre-filled
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByRole('combobox');
       await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
 
       // Run accessibility checks
@@ -235,12 +260,44 @@ test.describe('Search Page', () => {
     });
   });
 
+  test.describe('given user searches with no results', () => {
+    test('should display "No results found" message in English', async ({ page }) => {
+      await page.goto('/search');
+
+      // Type a search query that won't match any location
+      const locationInput = page.getByRole('combobox');
+      await locationInput.fill('zzzzzzzzzzz');
+
+      // Wait for autocomplete to show results
+      await page.waitForTimeout(300);
+
+      // Check for the "No results found" message
+      const noResultsMessage = page.getByText('No results found');
+      await expect(noResultsMessage).toBeVisible();
+    });
+
+    test('should display "Ni ddaethpwyd o hyd i unrhyw ganlyniad" message in Welsh', async ({ page }) => {
+      await page.goto('/search?lng=cy');
+
+      // Type a search query that won't match any location
+      const locationInput = page.getByRole('combobox');
+      await locationInput.fill('zzzzzzzzzzz');
+
+      // Wait for autocomplete to show results
+      await page.waitForTimeout(300);
+
+      // Check for the Welsh "No results found" message
+      const noResultsMessage = page.getByText('Ni ddaethpwyd o hyd i unrhyw ganlyniad');
+      await expect(noResultsMessage).toBeVisible();
+    });
+  });
+
   test.describe('given user uses keyboard navigation', () => {
     test('should be navigable using Tab key with visible focus indicators', async ({ page }) => {
       await page.goto('/search');
 
       // Navigate to the location input by clicking it (simulates real user interaction)
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByRole('combobox');
       await locationInput.click();
 
       // Check focus is visible
@@ -256,7 +313,7 @@ test.describe('Search Page', () => {
       await page.goto('/search');
 
       // Fill in locationId
-      const locationInput = page.getByLabel(/search for a court or tribunal|chwilio am lys neu dribiwnlys/i);
+      const locationInput = page.getByRole('combobox');
       await locationInput.fill('1');
 
       // Verify continue button is visible

@@ -24,7 +24,7 @@
             classes: "govuk-fieldset__legend--l"
           }
         },
-        errorMessage: errorMessage,
+        errorMessage: { text: errors[0].text } if errors else undefined,
         items: [
           {
             value: "court-tribunal",

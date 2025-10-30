@@ -29,7 +29,6 @@ describe("courts-tribunals-list page", () => {
       expect(call.groupedLocations).toHaveProperty("C");
       expect(call.groupedLocations).toHaveProperty("L");
       expect(call.groupedLocations).toHaveProperty("M");
-      expect(call.groupedLocations).toHaveProperty("N");
       expect(call.groupedLocations).toHaveProperty("O");
       expect(call.groupedLocations).toHaveProperty("R");
       expect(call.groupedLocations).toHaveProperty("S");

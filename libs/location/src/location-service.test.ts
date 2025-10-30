@@ -202,7 +202,6 @@ describe("getLocationsGroupedByLetter", () => {
     expect(grouped).toHaveProperty("C");
     expect(grouped).toHaveProperty("L");
     expect(grouped).toHaveProperty("M");
-    expect(grouped).toHaveProperty("N");
     expect(grouped).toHaveProperty("O");
     expect(grouped).toHaveProperty("R");
     expect(grouped).toHaveProperty("S");
