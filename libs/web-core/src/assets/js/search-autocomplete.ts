@@ -14,6 +14,11 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
   const container = locationInput.parentElement;
   if (!container) return;
 
+  // Check if autocomplete has already been initialized for this input
+  if (document.getElementById(`${inputId}-autocomplete-wrapper`)) {
+    return;
+  }
+
   const wrapper = document.createElement("div");
   wrapper.id = `${inputId}-autocomplete-wrapper`;
 

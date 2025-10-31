@@ -15,33 +15,34 @@
     {% endif %}
 
     <form method="post" novalidate>
-      {{ govukRadios({
-        name: "viewOption",
-        fieldset: {
-          legend: {
-            text: title,
-            isPageHeading: true,
-            classes: "govuk-fieldset__legend--l"
-          }
-        },
-        errorMessage: errorMessage,
-        items: [
-          {
-            value: "court-tribunal",
-            html: courtTribunalLabel,
-            hint: {
-              text: courtTribunalHint
+      <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
+        {{ govukRadios({
+          name: "viewOption",
+          fieldset: {
+            legend: {
+              text: title,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
             }
           },
-          {
-            value: "sjp-case",
-            html: sjpCaseLabel,
-            hint: {
-              text: sjpCaseHint
+          items: [
+            {
+              value: "court-tribunal",
+              html: courtTribunalLabel,
+              hint: {
+                text: courtTribunalHint
+              }
+            },
+            {
+              value: "sjp-case",
+              html: sjpCaseLabel,
+              hint: {
+                text: sjpCaseHint
+              }
             }
-          }
-        ]
-      }) }}
+          ]
+        }) }}
+      </div>
 
       {{ govukButton({
         text: continueButton
