@@ -117,7 +117,7 @@ export const GET = async (req: Request, res: Response) => {
   let locationName = "";
   if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
     const location = getLocationById(Number.parseInt(formData.locationId, 10));
-    locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
+    locationName = location ? location.name : "";
   } else {
     locationName = formData.locationName || "";
   }
