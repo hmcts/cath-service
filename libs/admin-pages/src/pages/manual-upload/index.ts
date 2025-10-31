@@ -92,9 +92,15 @@ interface ManualUploadFormData {
   displayTo?: DateInput;
 }
 
+interface ValidationError {
+  text: string;
+  href: string;
+}
+
 declare module "express-session" {
   interface SessionData {
     manualUploadForm?: ManualUploadFormData;
+    manualUploadErrors?: ValidationError[];
   }
 }
 
@@ -103,6 +109,10 @@ export const GET = async (req: Request, res: Response) => {
   const t = getTranslations(locale);
 
   const formData = req.session.manualUploadForm || {};
+  const errors = req.session.manualUploadErrors || [];
+
+  // Clear errors from session after reading
+  delete req.session.manualUploadErrors;
 
   let locationName = "";
   if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
@@ -114,6 +124,7 @@ export const GET = async (req: Request, res: Response) => {
 
   res.render("manual-upload/index", {
     ...t,
+    errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
     locations: getAllLocations(locale),
     listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
@@ -141,6 +152,8 @@ export const POST = async (req: Request, res: Response) => {
   }
 
   if (errors.length > 0) {
+    // Save errors and form data to session
+    req.session.manualUploadErrors = errors;
     req.session.manualUploadForm = formData;
 
     await new Promise<void>((resolve, reject) => {
@@ -150,27 +163,8 @@ export const POST = async (req: Request, res: Response) => {
       });
     });
 
-    // If locationId is a valid number, show the location name; otherwise show the invalid text entered
-    let locationName = "";
-    if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
-      const location = getLocationById(Number.parseInt(formData.locationId, 10));
-      locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
-    } else {
-      // Keep the invalid text that was entered (from the display field)
-      locationName = formData.locationName || "";
-    }
-
-    return res.render("manual-upload/index", {
-      ...t,
-      errors,
-      data: { ...formData, locationId: formData.locationId || "", locationName },
-      locations: getAllLocations(locale),
-      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
-      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
-      locale,
-      hideLanguageToggle: true
-    });
+    // Redirect to GET to prevent browser caching of POST response
+    return res.redirect("/manual-upload");
   }
 
   const uploadId = await storeManualUpload({

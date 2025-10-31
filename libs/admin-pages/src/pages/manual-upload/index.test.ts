@@ -274,6 +274,46 @@ describe("manual-upload page", () => {
       const selectedLanguage = renderData.languageOptions.find((opt: any) => opt.selected);
       expect(selectedLanguage?.value).toBe("ENGLISH");
     });
+
+    it("should display errors from session and clear them", async () => {
+      const mockErrors = [
+        { text: "Please provide a file", href: "#file" },
+        { text: "Court name too short", href: "#court" }
+      ];
+
+      const req = {
+        session: {
+          manualUploadErrors: mockErrors
+        }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.errors).toEqual(mockErrors);
+      expect(req.session.manualUploadErrors).toBeUndefined();
+    });
+
+    it("should not display errors when session has no errors", async () => {
+      const req = {
+        session: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.errors).toBeUndefined();
+    });
   });
 
   describe("POST", () => {
@@ -387,11 +427,15 @@ describe("manual-upload page", () => {
       expect(session.save).toHaveBeenCalled();
     });
 
-    it("should re-render form with errors on validation failure", async () => {
+    it("should redirect to GET with errors on validation failure", async () => {
       const mockErrors = [
         { text: "Please provide a file", href: "#file" },
         { text: "Court name too short", href: "#court" }
       ];
+
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
 
       const req = {
         body: {
@@ -409,9 +453,7 @@ describe("manual-upload page", () => {
           "displayTo-month": "",
           "displayTo-year": ""
         },
-        session: {
-          save: vi.fn((cb) => cb())
-        }
+        session
       } as unknown as Request;
 
       const res = {
@@ -424,17 +466,17 @@ describe("manual-upload page", () => {
       await POST(req, res);
 
       expect(validateForm).toHaveBeenCalled();
-      expect(res.render).toHaveBeenCalledWith(
-        "manual-upload/index",
-        expect.objectContaining({
-          errors: mockErrors,
-          errorSummaryTitle: "There is a problem"
-        })
-      );
-      expect(res.redirect).not.toHaveBeenCalled();
+      expect(req.session.manualUploadErrors).toEqual(mockErrors);
+      expect(session.save).toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
+      expect(res.render).not.toHaveBeenCalled();
     });
 
     it("should handle file size error from multer", async () => {
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
       const req = {
         body: {
           locationId: "1",
@@ -452,9 +494,7 @@ describe("manual-upload page", () => {
           "displayTo-year": "2025"
         },
         fileUploadError: { code: "LIMIT_FILE_SIZE" },
-        session: {
-          save: vi.fn((cb) => cb())
-        }
+        session
       } as unknown as Request;
 
       const res = {
@@ -466,21 +506,23 @@ describe("manual-upload page", () => {
 
       await POST(req, res);
 
-      expect(res.render).toHaveBeenCalledWith(
-        "manual-upload/index",
-        expect.objectContaining({
-          errors: expect.arrayContaining([
-            expect.objectContaining({
-              text: expect.stringContaining("File too large")
-            })
-          ])
-        })
+      expect(req.session.manualUploadErrors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            text: expect.stringContaining("File too large")
+          })
+        ])
       );
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
     });
 
     it("should preserve form data when validation fails", async () => {
       const mockErrors = [{ text: "Some error", href: "#field" }];
 
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
       const req = {
         body: {
           locationId: "1",
@@ -498,9 +540,7 @@ describe("manual-upload page", () => {
           "displayTo-month": "06",
           "displayTo-year": "2025"
         },
-        session: {
-          save: vi.fn((cb) => cb())
-        }
+        session
       } as unknown as Request;
 
       const res = {
@@ -512,18 +552,20 @@ describe("manual-upload page", () => {
 
       await POST(req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
-
-      expect(renderData.data).toBeDefined();
-      expect(renderData.data.locationId).toBe("1");
-      expect(renderData.data.listType).toBe("CIVIL_DAILY_CAUSE_LIST");
-      expect(renderData.data.sensitivity).toBe("PUBLIC");
-      expect(renderData.data.language).toBe("ENGLISH");
+      expect(req.session.manualUploadForm).toBeDefined();
+      expect(req.session.manualUploadForm?.locationId).toBe("1");
+      expect(req.session.manualUploadForm?.listType).toBe("CIVIL_DAILY_CAUSE_LIST");
+      expect(req.session.manualUploadForm?.sensitivity).toBe("PUBLIC");
+      expect(req.session.manualUploadForm?.language).toBe("ENGLISH");
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
     });
 
-    it("should show location name for valid location ID", async () => {
+    it("should store location name in session for valid location ID", async () => {
       const mockErrors = [{ text: "Some error", href: "#field" }];
+
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
 
       const req = {
         body: {
@@ -542,9 +584,7 @@ describe("manual-upload page", () => {
           "displayTo-month": "06",
           "displayTo-year": "2025"
         },
-        session: {
-          save: vi.fn((cb) => cb())
-        }
+        session
       } as unknown as Request;
 
       const res = {
@@ -556,14 +596,16 @@ describe("manual-upload page", () => {
 
       await POST(req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
-
-      expect(renderData.data.locationName).toBe("Test Court");
+      expect(req.session.manualUploadForm?.locationName).toBe("Test Court");
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
     });
 
     it("should preserve invalid court name when location ID is invalid", async () => {
       const mockErrors = [{ text: "Please enter and select a valid court", href: "#court" }];
+
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
 
       const req = {
         body: {
@@ -582,9 +624,7 @@ describe("manual-upload page", () => {
           "displayTo-month": "06",
           "displayTo-year": "2025"
         },
-        session: {
-          save: vi.fn((cb) => cb())
-        }
+        session
       } as unknown as Request;
 
       const res = {
@@ -596,10 +636,8 @@ describe("manual-upload page", () => {
 
       await POST(req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
-
-      expect(renderData.data.locationName).toBe("Invalid Court Name");
+      expect(req.session.manualUploadForm?.locationName).toBe("Invalid Court Name");
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
     });
 
     it("should store form data in session on validation failure", async () => {
@@ -636,7 +674,10 @@ describe("manual-upload page", () => {
 
       await POST(req, res);
 
-      expect(req.session).toHaveProperty("manualUploadForm");
+      expect(req.session.manualUploadForm).toBeDefined();
+      expect(req.session.manualUploadErrors).toEqual(mockErrors);
+      expect(session.save).toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
     });
   });
 });
