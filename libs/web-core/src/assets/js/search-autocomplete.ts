@@ -76,46 +76,52 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
     }
   });
 
-  // Additional fallback: listen to input changes and update hidden field
-  setTimeout(() => {
-    const autocompleteInput = document.querySelector(`#${inputId}`) as HTMLInputElement;
-    if (autocompleteInput) {
-      // Apply error styling if needed
-      if (hasError) {
-        autocompleteInput.classList.add("govuk-input--error");
-      }
-
-      const form = autocompleteInput.closest("form");
-
-      autocompleteInput.addEventListener("change", () => {
-        const value = autocompleteInput.value;
-        const locationId = locationMap.get(value);
-        if (locationId) {
-          hiddenInput.value = locationId;
-        } else {
-          hiddenInput.value = "";
-        }
-      });
-
-      autocompleteInput.addEventListener("blur", () => {
-        const value = autocompleteInput.value;
-        const locationId = locationMap.get(value);
-        if (locationId) {
-          hiddenInput.value = locationId;
-        }
-      });
-
-      if (form) {
-        form.addEventListener("submit", () => {
-          const currentValue = autocompleteInput.value;
-          const locationId = locationMap.get(currentValue);
-          if (locationId) {
-            hiddenInput.value = locationId;
-          }
-        });
-      }
+  const autocompleteInput = wrapper.querySelector(`#${inputId}`) as HTMLInputElement;
+  if (autocompleteInput) {
+    // Add label for accessibility
+    if (!wrapper.querySelector("label")) {
+      const label = document.createElement("label");
+      label.className = "govuk-label govuk-visually-hidden";
+      label.htmlFor = inputId;
+      label.textContent = "Search";
+      wrapper.insertBefore(label, wrapper.firstChild);
     }
-  }, 100);
+
+    // Apply error styling if needed
+    if (hasError) {
+      autocompleteInput.classList.add("govuk-input--error");
+    }
+
+    const form = autocompleteInput.closest("form");
+
+    autocompleteInput.addEventListener("change", () => {
+      const value = autocompleteInput.value;
+      const locationId = locationMap.get(value);
+      if (locationId) {
+        hiddenInput.value = locationId;
+      } else {
+        hiddenInput.value = "";
+      }
+    });
+
+    autocompleteInput.addEventListener("blur", () => {
+      const value = autocompleteInput.value;
+      const locationId = locationMap.get(value);
+      if (locationId) {
+        hiddenInput.value = locationId;
+      }
+    });
+
+    if (form) {
+      form.addEventListener("submit", () => {
+        const currentValue = autocompleteInput.value;
+        const locationId = locationMap.get(currentValue);
+        if (locationId) {
+          hiddenInput.value = locationId;
+        }
+      });
+    }
+  }
 }
 
 export function initSearchAutocomplete() {
