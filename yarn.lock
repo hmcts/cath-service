@@ -1656,7 +1656,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:24.9.2":
+"@types/node@npm:24.9.2, @types/node@npm:^24.9.2":
   version: 24.9.2
   resolution: "@types/node@npm:24.9.2"
   dependencies:
@@ -2302,7 +2302,7 @@ __metadata:
   resolution: "cath@workspace:."
   dependencies:
     "@biomejs/biome": "npm:2.3.2"
-    "@types/node": "npm:24.9.2"
+    "@types/node": "npm:^24.9.2"
     "@types/supertest": "npm:6.0.3"
     "@vitest/coverage-v8": "npm:3.2.4"
     "@vitest/ui": "npm:3.2.4"

@@ -5,8 +5,9 @@ const mockTranslations = {
   errorMessages: {
     fileRequired: "File is required",
     fileType: "Invalid file type",
-    fileSize: "File too large",
+    fileSize: "File too large, please upload file smaller than 2MB",
     courtRequired: "Court is required",
+    courtTooShort: "Court name too short",
     listTypeRequired: "List type is required",
     sensitivityRequired: "Sensitivity is required",
     languageRequired: "Language is required",
@@ -23,12 +24,12 @@ const mockTranslations = {
 describe("validateDate", () => {
   describe("Valid dates", () => {
     it("should return null for a valid date", () => {
-      const result = validateDate({ day: "15", month: "6", year: "2025" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "15", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toBeNull();
     });
 
     it("should return null for a valid leap year date", () => {
-      const result = validateDate({ day: "29", month: "2", year: "2024" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "29", month: "02", year: "2024" }, "testField", "Required message", "Invalid message");
       expect(result).toBeNull();
     });
   });
@@ -43,7 +44,7 @@ describe("validateDate", () => {
     });
 
     it("should return error when day is missing", () => {
-      const result = validateDate({ day: "", month: "6", year: "2025" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Required message",
         href: "#testField"
@@ -59,7 +60,7 @@ describe("validateDate", () => {
     });
 
     it("should return error when year is missing", () => {
-      const result = validateDate({ day: "15", month: "6", year: "" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "15", month: "06", year: "" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Required message",
         href: "#testField"
@@ -69,7 +70,7 @@ describe("validateDate", () => {
 
   describe("Invalid dates", () => {
     it("should return error for invalid day", () => {
-      const result = validateDate({ day: "32", month: "1", year: "2025" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "32", month: "01", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
         href: "#testField"
@@ -85,7 +86,7 @@ describe("validateDate", () => {
     });
 
     it("should return error for February 29 in non-leap year", () => {
-      const result = validateDate({ day: "29", month: "2", year: "2025" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "29", month: "02", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
         href: "#testField"
@@ -93,7 +94,7 @@ describe("validateDate", () => {
     });
 
     it("should return error for non-numeric values", () => {
-      const result = validateDate({ day: "abc", month: "6", year: "2025" }, "testField", "Required message", "Invalid message");
+      const result = validateDate({ day: "abc", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
       expect(result).toEqual({
         text: "Invalid message",
         href: "#testField"
@@ -122,11 +123,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -139,11 +140,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, undefined, mockTranslations);
@@ -157,11 +158,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const file = createMockFile({ originalname: "test.exe" });
@@ -176,17 +177,17 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const file = createMockFile({ size: 3 * 1024 * 1024 }); // 3MB
       const errors = validateForm(body, file, mockTranslations);
       expect(errors).toContainEqual({
-        text: "File too large",
+        text: "File too large, please upload file smaller than 2MB",
         href: "#file"
       });
     });
@@ -198,11 +199,11 @@ describe("validateForm", () => {
         const body = {
           locationId: "123",
           listType: "CIVIL_DAILY_CAUSE_LIST",
-          hearingStartDate: { day: "15", month: "6", year: "2025" },
+          hearingStartDate: { day: "15", month: "06", year: "2025" },
           sensitivity: "PUBLIC",
           language: "ENGLISH",
-          displayFrom: { day: "10", month: "6", year: "2025" },
-          displayTo: { day: "20", month: "6", year: "2025" }
+          displayFrom: { day: "10", month: "06", year: "2025" },
+          displayTo: { day: "20", month: "06", year: "2025" }
         };
 
         const file = createMockFile({ originalname: `test.${ext}` });
@@ -218,29 +219,29 @@ describe("validateForm", () => {
     it("should return error when locationId is missing", () => {
       const body = {
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
-        text: "Court is required",
+        text: "Court name too short",
         href: "#court"
       });
     });
 
-    it("should return error when locationId is too short", () => {
+    it("should return error when locationId is not a valid number", () => {
       const body = {
-        locationId: "12",
+        locationId: "invalid",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -253,11 +254,11 @@ describe("validateForm", () => {
     it("should return error when listType is missing", () => {
       const body = {
         locationId: "123",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -271,10 +272,10 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -288,10 +289,10 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -307,11 +308,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "32", month: "6", year: "2025" },
+        hearingStartDate: { day: "32", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -325,11 +326,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "32", month: "6", year: "2025" },
-        displayTo: { day: "20", month: "6", year: "2025" }
+        displayFrom: { day: "32", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -343,11 +344,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "10", month: "6", year: "2025" },
-        displayTo: { day: "32", month: "6", year: "2025" }
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "32", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -361,11 +362,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "20", month: "6", year: "2025" },
-        displayTo: { day: "10", month: "6", year: "2025" }
+        displayFrom: { day: "20", month: "06", year: "2025" },
+        displayTo: { day: "10", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -379,11 +380,11 @@ describe("validateForm", () => {
       const body = {
         locationId: "123",
         listType: "CIVIL_DAILY_CAUSE_LIST",
-        hearingStartDate: { day: "15", month: "6", year: "2025" },
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: { day: "15", month: "6", year: "2025" },
-        displayTo: { day: "15", month: "6", year: "2025" }
+        displayFrom: { day: "15", month: "06", year: "2025" },
+        displayTo: { day: "15", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, createMockFile(), mockTranslations);
@@ -399,15 +400,15 @@ describe("validateForm", () => {
         hearingStartDate: { day: "32", month: "13", year: "2025" },
         sensitivity: "",
         language: "",
-        displayFrom: { day: "32", month: "6", year: "2025" },
-        displayTo: { day: "10", month: "6", year: "2025" }
+        displayFrom: { day: "32", month: "06", year: "2025" },
+        displayTo: { day: "10", month: "06", year: "2025" }
       };
 
       const errors = validateForm(body, undefined, mockTranslations);
 
       expect(errors.length).toBeGreaterThan(5);
       expect(errors.some((e) => e.text === "File is required")).toBe(true);
-      expect(errors.some((e) => e.text === "Court is required")).toBe(true);
+      expect(errors.some((e) => e.text === "Court name too short")).toBe(true);
       expect(errors.some((e) => e.text === "List type is required")).toBe(true);
       expect(errors.some((e) => e.text === "Sensitivity is required")).toBe(true);
       expect(errors.some((e) => e.text === "Language is required")).toBe(true);

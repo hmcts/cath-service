@@ -8,6 +8,7 @@ export interface ValidationError {
 
 interface ManualUploadFormData {
   locationId?: string;
+  locationName?: string;
   listType?: string;
   hearingStartDate?: DateInput;
   sensitivity?: string;
@@ -23,17 +24,27 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
   if (!file) {
     errors.push({ text: t.errorMessages.fileRequired, href: "#file" });
   } else {
+    if (file.size > 2 * 1024 * 1024) {
+      errors.push({ text: t.errorMessages.fileSize, href: "#file" });
+    }
     const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
     if (!allowedExtensions.test(file.originalname)) {
       errors.push({ text: t.errorMessages.fileType, href: "#file" });
     }
-    if (file.size > 2 * 1024 * 1024) {
-      errors.push({ text: t.errorMessages.fileSize, href: "#file" });
-    }
   }
 
   // Required field validation
-  if (!body.locationId || body.locationId.trim() === "" || body.locationId.trim().length < 3) {
+  // Check if locationId exists and is a valid number (autocomplete submits numeric IDs)
+  if (!body.locationId || body.locationId.trim() === "") {
+    // Check if user entered text that's 3+ characters (invalid selection)
+    if (body.locationName && body.locationName.trim().length >= 3) {
+      errors.push({ text: t.errorMessages.courtRequired, href: "#court" });
+    } else {
+      // Empty or less than 3 characters
+      errors.push({ text: t.errorMessages.courtTooShort, href: "#court" });
+    }
+  } else if (Number.isNaN(Number(body.locationId))) {
+    // locationId exists but is not a valid number (invalid selection)
     errors.push({ text: t.errorMessages.courtRequired, href: "#court" });
   }
 
@@ -86,6 +97,11 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
 export function validateDate(dateInput: DateInput | undefined, fieldName: string, requiredMessage: string, invalidMessage: string): ValidationError | null {
   if (!dateInput || !dateInput.day || !dateInput.month || !dateInput.year) {
     return { text: requiredMessage, href: `#${fieldName}` };
+  }
+
+  // Validate day and month are exactly 2 characters
+  if (dateInput.day.length !== 2 || dateInput.month.length !== 2) {
+    return { text: invalidMessage, href: `#${fieldName}` };
   }
 
   const parsedDate = parseDate(dateInput);

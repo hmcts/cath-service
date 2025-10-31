@@ -17,6 +17,9 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
   const wrapper = document.createElement("div");
   wrapper.id = `${inputId}-autocomplete-wrapper`;
 
+  // Check if original input has error class
+  const hasError = locationInput.classList.contains("govuk-input--error");
+
   const existingLabel = container.querySelector("label");
   if (!existingLabel) {
     const label = document.createElement("label");
@@ -71,6 +74,11 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
   setTimeout(() => {
     const autocompleteInput = document.querySelector(`#${inputId}`) as HTMLInputElement;
     if (autocompleteInput) {
+      // Apply error class if original input had error
+      if (hasError) {
+        autocompleteInput.classList.add("govuk-input--error");
+      }
+
       const form = autocompleteInput.closest("form");
 
       autocompleteInput.addEventListener("change", () => {

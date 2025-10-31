@@ -1,4 +1,4 @@
-import { getAllLocations } from "@hmcts/location";
+import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
 import type { DateInput } from "@hmcts/web-core";
 import type { Request, Response } from "express";
@@ -45,8 +45,36 @@ const LANGUAGE_OPTIONS = [
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
+function transformDateFields(body: any): ManualUploadFormData {
+  const hasValue = (val: any) => val !== undefined && val !== null && val !== "" && val.toString().trim() !== "";
+
+  return {
+    locationId: body.locationId,
+    locationName: body["court-display"], // Capture the display value from autocomplete
+    listType: body.listType,
+    hearingStartDate: (hasValue(body["hearingStartDate-day"]) || hasValue(body["hearingStartDate-month"]) || hasValue(body["hearingStartDate-year"])) ? {
+      day: body["hearingStartDate-day"] || "",
+      month: body["hearingStartDate-month"] || "",
+      year: body["hearingStartDate-year"] || ""
+    } : undefined,
+    sensitivity: body.sensitivity,
+    language: body.language,
+    displayFrom: (hasValue(body["displayFrom-day"]) || hasValue(body["displayFrom-month"]) || hasValue(body["displayFrom-year"])) ? {
+      day: body["displayFrom-day"] || "",
+      month: body["displayFrom-month"] || "",
+      year: body["displayFrom-year"] || ""
+    } : undefined,
+    displayTo: (hasValue(body["displayTo-day"]) || hasValue(body["displayTo-month"]) || hasValue(body["displayTo-year"])) ? {
+      day: body["displayTo-day"] || "",
+      month: body["displayTo-month"] || "",
+      year: body["displayTo-year"] || ""
+    } : undefined
+  };
+}
+
 interface ManualUploadFormData {
   locationId?: string;
+  locationName?: string;
   listType?: string;
   hearingStartDate?: DateInput;
   sensitivity?: string;
@@ -62,7 +90,10 @@ declare module "express-session" {
 }
 
 export const GET = async (req: Request, res: Response) => {
-  const data = req.session.manualUploadForm || {};
+  // Clear session data on GET request to show clean form
+  delete req.session.manualUploadForm;
+
+  const data = {};
   const locale = "en";
   const t = getTranslations(locale);
 
@@ -70,21 +101,31 @@ export const GET = async (req: Request, res: Response) => {
     ...t,
     data,
     locations: getAllLocations(locale),
-    listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === data.listType })),
-    sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === data.sensitivity })),
-    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (data.language || Language.ENGLISH) })),
+    listTypes: LIST_TYPES,
+    sensitivityOptions: SENSITIVITY_OPTIONS,
+    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === Language.ENGLISH })),
     locale
   });
 };
 
 export const POST = async (req: Request, res: Response) => {
-  const locale = "en";
+  const locale = "en" as "en" | "cy";
   const t = getTranslations(locale);
 
-  const errors = validateForm(req.body, req.file, t);
+  const formData = transformDateFields(req.body);
+
+  // Check for multer errors (e.g., file too large)
+  const fileUploadError = (req as any).fileUploadError;
+  let errors = validateForm(formData, req.file, t);
+
+  // If multer threw a file size error, replace the "fileRequired" error with the file size error
+  if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
+    errors = errors.filter((e) => e.text !== t.errorMessages.fileRequired);
+    errors = [{ text: t.errorMessages.fileSize, href: "#file" }, ...errors];
+  }
 
   if (errors.length > 0) {
-    req.session.manualUploadForm = req.body;
+    req.session.manualUploadForm = formData;
 
     await new Promise<void>((resolve, reject) => {
       req.session.save((err) => {
@@ -92,55 +133,43 @@ export const POST = async (req: Request, res: Response) => {
         else resolve();
       });
     });
+
+    // If locationId is a valid number, show the location name; otherwise show the invalid text entered
+    let locationName = "";
+    if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
+      const location = getLocationById(Number.parseInt(formData.locationId, 10));
+      locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
+    } else {
+      // Keep the invalid text that was entered (from the display field)
+      locationName = formData.locationName || "";
+    }
 
     return res.render("manual-upload/index", {
       ...t,
       errors,
-      data: req.body,
+      data: { ...formData, locationId: formData.locationId || "", locationName },
       locations: getAllLocations(locale),
-      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
-      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (req.body.language || Language.ENGLISH) })),
-      locale
-    });
-  }
-
-  if (!req.file) {
-    req.session.manualUploadForm = req.body;
-
-    await new Promise<void>((resolve, reject) => {
-      req.session.save((err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-
-    return res.status(400).render("manual-upload/index", {
-      ...t,
-      errors: [{ text: t.errorMessages.fileRequired, href: "#file" }],
-      data: req.body,
-      locations: getAllLocations(locale),
-      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === req.body.listType })),
-      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === req.body.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (req.body.language || Language.ENGLISH) })),
+      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
+      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
+      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
       locale
     });
   }
 
   await storeManualUpload({
-    file: req.file.buffer,
-    fileName: req.file.originalname,
-    fileType: req.file.mimetype,
-    locationId: req.body.locationId,
-    listType: req.body.listType,
-    hearingStartDate: req.body.hearingStartDate,
-    sensitivity: req.body.sensitivity,
-    language: req.body.language,
-    displayFrom: req.body.displayFrom,
-    displayTo: req.body.displayTo
+    file: req.file!.buffer,
+    fileName: req.file!.originalname,
+    fileType: req.file!.mimetype,
+    locationId: formData.locationId!,
+    listType: formData.listType!,
+    hearingStartDate: formData.hearingStartDate!,
+    sensitivity: formData.sensitivity!,
+    language: formData.language!,
+    displayFrom: formData.displayFrom!,
+    displayTo: formData.displayTo!
   });
 
   delete req.session.manualUploadForm;
 
-  res.redirect("/manual-upload/confirm");
+  res.redirect("/manual-upload-summary");
 };

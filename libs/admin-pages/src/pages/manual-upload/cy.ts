@@ -41,9 +41,10 @@ export const cy = {
 
   errorMessages: {
     fileRequired: "Darparwch ffeil",
-    fileType: "Rhaid i'r ffeil a ddewiswyd fod yn csv, doc, docx, htm, html, json, neu pdf",
-    fileSize: "Rhaid i'r ffeil a ddewiswyd fod yn llai na 2MB",
-    courtRequired: "Rhaid i enw'r llys fod yn dri chymeriad neu fwy",
+    fileType: "Llwythwch fformat ffeil dilys",
+    fileSize: "Ffeil yn rhy fawr, llwythwch ffeil yn llai na 2MB",
+    courtRequired: "Rhowch a dewiswch lys dilys",
+    courtTooShort: "Rhaid i enw'r llys fod yn dri chymeriad neu fwy",
     listTypeRequired: "Dewiswch fath o restr",
     hearingStartDateRequired: "Rhowch ddyddiad dechrau gwrandawiad dilys",
     hearingStartDateInvalid: "Rhowch ddyddiad dechrau gwrandawiad dilys",

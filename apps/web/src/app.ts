@@ -66,7 +66,16 @@ export async function createApp(): Promise<Express> {
 
   // Register admin pages with multer middleware for file upload
   const upload = createFileUpload();
-  app.post("/manual-upload", upload.single("file"));
+  app.post("/manual-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        // Multer error occurred, but don't throw - let the route handler deal with validation
+        // Store the error so the POST handler can check it
+        (req as any).fileUploadError = err;
+      }
+      next();
+    });
+  });
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());

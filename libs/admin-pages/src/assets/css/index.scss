@@ -87,3 +87,48 @@
   margin-bottom: 20px;
   flex: 1;
 }
+
+// Error styling - red border on input when error class is present (GOV.UK standard 2px border)
+.autocomplete__input.govuk-input--error {
+  border-color: #d4351c;
+}
+
+// Ensure file upload error styling is applied
+.govuk-file-upload--error {
+  border: 2px solid #d4351c;
+}
+
+.govuk-file-upload--error:focus {
+  border-color: #0b0c0c;
+  box-shadow: 0 0 0 3px #fd0;
+}
+
+// Error message styling - ensure red color and proper formatting
+.govuk-error-message {
+  font-weight: 700;
+  color: #d4351c;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+// Form group with error - add red left border to form group
+.govuk-form-group--error {
+  padding-left: 15px;
+  border-left: 5px solid #d4351c;
+}
+
+// Error inset text - keep the grey border but add red border inside
+.govuk-inset-text--error {
+  padding-left: 0;
+  border-left: 10px solid #b1b4b6;
+
+  > .govuk-form-group {
+    padding-left: 15px;
+    border-left: 5px solid #d4351c;
+  }
+}
+
+.govuk-inset-text {
+  clear: both;
+  border-left: 10px solid #b1b4b6;
+}

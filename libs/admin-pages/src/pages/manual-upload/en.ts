@@ -41,9 +41,10 @@ export const en = {
 
   errorMessages: {
     fileRequired: "Please provide a file",
-    fileType: "The selected file must be a csv, doc, docx, htm, html, json, or pdf",
-    fileSize: "The selected file must be smaller than 2MB",
-    courtRequired: "Court name must be three characters or more",
+    fileType: "Please upload a valid file format",
+    fileSize: "File too large, please upload file smaller than 2MB",
+    courtRequired: "Please enter and select a valid court",
+    courtTooShort: "Court name must be three characters or more",
     listTypeRequired: "Please select a list type",
     hearingStartDateRequired: "Please enter a valid hearing start date",
     hearingStartDateInvalid: "Please enter a valid hearing start date",
