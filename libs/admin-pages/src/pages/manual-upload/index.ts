@@ -104,7 +104,8 @@ export const GET = async (req: Request, res: Response) => {
     listTypes: LIST_TYPES,
     sensitivityOptions: SENSITIVITY_OPTIONS,
     languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === Language.ENGLISH })),
-    locale
+    locale,
+    hideLanguageToggle: true
   });
 };
 
@@ -152,7 +153,8 @@ export const POST = async (req: Request, res: Response) => {
       listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
       sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
       languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
-      locale
+      locale,
+      hideLanguageToggle: true
     });
   }
 

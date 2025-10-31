@@ -1,5 +1,6 @@
 export const en = {
   title: "Manual upload",
+  pageTitle: "Upload - Manual upload",
   warningTitle: "Warning",
   warningMessage: "Prior to upload you must ensure the file is suitable for publication e.g. redaction of personal data has been done during the production of this file.",
   fileUploadLabel: "Manually upload a csv, doc, docx, htm, html, json, or pdf file, max size 2MB",
