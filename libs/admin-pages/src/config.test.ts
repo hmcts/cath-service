@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assets, moduleRoot, pageRoutes } from "./index.js";
+import { assets, moduleRoot, pageRoutes } from "./config.js";
 
 describe("admin-pages module exports", () => {
   it("should export pageRoutes with correct path", () => {

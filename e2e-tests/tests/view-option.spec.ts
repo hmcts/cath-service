@@ -22,6 +22,13 @@ test.describe('View Option Page', () => {
       await expect(courtTribunalRadio).toBeVisible();
       await expect(sjpCaseRadio).toBeVisible();
 
+      // Check for hint text under the radio buttons
+      const courtHintText = page.getByText(/view time, location, type of hearings and more/i);
+      await expect(courtHintText).toBeVisible();
+
+      const sjpHintText = page.getByText(/TV licensing, minor traffic offences such as speeding and more/i);
+      await expect(sjpHintText).toBeVisible();
+
       // Check for continue button
       const continueButton = page.getByRole('button', { name: /continue/i });
       await expect(continueButton).toBeVisible();

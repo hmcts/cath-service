@@ -1,0 +1,14 @@
+{% extends "layouts/base-template.njk" %}
+
+{% set title = "Bad request" %}
+
+{% block page_content %}
+  <h1 class="govuk-heading-l">Bad request</h1>
+  <p class="govuk-body">The page you were trying to access has missing or invalid information.</p>
+  <p class="govuk-body">You can:</p>
+  <ul class="govuk-list govuk-list--bullet">
+    <li>check the web address is correct</li>
+    <li>go back to the <a href="/" class="govuk-link">start page</a> and try again</li>
+  </ul>
+  <p class="govuk-body">If you continue to have problems, <a href="/contact-us" class="govuk-link">contact us</a> if you need to speak to someone about this service.</p>
+{% endblock %}

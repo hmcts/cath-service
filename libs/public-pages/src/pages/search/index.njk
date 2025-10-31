@@ -2,14 +2,6 @@
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
-{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
-
-{% block backLink %}
-  {{ govukBackLink({
-    text: back,
-    href: backLink
-  }) }}
-{% endblock %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
@@ -29,13 +21,20 @@
         id: "location",
         name: "locationId",
         type: "text",
-        errorMessage: errors[0] if errors else undefined,
+        label: {
+          text: "Search",
+          classes: "govuk-visually-hidden"
+        },
+        hint: {
+          text: searchHint
+        },
+        errorMessage: { text: "" } if errors else undefined,
         value: (preselectedLocation.welshName if locale === "cy" else preselectedLocation.name) if preselectedLocation else "",
         attributes: {
           "data-location-id": preselectedLocation.id if preselectedLocation else "",
           "data-autocomplete": "true",
           "data-locale": locale,
-          "data-search-label": (cy.searchLabel if locale === "cy" else en.searchLabel)
+          "data-no-results-message": noResultsFound
         }
       }) }}
 

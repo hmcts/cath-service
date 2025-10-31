@@ -6,6 +6,10 @@
     ".": {
       "production": "./dist/index.js",
       "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
     }
   },
   "scripts": {
@@ -20,5 +24,10 @@
   },
   "peerDependencies": {
     "express": "^5.1.0"
+  },
+  "dependencies": {
+    "@hmcts/location": "workspace:*",
+    "@hmcts/publication": "workspace:*",
+    "@hmcts/web-core": "workspace:*"
   }
 }
