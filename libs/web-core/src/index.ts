@@ -4,6 +4,8 @@ export { cy } from "./locales/cy.js";
 export { en } from "./locales/en.js";
 export type { CookieManagerOptions, CookieManagerState, CookiePreferences } from "./middleware/cookies/cookie-manager-middleware.js";
 export { configureCookieManager } from "./middleware/cookies/cookie-manager-middleware.js";
+export type { FileUploadOptions } from "./middleware/file-upload/file-upload-middleware.js";
+export { createFileUpload } from "./middleware/file-upload/file-upload-middleware.js";
 export type { GovukSetupOptions } from "./middleware/govuk-frontend/configure-govuk.js";
 export { configureGovuk } from "./middleware/govuk-frontend/configure-govuk.js";
 export { errorHandler, notFoundHandler } from "./middleware/govuk-frontend/error-handler.js";
@@ -19,4 +21,5 @@ export { PostgresStore } from "./middleware/session-stores/postgres-store.js";
 // Session stores - these have optional peer dependencies
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";
-export { formatDateAndLocale } from "./utils/format-date-and-locale.js";
+export type { DateInput } from "./utils/date-utils.js";
+export { formatDateAndLocale, parseDate } from "./utils/date-utils.js";
