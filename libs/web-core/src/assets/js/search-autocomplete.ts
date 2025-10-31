@@ -9,7 +9,8 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
 
   const preselectedLocationId = locationInput.getAttribute("data-location-id");
   const preselectedValue = locationInput.value;
-  const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
+  const noResultsMessage = locationInput.getAttribute("data-no-results-message") || "No results found";
+  const hasError = locationInput.classList.contains("govuk-input--error");
 
   const container = locationInput.parentElement;
   if (!container) return;
@@ -56,11 +57,13 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
     defaultValue: preselectedValue,
     source: (query: string, populateResults: (results: string[]) => void) => {
       const searchResults = searchLocations(query, language);
-      const locationNames = searchResults.map((loc) => (language === "cy" ? loc.welshName : loc.name)).sort((a, b) => a.localeCompare(b));
+      const locationNames = searchResults.map((loc) => (language === "cy" ? loc.welshName : loc.name));
       populateResults(locationNames);
     },
     minLength: 1,
     confirmOnBlur: true,
+    autoselect: false,
+    tNoResults: () => noResultsMessage,
     onConfirm: (confirmed: string | undefined) => {
       if (confirmed && typeof confirmed === "string") {
         const locationId = locationMap.get(confirmed);
@@ -75,46 +78,52 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
     }
   });
 
-  // Additional fallback: listen to input changes and update hidden field
-  setTimeout(() => {
-    const autocompleteInput = document.querySelector(`#${inputId}`) as HTMLInputElement;
-    if (autocompleteInput) {
-      // Apply error class if original input had error
-      if (hasError) {
-        autocompleteInput.classList.add("govuk-input--error");
-      }
-
-      const form = autocompleteInput.closest("form");
-
-      autocompleteInput.addEventListener("change", () => {
-        const value = autocompleteInput.value;
-        const locationId = locationMap.get(value);
-        if (locationId) {
-          hiddenInput.value = locationId;
-        } else {
-          hiddenInput.value = "";
-        }
-      });
-
-      autocompleteInput.addEventListener("blur", () => {
-        const value = autocompleteInput.value;
-        const locationId = locationMap.get(value);
-        if (locationId) {
-          hiddenInput.value = locationId;
-        }
-      });
-
-      if (form) {
-        form.addEventListener("submit", () => {
-          const currentValue = autocompleteInput.value;
-          const locationId = locationMap.get(currentValue);
-          if (locationId) {
-            hiddenInput.value = locationId;
-          }
-        });
-      }
+  const autocompleteInput = wrapper.querySelector("#location") as HTMLInputElement;
+  if (autocompleteInput) {
+    // Add label for accessibility
+    if (!wrapper.querySelector("label")) {
+      const label = document.createElement("label");
+      label.className = "govuk-label govuk-visually-hidden";
+      label.htmlFor = "location";
+      label.textContent = "Search";
+      wrapper.insertBefore(label, wrapper.firstChild);
     }
-  }, 100);
+
+    // Apply error styling if needed
+    if (hasError) {
+      autocompleteInput.classList.add("govuk-input--error");
+    }
+
+    const form = autocompleteInput.closest("form");
+
+    autocompleteInput.addEventListener("change", () => {
+      const value = autocompleteInput.value;
+      const locationId = locationMap.get(value);
+      if (locationId) {
+        hiddenInput.value = locationId;
+      } else {
+        hiddenInput.value = "";
+      }
+    });
+
+    autocompleteInput.addEventListener("blur", () => {
+      const value = autocompleteInput.value;
+      const locationId = locationMap.get(value);
+      if (locationId) {
+        hiddenInput.value = locationId;
+      }
+    });
+
+    if (form) {
+      form.addEventListener("submit", () => {
+        const currentValue = autocompleteInput.value;
+        const locationId = locationMap.get(currentValue);
+        if (locationId) {
+          hiddenInput.value = locationId;
+        }
+      });
+    }
+  }
 }
 
 export function initSearchAutocomplete() {
