@@ -1,23 +1,87 @@
 import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+
+// Helper function to complete the manual upload form and navigate to summary page
+async function navigateToSummaryPage(page: Page) {
+  // Navigate to manual upload page with location ID in query string (pre-fills the court)
+  await page.goto("/manual-upload?locationId=1");
+
+  // Wait for autocomplete to initialize
+  await page.waitForTimeout(1000);
+
+  // Select list type
+  await page.selectOption('select[name="listType"]', "CROWN_DAILY_LIST");
+
+  // Fill hearing start date
+  await page.fill('input[name="hearingStartDate-day"]', "23");
+  await page.fill('input[name="hearingStartDate-month"]', "10");
+  await page.fill('input[name="hearingStartDate-year"]', "2025");
+
+  // Select sensitivity
+  await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+
+  // Select language
+  await page.selectOption('select[name="language"]', "ENGLISH");
+
+  // Fill display dates
+  await page.fill('input[name="displayFrom-day"]', "20");
+  await page.fill('input[name="displayFrom-month"]', "10");
+  await page.fill('input[name="displayFrom-year"]', "2025");
+
+  await page.fill('input[name="displayTo-day"]', "30");
+  await page.fill('input[name="displayTo-month"]', "10");
+  await page.fill('input[name="displayTo-year"]', "2025");
+
+  // Upload a test file
+  const fileInput = page.locator('input[name="file"]');
+  await fileInput.setInputFiles({
+    name: "test-document.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\nTest PDF content")
+  });
+
+  // Submit the form
+  const continueButton = page.getByRole("button", { name: /continue/i });
+  await continueButton.click();
+
+  // Wait for navigation - either to summary page or back to form with errors
+  await Promise.race([
+    page.waitForURL(/\/manual-upload-summary\?uploadId=/, { timeout: 10000 }),
+    page.waitForURL("/manual-upload", { timeout: 10000 })
+  ]);
+
+  // Check if we landed on summary page (success) or back on form (validation error)
+  const currentURL = page.url();
+  if (!currentURL.includes("/manual-upload-summary")) {
+    // We're back on the form due to validation error
+    const errorSummary = page.locator(".govuk-error-summary");
+    const hasErrors = await errorSummary.isVisible().catch(() => false);
+    if (hasErrors) {
+      const errorText = await errorSummary.textContent();
+      throw new Error(`Form validation failed: ${errorText}`);
+    }
+    throw new Error(`Form submission did not navigate to summary page. Current URL: ${currentURL}`);
+  }
+}
 
 test.describe("Manual Upload Summary Page", () => {
   test.describe("Navigation and Page Load", () => {
     test("should load the manual upload summary page at /manual-upload-summary", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
-      await expect(page).toHaveURL("/manual-upload-summary");
+      await navigateToSummaryPage(page);
+      await expect(page).toHaveURL(/\/manual-upload-summary\?uploadId=/);
       await expect(page.locator("h1")).toHaveText("File upload summary");
     });
 
     test("should display sub-heading", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
       const subHeading = page.getByRole("heading", { name: "Check upload details" });
       await expect(subHeading).toBeVisible();
       await expect(subHeading).toHaveText("Check upload details");
     });
 
     test("should display back link", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
       const backLink = page.locator(".govuk-back-link");
       await expect(backLink).toBeVisible();
     });
@@ -25,7 +89,7 @@ test.describe("Manual Upload Summary Page", () => {
 
   test.describe("Summary List Display", () => {
     test("should display all 7 summary list rows", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const summaryList = page.locator(".govuk-summary-list");
       await expect(summaryList).toBeVisible();
@@ -35,7 +99,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should display correct summary list keys", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const keys = page.locator(".govuk-summary-list__key");
       await expect(keys.nth(0)).toHaveText("Court name");
@@ -47,23 +111,24 @@ test.describe("Manual Upload Summary Page", () => {
       await expect(keys.nth(6)).toHaveText("Display file dates");
     });
 
-    test("should display default values for all fields", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+    test("should display submitted values for all fields", async ({ page }) => {
+      await navigateToSummaryPage(page);
 
       const values = page.locator(".govuk-summary-list__value");
-      await expect(values.nth(0)).toContainText("Example Crown Court");
-      await expect(values.nth(1)).toContainText("example-hearing-list.pdf");
+      // locationId=1 should map to a valid court name from the location service
+      await expect(values.nth(0)).not.toBeEmpty(); // Check court name exists
+      await expect(values.nth(1)).toContainText("test-document.pdf");
       await expect(values.nth(2)).toContainText("Crown Daily List");
       await expect(values.nth(3)).toContainText("23 October 2025");
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
-      await expect(values.nth(6)).toContainText("23 October 2025");
+      await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
     });
   });
 
   test.describe("Change Actions", () => {
     test("should display Change link for all summary list rows", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const changeLinks = page.locator(".govuk-summary-list__actions a");
       await expect(changeLinks).toHaveCount(7);
@@ -75,7 +140,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should have Change links pointing to /manual-upload", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const changeLinks = page.locator(".govuk-summary-list__actions a");
 
@@ -85,7 +150,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should have visually hidden text for each Change link", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const changeLinks = page.locator(".govuk-summary-list__actions a");
       const hiddenTexts = ["Court name", "File", "List type", "Hearing start date", "Sensitivity", "Language", "Display file dates"];
@@ -99,14 +164,14 @@ test.describe("Manual Upload Summary Page", () => {
 
   test.describe("Confirm Button", () => {
     test("should display Confirm button", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const confirmButton = page.getByRole("button", { name: "Confirm" });
       await expect(confirmButton).toBeVisible();
     });
 
     test("should redirect to /manual-upload-confirmation when Confirm is clicked", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const confirmButton = page.getByRole("button", { name: "Confirm" });
       await confirmButton.click();
@@ -119,7 +184,7 @@ test.describe("Manual Upload Summary Page", () => {
 
   test.describe("Welsh Language Toggle", () => {
     test("should not display Welsh language toggle", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const welshToggle = page.locator('a[href*="lng=cy"]');
       await expect(welshToggle).not.toBeVisible();
@@ -128,7 +193,7 @@ test.describe("Manual Upload Summary Page", () => {
 
   test.describe("Accessibility", () => {
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
@@ -138,7 +203,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should have proper heading hierarchy", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const h1 = page.locator("h1");
       await expect(h1).toHaveCount(1);
@@ -152,7 +217,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should have all Change links keyboard accessible", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const changeLinks = page.locator(".govuk-summary-list__actions a");
       await expect(changeLinks).toHaveCount(7);
@@ -164,7 +229,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should have Confirm button keyboard accessible", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const confirmButton = page.getByRole("button", { name: "Confirm" });
       await expect(confirmButton).toBeVisible();
@@ -177,7 +242,7 @@ test.describe("Manual Upload Summary Page", () => {
   test.describe("Responsive Design", () => {
     test("should display correctly on mobile viewport", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const h1 = page.locator("h1");
       await expect(h1).toBeVisible();
@@ -191,7 +256,7 @@ test.describe("Manual Upload Summary Page", () => {
 
     test("should display correctly on tablet viewport", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const h1 = page.locator("h1");
       await expect(h1).toBeVisible();
@@ -205,7 +270,7 @@ test.describe("Manual Upload Summary Page", () => {
 
     test("should display correctly on desktop viewport", async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const h1 = page.locator("h1");
       await expect(h1).toBeVisible();
@@ -220,7 +285,7 @@ test.describe("Manual Upload Summary Page", () => {
 
   test.describe("Keyboard Navigation", () => {
     test("should be navigable using Tab key with visible focus indicators", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       // Verify all interactive elements are present and keyboard accessible
       const changeLinks = page.locator(".govuk-summary-list__actions a");
@@ -238,7 +303,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should submit form using Enter key on Confirm button", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const confirmButton = page.getByRole("button", { name: "Confirm" });
       await confirmButton.focus();
@@ -252,7 +317,7 @@ test.describe("Manual Upload Summary Page", () => {
 
   test.describe("Form Structure", () => {
     test("should have form with POST method", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const form = page.locator("form");
       await expect(form).toBeVisible();
@@ -260,7 +325,7 @@ test.describe("Manual Upload Summary Page", () => {
     });
 
     test("should not have cancel link", async ({ page }) => {
-      await page.goto("/manual-upload-summary");
+      await navigateToSummaryPage(page);
 
       const cancelLink = page.locator('a[href="/admin-dashboard"]');
       await expect(cancelLink).not.toBeVisible();
