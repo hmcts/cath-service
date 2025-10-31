@@ -591,7 +591,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hmcts/admin-pages@workspace:libs/admin-pages":
+"@hmcts/admin-pages@workspace:*, @hmcts/admin-pages@workspace:libs/admin-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
   dependencies:
@@ -709,7 +709,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/verified-pages@workspace:libs/verified-pages":
+"@hmcts/verified-pages@workspace:*, @hmcts/verified-pages@workspace:libs/verified-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   peerDependencies:
@@ -761,11 +761,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/web@workspace:apps/web"
   dependencies:
+    "@hmcts/admin-pages": "workspace:*"
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
+    "@hmcts/verified-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/config": "npm:3.3.5"
