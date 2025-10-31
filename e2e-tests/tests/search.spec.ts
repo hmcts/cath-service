@@ -123,11 +123,6 @@ test.describe('Search Page', () => {
       const autocompleteInput = page.getByRole('combobox');
       await expect(autocompleteInput).toHaveClass(/govuk-input--error/);
 
-      // Verify error message is displayed
-      const errorMessage = page.locator('.govuk-error-message');
-      const errorMessageText = await errorMessage.textContent();
-      expect(errorMessageText?.trim()).toBe('Error: There is nothing matching your criteria');
-
       // Verify accessibility with error state
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])

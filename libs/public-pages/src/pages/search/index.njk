@@ -28,7 +28,7 @@
         hint: {
           text: searchHint
         },
-        errorMessage: { text: errors[0].text } if errors else undefined,
+        errorMessage: { text: "" } if errors else undefined,
         value: (preselectedLocation.welshName if locale === "cy" else preselectedLocation.name) if preselectedLocation else "",
         attributes: {
           "data-location-id": preselectedLocation.id if preselectedLocation else "",
