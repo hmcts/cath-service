@@ -9,6 +9,7 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
 
   const preselectedLocationId = locationInput.getAttribute("data-location-id");
   const preselectedValue = locationInput.value;
+  const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
   const noResultsMessage = locationInput.getAttribute("data-no-results-message") || "No results found";
   const hasError = locationInput.classList.contains("govuk-input--error");
 
@@ -22,9 +23,6 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
 
   const wrapper = document.createElement("div");
   wrapper.id = `${inputId}-autocomplete-wrapper`;
-
-  // Check if original input has error class
-  const hasError = locationInput.classList.contains("govuk-input--error");
 
   const existingLabel = container.querySelector("label");
   if (!existingLabel) {
@@ -78,52 +76,46 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
     }
   });
 
-  const autocompleteInput = wrapper.querySelector("#location") as HTMLInputElement;
-  if (autocompleteInput) {
-    // Add label for accessibility
-    if (!wrapper.querySelector("label")) {
-      const label = document.createElement("label");
-      label.className = "govuk-label govuk-visually-hidden";
-      label.htmlFor = "location";
-      label.textContent = "Search";
-      wrapper.insertBefore(label, wrapper.firstChild);
-    }
-
-    // Apply error styling if needed
-    if (hasError) {
-      autocompleteInput.classList.add("govuk-input--error");
-    }
-
-    const form = autocompleteInput.closest("form");
-
-    autocompleteInput.addEventListener("change", () => {
-      const value = autocompleteInput.value;
-      const locationId = locationMap.get(value);
-      if (locationId) {
-        hiddenInput.value = locationId;
-      } else {
-        hiddenInput.value = "";
+  // Additional fallback: listen to input changes and update hidden field
+  setTimeout(() => {
+    const autocompleteInput = document.querySelector(`#${inputId}`) as HTMLInputElement;
+    if (autocompleteInput) {
+      // Apply error styling if needed
+      if (hasError) {
+        autocompleteInput.classList.add("govuk-input--error");
       }
-    });
 
-    autocompleteInput.addEventListener("blur", () => {
-      const value = autocompleteInput.value;
-      const locationId = locationMap.get(value);
-      if (locationId) {
-        hiddenInput.value = locationId;
-      }
-    });
+      const form = autocompleteInput.closest("form");
 
-    if (form) {
-      form.addEventListener("submit", () => {
-        const currentValue = autocompleteInput.value;
-        const locationId = locationMap.get(currentValue);
+      autocompleteInput.addEventListener("change", () => {
+        const value = autocompleteInput.value;
+        const locationId = locationMap.get(value);
+        if (locationId) {
+          hiddenInput.value = locationId;
+        } else {
+          hiddenInput.value = "";
+        }
+      });
+
+      autocompleteInput.addEventListener("blur", () => {
+        const value = autocompleteInput.value;
+        const locationId = locationMap.get(value);
         if (locationId) {
           hiddenInput.value = locationId;
         }
       });
+
+      if (form) {
+        form.addEventListener("submit", () => {
+          const currentValue = autocompleteInput.value;
+          const locationId = locationMap.get(currentValue);
+          if (locationId) {
+            hiddenInput.value = locationId;
+          }
+        });
+      }
     }
-  }
+  }, 100);
 }
 
 export function initSearchAutocomplete() {
