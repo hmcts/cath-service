@@ -26,7 +26,12 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
-const mockAccessibleAutocomplete = vi.fn();
+const mockAccessibleAutocomplete = vi.fn((config: { element: HTMLElement; id: string }) => {
+  // Simulate what accessible-autocomplete does: create an input element
+  const input = document.createElement("input");
+  input.id = config.id;
+  config.element.appendChild(input);
+});
 vi.mock("accessible-autocomplete/dist/accessible-autocomplete.min.js", () => ({
   default: mockAccessibleAutocomplete
 }));
@@ -58,39 +63,16 @@ describe("search-autocomplete", () => {
   });
 
   describe("initSearchAutocomplete", () => {
-    it("should initialize autocomplete with English label when no data-search-label attribute", async () => {
+    it("should initialize autocomplete with visually hidden label", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
       initSearchAutocomplete();
 
-      const label = container.querySelector("label");
+      const wrapper = container.querySelector("#location-autocomplete-wrapper");
+      const label = wrapper?.querySelector("label");
       expect(label).toBeTruthy();
-      expect(label?.textContent).toBe("Search for a court or tribunal");
-    });
-
-    it("should initialize autocomplete with custom label from data-search-label attribute", async () => {
-      locationInput.setAttribute("data-search-label", "Custom search label");
-
-      const { initSearchAutocomplete } = await import("./search-autocomplete.js");
-
-      initSearchAutocomplete();
-
-      const label = container.querySelector("label");
-      expect(label).toBeTruthy();
-      expect(label?.textContent).toBe("Custom search label");
-    });
-
-    it("should initialize autocomplete with Welsh label from data-search-label attribute", async () => {
-      locationInput.setAttribute("data-locale", "cy");
-      locationInput.setAttribute("data-search-label", "Chwilio am lys neu dribiwnlys");
-
-      const { initSearchAutocomplete } = await import("./search-autocomplete.js");
-
-      initSearchAutocomplete();
-
-      const label = container.querySelector("label");
-      expect(label).toBeTruthy();
-      expect(label?.textContent).toBe("Chwilio am lys neu dribiwnlys");
+      expect(label?.textContent).toBe("Search");
+      expect(label?.className).toContain("govuk-visually-hidden");
     });
 
     it("should create wrapper div for autocomplete", async () => {
@@ -200,8 +182,9 @@ describe("search-autocomplete", () => {
 
       initSearchAutocomplete();
 
-      const label = container.querySelector("label");
-      expect(label?.className).toBe("govuk-label");
+      const wrapper = container.querySelector("#location-autocomplete-wrapper");
+      const label = wrapper?.querySelector("label");
+      expect(label?.className).toBe("govuk-label govuk-visually-hidden");
     });
 
     it("should set label htmlFor to location", async () => {
@@ -209,8 +192,31 @@ describe("search-autocomplete", () => {
 
       initSearchAutocomplete();
 
-      const label = container.querySelector("label");
+      const wrapper = container.querySelector("#location-autocomplete-wrapper");
+      const label = wrapper?.querySelector("label");
       expect(label?.htmlFor).toBe("location");
+    });
+
+    it("should apply error class to autocomplete input when original input has error", async () => {
+      locationInput.classList.add("govuk-input--error");
+
+      const { initSearchAutocomplete } = await import("./search-autocomplete.js");
+
+      initSearchAutocomplete();
+
+      const wrapper = container.querySelector("#location-autocomplete-wrapper");
+      const autocompleteInput = wrapper?.querySelector("#location");
+      expect(autocompleteInput?.classList.contains("govuk-input--error")).toBe(true);
+    });
+
+    it("should not apply error class to autocomplete input when original input has no error", async () => {
+      const { initSearchAutocomplete } = await import("./search-autocomplete.js");
+
+      initSearchAutocomplete();
+
+      const wrapper = container.querySelector("#location-autocomplete-wrapper");
+      const autocompleteInput = wrapper?.querySelector("#location");
+      expect(autocompleteInput?.classList.contains("govuk-input--error")).toBe(false);
     });
   });
 });
