@@ -99,20 +99,26 @@ declare module "express-session" {
 }
 
 export const GET = async (req: Request, res: Response) => {
-  // Clear session data on GET request to show clean form
-  delete req.session.manualUploadForm;
-
-  const data = {};
   const locale = "en";
   const t = getTranslations(locale);
 
+  const formData = req.session.manualUploadForm || {};
+
+  let locationName = "";
+  if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
+    const location = getLocationById(Number.parseInt(formData.locationId, 10));
+    locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
+  } else {
+    locationName = formData.locationName || "";
+  }
+
   res.render("manual-upload/index", {
     ...t,
-    data,
+    data: { ...formData, locationName },
     locations: getAllLocations(locale),
-    listTypes: LIST_TYPES,
-    sensitivityOptions: SENSITIVITY_OPTIONS,
-    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === Language.ENGLISH })),
+    listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
+    sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
+    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
     locale,
     hideLanguageToggle: true
   });
@@ -167,7 +173,7 @@ export const POST = async (req: Request, res: Response) => {
     });
   }
 
-  await storeManualUpload({
+  const uploadId = await storeManualUpload({
     file: req.file!.buffer,
     fileName: req.file!.originalname,
     fileType: req.file!.mimetype,
@@ -180,7 +186,14 @@ export const POST = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
-  delete req.session.manualUploadForm;
+  req.session.manualUploadForm = formData;
 
-  res.redirect("/manual-upload-summary");
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+  res.redirect(`/manual-upload-summary?uploadId=${uploadId}`);
 };

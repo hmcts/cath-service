@@ -1,11 +1,92 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
+// Mock the modules
+vi.mock("@hmcts/location", () => ({
+  getLocationById: vi.fn((id: number) => {
+    if (id === 1) return { locationId: 1, name: "Test Crown Court", welshName: "Test Crown Court CY" };
+    if (id === 2) return { locationId: 2, name: "Another Court", welshName: "Another Court CY" };
+    return null;
+  })
+}));
+
+vi.mock("@hmcts/web-core", async () => {
+  const actual = await vi.importActual("@hmcts/web-core");
+  return {
+    ...actual,
+    formatDate: vi.fn((date) => `${date.day} Month ${date.year}`),
+    formatDateRange: vi.fn((from, to) => `${from.day} Month ${from.year} to ${to.day} Month ${to.year}`)
+  };
+});
+
+vi.mock("../../manual-upload/storage.js", () => ({
+  getManualUpload: vi.fn()
+}));
+
+import { getManualUpload } from "../../manual-upload/storage.js";
+
 describe("manual-upload-summary page", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("GET", () => {
+    it("should retrieve and display upload data", async () => {
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test-hearing-list.pdf",
+        fileType: "application/pdf",
+        locationId: "1",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-upload-id" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      expect(getManualUpload).toHaveBeenCalledWith("test-upload-id");
+      expect(res.render).toHaveBeenCalledWith(
+        "manual-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            courtName: "Test Crown Court",
+            file: "test-hearing-list.pdf",
+            listType: "Crown Daily List"
+          })
+        })
+      );
+    });
+
     it("should render file upload summary page with English content", async () => {
-      const req = { query: {} } as unknown as Request;
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.pdf",
+        fileType: "application/pdf",
+        locationId: "1",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-id" } } as unknown as Request;
 
       const res = {
         render: vi.fn(),
@@ -34,7 +115,22 @@ describe("manual-upload-summary page", () => {
     });
 
     it("should render file upload summary page with Welsh content", async () => {
-      const req = { query: { lng: "cy" } } as unknown as Request;
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.pdf",
+        fileType: "application/pdf",
+        locationId: "1",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "WELSH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { lng: "cy", uploadId: "test-id" } } as unknown as Request;
 
       const res = {
         render: vi.fn(),
@@ -62,25 +158,212 @@ describe("manual-upload-summary page", () => {
       );
     });
 
-    it("should hide language toggle", async () => {
+    it("should return 400 when uploadId is missing", async () => {
       const req = { query: {} } as unknown as Request;
-
       const res = {
-        render: vi.fn()
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
       } as unknown as Response;
+
+      await GET(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith("Missing uploadId");
+    });
+
+    it("should return 404 when upload data is not found", async () => {
+      vi.mocked(getManualUpload).mockResolvedValue(null);
+
+      const req = { query: { uploadId: "non-existent-id" } } as unknown as Request;
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.send).toHaveBeenCalledWith("Upload not found");
+    });
+
+    it("should format dates using formatDate function", async () => {
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.pdf",
+        fileType: "application/pdf",
+        locationId: "1",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-id" } } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
 
       await GET(req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
 
-      expect(renderData.hideLanguageToggle).toBe(true);
+      expect(renderData.data.hearingStartDate).toBe("23 Month 2025");
+    });
+
+    it("should format date range using formatDateRange function", async () => {
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.pdf",
+        fileType: "application/pdf",
+        locationId: "1",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-id" } } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data.displayFileDates).toBe("20 Month 2025 to 30 Month 2025");
+    });
+
+    it("should use Welsh court name when locale is cy", async () => {
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.pdf",
+        fileType: "application/pdf",
+        locationId: "1",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-id", lng: "cy" } } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data.courtName).toBe("Test Crown Court CY");
+    });
+
+    it("should fallback to locationId when location is not found", async () => {
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.pdf",
+        fileType: "application/pdf",
+        locationId: "999",
+        listType: "CROWN_DAILY_LIST",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-id" } } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data.courtName).toBe("999");
+    });
+
+    it("should format all sensitivity types correctly", async () => {
+      const sensitivities = ["PUBLIC", "PRIVATE", "CLASSIFIED"];
+      const expectedLabels = ["Public", "Private", "Classified"];
+
+      for (let i = 0; i < sensitivities.length; i++) {
+        const mockUploadData = {
+          file: Buffer.from("test"),
+          fileName: "test.pdf",
+          fileType: "application/pdf",
+          locationId: "1",
+          listType: "CROWN_DAILY_LIST",
+          hearingStartDate: { day: "23", month: "10", year: "2025" },
+          sensitivity: sensitivities[i],
+          language: "ENGLISH",
+          displayFrom: { day: "20", month: "10", year: "2025" },
+          displayTo: { day: "30", month: "10", year: "2025" }
+        };
+
+        vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+        const req = { query: { uploadId: "test-id" } } as unknown as Request;
+        const res = { render: vi.fn() } as unknown as Response;
+
+        await GET(req, res);
+
+        const renderCall = res.render.mock.calls[0];
+        const renderData = renderCall[1];
+
+        expect(renderData.data.sensitivity).toBe(expectedLabels[i]);
+      }
+    });
+
+    it("should format all language types correctly", async () => {
+      const languages = ["ENGLISH", "WELSH", "BILINGUAL"];
+      const expectedLabels = ["English", "Welsh", "Bilingual"];
+
+      for (let i = 0; i < languages.length; i++) {
+        const mockUploadData = {
+          file: Buffer.from("test"),
+          fileName: "test.pdf",
+          fileType: "application/pdf",
+          locationId: "1",
+          listType: "CROWN_DAILY_LIST",
+          hearingStartDate: { day: "23", month: "10", year: "2025" },
+          sensitivity: "PUBLIC",
+          language: languages[i],
+          displayFrom: { day: "20", month: "10", year: "2025" },
+          displayTo: { day: "30", month: "10", year: "2025" }
+        };
+
+        vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+
+        const req = { query: { uploadId: "test-id" } } as unknown as Request;
+        const res = { render: vi.fn() } as unknown as Response;
+
+        await GET(req, res);
+
+        const renderCall = res.render.mock.calls[0];
+        const renderData = renderCall[1];
+
+        expect(renderData.data.language).toBe(expectedLabels[i]);
+      }
     });
   });
 
   describe("POST", () => {
     it("should redirect to manual-upload-confirmation", async () => {
-      const req = {} as unknown as Request;
+      const req = {
+        session: {}
+      } as unknown as Request;
 
       const res = {
         redirect: vi.fn()
@@ -89,6 +372,27 @@ describe("manual-upload-summary page", () => {
       await POST(req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-confirmation");
+    });
+
+    it("should clear session data on confirmation", async () => {
+      const session = {
+        manualUploadForm: {
+          locationId: "1",
+          listType: "CROWN_DAILY_LIST"
+        }
+      };
+
+      const req = {
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await POST(req, res);
+
+      expect(req.session.manualUploadForm).toBeUndefined();
     });
   });
 });

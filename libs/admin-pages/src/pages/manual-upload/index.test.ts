@@ -20,7 +20,7 @@ vi.mock("../../manual-upload/validation.js", () => ({
 }));
 
 vi.mock("../../manual-upload/storage.js", () => ({
-  storeManualUpload: vi.fn(() => Promise.resolve())
+  storeManualUpload: vi.fn(() => Promise.resolve("test-upload-id-123"))
 }));
 
 import { storeManualUpload } from "../../manual-upload/storage.js";
@@ -139,10 +139,145 @@ describe("manual-upload page", () => {
 
       expect(renderData.hideLanguageToggle).toBe(true);
     });
+
+    it("should pre-populate form data from session", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            locationId: "1",
+            listType: "CIVIL_DAILY_CAUSE_LIST",
+            hearingStartDate: { day: "15", month: "06", year: "2025" },
+            sensitivity: "PUBLIC",
+            language: "ENGLISH",
+            displayFrom: { day: "10", month: "06", year: "2025" },
+            displayTo: { day: "20", month: "06", year: "2025" }
+          }
+        }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data).toEqual(
+        expect.objectContaining({
+          locationId: "1",
+          locationName: "Test Court",
+          listType: "CIVIL_DAILY_CAUSE_LIST",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH"
+        })
+      );
+    });
+
+    it("should pre-select list type from session", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            listType: "CROWN_DAILY_LIST"
+          }
+        }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      const selectedListType = renderData.listTypes.find((lt: any) => lt.selected);
+      expect(selectedListType?.value).toBe("CROWN_DAILY_LIST");
+    });
+
+    it("should pre-select sensitivity from session", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            sensitivity: "PRIVATE"
+          }
+        }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      const selectedSensitivity = renderData.sensitivityOptions.find((opt: any) => opt.selected);
+      expect(selectedSensitivity?.value).toBe("PRIVATE");
+    });
+
+    it("should pre-select language from session", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            language: "WELSH"
+          }
+        }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      const selectedLanguage = renderData.languageOptions.find((opt: any) => opt.selected);
+      expect(selectedLanguage?.value).toBe("WELSH");
+    });
+
+    it("should handle invalid location ID from session", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            locationId: "invalid",
+            locationName: "Invalid Court"
+          }
+        }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data.locationName).toBe("Invalid Court");
+    });
+
+    it("should default to English language when no session data", async () => {
+      const req = {
+        session: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      const selectedLanguage = renderData.languageOptions.find((opt: any) => opt.selected);
+      expect(selectedLanguage?.value).toBe("ENGLISH");
+    });
   });
 
   describe("POST", () => {
-    it("should redirect to manual-upload-summary on successful validation", async () => {
+    it("should redirect to manual-upload-summary with uploadId on successful validation", async () => {
       const mockFile = {
         buffer: Buffer.from("test"),
         originalname: "test.pdf",
@@ -168,7 +303,9 @@ describe("manual-upload page", () => {
           "displayTo-year": "2025"
         },
         file: mockFile,
-        session: {}
+        session: {
+          save: vi.fn((cb) => cb())
+        }
       } as unknown as Request;
 
       const res = {
@@ -177,6 +314,7 @@ describe("manual-upload page", () => {
       } as unknown as Response;
 
       vi.mocked(validateForm).mockReturnValue([]);
+      vi.mocked(storeManualUpload).mockResolvedValue("test-upload-id-123");
 
       await POST(req, res);
 
@@ -192,7 +330,61 @@ describe("manual-upload page", () => {
           language: "ENGLISH"
         })
       );
-      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary");
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
+    });
+
+    it("should save form data to session on successful submission", async () => {
+      const mockFile = {
+        buffer: Buffer.from("test"),
+        originalname: "test.pdf",
+        mimetype: "application/pdf",
+        size: 1024
+      } as Express.Multer.File;
+
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
+      const req = {
+        body: {
+          locationId: "1",
+          "court-display": "Test Court",
+          listType: "CIVIL_DAILY_CAUSE_LIST",
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "06",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "10",
+          "displayFrom-month": "06",
+          "displayFrom-year": "2025",
+          "displayTo-day": "20",
+          "displayTo-month": "06",
+          "displayTo-year": "2025"
+        },
+        file: mockFile,
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      vi.mocked(validateForm).mockReturnValue([]);
+
+      await POST(req, res);
+
+      expect(req.session).toHaveProperty("manualUploadForm");
+      expect(req.session.manualUploadForm).toEqual(
+        expect.objectContaining({
+          locationId: "1",
+          listType: "CIVIL_DAILY_CAUSE_LIST",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH"
+        })
+      );
+      expect(session.save).toHaveBeenCalled();
     });
 
     it("should re-render form with errors on validation failure", async () => {

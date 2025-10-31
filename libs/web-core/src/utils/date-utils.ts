@@ -39,3 +39,17 @@ export function parseDate(dateInput: DateInput): Date | null {
 
   return date;
 }
+
+export function formatDate(date: DateInput): string {
+  const day = date.day.padStart(2, "0");
+  const month = date.month.padStart(2, "0");
+  const year = date.year;
+
+  const dateObj = new Date(`${year}-${month}-${day}`);
+  const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
+  return dateObj.toLocaleDateString("en-GB", options);
+}
+
+export function formatDateRange(from: DateInput, to: DateInput): string {
+  return `${formatDate(from)} to ${formatDate(to)}`;
+}
