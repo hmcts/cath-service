@@ -52,23 +52,32 @@ function transformDateFields(body: any): ManualUploadFormData {
     locationId: body.locationId,
     locationName: body["court-display"], // Capture the display value from autocomplete
     listType: body.listType,
-    hearingStartDate: (hasValue(body["hearingStartDate-day"]) || hasValue(body["hearingStartDate-month"]) || hasValue(body["hearingStartDate-year"])) ? {
-      day: body["hearingStartDate-day"] || "",
-      month: body["hearingStartDate-month"] || "",
-      year: body["hearingStartDate-year"] || ""
-    } : undefined,
+    hearingStartDate:
+      hasValue(body["hearingStartDate-day"]) || hasValue(body["hearingStartDate-month"]) || hasValue(body["hearingStartDate-year"])
+        ? {
+            day: body["hearingStartDate-day"] || "",
+            month: body["hearingStartDate-month"] || "",
+            year: body["hearingStartDate-year"] || ""
+          }
+        : undefined,
     sensitivity: body.sensitivity,
     language: body.language,
-    displayFrom: (hasValue(body["displayFrom-day"]) || hasValue(body["displayFrom-month"]) || hasValue(body["displayFrom-year"])) ? {
-      day: body["displayFrom-day"] || "",
-      month: body["displayFrom-month"] || "",
-      year: body["displayFrom-year"] || ""
-    } : undefined,
-    displayTo: (hasValue(body["displayTo-day"]) || hasValue(body["displayTo-month"]) || hasValue(body["displayTo-year"])) ? {
-      day: body["displayTo-day"] || "",
-      month: body["displayTo-month"] || "",
-      year: body["displayTo-year"] || ""
-    } : undefined
+    displayFrom:
+      hasValue(body["displayFrom-day"]) || hasValue(body["displayFrom-month"]) || hasValue(body["displayFrom-year"])
+        ? {
+            day: body["displayFrom-day"] || "",
+            month: body["displayFrom-month"] || "",
+            year: body["displayFrom-year"] || ""
+          }
+        : undefined,
+    displayTo:
+      hasValue(body["displayTo-day"]) || hasValue(body["displayTo-month"]) || hasValue(body["displayTo-year"])
+        ? {
+            day: body["displayTo-day"] || "",
+            month: body["displayTo-month"] || "",
+            year: body["displayTo-year"] || ""
+          }
+        : undefined
   };
 }
 

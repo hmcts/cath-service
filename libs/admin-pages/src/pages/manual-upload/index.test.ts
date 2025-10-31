@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
 // Mock the modules
@@ -23,8 +23,8 @@ vi.mock("../../manual-upload/storage.js", () => ({
   storeManualUpload: vi.fn(() => Promise.resolve())
 }));
 
-import { validateForm } from "../../manual-upload/validation.js";
 import { storeManualUpload } from "../../manual-upload/storage.js";
+import { validateForm } from "../../manual-upload/validation.js";
 
 describe("manual-upload page", () => {
   beforeEach(() => {
