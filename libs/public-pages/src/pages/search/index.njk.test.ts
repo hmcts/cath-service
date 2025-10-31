@@ -44,7 +44,7 @@ describe("search template", () => {
     });
 
     it("should have error summary title", () => {
-      expect(cy.errorSummaryTitle).toBe("Ni ddaethpwyd o hyd i unrhyw ganlyniad");
+      expect(cy.errorSummaryTitle).toBe("Mae problem");
     });
 
     it("should have error message", () => {
