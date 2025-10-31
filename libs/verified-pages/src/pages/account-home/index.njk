@@ -1,0 +1,42 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block pageTitle %}
+  {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <div class="verified-tiles-container">
+      <a href="/search" class="verified-tile">
+        <h2 class="govuk-heading-s verified-tile-heading">
+          {{ sections.courtHearings.title }}
+        </h2>
+        <p class="govuk-body verified-tile-description">
+          {{ sections.courtHearings.description }}
+        </p>
+      </a>
+
+      <a href="/summary-of-publications?locationId=9" class="verified-tile">
+        <h2 class="govuk-heading-s verified-tile-heading">
+          {{ sections.sjpCases.title }}
+        </h2>
+        <p class="govuk-body verified-tile-description">
+          {{ sections.sjpCases.description }}
+        </p>
+      </a>
+
+      <a href="/" class="verified-tile">
+        <h2 class="govuk-heading-s verified-tile-heading">
+          {{ sections.emailSubscriptions.title }}
+        </h2>
+        <p class="govuk-body verified-tile-description">
+          {{ sections.emailSubscriptions.description }}
+        </p>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
