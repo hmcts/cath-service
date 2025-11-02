@@ -34,7 +34,8 @@ describe("manual-upload page", () => {
   describe("GET", () => {
     it("should render manual-upload page with English content", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -57,7 +58,8 @@ describe("manual-upload page", () => {
 
     it("should include list type options", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -75,7 +77,8 @@ describe("manual-upload page", () => {
 
     it("should include sensitivity options", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -92,7 +95,8 @@ describe("manual-upload page", () => {
 
     it("should include language options", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -109,7 +113,8 @@ describe("manual-upload page", () => {
 
     it("should include all location data", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -126,7 +131,8 @@ describe("manual-upload page", () => {
 
     it("should set hideLanguageToggle to true", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -260,7 +266,8 @@ describe("manual-upload page", () => {
 
     it("should default to English language when no session data", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -301,7 +308,9 @@ describe("manual-upload page", () => {
 
     it("should not display errors when session has no errors", async () => {
       const req = {
-        session: {}
+        session: {},
+        query: {}
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -313,6 +322,47 @@ describe("manual-upload page", () => {
       const renderData = renderCall[1];
 
       expect(renderData.errors).toBeUndefined();
+    });
+
+    it("should pre-fill locationId from query parameter", async () => {
+      const req = {
+        session: {},
+        query: {}
+        query: { locationId: "1" }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data.locationId).toBe("1");
+      expect(renderData.data.locationName).toBe("Test Court");
+    });
+
+    it("should not override session locationId with query parameter", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            locationId: "2"
+          }
+        },
+        query: { locationId: "1" }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      // Session data should take precedence
+      expect(renderData.data.locationId).toBe("2");
     });
   });
 

@@ -108,11 +108,17 @@ export const GET = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
 
-  const formData = req.session.manualUploadForm || {};
+  let formData = req.session.manualUploadForm || {};
   const errors = req.session.manualUploadErrors || [];
 
   // Clear errors from session after reading
   delete req.session.manualUploadErrors;
+
+  // Support pre-filling from query parameter (for testing and deep linking)
+  const queryLocationId = req.query.locationId as string;
+  if (queryLocationId && !formData.locationId) {
+    formData = { ...formData, locationId: queryLocationId };
+  }
 
   let locationName = "";
   if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
