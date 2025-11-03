@@ -100,5 +100,6 @@ declare module "express-session" {
 
 export const POST = async (req: Request, res: Response) => {
   delete req.session.manualUploadForm;
-  res.redirect("/manual-upload-confirmation");
+  delete req.session.manualUploadSubmitted;
+  res.redirect("/manual-upload-success");
 };

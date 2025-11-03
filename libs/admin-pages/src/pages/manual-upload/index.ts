@@ -101,6 +101,7 @@ declare module "express-session" {
   interface SessionData {
     manualUploadForm?: ManualUploadFormData;
     manualUploadErrors?: ValidationError[];
+    manualUploadSubmitted?: boolean;
   }
 }
 
@@ -108,11 +109,21 @@ export const GET = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
 
+  // Check if form was successfully submitted to summary page
+  const wasSubmitted = req.session.manualUploadSubmitted || false;
+
+  // Restore form data from session if it exists
   let formData = req.session.manualUploadForm || {};
   const errors = req.session.manualUploadErrors || [];
 
   // Clear errors from session after reading
   delete req.session.manualUploadErrors;
+
+  // If form wasn't successfully submitted yet (still on manual-upload after error or initial load),
+  // clear the form data from session so refresh will clear it
+  if (!wasSubmitted) {
+    delete req.session.manualUploadForm;
+  }
 
   // Support pre-filling from query parameter (for testing and deep linking)
   const queryLocationId = req.query.locationId as string;
@@ -120,7 +131,7 @@ export const GET = async (req: Request, res: Response) => {
     formData = { ...formData, locationId: queryLocationId };
   }
 
-  let locationName = "";
+  let locationName: string;
   if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
     const location = getLocationById(Number.parseInt(formData.locationId, 10));
     locationName = location ? location.name : "";
@@ -186,7 +197,9 @@ export const POST = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
+  // Save form data to session and mark as successfully submitted
   req.session.manualUploadForm = formData;
+  req.session.manualUploadSubmitted = true;
 
   await new Promise<void>((resolve, reject) => {
     req.session.save((err) => {

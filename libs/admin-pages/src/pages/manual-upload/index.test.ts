@@ -146,9 +146,10 @@ describe("manual-upload page", () => {
       expect(renderData.hideLanguageToggle).toBe(true);
     });
 
-    it("should pre-populate form data from session", async () => {
+    it("should pre-populate form data from session when successfully submitted", async () => {
       const req = {
         session: {
+          manualUploadSubmitted: true,
           manualUploadForm: {
             locationId: "1",
             listType: "CIVIL_DAILY_CAUSE_LIST",
@@ -158,7 +159,8 @@ describe("manual-upload page", () => {
             displayFrom: { day: "10", month: "06", year: "2025" },
             displayTo: { day: "20", month: "06", year: "2025" }
           }
-        }
+        },
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -180,13 +182,15 @@ describe("manual-upload page", () => {
       );
     });
 
-    it("should pre-select list type from session", async () => {
+    it("should pre-select list type from session when successfully submitted", async () => {
       const req = {
         session: {
+          manualUploadSubmitted: true,
           manualUploadForm: {
             listType: "CROWN_DAILY_LIST"
           }
-        }
+        },
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -201,13 +205,15 @@ describe("manual-upload page", () => {
       expect(selectedListType?.value).toBe("CROWN_DAILY_LIST");
     });
 
-    it("should pre-select sensitivity from session", async () => {
+    it("should pre-select sensitivity from session when successfully submitted", async () => {
       const req = {
         session: {
+          manualUploadSubmitted: true,
           manualUploadForm: {
             sensitivity: "PRIVATE"
           }
-        }
+        },
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -222,13 +228,15 @@ describe("manual-upload page", () => {
       expect(selectedSensitivity?.value).toBe("PRIVATE");
     });
 
-    it("should pre-select language from session", async () => {
+    it("should pre-select language from session when successfully submitted", async () => {
       const req = {
         session: {
+          manualUploadSubmitted: true,
           manualUploadForm: {
             language: "WELSH"
           }
-        }
+        },
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -243,14 +251,16 @@ describe("manual-upload page", () => {
       expect(selectedLanguage?.value).toBe("WELSH");
     });
 
-    it("should handle invalid location ID from session", async () => {
+    it("should handle invalid location ID from session when successfully submitted", async () => {
       const req = {
         session: {
+          manualUploadSubmitted: true,
           manualUploadForm: {
             locationId: "invalid",
             locationName: "Invalid Court"
           }
-        }
+        },
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -291,7 +301,8 @@ describe("manual-upload page", () => {
       const req = {
         session: {
           manualUploadErrors: mockErrors
-        }
+        },
+        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -310,7 +321,6 @@ describe("manual-upload page", () => {
       const req = {
         session: {},
         query: {}
-        query: {}
       } as unknown as Request;
       const res = {
         render: vi.fn()
@@ -327,7 +337,6 @@ describe("manual-upload page", () => {
     it("should pre-fill locationId from query parameter", async () => {
       const req = {
         session: {},
-        query: {}
         query: { locationId: "1" }
       } as unknown as Request;
       const res = {
@@ -343,9 +352,10 @@ describe("manual-upload page", () => {
       expect(renderData.data.locationName).toBe("Test Court");
     });
 
-    it("should not override session locationId with query parameter", async () => {
+    it("should not override session locationId with query parameter when successfully submitted", async () => {
       const req = {
         session: {
+          manualUploadSubmitted: true,
           manualUploadForm: {
             locationId: "2"
           }
@@ -363,6 +373,78 @@ describe("manual-upload page", () => {
 
       // Session data should take precedence
       expect(renderData.data.locationId).toBe("2");
+    });
+
+    it("should persist form data from session on refresh after successful submission", async () => {
+      const req = {
+        session: {
+          manualUploadSubmitted: true,
+          manualUploadForm: {
+            locationId: "1",
+            listType: "CIVIL_DAILY_CAUSE_LIST"
+          }
+        },
+        query: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      // Form data should remain in session (submitted flag is set)
+      expect(req.session.manualUploadForm).toBeDefined();
+      expect(req.session.manualUploadForm?.locationId).toBe("1");
+
+      // Rendered data should include form data
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+      expect(renderData.data.locationId).toBe("1");
+      expect(renderData.data.listType).toBe("CIVIL_DAILY_CAUSE_LIST");
+    });
+
+    it("should clear form data from session on refresh before successful submission", async () => {
+      const req = {
+        session: {
+          manualUploadForm: {
+            locationId: "1",
+            listType: "CIVIL_DAILY_CAUSE_LIST"
+          }
+        },
+        query: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      // Form data should be cleared from session (no submitted flag)
+      expect(req.session.manualUploadForm).toBeUndefined();
+
+      // But rendered data should still include form data for this render
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+      expect(renderData.data.locationId).toBe("1");
+      expect(renderData.data.listType).toBe("CIVIL_DAILY_CAUSE_LIST");
+    });
+
+    it("should allow query parameter to pre-fill when no session data", async () => {
+      const req = {
+        session: {},
+        query: { locationId: "2" }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.data.locationId).toBe("2");
+      expect(renderData.data.locationName).toBe("Another Court");
     });
   });
 
@@ -474,6 +556,7 @@ describe("manual-upload page", () => {
           language: "ENGLISH"
         })
       );
+      expect(req.session.manualUploadSubmitted).toBe(true);
       expect(session.save).toHaveBeenCalled();
     });
 

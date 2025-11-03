@@ -360,7 +360,7 @@ describe("manual-upload-summary page", () => {
   });
 
   describe("POST", () => {
-    it("should redirect to manual-upload-confirmation", async () => {
+    it("should redirect to manual-upload-success", async () => {
       const req = {
         session: {}
       } as unknown as Request;
@@ -371,7 +371,7 @@ describe("manual-upload-summary page", () => {
 
       await POST(req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-confirmation");
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
     });
 
     it("should clear session data on confirmation", async () => {
@@ -379,7 +379,8 @@ describe("manual-upload-summary page", () => {
         manualUploadForm: {
           locationId: "1",
           listType: "CROWN_DAILY_LIST"
-        }
+        },
+        manualUploadSubmitted: true
       };
 
       const req = {
@@ -393,6 +394,7 @@ describe("manual-upload-summary page", () => {
       await POST(req, res);
 
       expect(req.session.manualUploadForm).toBeUndefined();
+      expect(req.session.manualUploadSubmitted).toBeUndefined();
     });
   });
 });

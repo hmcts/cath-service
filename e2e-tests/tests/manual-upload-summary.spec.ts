@@ -139,14 +139,19 @@ test.describe("Manual Upload Summary Page", () => {
       }
     });
 
-    test("should have Change links pointing to /manual-upload", async ({ page }) => {
+    test("should have Change links pointing to /manual-upload with anchor links", async ({ page }) => {
       await navigateToSummaryPage(page);
 
       const changeLinks = page.locator(".govuk-summary-list__actions a");
 
-      for (let i = 0; i < 7; i++) {
-        await expect(changeLinks.nth(i)).toHaveAttribute("href", "/manual-upload");
-      }
+      // Verify each change link has proper anchor to the corresponding field
+      await expect(changeLinks.nth(0)).toHaveAttribute("href", "/manual-upload#court");
+      await expect(changeLinks.nth(1)).toHaveAttribute("href", "/manual-upload#file");
+      await expect(changeLinks.nth(2)).toHaveAttribute("href", "/manual-upload#listType");
+      await expect(changeLinks.nth(3)).toHaveAttribute("href", "/manual-upload#hearingStartDate-day");
+      await expect(changeLinks.nth(4)).toHaveAttribute("href", "/manual-upload#sensitivity");
+      await expect(changeLinks.nth(5)).toHaveAttribute("href", "/manual-upload#language");
+      await expect(changeLinks.nth(6)).toHaveAttribute("href", "/manual-upload#displayFrom-day");
     });
 
     test("should have visually hidden text for each Change link", async ({ page }) => {
@@ -170,15 +175,15 @@ test.describe("Manual Upload Summary Page", () => {
       await expect(confirmButton).toBeVisible();
     });
 
-    test("should redirect to /manual-upload-confirmation when Confirm is clicked", async ({ page }) => {
+    test("should redirect to /manual-upload-success when Confirm is clicked", async ({ page }) => {
       await navigateToSummaryPage(page);
 
       const confirmButton = page.getByRole("button", { name: "Confirm" });
       await confirmButton.click();
 
       // Wait for navigation
-      await page.waitForURL("/manual-upload-confirmation");
-      await expect(page).toHaveURL("/manual-upload-confirmation");
+      await page.waitForURL("/manual-upload-success");
+      await expect(page).toHaveURL("/manual-upload-success");
     });
   });
 
@@ -224,7 +229,8 @@ test.describe("Manual Upload Summary Page", () => {
 
       // Verify all change links have href attributes (making them keyboard accessible)
       for (let i = 0; i < 7; i++) {
-        await expect(changeLinks.nth(i)).toHaveAttribute("href", "/manual-upload");
+        const href = await changeLinks.nth(i).getAttribute("href");
+        expect(href).toMatch(/^\/manual-upload#/);
       }
     });
 
@@ -293,7 +299,8 @@ test.describe("Manual Upload Summary Page", () => {
 
       // Verify all change links are proper anchor elements (keyboard accessible)
       for (let i = 0; i < 7; i++) {
-        await expect(changeLinks.nth(i)).toHaveAttribute("href", "/manual-upload");
+        const href = await changeLinks.nth(i).getAttribute("href");
+        expect(href).toMatch(/^\/manual-upload#/);
       }
 
       // Verify Confirm button is present and keyboard accessible
@@ -310,8 +317,8 @@ test.describe("Manual Upload Summary Page", () => {
       await page.keyboard.press("Enter");
 
       // Wait for navigation
-      await page.waitForURL("/manual-upload-confirmation");
-      await expect(page).toHaveURL("/manual-upload-confirmation");
+      await page.waitForURL("/manual-upload-success");
+      await expect(page).toHaveURL("/manual-upload-success");
     });
   });
 
