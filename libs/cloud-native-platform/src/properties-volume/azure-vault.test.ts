@@ -6,12 +6,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { addFromAzureVault } from "./azure-vault.js";
 
 // Mock all external dependencies
+const mockClient = {
+  getSecret: vi.fn()
+};
+
 vi.mock("@azure/identity", () => ({
-  DefaultAzureCredential: vi.fn()
+  DefaultAzureCredential: vi.fn(function () {
+    return {};
+  })
 }));
 
 vi.mock("@azure/keyvault-secrets", () => ({
-  SecretClient: vi.fn()
+  SecretClient: vi.fn(function (url: string, credential: any) {
+    return mockClient;
+  })
 }));
 
 vi.mock("node:fs", () => ({
@@ -30,20 +38,10 @@ const mockYamlLoad = vi.mocked(yamlLoad);
 describe("addFromAzureVault", () => {
   let config: Record<string, any>;
   let consoleWarnSpy: any;
-  let mockClient: any;
 
   beforeEach(() => {
     config = { existing: "value" };
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    // Set up mock client
-    mockClient = {
-      getSecret: vi.fn()
-    };
-
-    // Configure mocks
-    mockDefaultAzureCredential.mockReturnValue({});
-    mockSecretClient.mockReturnValue(mockClient);
 
     vi.clearAllMocks();
   });
