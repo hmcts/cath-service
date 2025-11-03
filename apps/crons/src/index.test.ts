@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockConfigurePropertiesVolume = vi.fn();
 const mockConfigGet = vi.fn();
+const mockScripts = new Map();
 
 vi.mock("@hmcts/cloud-native-platform", () => ({
   configurePropertiesVolume: mockConfigurePropertiesVolume
@@ -54,10 +55,10 @@ describe("index - cron job runner", () => {
   });
 
   it("should execute custom script when SCRIPT_NAME is provided", async () => {
-    process.env.SCRIPT_NAME = "custom-job";
+    process.env.SCRIPT_NAME = "example";
     const mockCustomScript = vi.fn();
 
-    vi.doMock("./custom-job.js", () => ({
+    vi.doMock("./example.js", () => ({
       default: mockCustomScript
     }));
 
@@ -68,16 +69,16 @@ describe("index - cron job runner", () => {
   });
 
   it("should throw error when script does not export a default function", async () => {
-    process.env.SCRIPT_NAME = "invalid-script";
+    process.env.SCRIPT_NAME = "example";
 
-    vi.doMock("./invalid-script.js", () => ({
+    vi.doMock("./example.js", () => ({
       default: null,
       somethingElse: vi.fn()
     }));
 
     const { main } = await import("./index.js");
 
-    await expect(main()).rejects.toThrow('The script "invalid-script" does not export a default function.');
+    await expect(main()).rejects.toThrow('The script "example" does not export a default function.');
   });
 
   it("should throw error when script execution fails", async () => {
