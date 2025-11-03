@@ -1,5 +1,6 @@
 export default {
-  pageTitle: "File upload summary",
+  pageTitle: "Manual upload - File upload summary - Court and tribunal hearings - GOV.UK",
+  heading: "File upload summary",
   subHeading: "Check upload details",
   courtName: "Court name",
   file: "File",

@@ -98,7 +98,8 @@ describe("manual-upload-summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload-summary/index",
         expect.objectContaining({
-          pageTitle: "File upload summary",
+          pageTitle: "Manual upload - File upload summary - Court and tribunal hearings - GOV.UK",
+          heading: "File upload summary",
           subHeading: "Check upload details",
           courtName: "Court name",
           file: "File",
@@ -142,7 +143,8 @@ describe("manual-upload-summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload-summary/index",
         expect.objectContaining({
-          pageTitle: "Crynodeb lanlwytho ffeil",
+          pageTitle: "Llwytho i fyny â llaw - Crynodeb lanlwytho ffeil - Gwrandawiadau llys a thribiwnlys - GOV.UK",
+          heading: "Crynodeb lanlwytho ffeil",
           subHeading: "Gwirio manylion lanlwytho",
           courtName: "Enw'r llys",
           file: "Ffeil",

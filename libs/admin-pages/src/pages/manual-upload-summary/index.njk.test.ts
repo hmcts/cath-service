@@ -18,7 +18,7 @@ describe("manual-upload-summary template", () => {
 
   describe("English locale", () => {
     it("should have required title", () => {
-      expect(en.pageTitle).toBe("File upload summary");
+      expect(en.pageTitle).toBe("Manual upload - File upload summary - Court and tribunal hearings - GOV.UK");
     });
 
     it("should have sub-heading", () => {
@@ -64,7 +64,7 @@ describe("manual-upload-summary template", () => {
 
   describe("Welsh locale", () => {
     it("should have required title", () => {
-      expect(cy.pageTitle).toBe("Crynodeb lanlwytho ffeil");
+      expect(cy.pageTitle).toBe("Llwytho i fyny â llaw - Crynodeb lanlwytho ffeil - Gwrandawiadau llys a thribiwnlys - GOV.UK");
     });
 
     it("should have sub-heading", () => {
@@ -116,6 +116,7 @@ describe("manual-upload-summary template", () => {
     it("should have all required keys", () => {
       const requiredKeys = [
         "pageTitle",
+        "heading",
         "subHeading",
         "courtName",
         "file",
@@ -138,6 +139,7 @@ describe("manual-upload-summary template", () => {
   describe("Content validation", () => {
     it("should have non-empty strings for all English content", () => {
       expect(en.pageTitle.length).toBeGreaterThan(0);
+      expect(en.heading.length).toBeGreaterThan(0);
       expect(en.subHeading.length).toBeGreaterThan(0);
       expect(en.courtName.length).toBeGreaterThan(0);
       expect(en.file.length).toBeGreaterThan(0);
@@ -152,6 +154,7 @@ describe("manual-upload-summary template", () => {
 
     it("should have non-empty strings for all Welsh content", () => {
       expect(cy.pageTitle.length).toBeGreaterThan(0);
+      expect(cy.heading.length).toBeGreaterThan(0);
       expect(cy.subHeading.length).toBeGreaterThan(0);
       expect(cy.courtName.length).toBeGreaterThan(0);
       expect(cy.file.length).toBeGreaterThan(0);

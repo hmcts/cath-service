@@ -2,31 +2,20 @@ import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import "../../manual-upload/model.js";
-import {
-  LANGUAGE_LABELS,
-  LIST_TYPE_LABELS,
-  type ManualUploadFormData,
-  SENSITIVITY_LABELS
-} from "../../manual-upload/model.js";
+import { LANGUAGE_LABELS, LIST_TYPE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import { storeManualUpload } from "../../manual-upload/storage.js";
 import { validateForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const LIST_TYPES = [
-  { value: "", text: "<Please choose a list type>" },
-  ...Object.entries(LIST_TYPE_LABELS).map(([value, text]) => ({ value, text }))
-];
+const LIST_TYPES = [{ value: "", text: "<Please choose a list type>" }, ...Object.entries(LIST_TYPE_LABELS).map(([value, text]) => ({ value, text }))];
 
 const SENSITIVITY_OPTIONS = [
   { value: "", text: "<Please choose a sensitivity>" },
   ...Object.entries(SENSITIVITY_LABELS).map(([value, text]) => ({ value, text }))
 ];
 
-const LANGUAGE_OPTIONS = [
-  { value: "", text: "" },
-  ...Object.entries(LANGUAGE_LABELS).map(([value, text]) => ({ value, text }))
-];
+const LANGUAGE_OPTIONS = [{ value: "", text: "" }, ...Object.entries(LANGUAGE_LABELS).map(([value, text]) => ({ value, text }))];
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
