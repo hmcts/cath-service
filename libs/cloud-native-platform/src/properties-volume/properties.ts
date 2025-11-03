@@ -23,8 +23,14 @@ export async function configurePropertiesVolume(config: Config, options: AddToOp
   const isProd = process.env.NODE_ENV === "production";
   const { mountPoint = DEFAULT_MOUNT_POINT, failOnError = isProd, chartPath } = options;
 
+  // Check if running in Azure (Kubernetes) environment
+  // AZURE_KEYVAULT_TEST_MODE allows local testing with Azure credentials
+  const isAzureEnvironment = existsSync(mountPoint) || process.env.KUBERNETES_SERVICE_HOST || process.env.AZURE_KEYVAULT_TEST_MODE === "true";
+
   try {
-    if (chartPath && !isProd && fs.existsSync(chartPath)) {
+    // Only use Azure Key Vault when deployed to Azure (not local dev)
+    // Or when AZURE_KEYVAULT_TEST_MODE is enabled for local testing
+    if (chartPath && isAzureEnvironment && fs.existsSync(chartPath)) {
       return await addFromAzureVault(config, { pathToHelmChart: chartPath });
     }
 

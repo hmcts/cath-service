@@ -2,14 +2,24 @@ import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
+// Mock the auth middleware
+vi.mock("@hmcts/auth", () => ({
+  requireAuth: () => (_req: Request, _res: Response, next: () => void) => next()
+}));
+
 describe("Admin Dashboard GET handler", () => {
   it("should render the dashboard page with English content", async () => {
-    const req = {} as Request;
+    const req = {
+      isAuthenticated: () => true,
+      user: { id: "test-user", email: "test@example.com", displayName: "Test User", roles: [] }
+    } as unknown as Request;
     const res = {
       render: vi.fn()
     } as unknown as Response;
 
-    await GET(req, res);
+    // GET is now an array [middleware, handler]
+    const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+    await handler(req, res);
 
     expect(res.render).toHaveBeenCalledOnce();
     expect(res.render).toHaveBeenCalledWith(
@@ -21,18 +31,27 @@ describe("Admin Dashboard GET handler", () => {
             title: "Upload Reference Data",
             href: "/admin/upload-reference-data"
           })
-        ])
+        ]),
+        user: expect.objectContaining({
+          id: "test-user",
+          email: "test@example.com"
+        })
       })
     );
   });
 
   it("should include all 8 tiles", async () => {
-    const req = {} as Request;
+    const req = {
+      isAuthenticated: () => true,
+      user: { id: "test-user", email: "test@example.com", displayName: "Test User", roles: [] }
+    } as unknown as Request;
     const res = {
       render: vi.fn()
     } as unknown as Response;
 
-    await GET(req, res);
+    // GET is now an array [middleware, handler]
+    const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+    await handler(req, res);
 
     const renderCall = (res.render as ReturnType<typeof vi.fn>).mock.calls[0];
     const content = renderCall[1];

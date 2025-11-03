@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/system-admin",
+  "name": "@hmcts/auth",
   "version": "1.0.0",
   "type": "module",
   "exports": {
@@ -12,9 +12,9 @@
       "default": "./src/config.ts"
     }
   },
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -23,13 +23,17 @@
     "lint:fix": "biome check --write ."
   },
   "peerDependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "passport": "^0.7.0"
   },
   "dependencies": {
-    "@hmcts/auth": "workspace:*"
+    "@microsoft/microsoft-graph-client": "3.0.7",
+    "passport-azure-ad": "4.3.5"
   },
   "devDependencies": {
     "@types/express": "5.0.1",
-    "@types/express-session": "1.18.1"
+    "@types/express-session": "1.18.1",
+    "@types/passport": "1.0.16"
   }
 }

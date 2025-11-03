@@ -67,7 +67,7 @@ async function processVault(config: Config, vault: any): Promise<void> {
     return;
   }
 
-  const vaultUri = `https://${vaultName}-aat.vault.azure.net/`;
+  const vaultUri = `https://${vaultName}.vault.azure.net/`;
   const credential = new DefaultAzureCredential();
   const client = new SecretClient(vaultUri, credential);
   const secretPromises = secrets.map((secret: StructuredOrUnstructuredSecret) => processSecret(client, secret));

@@ -1,13 +1,29 @@
 nodejs:
-  applicationPort: 3000
+  applicationPort: 8080
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
+    BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
+    SSO_ALLOW_HTTP_REDIRECT: 'false'
   keyVaults:
-    cath:
+    # ORIGINAL (for deployment): pip-ss-kv-{{ .Values.global.environment }}:
+    # TEMPORARY FOR LOCAL TESTING: Using pip-ss-kv-stg
+    pip-ss-kv-stg:
       secrets:
         - redis-access-key
         - app-insights-connection-string
         - dynatrace-url
+        - name: sso-client-id
+          alias: SSO_CLIENT_ID
+        - name: sso-client-secret
+          alias: SSO_CLIENT_SECRET
+        - name: sso-config-endpoint
+          alias: SSO_IDENTITY_METADATA
+        - name: sso-sg-system-admin
+          alias: SSO_SYSTEM_ADMIN_GROUP_ID
+        - name: sso-sg-admin-ctsc
+          alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
+        - name: sso-sg-admin-local
+          alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID

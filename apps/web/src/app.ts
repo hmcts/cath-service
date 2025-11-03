@@ -1,5 +1,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
+import { authNavigationMiddleware, configurePassport } from "@hmcts/auth";
+import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
@@ -31,7 +34,13 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, webCoreModuleRoot, publicPagesModuleRoot, systemAdminModuleRoot];
+  // Initialize Passport for Azure AD authentication
+  configurePassport(app);
+
+  // Add authentication state to navigation
+  app.use(authNavigationMiddleware());
+
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -53,8 +62,10 @@ export async function createApp(): Promise<Express> {
   });
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
-  app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
+  app.use(await createSimpleRouter(authRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
+  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
+  app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(notFoundHandler());
   app.use(errorHandler());
 

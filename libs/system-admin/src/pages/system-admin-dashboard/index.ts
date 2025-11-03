@@ -1,6 +1,10 @@
+import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, Response } from "express";
 import { en } from "./en.js";
 
-export const GET = async (_req: Request, res: Response) => {
-  res.render("system-admin-dashboard/index", en);
+const getHandler = async (req: Request, res: Response) => {
+  const user = req.user;
+  res.render("system-admin-dashboard/index", { ...en, user });
 };
+
+export const GET = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
