@@ -1,6 +1,7 @@
-# Pipeline Deployment Helm Values
-# This file is used by Flux for non-prod and prod deployments
-# For local development, see values.dev.yaml
+# Local Development Helm Values
+# This file is automatically used when running locally (not in Kubernetes/Azure)
+# It references the pip-ss-kv-stg Key Vault with -dev suffixed secrets
+# For pipeline deployments, see values.yaml
 
 nodejs:
   applicationPort: 8080
@@ -12,18 +13,13 @@ nodejs:
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
   keyVaults:
-    # Using pip-ss-kv-stg for all environments
+    # Local development uses pip-ss-kv-stg with -dev suffixed secrets
     pip-ss-kv-stg:
       secrets:
-        # Infrastructure secrets
-        # - redis-access-key
-        # - app-insights-connection-string
-        # - dynatrace-url
-
-        # SSO secrets (production names without -dev suffix)
-        - name: sso-client-id
+        # SSO secrets for local development
+        - name: sso-client-id-dev
           alias: SSO_CLIENT_ID
-        - name: sso-client-secret
+        - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-config-endpoint
           alias: SSO_IDENTITY_METADATA
