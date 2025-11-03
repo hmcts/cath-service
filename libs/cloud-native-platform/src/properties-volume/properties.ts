@@ -24,14 +24,20 @@ export async function configurePropertiesVolume(config: Config, options: AddToOp
   const { mountPoint = DEFAULT_MOUNT_POINT, failOnError = isProd, chartPath } = options;
 
   // Check if running in Azure (Kubernetes) environment
-  // AZURE_KEYVAULT_TEST_MODE allows local testing with Azure credentials
-  const isAzureEnvironment = existsSync(mountPoint) || process.env.KUBERNETES_SERVICE_HOST || process.env.AZURE_KEYVAULT_TEST_MODE === "true";
+  // AZURE_KEYVAULT_TEST_MODE allows toggling between Azure Key Vault and .env file
+  const enableAzureKeyVault = process.env.AZURE_KEYVAULT_TEST_MODE === "true";
+  const isAzureEnvironment = existsSync(mountPoint) || process.env.KUBERNETES_SERVICE_HOST || enableAzureKeyVault;
 
   try {
     // Only use Azure Key Vault when deployed to Azure (not local dev)
     // Or when AZURE_KEYVAULT_TEST_MODE is enabled for local testing
     if (chartPath && isAzureEnvironment && fs.existsSync(chartPath)) {
+      console.log(enableAzureKeyVault ? "Azure Vault: ENABLED (AZURE_KEYVAULT_TEST_MODE=true) - Loading secrets from Azure Key Vault" : "Azure Vault: Running in Kubernetes/Azure environment");
       return await addFromAzureVault(config, { pathToHelmChart: chartPath });
+    }
+
+    if (chartPath && !enableAzureKeyVault) {
+      console.log("Azure Vault: DISABLED (AZURE_KEYVAULT_TEST_MODE not set) - Using .env file only");
     }
 
     if (!existsSync(mountPoint)) {

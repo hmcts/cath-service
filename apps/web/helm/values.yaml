@@ -12,12 +12,15 @@ nodejs:
     # TEMPORARY FOR LOCAL TESTING: Using pip-ss-kv-stg
     pip-ss-kv-stg:
       secrets:
-        - redis-access-key
-        - app-insights-connection-string
-        - dynatrace-url
-        - name: sso-client-id
+        # Non-SSO secrets (commented out - not needed for local SSO testing)
+        # - redis-access-key
+        # - app-insights-connection-string
+        # - dynatrace-url
+
+        # SSO secrets (available in pip-ss-kv-stg)
+        - name: sso-client-id-dev
           alias: SSO_CLIENT_ID
-        - name: sso-client-secret
+        - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-config-endpoint
           alias: SSO_IDENTITY_METADATA
