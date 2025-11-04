@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import cy from "./cy.js";
 import en from "./en.js";
 
@@ -18,4 +18,4 @@ const getHandler = async (req: Request, res: Response) => {
   });
 };
 
-export const GET = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
