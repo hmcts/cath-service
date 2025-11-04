@@ -68,7 +68,10 @@ async function processVault(config: Config, vault: any): Promise<void> {
   }
 
   console.log(`Azure Vault: Connecting to ${vaultName}...`);
-  const vaultUri = `https://${vaultName}.vault.azure.net/`;
+
+  // Append environment suffix to vault name (e.g., -aat, -stg, -prod)
+  const envSuffix = process.env.ENV ? `-${process.env.ENV}` : "-aat";
+  const vaultUri = `https://${vaultName}${envSuffix}.vault.azure.net/`;
 
   // Use DefaultAzureCredential with a shorter timeout for local development
   // AZURE_TENANT_ID should be set to prioritize Azure CLI authentication

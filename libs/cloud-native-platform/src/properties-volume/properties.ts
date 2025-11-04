@@ -39,8 +39,8 @@ export async function configurePropertiesVolume(config: Config, options: AddToOp
       }
     }
 
-    // Always try to load from Azure Key Vault when chartPath is provided
-    if (helmChartPath && fs.existsSync(helmChartPath)) {
+    // Load from Azure Key Vault when chartPath is provided (except in production)
+    if (helmChartPath && fs.existsSync(helmChartPath) && !isProd) {
       if (isAzureEnvironment) {
         console.log("Azure Vault: Running in Kubernetes/Azure environment - Loading secrets from Key Vault");
       } else {
