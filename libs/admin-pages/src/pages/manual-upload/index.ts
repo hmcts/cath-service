@@ -1,5 +1,6 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
+import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { DateInput } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { storeManualUpload } from "../../manual-upload/storage.js";
@@ -105,6 +106,7 @@ export const GET = async (req: Request, res: Response) => {
   const data = {};
   const locale = "en";
   const t = getTranslations(locale);
+  const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
 
   res.render("manual-upload/index", {
     ...t,
@@ -114,6 +116,9 @@ export const GET = async (req: Request, res: Response) => {
     sensitivityOptions: SENSITIVITY_OPTIONS,
     languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === Language.ENGLISH })),
     locale,
+    navigation: {
+      signOut: coreAuthNavigation.signOut
+    },
     hideLanguageToggle: true
   });
 };
