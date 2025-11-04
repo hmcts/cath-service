@@ -119,8 +119,48 @@ test.describe("Admin Dashboard", () => {
 
     test("should show focus indicators on tiles", async ({ page }) => {
       const firstTileLink = page.locator("a.admin-dashboard-tile__link").first();
-      await firstTileLink.focus();
-      await expect(firstTileLink).toBeFocused();
+
+      // Wait for the tile to be visible before trying to focus
+      await expect(firstTileLink).toBeVisible();
+
+      // Use keyboard navigation to focus on the first tile
+      // Tab through until we reach a tile link
+      await page.keyboard.press("Tab");
+
+      // Check if any tile link has focus
+      const tileLinks = page.locator("a.admin-dashboard-tile__link");
+      let hasFocus = false;
+
+      for (let i = 0; i < await tileLinks.count(); i++) {
+        try {
+          await expect(tileLinks.nth(i)).toBeFocused({ timeout: 100 });
+          hasFocus = true;
+          break;
+        } catch {
+          // Continue checking other tiles
+        }
+      }
+
+      // If no tile has focus yet, keep tabbing
+      if (!hasFocus) {
+        for (let i = 0; i < 10; i++) {
+          await page.keyboard.press("Tab");
+
+          for (let j = 0; j < await tileLinks.count(); j++) {
+            try {
+              await expect(tileLinks.nth(j)).toBeFocused({ timeout: 100 });
+              hasFocus = true;
+              break;
+            } catch {
+              // Continue
+            }
+          }
+
+          if (hasFocus) break;
+        }
+      }
+
+      expect(hasFocus).toBe(true);
     });
   });
 
