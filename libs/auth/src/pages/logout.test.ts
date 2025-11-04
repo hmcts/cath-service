@@ -1,0 +1,155 @@
+import type { Request, Response } from "express";
+import { describe, expect, it, vi } from "vitest";
+import { GET } from "./logout.js";
+
+// Mock sso-config
+vi.mock("../sso-config.js", () => ({
+  getSsoConfig: vi.fn(() => ({
+    identityMetadata: "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/v2.0/.well-known/openid-configuration"
+  }))
+}));
+
+describe("Logout handler", () => {
+  it("should logout user and redirect to Azure AD logout with tenant ID", async () => {
+    const req = {
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(req.logout).toHaveBeenCalled();
+    expect(req.session.destroy).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(res.redirect).toHaveBeenCalledWith(
+      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F"
+    );
+  });
+
+  it("should redirect to / when tenant ID cannot be extracted", async () => {
+    const { getSsoConfig } = await import("../sso-config.js");
+
+    vi.mocked(getSsoConfig).mockReturnValue({
+      identityMetadata: "https://invalid-url.com"
+    } as any);
+
+    const req = {
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith("/");
+  });
+
+  it("should continue logout even if logout callback has error", async () => {
+    const { getSsoConfig } = await import("../sso-config.js");
+
+    vi.mocked(getSsoConfig).mockReturnValue({
+      identityMetadata: "https://login.microsoftonline.com/abc-123/v2.0/.well-known/openid-configuration"
+    } as any);
+
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const req = {
+      logout: vi.fn((cb) => cb(new Error("Logout error"))),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Error during logout:", expect.any(Error));
+    expect(req.session.destroy).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should continue logout even if session destroy has error", async () => {
+    const { getSsoConfig } = await import("../sso-config.js");
+
+    vi.mocked(getSsoConfig).mockReturnValue({
+      identityMetadata: "https://login.microsoftonline.com/def-456/v2.0/.well-known/openid-configuration"
+    } as any);
+
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const req = {
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(new Error("Destroy error")))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Error destroying session:", expect.any(Error));
+    expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(res.redirect).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should use http protocol when request is http", async () => {
+    const { getSsoConfig } = await import("../sso-config.js");
+
+    vi.mocked(getSsoConfig).mockReturnValue({
+      identityMetadata: "https://login.microsoftonline.com/abcdef12-3456-7890-abcd-ef1234567890/v2.0/.well-known/openid-configuration"
+    } as any);
+
+    const req = {
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "http",
+      get: vi.fn(() => "localhost:3000")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith(
+      expect.stringContaining("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F")
+    );
+  });
+});
