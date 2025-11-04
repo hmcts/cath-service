@@ -30,6 +30,11 @@ describe("auth module exports", () => {
     expect(authModule.USER_ROLES.INTERNAL_ADMIN_LOCAL).toBeDefined();
   });
 
+  it("should export isSsoConfigured function", () => {
+    expect(authModule.isSsoConfigured).toBeDefined();
+    expect(typeof authModule.isSsoConfigured).toBe("function");
+  });
+
   it("should have all expected exports", () => {
     const exports = Object.keys(authModule);
     expect(exports).toContain("requireAuth");
@@ -37,5 +42,6 @@ describe("auth module exports", () => {
     expect(exports).toContain("authNavigationMiddleware");
     expect(exports).toContain("configurePassport");
     expect(exports).toContain("USER_ROLES");
+    expect(exports).toContain("isSsoConfigured");
   });
 });

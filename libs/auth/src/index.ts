@@ -3,4 +3,5 @@ export { requireRole } from "./authorize-middleware.js";
 export { authNavigationMiddleware } from "./navigation-middleware.js";
 export { configurePassport } from "./passport-config.js";
 export { USER_ROLES } from "./role-service.js";
+export { isSsoConfigured } from "./sso-config.js";
 export type { UserProfile } from "./types.js";

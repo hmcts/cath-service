@@ -53,3 +53,17 @@ export function getSsoConfig(): SsoConfig {
     internalAdminLocalGroupId: getConfigValue("SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID")
   };
 }
+
+/**
+ * Checks if SSO is fully configured and available
+ * @returns true if SSO configuration is complete, false otherwise
+ */
+export function isSsoConfigured(): boolean {
+  // Check if SSO should be disabled for local development
+  if (process.env.NODE_ENV === "development" && !process.env.ENABLE_SSO) {
+    return false;
+  }
+
+  const ssoConfig = getSsoConfig();
+  return !!(ssoConfig.identityMetadata && ssoConfig.clientId && ssoConfig.clientSecret);
+}

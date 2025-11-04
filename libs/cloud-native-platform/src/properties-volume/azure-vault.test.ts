@@ -69,7 +69,7 @@ describe("addFromAzureVault", () => {
 
     expect(mockReadFileSync).toHaveBeenCalledWith("/path/to/chart.yaml", "utf8");
     expect(mockYamlLoad).toHaveBeenCalledWith("helm-chart-content");
-    expect(mockSecretClient).toHaveBeenCalledWith("https://test-vault-aat.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://test-vault.vault.azure.net/", expect.any(Object));
     expect(mockClient.getSecret).toHaveBeenCalledWith("secret1");
     expect(mockClient.getSecret).toHaveBeenCalledWith("secret2");
 
@@ -98,8 +98,8 @@ describe("addFromAzureVault", () => {
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
-    expect(mockSecretClient).toHaveBeenCalledWith("https://vault1-aat.vault.azure.net/", expect.any(Object));
-    expect(mockSecretClient).toHaveBeenCalledWith("https://vault2-aat.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://vault1.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://vault2.vault.azure.net/", expect.any(Object));
 
     expect(config).toEqual({
       existing: "value",
@@ -245,8 +245,8 @@ describe("addFromAzureVault", () => {
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
-    expect(mockSecretClient).toHaveBeenCalledWith("https://deep-vault-aat.vault.azure.net/", expect.any(Object));
-    expect(mockSecretClient).toHaveBeenCalledWith("https://other-vault-aat.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://deep-vault.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://other-vault.vault.azure.net/", expect.any(Object));
     expect(config).toEqual({
       existing: "value",
       deep_secret: "deep-value",

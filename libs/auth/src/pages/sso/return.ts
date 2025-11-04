@@ -1,16 +1,26 @@
 import type { Request, Response } from "express";
 import passport from "passport";
 import { USER_ROLES } from "../../role-service.js";
+import { isSsoConfigured } from "../../sso-config.js";
 
 /**
  * Handles OAuth callback from Azure AD
  * After successful authentication, redirects to the original requested URL or appropriate dashboard based on user role
  */
 export const GET = [
-  passport.authenticate("azuread-openidconnect", {
-    failureRedirect: "/auth/login",
-    failureMessage: true
-  }),
+  (req: Request, res: Response, next: () => void) => {
+    // Check if SSO is properly configured
+    if (!isSsoConfigured()) {
+      console.warn("SSO callback attempted but SSO is not configured");
+      return res.status(503).send("SSO authentication is not available. Please check configuration.");
+    }
+
+    // Proceed with SSO authentication
+    return passport.authenticate("azuread-openidconnect", {
+      failureRedirect: "/auth/login",
+      failureMessage: true
+    })(req, res, next);
+  },
   async (req: Request, res: Response) => {
     if (!req.user) {
       return res.redirect("/auth/login");
