@@ -12,6 +12,7 @@
     "build": "tsc && vite build --config vite.build.ts --configLoader runner",
     "clean": "rm -rf dist",
     "start": "node dist/server.js",
+    "certs:generate": "../../scripts/generate-local-certs.sh",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
