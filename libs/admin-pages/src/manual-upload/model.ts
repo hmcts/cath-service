@@ -55,5 +55,6 @@ declare module "express-session" {
     manualUploadForm?: ManualUploadFormData;
     manualUploadErrors?: ValidationError[];
     manualUploadSubmitted?: boolean;
+    uploadConfirmed?: boolean;
   }
 }

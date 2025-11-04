@@ -56,6 +56,24 @@ describe("manual-upload page", () => {
       );
     });
 
+    it("should clear uploadConfirmed flag when starting new upload", async () => {
+      const session = {
+        uploadConfirmed: true
+      };
+
+      const req = {
+        session,
+        query: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await GET(req, res);
+
+      expect(req.session.uploadConfirmed).toBeUndefined();
+    });
+
     it("should include list type options", async () => {
       const req = {
         session: {},
@@ -187,7 +205,7 @@ describe("manual-upload page", () => {
         session: {
           manualUploadSubmitted: true,
           manualUploadForm: {
-            listType: "CROWN_DAILY_LIST"
+            listType: "6"
           }
         },
         query: {}
@@ -202,7 +220,7 @@ describe("manual-upload page", () => {
       const renderData = renderCall[1];
 
       const selectedListType = renderData.listTypes.find((lt: any) => lt.selected);
-      expect(selectedListType?.value).toBe("CROWN_DAILY_LIST");
+      expect(selectedListType?.value).toBe("6");
     });
 
     it("should pre-select sensitivity from session when successfully submitted", async () => {

@@ -35,5 +35,17 @@ export const mockListTypes: ListType[] = [
     name: "CROWN_WARNED_LIST",
     englishFriendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List"
+  },
+  {
+    id: 6,
+    name: "CROWN_DAILY_LIST",
+    englishFriendlyName: "Crown Daily List",
+    welshFriendlyName: "Crown Daily List"
+  },
+  {
+    id: 7,
+    name: "CROWN_FIRM_LIST",
+    englishFriendlyName: "Crown Firm List",
+    welshFriendlyName: "Crown Firm List"
   }
 ];

@@ -1,15 +1,18 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language } from "@hmcts/publication";
+import { Language, mockListTypes } from "@hmcts/publication";
 import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import "../../manual-upload/model.js";
-import { LANGUAGE_LABELS, LIST_TYPE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
+import { LANGUAGE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import { storeManualUpload } from "../../manual-upload/storage.js";
 import { validateForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const LIST_TYPES = [{ value: "", text: "<Please choose a list type>" }, ...Object.entries(LIST_TYPE_LABELS).map(([value, text]) => ({ value, text }))];
+const LIST_TYPES = [
+  { value: "", text: "<Please choose a list type>" },
+  ...mockListTypes.map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
+];
 
 const SENSITIVITY_OPTIONS = [
   { value: "", text: "<Please choose a sensitivity>" },
@@ -60,6 +63,9 @@ export const GET = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
   const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
+
+  // Clear upload confirmation flag when starting a new upload
+  delete req.session.uploadConfirmed;
 
   // Check if form was successfully submitted to summary page
   const wasSubmitted = req.session.manualUploadSubmitted || false;
