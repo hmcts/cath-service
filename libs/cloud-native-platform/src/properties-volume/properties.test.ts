@@ -159,6 +159,31 @@ describe("configurePropertiesVolume", () => {
       process.env.NODE_ENV = originalEnv;
     });
 
+    it("should log message when loading from Azure vault in non-Azure environment", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      const originalK8sHost = process.env.KUBERNETES_SERVICE_HOST;
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      process.env.NODE_ENV = "development";
+      delete process.env.KUBERNETES_SERVICE_HOST;
+
+      // Mount point doesn't exist (not in Azure)
+      mockExistsSync.mockReturnValueOnce(false).mockReturnValueOnce(false);
+      // Chart file exists
+      mockFs.existsSync.mockReturnValue(true);
+      mockAddFromAzureVault.mockResolvedValue(undefined);
+
+      await setupPropertiesVolume(config, { chartPath: "/path/to/chart.yaml" });
+
+      expect(consoleLogSpy).toHaveBeenCalledWith("Azure Vault: Loading secrets from Key Vault (requires 'az login')");
+      expect(mockAddFromAzureVault).toHaveBeenCalledWith(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+      consoleLogSpy.mockRestore();
+      process.env.NODE_ENV = originalEnv;
+      if (originalK8sHost) {
+        process.env.KUBERNETES_SERVICE_HOST = originalK8sHost;
+      }
+    });
+
     it("should not use Azure vault in production even with chartPath", async () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = "production";
