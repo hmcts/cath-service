@@ -184,16 +184,61 @@ The web application features an intelligent module discovery system that automat
 - **Application Insights**: Telemetry and monitoring
 - **Health Checks**: Kubernetes readiness/liveness probes
 
+#### Azure Key Vault Integration
+
+The platform provides seamless Azure Key Vault integration for secure secrets management across environments:
+
+**Configuration Flow**:
+1. **Helm Chart Definition** (`apps/web/helm/values.yaml`):
+   ```yaml
+   keyVaults:
+     pip-ss-kv-{{ .Values.global.environment }}:
+       secrets:
+         - name: sso-client-id
+           alias: SSO_CLIENT_ID
+   ```
+
+2. **Automatic Loading** (`libs/cloud-native-platform/src/properties-volume/azure-vault.ts`):
+   - Uses `@azure/identity` with `DefaultAzureCredential` for authentication
+   - Uses `@azure/keyvault-secrets` `SecretClient` to fetch secrets
+   - Reads Helm chart to determine which secrets to load
+   - Merges secrets into application config
+
+3. **Application Initialization**:
+   ```typescript
+   // apps/web/src/app.ts
+   await configurePropertiesVolume(config, {
+     chartPath: path.join(__dirname, "../helm/values.yaml")
+   });
+   ```
+
+**Environment-Specific Behavior**:
+- **Local Development**: Reads from `.env` files via `process.env`
+- **CI/Testing**: Can optionally connect to Key Vault with Azure credentials
+- **Production (Kubernetes)**: Secrets mounted as files in `/mnt/secrets` by Helm chart
+- **Non-Production with chartPath**: Uses Azure credentials to fetch secrets directly from Key Vault
+
+**Key Vault Naming Convention**:
+```
+pip-ss-kv-{environment}
+```
+Where environment is: `demo`, `test`, `stg`, or `prod`
+
 **Implementation**:
 ```typescript
 // Automatic configuration loading
-await configurePropertiesVolume(config, { 
-  chartPath: path.join(__dirname, "../helm/values.yaml") 
+await configurePropertiesVolume(config, {
+  chartPath: path.join(__dirname, "../helm/values.yaml")
 });
 
 // Health check endpoints
 app.use(healthcheck()); // /health, /health/readiness, /health/liveness
 ```
+
+**Configuration Priority** (highest to lowest):
+1. `process.env` - Direct environment variables (local dev)
+2. Config object - Populated from Key Vault or mounted volumes
+3. Default values - Defined in `apps/web/config/default.json`
 
 ### Express GOV.UK Starter (`libs/express-govuk-starter`)
 
