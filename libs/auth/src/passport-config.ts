@@ -75,14 +75,12 @@ export function configurePassport(app: Express): void {
 
             return done(null, user);
           } catch (error) {
-            console.error("Error in Azure AD authentication:", error);
             return done(error, false);
           }
         }
       )
     );
   } catch (error) {
-    console.error("[Passport] Error creating OIDC Strategy:", error);
     throw error;
   }
 

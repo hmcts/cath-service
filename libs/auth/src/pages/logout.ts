@@ -14,16 +14,8 @@ function extractTenantId(identityMetadata: string): string | null {
  * Destroys session and redirects to Azure AD logout endpoint
  */
 export const GET = async (req: Request, res: Response) => {
-  req.logout((err) => {
-    if (err) {
-      console.error("Error during logout:", err);
-    }
-
-    req.session.destroy((destroyErr: Error | null) => {
-      if (destroyErr) {
-        console.error("Error destroying session:", destroyErr);
-      }
-
+  req.logout(() => {
+    req.session.destroy(() => {
       // Clear session cookie
       res.clearCookie("connect.sid");
 
@@ -41,7 +33,6 @@ export const GET = async (req: Request, res: Response) => {
         const logoutUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent(postLogoutRedirectUri)}`;
         res.redirect(logoutUrl);
       } else {
-        console.error("Could not extract tenant ID from identity metadata");
         res.redirect("/");
       }
     });

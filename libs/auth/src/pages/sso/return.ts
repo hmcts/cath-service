@@ -12,24 +12,12 @@ export const GET = [
     failureMessage: true
   }),
   async (req: Request, res: Response) => {
-    console.log("[SSO Return] User authenticated:", {
-      user: req.user ? "Present" : "Missing",
-      role: req.user?.role,
-      email: req.user?.email,
-      isAuthenticated: req.isAuthenticated()
-    });
-
     if (!req.user) {
-      console.error("[SSO Return] No user data after authentication");
       return res.redirect("/auth/login");
     }
 
     // Check if user has a valid role
     if (!req.user.role) {
-      console.warn("[SSO Return] User authenticated but has no valid role:", {
-        email: req.user.email,
-        groupIds: req.user.groupIds
-      });
       return res.redirect("/sso/rejected");
     }
 
@@ -43,7 +31,6 @@ export const GET = [
 
     // Get the return URL from session, or use role-based default
     const returnTo = req.session.returnTo || defaultRedirect;
-    console.log("[SSO Return] Redirecting to:", returnTo);
 
     // Clear the returnTo from session
     delete req.session.returnTo;
@@ -54,29 +41,21 @@ export const GET = [
     // Regenerate session for security
     req.session.regenerate((err: Error | null) => {
       if (err) {
-        console.error("[SSO Return] Error regenerating session:", err);
         return res.redirect("/auth/login");
       }
-
-      console.log("[SSO Return] Session regenerated, re-establishing login");
 
       // Use req.login() to properly establish Passport session
       req.login(user, (loginErr: Error | null) => {
         if (loginErr) {
-          console.error("[SSO Return] Error re-establishing login:", loginErr);
           return res.redirect("/auth/login");
         }
-
-        console.log("[SSO Return] Login re-established successfully");
 
         // Save session before redirecting to prevent race condition
         req.session.save((saveErr: Error | null) => {
           if (saveErr) {
-            console.error("[SSO Return] Error saving session:", saveErr);
             return res.redirect("/auth/login");
           }
 
-          console.log("[SSO Return] Session saved successfully, redirecting to:", returnTo);
           res.redirect(returnTo);
         });
       });

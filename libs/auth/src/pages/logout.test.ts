@@ -68,8 +68,6 @@ describe("Logout handler", () => {
       identityMetadata: "https://login.microsoftonline.com/abc-123/v2.0/.well-known/openid-configuration"
     } as any);
 
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
     const req = {
       logout: vi.fn((cb) => cb(new Error("Logout error"))),
       session: {
@@ -86,11 +84,8 @@ describe("Logout handler", () => {
 
     await GET(req, res);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Error during logout:", expect.any(Error));
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
   });
 
   it("should continue logout even if session destroy has error", async () => {
@@ -99,8 +94,6 @@ describe("Logout handler", () => {
     vi.mocked(getSsoConfig).mockReturnValue({
       identityMetadata: "https://login.microsoftonline.com/def-456/v2.0/.well-known/openid-configuration"
     } as any);
-
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const req = {
       logout: vi.fn((cb) => cb(null)),
@@ -118,11 +111,8 @@ describe("Logout handler", () => {
 
     await GET(req, res);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Error destroying session:", expect.any(Error));
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
     expect(res.redirect).toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
   });
 
   it("should use http protocol when request is http", async () => {
