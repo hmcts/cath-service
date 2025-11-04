@@ -33,6 +33,24 @@ export function configurePassport(app: Express): void {
 
   const ssoConfig = getSsoConfig();
 
+  // Check if SSO configuration is complete (e.g., for E2E tests or environments without SSO setup)
+  if (!ssoConfig.identityMetadata || !ssoConfig.clientId || !ssoConfig.clientSecret) {
+    // Initialize passport with minimal configuration (no OIDC strategy)
+    app.use(passport.initialize());
+    app.use(passport.session());
+
+    // Simple serialization
+    passport.serializeUser((user, done) => {
+      done(null, user);
+    });
+
+    passport.deserializeUser((user: Express.User, done) => {
+      done(null, user);
+    });
+
+    return;
+  }
+
   // Initialize passport
   app.use(passport.initialize());
   app.use(passport.session());

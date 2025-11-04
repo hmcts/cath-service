@@ -1,15 +1,24 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe("Admin Dashboard", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/system-admin-dashboard");
+    await loginWithSSO(
+      page,
+      process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!,
+      process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!
+    );
+    await page.waitForURL("/system-admin-dashboard");
+  });
+
   test.describe("Content Display", () => {
     test("should load the admin dashboard at /system-admin-dashboard", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       await expect(page).toHaveTitle(/Court and tribunal hearings/i);
     });
 
     test("should display the main heading", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
       await expect(heading).toHaveText("System Admin Dashboard");
@@ -17,13 +26,11 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should display all 8 admin tiles", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const tiles = page.locator(".admin-dashboard-tile");
       await expect(tiles).toHaveCount(8);
     });
 
     test("should display correct tile titles and links", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
 
       const tileData = [
         { title: "Upload Reference Data", href: "/admin/upload-reference-data" },
@@ -44,7 +51,6 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should display descriptions for all tiles", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const descriptions = page.locator(".admin-dashboard-tile__description");
       await expect(descriptions).toHaveCount(8);
 
@@ -59,7 +65,6 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should display tiles in 2-column grid", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const gridColumns = page.locator(".govuk-grid-column-one-half");
       await expect(gridColumns).toHaveCount(8);
     });
@@ -67,7 +72,6 @@ test.describe("Admin Dashboard", () => {
 
   test.describe("Accessibility", () => {
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
@@ -75,14 +79,12 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should have logical heading hierarchy", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const h1 = page.locator("h1");
       await expect(h1).toHaveCount(1);
       await expect(h1).toHaveText("System Admin Dashboard");
     });
 
     test("should have accessible links", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const links = page.locator("a.admin-dashboard-tile__link");
       await expect(links).toHaveCount(8);
 
@@ -94,8 +96,6 @@ test.describe("Admin Dashboard", () => {
 
   test.describe("Keyboard Navigation", () => {
     test("should allow keyboard navigation through all tiles", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
-
       const tileLinks = page.locator("a.admin-dashboard-tile__link");
       const count = await tileLinks.count();
 
@@ -118,8 +118,6 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should show focus indicators on tiles", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
-
       const firstTileLink = page.locator("a.admin-dashboard-tile__link").first();
       await firstTileLink.focus();
       await expect(firstTileLink).toBeFocused();
@@ -163,7 +161,6 @@ test.describe("Admin Dashboard", () => {
 
   test.describe("Tile Interaction", () => {
     test("should navigate to 404 when clicking Upload Reference Data tile", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       await page.click('a:has-text("Upload Reference Data")');
       await page.waitForURL("**/admin/upload-reference-data");
 
@@ -172,7 +169,6 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should have hover state on tiles", async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
       const firstTile = page.locator(".admin-dashboard-tile").first();
 
       await firstTile.hover();
