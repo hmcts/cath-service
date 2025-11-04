@@ -1,5 +1,6 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
+import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, LIST_TYPE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
@@ -58,6 +59,7 @@ function transformDateFields(body: any): ManualUploadFormData {
 export const GET = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
+  const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
 
   // Check if form was successfully submitted to summary page
   const wasSubmitted = req.session.manualUploadSubmitted || false;
@@ -98,6 +100,9 @@ export const GET = async (req: Request, res: Response) => {
     sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
     languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
     locale,
+    navigation: {
+      signOut: coreAuthNavigation.signOut
+    },
     hideLanguageToggle: true
   });
 };
