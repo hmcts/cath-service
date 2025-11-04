@@ -99,7 +99,7 @@ describe("buildJurisdictionItems", () => {
     const items = buildJurisdictionItems([], "en");
 
     expect(items.every((item) => typeof item.value === "string")).toBe(true);
-    expect(items.every((item) => Number.parseInt(item.value) === item.jurisdictionId)).toBe(true);
+    expect(items.every((item) => Number.parseInt(item.value, 10) === item.jurisdictionId)).toBe(true);
   });
 
   it("should handle multiple selected jurisdictions", () => {

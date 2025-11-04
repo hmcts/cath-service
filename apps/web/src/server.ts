@@ -3,8 +3,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-import https from "node:https";
 import fs from "node:fs";
+import type http from "node:http";
+import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApp } from "./app.js";
@@ -25,13 +26,13 @@ async function startServer() {
 
   const shouldUseHttps = !IS_PRODUCTION && fs.existsSync(certPath) && fs.existsSync(keyPath);
 
-  let server;
+  let server: http.Server | https.Server;
 
   if (shouldUseHttps) {
     // Use HTTPS for local development
     const httpsOptions = {
       key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath),
+      cert: fs.readFileSync(certPath)
     };
 
     server = https.createServer(httpsOptions, app);

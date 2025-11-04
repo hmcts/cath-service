@@ -16,6 +16,6 @@ const cy = {
   linkText: "ServiceNow"
 };
 
-export const GET = async (req: Request, res: Response) => {
+export const GET = async (_req: Request, res: Response) => {
   res.render("sso/rejected", { en, cy });
 };

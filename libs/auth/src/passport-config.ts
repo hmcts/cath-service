@@ -6,22 +6,6 @@ import { determineUserRole } from "./role-service.js";
 import { getSsoConfig } from "./sso-config.js";
 import type { UserProfile } from "./types.js";
 
-interface AzureProfile {
-  oid: string;
-  upn?: string;
-  email?: string;
-  name?: string;
-  _json?: {
-    oid: string;
-    email?: string;
-    name?: string;
-  };
-}
-
-interface TokenSet {
-  accessToken?: string;
-}
-
 /**
  * Configures Passport with Azure AD OIDC Strategy
  * @param app - Express application instance

@@ -38,7 +38,7 @@ export async function fetchUserProfile(accessToken: string): Promise<UserProfile
     // Extract roles and group IDs from memberOf response
     const roles: string[] = [];
     const groupIds: string[] = [];
-    if (memberOf && memberOf.value && Array.isArray(memberOf.value)) {
+    if (memberOf?.value && Array.isArray(memberOf.value)) {
       console.log(`[Graph API] Found ${memberOf.value.length} group memberships`);
       for (const group of memberOf.value) {
         if (group.id) {
