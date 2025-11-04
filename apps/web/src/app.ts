@@ -7,6 +7,7 @@ import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@h
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin/config";
+import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import { configureCookieManager, configureGovuk, configureHelmet, configureNonce, errorHandler, expressSessionRedis, notFoundHandler } from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import compression from "compression";
@@ -40,7 +41,7 @@ export async function createApp(): Promise<Express> {
   // Add authentication state to navigation
   app.use(authNavigationMiddleware());
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot];
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -66,6 +67,7 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
+  app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
   app.use(notFoundHandler());
   app.use(errorHandler());
 

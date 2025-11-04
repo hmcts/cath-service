@@ -2,7 +2,9 @@ export const en = {
   govUk: "GOV.UK",
   phase: "beta",
   navigation: {
-    signIn: "Sign in",
+    signIn: "Sign in"
+  },
+  authenticatedNavigation: {
     signOut: "Sign out"
   },
   footer: {

@@ -1,6 +1,5 @@
 export default {
   pageTitle: "Admin Dashboard",
-  signOut: "Sign out",
   tiles: [
     {
       heading: "Upload",
