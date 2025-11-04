@@ -2,6 +2,16 @@ import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
+// Mock the auth middleware
+vi.mock("@hmcts/auth", () => ({
+  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  USER_ROLES: {
+    SYSTEM_ADMIN: "system-admin",
+    INTERNAL_ADMIN_CTSC: "internal-admin-ctsc",
+    INTERNAL_ADMIN_LOCAL: "internal-admin-local"
+  }
+}));
+
 describe("admin dashboard page", () => {
   describe("GET", () => {
     it("should render dashboard page with English content", async () => {
@@ -12,7 +22,9 @@ describe("admin dashboard page", () => {
         locals: { locale: "en" }
       } as unknown as Response;
 
-      await GET(req, res);
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "admin-dashboard/index",
@@ -48,7 +60,9 @@ describe("admin dashboard page", () => {
         locals: { locale: "cy" }
       } as unknown as Response;
 
-      await GET(req, res);
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "admin-dashboard/index",
@@ -83,7 +97,9 @@ describe("admin dashboard page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -98,7 +114,9 @@ describe("admin dashboard page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];

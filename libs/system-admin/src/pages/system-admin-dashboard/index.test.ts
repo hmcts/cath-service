@@ -4,7 +4,10 @@ import { GET } from "./index.js";
 
 // Mock the auth middleware
 vi.mock("@hmcts/auth", () => ({
-  requireAuth: () => (_req: Request, _res: Response, next: () => void) => next()
+  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  USER_ROLES: {
+    SYSTEM_ADMIN: "system-admin"
+  }
 }));
 
 describe("Admin Dashboard GET handler", () => {

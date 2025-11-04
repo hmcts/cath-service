@@ -60,7 +60,10 @@ export async function collateSchemas(
   console.log(`📊 Total: ${definedModels.size} models, ${definedEnums.size} enums`);
 }
 
-collateSchemas().catch((error) => {
-  console.error("❌ Error collating schemas:", error);
-  process.exit(1);
-});
+// Only run when executed directly, not during tests
+if (import.meta.url === `file://${process.argv[1]}`) {
+  collateSchemas().catch((error) => {
+    console.error("❌ Error collating schemas:", error);
+    process.exit(1);
+  });
+}
