@@ -1,7 +1,7 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
-import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { DateInput } from "@hmcts/web-core";
+import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { storeManualUpload } from "../../manual-upload/storage.js";
 import { validateForm } from "../../manual-upload/validation.js";
