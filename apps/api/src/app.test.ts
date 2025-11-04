@@ -32,10 +32,7 @@ describe("API App", () => {
     const request = await import("supertest");
 
     // Test that the app can parse JSON by making a request that would use it
-    const response = await request.default(app)
-      .post("/test-json-parse")
-      .send({ test: "data" })
-      .set("Content-Type", "application/json");
+    const response = await request.default(app).post("/test-json-parse").send({ test: "data" }).set("Content-Type", "application/json");
 
     // Even though this endpoint doesn't exist (404), if JSON parsing failed,
     // we'd get a different error

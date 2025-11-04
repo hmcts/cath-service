@@ -3,8 +3,8 @@ import express from "express";
 import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { configurePassport } from "./passport-config.js";
 import * as graphClient from "./graph-client.js";
+import { configurePassport } from "./passport-config.js";
 import * as roleService from "./role-service.js";
 import * as ssoConfig from "./sso-config.js";
 
@@ -44,7 +44,6 @@ vi.mock("passport", () => ({
 const mockFetchUserProfile = vi.mocked(graphClient.fetchUserProfile);
 const mockDetermineUserRole = vi.mocked(roleService.determineUserRole);
 const mockGetSsoConfig = vi.mocked(ssoConfig.getSsoConfig);
-const mockIsSsoConfigured = vi.mocked(ssoConfig.isSsoConfigured);
 const mockPassport = vi.mocked(passport);
 const mockOIDCStrategy = vi.mocked(OIDCStrategy);
 
@@ -202,14 +201,7 @@ describe("passport-config", () => {
   });
 
   describe("OIDC strategy verify callback", () => {
-    let verifyCallback: (
-      _iss: any,
-      _sub: any,
-      profile: any,
-      accessToken: any,
-      _refreshToken: any,
-      done: any
-    ) => Promise<void>;
+    let verifyCallback: (_iss: any, _sub: any, profile: any, accessToken: any, _refreshToken: any, done: any) => Promise<void>;
 
     beforeEach(() => {
       process.env.NODE_ENV = "production";
@@ -251,25 +243,21 @@ describe("passport-config", () => {
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
       mockDetermineUserRole.mockReturnValue("SYSTEM_ADMIN");
 
-      await verifyCallback(
-        "issuer",
-        "subject",
-        mockProfile,
-        "access-token",
-        "refresh-token",
-        mockDone
-      );
+      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
       expect(mockFetchUserProfile).toHaveBeenCalledWith("access-token");
       expect(mockDetermineUserRole).toHaveBeenCalledWith(["group1", "group2"]);
-      expect(mockDone).toHaveBeenCalledWith(null, expect.objectContaining({
-        id: "user-123",
-        email: "test@example.com",
-        displayName: "Test User",
-        role: "SYSTEM_ADMIN",
-        groupIds: ["group1", "group2"],
-        accessToken: "access-token"
-      }));
+      expect(mockDone).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({
+          id: "user-123",
+          email: "test@example.com",
+          displayName: "Test User",
+          role: "SYSTEM_ADMIN",
+          groupIds: ["group1", "group2"],
+          accessToken: "access-token"
+        })
+      );
     });
 
     it("should use profile email fallbacks when upn is not available", async () => {
@@ -290,18 +278,14 @@ describe("passport-config", () => {
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
       mockDetermineUserRole.mockReturnValue("INTERNAL_ADMIN_CTSC");
 
-      await verifyCallback(
-        "issuer",
-        "subject",
-        mockProfile,
-        "access-token",
-        "refresh-token",
-        mockDone
-      );
+      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(null, expect.objectContaining({
-        email: "test@example.com"
-      }));
+      expect(mockDone).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({
+          email: "test@example.com"
+        })
+      );
     });
 
     it("should use _json email fallback when email is not available", async () => {
@@ -322,18 +306,14 @@ describe("passport-config", () => {
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
       mockDetermineUserRole.mockReturnValue("INTERNAL_ADMIN_LOCAL");
 
-      await verifyCallback(
-        "issuer",
-        "subject",
-        mockProfile,
-        "access-token",
-        "refresh-token",
-        mockDone
-      );
+      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(null, expect.objectContaining({
-        email: "json@example.com"
-      }));
+      expect(mockDone).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({
+          email: "json@example.com"
+        })
+      );
     });
 
     it("should handle errors during user profile fetching", async () => {
@@ -347,14 +327,7 @@ describe("passport-config", () => {
 
       mockFetchUserProfile.mockRejectedValue(mockError);
 
-      await verifyCallback(
-        "issuer",
-        "subject",
-        mockProfile,
-        "access-token",
-        "refresh-token",
-        mockDone
-      );
+      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
       expect(mockDone).toHaveBeenCalledWith(mockError, false);
     });
