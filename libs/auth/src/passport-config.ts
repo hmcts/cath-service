@@ -27,15 +27,10 @@ interface TokenSet {
  * @param app - Express application instance
  */
 export function configurePassport(app: Express): void {
-  console.log("[Passport] Starting configuration...");
-
   // Check if SSO should be disabled for local development
   const disableSso = process.env.NODE_ENV === "development" && !process.env.ENABLE_SSO;
 
   if (disableSso) {
-    console.log("[Passport] ⚠️  SSO disabled for local development (NODE_ENV=development)");
-    console.log("[Passport] To enable SSO locally, set ENABLE_SSO=true environment variable");
-
     // Initialize passport with minimal configuration (no OIDC strategy)
     app.use(passport.initialize());
     app.use(passport.session());
@@ -49,24 +44,16 @@ export function configurePassport(app: Express): void {
       done(null, user);
     });
 
-    console.log("[Passport] Dev mode configuration complete (SSO disabled)");
     return;
   }
 
   const ssoConfig = getSsoConfig();
-  console.log("[Passport] SSO config loaded:", {
-    clientId: ssoConfig.clientId ? "SET" : "MISSING",
-    identityMetadata: ssoConfig.identityMetadata ? "SET" : "MISSING"
-  });
 
   // Initialize passport
-  console.log("[Passport] Initializing passport middleware...");
   app.use(passport.initialize());
   app.use(passport.session());
-  console.log("[Passport] Passport middleware initialized");
 
   // Configure Azure AD OIDC Strategy
-  console.log("[Passport] Creating OIDC Strategy...");
   try {
     passport.use(
       new OIDCStrategy(
@@ -88,24 +75,8 @@ export function configurePassport(app: Express): void {
             // Fetch user details and roles from Microsoft Graph API
             const userProfile = await fetchUserProfile(accessToken);
 
-            console.log("[Passport] User profile fetched:", {
-              email: userProfile.email,
-              groupIds: userProfile.groupIds,
-              roles: userProfile.roles
-            });
-
             // Determine user role based on group memberships
             const userRole = determineUserRole(userProfile.groupIds);
-
-            console.log("[Passport] Role determination:", {
-              userRole,
-              groupIds: userProfile.groupIds,
-              configuredGroups: {
-                systemAdmin: ssoConfig.systemAdminGroupId,
-                ctsc: ssoConfig.internalAdminCtscGroupId,
-                local: ssoConfig.internalAdminLocalGroupId
-              }
-            });
 
             // Merge profile data
             const user: UserProfile = {
@@ -126,7 +97,6 @@ export function configurePassport(app: Express): void {
         }
       )
     );
-    console.log("[Passport] OIDC Strategy created successfully");
   } catch (error) {
     console.error("[Passport] Error creating OIDC Strategy:", error);
     throw error;
@@ -141,6 +111,4 @@ export function configurePassport(app: Express): void {
   passport.deserializeUser((user: Express.User, done) => {
     done(null, user);
   });
-
-  console.log("[Passport] Configuration complete!");
 }

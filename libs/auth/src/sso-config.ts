@@ -36,8 +36,8 @@ function getConfigValue(key: string): string {
  * @returns SSO configuration object
  */
 export function getSsoConfig(): SsoConfig {
-  const baseUrl = getConfigValue("BASE_URL");
-  const redirectUri = baseUrl ? `${baseUrl}/sso/return` : "";
+  const baseUrl = getConfigValue("BASE_URL") || "https://localhost:8080";
+  const redirectUri = `${baseUrl}/sso/return`;
 
   return {
     identityMetadata: getConfigValue("SSO_IDENTITY_METADATA"),

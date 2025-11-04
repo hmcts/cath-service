@@ -22,8 +22,30 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Application configuration
+      BASE_URL: https://localhost:8080
+      PORT: 8080
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # SSO Configuration (using existing GitHub Secrets)
+      SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
+      SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
+      SSO_IDENTITY_METADATA: ${{ secrets.SSO_CONFIG_ENDPOINT }}
+      SSO_SYSTEM_ADMIN_GROUP_ID: ${{ secrets.SSO_SG_SYSTEM_ADMIN }}
+      SSO_INTERNAL_ADMIN_CTSC_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_CTSC }}
+      SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_LOCAL }}
+      SSO_ALLOW_HTTP_REDIRECT: false
+
+      # Test user credentials (using existing GitHub Secrets)
+      SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
+      SSO_TEST_SYSTEM_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_PWD }}
+      SSO_TEST_LOCAL_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_USER }}
+      SSO_TEST_LOCAL_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_PWD }}
+      SSO_TEST_CTSC_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_USER }}
+      SSO_TEST_CTSC_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_PWD }}
+      SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
+      SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
 
     steps:
       - name: Checkout
@@ -56,6 +78,11 @@ jobs:
 
       - name: Build packages
         run: yarn build
+
+      - name: Generate self-signed certificates for CI
+        run: |
+          chmod +x ./scripts/generate-ci-certs.sh
+          ./scripts/generate-ci-certs.sh
 
       - name: Restore Playwright browsers cache
         uses: actions/cache/restore@v4

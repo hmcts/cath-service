@@ -18,7 +18,7 @@ export async function createApp(): Promise<Express> {
   app.use(compression());
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000"],
+      origin: process.env.CORS_ORIGIN?.split(",") || ["https://localhost:8080"],
       credentials: true
     })
   );

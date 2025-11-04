@@ -8,10 +8,15 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
+    "test:sso": "node run-with-credentials.js tests/sso",
+    "test:sso:ui": "node run-with-credentials.js tests/sso --ui",
+    "test:sso:debug": "node run-with-credentials.js tests/sso --debug",
     "playwright:install": "npx playwright install"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",
+    "@azure/identity": "4.5.0",
+    "@azure/keyvault-secrets": "4.9.0",
     "@playwright/test": "1.56.1"
   }
 }
