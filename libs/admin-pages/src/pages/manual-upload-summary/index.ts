@@ -1,5 +1,5 @@
 import { getLocationById } from "@hmcts/location";
-import { formatDate, formatDateRange } from "@hmcts/web-core";
+import { cy as coreLocales, en as coreLocalesEn, formatDate, formatDateRange } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, LIST_TYPE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
@@ -24,6 +24,7 @@ export const GET = async (req: Request, res: Response) => {
   const locale = req.query.lng === "cy" ? "cy" : "en";
   const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
+  const coreAuthNavigation = locale === "cy" ? coreLocales.authenticatedNavigation : coreLocalesEn.authenticatedNavigation;
 
   res.render("manual-upload-summary/index", {
     pageTitle: lang.pageTitle,
@@ -46,6 +47,9 @@ export const GET = async (req: Request, res: Response) => {
       sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
       language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
       displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
+    },
+    navigation: {
+      signOut: coreAuthNavigation.signOut
     },
     hideLanguageToggle: true
   });
