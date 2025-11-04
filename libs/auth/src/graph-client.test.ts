@@ -115,10 +115,7 @@ describe("fetchUserProfile", () => {
       displayName: "Test User 4"
     });
     mockGet.mockResolvedValueOnce({
-      value: [
-        { id: "group-1" },
-        { id: "group-2", displayName: "Named Group" }
-      ]
+      value: [{ id: "group-1" }, { id: "group-2", displayName: "Named Group" }]
     });
 
     vi.mocked(Client.init).mockReturnValue({
@@ -146,10 +143,7 @@ describe("fetchUserProfile", () => {
       displayName: "Test User 5"
     });
     mockGet.mockResolvedValueOnce({
-      value: [
-        { displayName: "Group Without ID" },
-        { id: "group-2", displayName: "Valid Group" }
-      ]
+      value: [{ displayName: "Group Without ID" }, { id: "group-2", displayName: "Valid Group" }]
     });
 
     vi.mocked(Client.init).mockReturnValue({

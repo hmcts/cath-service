@@ -138,8 +138,6 @@ describe("Logout handler", () => {
 
     await GET(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith(
-      expect.stringContaining("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F")
-    );
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F"));
   });
 });

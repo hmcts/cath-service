@@ -66,7 +66,7 @@ describe("SSO Return handler", () => {
       user,
       isAuthenticated: () => true,
       session: { regenerate: vi.fn((cb) => cb(null)), returnTo: undefined },
-      login: vi.fn((u, cb) => cb(null))
+      login: vi.fn((_u, cb) => cb(null))
     } as unknown as Request;
 
     const res = {
@@ -94,7 +94,7 @@ describe("SSO Return handler", () => {
       user,
       isAuthenticated: () => true,
       session: { regenerate: vi.fn((cb) => cb(null)), returnTo: undefined },
-      login: vi.fn((u, cb) => cb(null))
+      login: vi.fn((_u, cb) => cb(null))
     } as unknown as Request;
 
     const res = {
@@ -122,7 +122,7 @@ describe("SSO Return handler", () => {
       user,
       isAuthenticated: () => true,
       session: { regenerate: vi.fn((cb) => cb(null)), returnTo: undefined },
-      login: vi.fn((u, cb) => cb(null))
+      login: vi.fn((_u, cb) => cb(null))
     } as unknown as Request;
 
     const res = {
@@ -150,7 +150,7 @@ describe("SSO Return handler", () => {
       user,
       isAuthenticated: () => true,
       session: { regenerate: vi.fn((cb) => cb(null)), returnTo: "/some/page" },
-      login: vi.fn((u, cb) => cb(null))
+      login: vi.fn((_u, cb) => cb(null))
     } as unknown as Request;
 
     const res = {
@@ -210,7 +210,7 @@ describe("SSO Return handler", () => {
         regenerate: vi.fn((cb) => cb(null)),
         returnTo: undefined
       },
-      login: vi.fn((u, cb) => cb(new Error("Login failed")))
+      login: vi.fn((_u, cb) => cb(new Error("Login failed")))
     } as unknown as Request;
 
     const res = {
@@ -239,7 +239,7 @@ describe("SSO Return handler", () => {
         regenerate: vi.fn((cb) => cb(null)),
         returnTo: undefined
       },
-      login: vi.fn((u, cb) => cb(null))
+      login: vi.fn((_u, cb) => cb(null))
     } as unknown as Request;
 
     const res = {
@@ -273,7 +273,7 @@ describe("SSO Return handler", () => {
       user,
       isAuthenticated: () => true,
       session,
-      login: vi.fn((u, cb) => cb(null))
+      login: vi.fn((_u, cb) => cb(null))
     } as unknown as Request;
 
     const res = {
