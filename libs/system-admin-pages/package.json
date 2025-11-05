@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/system-admin",
+  "name": "@hmcts/system-admin-pages",
   "version": "1.0.0",
   "type": "module",
   "exports": {
