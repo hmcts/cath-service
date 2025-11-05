@@ -30,7 +30,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'NODE_ENV=development yarn dev:nowatch',
+    // ENABLE_SSO=true required to test SSO flows (SSO disabled by default in development)
+    command: 'NODE_ENV=development ENABLE_SSO=true yarn dev:nowatch',
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
     reuseExistingServer: !process.env.CI,

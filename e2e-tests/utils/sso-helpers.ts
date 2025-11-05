@@ -9,7 +9,15 @@ import { expect } from '@playwright/test';
  */
 export async function loginWithSSO(page: Page, email: string, password: string): Promise<void> {
   // Wait for Azure AD login page
-  await page.waitForURL(/login.microsoftonline.com/, { timeout: 10000 });
+  try {
+    await page.waitForURL(/login.microsoftonline.com/, { timeout: 10000 });
+  } catch (error) {
+    const currentUrl = page.url();
+    throw new Error(
+      `Failed to redirect to Azure AD login page. Current URL: ${currentUrl}. ` +
+      `This might indicate that SSO is not properly configured or ENABLE_SSO=true is not set.`
+    );
+  }
 
   // Enter email
   await page.fill('input[type="email"]', email);
