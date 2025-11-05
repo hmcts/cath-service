@@ -55,6 +55,7 @@ export async function createApp(): Promise<Express> {
   });
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
+  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));

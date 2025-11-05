@@ -123,16 +123,16 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 3 times: web pages, public pages, system-admin pages
-      expect(createSimpleRouter).toHaveBeenCalledTimes(3);
+      // Should be called 5 times: web pages, admin pages, public pages, system-admin pages, verified pages
+      expect(createSimpleRouter).toHaveBeenCalledTimes(5);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (3rd call)
-      expect(calls.length).toBeGreaterThanOrEqual(3);
+      // Verify system-admin routes were registered (4th call)
+      expect(calls.length).toBeGreaterThanOrEqual(4);
     });
 
     it("should configure error handlers at the end", async () => {
