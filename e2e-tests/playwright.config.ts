@@ -30,7 +30,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'yarn dev:nowatch',
+    command: 'NODE_ENV=development yarn dev:nowatch',
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
     reuseExistingServer: !process.env.CI,
