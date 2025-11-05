@@ -50,7 +50,7 @@ export async function loadTranslations(localesPath: string): Promise<Translation
     if (existsSync(filePath)) {
       try {
         const fileUrl = pathToFileURL(filePath).href;
-        const langContent = await import(fileUrl);
+        const langContent = await import(/* @vite-ignore */ fileUrl);
         translations[locale] = { ...translations[locale], ...(langContent[locale] || langContent.content || langContent.default || {}) };
       } catch (error) {
         console.error(`Failed to load translations for ${locale}:`, error);

@@ -834,6 +834,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/system-admin-pages@workspace:*, @hmcts/system-admin-pages@workspace:libs/system-admin-pages":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/verified-pages@workspace:libs/verified-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
@@ -889,6 +897,7 @@ __metadata:
     "@hmcts/postgres": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/config": "npm:3.3.5"
