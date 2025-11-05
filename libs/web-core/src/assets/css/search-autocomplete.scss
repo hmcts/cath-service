@@ -30,6 +30,11 @@
   border: 0;
 }
 
+// Error styling - red border on input when error class is present (GOV.UK standard 2px border)
+.autocomplete__input.govuk-input--error {
+  border-color: #d4351c;
+}
+
 @media print {
   .autocomplete__wrapper,
   .autocomplete__hint,

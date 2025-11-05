@@ -112,7 +112,7 @@ describe("search page", () => {
         expect.objectContaining({
           errors: [
             {
-              text: "Select a court or tribunal from the list",
+              text: "There is nothing matching your criteria",
               href: "#location"
             }
           ],
@@ -140,7 +140,7 @@ describe("search page", () => {
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
-              text: "Select a court or tribunal from the list",
+              text: "There is nothing matching your criteria",
               href: "#location"
             })
           ])
@@ -167,7 +167,7 @@ describe("search page", () => {
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
-              text: "Select a court or tribunal from the list"
+              text: "There is nothing matching your criteria"
             })
           ])
         })
@@ -193,7 +193,7 @@ describe("search page", () => {
         expect.objectContaining({
           errors: [
             {
-              text: "Dewiswch lys neu dribiwnlys o'r rhestr",
+              text: "Nid oes dim sy'n cyfateb i'ch meini prawf",
               href: "#location"
             }
           ]

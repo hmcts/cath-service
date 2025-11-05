@@ -63,11 +63,7 @@ export class MonitoringService {
   }
 
   flush(): Promise<void> {
-    return new Promise((resolve) => {
-      this.client.flush({
-        callback: () => resolve()
-      });
-    });
+    return this.client.flush();
   }
 }
 

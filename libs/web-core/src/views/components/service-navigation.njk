@@ -1,16 +1,20 @@
 {% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
 
+{% set navigationItems = [] %}
+{% if navigation and navigation.verifiedItems %}
+  {% for item in navigation.verifiedItems %}
+    {% set navigationItems = (navigationItems.push(item), navigationItems) %}
+  {% endfor %}
+{% endif %}
+
 {% set navigationEndHtml %}
-  {% if navigation and navigation.signIn %}
-    <li class="govuk-service-navigation__item"><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>
-  {% elif navigation and navigation.signOut %}
-    <li class="govuk-service-navigation__item"><a class="govuk-service-navigation__link" href="/sign-out">{{ navigation.signOut }}</a></li>
-  {% endif %}
+{% if navigation and navigation.signIn %}<li class="govuk-service-navigation__item govuk-service-navigation__navigation-end "><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>{% endif %}{% if navigation and navigation.signOut %}<li class="govuk-service-navigation__item govuk-service-navigation__navigation-end"><a class="govuk-service-navigation__link" href="/">{{ navigation.signOut }}</a></li>{% endif %}
 {% endset %}
 
 {{ govukServiceNavigation({
   serviceName: serviceName,
   serviceUrl: "/",
+  navigation: navigationItems if navigationItems.length > 0 else undefined,
   slots: {
     navigationEnd: navigationEndHtml
   },
