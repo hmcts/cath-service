@@ -8,14 +8,20 @@ export const GET = async (_req: Request, res: Response) => {
   const coreAuthNavigation = locale === "cy" ? coreLocales.authenticatedNavigation : coreLocalesEn.authenticatedNavigation;
   const pageLocales = locale === "cy" ? cy : en;
 
-  const navigation = {
-    signOut: coreAuthNavigation.signOut,
-    verifiedItems: pageLocales.navigationItems
-  };
+  // Merge SSO admin navigation (if present) with page-specific navigation
+  const ssoNavigation = res.locals.navigation?.verifiedItems || [];
+  const combinedNavigationItems = [...ssoNavigation, ...pageLocales.navigationItems];
 
+  // Update res.locals.navigation so renderInterceptorMiddleware can merge it
+  if (!res.locals.navigation) {
+    res.locals.navigation = {};
+  }
+  res.locals.navigation.signOut = coreAuthNavigation.signOut;
+  res.locals.navigation.verifiedItems = combinedNavigationItems;
+
+  // Don't pass navigation in render - let renderInterceptorMiddleware merge res.locals
   res.render("account-home/index", {
     en,
-    cy,
-    navigation
+    cy
   });
 };

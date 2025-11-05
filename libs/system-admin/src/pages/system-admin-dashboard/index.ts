@@ -4,6 +4,8 @@ import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const user = req.user;
+  // Navigation comes from res.locals via authNavigationMiddleware
+  // renderInterceptorMiddleware automatically merges res.locals into render options
   res.render("system-admin-dashboard/index", { ...en, user });
 };
 

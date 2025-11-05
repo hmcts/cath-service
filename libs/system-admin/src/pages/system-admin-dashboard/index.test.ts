@@ -6,7 +6,7 @@ import { GET } from "./index.js";
 vi.mock("@hmcts/auth", () => ({
   requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
   USER_ROLES: {
-    SYSTEM_ADMIN: "system-admin"
+    SYSTEM_ADMIN: "SYSTEM_ADMIN"
   }
 }));
 
@@ -14,15 +14,27 @@ describe("Admin Dashboard GET handler", () => {
   it("should render the dashboard page with English content", async () => {
     const req = {
       isAuthenticated: () => true,
-      user: { id: "test-user", email: "test@example.com", displayName: "Test User", roles: [] }
+      user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" }
     } as unknown as Request;
     const res = {
-      render: vi.fn()
+      render: vi.fn(),
+      locals: {
+        navigation: {
+          verifiedItems: [
+            { text: "Dashboard", href: "/system-admin-dashboard", current: true },
+            { text: "Admin Dashboard", href: "/admin-dashboard", current: false }
+          ]
+        }
+      }
     } as unknown as Response;
 
     // GET is now an array [middleware, handler]
     const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
     await handler(req, res);
+
+    // Verify res.locals.navigation is set from middleware (renderInterceptorMiddleware will merge this)
+    expect(res.locals.navigation).toBeDefined();
+    expect(res.locals.navigation.verifiedItems).toHaveLength(2);
 
     expect(res.render).toHaveBeenCalledOnce();
     expect(res.render).toHaveBeenCalledWith(
@@ -37,8 +49,10 @@ describe("Admin Dashboard GET handler", () => {
         ]),
         user: expect.objectContaining({
           id: "test-user",
-          email: "test@example.com"
+          email: "test@example.com",
+          role: "SYSTEM_ADMIN"
         })
+        // navigation is not passed explicitly - it comes from res.locals via renderInterceptorMiddleware
       })
     );
   });
@@ -46,10 +60,15 @@ describe("Admin Dashboard GET handler", () => {
   it("should include all 8 tiles", async () => {
     const req = {
       isAuthenticated: () => true,
-      user: { id: "test-user", email: "test@example.com", displayName: "Test User", roles: [] }
+      user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" }
     } as unknown as Request;
     const res = {
-      render: vi.fn()
+      render: vi.fn(),
+      locals: {
+        navigation: {
+          verifiedItems: []
+        }
+      }
     } as unknown as Response;
 
     // GET is now an array [middleware, handler]

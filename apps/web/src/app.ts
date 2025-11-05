@@ -38,9 +38,6 @@ export async function createApp(): Promise<Express> {
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
 
-  // Add authentication state to navigation
-  app.use(authNavigationMiddleware());
-
   const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
@@ -61,6 +58,9 @@ export async function createApp(): Promise<Express> {
       preferences: ["language"]
     }
   });
+
+  // Add authentication state to navigation (AFTER all other middleware is set up)
+  app.use(authNavigationMiddleware());
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));

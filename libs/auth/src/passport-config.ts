@@ -21,14 +21,10 @@ export function configurePassport(app: Express): void {
 
     // Simple serialization for dev mode
     passport.serializeUser((user, done) => {
-      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
-      console.log("📝 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
     passport.deserializeUser((user: Express.User, done) => {
-      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
-      console.log("🔓 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
@@ -45,14 +41,10 @@ export function configurePassport(app: Express): void {
 
     // Simple serialization
     passport.serializeUser((user, done) => {
-      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
-      console.log("📝 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
     passport.deserializeUser((user: Express.User, done) => {
-      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
-      console.log("🔓 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
@@ -103,15 +95,11 @@ export function configurePassport(app: Express): void {
 
   // Serialize user to session
   passport.serializeUser((user, done) => {
-    const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
-    console.log("📝 Session data:", JSON.stringify(sessionData, null, 2));
     done(null, user);
   });
 
   // Deserialize user from session
   passport.deserializeUser((user: Express.User, done) => {
-    const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
-    console.log("🔓 Session data:", JSON.stringify(sessionData, null, 2));
     done(null, user);
   });
 }
