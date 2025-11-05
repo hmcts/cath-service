@@ -6,7 +6,7 @@ import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/a
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin/config";
+import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import { configureCookieManager, configureGovuk, configureHelmet, configureNonce, errorHandler, expressSessionRedis, notFoundHandler } from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";

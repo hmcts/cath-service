@@ -17,7 +17,7 @@
       "@hmcts/verified-pages": ["libs/verified-pages/src"],
       "@hmcts/location": ["libs/location/src"],
       "@hmcts/publication": ["libs/publication/src"],
-      "@hmcts/system-admin": ["libs/system-admin/src"]
+      "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
