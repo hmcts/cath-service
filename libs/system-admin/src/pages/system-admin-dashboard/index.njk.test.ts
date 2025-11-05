@@ -41,7 +41,7 @@ describe("system-admin-dashboard template", () => {
         expect(tile).toHaveProperty("href");
         expect(tile.title).toBeTruthy();
         expect(tile.description).toBeTruthy();
-        expect(tile.href).toMatch(/^\/admin\//);
+        expect(tile.href).toMatch(/^\/system-admin\//);
       });
     });
 
@@ -57,14 +57,14 @@ describe("system-admin-dashboard template", () => {
     });
 
     it("should have correct href for each tile", () => {
-      expect(en.tiles[0].href).toBe("/admin/upload-reference-data");
-      expect(en.tiles[1].href).toBe("/admin/delete-court");
-      expect(en.tiles[2].href).toBe("/admin/third-party-users");
-      expect(en.tiles[3].href).toBe("/admin/user-management");
-      expect(en.tiles[4].href).toBe("/admin/blob-explorer");
-      expect(en.tiles[5].href).toBe("/admin/bulk-media-accounts");
-      expect(en.tiles[6].href).toBe("/admin/audit-log-viewer");
-      expect(en.tiles[7].href).toBe("/admin/location-metadata");
+      expect(en.tiles[0].href).toBe("/system-admin/upload-reference-data");
+      expect(en.tiles[1].href).toBe("/system-admin/delete-court");
+      expect(en.tiles[2].href).toBe("/system-admin/third-party-users");
+      expect(en.tiles[3].href).toBe("/system-admin/user-management");
+      expect(en.tiles[4].href).toBe("/system-admin/blob-explorer");
+      expect(en.tiles[5].href).toBe("/system-admin/bulk-media-accounts");
+      expect(en.tiles[6].href).toBe("/system-admin/audit-log-viewer");
+      expect(en.tiles[7].href).toBe("/system-admin/location-metadata");
     });
 
     it("should have descriptions for all tiles", () => {

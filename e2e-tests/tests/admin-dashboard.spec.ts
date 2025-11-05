@@ -26,14 +26,14 @@ test.describe("Admin Dashboard", () => {
       await page.goto("/system-admin-dashboard");
 
       const tileData = [
-        { title: "Upload Reference Data", href: "/admin/upload-reference-data" },
-        { title: "Delete Court", href: "/admin/delete-court" },
-        { title: "Manage Third-Party Users", href: "/admin/third-party-users" },
-        { title: "User Management", href: "/admin/user-management" },
-        { title: "Blob Explorer", href: "/admin/blob-explorer" },
-        { title: "Bulk Create Media Accounts", href: "/admin/bulk-media-accounts" },
-        { title: "Audit Log Viewer", href: "/admin/audit-log-viewer" },
-        { title: "Manage Location Metadata", href: "/admin/location-metadata" }
+        { title: "Upload Reference Data", href: "/system-admin/upload-reference-data" },
+        { title: "Delete Court", href: "/system-admin/delete-court" },
+        { title: "Manage Third-Party Users", href: "/system-admin/third-party-users" },
+        { title: "User Management", href: "/system-admin/user-management" },
+        { title: "Blob Explorer", href: "/system-admin/blob-explorer" },
+        { title: "Bulk Create Media Accounts", href: "/system-admin/bulk-media-accounts" },
+        { title: "Audit Log Viewer", href: "/system-admin/audit-log-viewer" },
+        { title: "Manage Location Metadata", href: "/system-admin/location-metadata" }
       ];
 
       for (const { title, href } of tileData) {
@@ -178,7 +178,7 @@ test.describe("Admin Dashboard", () => {
     test("should navigate to 404 when clicking Upload Reference Data tile", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
       await page.click('a:has-text("Upload Reference Data")');
-      await page.waitForURL("**/admin/upload-reference-data");
+      await page.waitForURL("**/system-admin/upload-reference-data");
 
       // Should show 404 as page doesn't exist yet
       await expect(page.locator("h1")).toContainText(/not found|404/i);
