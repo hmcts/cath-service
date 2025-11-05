@@ -12,10 +12,10 @@ nodejs:
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
   keyVaults:
-    # Using pip-ss-kv-stg for all environments
+    # Using pip-ss-kv-stg for time being, once pipeline properly setup, stg will be replaced by environment
     pip-ss-kv-stg:
       secrets:
-        # Infrastructure secrets
+        # Infrastructure secrets will be enabled later
         # - redis-access-key
         # - app-insights-connection-string
         # - dynatrace-url

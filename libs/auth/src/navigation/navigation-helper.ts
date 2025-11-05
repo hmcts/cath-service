@@ -1,4 +1,4 @@
-import { USER_ROLES } from "./authorization/role-service.js";
+import { USER_ROLES } from "../authorization/role-service.js";
 
 interface NavigationItem {
   text: string;

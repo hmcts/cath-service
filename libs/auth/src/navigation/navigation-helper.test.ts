@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { USER_ROLES } from "./authorization/role-service.js";
+import { USER_ROLES } from "../authorization/role-service.js";
 import { buildNavigationItems } from "./navigation-helper.js";
 
 describe("buildNavigationItems", () => {

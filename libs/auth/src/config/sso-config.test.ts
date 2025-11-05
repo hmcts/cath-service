@@ -17,7 +17,6 @@ describe("getSsoConfig", () => {
     delete process.env.SSO_IDENTITY_METADATA;
     delete process.env.SSO_CLIENT_ID;
     delete process.env.SSO_CLIENT_SECRET;
-    delete process.env.SSO_ALLOW_HTTP_REDIRECT;
     delete process.env.SSO_SYSTEM_ADMIN_GROUP_ID;
     delete process.env.SSO_INTERNAL_ADMIN_CTSC_GROUP_ID;
     delete process.env.SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID;
@@ -33,7 +32,6 @@ describe("getSsoConfig", () => {
     process.env.SSO_IDENTITY_METADATA = "https://login.microsoftonline.com/tenant/v2.0";
     process.env.SSO_CLIENT_ID = "client-123";
     process.env.SSO_CLIENT_SECRET = "secret-456";
-    process.env.SSO_ALLOW_HTTP_REDIRECT = "true";
     process.env.SSO_SYSTEM_ADMIN_GROUP_ID = "group-1";
     process.env.SSO_INTERNAL_ADMIN_CTSC_GROUP_ID = "group-2";
     process.env.SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID = "group-3";
@@ -46,7 +44,6 @@ describe("getSsoConfig", () => {
       clientId: "client-123",
       clientSecret: "secret-456",
       redirectUri: "https://example.com/sso/return",
-      allowHttpForRedirectUrl: true,
       responseType: "code",
       responseMode: "query",
       scope: ["openid", "profile", "email"],
@@ -65,7 +62,6 @@ describe("getSsoConfig", () => {
         SSO_IDENTITY_METADATA: "https://config-login.com/tenant/v2.0",
         SSO_CLIENT_ID: "config-client-123",
         SSO_CLIENT_SECRET: "config-secret-456",
-        SSO_ALLOW_HTTP_REDIRECT: "false",
         SSO_SYSTEM_ADMIN_GROUP_ID: "config-group-1",
         SSO_INTERNAL_ADMIN_CTSC_GROUP_ID: "config-group-2",
         SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID: "config-group-3"
@@ -80,7 +76,6 @@ describe("getSsoConfig", () => {
     expect(ssoConfig.clientId).toBe("config-client-123");
     expect(ssoConfig.clientSecret).toBe("config-secret-456");
     expect(ssoConfig.redirectUri).toBe("https://config.example.com/sso/return");
-    expect(ssoConfig.allowHttpForRedirectUrl).toBe(false);
   });
 
   it("should use default BASE_URL when not provided", async () => {
@@ -122,24 +117,6 @@ describe("getSsoConfig", () => {
     expect(ssoConfig.identityMetadata).toBe("");
     expect(ssoConfig.clientId).toBe("");
     expect(ssoConfig.clientSecret).toBe("");
-  });
-
-  it("should set allowHttpForRedirectUrl to true when env var is 'true'", async () => {
-    process.env.SSO_ALLOW_HTTP_REDIRECT = "true";
-
-    const { getSsoConfig } = await import("./sso-config.js");
-    const ssoConfig = getSsoConfig();
-
-    expect(ssoConfig.allowHttpForRedirectUrl).toBe(true);
-  });
-
-  it("should set allowHttpForRedirectUrl to false when env var is not 'true'", async () => {
-    process.env.SSO_ALLOW_HTTP_REDIRECT = "false";
-
-    const { getSsoConfig } = await import("./sso-config.js");
-    const ssoConfig = getSsoConfig();
-
-    expect(ssoConfig.allowHttpForRedirectUrl).toBe(false);
   });
 
   it("should always return expected static values", async () => {

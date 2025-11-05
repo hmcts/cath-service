@@ -303,7 +303,7 @@ For local development, configuration is split between Azure Key Vault (for sensi
 ```bash
 # apps/web/.env
 PORT=8080
-BASE_URL=http://localhost:8080
+BASE_URL=https://localhost:8080
 SESSION_SECRET=your-session-secret
 REDIS_URL=redis://localhost:6380
 SSO_ALLOW_HTTP_REDIRECT=true
@@ -363,8 +363,8 @@ The SSO redirect URL is automatically constructed from the `BASE_URL` environmen
 // Redirect URL: {BASE_URL}/sso/return
 
 // Local development
-BASE_URL=http://localhost:8080
-// Results in: http://localhost:8080/sso/return
+BASE_URL=https://localhost:8080
+// Results in: https://localhost:8080/sso/return
 
 // Production (via Helm chart)
 BASE_URL=https://cath-web.prod.platform.hmcts.net

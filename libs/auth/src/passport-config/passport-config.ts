@@ -7,6 +7,31 @@ import { fetchUserProfile } from "../graph-api/graph-client.js";
 import type { UserProfile } from "../types.js";
 
 /**
+ * Verifies OIDC authentication and creates user profile
+ */
+async function verifyOidcCallback(_iss: any, _sub: any, profile: any, accessToken: any, _refreshToken: any, done: any): Promise<void> {
+  try {
+    // Fetch user details and roles from Microsoft Graph API
+    const userProfile = await fetchUserProfile(accessToken);
+
+    // Determine user role based on group memberships
+    const userRole = determineUserRole(userProfile.groupIds);
+
+    // Merge profile data (only store essential fields for session)
+    const user: UserProfile = {
+      id: profile.oid || userProfile.id,
+      email: profile.upn || profile.email || profile._json?.email || userProfile.email,
+      displayName: profile.name || profile._json?.name || userProfile.displayName,
+      role: userRole
+    };
+
+    return done(null, user);
+  } catch (error) {
+    return done(error, false);
+  }
+}
+
+/**
  * Configures Passport with Azure AD OIDC Strategy
  * @param app - Express application instance
  */
@@ -61,7 +86,6 @@ export function configurePassport(app: Express): void {
         clientID: ssoConfig.clientId,
         clientSecret: ssoConfig.clientSecret,
         redirectUrl: ssoConfig.redirectUri,
-        allowHttpForRedirectUrl: ssoConfig.allowHttpForRedirectUrl,
         responseType: ssoConfig.responseType,
         responseMode: ssoConfig.responseMode,
         scope: ssoConfig.scope,
@@ -69,27 +93,7 @@ export function configurePassport(app: Express): void {
         validateIssuer: false,
         clockSkew: 300
       },
-      async (_iss: any, _sub: any, profile: any, accessToken: any, _refreshToken: any, done: any) => {
-        try {
-          // Fetch user details and roles from Microsoft Graph API
-          const userProfile = await fetchUserProfile(accessToken);
-
-          // Determine user role based on group memberships
-          const userRole = determineUserRole(userProfile.groupIds);
-
-          // Merge profile data (only store essential fields for session)
-          const user: UserProfile = {
-            id: profile.oid || userProfile.id,
-            email: profile.upn || profile.email || profile._json?.email || userProfile.email,
-            displayName: profile.name || profile._json?.name || userProfile.displayName,
-            role: userRole
-          };
-
-          return done(null, user);
-        } catch (error) {
-          return done(error, false);
-        }
-      }
+      verifyOidcCallback
     )
   );
 

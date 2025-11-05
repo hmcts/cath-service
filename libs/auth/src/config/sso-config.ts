@@ -5,7 +5,6 @@ interface SsoConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  allowHttpForRedirectUrl: boolean;
   responseType: "code" | "code id_token" | "id_token code" | "id_token";
   responseMode: "query" | "form_post";
   scope: string[];
@@ -44,7 +43,6 @@ export function getSsoConfig(): SsoConfig {
     clientId: getConfigValue("SSO_CLIENT_ID"),
     clientSecret: getConfigValue("SSO_CLIENT_SECRET"),
     redirectUri,
-    allowHttpForRedirectUrl: getConfigValue("SSO_ALLOW_HTTP_REDIRECT") === "true",
     responseType: "code",
     responseMode: "query",
     scope: ["openid", "profile", "email"],
