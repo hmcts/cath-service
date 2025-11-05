@@ -151,9 +151,7 @@ describe("admin dashboard page", () => {
         render: vi.fn(),
         locals: {
           navigation: {
-            verifiedItems: [
-              { text: "Admin Dashboard", href: "/admin-dashboard", current: true }
-            ]
+            verifiedItems: [{ text: "Admin Dashboard", href: "/admin-dashboard", current: true }]
           }
         }
       } as unknown as Response;
@@ -206,9 +204,7 @@ describe("admin dashboard page", () => {
         render: vi.fn(),
         locals: {
           navigation: {
-            verifiedItems: [
-              { text: "Admin Dashboard", href: "/admin-dashboard", current: true }
-            ]
+            verifiedItems: [{ text: "Admin Dashboard", href: "/admin-dashboard", current: true }]
           }
         }
       } as unknown as Response;
@@ -233,9 +229,7 @@ describe("admin dashboard page", () => {
         render: vi.fn(),
         locals: {
           navigation: {
-            verifiedItems: [
-              { text: "Admin Dashboard", href: "/admin-dashboard", current: true }
-            ]
+            verifiedItems: [{ text: "Admin Dashboard", href: "/admin-dashboard", current: true }]
           }
         }
       } as unknown as Response;

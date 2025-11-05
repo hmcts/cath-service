@@ -30,8 +30,8 @@ describe("account-home controller", () => {
         "account-home/index",
         expect.objectContaining({
           en: expect.any(Object),
-          cy: expect.any(Object),
-          navigation: expect.any(Object)
+          cy: expect.any(Object)
+          // navigation comes from res.locals, not passed explicitly
         })
       );
     });
@@ -46,8 +46,8 @@ describe("account-home controller", () => {
         "account-home/index",
         expect.objectContaining({
           en: expect.any(Object),
-          cy: expect.any(Object),
-          navigation: expect.any(Object)
+          cy: expect.any(Object)
+          // navigation comes from res.locals, not passed explicitly
         })
       );
     });
@@ -58,8 +58,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].text).toBe("Dashboard");
       expect(navigation.signOut).toBe("Sign out");
@@ -71,8 +71,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].text).toBe("Dashboard");
@@ -86,8 +86,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].text).toBe("Dangosfwrdd");
@@ -111,8 +111,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toBeDefined();
       expect(navigation.signOut).toBeDefined();
@@ -124,8 +124,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].current).toBe(true);
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
@@ -135,8 +135,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[1].current).toBe(false);
     });
@@ -145,8 +145,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].attributes["data-test"]).toBe("dashboard-link");
       expect(navigation.verifiedItems[1].attributes["data-test"]).toBe("email-subscriptions-link");
@@ -156,8 +156,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
       expect(navigation.verifiedItems[1].href).toBe("/");
@@ -169,8 +169,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
@@ -185,17 +185,14 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const enCall = (mockResponse.render as any).mock.calls[0][1];
-      const enNav = enCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const enNav = (mockResponse as any).locals.navigation;
 
-      vi.clearAllMocks();
-
-      // Test Welsh
+      // Reset for Welsh test
       mockResponse.locals = { locale: "cy" };
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const cyCall = (mockResponse.render as any).mock.calls[0][1];
-      const cyNav = cyCall.navigation;
+      const cyNav = (mockResponse as any).locals.navigation;
 
       // Structure should be the same, only text differs
       expect(enNav.verifiedItems[0].href).toBe(cyNav.verifiedItems[0].href);
