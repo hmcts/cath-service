@@ -10,11 +10,13 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
-    }
+    },
+    "./src/assets/css/dashboard.scss": "./src/assets/css/dashboard.scss"
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
+    "build": "tsc && yarn build:nunjucks && yarn build:assets",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
