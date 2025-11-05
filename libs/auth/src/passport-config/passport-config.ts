@@ -90,7 +90,7 @@ export function configurePassport(app: Express): void {
         responseMode: ssoConfig.responseMode,
         scope: ssoConfig.scope,
         passReqToCallback: false,
-        validateIssuer: false,
+        validateIssuer: true,
         clockSkew: 300
       },
       verifyOidcCallback

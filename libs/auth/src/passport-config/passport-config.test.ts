@@ -187,7 +187,7 @@ describe("passport-config", () => {
           responseMode: "query",
           scope: ["openid", "profile", "email"],
           passReqToCallback: false,
-          validateIssuer: false,
+          validateIssuer: true,
           clockSkew: 300
         }),
         expect.any(Function)
