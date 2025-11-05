@@ -29,15 +29,15 @@ vi.mock("../../manual-upload/file-storage.js", () => ({
   saveUploadedFile: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
-  prisma: {
-    artefact: {
-      create: vi.fn()
-    }
-  }
-}));
+vi.mock("@hmcts/publication", async () => {
+  const actual = await vi.importActual("@hmcts/publication");
+  return {
+    ...actual,
+    createArtefact: vi.fn()
+  };
+});
 
-import { prisma } from "@hmcts/postgres";
+import { createArtefact } from "@hmcts/publication";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import { getManualUpload } from "../../manual-upload/storage.js";
 
@@ -393,7 +393,7 @@ describe("manual-upload-summary page", () => {
     it("should save file, create database record, and redirect to success page", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/storage/test-artefact-id-123/test-hearing-list.pdf");
-      vi.mocked(prisma.artefact.create).mockResolvedValue({} as any);
+      vi.mocked(createArtefact).mockResolvedValue();
 
       const session = {
         manualUploadForm: { locationId: "1" },
@@ -415,13 +415,13 @@ describe("manual-upload-summary page", () => {
 
       expect(getManualUpload).toHaveBeenCalledWith("test-upload-id");
       expect(saveUploadedFile).toHaveBeenCalledWith(expect.any(String), "test-hearing-list.pdf", mockUploadData.file);
-      expect(prisma.artefact.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(createArtefact).toHaveBeenCalledWith(
+        expect.objectContaining({
           artefactId: expect.any(String),
           locationId: "1",
           listTypeId: 6
         })
-      });
+      );
       expect(req.session.manualUploadForm).toBeUndefined();
       expect(req.session.manualUploadSubmitted).toBeUndefined();
       expect(req.session.uploadConfirmed).toBe(true);
@@ -463,7 +463,7 @@ describe("manual-upload-summary page", () => {
     it("should render error page when database create fails", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file");
-      vi.mocked(prisma.artefact.create).mockRejectedValue(new Error("Database error"));
+      vi.mocked(createArtefact).mockRejectedValue(new Error("Database error"));
 
       const session = {
         manualUploadForm: { locationId: "1" },

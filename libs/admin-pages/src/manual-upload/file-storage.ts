@@ -15,15 +15,3 @@ export async function saveUploadedFile(artefactId: string, originalFileName: str
   const filePath = path.join(TEMP_STORAGE_BASE, newFileName);
   await fs.writeFile(filePath, fileBuffer);
 }
-
-export async function getUploadedFile(artefactId: string, fileExtension: string): Promise<Buffer> {
-  const fileName = `${artefactId}${fileExtension}`;
-  const filePath = path.join(TEMP_STORAGE_BASE, fileName);
-  return fs.readFile(filePath);
-}
-
-export async function deleteUploadedFile(artefactId: string, fileExtension: string): Promise<void> {
-  const fileName = `${artefactId}${fileExtension}`;
-  const filePath = path.join(TEMP_STORAGE_BASE, fileName);
-  await fs.unlink(filePath);
-}

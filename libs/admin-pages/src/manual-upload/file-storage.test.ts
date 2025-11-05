@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { deleteUploadedFile, getUploadedFile, saveUploadedFile } from "./file-storage.js";
+import { saveUploadedFile } from "./file-storage.js";
 
 const TEST_ARTEFACT_ID = "test-artefact-123";
 const TEST_FILE_NAME = "test-hearing-list.csv";
@@ -55,38 +55,6 @@ describe("file-storage", () => {
 
       // Cleanup
       await fs.rm(pdfPath, { force: true });
-    });
-  });
-
-  describe("getUploadedFile", () => {
-    it("should retrieve saved file content", async () => {
-      await saveUploadedFile(TEST_ARTEFACT_ID, TEST_FILE_NAME, TEST_FILE_CONTENT);
-
-      const retrievedContent = await getUploadedFile(TEST_ARTEFACT_ID, TEST_FILE_EXTENSION);
-
-      expect(retrievedContent.toString()).toBe(TEST_FILE_CONTENT.toString());
-    });
-
-    it("should throw error if file does not exist", async () => {
-      await expect(getUploadedFile("nonexistent-id", ".csv")).rejects.toThrow();
-    });
-  });
-
-  describe("deleteUploadedFile", () => {
-    it("should delete file", async () => {
-      await saveUploadedFile(TEST_ARTEFACT_ID, TEST_FILE_NAME, TEST_FILE_CONTENT);
-
-      await deleteUploadedFile(TEST_ARTEFACT_ID, TEST_FILE_EXTENSION);
-
-      const fileExists = await fs
-        .access(TEST_FILE_PATH)
-        .then(() => true)
-        .catch(() => false);
-      expect(fileExists).toBe(false);
-    });
-
-    it("should handle missing file gracefully", async () => {
-      await expect(deleteUploadedFile("nonexistent-id", ".csv")).rejects.toThrow();
     });
   });
 });

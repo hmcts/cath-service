@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
-import { mockListTypes } from "@hmcts/publication";
+import { createArtefact, mockListTypes } from "@hmcts/publication";
 import { cy as coreLocales, en as coreLocalesEn, formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -96,17 +95,15 @@ export const POST = async (req: Request, res: Response) => {
     }
 
     // Store metadata in database
-    await prisma.artefact.create({
-      data: {
-        artefactId,
-        locationId: uploadData.locationId,
-        listTypeId: Number.parseInt(uploadData.listType, 10),
-        contentDate,
-        sensitivity: uploadData.sensitivity,
-        language: uploadData.language,
-        displayFrom,
-        displayTo
-      }
+    await createArtefact({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId: Number.parseInt(uploadData.listType, 10),
+      contentDate,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
+      displayFrom,
+      displayTo
     });
 
     // Clear session data
