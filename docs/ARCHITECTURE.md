@@ -22,7 +22,7 @@ The HMCTS Express Monorepo Template is a production-ready, cloud-native applicat
 │  │         Web Frontend (@hmcts/web)                       │     │
 │  │  - Express 5.x + Nunjucks                               │     │
 │  │  - GOV.UK Design System                                 │     │
-│  │  - Port: 3000                                           │     │
+│  │  - Port: 8080                                           │     │
 │  └──────────────────────────┬──────────────────────────────┘     │
 │                             │                                    │
 │  ┌──────────────────────────┴──────────────────────────────┐     │

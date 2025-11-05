@@ -15,4 +15,4 @@ FROM build AS runtime
 COPY --from=build $WORKDIR/src/main ./src/main
 RUN yarn build
 
-EXPOSE 3000
+EXPOSE 8080
