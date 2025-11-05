@@ -5,7 +5,7 @@
 @use "@hmcts/web-core/src/assets/css/filter-panel.scss";
 @use "@hmcts/web-core/src/assets/css/back-to-top.scss";
 @use "@hmcts/admin-pages/src/assets/css/index.scss" as admin;
-@use "../../../../../libs/system-admin/src/assets/css/dashboard.scss";
+@use "@hmcts/system-admin/src/assets/css/dashboard.scss";
 @use "@hmcts/verified-pages/src/assets/css/index.scss" as verified;
 
 .govuk-service-navigation__navigation-end {
