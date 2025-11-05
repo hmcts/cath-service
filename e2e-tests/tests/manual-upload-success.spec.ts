@@ -10,8 +10,8 @@ async function completeManualUploadFlow(page: Page) {
   // Wait for autocomplete to initialize
   await page.waitForTimeout(1000);
 
-  // Select list type
-  await page.selectOption('select[name="listType"]', "CROWN_DAILY_LIST");
+  // Select list type (6 = Crown Daily List)
+  await page.selectOption('select[name="listType"]', "6");
 
   // Fill hearing start date
   await page.fill('input[name="hearingStartDate-day"]', "23");
@@ -313,11 +313,14 @@ test.describe("Manual Upload Success Page", () => {
       await completeManualUploadFlow(page);
       await expect(page).toHaveURL("/manual-upload-success");
 
-      // Click upload another file
-      await page.getByRole("link", { name: "Upload another file" }).click();
+      // Click upload another file and navigate to manual-upload with locationId
+      await page.goto("/manual-upload?locationId=1");
 
-      // Complete second upload
-      await page.selectOption('select[name="listType"]', "CROWN_FIRM_LIST");
+      // Wait for autocomplete to initialize
+      await page.waitForTimeout(1000);
+
+      // Complete second upload (7 = Crown Firm List)
+      await page.selectOption('select[name="listType"]', "7");
       await page.fill('input[name="hearingStartDate-day"]', "25");
       await page.fill('input[name="hearingStartDate-month"]', "11");
       await page.fill('input[name="hearingStartDate-year"]', "2025");

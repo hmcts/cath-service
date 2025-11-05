@@ -15,6 +15,21 @@ export const GET = async (req: Request, res: Response) => {
     return res.redirect("/manual-upload");
   }
 
+  const hasLangParam = req.query.lng !== undefined;
+  const previousLang = req.session.viewedLanguage;
+
+  // If page has been viewed and this is not a first-time language change, redirect
+  if (req.session.successPageViewed && (!hasLangParam || previousLang === locale)) {
+    delete req.session.uploadConfirmed;
+    delete req.session.successPageViewed;
+    delete req.session.viewedLanguage;
+    return res.redirect("/manual-upload");
+  }
+
+  // Track which language was viewed and mark page as viewed
+  req.session.viewedLanguage = locale;
+  req.session.successPageViewed = true;
+
   res.render("manual-upload-success/index", {
     ...t,
     navigation: {

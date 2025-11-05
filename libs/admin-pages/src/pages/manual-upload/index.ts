@@ -23,40 +23,37 @@ const LANGUAGE_OPTIONS = [{ value: "", text: "" }, ...Object.entries(LANGUAGE_LA
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
-function transformDateFields(body: any): ManualUploadFormData {
-  const hasValue = (val: any) => val !== undefined && val !== null && val !== "" && val.toString().trim() !== "";
+const hasValue = (val: any) => val !== undefined && val !== null && val !== "" && val.toString().trim() !== "";
 
+function parseDateInput(body: any, prefix: string) {
+  const day = body[`${prefix}-day`];
+  const month = body[`${prefix}-month`];
+  const year = body[`${prefix}-year`];
+
+  return hasValue(day) || hasValue(month) || hasValue(year) ? { day: day || "", month: month || "", year: year || "" } : undefined;
+}
+
+function transformDateFields(body: any): ManualUploadFormData {
   return {
     locationId: body.locationId,
-    locationName: body["court-display"], // Capture the display value from autocomplete
+    locationName: body["court-display"],
     listType: body.listType,
-    hearingStartDate:
-      hasValue(body["hearingStartDate-day"]) || hasValue(body["hearingStartDate-month"]) || hasValue(body["hearingStartDate-year"])
-        ? {
-            day: body["hearingStartDate-day"] || "",
-            month: body["hearingStartDate-month"] || "",
-            year: body["hearingStartDate-year"] || ""
-          }
-        : undefined,
+    hearingStartDate: parseDateInput(body, "hearingStartDate"),
     sensitivity: body.sensitivity,
     language: body.language,
-    displayFrom:
-      hasValue(body["displayFrom-day"]) || hasValue(body["displayFrom-month"]) || hasValue(body["displayFrom-year"])
-        ? {
-            day: body["displayFrom-day"] || "",
-            month: body["displayFrom-month"] || "",
-            year: body["displayFrom-year"] || ""
-          }
-        : undefined,
-    displayTo:
-      hasValue(body["displayTo-day"]) || hasValue(body["displayTo-month"]) || hasValue(body["displayTo-year"])
-        ? {
-            day: body["displayTo-day"] || "",
-            month: body["displayTo-month"] || "",
-            year: body["displayTo-year"] || ""
-          }
-        : undefined
+    displayFrom: parseDateInput(body, "displayFrom"),
+    displayTo: parseDateInput(body, "displayTo")
   };
+}
+
+function saveSession(session: any): Promise<void> {
+  return new Promise((resolve, reject) => {
+    session.save((err: any) => (err ? reject(err) : resolve()));
+  });
+}
+
+function selectOption(options: any[], selectedValue: string | undefined) {
+  return options.map((item) => ({ ...item, selected: item.value === selectedValue }));
 }
 
 export const GET = async (req: Request, res: Response) => {
@@ -64,51 +61,41 @@ export const GET = async (req: Request, res: Response) => {
   const t = getTranslations(locale);
   const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
 
-  // Clear upload confirmation flag when starting a new upload
+  // Clear upload confirmation flags when starting a new upload
   delete req.session.uploadConfirmed;
+  delete req.session.successPageViewed;
+  delete req.session.viewedLanguage;
 
-  // Check if form was successfully submitted to summary page
   const wasSubmitted = req.session.manualUploadSubmitted || false;
-
-  // Restore form data from session if it exists
   let formData = req.session.manualUploadForm || {};
   const errors = req.session.manualUploadErrors || [];
 
-  // Clear errors from session after reading
   delete req.session.manualUploadErrors;
 
-  // If form wasn't successfully submitted yet (still on manual-upload after error or initial load),
-  // clear the form data from session so refresh will clear it
+  // Clear form data on refresh if not successfully submitted
   if (!wasSubmitted) {
     delete req.session.manualUploadForm;
   }
 
-  // Support pre-filling from query parameter (for testing and deep linking)
-  const queryLocationId = req.query.locationId as string;
-  if (queryLocationId && !formData.locationId) {
-    formData = { ...formData, locationId: queryLocationId };
+  // Support pre-filling from query parameter
+  if (req.query.locationId && !formData.locationId) {
+    formData = { ...formData, locationId: req.query.locationId as string };
   }
 
-  let locationName: string;
-  if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
-    const location = getLocationById(Number.parseInt(formData.locationId, 10));
-    locationName = location ? location.name : "";
-  } else {
-    locationName = formData.locationName || "";
-  }
+  // Resolve location name from ID or use stored name
+  const locationId = formData.locationId ? Number.parseInt(formData.locationId, 10) : null;
+  const locationName = (locationId && !Number.isNaN(locationId) && getLocationById(locationId)?.name) || formData.locationName || "";
 
   res.render("manual-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
     locations: getAllLocations(locale),
-    listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
-    sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
-    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
+    listTypes: selectOption(LIST_TYPES, formData.listType),
+    sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
+    languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
     locale,
-    navigation: {
-      signOut: coreAuthNavigation.signOut
-    },
+    navigation: { signOut: coreAuthNavigation.signOut },
     hideLanguageToggle: true
   });
 };
@@ -130,18 +117,9 @@ export const POST = async (req: Request, res: Response) => {
   }
 
   if (errors.length > 0) {
-    // Save errors and form data to session
     req.session.manualUploadErrors = errors;
     req.session.manualUploadForm = formData;
-
-    await new Promise<void>((resolve, reject) => {
-      req.session.save((err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-
-    // Redirect to GET to prevent browser caching of POST response
+    await saveSession(req.session);
     return res.redirect("/manual-upload");
   }
 
@@ -158,16 +136,9 @@ export const POST = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
-  // Save form data to session and mark as successfully submitted
   req.session.manualUploadForm = formData;
   req.session.manualUploadSubmitted = true;
-
-  await new Promise<void>((resolve, reject) => {
-    req.session.save((err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  await saveSession(req.session);
 
   res.redirect(`/manual-upload-summary?uploadId=${uploadId}`);
 };

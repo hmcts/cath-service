@@ -35,5 +35,7 @@ declare module "express-session" {
     manualUploadErrors?: ValidationError[];
     manualUploadSubmitted?: boolean;
     uploadConfirmed?: boolean;
+    successPageViewed?: boolean;
+    viewedLanguage?: "en" | "cy";
   }
 }

@@ -799,7 +799,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
+"@hmcts/postgres@npm:*, @hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:
@@ -3640,6 +3640,7 @@ __metadata:
   resolution: "e2e-tests@workspace:e2e-tests"
   dependencies:
     "@axe-core/playwright": "npm:4.11.0"
+    "@hmcts/postgres": "npm:*"
     "@playwright/test": "npm:1.56.1"
   languageName: unknown
   linkType: soft
