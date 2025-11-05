@@ -26,7 +26,7 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should display all 8 admin tiles", async ({ page }) => {
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
 
@@ -44,14 +44,14 @@ test.describe("Admin Dashboard", () => {
       ];
 
       for (const { title, href } of tileData) {
-        const link = page.locator(`a.admin-dashboard-tile__link:has-text("${title}")`);
+        const link = page.locator(`a.admin-tile:has-text("${title}")`);
         await expect(link).toBeVisible();
         await expect(link).toHaveAttribute("href", href);
       }
     });
 
     test("should display descriptions for all tiles", async ({ page }) => {
-      const descriptions = page.locator(".admin-dashboard-tile__description");
+      const descriptions = page.locator(".admin-tile__description");
       await expect(descriptions).toHaveCount(8);
 
       await expect(descriptions.nth(0)).toContainText("Upload CSV location reference data");
@@ -85,7 +85,7 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should have accessible links", async ({ page }) => {
-      const links = page.locator("a.admin-dashboard-tile__link");
+      const links = page.locator("a.admin-tile");
       await expect(links).toHaveCount(8);
 
       for (let i = 0; i < 8; i++) {
@@ -96,7 +96,7 @@ test.describe("Admin Dashboard", () => {
 
   test.describe("Keyboard Navigation", () => {
     test("should allow keyboard navigation through all tiles", async ({ page }) => {
-      const tileLinks = page.locator("a.admin-dashboard-tile__link");
+      const tileLinks = page.locator("a.admin-tile");
       const count = await tileLinks.count();
 
       let foundTiles = 0;
@@ -118,7 +118,7 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should show focus indicators on tiles", async ({ page }) => {
-      const firstTileLink = page.locator("a.admin-dashboard-tile__link").first();
+      const firstTileLink = page.locator("a.admin-tile").first();
 
       // Wait for the tile to be visible before trying to focus
       await expect(firstTileLink).toBeVisible();
@@ -128,7 +128,7 @@ test.describe("Admin Dashboard", () => {
       await page.keyboard.press("Tab");
 
       // Check if any tile link has focus
-      const tileLinks = page.locator("a.admin-dashboard-tile__link");
+      const tileLinks = page.locator("a.admin-tile");
       let hasFocus = false;
 
       for (let i = 0; i < await tileLinks.count(); i++) {
@@ -172,7 +172,7 @@ test.describe("Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
 
@@ -183,7 +183,7 @@ test.describe("Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
 
@@ -194,7 +194,7 @@ test.describe("Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
   });
@@ -209,7 +209,7 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should have hover state on tiles", async ({ page }) => {
-      const firstTile = page.locator(".admin-dashboard-tile").first();
+      const firstTile = page.locator(".admin-tile").first();
 
       await firstTile.hover();
       await expect(firstTile).toBeVisible();

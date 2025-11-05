@@ -25,40 +25,17 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
     <h1 class="govuk-heading-l">{{ title }}</h1>
-
-    <div class="admin-dashboard-tiles">
-      {% for i in range(0, tiles.length, 2) %}
-        <div class="govuk-grid-row">
-          <div class="govuk-grid-column-one-half">
-            <div class="admin-dashboard-tile">
-              <p class="govuk-body admin-dashboard-tile__heading">
-                <a href="{{ tiles[i].href }}" class="govuk-link admin-dashboard-tile__link">
-                  {{ tiles[i].title }}
-                </a>
-              </p>
-              <p class="govuk-body admin-dashboard-tile__description">
-                {{ tiles[i].description }}
-              </p>
-            </div>
-          </div>
-
-          {% if tiles[i + 1] %}
-            <div class="govuk-grid-column-one-half">
-              <div class="admin-dashboard-tile">
-                <p class="govuk-body admin-dashboard-tile__heading">
-                  <a href="{{ tiles[i + 1].href }}" class="govuk-link admin-dashboard-tile__link">
-                    {{ tiles[i + 1].title }}
-                  </a>
-                </p>
-                <p class="govuk-body admin-dashboard-tile__description">
-                  {{ tiles[i + 1].description }}
-                </p>
-              </div>
-            </div>
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
   </div>
+</div>
+
+<div class="govuk-grid-row">
+  {% for tile in tiles %}
+    <div class="govuk-grid-column-one-half">
+      <a href="{{ tile.href }}" class="admin-tile">
+        <h2 class="admin-tile__heading">{{ tile.title }}</h2>
+        <p class="admin-tile__description">{{ tile.description }}</p>
+      </a>
+    </div>
+  {% endfor %}
 </div>
 {% endblock %}
