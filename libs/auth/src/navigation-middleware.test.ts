@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
+import { USER_ROLES } from "./authorization/role-service.js";
 import { authNavigationMiddleware } from "./navigation-middleware.js";
-import { USER_ROLES } from "./role-service.js";
 
 describe("authNavigationMiddleware", () => {
   it("should set isAuthenticated to true for authenticated user", () => {

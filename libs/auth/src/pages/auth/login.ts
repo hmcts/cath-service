@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import passport from "passport";
-import { isSsoConfigured } from "../../sso-config.js";
+import { isSsoConfigured } from "../../config/sso-config.js";
 
 /**
  * Initiates Azure AD authentication flow

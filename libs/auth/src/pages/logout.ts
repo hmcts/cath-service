@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { getSsoConfig } from "../sso-config.js";
+import { getSsoConfig } from "../config/sso-config.js";
 
 /**
  * Extracts tenant ID from Azure AD identity metadata URL

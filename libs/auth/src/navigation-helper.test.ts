@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { USER_ROLES } from "./authorization/role-service.js";
 import { buildNavigationItems } from "./navigation-helper.js";
-import { USER_ROLES } from "./role-service.js";
 
 describe("buildNavigationItems", () => {
   describe("SYSTEM_ADMIN role", () => {

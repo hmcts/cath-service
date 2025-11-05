@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import passport from "passport";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as ssoConfig from "../../sso-config.js";
+import * as ssoConfig from "../../config/sso-config.js";
 import { GET } from "./login.js";
 
 // Mock passport
@@ -12,7 +12,7 @@ vi.mock("passport", () => ({
 }));
 
 // Mock sso-config
-vi.mock("../../sso-config.js", () => ({
+vi.mock("../../config/sso-config.js", () => ({
   isSsoConfigured: vi.fn()
 }));
 

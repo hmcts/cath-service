@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as ssoConfigModule from "../config/sso-config.js";
 import { determineUserRole, hasRole, USER_ROLES } from "./role-service.js";
-import * as ssoConfigModule from "./sso-config.js";
 
-vi.mock("./sso-config.js");
+vi.mock("../config/sso-config.js");
 
 describe("Role Service", () => {
   const mockSsoConfig = {

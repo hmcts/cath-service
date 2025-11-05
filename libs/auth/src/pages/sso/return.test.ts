@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { USER_ROLES } from "../../role-service.js";
+import { USER_ROLES } from "../../authorization/role-service.js";
 import { GET } from "./return.js";
 
 // Mock passport

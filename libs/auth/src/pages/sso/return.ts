@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import passport from "passport";
-import { USER_ROLES } from "../../role-service.js";
-import { isSsoConfigured } from "../../sso-config.js";
+import { USER_ROLES } from "../../authorization/role-service.js";
+import { isSsoConfigured } from "../../config/sso-config.js";
 
 /**
  * Handles OAuth callback from Azure AD

@@ -1,5 +1,5 @@
 import { Client } from "@microsoft/microsoft-graph-client";
-import type { UserProfile } from "./types.js";
+import type { UserProfile } from "../types.js";
 
 interface GraphUser {
   id: string;

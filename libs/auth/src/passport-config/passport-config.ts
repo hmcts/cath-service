@@ -1,10 +1,10 @@
 import type { Express } from "express";
 import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
-import { fetchUserProfile } from "./graph-client.js";
-import { determineUserRole } from "./role-service.js";
-import { getSsoConfig } from "./sso-config.js";
-import type { UserProfile } from "./types.js";
+import { determineUserRole } from "../authorization/role-service.js";
+import { getSsoConfig } from "../config/sso-config.js";
+import { fetchUserProfile } from "../graph-api/graph-client.js";
+import type { UserProfile } from "../types.js";
 
 /**
  * Configures Passport with Azure AD OIDC Strategy

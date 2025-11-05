@@ -1,4 +1,4 @@
-import { getSsoConfig } from "./sso-config.js";
+import { getSsoConfig } from "../config/sso-config.js";
 
 export const USER_ROLES = {
   SYSTEM_ADMIN: "SYSTEM_ADMIN",
