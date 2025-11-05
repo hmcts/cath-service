@@ -18,7 +18,7 @@ test.describe("Admin Dashboard", () => {
 
     test("should display all 8 admin tiles", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
 
@@ -37,7 +37,7 @@ test.describe("Admin Dashboard", () => {
       ];
 
       for (const { title, href } of tileData) {
-        const link = page.locator(`a.admin-dashboard-tile__link:has-text("${title}")`);
+        const link = page.locator(`a.admin-tile:has-text("${title}")`);
         await expect(link).toBeVisible();
         await expect(link).toHaveAttribute("href", href);
       }
@@ -45,7 +45,7 @@ test.describe("Admin Dashboard", () => {
 
     test("should display descriptions for all tiles", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
-      const descriptions = page.locator(".admin-dashboard-tile__description");
+      const descriptions = page.locator(".admin-tile__description");
       await expect(descriptions).toHaveCount(8);
 
       await expect(descriptions.nth(0)).toContainText("Upload CSV location reference data");
@@ -83,7 +83,7 @@ test.describe("Admin Dashboard", () => {
 
     test("should have accessible links", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
-      const links = page.locator("a.admin-dashboard-tile__link");
+      const links = page.locator("a.admin-tile");
       await expect(links).toHaveCount(8);
 
       for (let i = 0; i < 8; i++) {
@@ -96,7 +96,7 @@ test.describe("Admin Dashboard", () => {
     test("should allow keyboard navigation through all tiles", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
 
-      const tileLinks = page.locator("a.admin-dashboard-tile__link");
+      const tileLinks = page.locator("a.admin-tile");
       const count = await tileLinks.count();
 
       let foundTiles = 0;
@@ -120,9 +120,22 @@ test.describe("Admin Dashboard", () => {
     test("should show focus indicators on tiles", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
 
-      const firstTileLink = page.locator("a.admin-dashboard-tile__link").first();
-      await firstTileLink.focus();
-      await expect(firstTileLink).toBeFocused();
+      const firstTileLink = page.locator("a.admin-tile").first();
+
+      // Press Tab multiple times to navigate to the first tile
+      for (let i = 0; i < 10; i++) {
+        await page.keyboard.press("Tab");
+
+        try {
+          await expect(firstTileLink).toBeFocused({ timeout: 100 });
+          return; // Test passes if first tile is focused
+        } catch {
+          // Continue to next tab press
+        }
+      }
+
+      // If we get here, the tile was never focused
+      throw new Error("First tile was not focused after multiple Tab presses");
     });
   });
 
@@ -134,7 +147,7 @@ test.describe("Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
 
@@ -145,7 +158,7 @@ test.describe("Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
 
@@ -156,7 +169,7 @@ test.describe("Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const tiles = page.locator(".admin-dashboard-tile");
+      const tiles = page.locator(".admin-tile");
       await expect(tiles).toHaveCount(8);
     });
   });
@@ -173,7 +186,7 @@ test.describe("Admin Dashboard", () => {
 
     test("should have hover state on tiles", async ({ page }) => {
       await page.goto("/system-admin-dashboard");
-      const firstTile = page.locator(".admin-dashboard-tile").first();
+      const firstTile = page.locator(".admin-tile").first();
 
       await firstTile.hover();
       await expect(firstTile).toBeVisible();
