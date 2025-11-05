@@ -253,9 +253,7 @@ describe("passport-config", () => {
           id: "user-123",
           email: "test@example.com",
           displayName: "Test User",
-          role: "SYSTEM_ADMIN",
-          groupIds: ["group1", "group2"],
-          accessToken: "access-token"
+          role: "SYSTEM_ADMIN"
         })
       );
     });

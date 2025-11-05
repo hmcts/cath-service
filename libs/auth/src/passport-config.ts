@@ -21,10 +21,14 @@ export function configurePassport(app: Express): void {
 
     // Simple serialization for dev mode
     passport.serializeUser((user, done) => {
+      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+      console.log("📝 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
     passport.deserializeUser((user: Express.User, done) => {
+      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+      console.log("🔓 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
@@ -41,10 +45,14 @@ export function configurePassport(app: Express): void {
 
     // Simple serialization
     passport.serializeUser((user, done) => {
+      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+      console.log("📝 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
     passport.deserializeUser((user: Express.User, done) => {
+      const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+      console.log("🔓 Session data:", JSON.stringify(sessionData, null, 2));
       done(null, user);
     });
 
@@ -77,15 +85,12 @@ export function configurePassport(app: Express): void {
           // Determine user role based on group memberships
           const userRole = determineUserRole(userProfile.groupIds);
 
-          // Merge profile data
+          // Merge profile data (only store essential fields for session)
           const user: UserProfile = {
             id: profile.oid || userProfile.id,
             email: profile.upn || profile.email || profile._json?.email || userProfile.email,
             displayName: profile.name || profile._json?.name || userProfile.displayName,
-            roles: userProfile.roles,
-            groupIds: userProfile.groupIds,
-            role: userRole,
-            accessToken
+            role: userRole
           };
 
           return done(null, user);
@@ -98,11 +103,15 @@ export function configurePassport(app: Express): void {
 
   // Serialize user to session
   passport.serializeUser((user, done) => {
+    const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+    console.log("📝 Session data:", JSON.stringify(sessionData, null, 2));
     done(null, user);
   });
 
   // Deserialize user from session
   passport.deserializeUser((user: Express.User, done) => {
+    const sessionData = { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+    console.log("🔓 Session data:", JSON.stringify(sessionData, null, 2));
     done(null, user);
   });
 }
