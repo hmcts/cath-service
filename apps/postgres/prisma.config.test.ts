@@ -1,0 +1,47 @@
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+
+describe("Prisma Config", () => {
+  it("should export a default config", async () => {
+    const configModule = await import("./prisma.config.js");
+    expect(configModule.default).toBeDefined();
+  });
+
+  it("should have schema path configuration", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config).toHaveProperty("schema");
+    expect(typeof config.schema).toBe("string");
+  });
+
+  it("should have migrations path configuration", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config).toHaveProperty("migrations");
+    expect(config.migrations).toHaveProperty("path");
+    expect(typeof config.migrations.path).toBe("string");
+  });
+
+  it("should point schema to dist directory", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config.schema).toContain("dist");
+    expect(config.schema).toContain("schema.prisma");
+  });
+
+  it("should point migrations to prisma/migrations directory", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config.migrations.path).toContain("prisma");
+    expect(config.migrations.path).toContain("migrations");
+  });
+
+  it("should use path.join for consistent path construction", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    const expectedSchemaPath = path.join("dist", "schema.prisma");
+    const expectedMigrationsPath = path.join("prisma", "migrations");
+    expect(config.schema).toBe(expectedSchemaPath);
+    expect(config.migrations.path).toBe(expectedMigrationsPath);
+  });
+});
