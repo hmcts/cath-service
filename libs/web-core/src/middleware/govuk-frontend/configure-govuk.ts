@@ -41,7 +41,7 @@ export async function configureGovuk(app: Express, paths: string[], options: Gov
   await configureAssets(app, env, options.assetOptions);
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    res.locals.pageUrl = req.path;
+    res.locals.pageUrl = req.path.startsWith("/") ? req.path.slice(1) : req.path;
     res.locals.serviceUrl = `${req.protocol}://${req.get("host")}`;
     next();
   });

@@ -187,7 +187,7 @@ describe("configureGovuk", () => {
     // Call the middleware
     lastMiddleware(req, res, next);
 
-    expect(res.locals.pageUrl).toBe("/test/path");
+    expect(res.locals.pageUrl).toBe("test/path");
     expect(res.locals.serviceUrl).toBe("https://example.com");
     expect(next).toHaveBeenCalled();
   });

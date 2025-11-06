@@ -70,11 +70,11 @@ test.describe('Page Structure - VIBE-149', () => {
       await expect(footer).toBeVisible();
     });
 
-    test('should contain all 9 required footer links', async ({ page }) => {
+    test('should contain all 8 required footer links', async ({ page }) => {
       await page.goto('/');
 
-      // AC8: All 9 footer links present
-      // Note: The footer has 9 links
+      // AC8: All 8 footer links present
+      // Note: The footer has 8 links
       const footerLinks = [
         { text: 'Help', href: 'https://www.gov.uk/help' },
         { text: 'Privacy policy', href: 'https://www.gov.uk/help/privacy-notice' },
@@ -83,13 +83,12 @@ test.describe('Page Structure - VIBE-149', () => {
         { text: 'Contact us', href: 'https://www.gov.uk/contact' },
         { text: 'Terms and conditions', href: 'https://www.gov.uk/help/terms-conditions' },
         { text: 'Welsh', href: 'https://www.gov.uk/cymraeg' },
-        { text: 'Government Digital Service', href: 'https://www.gov.uk/government/organisations/government-digital-service' },
-        { text: 'Open Government Licence', href: 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/' }
+        { text: 'Government Digital Service', href: 'https://www.gov.uk/government/organisations/government-digital-service' }
       ];
 
-      // Verify we have 9 footer meta links
+      // Verify we have 8 footer meta links
       const footerMetaLinks = page.locator('.govuk-footer__meta .govuk-footer__inline-list-item');
-      await expect(footerMetaLinks).toHaveCount(9);
+      await expect(footerMetaLinks).toHaveCount(8);
 
       // Verify specific important links are present
       for (const link of footerLinks) {
@@ -111,13 +110,19 @@ test.describe('Page Structure - VIBE-149', () => {
       await expect(copyrightLink).toHaveAttribute('href', 'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/');
     });
 
-    test('should display Open Government Licence text', async ({ page }) => {
+    test('should display Open Government Licence text and attribution', async ({ page }) => {
       await page.goto('/');
 
       // Verify OGL text in footer
       const oglText = page.locator('.govuk-footer__meta-item--grow');
       await expect(oglText).toContainText('All content is available under the');
       await expect(oglText).toContainText('Open Government Licence v3.0');
+
+      // Verify attribution text is present
+      await expect(oglText).toContainText('When you use this information under the OGL, you should include the following attribution:');
+      await expect(oglText).toContainText('Contains public sector information licensed under the Open Government Licence v3.0');
+      await expect(oglText).toContainText('The Open Government Licence v3.0 does not cover use of any personal data in the Court and tribunal hearings service');
+      await expect(oglText).toContainText('Personal data is subject to applicable data protection laws');
     });
   });
 
