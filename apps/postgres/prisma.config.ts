@@ -7,11 +7,22 @@ const envPath = path.join(import.meta.dirname || ".", ".env");
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, "utf-8");
   for (const line of envContent.split("\n")) {
-    const match = line.match(/^([^=]+)=(.+)$/);
-    if (match) {
-      const key = match[1].trim();
-      const value = match[2].trim().replace(/^["']|["']$/g, "");
-      process.env[key] = value;
+    // Skip empty lines and comments
+    const trimmedLine = line.trim();
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = trimmedLine.indexOf("=");
+    if (separatorIndex > 0) {
+      const key = trimmedLine.substring(0, separatorIndex).trim();
+      const value = trimmedLine
+        .substring(separatorIndex + 1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
+      if (key) {
+        process.env[key] = value;
+      }
     }
   }
 }

@@ -159,11 +159,7 @@ enum Role {
     const emptySchema = "";
 
     const mockDeps = {
-      readFile: vi
-        .fn()
-        .mockResolvedValueOnce(baseSchema)
-        .mockResolvedValueOnce(emptySchema)
-        .mockRejectedValueOnce(new Error(".env not found")),
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(emptySchema).mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi.fn().mockReturnValueOnce(["/libs/empty/prisma/schema.prisma"]).mockReturnValueOnce([])
@@ -195,11 +191,7 @@ enum Role {
 }`;
 
     const mockDeps = {
-      readFile: vi
-        .fn()
-        .mockResolvedValueOnce(baseSchema)
-        .mockResolvedValueOnce(complexSchema)
-        .mockRejectedValueOnce(new Error(".env not found")),
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(complexSchema).mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi.fn().mockReturnValueOnce(["/libs/complex/prisma/schema.prisma"]).mockReturnValueOnce([])
