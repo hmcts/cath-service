@@ -2,12 +2,12 @@ import { getSsoConfig } from "../config/sso-config.js";
 import { USER_ROLES } from "../user/roles.js";
 
 /**
- * Determines the user's role based on their Azure AD group memberships
+ * Determines the user's role based on their Azure AD SSO group memberships
  * Implements highest privilege logic: SYSTEM_ADMIN > INTERNAL_ADMIN
  * @param groupIds - Array of Azure AD group IDs the user belongs to
  * @returns The user's primary role or undefined if no role found
  */
-export function determineUserRole(groupIds?: string[]): string | undefined {
+export function determineSsoUserRole(groupIds?: string[]): string | undefined {
   if (!groupIds || groupIds.length === 0) {
     return undefined;
   }

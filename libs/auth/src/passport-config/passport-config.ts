@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
-import { determineUserRole } from "../authorisation/role-service.js";
+import { determineSsoUserRole } from "../authorisation/role-service.js";
 import { getSsoConfig } from "../config/sso-config.js";
 import { fetchUserProfile } from "../graph-api/graph-client.js";
 import type { UserProfile } from "../types.js";
@@ -15,7 +15,7 @@ async function verifyOidcCallback(_iss: any, _sub: any, profile: any, accessToke
     const userProfile = await fetchUserProfile(accessToken);
 
     // Determine user role based on group memberships
-    const userRole = determineUserRole(userProfile.groupIds);
+    const userRole = determineSsoUserRole(userProfile.groupIds);
 
     // Merge profile data (only store essential fields for session)
     const user: UserProfile = {

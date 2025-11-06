@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ssoConfigModule from "../config/sso-config.js";
 import { USER_ROLES } from "../user/roles.js";
-import { determineUserRole, hasRole } from "./role-service.js";
+import { determineSsoUserRole, hasRole } from "./role-service.js";
 
 vi.mock("../config/sso-config.js");
 
@@ -23,50 +23,50 @@ describe("Role Service", () => {
     vi.mocked(ssoConfigModule.getSsoConfig).mockReturnValue(mockSsoConfig);
   });
 
-  describe("determineUserRole", () => {
+  describe("determineSsoUserRole", () => {
     it("should return SYSTEM_ADMIN when user is in system admin group", () => {
       const groupIds = [mockSsoConfig.systemAdminGroupId, "other-group-id"];
-      const role = determineUserRole(groupIds);
+      const role = determineSsoUserRole(groupIds);
 
       expect(role).toBe(USER_ROLES.SYSTEM_ADMIN);
     });
 
     it("should return INTERNAL_ADMIN_CTSC when user is in CTSC admin group", () => {
       const groupIds = [mockSsoConfig.internalAdminCtscGroupId, "other-group-id"];
-      const role = determineUserRole(groupIds);
+      const role = determineSsoUserRole(groupIds);
 
       expect(role).toBe(USER_ROLES.INTERNAL_ADMIN_CTSC);
     });
 
     it("should return INTERNAL_ADMIN_LOCAL when user is in local admin group", () => {
       const groupIds = [mockSsoConfig.internalAdminLocalGroupId, "other-group-id"];
-      const role = determineUserRole(groupIds);
+      const role = determineSsoUserRole(groupIds);
 
       expect(role).toBe(USER_ROLES.INTERNAL_ADMIN_LOCAL);
     });
 
     it("should prioritize SYSTEM_ADMIN over other roles when user is in multiple groups", () => {
       const groupIds = [mockSsoConfig.internalAdminCtscGroupId, mockSsoConfig.systemAdminGroupId, mockSsoConfig.internalAdminLocalGroupId];
-      const role = determineUserRole(groupIds);
+      const role = determineSsoUserRole(groupIds);
 
       expect(role).toBe(USER_ROLES.SYSTEM_ADMIN);
     });
 
     it("should return undefined when user has no matching groups", () => {
       const groupIds = ["other-group-id", "another-group-id"];
-      const role = determineUserRole(groupIds);
+      const role = determineSsoUserRole(groupIds);
 
       expect(role).toBeUndefined();
     });
 
     it("should return undefined when groupIds is empty", () => {
-      const role = determineUserRole([]);
+      const role = determineSsoUserRole([]);
 
       expect(role).toBeUndefined();
     });
 
     it("should return undefined when groupIds is undefined", () => {
-      const role = determineUserRole(undefined);
+      const role = determineSsoUserRole(undefined);
 
       expect(role).toBeUndefined();
     });

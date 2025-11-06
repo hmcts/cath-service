@@ -18,7 +18,7 @@ vi.mock("../graph-api/graph-client.js", () => ({
 }));
 
 vi.mock("../authorisation/role-service.js", () => ({
-  determineUserRole: vi.fn()
+  determineSsoUserRole: vi.fn()
 }));
 
 vi.mock("../config/sso-config.js", () => ({
@@ -37,7 +37,7 @@ vi.mock("passport", () => ({
 }));
 
 const mockFetchUserProfile = vi.mocked(graphClient.fetchUserProfile);
-const mockDetermineUserRole = vi.mocked(roleService.determineUserRole);
+const mockDetermineSsoUserRole = vi.mocked(roleService.determineSsoUserRole);
 const mockGetSsoConfig = vi.mocked(ssoConfig.getSsoConfig);
 const mockPassport = vi.mocked(passport);
 const mockOIDCStrategy = vi.mocked(OIDCStrategy);
@@ -230,12 +230,12 @@ describe("passport-config", () => {
       const mockDone = vi.fn();
 
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
-      mockDetermineUserRole.mockReturnValue("SYSTEM_ADMIN");
+      mockDetermineSsoUserRole.mockReturnValue("SYSTEM_ADMIN");
 
       await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
       expect(mockFetchUserProfile).toHaveBeenCalledWith("access-token");
-      expect(mockDetermineUserRole).toHaveBeenCalledWith(["group1", "group2"]);
+      expect(mockDetermineSsoUserRole).toHaveBeenCalledWith(["group1", "group2"]);
       expect(mockDone).toHaveBeenCalledWith(
         null,
         expect.objectContaining({
@@ -263,7 +263,7 @@ describe("passport-config", () => {
       const mockDone = vi.fn();
 
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
-      mockDetermineUserRole.mockReturnValue("INTERNAL_ADMIN_CTSC");
+      mockDetermineSsoUserRole.mockReturnValue("INTERNAL_ADMIN_CTSC");
 
       await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
@@ -291,7 +291,7 @@ describe("passport-config", () => {
       const mockDone = vi.fn();
 
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
-      mockDetermineUserRole.mockReturnValue("INTERNAL_ADMIN_LOCAL");
+      mockDetermineSsoUserRole.mockReturnValue("INTERNAL_ADMIN_LOCAL");
 
       await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
 
