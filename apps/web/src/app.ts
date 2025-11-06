@@ -4,6 +4,7 @@ import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
@@ -41,7 +42,7 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, publicPagesModuleRoot, systemAdminModuleRoot, verifiedPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -64,6 +65,7 @@ export async function createApp(): Promise<Express> {
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
+  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
   // Register admin pages with multer middleware for file upload
