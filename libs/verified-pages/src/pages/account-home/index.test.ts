@@ -62,7 +62,6 @@ describe("account-home controller", () => {
       const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].text).toBe("Dashboard");
-      expect(navigation.signOut).toBe("Sign out");
     });
 
     it("should use English navigation when locale is en", async () => {
@@ -77,7 +76,6 @@ describe("account-home controller", () => {
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].text).toBe("Dashboard");
       expect(navigation.verifiedItems[1].text).toBe("Email subscriptions");
-      expect(navigation.signOut).toBe("Sign out");
     });
 
     it("should use Welsh navigation when locale is cy", async () => {
@@ -92,7 +90,6 @@ describe("account-home controller", () => {
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].text).toBe("Dangosfwrdd");
       expect(navigation.verifiedItems[1].text).toBe("Tanysgrifiadau e-bost");
-      expect(navigation.signOut).toBe("Allgofnodi");
     });
 
     it("should include both en and cy locale data in render", async () => {
@@ -107,7 +104,7 @@ describe("account-home controller", () => {
       expect(renderCall.cy.title).toBe("Eich cyfrif");
     });
 
-    it("should include navigation with items and signOut", async () => {
+    it("should include navigation items", async () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
@@ -115,9 +112,7 @@ describe("account-home controller", () => {
       const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toBeDefined();
-      expect(navigation.signOut).toBeDefined();
       expect(Array.isArray(navigation.verifiedItems)).toBe(true);
-      expect(typeof navigation.signOut).toBe("string");
     });
 
     it("should set first navigation item as current", async () => {
