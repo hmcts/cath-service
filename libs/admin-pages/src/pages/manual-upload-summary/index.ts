@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, mockListTypes } from "@hmcts/publication";
 import { cy as coreLocales, en as coreLocalesEn, formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
@@ -10,7 +11,7 @@ import { getManualUpload } from "../../manual-upload/storage.js";
 import cy from "./cy.js";
 import en from "./en.js";
 
-export const GET = async (req: Request, res: Response) => {
+const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const uploadId = req.query.uploadId as string;
 
@@ -27,7 +28,7 @@ export const GET = async (req: Request, res: Response) => {
   const locale = req.query.lng === "cy" ? "cy" : "en";
   const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
-  const coreAuthNavigation = locale === "cy" ? coreLocales.authenticatedNavigation : coreLocalesEn.authenticatedNavigation;
+  const coreLocalesData = locale === "cy" ? coreLocales : coreLocalesEn;
 
   // Find list type by ID
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
@@ -57,13 +58,14 @@ export const GET = async (req: Request, res: Response) => {
       displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
     },
     navigation: {
-      signOut: coreAuthNavigation.signOut
+      signIn: coreLocalesData.navigation.signIn,
+      signOut: coreLocalesData.authenticatedNavigation.signOut
     },
     hideLanguageToggle: true
   });
 };
 
-export const POST = async (req: Request, res: Response) => {
+const postHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const uploadId = req.query.uploadId as string;
 
@@ -168,3 +170,6 @@ export const POST = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

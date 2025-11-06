@@ -1,9 +1,20 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper function to complete the manual upload form and navigate to summary page
 async function navigateToSummaryPage(page: Page) {
+  // Authenticate as System Admin first (manual upload requires admin access)
+  await page.goto("/system-admin-dashboard");
+
+  // If we're redirected to Azure AD, login
+  if (page.url().includes("login.microsoftonline.com")) {
+    const systemAdminEmail = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!;
+    const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
+    await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
+  }
+
   // Navigate to manual upload page with location ID in query string (pre-fills the court)
   await page.goto("/manual-upload?locationId=1");
 

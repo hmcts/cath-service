@@ -1,9 +1,20 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper function to complete the full manual upload flow and reach success page
 async function completeManualUploadFlow(page: Page) {
+  // Authenticate as System Admin first (manual upload requires admin access)
+  await page.goto("/system-admin-dashboard");
+
+  // If we're redirected to Azure AD, login
+  if (page.url().includes("login.microsoftonline.com")) {
+    const systemAdminEmail = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!;
+    const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
+    await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
+  }
+
   // Navigate to manual upload page
   await page.goto("/manual-upload?locationId=1");
 
@@ -62,6 +73,15 @@ test.describe("Manual Upload Success Page", () => {
     });
 
     test("should redirect to manual-upload if accessed directly without upload session", async ({ page }) => {
+      // Authenticate first
+      await page.goto("/system-admin-dashboard");
+      if (page.url().includes("login.microsoftonline.com")) {
+        const systemAdminEmail = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!;
+        const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
+        await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
+      }
+
+      // Try to access success page directly without upload session
       await page.goto("/manual-upload-success");
       await expect(page).toHaveURL("/manual-upload");
     });
