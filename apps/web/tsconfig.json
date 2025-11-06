@@ -8,9 +8,12 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "src/assets/**/*"],
   "references": [
-    { "path": "../../libs/web-core" },
-    { "path": "../../libs/simple-router" },
+    { "path": "../../libs/admin-pages" },
     { "path": "../../libs/cloud-native-platform" },
+    { "path": "../../libs/public-pages" },
+    { "path": "../../libs/simple-router" },
+    { "path": "../../libs/verified-pages" },
+    { "path": "../../libs/web-core" },
     { "path": "../postgres" }
   ]
 }

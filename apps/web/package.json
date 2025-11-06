@@ -19,12 +19,14 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
+    "@hmcts/admin-pages": "workspace:*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
+    "@hmcts/verified-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
     "config": "4.1.1",
@@ -35,6 +37,7 @@
     "glob": "11.0.3",
     "govuk-frontend": "5.13.0",
     "helmet": "8.1.0",
+    "multer": "2.0.2",
     "nunjucks": "3.2.4",
     "redis": "5.9.0"
   },
