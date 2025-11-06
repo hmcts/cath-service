@@ -18,7 +18,7 @@ vi.mock("@hmcts/web-core", () => ({
   configureHelmet: vi.fn(() => vi.fn()),
   configureNonce: vi.fn(() => vi.fn()),
   createFileUpload: vi.fn(() => ({
-    single: vi.fn(() => vi.fn((req: any, res: any, next: any) => next()))
+    single: vi.fn(() => vi.fn((_req: any, _res: any, next: any) => next()))
   })),
   errorHandler: vi.fn(() => vi.fn()),
   expressSessionRedis: vi.fn(() => vi.fn()),

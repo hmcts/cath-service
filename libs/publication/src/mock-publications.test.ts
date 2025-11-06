@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Publication, mockPublications } from "./mock-publications.js";
+import { mockPublications } from "./mock-publications.js";
 
 describe("mockPublications", () => {
   it("should be an array", () => {

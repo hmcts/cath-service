@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ListType, mockListTypes } from "./mock-list-types.js";
+import { mockListTypes } from "./mock-list-types.js";
 
 describe("mockListTypes", () => {
   it("should be an array", () => {

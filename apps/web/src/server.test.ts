@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 // Mock the app creation to avoid actually starting a server
 vi.mock("./app.js", () => ({
   createApp: vi.fn(async () => ({
-    listen: vi.fn((port: number, callback: () => void) => {
+    listen: vi.fn((_port: number, callback: () => void) => {
       callback();
       return {
         close: vi.fn((cb: () => void) => cb())

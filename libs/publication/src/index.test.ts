@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Language, Sensitivity, mockListTypes, mockPublications } from "./index.js";
+import { Language, mockListTypes, mockPublications, Sensitivity } from "./index.js";
 
 describe("Publication Module Exports", () => {
   it("should export Language enum", () => {
