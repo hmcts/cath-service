@@ -16,7 +16,8 @@ vi.mock("@hmcts/web-core", async () => {
   return {
     ...actual,
     formatDate: vi.fn((date) => `${date.day} Month ${date.year}`),
-    formatDateRange: vi.fn((from, to) => `${from.day} Month ${from.year} to ${to.day} Month ${to.year}`)
+    formatDateRange: vi.fn((from, to) => `${from.day} Month ${from.year} to ${to.day} Month ${to.year}`),
+    parseDate: vi.fn((date) => new Date(Number.parseInt(date.year), Number.parseInt(date.month) - 1, Number.parseInt(date.day)))
   };
 });
 
@@ -24,6 +25,20 @@ vi.mock("../../manual-upload/storage.js", () => ({
   getManualUpload: vi.fn()
 }));
 
+vi.mock("../../manual-upload/file-storage.js", () => ({
+  saveUploadedFile: vi.fn()
+}));
+
+vi.mock("@hmcts/publication", async () => {
+  const actual = await vi.importActual("@hmcts/publication");
+  return {
+    ...actual,
+    createArtefact: vi.fn()
+  };
+});
+
+import { createArtefact } from "@hmcts/publication";
+import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import { getManualUpload } from "../../manual-upload/storage.js";
 
 describe("manual-upload-summary page", () => {
@@ -38,7 +53,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test-hearing-list.pdf",
         fileType: "application/pdf",
         locationId: "1",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -76,7 +91,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test.pdf",
         fileType: "application/pdf",
         locationId: "1",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -121,7 +136,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test.pdf",
         fileType: "application/pdf",
         locationId: "1",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "WELSH",
@@ -194,7 +209,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test.pdf",
         fileType: "application/pdf",
         locationId: "1",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -221,7 +236,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test.pdf",
         fileType: "application/pdf",
         locationId: "1",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -248,7 +263,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test.pdf",
         fileType: "application/pdf",
         locationId: "1",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -275,7 +290,7 @@ describe("manual-upload-summary page", () => {
         fileName: "test.pdf",
         fileType: "application/pdf",
         locationId: "999",
-        listType: "CROWN_DAILY_LIST",
+        listType: "6",
         hearingStartDate: { day: "23", month: "10", year: "2025" },
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -306,7 +321,7 @@ describe("manual-upload-summary page", () => {
           fileName: "test.pdf",
           fileType: "application/pdf",
           locationId: "1",
-          listType: "CROWN_DAILY_LIST",
+          listType: "6",
           hearingStartDate: { day: "23", month: "10", year: "2025" },
           sensitivity: sensitivities[i],
           language: "ENGLISH",
@@ -338,7 +353,7 @@ describe("manual-upload-summary page", () => {
           fileName: "test.pdf",
           fileType: "application/pdf",
           locationId: "1",
-          listType: "CROWN_DAILY_LIST",
+          listType: "6",
           hearingStartDate: { day: "23", month: "10", year: "2025" },
           sensitivity: "PUBLIC",
           language: languages[i],
@@ -362,41 +377,149 @@ describe("manual-upload-summary page", () => {
   });
 
   describe("POST", () => {
-    it("should redirect to manual-upload-success", async () => {
-      const req = {
-        session: {}
-      } as unknown as Request;
+    const mockUploadData = {
+      file: Buffer.from("test file content"),
+      fileName: "test-hearing-list.pdf",
+      fileType: "application/pdf",
+      locationId: "1",
+      listType: "6",
+      hearingStartDate: { day: "23", month: "10", year: "2025" },
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: { day: "20", month: "10", year: "2025" },
+      displayTo: { day: "30", month: "10", year: "2025" }
+    };
 
-      const res = {
-        redirect: vi.fn()
-      } as unknown as Response;
+    it("should save file, create database record, and redirect to success page", async () => {
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/storage/test-artefact-id-123/test-hearing-list.pdf");
+      vi.mocked(createArtefact).mockResolvedValue();
 
-      await POST(req, res);
-
-      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-    });
-
-    it("should clear session data on confirmation", async () => {
       const session = {
-        manualUploadForm: {
-          locationId: "1",
-          listType: "CROWN_DAILY_LIST"
-        },
-        manualUploadSubmitted: true
+        manualUploadForm: { locationId: "1" },
+        manualUploadSubmitted: true,
+        save: vi.fn((callback) => callback())
       };
 
       const req = {
+        query: { uploadId: "test-upload-id" },
         session
       } as unknown as Request;
 
       const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await POST(req, res);
+
+      expect(getManualUpload).toHaveBeenCalledWith("test-upload-id");
+      expect(saveUploadedFile).toHaveBeenCalledWith(expect.any(String), "test-hearing-list.pdf", mockUploadData.file);
+      expect(createArtefact).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artefactId: expect.any(String),
+          locationId: "1",
+          listTypeId: 6
+        })
+      );
+      expect(req.session.manualUploadForm).toBeUndefined();
+      expect(req.session.manualUploadSubmitted).toBeUndefined();
+      expect(req.session.uploadConfirmed).toBe(true);
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+    });
+
+    it("should return 400 when uploadId is missing", async () => {
+      const req = { query: {}, session: {} } as unknown as Request;
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      await POST(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith("Missing uploadId");
+    });
+
+    it("should return 404 when upload data is not found", async () => {
+      vi.mocked(getManualUpload).mockResolvedValue(null);
+
+      const req = {
+        query: { uploadId: "non-existent-id" },
+        session: {}
+      } as unknown as Request;
+
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      await POST(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.send).toHaveBeenCalledWith("Upload not found");
+    });
+
+    it("should render error page when database create fails", async () => {
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file");
+      vi.mocked(createArtefact).mockRejectedValue(new Error("Database error"));
+
+      const session = {
+        manualUploadForm: { locationId: "1" },
+        manualUploadSubmitted: true
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+
+      const res = {
+        render: vi.fn(),
         redirect: vi.fn()
       } as unknown as Response;
 
       await POST(req, res);
 
-      expect(req.session.manualUploadForm).toBeUndefined();
-      expect(req.session.manualUploadSubmitted).toBeUndefined();
+      expect(res.render).toHaveBeenCalledWith(
+        "manual-upload-summary/index",
+        expect.objectContaining({
+          errors: [{ text: "We could not process your upload. Please try again.", href: "#" }]
+        })
+      );
+      expect(req.session.manualUploadForm).toEqual({ locationId: "1" });
+      expect(req.session.manualUploadSubmitted).toBe(true);
+    });
+
+    it("should render error page when file save fails", async () => {
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(saveUploadedFile).mockRejectedValue(new Error("File system error"));
+
+      const session = {
+        manualUploadForm: { locationId: "1" },
+        manualUploadSubmitted: true
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+
+      const res = {
+        render: vi.fn(),
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await POST(req, res);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "manual-upload-summary/index",
+        expect.objectContaining({
+          errors: [{ text: "We could not process your upload. Please try again.", href: "#" }]
+        })
+      );
+      expect(req.session.manualUploadForm).toEqual({ locationId: "1" });
     });
   });
 });

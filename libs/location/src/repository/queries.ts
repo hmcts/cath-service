@@ -1,13 +1,7 @@
-import type { Jurisdiction, Region, SubJurisdiction } from "../location-data.js";
 import { locationData } from "../location-data.js";
+import type { Jurisdiction, Location, Region, SubJurisdiction } from "./model.js";
 
-export interface Location {
-  locationId: number;
-  name: string;
-  welshName: string;
-  regions: number[];
-  subJurisdictions: number[];
-}
+export type { Location };
 
 export function getAllLocations(language: "en" | "cy"): Location[] {
   const locations = [...locationData.locations];

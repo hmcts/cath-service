@@ -175,7 +175,7 @@ test.describe('Manual Upload Page', () => {
         buffer: Buffer.from('test content')
       });
 
-      await page.selectOption('select[name="listType"]', 'CIVIL_DAILY_CAUSE_LIST');
+      await page.selectOption('select[name="listType"]', '1'); // Civil Daily Cause List
       await page.fill('input[name="hearingStartDate-day"]', '15');
       await page.fill('input[name="hearingStartDate-month"]', '06');
       await page.fill('input[name="hearingStartDate-year"]', '2025');
@@ -228,7 +228,7 @@ test.describe('Manual Upload Page', () => {
         buffer: largeBuffer
       });
 
-      await page.selectOption('select[name="listType"]', 'CIVIL_DAILY_CAUSE_LIST');
+      await page.selectOption('select[name="listType"]', '1'); // Civil Daily Cause List
       await page.fill('input[name="hearingStartDate-day"]', '15');
       await page.fill('input[name="hearingStartDate-month"]', '06');
       await page.fill('input[name="hearingStartDate-year"]', '2025');
@@ -412,7 +412,7 @@ test.describe('Manual Upload Page', () => {
       await page.waitForTimeout(1000); // Wait for autocomplete to initialize
 
       // Fill list type
-      await page.selectOption('select[name="listType"]', 'CIVIL_DAILY_CAUSE_LIST');
+      await page.selectOption('select[name="listType"]', '1'); // Civil Daily Cause List
 
       // Fill hearing start date
       await page.fill('input[name="hearingStartDate-day"]', '15');
@@ -512,7 +512,7 @@ test.describe('Manual Upload Page', () => {
       // Wait for autocomplete to initialize with pre-filled value
       await page.waitForTimeout(1000);
 
-      await page.selectOption('select[name="listType"]', 'CIVIL_DAILY_CAUSE_LIST');
+      await page.selectOption('select[name="listType"]', '1'); // Civil Daily Cause List
       await page.fill('input[name="hearingStartDate-day"]', '15');
       await page.fill('input[name="hearingStartDate-month"]', '06');
       await page.fill('input[name="hearingStartDate-year"]', '2025');
@@ -532,7 +532,7 @@ test.describe('Manual Upload Page', () => {
       await continueButton.click();
 
       // Verify form data is preserved
-      await expect(page.locator('select[name="listType"]')).toHaveValue('CIVIL_DAILY_CAUSE_LIST');
+      await expect(page.locator('select[name="listType"]')).toHaveValue('1'); // Civil Daily Cause List
       await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue('15');
       await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue('06');
       await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue('2025');

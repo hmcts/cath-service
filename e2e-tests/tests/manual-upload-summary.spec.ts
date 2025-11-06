@@ -10,8 +10,8 @@ async function navigateToSummaryPage(page: Page) {
   // Wait for autocomplete to initialize
   await page.waitForTimeout(1000);
 
-  // Select list type
-  await page.selectOption('select[name="listType"]', "CROWN_DAILY_LIST");
+  // Select list type (6 = Crown Daily List)
+  await page.selectOption('select[name="listType"]', "6");
 
   // Fill hearing start date
   await page.fill('input[name="hearingStartDate-day"]', "23");
