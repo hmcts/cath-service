@@ -1,21 +1,8 @@
 import { type DateInput, parseDate } from "@hmcts/web-core";
 import type { en } from "../pages/manual-upload/en.js";
+import type { ManualUploadFormData, ValidationError } from "./model.js";
 
-export interface ValidationError {
-  text: string;
-  href: string;
-}
-
-interface ManualUploadFormData {
-  locationId?: string;
-  locationName?: string;
-  listType?: string;
-  hearingStartDate?: DateInput;
-  sensitivity?: string;
-  language?: string;
-  displayFrom?: DateInput;
-  displayTo?: DateInput;
-}
+export type { ValidationError };
 
 export function validateForm(body: ManualUploadFormData, file: Express.Multer.File | undefined, t: typeof en): ValidationError[] {
   const errors: ValidationError[] = [];

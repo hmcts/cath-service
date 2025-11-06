@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateAndLocale, parseDate } from "./date-utils.js";
+import { formatDate, formatDateAndLocale, formatDateRange, parseDate } from "./date-utils.js";
 
 describe("formatDateAndLocale", () => {
   describe("English locale (en-GB)", () => {
@@ -148,6 +148,144 @@ describe("parseDate", () => {
     it("should return null for zero month", () => {
       const result = parseDate({ day: "15", month: "0", year: "2025" });
       expect(result).toBeNull();
+    });
+  });
+});
+
+describe("formatDate", () => {
+  describe("Valid dates", () => {
+    it("should format date correctly with single-digit day and month", () => {
+      const result = formatDate({ day: "5", month: "4", year: "2025" });
+      expect(result).toBe("5 April 2025");
+    });
+
+    it("should format date correctly with double-digit day and month", () => {
+      const result = formatDate({ day: "23", month: "10", year: "2025" });
+      expect(result).toBe("23 October 2025");
+    });
+
+    it("should handle beginning of year", () => {
+      const result = formatDate({ day: "01", month: "01", year: "2025" });
+      expect(result).toBe("1 January 2025");
+    });
+
+    it("should handle end of year", () => {
+      const result = formatDate({ day: "31", month: "12", year: "2025" });
+      expect(result).toBe("31 December 2025");
+    });
+
+    it("should format February date", () => {
+      const result = formatDate({ day: "14", month: "02", year: "2025" });
+      expect(result).toBe("14 February 2025");
+    });
+
+    it("should format date with padded values", () => {
+      const result = formatDate({ day: "05", month: "03", year: "2025" });
+      expect(result).toBe("5 March 2025");
+    });
+
+    it("should handle leap year date", () => {
+      const result = formatDate({ day: "29", month: "02", year: "2024" });
+      expect(result).toBe("29 February 2024");
+    });
+
+    it("should handle different years", () => {
+      const result = formatDate({ day: "15", month: "06", year: "2030" });
+      expect(result).toBe("15 June 2030");
+    });
+  });
+
+  describe("Edge cases", () => {
+    it("should handle day without leading zero", () => {
+      const result = formatDate({ day: "7", month: "08", year: "2025" });
+      expect(result).toBe("7 August 2025");
+    });
+
+    it("should handle month without leading zero", () => {
+      const result = formatDate({ day: "15", month: "9", year: "2025" });
+      expect(result).toBe("15 September 2025");
+    });
+
+    it("should format all months correctly", () => {
+      const months = [
+        { month: "01", name: "January" },
+        { month: "02", name: "February" },
+        { month: "03", name: "March" },
+        { month: "04", name: "April" },
+        { month: "05", name: "May" },
+        { month: "06", name: "June" },
+        { month: "07", name: "July" },
+        { month: "08", name: "August" },
+        { month: "09", name: "September" },
+        { month: "10", name: "October" },
+        { month: "11", name: "November" },
+        { month: "12", name: "December" }
+      ];
+
+      for (const { month, name } of months) {
+        const result = formatDate({ day: "15", month, year: "2025" });
+        expect(result).toBe(`15 ${name} 2025`);
+      }
+    });
+  });
+});
+
+describe("formatDateRange", () => {
+  describe("Valid date ranges", () => {
+    it("should format date range correctly", () => {
+      const from = { day: "23", month: "10", year: "2025" };
+      const to = { day: "30", month: "10", year: "2025" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("23 October 2025 to 30 October 2025");
+    });
+
+    it("should handle range within same month", () => {
+      const from = { day: "01", month: "04", year: "2025" };
+      const to = { day: "15", month: "04", year: "2025" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("1 April 2025 to 15 April 2025");
+    });
+
+    it("should handle range across different months", () => {
+      const from = { day: "25", month: "03", year: "2025" };
+      const to = { day: "05", month: "04", year: "2025" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("25 March 2025 to 5 April 2025");
+    });
+
+    it("should handle range across different years", () => {
+      const from = { day: "20", month: "12", year: "2025" };
+      const to = { day: "10", month: "01", year: "2026" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("20 December 2025 to 10 January 2026");
+    });
+
+    it("should handle single day range", () => {
+      const from = { day: "15", month: "06", year: "2025" };
+      const to = { day: "15", month: "06", year: "2025" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("15 June 2025 to 15 June 2025");
+    });
+
+    it("should handle range at year boundary", () => {
+      const from = { day: "31", month: "12", year: "2025" };
+      const to = { day: "01", month: "01", year: "2026" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("31 December 2025 to 1 January 2026");
+    });
+
+    it("should handle range with single-digit days", () => {
+      const from = { day: "1", month: "01", year: "2025" };
+      const to = { day: "9", month: "01", year: "2025" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("1 January 2025 to 9 January 2025");
+    });
+
+    it("should handle range spanning multiple months", () => {
+      const from = { day: "15", month: "02", year: "2025" };
+      const to = { day: "20", month: "05", year: "2025" };
+      const result = formatDateRange(from, to);
+      expect(result).toBe("15 February 2025 to 20 May 2025");
     });
   });
 });

@@ -22,4 +22,4 @@ export { PostgresStore } from "./middleware/session-stores/postgres-store.js";
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";
 export type { DateInput } from "./utils/date-utils.js";
-export { formatDateAndLocale, parseDate } from "./utils/date-utils.js";
+export { formatDate, formatDateAndLocale, formatDateRange, parseDate } from "./utils/date-utils.js";

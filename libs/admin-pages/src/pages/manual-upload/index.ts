@@ -1,48 +1,22 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language, Sensitivity } from "@hmcts/publication";
-import type { DateInput } from "@hmcts/web-core";
+import { Language } from "@hmcts/publication";
 import { en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
+import "../../manual-upload/model.js";
+import { LANGUAGE_LABELS, LIST_TYPE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import { storeManualUpload } from "../../manual-upload/storage.js";
 import { validateForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const LIST_TYPES = [
-  { value: "", text: "<Please choose a list type>" },
-  { value: "CIVIL_DAILY_CAUSE_LIST", text: "Civil Daily Cause List" },
-  { value: "FAMILY_DAILY_CAUSE_LIST", text: "Family Daily Cause List" },
-  { value: "CRIMINAL_DAILY_CAUSE_LIST", text: "Criminal Daily Cause List" },
-  { value: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", text: "Civil and Family Daily Cause List" },
-  { value: "CROWN_DAILY_LIST", text: "Crown Daily List" },
-  { value: "CROWN_FIRM_LIST", text: "Crown Firm List" },
-  { value: "CROWN_WARNED_LIST", text: "Crown Warned List" },
-  { value: "MAGISTRATES_PUBLIC_LIST", text: "Magistrates Public List" },
-  { value: "MAGISTRATES_STANDARD_LIST", text: "Magistrates Standard List" },
-  { value: "CARE_STANDARDS_LIST", text: "Care Standards List" },
-  { value: "EMPLOYMENT_TRIBUNAL_LIST", text: "Employment Tribunal List" },
-  { value: "IAC_DAILY_LIST", text: "IAC Daily List" },
-  { value: "IAC_DAILY_LIST_ADDITIONAL_CASES", text: "IAC Daily List Additional Cases" },
-  { value: "PRIMARY_HEALTH_LIST", text: "Primary Health List" },
-  { value: "SJP_PUBLIC_LIST", text: "SJP Public List" },
-  { value: "SJP_DELTA_PUBLIC_LIST", text: "SJP Delta Public List" },
-  { value: "SSCS_DAILY_LIST", text: "SSCS Daily List" },
-  { value: "SSCS_DAILY_LIST_ADDITIONAL_HEARINGS", text: "SSCS Daily List Additional Hearings" }
-];
+const LIST_TYPES = [{ value: "", text: "<Please choose a list type>" }, ...Object.entries(LIST_TYPE_LABELS).map(([value, text]) => ({ value, text }))];
 
 const SENSITIVITY_OPTIONS = [
   { value: "", text: "<Please choose a sensitivity>" },
-  { value: Sensitivity.PUBLIC, text: "Public" },
-  { value: Sensitivity.PRIVATE, text: "Private" },
-  { value: Sensitivity.CLASSIFIED, text: "Classified" }
+  ...Object.entries(SENSITIVITY_LABELS).map(([value, text]) => ({ value, text }))
 ];
 
-const LANGUAGE_OPTIONS = [
-  { value: "", text: "" },
-  { value: Language.ENGLISH, text: "English" },
-  { value: Language.WELSH, text: "Welsh" },
-  { value: Language.BILINGUAL, text: "Bilingual" }
-];
+const LANGUAGE_OPTIONS = [{ value: "", text: "" }, ...Object.entries(LANGUAGE_LABELS).map(([value, text]) => ({ value, text }))];
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
@@ -82,39 +56,49 @@ function transformDateFields(body: any): ManualUploadFormData {
   };
 }
 
-interface ManualUploadFormData {
-  locationId?: string;
-  locationName?: string;
-  listType?: string;
-  hearingStartDate?: DateInput;
-  sensitivity?: string;
-  language?: string;
-  displayFrom?: DateInput;
-  displayTo?: DateInput;
-}
-
-declare module "express-session" {
-  interface SessionData {
-    manualUploadForm?: ManualUploadFormData;
-  }
-}
-
 export const GET = async (req: Request, res: Response) => {
-  // Clear session data on GET request to show clean form
-  delete req.session.manualUploadForm;
-
-  const data = {};
   const locale = "en";
   const t = getTranslations(locale);
   const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
 
+  // Check if form was successfully submitted to summary page
+  const wasSubmitted = req.session.manualUploadSubmitted || false;
+
+  // Restore form data from session if it exists
+  let formData = req.session.manualUploadForm || {};
+  const errors = req.session.manualUploadErrors || [];
+
+  // Clear errors from session after reading
+  delete req.session.manualUploadErrors;
+
+  // If form wasn't successfully submitted yet (still on manual-upload after error or initial load),
+  // clear the form data from session so refresh will clear it
+  if (!wasSubmitted) {
+    delete req.session.manualUploadForm;
+  }
+
+  // Support pre-filling from query parameter (for testing and deep linking)
+  const queryLocationId = req.query.locationId as string;
+  if (queryLocationId && !formData.locationId) {
+    formData = { ...formData, locationId: queryLocationId };
+  }
+
+  let locationName: string;
+  if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
+    const location = getLocationById(Number.parseInt(formData.locationId, 10));
+    locationName = location ? location.name : "";
+  } else {
+    locationName = formData.locationName || "";
+  }
+
   res.render("manual-upload/index", {
     ...t,
-    data,
+    errors: errors.length > 0 ? errors : undefined,
+    data: { ...formData, locationName },
     locations: getAllLocations(locale),
-    listTypes: LIST_TYPES,
-    sensitivityOptions: SENSITIVITY_OPTIONS,
-    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === Language.ENGLISH })),
+    listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
+    sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
+    languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
     locale,
     navigation: {
       signOut: coreAuthNavigation.signOut
@@ -140,6 +124,8 @@ export const POST = async (req: Request, res: Response) => {
   }
 
   if (errors.length > 0) {
+    // Save errors and form data to session
+    req.session.manualUploadErrors = errors;
     req.session.manualUploadForm = formData;
 
     await new Promise<void>((resolve, reject) => {
@@ -149,30 +135,11 @@ export const POST = async (req: Request, res: Response) => {
       });
     });
 
-    // If locationId is a valid number, show the location name; otherwise show the invalid text entered
-    let locationName = "";
-    if (formData.locationId && !Number.isNaN(Number(formData.locationId))) {
-      const location = getLocationById(Number.parseInt(formData.locationId, 10));
-      locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
-    } else {
-      // Keep the invalid text that was entered (from the display field)
-      locationName = formData.locationName || "";
-    }
-
-    return res.render("manual-upload/index", {
-      ...t,
-      errors,
-      data: { ...formData, locationId: formData.locationId || "", locationName },
-      locations: getAllLocations(locale),
-      listTypes: LIST_TYPES.map((item) => ({ ...item, selected: item.value === formData.listType })),
-      sensitivityOptions: SENSITIVITY_OPTIONS.map((item) => ({ ...item, selected: item.value === formData.sensitivity })),
-      languageOptions: LANGUAGE_OPTIONS.map((item) => ({ ...item, selected: item.value === (formData.language || Language.ENGLISH) })),
-      locale,
-      hideLanguageToggle: true
-    });
+    // Redirect to GET to prevent browser caching of POST response
+    return res.redirect("/manual-upload");
   }
 
-  await storeManualUpload({
+  const uploadId = await storeManualUpload({
     file: req.file!.buffer,
     fileName: req.file!.originalname,
     fileType: req.file!.mimetype,
@@ -185,7 +152,16 @@ export const POST = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
-  delete req.session.manualUploadForm;
+  // Save form data to session and mark as successfully submitted
+  req.session.manualUploadForm = formData;
+  req.session.manualUploadSubmitted = true;
 
-  res.redirect("/manual-upload-summary");
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+  res.redirect(`/manual-upload-summary?uploadId=${uploadId}`);
 };
