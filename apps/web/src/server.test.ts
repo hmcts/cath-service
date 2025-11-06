@@ -1,8 +1,4 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import fs from "node:fs";
-
-// Store original process.exit
-const originalExit = process.exit;
 
 // Mock process.exit to prevent test runner from exiting
 const mockExit = vi.fn() as any;
