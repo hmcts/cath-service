@@ -1,8 +1,9 @@
-export { requireAuth } from "./authentication/authenticate-middleware.js";
-export { requireRole } from "./authorisation/authorise-middleware.js";
+export { USER_ROLES } from "@hmcts/account";
+export { configurePassport } from "./config/passport-config.js";
 export { isSsoConfigured } from "./config/sso-config.js";
-export { buildNavigationItems, buildVerifiedUserNavigation } from "./navigation/navigation-helper.js";
-export { authNavigationMiddleware } from "./navigation/navigation-middleware.js";
-export { configurePassport } from "./passport-config/passport-config.js";
+export { requireAuth } from "./middleware/authenticate.js";
+export { requireRole } from "./middleware/authorise.js";
+export { authNavigationMiddleware } from "./middleware/navigation.js";
+export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
+export { GET as ssoCallbackHandler } from "./pages/callback/sso.js";
 export type { UserProfile } from "./types.js";
-export { USER_ROLES } from "./user/roles.js";

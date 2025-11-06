@@ -1,5 +1,5 @@
+import { USER_ROLES } from "@hmcts/account";
 import { describe, expect, it } from "vitest";
-import { USER_ROLES } from "../user/roles.js";
 import { buildNavigationItems, buildVerifiedUserNavigation } from "./navigation-helper.js";
 
 describe("buildNavigationItems", () => {

@@ -15,6 +15,6 @@ export function requireAuth(): RequestHandler {
     req.session.returnTo = req.originalUrl;
 
     // Redirect to login page
-    res.redirect("/auth/login");
+    res.redirect("/login");
   };
 }

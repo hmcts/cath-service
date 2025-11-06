@@ -1,7 +1,7 @@
+import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
 import passport from "passport";
 import { isSsoConfigured } from "../../config/sso-config.js";
-import { USER_ROLES } from "../../user/roles.js";
 
 /**
  * Handles OAuth callback from Azure AD
@@ -17,18 +17,18 @@ export const GET = [
 
     // Proceed with SSO authentication
     return passport.authenticate("azuread-openidconnect", {
-      failureRedirect: "/auth/login",
+      failureRedirect: "/login",
       failureMessage: true
     })(req, res, next);
   },
   async (req: Request, res: Response) => {
     if (!req.user) {
-      return res.redirect("/auth/login");
+      return res.redirect("/login");
     }
 
     // Check if user has a valid role
     if (!req.user.role) {
-      return res.redirect("/sso/rejected");
+      return res.redirect("/sso-rejected");
     }
 
     // Determine default redirect based on user role
@@ -51,19 +51,19 @@ export const GET = [
     // Regenerate session for security
     req.session.regenerate((err: Error | null) => {
       if (err) {
-        return res.redirect("/auth/login");
+        return res.redirect("/login");
       }
 
       // Use req.login() to properly establish Passport session
       req.login(user, (loginErr: Error | null) => {
         if (loginErr) {
-          return res.redirect("/auth/login");
+          return res.redirect("/login");
         }
 
         // Save session before redirecting to prevent race condition
         req.session.save((saveErr: Error | null) => {
           if (saveErr) {
-            return res.redirect("/auth/login");
+            return res.redirect("/login");
           }
 
           res.redirect(returnTo);

@@ -1,6 +1,6 @@
+import { USER_ROLES } from "@hmcts/account";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { USER_ROLES } from "../user/roles.js";
-import { hasRole } from "./role-service.js";
+import { hasRole } from "../role-service/index.js";
 
 /**
  * Middleware to require specific roles for protected routes
@@ -13,7 +13,7 @@ export function requireRole(allowedRoles: string[]): RequestHandler {
     // First check if user is authenticated
     if (!req.isAuthenticated() || !req.user) {
       req.session.returnTo = req.originalUrl;
-      return res.redirect("/auth/login");
+      return res.redirect("/login");
     }
 
     const userRole = req.user.role;
@@ -34,6 +34,6 @@ export function requireRole(allowedRoles: string[]): RequestHandler {
 
     // User has no role - redirect to login
     req.session.returnTo = req.originalUrl;
-    return res.redirect("/auth/login");
+    return res.redirect("/login");
   };
 }

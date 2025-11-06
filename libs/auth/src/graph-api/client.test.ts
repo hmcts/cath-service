@@ -13,7 +13,7 @@ vi.mock("@microsoft/microsoft-graph-client", () => ({
 describe("fetchUserProfile", () => {
   it("should fetch user profile with mail field", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -50,7 +50,7 @@ describe("fetchUserProfile", () => {
 
   it("should use userPrincipalName when mail is not available", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -76,7 +76,7 @@ describe("fetchUserProfile", () => {
 
   it("should handle empty memberOf response", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -102,7 +102,7 @@ describe("fetchUserProfile", () => {
 
   it("should handle groups without displayName", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -130,7 +130,7 @@ describe("fetchUserProfile", () => {
 
   it("should handle groups without id", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -158,7 +158,7 @@ describe("fetchUserProfile", () => {
 
   it("should throw error on Graph API failure with message", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -178,7 +178,7 @@ describe("fetchUserProfile", () => {
 
   it("should throw error on Graph API failure without message", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();
@@ -195,7 +195,7 @@ describe("fetchUserProfile", () => {
 
   it("should handle memberOf.value not being an array", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { fetchUserProfile } = await import("./graph-client.js");
+    const { fetchUserProfile } = await import("./client.js");
 
     const mockApi = vi.fn();
     const mockGet = vi.fn();

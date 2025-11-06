@@ -9,6 +9,7 @@
       "@hmcts/postgres": ["apps/database/src"],
       "@hmcts/web": ["apps/web/src"],
       "@hmcts/web-core": ["libs/web-core/src"],
+      "@hmcts/account": ["libs/account/src"],
       "@hmcts/admin-pages": ["libs/admin-pages/src"],
       "@hmcts/auth": ["libs/auth/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],

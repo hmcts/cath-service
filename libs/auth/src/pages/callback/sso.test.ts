@@ -1,7 +1,7 @@
+import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { USER_ROLES } from "../../user/roles.js";
-import { GET } from "./return.js";
+import { GET } from "./sso.js";
 
 // Mock passport
 vi.mock("passport", () => ({
@@ -26,7 +26,7 @@ describe("SSO Return handler", () => {
 
     await handler(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
   });
 
   it("should redirect to /sso/rejected when user has no role", async () => {
@@ -49,7 +49,7 @@ describe("SSO Return handler", () => {
 
     await handler(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/sso/rejected");
+    expect(res.redirect).toHaveBeenCalledWith("/sso-rejected");
   });
 
   it("should redirect system admin to /system-admin-dashboard by default", async () => {
@@ -190,7 +190,7 @@ describe("SSO Return handler", () => {
 
     await handler(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
   });
 
   it("should redirect to /auth/login on login error", async () => {
@@ -219,7 +219,7 @@ describe("SSO Return handler", () => {
 
     await handler(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
   });
 
   it("should redirect to /auth/login on session save error", async () => {
@@ -250,7 +250,7 @@ describe("SSO Return handler", () => {
 
     await handler(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
   });
 
   it("should clear returnTo from session after redirect", async () => {

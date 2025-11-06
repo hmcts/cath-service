@@ -41,7 +41,7 @@ test.describe('SSO Role-Based Access Control', () => {
       process.env.SSO_TEST_NO_ROLES_EMAIL!,
       process.env.SSO_TEST_NO_ROLES_PASSWORD!
     );
-    await expect(page).toHaveURL('/sso/rejected');
+    await expect(page).toHaveURL('/sso-rejected');
   });
 
   test('Local Admin cannot access system admin dashboard and is redirected to admin dashboard', async ({ page }) => {

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { GET } from "./rejected.js";
+import { GET } from "./index.js";
 
 describe("SSO Rejected page handler", () => {
   it("should render rejected page with English and Welsh content", async () => {
@@ -12,7 +12,7 @@ describe("SSO Rejected page handler", () => {
 
     await GET(req, res);
 
-    expect(res.render).toHaveBeenCalledWith("sso/rejected", {
+    expect(res.render).toHaveBeenCalledWith("sso-rejected/index", {
       en: expect.objectContaining({
         title: expect.stringContaining("SSO Rejected Login"),
         header: "SSO Rejected Login",

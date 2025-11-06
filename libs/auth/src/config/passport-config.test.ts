@@ -3,25 +3,25 @@ import express from "express";
 import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as roleService from "../authorisation/role-service.js";
-import * as ssoConfig from "../config/sso-config.js";
-import * as graphClient from "../graph-api/graph-client.js";
+import * as graphClient from "../graph-api/client.js";
+import * as roleService from "../role-service/index.js";
 import { configurePassport } from "./passport-config.js";
+import * as ssoConfig from "./sso-config.js";
 
 // Mock all dependencies
 vi.mock("passport-azure-ad", () => ({
   OIDCStrategy: vi.fn()
 }));
 
-vi.mock("../graph-api/graph-client.js", () => ({
+vi.mock("../graph-api/client.js", () => ({
   fetchUserProfile: vi.fn()
 }));
 
-vi.mock("../authorisation/role-service.js", () => ({
+vi.mock("../role-service/index.js", () => ({
   determineSsoUserRole: vi.fn()
 }));
 
-vi.mock("../config/sso-config.js", () => ({
+vi.mock("./sso-config.js", () => ({
   getSsoConfig: vi.fn(),
   isSsoConfigured: vi.fn()
 }));

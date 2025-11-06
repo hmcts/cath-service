@@ -56,6 +56,17 @@ export async function collateSchemas(
   await deps.mkdir(distDir, { recursive: true });
   await deps.writeFile(path.join(distDir, "schema.prisma"), combinedSchema);
 
+  // Copy .env file to dist so Prisma can find DATABASE_URL
+  const envPath = path.join(__dirname, "../.env");
+  const distEnvPath = path.join(distDir, ".env");
+  try {
+    const envContent = await deps.readFile(envPath, "utf-8");
+    await deps.writeFile(distEnvPath, envContent);
+  } catch (error) {
+    // .env file might not exist in development, that's ok
+    console.log(`ℹ️  No .env file found at ${envPath}`);
+  }
+
   console.log(`✅ Prisma schema collated successfully!`);
   console.log(`📊 Total: ${definedModels.size} models, ${definedEnums.size} enums`);
 }

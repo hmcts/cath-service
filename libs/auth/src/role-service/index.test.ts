@@ -1,7 +1,7 @@
+import { USER_ROLES } from "@hmcts/account";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ssoConfigModule from "../config/sso-config.js";
-import { USER_ROLES } from "../user/roles.js";
-import { determineSsoUserRole, hasRole } from "./role-service.js";
+import { determineSsoUserRole, hasRole } from "./index.js";
 
 vi.mock("../config/sso-config.js");
 

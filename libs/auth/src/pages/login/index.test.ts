@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import passport from "passport";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as ssoConfig from "../../config/sso-config.js";
-import { GET } from "./login.js";
+import { GET } from "./index.js";
 
 // Mock passport
 vi.mock("passport", () => ({

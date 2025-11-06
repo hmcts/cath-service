@@ -1,5 +1,5 @@
+import { USER_ROLES } from "@hmcts/account";
 import { getSsoConfig } from "../config/sso-config.js";
-import { USER_ROLES } from "../user/roles.js";
 
 /**
  * Determines the user's role based on their Azure AD SSO group memberships

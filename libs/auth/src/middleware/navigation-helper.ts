@@ -1,4 +1,4 @@
-import { USER_ROLES } from "../user/roles.js";
+import { USER_ROLES } from "@hmcts/account";
 
 interface NavigationItem {
   text: string;

@@ -47,7 +47,7 @@ test.describe('SSO Login Flow', () => {
       process.env.SSO_TEST_NO_ROLES_PASSWORD!
     );
     await assertAuthenticated(page);
-    await expect(page).toHaveURL('/sso/rejected');
+    await expect(page).toHaveURL('/sso-rejected');
   });
 
   test('Unauthenticated user is redirected to Azure AD login', async ({ page }) => {

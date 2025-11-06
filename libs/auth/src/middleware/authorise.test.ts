@@ -1,7 +1,7 @@
+import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { USER_ROLES } from "../user/roles.js";
-import { requireRole } from "./authorise-middleware.js";
+import { requireRole } from "./authorise.js";
 
 describe("requireRole middleware", () => {
   it("should call next for authenticated user with required role", () => {
@@ -40,7 +40,7 @@ describe("requireRole middleware", () => {
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
     expect(req.session.returnTo).toBe("/system-admin-dashboard");
     expect(next).not.toHaveBeenCalled();
   });
@@ -63,7 +63,7 @@ describe("requireRole middleware", () => {
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
     expect(req.session.returnTo).toBe("/system-admin-dashboard");
   });
 
@@ -151,7 +151,7 @@ describe("requireRole middleware", () => {
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
     expect(req.session.returnTo).toBe("/system-admin-dashboard");
     expect(next).not.toHaveBeenCalled();
   });

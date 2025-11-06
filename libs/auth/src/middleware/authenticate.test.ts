@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { requireAuth } from "./authenticate-middleware.js";
+import { requireAuth } from "./authenticate.js";
 
 describe("requireAuth middleware", () => {
   it("should call next() if user is authenticated", () => {
@@ -31,7 +31,7 @@ describe("requireAuth middleware", () => {
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/auth/login");
+    expect(res.redirect).toHaveBeenCalledWith("/login");
     expect(next).not.toHaveBeenCalled();
     expect(req.session.returnTo).toBe("/system-admin-dashboard");
   });

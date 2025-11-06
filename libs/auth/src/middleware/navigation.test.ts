@@ -1,7 +1,7 @@
+import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { USER_ROLES } from "../user/roles.js";
-import { authNavigationMiddleware } from "./navigation-middleware.js";
+import { authNavigationMiddleware } from "./navigation.js";
 
 describe("authNavigationMiddleware", () => {
   it("should set isAuthenticated to true for authenticated user", () => {

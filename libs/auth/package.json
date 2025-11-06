@@ -8,8 +8,8 @@
       "default": "./src/index.ts"
     },
     "./config": {
-      "production": "./dist/config.js",
-      "default": "./src/config.ts"
+      "production": "./dist/config/index.js",
+      "default": "./src/config/index.ts"
     }
   },
   "types": "./dist/index.d.ts",
@@ -28,6 +28,7 @@
     "passport": "^0.7.0"
   },
   "dependencies": {
+    "@hmcts/account": "*",
     "@microsoft/microsoft-graph-client": "3.0.7",
     "passport-azure-ad": "4.3.5"
   },

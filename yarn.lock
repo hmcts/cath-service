@@ -829,6 +829,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hmcts/account@npm:*, @hmcts/account@workspace:libs/account":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/account@workspace:libs/account"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/admin-pages@workspace:*, @hmcts/admin-pages@workspace:libs/admin-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
@@ -864,6 +870,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/auth@workspace:libs/auth"
   dependencies:
+    "@hmcts/account": "npm:*"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/express": "npm:5.0.1"
     "@types/express-session": "npm:1.18.1"
