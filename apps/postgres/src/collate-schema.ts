@@ -62,7 +62,7 @@ export async function collateSchemas(
   try {
     const envContent = await deps.readFile(envPath, "utf-8");
     await deps.writeFile(distEnvPath, envContent);
-  } catch (error) {
+  } catch {
     // .env file might not exist in development, that's ok
     console.log(`ℹ️  No .env file found at ${envPath}`);
   }

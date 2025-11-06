@@ -60,7 +60,12 @@ enum Status {
 }`;
 
     const mockDeps = {
-      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(libSchema1).mockResolvedValueOnce(libSchema2),
+      readFile: vi
+        .fn()
+        .mockResolvedValueOnce(baseSchema)
+        .mockResolvedValueOnce(libSchema1)
+        .mockResolvedValueOnce(libSchema2)
+        .mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi
@@ -80,7 +85,7 @@ enum Status {
       absolute: true
     });
 
-    expect(mockDeps.readFile).toHaveBeenCalledTimes(3);
+    expect(mockDeps.readFile).toHaveBeenCalledTimes(4);
     expect(mockDeps.mkdir).toHaveBeenCalledWith(expect.stringContaining("/dist"), { recursive: true });
 
     const writtenContent = mockDeps.writeFile.mock.calls[0][1];
@@ -122,7 +127,12 @@ enum Role {
 }`;
 
     const mockDeps = {
-      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(libSchema1).mockResolvedValueOnce(libSchema2),
+      readFile: vi
+        .fn()
+        .mockResolvedValueOnce(baseSchema)
+        .mockResolvedValueOnce(libSchema1)
+        .mockResolvedValueOnce(libSchema2)
+        .mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi.fn().mockReturnValueOnce(["/libs/auth/prisma/schema.prisma"]).mockReturnValueOnce(["/libs/users/prisma/schema.prisma"])
@@ -149,7 +159,11 @@ enum Role {
     const emptySchema = "";
 
     const mockDeps = {
-      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(emptySchema),
+      readFile: vi
+        .fn()
+        .mockResolvedValueOnce(baseSchema)
+        .mockResolvedValueOnce(emptySchema)
+        .mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi.fn().mockReturnValueOnce(["/libs/empty/prisma/schema.prisma"]).mockReturnValueOnce([])
@@ -181,7 +195,11 @@ enum Role {
 }`;
 
     const mockDeps = {
-      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(complexSchema),
+      readFile: vi
+        .fn()
+        .mockResolvedValueOnce(baseSchema)
+        .mockResolvedValueOnce(complexSchema)
+        .mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi.fn().mockReturnValueOnce(["/libs/complex/prisma/schema.prisma"]).mockReturnValueOnce([])
@@ -214,7 +232,7 @@ enum Role {
 }`;
 
     const mockDeps = {
-      readFile: vi.fn().mockResolvedValue(baseSchema),
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockRejectedValue(new Error(".env not found")),
       writeFile: vi.fn(),
       mkdir: vi.fn().mockRejectedValue(new Error("Permission denied")),
       globSync: vi.fn().mockReturnValue([])
@@ -249,7 +267,7 @@ generator client {
 }`;
 
     const mockDeps = {
-      readFile: vi.fn().mockResolvedValue(baseSchema),
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockRejectedValueOnce(new Error(".env not found")),
       writeFile: vi.fn().mockResolvedValue(undefined),
       mkdir: vi.fn().mockResolvedValue(undefined),
       globSync: vi.fn().mockReturnValue([])
