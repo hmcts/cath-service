@@ -1,5 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { hasRole, USER_ROLES } from "./role-service.js";
+import { USER_ROLES } from "../user/roles.js";
+import { hasRole } from "./role-service.js";
 
 /**
  * Middleware to require specific roles for protected routes

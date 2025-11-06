@@ -1,12 +1,5 @@
 import { getSsoConfig } from "../config/sso-config.js";
-
-export const USER_ROLES = {
-  SYSTEM_ADMIN: "SYSTEM_ADMIN",
-  INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
-  INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
-} as const;
-
-export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+import { USER_ROLES } from "../user/roles.js";
 
 /**
  * Determines the user's role based on their Azure AD group memberships

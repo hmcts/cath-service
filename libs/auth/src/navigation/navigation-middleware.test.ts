@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { USER_ROLES } from "../authorisation/role-service.js";
+import { USER_ROLES } from "../user/roles.js";
 import { authNavigationMiddleware } from "./navigation-middleware.js";
 
 describe("authNavigationMiddleware", () => {

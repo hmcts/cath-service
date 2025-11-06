@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
+import { USER_ROLES } from "../user/roles.js";
 import { requireRole } from "./authorise-middleware.js";
-import { USER_ROLES } from "./role-service.js";
 
 describe("requireRole middleware", () => {
   it("should call next for authenticated user with required role", () => {

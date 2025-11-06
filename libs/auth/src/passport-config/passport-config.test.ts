@@ -18,12 +18,7 @@ vi.mock("../graph-api/graph-client.js", () => ({
 }));
 
 vi.mock("../authorisation/role-service.js", () => ({
-  determineUserRole: vi.fn(),
-  USER_ROLES: {
-    SYSTEM_ADMIN: "SYSTEM_ADMIN",
-    INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
-    INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
-  }
+  determineUserRole: vi.fn()
 }));
 
 vi.mock("../config/sso-config.js", () => ({
