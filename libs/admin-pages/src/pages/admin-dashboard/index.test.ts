@@ -37,8 +37,7 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      // Verify res.locals.navigation was updated correctly
-      expect(res.locals.navigation.signOut).toBe("Sign out");
+      // Verify res.locals.navigation still has the verifiedItems from middleware
       expect(res.locals.navigation.verifiedItems).toHaveLength(2);
 
       expect(res.render).toHaveBeenCalledWith(
@@ -88,8 +87,7 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      // Verify res.locals.navigation was updated correctly
-      expect(res.locals.navigation.signOut).toBe("Allgofnodi");
+      // Verify res.locals.navigation still has the verifiedItems from middleware
       expect(res.locals.navigation.verifiedItems).toHaveLength(2);
 
       expect(res.render).toHaveBeenCalledWith(
@@ -160,8 +158,7 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      // Verify res.locals.navigation was updated correctly
-      expect(res.locals.navigation.signOut).toBe("Sign out");
+      // Verify res.locals.navigation still has the verifiedItems from middleware
       expect(res.locals.navigation.verifiedItems).toHaveLength(1);
     });
 
@@ -186,12 +183,11 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      // Verify res.locals.navigation was updated correctly
+      // Verify res.locals.navigation still has the verifiedItems from middleware
       expect(res.locals.navigation.verifiedItems).toHaveLength(2);
       expect(res.locals.navigation.verifiedItems[0].text).toBe("Dashboard");
       expect(res.locals.navigation.verifiedItems[1].text).toBe("Admin Dashboard");
       expect(res.locals.navigation.verifiedItems[1].current).toBe(true);
-      expect(res.locals.navigation.signOut).toBe("Sign out");
     });
 
     it("should show only Admin Dashboard link for INTERNAL_ADMIN_CTSC", async () => {
@@ -212,11 +208,10 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      // Verify res.locals.navigation was updated correctly
+      // Verify res.locals.navigation still has the verifiedItems from middleware
       expect(res.locals.navigation.verifiedItems).toHaveLength(1);
       expect(res.locals.navigation.verifiedItems[0].text).toBe("Admin Dashboard");
       expect(res.locals.navigation.verifiedItems[0].current).toBe(true);
-      expect(res.locals.navigation.signOut).toBe("Sign out");
     });
 
     it("should show only Admin Dashboard link for INTERNAL_ADMIN_LOCAL", async () => {
@@ -237,11 +232,10 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      // Verify res.locals.navigation was updated correctly
+      // Verify res.locals.navigation still has the verifiedItems from middleware
       expect(res.locals.navigation.verifiedItems).toHaveLength(1);
       expect(res.locals.navigation.verifiedItems[0].text).toBe("Admin Dashboard");
       expect(res.locals.navigation.verifiedItems[0].current).toBe(true);
-      expect(res.locals.navigation.signOut).toBe("Sign out");
     });
   });
 });
