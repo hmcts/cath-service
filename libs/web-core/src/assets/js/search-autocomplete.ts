@@ -125,9 +125,10 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
 }
 
 export function initSearchAutocomplete() {
-  const locationInput = document.getElementById("location") as HTMLInputElement;
-  if (locationInput && locationInput.getAttribute("data-autocomplete") === "true") {
-    initAutocompleteForInput(locationInput);
+  // Initialize all autocomplete inputs on the page
+  const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
+  for (const input of autocompleteInputs) {
+    initAutocompleteForInput(input);
   }
 }
 

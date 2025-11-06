@@ -29,8 +29,9 @@ test.describe('Manual Upload Page', () => {
       await expect(fileUpload).toBeVisible();
 
       // Check for court/tribunal autocomplete field (use role="combobox" which is set after autocomplete initializes)
-      await page.waitForTimeout(1000);
+      // Wait for the autocomplete to be initialized and visible
       const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: 'visible', timeout: 10000 });
       await expect(courtInput).toBeVisible();
 
       // Check for list type dropdown
@@ -267,11 +268,11 @@ test.describe('Manual Upload Page', () => {
     test('should show court name input with autocomplete initialized', async ({ page }) => {
       await page.goto('/manual-upload');
 
-      // Wait for autocomplete to initialize
-      await page.waitForTimeout(1000);
+      // Wait for autocomplete to initialize by waiting for the combobox element
+      const autocompleteInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
+      await autocompleteInput.waitFor({ state: 'visible', timeout: 10000 });
 
       // Check that the autocomplete input is visible (created by accessible-autocomplete)
-      const autocompleteInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
       await expect(autocompleteInput).toBeVisible();
 
       // Verify the autocomplete has been initialized
@@ -306,9 +307,9 @@ test.describe('Manual Upload Page', () => {
     test('should display validation error for court name less than 3 characters', async ({ page }) => {
       await page.goto('/manual-upload');
 
-      // Wait for autocomplete to initialize
-      await page.waitForTimeout(1000);
+      // Wait for autocomplete to initialize and be ready for input
       const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: 'visible', timeout: 10000 });
       await courtInput.fill('AB');
 
       // Fill file to avoid file error
@@ -338,9 +339,9 @@ test.describe('Manual Upload Page', () => {
     test('should display validation error for invalid court name longer than 3 characters', async ({ page }) => {
       await page.goto('/manual-upload');
 
-      // Wait for autocomplete to initialize
-      await page.waitForTimeout(1000);
+      // Wait for autocomplete to initialize and be ready for input
       const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: 'visible', timeout: 10000 });
       await courtInput.fill('Invalid Court Name That Does Not Exist');
 
       // Fill file to avoid file error
@@ -370,10 +371,10 @@ test.describe('Manual Upload Page', () => {
     test('should preserve invalid court name after validation error', async ({ page }) => {
       await page.goto('/manual-upload');
 
-      // Wait for autocomplete to initialize
-      await page.waitForTimeout(1000);
+      // Wait for autocomplete to initialize and be ready for input
       const invalidCourtName = 'Invalid Court Name';
       const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: 'visible', timeout: 10000 });
       await courtInput.fill(invalidCourtName);
 
       // Fill file to avoid file error
