@@ -4,11 +4,11 @@
   "type": "module",
   "exports": {
     ".": {
-      "production": "./dist/index.js",
-      "default": "./src/index.ts"
+      "production": "./dist/roles.js",
+      "default": "./src/roles.ts"
     }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./dist/roles.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
