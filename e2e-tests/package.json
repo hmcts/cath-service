@@ -13,6 +13,9 @@
     "test:sso:debug": "node run-with-credentials.js tests/sso --debug",
     "playwright:install": "npx playwright install"
   },
+  "dependencies": {
+    "@hmcts/postgres": "*"
+  },
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",
     "@azure/identity": "4.5.0",

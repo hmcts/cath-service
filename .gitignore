@@ -31,6 +31,7 @@ coverage/
 .nyc_output/
 lcov.info
 .playwright-mcp/
+.test-artefacts.json
 
 # Turborepo
 .turbo/

@@ -1,0 +1,42 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock PrismaClient before importing
+vi.mock("@prisma/client", () => {
+  const mockPrismaClient = vi.fn(() => ({
+    $connect: vi.fn(),
+    $disconnect: vi.fn()
+  }));
+
+  return {
+    PrismaClient: mockPrismaClient
+  };
+});
+
+describe("Prisma Client Module", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete (globalThis as any).prisma;
+  });
+
+  it("should export prisma client instance", async () => {
+    const { prisma } = await import("./index.js");
+    expect(prisma).toBeDefined();
+  });
+
+  it("should export PrismaClient type", async () => {
+    const module = await import("./index.js");
+    expect(module).toHaveProperty("PrismaClient");
+  });
+
+  it("should create a singleton prisma instance", async () => {
+    const { prisma: prisma1 } = await import("./index.js");
+    const { prisma: prisma2 } = await import("./index.js");
+    expect(prisma1).toBe(prisma2);
+  });
+
+  it("should initialize prisma client", async () => {
+    const { prisma } = await import("./index.js");
+    expect(prisma).toBeDefined();
+    expect(typeof prisma).toBe("object");
+  });
+});

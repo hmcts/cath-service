@@ -7,7 +7,8 @@ export {
   type RegionItem,
   type SubJurisdictionItem
 } from "./filtering/service.js";
-export { type Jurisdiction, locationData, type Region, type SubJurisdiction } from "./location-data.js";
+export { locationData } from "./location-data.js";
+export type { Jurisdiction, Region, SubJurisdiction } from "./repository/model.js";
 export {
   getAllJurisdictions,
   getAllLocations,

@@ -1,31 +1,11 @@
-export interface LocationData {
-  locationId: number;
-  name: string;
-  welshName: string;
-  regions: number[];
-  subJurisdictions: number[];
-}
+import type { Jurisdiction, Location, Region, SubJurisdiction } from "./repository/model.js";
 
-export interface Region {
-  regionId: number;
-  name: string;
-  welshName: string;
-}
-
-export interface Jurisdiction {
-  jurisdictionId: number;
-  name: string;
-  welshName: string;
-}
-
-export interface SubJurisdiction {
-  subJurisdictionId: number;
-  name: string;
-  welshName: string;
-  jurisdictionId: number;
-}
-
-export const locationData = {
+export const locationData: {
+  locations: Location[];
+  regions: Region[];
+  jurisdictions: Jurisdiction[];
+  subJurisdictions: SubJurisdiction[];
+} = {
   locations: [
     {
       locationId: 1,

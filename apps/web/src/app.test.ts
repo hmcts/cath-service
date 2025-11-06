@@ -17,6 +17,9 @@ vi.mock("@hmcts/web-core", () => ({
   configureGovuk: vi.fn().mockResolvedValue(undefined),
   configureHelmet: vi.fn(() => vi.fn()),
   configureNonce: vi.fn(() => vi.fn()),
+  createFileUpload: vi.fn(() => ({
+    single: vi.fn(() => vi.fn((_req: any, _res: any, next: any) => next()))
+  })),
   errorHandler: vi.fn(() => vi.fn()),
   expressSessionRedis: vi.fn(() => vi.fn()),
   notFoundHandler: vi.fn(() => vi.fn())

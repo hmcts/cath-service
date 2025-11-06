@@ -54,6 +54,7 @@
     "express-session": "^1.18.2",
     "govuk-frontend": "^5.2.0",
     "helmet": "^8.0.0",
+    "multer": "^2.0.2",
     "nunjucks": "^3.2.4",
     "pg": "^8.13.1",
     "pg-format": "^1.0.4",
@@ -78,6 +79,7 @@
   "devDependencies": {
     "@types/express": "5.0.5",
     "@types/express-session": "1.18.2",
+    "@types/multer": "2.0.0",
     "@types/nunjucks": "3.2.6",
     "@types/pg": "8.15.6",
     "@types/pg-format": "1.0.5",

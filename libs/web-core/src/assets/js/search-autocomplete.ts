@@ -2,33 +2,47 @@ import { getAllLocations, searchLocations } from "@hmcts/location";
 // @ts-expect-error - accessible-autocomplete doesn't have proper TypeScript definitions
 import accessibleAutocomplete from "accessible-autocomplete/dist/accessible-autocomplete.min.js";
 
-export function initSearchAutocomplete() {
-  const locationInput = document.getElementById("location") as HTMLInputElement;
-  if (!locationInput) return;
-
+function initAutocompleteForInput(locationInput: HTMLInputElement) {
+  const inputId = locationInput.id;
   const language = (locationInput.getAttribute("data-locale") || "en") as "en" | "cy";
   const locations = getAllLocations(language);
 
   const preselectedLocationId = locationInput.getAttribute("data-location-id");
   const preselectedValue = locationInput.value;
+  const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
   const noResultsMessage = locationInput.getAttribute("data-no-results-message") || "No results found";
   const hasError = locationInput.classList.contains("govuk-input--error");
 
   const container = locationInput.parentElement;
   if (!container) return;
 
+  // Check if autocomplete has already been initialized for this input
+  if (document.getElementById(`${inputId}-autocomplete-wrapper`)) {
+    return;
+  }
+
   const wrapper = document.createElement("div");
-  wrapper.id = "location-autocomplete-wrapper";
+  wrapper.id = `${inputId}-autocomplete-wrapper`;
+
+  const existingLabel = container.querySelector("label");
+  if (!existingLabel) {
+    const label = document.createElement("label");
+    label.className = "govuk-label";
+    label.htmlFor = inputId;
+    label.textContent = searchLabel;
+    container.insertBefore(label, locationInput);
+  }
 
   container.insertBefore(wrapper, locationInput);
 
   locationInput.style.display = "none";
+  const originalName = locationInput.getAttribute("name");
   locationInput.removeAttribute("name");
 
   const hiddenInput = document.createElement("input");
   hiddenInput.type = "hidden";
-  hiddenInput.name = "locationId";
-  hiddenInput.id = "locationId";
+  hiddenInput.name = originalName || "locationId";
+  hiddenInput.id = `${inputId}Id`;
   hiddenInput.value = preselectedLocationId || "";
   container.appendChild(hiddenInput);
 
@@ -36,8 +50,8 @@ export function initSearchAutocomplete() {
 
   accessibleAutocomplete({
     element: wrapper,
-    id: "location",
-    name: "location-display",
+    id: inputId,
+    name: `${inputId}-display`,
     defaultValue: preselectedValue,
     source: (query: string, populateResults: (results: string[]) => void) => {
       const searchResults = searchLocations(query, language);
@@ -62,13 +76,13 @@ export function initSearchAutocomplete() {
     }
   });
 
-  const autocompleteInput = wrapper.querySelector("#location") as HTMLInputElement;
+  const autocompleteInput = wrapper.querySelector(`#${inputId}`) as HTMLInputElement;
   if (autocompleteInput) {
     // Add label for accessibility
     if (!wrapper.querySelector("label")) {
       const label = document.createElement("label");
       label.className = "govuk-label govuk-visually-hidden";
-      label.htmlFor = "location";
+      label.htmlFor = inputId;
       label.textContent = "Search";
       wrapper.insertBefore(label, wrapper.firstChild);
     }
@@ -108,4 +122,25 @@ export function initSearchAutocomplete() {
       });
     }
   }
+}
+
+export function initSearchAutocomplete() {
+  // Initialize all autocomplete inputs on the page
+  const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
+  for (const input of autocompleteInputs) {
+    initAutocompleteForInput(input);
+  }
+}
+
+export function initAllAutocompletes() {
+  const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
+  for (const input of autocompleteInputs) {
+    initAutocompleteForInput(input);
+  }
+}
+
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", () => {
+    initAllAutocompletes();
+  });
 }
