@@ -1,6 +1,5 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language, Sensitivity } from "@hmcts/publication";
-import type { DateInput } from "@hmcts/web-core";
+import { Language } from "@hmcts/publication";
 import { en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import "../../manual-upload/model.js";
