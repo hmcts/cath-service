@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import passport from "passport";
-import { USER_ROLES } from "../../authorization/role-service.js";
+import { USER_ROLES } from "../../authorisation/role-service.js";
 import { isSsoConfigured } from "../../config/sso-config.js";
 
 /**

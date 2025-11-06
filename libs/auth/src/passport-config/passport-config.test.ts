@@ -3,7 +3,7 @@ import express from "express";
 import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as roleService from "../authorization/role-service.js";
+import * as roleService from "../authorisation/role-service.js";
 import * as ssoConfig from "../config/sso-config.js";
 import * as graphClient from "../graph-api/graph-client.js";
 import { configurePassport } from "./passport-config.js";
@@ -17,7 +17,7 @@ vi.mock("../graph-api/graph-client.js", () => ({
   fetchUserProfile: vi.fn()
 }));
 
-vi.mock("../authorization/role-service.js", () => ({
+vi.mock("../authorisation/role-service.js", () => ({
   determineUserRole: vi.fn(),
   USER_ROLES: {
     SYSTEM_ADMIN: "SYSTEM_ADMIN",

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
-import { determineUserRole } from "../authorization/role-service.js";
+import { determineUserRole } from "../authorisation/role-service.js";
 import { getSsoConfig } from "../config/sso-config.js";
 import { fetchUserProfile } from "../graph-api/graph-client.js";
 import type { UserProfile } from "../types.js";
