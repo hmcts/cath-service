@@ -17,7 +17,7 @@ vi.mock("@hmcts/web-core", async () => {
     ...actual,
     formatDate: vi.fn((date) => `${date.day} Month ${date.year}`),
     formatDateRange: vi.fn((from, to) => `${from.day} Month ${from.year} to ${to.day} Month ${to.year}`),
-    parseDate: vi.fn((date) => new Date(Number.parseInt(date.year), Number.parseInt(date.month) - 1, Number.parseInt(date.day)))
+    parseDate: vi.fn((date) => new Date(Number.parseInt(date.year, 10), Number.parseInt(date.month, 10) - 1, Number.parseInt(date.day, 10)))
   };
 });
 

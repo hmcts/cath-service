@@ -1,6 +1,6 @@
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
-import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
+import { en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";

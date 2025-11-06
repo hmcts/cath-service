@@ -114,7 +114,7 @@ export const POST = async (req: Request, res: Response) => {
     req.session.uploadConfirmed = true;
 
     await new Promise<void>((resolve, reject) => {
-      req.session.save((err) => {
+      req.session.save((err: Error | null | undefined) => {
         if (err) reject(err);
         else resolve();
       });
