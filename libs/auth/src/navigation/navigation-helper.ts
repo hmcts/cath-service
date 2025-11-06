@@ -57,3 +57,43 @@ export function buildNavigationItems(userRole: string | undefined, currentPath: 
 
   return items;
 }
+
+/**
+ * Builds navigation items for verified users (non-SSO authenticated users)
+ * @param currentPath - The current page path to mark as active
+ * @param locale - The locale for translations (en or cy)
+ * @returns Array of navigation items
+ */
+export function buildVerifiedUserNavigation(currentPath: string, locale: string = "en"): NavigationItem[] {
+  const translations = {
+    en: {
+      dashboard: "Dashboard",
+      emailSubscriptions: "Email subscriptions"
+    },
+    cy: {
+      dashboard: "Dangosfwrdd",
+      emailSubscriptions: "Tanysgrifiadau e-bost"
+    }
+  };
+
+  const t = locale === "cy" ? translations.cy : translations.en;
+
+  return [
+    {
+      text: t.dashboard,
+      href: "/account-home",
+      current: currentPath === "/account-home",
+      attributes: {
+        "data-test": "dashboard-link"
+      }
+    },
+    {
+      text: t.emailSubscriptions,
+      href: "/",
+      current: currentPath === "/",
+      attributes: {
+        "data-test": "email-subscriptions-link"
+      }
+    }
+  ];
+}

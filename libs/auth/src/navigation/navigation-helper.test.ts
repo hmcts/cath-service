@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { USER_ROLES } from "../user/roles.js";
-import { buildNavigationItems } from "./navigation-helper.js";
+import { buildNavigationItems, buildVerifiedUserNavigation } from "./navigation-helper.js";
 
 describe("buildNavigationItems", () => {
   describe("SYSTEM_ADMIN role", () => {
@@ -85,6 +85,52 @@ describe("buildNavigationItems", () => {
       const items = buildNavigationItems("UNKNOWN_ROLE", "/admin-dashboard");
 
       expect(items).toHaveLength(0);
+    });
+  });
+
+  describe("buildVerifiedUserNavigation", () => {
+    it("should return Dashboard and Email subscriptions navigation items in English", () => {
+      const items = buildVerifiedUserNavigation("/account-home", "en");
+
+      expect(items).toHaveLength(2);
+      expect(items[0].text).toBe("Dashboard");
+      expect(items[0].href).toBe("/account-home");
+      expect(items[0].current).toBe(true);
+      expect(items[0].attributes?.["data-test"]).toBe("dashboard-link");
+
+      expect(items[1].text).toBe("Email subscriptions");
+      expect(items[1].href).toBe("/");
+      expect(items[1].current).toBe(false);
+      expect(items[1].attributes?.["data-test"]).toBe("email-subscriptions-link");
+    });
+
+    it("should return navigation items in Welsh when locale is cy", () => {
+      const items = buildVerifiedUserNavigation("/account-home", "cy");
+
+      expect(items).toHaveLength(2);
+      expect(items[0].text).toBe("Dangosfwrdd");
+      expect(items[1].text).toBe("Tanysgrifiadau e-bost");
+    });
+
+    it("should mark the correct item as current based on path", () => {
+      const items = buildVerifiedUserNavigation("/", "en");
+
+      expect(items[0].current).toBe(false);
+      expect(items[1].current).toBe(true);
+    });
+
+    it("should default to English when locale is not provided", () => {
+      const items = buildVerifiedUserNavigation("/account-home");
+
+      expect(items[0].text).toBe("Dashboard");
+      expect(items[1].text).toBe("Email subscriptions");
+    });
+
+    it("should have consistent attributes structure", () => {
+      const items = buildVerifiedUserNavigation("/account-home", "en");
+
+      expect(items[0].attributes).toHaveProperty("data-test");
+      expect(items[1].attributes).toHaveProperty("data-test");
     });
   });
 });

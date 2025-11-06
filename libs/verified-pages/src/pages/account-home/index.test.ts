@@ -1,12 +1,29 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock the buildVerifiedUserNavigation function from auth package
+vi.mock("@hmcts/auth", () => ({
+  buildVerifiedUserNavigation: vi.fn((currentPath: string, locale: string = "en") => {
+    const translations = {
+      en: { dashboard: "Dashboard", emailSubscriptions: "Email subscriptions" },
+      cy: { dashboard: "Dangosfwrdd", emailSubscriptions: "Tanysgrifiadau e-bost" }
+    };
+    const t = locale === "cy" ? translations.cy : translations.en;
+    return [
+      { text: t.dashboard, href: "/account-home", current: currentPath === "/account-home", attributes: { "data-test": "dashboard-link" } },
+      { text: t.emailSubscriptions, href: "/", current: currentPath === "/", attributes: { "data-test": "email-subscriptions-link" } }
+    ];
+  })
+}));
+
 describe("account-home controller", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
 
   beforeEach(() => {
-    mockRequest = {};
+    mockRequest = {
+      path: "/account-home"
+    };
 
     mockResponse = {
       render: vi.fn(),
