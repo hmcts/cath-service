@@ -10,5 +10,19 @@ export const cy = {
   signInLink: "mewngofnodi",
   welshAvailableText: "Mae'r gwasanaeth hwn hefyd ar gael yn",
   welshAvailableLink: "Saesneg (English)",
-  continueButton: "Parhau"
+  continueButton: "Parhau",
+  factSectionTitle: "Dod o hyd i lys neu dribiwnlys",
+  factSectionText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factSectionTextSuffix: " yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  factLinkUrl: "https://www.gov.uk/find-court-tribunal",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  beforeYouStartTitle: "Cyn i chi ddechrau",
+  scotlandNorthernIrelandTitle: "Os ydych yn byw yn Yr Alban neu Gogledd Iwerddon",
+  contactText: "Cysylltwch â:",
+  scottishCourtsText: " ar gyfer rhai Llysoedd a Thribiwnlysoedd yn Yr Alban",
+  scottishCourtsLink: "Gwefan Llysoedd yr Alban",
+  scottishCourtsUrl: "https://www.scotcourts.gov.uk",
+  niCourtsText: " ar gyfer llysoedd a thribiwnlysoedd yng Ngogledd Iwerddon",
+  niCourtsLink: "Gwasanaeth Llysoedd a Thribiwnlysoedd Gogledd Iwerddon",
+  niCourtsUrl: "https://www.justice-ni.gov.uk/topics/courts-and-tribunals"
 };
