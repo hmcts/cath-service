@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+
 test.describe("Landing Page", () => {
   test.describe("Content Display", () => {
     test("should load the landing page at root route", async ({ page }) => {
@@ -16,9 +18,9 @@ test.describe("Landing Page", () => {
       await expect(heading).toHaveClass(/govuk-heading-l/);
     });
 
-    test("should display all 4 bullet points", async ({ page }) => {
+    test("should display all 4 bullet points in hearings list", async ({ page }) => {
       await page.goto("/");
-      const bulletList = page.locator("ul.govuk-list--bullet li");
+      const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
       await expect(bulletList).toHaveCount(4);
 
       // Verify content of each bullet point
@@ -58,6 +60,60 @@ test.describe("Landing Page", () => {
       await expect(continueButton).toBeVisible();
       await expect(continueButton).toHaveAttribute("href", "/view-option");
     });
+
+    test("should navigate to view-option page when Continue is clicked", async ({ page }) => {
+      await page.goto("/");
+      await page.click('.govuk-button[href="/view-option"]');
+      await expect(page).toHaveURL(/\/view-option/);
+    });
+
+    test("should display FaCT section", async ({ page }) => {
+      await page.goto("/");
+      const factSection = page.locator("text=Find a court or tribunal").first();
+      await expect(factSection).toBeVisible();
+
+      const factLink = page.locator('a[href="https://www.gov.uk/find-court-tribunal"]');
+      await expect(factLink).toBeVisible();
+      await expect(factLink).toHaveAttribute("rel", "external");
+      await expect(factLink).toHaveText("Find contact details and other information about courts and tribunals");
+
+      const factText = page.locator("text=in England and Wales, and some non-devolved tribunals in Scotland");
+      await expect(factText).toBeVisible();
+    });
+
+    test("should display Before you start section", async ({ page }) => {
+      await page.goto("/");
+      const beforeYouStartTitle = page.locator("text=Before you start");
+      await expect(beforeYouStartTitle).toBeVisible();
+
+      const scotlandNITitle = page.locator("text=If you're in Scotland or Northern Ireland");
+      await expect(scotlandNITitle).toBeVisible();
+
+      const contactText = page.locator("text=Contact the:");
+      await expect(contactText).toBeVisible();
+    });
+
+    test("should display Scottish Courts link", async ({ page }) => {
+      await page.goto("/");
+      const scottishCourtsLink = page.locator('a[href="https://www.scotcourts.gov.uk"]');
+      await expect(scottishCourtsLink).toBeVisible();
+      await expect(scottishCourtsLink).toHaveText("Scottish Courts website");
+      await expect(scottishCourtsLink).toHaveAttribute("rel", "external");
+
+      const scottishCourtsText = page.locator("text=for courts and some tribunals in Scotland");
+      await expect(scottishCourtsText).toBeVisible();
+    });
+
+    test("should display Northern Ireland Courts link", async ({ page }) => {
+      await page.goto("/");
+      const niCourtsLink = page.locator('a[href="https://www.justice-ni.gov.uk/topics/courts-and-tribunals"]');
+      await expect(niCourtsLink).toBeVisible();
+      await expect(niCourtsLink).toHaveText("Northern Ireland Courts and Tribunals Service");
+      await expect(niCourtsLink).toHaveAttribute("rel", "external");
+
+      const niCourtsText = page.locator("text=for courts and tribunals in Northern Ireland");
+      await expect(niCourtsText).toBeVisible();
+    });
   });
 
   test.describe("Welsh Language Support", () => {
@@ -76,7 +132,7 @@ test.describe("Landing Page", () => {
       await expect(heading).toHaveText("Gwrandawiadau llys a thribiwnlys");
 
       // Verify Welsh bullet points
-      const bulletList = page.locator("ul.govuk-list--bullet li");
+      const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
       await expect(bulletList.nth(0)).toContainText("Lysoedd Sifil a Theulu");
       await expect(bulletList.nth(1)).toContainText("Tribiwnlys Haen Gyntaf");
       await expect(bulletList.nth(2)).toContainText("Llys Barn Brenhinol");
@@ -101,17 +157,49 @@ test.describe("Landing Page", () => {
       await expect(page.locator('a.govuk-button:has-text("Parhau")')).toBeVisible();
     });
 
-    test("should maintain same structure in Welsh and English", async ({ page }) => {
-      // Check English version
-      await page.goto("/");
-      const enBullets = await page.locator("ul.govuk-list--bullet li").count();
-
-      // Check Welsh version
+    test("should display Welsh FaCT section", async ({ page }) => {
       await page.goto("/?lng=cy");
-      const cyBullets = await page.locator("ul.govuk-list--bullet li").count();
+      const factSection = page.locator("text=Dod o hyd i lys neu dribiwnlys").first();
+      await expect(factSection).toBeVisible();
 
-      expect(enBullets).toBe(cyBullets);
-      expect(enBullets).toBe(4);
+      const factLink = page.locator('a[href="https://www.gov.uk/find-court-tribunal"]');
+      await expect(factLink).toBeVisible();
+      await expect(factLink).toHaveText("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
+
+      const factText = page.locator("text=yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban");
+      await expect(factText).toBeVisible();
+    });
+
+    test("should display Welsh Before you start section", async ({ page }) => {
+      await page.goto("/?lng=cy");
+      const beforeYouStartTitle = page.locator("text=Cyn i chi ddechrau");
+      await expect(beforeYouStartTitle).toBeVisible();
+
+      const scotlandNITitle = page.locator("text=Os ydych yn byw yn Yr Alban neu Gogledd Iwerddon");
+      await expect(scotlandNITitle).toBeVisible();
+
+      const contactText = page.locator("text=Cysylltwch â:");
+      await expect(contactText).toBeVisible();
+    });
+
+    test("should display Welsh Scottish Courts link", async ({ page }) => {
+      await page.goto("/?lng=cy");
+      const scottishCourtsLink = page.locator('a[href="https://www.scotcourts.gov.uk"]');
+      await expect(scottishCourtsLink).toBeVisible();
+      await expect(scottishCourtsLink).toHaveText("Gwefan Llysoedd yr Alban");
+
+      const scottishCourtsText = page.locator("text=ar gyfer rhai Llysoedd a Thribiwnlysoedd yn Yr Alban");
+      await expect(scottishCourtsText).toBeVisible();
+    });
+
+    test("should display Welsh Northern Ireland Courts link", async ({ page }) => {
+      await page.goto("/?lng=cy");
+      const niCourtsLink = page.locator('a[href="https://www.justice-ni.gov.uk/topics/courts-and-tribunals"]');
+      await expect(niCourtsLink).toBeVisible();
+      await expect(niCourtsLink).toHaveText("Gwasanaeth Llysoedd a Thribiwnlysoedd Gogledd Iwerddon");
+
+      const niCourtsText = page.locator("text=ar gyfer llysoedd a thribiwnlysoedd yng Ngogledd Iwerddon");
+      await expect(niCourtsText).toBeVisible();
     });
   });
 
@@ -171,7 +259,7 @@ test.describe("Landing Page", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const bulletList = page.locator("ul.govuk-list--bullet li");
+      const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
       await expect(bulletList).toHaveCount(4);
 
       const continueButton = page.locator('a.govuk-button:has-text("Continue")');
@@ -185,7 +273,7 @@ test.describe("Landing Page", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const bulletList = page.locator("ul.govuk-list--bullet li");
+      const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
       await expect(bulletList).toHaveCount(4);
 
       const continueButton = page.locator('a.govuk-button:has-text("Continue")');
@@ -199,7 +287,7 @@ test.describe("Landing Page", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
 
-      const bulletList = page.locator("ul.govuk-list--bullet li");
+      const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
       await expect(bulletList).toHaveCount(4);
 
       const continueButton = page.locator('a.govuk-button:has-text("Continue")');

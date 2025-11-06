@@ -26,8 +26,22 @@
 
     {{ govukButton({
       text: continueButton,
-      href: "/view-option"
+      href: "/view-option",
+      isStartButton: true
     }) }}
+
+    <h2 class="govuk-heading-m govuk-!-margin-top-2">{{ factSectionTitle }}</h2>
+    <p class="govuk-body">
+      <a href="{{ factLinkUrl }}" class="govuk-link" rel="external">{{ factLinkText }}</a>{{ factSectionTextSuffix }}
+    </p>
+
+    <h2 class="govuk-heading-m govuk-!-margin-top-5">{{ beforeYouStartTitle }}</h2>
+    <h3 class="govuk-heading-s">{{ scotlandNorthernIrelandTitle }}</h3>
+    <p class="govuk-body">{{ contactText }}</p>
+    <ul class="govuk-list govuk-list--bullet">
+      <li><a href="{{ scottishCourtsUrl }}" class="govuk-link" rel="external">{{ scottishCourtsLink }}</a>{{ scottishCourtsText }}</li>
+      <li><a href="{{ niCourtsUrl }}" class="govuk-link" rel="external">{{ niCourtsLink }}</a>{{ niCourtsText }}</li>
+    </ul>
   </div>
 </div>
 {% endblock %}
