@@ -181,6 +181,31 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Role-Based Access", () => {
+    test("System Admin can access admin dashboard", async ({ page, context }) => {
+      // Clear existing session
+      await context.clearCookies();
+
+      await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!,
+        process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
+
+      const heading = page.locator("h1");
+      await expect(heading).toHaveText("Admin Dashboard");
+
+      // Verify System Admin sees both navigation links
+      const dashboardLink = page.locator('a[data-test="system-admin-dashboard-link"]');
+      const adminDashboardLink = page.locator('a[data-test="admin-dashboard-link"]');
+
+      await expect(dashboardLink).toBeVisible();
+      await expect(adminDashboardLink).toBeVisible();
+      await expect(dashboardLink).toHaveText("Dashboard");
+      await expect(adminDashboardLink).toHaveText("Admin Dashboard");
+    });
+
     test("CTSC Admin can access admin dashboard", async ({ page, context }) => {
       // Clear existing session
       await context.clearCookies();
