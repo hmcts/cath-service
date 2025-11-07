@@ -44,7 +44,7 @@ describe("Admin Dashboard GET handler", () => {
         tiles: expect.arrayContaining([
           expect.objectContaining({
             title: "Upload Reference Data",
-            href: "/system-admin/upload-reference-data"
+            href: "/upload-reference-data"
           })
         ]),
         user: expect.objectContaining({

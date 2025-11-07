@@ -50,7 +50,7 @@ describe("admin dashboard page", () => {
               description: expect.any(String)
             }),
             expect.objectContaining({
-              heading: "Upload Excel file",
+              heading: "Upload Excel File",
               description: expect.any(String)
             }),
             expect.objectContaining({
@@ -100,7 +100,7 @@ describe("admin dashboard page", () => {
               description: expect.any(String)
             }),
             expect.objectContaining({
-              heading: "Upload Excel file",
+              heading: "Upload Excel File",
               description: expect.any(String)
             }),
             expect.objectContaining({
