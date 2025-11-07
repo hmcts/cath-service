@@ -38,11 +38,15 @@ test.describe("Admin Dashboard", () => {
         { title: "Remove", href: "/remove-list" }
       ];
 
-      for (const { title, href } of tileData) {
-        const link = page.locator(`a.admin-tile:has-text("${title}")`);
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute("href", href);
-      }
+      // Use more specific selector to avoid matching multiple tiles
+      await expect(page.locator('a.admin-tile[href="/manual-upload"]')).toBeVisible();
+      await expect(page.locator('a.admin-tile[href="/manual-upload"]')).toContainText("Upload");
+
+      await expect(page.locator('a.admin-tile[href="/non-strategic-upload"]')).toBeVisible();
+      await expect(page.locator('a.admin-tile[href="/non-strategic-upload"]')).toContainText("Upload Excel File");
+
+      await expect(page.locator('a.admin-tile[href="/remove-list"]')).toBeVisible();
+      await expect(page.locator('a.admin-tile[href="/remove-list"]')).toContainText("Remove");
     });
 
     test("should display descriptions for all tiles", async ({ page }) => {
@@ -165,11 +169,11 @@ test.describe("Admin Dashboard", () => {
 
   test.describe("Tile Interaction", () => {
     test("should navigate to manual upload when clicking Upload tile", async ({ page }) => {
-      await page.click('a:has-text("Upload")');
+      await page.click('a[href="/manual-upload"]');
       await page.waitForURL("**/manual-upload");
 
       // Should navigate to manual upload page
-      await expect(page.locator("h1")).toContainText(/Upload a document/i);
+      await expect(page.locator("h1")).toHaveText("Manual upload");
     });
 
     test("should have hover state on tiles", async ({ page }) => {
@@ -191,7 +195,11 @@ test.describe("Admin Dashboard", () => {
         process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!,
         process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!
       );
-      await page.waitForURL("/admin-dashboard");
+
+      // System Admin will be redirected to /system-admin-dashboard first (their primary dashboard)
+      // Then navigate to admin dashboard
+      await page.waitForURL(/\/(system-admin-dashboard|admin-dashboard)/);
+      await page.goto("/admin-dashboard");
 
       const heading = page.locator("h1");
       await expect(heading).toHaveText("Admin Dashboard");
