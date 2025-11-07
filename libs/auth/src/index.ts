@@ -6,4 +6,4 @@ export { requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";
 export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
 export { GET as ssoCallbackHandler } from "./pages/callback/sso.js";
-export type { UserProfile } from "./types.js";
+export type { UserProfile } from "./user-profile.js";

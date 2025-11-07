@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { UserProfile } from "../types.js";
+import type { UserProfile } from "../user-profile.js";
 
 // Mock the Microsoft Graph Client
 vi.mock("@microsoft/microsoft-graph-client", () => ({

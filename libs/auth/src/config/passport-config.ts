@@ -3,7 +3,7 @@ import passport from "passport";
 import { OIDCStrategy } from "passport-azure-ad";
 import { fetchUserProfile } from "../graph-api/client.js";
 import { determineSsoUserRole } from "../role-service/index.js";
-import type { UserProfile } from "../types.js";
+import type { UserProfile } from "../user-profile.js";
 import { getSsoConfig } from "./sso-config.js";
 
 /**
