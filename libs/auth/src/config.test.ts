@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { moduleRoot, pageRoutes } from "./index.js";
+import { moduleRoot, pageRoutes } from "./config.js";
 
 describe("auth config module exports", () => {
   it("should export pageRoutes with correct path", () => {
