@@ -30,8 +30,8 @@ describe("admin-dashboard template", () => {
       expect(en.tiles[0].description).toBe("Upload a file to be published on the external facing service on GOV.UK");
     });
 
-    it("should have Upload Excel file tile", () => {
-      expect(en.tiles[1].heading).toBe("Upload Excel file");
+    it("should have Upload Excel File tile", () => {
+      expect(en.tiles[1].heading).toBe("Upload Excel File");
       expect(en.tiles[1].description).toBe("Upload an excel file to be converted and displayed on the external facing service on GOV.UK");
     });
 
