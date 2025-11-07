@@ -26,5 +26,12 @@
   },
   "peerDependencies": {
     "express": "^5.1.0"
+  },
+  "dependencies": {
+    "@hmcts/auth": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.1",
+    "@types/express-session": "1.18.1"
   }
 }

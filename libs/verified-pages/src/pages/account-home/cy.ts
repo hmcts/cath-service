@@ -14,23 +14,5 @@ export const cy = {
       title: "Tanysgrifiadau e-bost",
       description: "Cael e-byst am wrandawiadau o wahanol lysoedd a thribiwnlysoedd a rheoli eich tanysgrifiadau."
     }
-  },
-  navigationItems: [
-    {
-      text: "Dangosfwrdd",
-      href: "/account-home",
-      current: true,
-      attributes: {
-        "data-test": "dashboard-link"
-      }
-    },
-    {
-      text: "Tanysgrifiadau e-bost",
-      href: "/",
-      current: false,
-      attributes: {
-        "data-test": "email-subscriptions-link"
-      }
-    }
-  ]
+  }
 };

@@ -1,7 +1,8 @@
+import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
-import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
-import type { Request, Response } from "express";
+import { en as coreLocalesEn } from "@hmcts/web-core";
+import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import { storeManualUpload } from "../../manual-upload/storage.js";
@@ -56,7 +57,7 @@ function selectOption(options: any[], selectedValue: string | undefined) {
   return options.map((item) => ({ ...item, selected: item.value === selectedValue }));
 }
 
-export const GET = async (req: Request, res: Response) => {
+const getHandler = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
   const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
@@ -100,7 +101,7 @@ export const GET = async (req: Request, res: Response) => {
   });
 };
 
-export const POST = async (req: Request, res: Response) => {
+const postHandler = async (req: Request, res: Response) => {
   const locale = "en" as "en" | "cy";
   const t = getTranslations(locale);
 
@@ -142,3 +143,6 @@ export const POST = async (req: Request, res: Response) => {
 
   res.redirect(`/manual-upload-summary?uploadId=${uploadId}`);
 };
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

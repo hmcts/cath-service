@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
+import { loginWithSSO } from '../utils/sso-helpers.js';
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -9,6 +10,18 @@ import path from 'node:path';
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
 test.describe('Manual Upload Page', () => {
+  // Authenticate once before all tests
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/system-admin-dashboard");
+
+    // If we're redirected to Azure AD, login
+    if (page.url().includes("login.microsoftonline.com")) {
+      const systemAdminEmail = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!;
+      const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
+      await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
+    }
+  });
+
   test.describe('given user is on the manual-upload page', () => {
     test('should load the page with all form fields and accessibility compliance', async ({ page }) => {
       await page.goto('/manual-upload');

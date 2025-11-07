@@ -1,12 +1,29 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock the buildVerifiedUserNavigation function from auth package
+vi.mock("@hmcts/auth", () => ({
+  buildVerifiedUserNavigation: vi.fn((currentPath: string, locale: string = "en") => {
+    const translations = {
+      en: { dashboard: "Dashboard", emailSubscriptions: "Email subscriptions" },
+      cy: { dashboard: "Dangosfwrdd", emailSubscriptions: "Tanysgrifiadau e-bost" }
+    };
+    const t = locale === "cy" ? translations.cy : translations.en;
+    return [
+      { text: t.dashboard, href: "/account-home", current: currentPath === "/account-home", attributes: { "data-test": "dashboard-link" } },
+      { text: t.emailSubscriptions, href: "/", current: currentPath === "/", attributes: { "data-test": "email-subscriptions-link" } }
+    ];
+  })
+}));
+
 describe("account-home controller", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
 
   beforeEach(() => {
-    mockRequest = {};
+    mockRequest = {
+      path: "/account-home"
+    };
 
     mockResponse = {
       render: vi.fn(),
@@ -30,8 +47,8 @@ describe("account-home controller", () => {
         "account-home/index",
         expect.objectContaining({
           en: expect.any(Object),
-          cy: expect.any(Object),
-          navigation: expect.any(Object)
+          cy: expect.any(Object)
+          // navigation comes from res.locals, not passed explicitly
         })
       );
     });
@@ -46,8 +63,8 @@ describe("account-home controller", () => {
         "account-home/index",
         expect.objectContaining({
           en: expect.any(Object),
-          cy: expect.any(Object),
-          navigation: expect.any(Object)
+          cy: expect.any(Object)
+          // navigation comes from res.locals, not passed explicitly
         })
       );
     });
@@ -58,11 +75,10 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].text).toBe("Dashboard");
-      expect(navigation.signOut).toBe("Sign out");
     });
 
     it("should use English navigation when locale is en", async () => {
@@ -71,13 +87,12 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].text).toBe("Dashboard");
       expect(navigation.verifiedItems[1].text).toBe("Email subscriptions");
-      expect(navigation.signOut).toBe("Sign out");
     });
 
     it("should use Welsh navigation when locale is cy", async () => {
@@ -86,13 +101,12 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].text).toBe("Dangosfwrdd");
       expect(navigation.verifiedItems[1].text).toBe("Tanysgrifiadau e-bost");
-      expect(navigation.signOut).toBe("Allgofnodi");
     });
 
     it("should include both en and cy locale data in render", async () => {
@@ -107,25 +121,23 @@ describe("account-home controller", () => {
       expect(renderCall.cy.title).toBe("Eich cyfrif");
     });
 
-    it("should include navigation with items and signOut", async () => {
+    it("should include navigation items", async () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toBeDefined();
-      expect(navigation.signOut).toBeDefined();
       expect(Array.isArray(navigation.verifiedItems)).toBe(true);
-      expect(typeof navigation.signOut).toBe("string");
     });
 
     it("should set first navigation item as current", async () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].current).toBe(true);
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
@@ -135,8 +147,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[1].current).toBe(false);
     });
@@ -145,8 +157,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].attributes["data-test"]).toBe("dashboard-link");
       expect(navigation.verifiedItems[1].attributes["data-test"]).toBe("email-subscriptions-link");
@@ -156,8 +168,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
       expect(navigation.verifiedItems[1].href).toBe("/");
@@ -169,8 +181,8 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const renderCall = (mockResponse.render as any).mock.calls[0][1];
-      const navigation = renderCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
@@ -185,17 +197,14 @@ describe("account-home controller", () => {
       const { GET } = await import("./index.js");
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const enCall = (mockResponse.render as any).mock.calls[0][1];
-      const enNav = enCall.navigation;
+      // Check res.locals.navigation instead of render parameters
+      const enNav = (mockResponse as any).locals.navigation;
 
-      vi.clearAllMocks();
-
-      // Test Welsh
+      // Reset for Welsh test
       mockResponse.locals = { locale: "cy" };
       await GET(mockRequest as Request, mockResponse as Response);
 
-      const cyCall = (mockResponse.render as any).mock.calls[0][1];
-      const cyNav = cyCall.navigation;
+      const cyNav = (mockResponse as any).locals.navigation;
 
       // Structure should be the same, only text differs
       expect(enNav.verifiedItems[0].href).toBe(cyNav.verifiedItems[0].href);

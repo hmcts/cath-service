@@ -69,7 +69,7 @@ describe("addFromAzureVault", () => {
 
     expect(mockReadFileSync).toHaveBeenCalledWith("/path/to/chart.yaml", "utf8");
     expect(mockYamlLoad).toHaveBeenCalledWith("helm-chart-content");
-    expect(mockSecretClient).toHaveBeenCalledWith("https://test-vault-aat.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://test-vault.vault.azure.net/", expect.any(Object));
     expect(mockClient.getSecret).toHaveBeenCalledWith("secret1");
     expect(mockClient.getSecret).toHaveBeenCalledWith("secret2");
 
@@ -98,8 +98,8 @@ describe("addFromAzureVault", () => {
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
-    expect(mockSecretClient).toHaveBeenCalledWith("https://vault1-aat.vault.azure.net/", expect.any(Object));
-    expect(mockSecretClient).toHaveBeenCalledWith("https://vault2-aat.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://vault1.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://vault2.vault.azure.net/", expect.any(Object));
 
     expect(config).toEqual({
       existing: "value",
@@ -245,8 +245,8 @@ describe("addFromAzureVault", () => {
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
-    expect(mockSecretClient).toHaveBeenCalledWith("https://deep-vault-aat.vault.azure.net/", expect.any(Object));
-    expect(mockSecretClient).toHaveBeenCalledWith("https://other-vault-aat.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://deep-vault.vault.azure.net/", expect.any(Object));
+    expect(mockSecretClient).toHaveBeenCalledWith("https://other-vault.vault.azure.net/", expect.any(Object));
     expect(config).toEqual({
       existing: "value",
       deep_secret: "deep-value",
@@ -363,6 +363,54 @@ describe("addFromAzureVault", () => {
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Failed to retrieve secret secret1: test-vault: Already contains vault name"
+    );
+  });
+
+  it("should handle error without message property in addFromAzureVault", async () => {
+    mockReadFileSync.mockImplementation(() => {
+      throw "Plain string error without message property";
+    });
+
+    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
+      "Azure Key Vault: Plain string error without message property"
+    );
+  });
+
+  it("should handle SecretNotFound error code", async () => {
+    const helmChart = {
+      keyVaults: {
+        "test-vault": {
+          secrets: ["missing-secret"]
+        }
+      }
+    };
+
+    mockReadFileSync.mockReturnValue("helm-chart-content");
+    mockYamlLoad.mockReturnValue(helmChart);
+    const notFoundError: any = new Error("Secret was not found");
+    notFoundError.code = "SecretNotFound";
+    mockClient.getSecret.mockRejectedValue(notFoundError);
+
+    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
+      "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
+    );
+  });
+
+  it("should handle error message containing 'was not found'", async () => {
+    const helmChart = {
+      keyVaults: {
+        "test-vault": {
+          secrets: ["missing-secret"]
+        }
+      }
+    };
+
+    mockReadFileSync.mockReturnValue("helm-chart-content");
+    mockYamlLoad.mockReturnValue(helmChart);
+    mockClient.getSecret.mockRejectedValue(new Error("The secret was not found in the vault"));
+
+    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
+      "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
     );
   });
 });

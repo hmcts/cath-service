@@ -1,6 +1,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
+import { authNavigationMiddleware, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
+import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
@@ -42,7 +44,10 @@ export async function createApp(): Promise<Express> {
   app.use(configureHelmet());
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, publicPagesModuleRoot, systemAdminModuleRoot, verifiedPagesModuleRoot];
+  // Initialize Passport for Azure AD authentication
+  configurePassport(app);
+
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -63,9 +68,16 @@ export async function createApp(): Promise<Express> {
     }
   });
 
+  // Add authentication state to navigation (AFTER all other middleware is set up)
+  app.use(authNavigationMiddleware());
+
+  // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
+  app.get("/sso/return", ssoCallbackHandler);
+
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
-  app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
+  app.use(await createSimpleRouter(authRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
+  app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
   // Register admin pages with multer middleware for file upload

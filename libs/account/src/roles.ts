@@ -1,0 +1,7 @@
+export const USER_ROLES = {
+  SYSTEM_ADMIN: "SYSTEM_ADMIN",
+  INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
+  INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
+} as const;
+
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];

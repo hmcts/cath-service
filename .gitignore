@@ -12,8 +12,14 @@ database/build
 npm-debug.log*
 
 # Environment variables
+.env
 .env.*.local
 .env.local
+
+# SSL/TLS Certificates
+certs/
+*.pem
+*.key
 
 # TypeScript cache
 *.tsbuildinfo

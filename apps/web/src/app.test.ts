@@ -44,6 +44,12 @@ vi.mock("config", () => ({
   }
 }));
 
+vi.mock("@hmcts/auth", () => ({
+  configurePassport: vi.fn(),
+  authNavigationMiddleware: vi.fn(() => vi.fn()),
+  ssoCallbackHandler: vi.fn()
+}));
+
 describe("Web Application", () => {
   let app: Express;
 
@@ -126,16 +132,16 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 5 times: web pages, admin pages, public pages, system-admin pages, verified pages
-      expect(createSimpleRouter).toHaveBeenCalledTimes(5);
+      // Should be called 6 times: web pages, auth routes, system-admin pages, admin routes, public pages, verified pages
+      expect(createSimpleRouter).toHaveBeenCalledTimes(6);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (4th call)
-      expect(calls.length).toBeGreaterThanOrEqual(4);
+      // Verify system-admin routes were registered (should have 6 total calls)
+      expect(calls.length).toBeGreaterThanOrEqual(6);
     });
 
     it("should configure error handlers at the end", async () => {

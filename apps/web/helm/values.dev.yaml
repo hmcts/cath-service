@@ -1,0 +1,31 @@
+# Local Development Helm Values
+# This file is automatically used when running locally (not in Kubernetes/Azure)
+# It references the pip-ss-kv-stg Key Vault with -dev suffixed secrets
+# For pipeline deployments, see values.yaml
+
+nodejs:
+  applicationPort: 8080
+  aadIdentityName: cath
+  ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
+  environment:
+    REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
+    BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
+    SSO_ALLOW_HTTP_REDIRECT: 'false'
+  keyVaults:
+    # Local development uses pip-ss-kv-stg with -dev suffixed secrets
+    pip-ss-kv-stg:
+      secrets:
+        # SSO secrets for local development
+        - name: sso-client-id-dev
+          alias: SSO_CLIENT_ID
+        - name: sso-client-secret-dev
+          alias: SSO_CLIENT_SECRET
+        - name: sso-config-endpoint
+          alias: SSO_IDENTITY_METADATA
+        - name: sso-sg-system-admin
+          alias: SSO_SYSTEM_ADMIN_GROUP_ID
+        - name: sso-sg-admin-ctsc
+          alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
+        - name: sso-sg-admin-local
+          alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID

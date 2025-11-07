@@ -1,0 +1,40 @@
+{
+  "name": "@hmcts/auth",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "peerDependencies": {
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "passport": "^0.7.0"
+  },
+  "dependencies": {
+    "@hmcts/account": "*",
+    "@microsoft/microsoft-graph-client": "3.0.7",
+    "passport-azure-ad": "4.3.5"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.1",
+    "@types/express-session": "1.18.1",
+    "@types/passport": "1.0.16"
+  }
+}

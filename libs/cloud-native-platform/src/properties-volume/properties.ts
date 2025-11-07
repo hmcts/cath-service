@@ -23,9 +23,30 @@ export async function configurePropertiesVolume(config: Config, options: AddToOp
   const isProd = process.env.NODE_ENV === "production";
   const { mountPoint = DEFAULT_MOUNT_POINT, failOnError = isProd, chartPath } = options;
 
+  // Detect if running in Azure/Kubernetes environment
+  const isAzureEnvironment = existsSync(mountPoint) || !!process.env.KUBERNETES_SERVICE_HOST;
+
   try {
-    if (chartPath && !isProd && fs.existsSync(chartPath)) {
-      return await addFromAzureVault(config, { pathToHelmChart: chartPath });
+    // Determine which Helm chart to use
+    let helmChartPath = chartPath;
+
+    // When running locally (not in Azure), always use values.dev.yaml if it exists
+    if (chartPath && !isAzureEnvironment) {
+      const devChartPath = chartPath.replace(/values\.yaml$/, "values.dev.yaml");
+      if (fs.existsSync(devChartPath)) {
+        helmChartPath = devChartPath;
+        console.log(`Using local development values (${devChartPath.split("/").pop()})`);
+      }
+    }
+
+    // Load from Azure Key Vault when chartPath is provided (except in production)
+    if (helmChartPath && fs.existsSync(helmChartPath) && !isProd) {
+      if (isAzureEnvironment) {
+        console.log("Azure Vault: Running in Kubernetes/Azure environment - Loading secrets from Key Vault");
+      } else {
+        console.log("Azure Vault: Loading secrets from Key Vault (requires 'az login')");
+      }
+      return await addFromAzureVault(config, { pathToHelmChart: helmChartPath });
     }
 
     if (!existsSync(mountPoint)) {

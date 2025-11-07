@@ -17,11 +17,13 @@ export default defineConfig({
       ]
     : 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'https://localhost:8080',
     trace: 'on-first-retry',
     headless: true,
     screenshot: "only-on-failure",
     video: process.env.CI ? 'retain-on-failure' : 'off',
+    // Ignore HTTPS errors for self-signed certificates
+    ignoreHTTPSErrors: true,
   },
   projects: [
     {
@@ -30,12 +32,16 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'yarn dev:nowatch',
-    url: 'http://localhost:3000',
+    // ENABLE_SSO=true required to test SSO flows (SSO disabled by default in development)
+    command: 'NODE_ENV=development ENABLE_SSO=true yarn dev:nowatch',
+    // Check port instead of URL to avoid HTTPS certificate issues
+    port: 8080,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     cwd: '..',
     stdout: 'pipe',
     stderr: 'pipe',
   },
+  // Longer timeout for SSO tests (Azure AD redirects)
+  timeout: 60 * 1000,
 });

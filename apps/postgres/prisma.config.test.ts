@@ -1,7 +1,19 @@
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock fs to avoid actual file reads during config import
+vi.mock("node:fs", () => ({
+  default: {
+    existsSync: vi.fn().mockReturnValue(false),
+    readFileSync: vi.fn().mockReturnValue("")
+  }
+}));
 
 describe("Prisma Config", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should export a default config", async () => {
     const configModule = await import("./prisma.config.js");
     expect(configModule.default).toBeDefined();

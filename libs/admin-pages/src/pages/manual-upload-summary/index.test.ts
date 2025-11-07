@@ -1,8 +1,43 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
+// Helper to call handler arrays (middleware chain)
+async function callHandler(handlers: RequestHandler | RequestHandler[], req: Request, res: Response) {
+  if (Array.isArray(handlers)) {
+    // Call middleware chain
+    for (let i = 0; i < handlers.length; i++) {
+      await new Promise<void>((resolve, reject) => {
+        const handler = handlers[i];
+        const next = (err?: any) => {
+          if (err) reject(err);
+          else resolve();
+        };
+        const result = handler(req, res, next);
+        // If handler returns a promise, wait for it
+        if (result instanceof Promise) {
+          result.then(() => resolve()).catch(reject);
+        }
+      });
+    }
+  } else {
+    const result = handlers(req, res, () => {});
+    if (result instanceof Promise) {
+      await result;
+    }
+  }
+}
+
 // Mock the modules
+vi.mock("@hmcts/auth", () => ({
+  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  USER_ROLES: {
+    SYSTEM_ADMIN: "SYSTEM_ADMIN",
+    INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
+    INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
+  }
+}));
+
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn((id: number) => {
     if (id === 1) return { locationId: 1, name: "Test Crown Court", welshName: "Test Crown Court CY" };
@@ -17,7 +52,7 @@ vi.mock("@hmcts/web-core", async () => {
     ...actual,
     formatDate: vi.fn((date) => `${date.day} Month ${date.year}`),
     formatDateRange: vi.fn((from, to) => `${from.day} Month ${from.year} to ${to.day} Month ${to.year}`),
-    parseDate: vi.fn((date) => new Date(Number.parseInt(date.year), Number.parseInt(date.month) - 1, Number.parseInt(date.day)))
+    parseDate: vi.fn((date) => new Date(Number.parseInt(date.year, 10), Number.parseInt(date.month, 10) - 1, Number.parseInt(date.day, 10)))
   };
 });
 
@@ -70,7 +105,7 @@ describe("manual-upload-summary page", () => {
         send: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(getManualUpload).toHaveBeenCalledWith("test-upload-id");
       expect(res.render).toHaveBeenCalledWith(
@@ -108,7 +143,7 @@ describe("manual-upload-summary page", () => {
         locals: { locale: "en" }
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload-summary/index",
@@ -153,7 +188,7 @@ describe("manual-upload-summary page", () => {
         locals: { locale: "cy" }
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload-summary/index",
@@ -182,7 +217,7 @@ describe("manual-upload-summary page", () => {
         send: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.send).toHaveBeenCalledWith("Missing uploadId");
@@ -197,7 +232,7 @@ describe("manual-upload-summary page", () => {
         send: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.send).toHaveBeenCalledWith("Upload not found");
@@ -222,7 +257,7 @@ describe("manual-upload-summary page", () => {
       const req = { query: { uploadId: "test-id" } } as unknown as Request;
       const res = { render: vi.fn() } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -249,7 +284,7 @@ describe("manual-upload-summary page", () => {
       const req = { query: { uploadId: "test-id" } } as unknown as Request;
       const res = { render: vi.fn() } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -276,7 +311,7 @@ describe("manual-upload-summary page", () => {
       const req = { query: { uploadId: "test-id", lng: "cy" } } as unknown as Request;
       const res = { render: vi.fn() } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -303,7 +338,7 @@ describe("manual-upload-summary page", () => {
       const req = { query: { uploadId: "test-id" } } as unknown as Request;
       const res = { render: vi.fn() } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -334,7 +369,7 @@ describe("manual-upload-summary page", () => {
         const req = { query: { uploadId: "test-id" } } as unknown as Request;
         const res = { render: vi.fn() } as unknown as Response;
 
-        await GET(req, res);
+        await callHandler(GET, req, res);
 
         const renderCall = res.render.mock.calls[0];
         const renderData = renderCall[1];
@@ -366,7 +401,7 @@ describe("manual-upload-summary page", () => {
         const req = { query: { uploadId: "test-id" } } as unknown as Request;
         const res = { render: vi.fn() } as unknown as Response;
 
-        await GET(req, res);
+        await callHandler(GET, req, res);
 
         const renderCall = res.render.mock.calls[0];
         const renderData = renderCall[1];
@@ -411,7 +446,7 @@ describe("manual-upload-summary page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(getManualUpload).toHaveBeenCalledWith("test-upload-id");
       expect(saveUploadedFile).toHaveBeenCalledWith(expect.any(String), "test-hearing-list.pdf", mockUploadData.file);
@@ -435,7 +470,7 @@ describe("manual-upload-summary page", () => {
         send: vi.fn()
       } as unknown as Response;
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.send).toHaveBeenCalledWith("Missing uploadId");
@@ -454,7 +489,7 @@ describe("manual-upload-summary page", () => {
         send: vi.fn()
       } as unknown as Response;
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.send).toHaveBeenCalledWith("Upload not found");
@@ -480,7 +515,7 @@ describe("manual-upload-summary page", () => {
         redirect: vi.fn()
       } as unknown as Response;
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload-summary/index",
@@ -511,7 +546,7 @@ describe("manual-upload-summary page", () => {
         redirect: vi.fn()
       } as unknown as Response;
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload-summary/index",

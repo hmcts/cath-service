@@ -1,8 +1,43 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
+// Helper to call handler arrays (middleware chain)
+async function callHandler(handlers: RequestHandler | RequestHandler[], req: Request, res: Response) {
+  if (Array.isArray(handlers)) {
+    // Call middleware chain
+    for (let i = 0; i < handlers.length; i++) {
+      await new Promise<void>((resolve, reject) => {
+        const handler = handlers[i];
+        const next = (err?: any) => {
+          if (err) reject(err);
+          else resolve();
+        };
+        const result = handler(req, res, next);
+        // If handler returns a promise, wait for it
+        if (result instanceof Promise) {
+          result.then(() => resolve()).catch(reject);
+        }
+      });
+    }
+  } else {
+    const result = handlers(req, res, () => {});
+    if (result instanceof Promise) {
+      await result;
+    }
+  }
+}
+
 // Mock the modules
+vi.mock("@hmcts/auth", () => ({
+  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  USER_ROLES: {
+    SYSTEM_ADMIN: "SYSTEM_ADMIN",
+    INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
+    INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
+  }
+}));
+
 vi.mock("@hmcts/location", () => ({
   getAllLocations: vi.fn(() => [
     { locationId: 1, name: "Test Court", welshName: "Test Court CY" },
@@ -41,7 +76,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "manual-upload/index",
@@ -69,7 +104,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       expect(req.session.uploadConfirmed).toBeUndefined();
     });
@@ -83,7 +118,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -102,7 +137,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -120,7 +155,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -138,7 +173,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -156,7 +191,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -184,7 +219,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -214,7 +249,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -237,7 +272,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -260,7 +295,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -284,7 +319,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -301,7 +336,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -326,7 +361,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -344,7 +379,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -361,7 +396,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -384,7 +419,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -408,7 +443,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       // Form data should remain in session (submitted flag is set)
       expect(req.session.manualUploadForm).toBeDefined();
@@ -435,7 +470,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       // Form data should be cleared from session (no submitted flag)
       expect(req.session.manualUploadForm).toBeUndefined();
@@ -456,7 +491,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      await GET(req, res);
+      await callHandler(GET, req, res);
 
       const renderCall = res.render.mock.calls[0];
       const renderData = renderCall[1];
@@ -506,7 +541,7 @@ describe("manual-upload page", () => {
       vi.mocked(validateForm).mockReturnValue([]);
       vi.mocked(storeManualUpload).mockResolvedValue("test-upload-id-123");
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(validateForm).toHaveBeenCalled();
       expect(storeManualUpload).toHaveBeenCalledWith(
@@ -563,7 +598,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue([]);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(req.session).toHaveProperty("manualUploadForm");
       expect(req.session.manualUploadForm).toEqual(
@@ -614,7 +649,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue(mockErrors);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(validateForm).toHaveBeenCalled();
       expect(req.session.manualUploadErrors).toEqual(mockErrors);
@@ -655,7 +690,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue([{ text: "File is required", href: "#file" }]);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(req.session.manualUploadErrors).toEqual(
         expect.arrayContaining([
@@ -701,7 +736,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue(mockErrors);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(req.session.manualUploadForm).toBeDefined();
       expect(req.session.manualUploadForm?.locationId).toBe("1");
@@ -745,7 +780,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue(mockErrors);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(req.session.manualUploadForm?.locationName).toBe("Test Court");
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
@@ -785,7 +820,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue(mockErrors);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(req.session.manualUploadForm?.locationName).toBe("Invalid Court Name");
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
@@ -823,7 +858,7 @@ describe("manual-upload page", () => {
 
       vi.mocked(validateForm).mockReturnValue(mockErrors);
 
-      await POST(req, res);
+      await callHandler(POST, req, res);
 
       expect(req.session.manualUploadForm).toBeDefined();
       expect(req.session.manualUploadErrors).toEqual(mockErrors);

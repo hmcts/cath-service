@@ -8,7 +8,11 @@
 {% endif %}
 
 {% set navigationEndHtml %}
-{% if navigation and navigation.signIn %}<li class="govuk-service-navigation__item govuk-service-navigation__navigation-end "><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>{% endif %}{% if navigation and navigation.signOut %}<li class="govuk-service-navigation__item govuk-service-navigation__navigation-end"><a class="govuk-service-navigation__link" href="/">{{ navigation.signOut }}</a></li>{% endif %}
+  {% if isAuthenticated %}
+    <li class="govuk-service-navigation__item govuk-service-navigation__navigation-end"><a class="govuk-service-navigation__link" href="/logout">{{ navigation.signOut or authenticatedNavigation.signOut }}</a></li>
+  {% else %}
+    <li class="govuk-service-navigation__item govuk-service-navigation__navigation-end"><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>
+  {% endif %}
 {% endset %}
 
 {{ govukServiceNavigation({
