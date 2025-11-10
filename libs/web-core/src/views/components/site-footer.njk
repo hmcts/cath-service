@@ -35,15 +35,11 @@
       {
         href: "https://www.gov.uk/government/organisations/government-digital-service",
         text: footer.governmentDigitalService
-      },
-      {
-        href: "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
-        text: footer.openGovernmentLicence
       }
     ]
   },
   contentLicence: {
-    html: footer.contentLicence.text + ' <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">' + footer.contentLicence.linkText + '</a>' + footer.contentLicence.suffix
+    html: '<span style="display: inline;">' + footer.contentLicence.text + ' <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">' + footer.contentLicence.linkText + '</a>' + footer.contentLicence.suffix + '</span><br><br>' + footer.attribution.heading + '<br>' + footer.attribution.textPrefix + ' <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">' + footer.attribution.linkText + '</a><br><br>' + footer.attribution.disclaimerPrefix + ' <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">' + footer.attribution.linkText + '</a> ' + footer.attribution.disclaimerSuffix
   },
   copyright: {
     text: '© Crown copyright'
