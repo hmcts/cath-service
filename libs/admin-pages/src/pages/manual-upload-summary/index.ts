@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, mockListTypes } from "@hmcts/publication";
-import { cy as coreLocales, en as coreLocalesEn, formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
+import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import "../../manual-upload/model.js";
@@ -28,7 +28,6 @@ const getHandler = async (req: Request, res: Response) => {
   const locale = req.query.lng === "cy" ? "cy" : "en";
   const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
-  const coreLocalesData = locale === "cy" ? coreLocales : coreLocalesEn;
 
   // Find list type by ID
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
@@ -56,10 +55,6 @@ const getHandler = async (req: Request, res: Response) => {
       sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
       language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
       displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
-    },
-    navigation: {
-      signIn: coreLocalesData.navigation.signIn,
-      signOut: coreLocalesData.authenticatedNavigation.signOut
     },
     hideLanguageToggle: true
   });

@@ -71,10 +71,6 @@ describe("manual-upload-success page", () => {
           uploadAnotherLink: "Upload another file",
           removeFileLink: "Remove file",
           homeLink: "Home",
-          navigation: {
-            signIn: "Sign in",
-            signOut: "Sign out"
-          },
           hideLanguageToggle: true
         })
       );
@@ -108,10 +104,6 @@ describe("manual-upload-success page", () => {
           uploadAnotherLink: "uwchlwytho ffeil arall",
           removeFileLink: "Dileu ffeil",
           homeLink: "Tudalen hafan",
-          navigation: {
-            signIn: "Mewngofnodi",
-            signOut: "Allgofnodi"
-          },
           hideLanguageToggle: true
         })
       );

@@ -1,5 +1,4 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { cy as coreLocales, en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -9,7 +8,6 @@ const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 const getHandler = async (req: Request, res: Response) => {
   const locale = (req.query.lng === "cy" ? "cy" : "en") as "en" | "cy";
   const t = getTranslations(locale);
-  const coreLocalesData = locale === "cy" ? coreLocales : coreLocalesEn;
 
   // Validation: require upload confirmation in session
   if (!req.session?.uploadConfirmed) {
@@ -33,10 +31,6 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("manual-upload-success/index", {
     ...t,
-    navigation: {
-      signIn: coreLocalesData.navigation.signIn,
-      signOut: coreLocalesData.authenticatedNavigation.signOut
-    },
     hideLanguageToggle: true
   });
 };

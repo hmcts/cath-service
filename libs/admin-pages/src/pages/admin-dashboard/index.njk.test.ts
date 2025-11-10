@@ -21,8 +21,8 @@ describe("admin-dashboard template", () => {
       expect(en.pageTitle).toBe("Admin Dashboard");
     });
 
-    it("should have three tiles", () => {
-      expect(en.tiles).toHaveLength(3);
+    it("should have four tiles", () => {
+      expect(en.tiles).toHaveLength(4);
     });
 
     it("should have Upload tile", () => {
@@ -39,6 +39,11 @@ describe("admin-dashboard template", () => {
       expect(en.tiles[2].heading).toBe("Remove");
       expect(en.tiles[2].description).toBe("Search by court or tribunal and remove a publication from the external facing service on GOV.UK");
     });
+
+    it("should have Manage Media Account Requests tile", () => {
+      expect(en.tiles[3].heading).toBe("Manage Media Account Requests");
+      expect(en.tiles[3].description).toBe("CTSC assess new media account applications");
+    });
   });
 
   describe("Welsh locale", () => {
@@ -47,8 +52,8 @@ describe("admin-dashboard template", () => {
       expect(cy.pageTitle.length).toBeGreaterThan(0);
     });
 
-    it("should have three tiles", () => {
-      expect(cy.tiles).toHaveLength(3);
+    it("should have four tiles", () => {
+      expect(cy.tiles).toHaveLength(4);
     });
 
     it("should have all tiles with heading and description", () => {

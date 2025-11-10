@@ -12,6 +12,10 @@ export default {
     {
       heading: "Remove",
       description: "Search by court or tribunal and remove a publication from the external facing service on GOV.UK"
+    },
+    {
+      heading: "Manage Media Account Requests",
+      description: "CTSC assess new media account applications"
     }
   ]
 };

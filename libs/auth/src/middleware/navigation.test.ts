@@ -100,10 +100,10 @@ describe("authNavigationMiddleware", () => {
     expect(res.locals.navigation).toBeDefined();
     expect(res.locals.navigation.verifiedItems).toHaveLength(1);
     expect(res.locals.navigation.verifiedItems[0]).toEqual({
-      text: "Admin Dashboard",
+      text: "Dashboard",
       href: "/admin-dashboard",
       current: true,
-      attributes: { "data-test": "admin-dashboard-link" }
+      attributes: { "data-test": "dashboard-link" }
     });
   });
 
@@ -127,10 +127,10 @@ describe("authNavigationMiddleware", () => {
     expect(res.locals.navigation).toBeDefined();
     expect(res.locals.navigation.verifiedItems).toHaveLength(1);
     expect(res.locals.navigation.verifiedItems[0]).toEqual({
-      text: "Admin Dashboard",
+      text: "Dashboard",
       href: "/admin-dashboard",
       current: true,
-      attributes: { "data-test": "admin-dashboard-link" }
+      attributes: { "data-test": "dashboard-link" }
     });
   });
 
