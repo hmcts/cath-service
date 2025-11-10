@@ -10,7 +10,7 @@ interface NavigationItem {
 /**
  * Builds navigation items based on user role
  * - SYSTEM_ADMIN: sees Dashboard and Admin Dashboard
- * - INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL: sees only Admin Dashboard
+ * - INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL: sees only Dashboard
  *
  * @param userRole - The user's role from req.user.role
  * @param currentPath - The current page path to mark as active
@@ -43,14 +43,14 @@ export function buildNavigationItems(userRole: string | undefined, currentPath: 
     });
   }
 
-  // CTSC and Local admins see only Admin Dashboard
+  // CTSC and Local admins see only Dashboard
   if (userRole === USER_ROLES.INTERNAL_ADMIN_CTSC || userRole === USER_ROLES.INTERNAL_ADMIN_LOCAL) {
     items.push({
-      text: "Admin Dashboard",
+      text: "Dashboard",
       href: "/admin-dashboard",
       current: currentPath === "/admin-dashboard",
       attributes: {
-        "data-test": "admin-dashboard-link"
+        "data-test": "dashboard-link"
       }
     });
   }

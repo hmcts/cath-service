@@ -12,6 +12,10 @@ export default {
     {
       heading: "Remove",
       description: "Search by court or tribunal and remove a publication from the external facing service on GOV.UK"
+    },
+    {
+      heading: "Rheoli Ceisiadau am Gyfrif y Cyfryngau",
+      description: "CTSC yn asesu ceisiadau newydd am gyfrif y cyfryngau"
     }
   ]
 };

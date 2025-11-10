@@ -1,7 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
-import { en as coreLocalesEn } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
@@ -60,7 +59,6 @@ function selectOption(options: any[], selectedValue: string | undefined) {
 const getHandler = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
-  const coreAuthNavigation = coreLocalesEn.authenticatedNavigation;
 
   // Clear upload confirmation flags when starting a new upload
   delete req.session.uploadConfirmed;
@@ -96,7 +94,6 @@ const getHandler = async (req: Request, res: Response) => {
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
     locale,
-    navigation: { signOut: coreAuthNavigation.signOut },
     hideLanguageToggle: true
   });
 };

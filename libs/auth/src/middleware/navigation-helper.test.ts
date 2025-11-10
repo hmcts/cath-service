@@ -36,21 +36,21 @@ describe("buildNavigationItems", () => {
   });
 
   describe("INTERNAL_ADMIN_CTSC role", () => {
-    it("should return only Admin Dashboard link", () => {
+    it("should return only Dashboard link", () => {
       const items = buildNavigationItems(USER_ROLES.INTERNAL_ADMIN_CTSC, "/admin-dashboard");
 
       expect(items).toHaveLength(1);
       expect(items[0]).toEqual({
-        text: "Admin Dashboard",
+        text: "Dashboard",
         href: "/admin-dashboard",
         current: true,
         attributes: {
-          "data-test": "admin-dashboard-link"
+          "data-test": "dashboard-link"
         }
       });
     });
 
-    it("should mark Admin Dashboard as not current when on different page", () => {
+    it("should mark Dashboard as not current when on different page", () => {
       const items = buildNavigationItems(USER_ROLES.INTERNAL_ADMIN_CTSC, "/some-other-page");
 
       expect(items).toHaveLength(1);
@@ -59,16 +59,16 @@ describe("buildNavigationItems", () => {
   });
 
   describe("INTERNAL_ADMIN_LOCAL role", () => {
-    it("should return only Admin Dashboard link", () => {
+    it("should return only Dashboard link", () => {
       const items = buildNavigationItems(USER_ROLES.INTERNAL_ADMIN_LOCAL, "/admin-dashboard");
 
       expect(items).toHaveLength(1);
       expect(items[0]).toEqual({
-        text: "Admin Dashboard",
+        text: "Dashboard",
         href: "/admin-dashboard",
         current: true,
         attributes: {
-          "data-test": "admin-dashboard-link"
+          "data-test": "dashboard-link"
         }
       });
     });

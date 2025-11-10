@@ -114,7 +114,7 @@ describe("admin dashboard page", () => {
       );
     });
 
-    it("should include three tiles", async () => {
+    it("should include three tiles for SYSTEM_ADMIN", async () => {
       const req = {
         query: {},
         user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" }
@@ -137,6 +137,60 @@ describe("admin dashboard page", () => {
       const renderData = renderCall[1];
 
       expect(renderData.tiles).toHaveLength(3);
+    });
+
+    it("should include three tiles for INTERNAL_ADMIN_LOCAL", async () => {
+      const req = {
+        query: {},
+        user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "INTERNAL_ADMIN_LOCAL" }
+      } as unknown as Request;
+
+      const res = {
+        render: vi.fn(),
+        locals: {
+          navigation: {
+            verifiedItems: []
+          }
+        }
+      } as unknown as Response;
+
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.tiles).toHaveLength(3);
+    });
+
+    it("should include four tiles for INTERNAL_ADMIN_CTSC", async () => {
+      const req = {
+        query: {},
+        user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "INTERNAL_ADMIN_CTSC" }
+      } as unknown as Request;
+
+      const res = {
+        render: vi.fn(),
+        locals: {
+          navigation: {
+            verifiedItems: []
+          }
+        }
+      } as unknown as Response;
+
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(req, res);
+
+      const renderCall = res.render.mock.calls[0];
+      const renderData = renderCall[1];
+
+      expect(renderData.tiles).toHaveLength(4);
+      expect(renderData.tiles[3]).toEqual({
+        heading: "Manage Media Account Requests",
+        description: "CTSC assess new media account applications"
+      });
     });
 
     it("should set navigation.signOut with language-specific text", async () => {

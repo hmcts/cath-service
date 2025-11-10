@@ -228,11 +228,46 @@ test.describe("Admin Dashboard", () => {
 
       const heading = page.locator("h1");
       await expect(heading).toHaveText("Admin Dashboard");
+
+      // Verify CTSC Admin sees "Dashboard" in navigation, not "Admin Dashboard"
+      const dashboardLink = page.locator('a[data-test="dashboard-link"]');
+      await expect(dashboardLink).toBeVisible();
+      await expect(dashboardLink).toHaveText("Dashboard");
+
+      // Verify they don't see the system admin dashboard link
+      const systemAdminLink = page.locator('a[data-test="system-admin-dashboard-link"]');
+      await expect(systemAdminLink).not.toBeVisible();
+
+      // Verify CTSC Admin sees 4 tiles
+      const tiles = page.locator(".admin-tile");
+      await expect(tiles).toHaveCount(4);
+
+      // Verify the fourth tile is present
+      const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
+      await expect(mediaApplicationsTile).toBeVisible();
+      await expect(mediaApplicationsTile).toContainText("Manage Media Account Requests");
     });
 
     test("Local Admin can access admin dashboard", async ({ page }) => {
       const heading = page.locator("h1");
       await expect(heading).toHaveText("Admin Dashboard");
+
+      // Verify Local Admin sees "Dashboard" in navigation, not "Admin Dashboard"
+      const dashboardLink = page.locator('a[data-test="dashboard-link"]');
+      await expect(dashboardLink).toBeVisible();
+      await expect(dashboardLink).toHaveText("Dashboard");
+
+      // Verify they don't see the system admin dashboard link
+      const systemAdminLink = page.locator('a[data-test="system-admin-dashboard-link"]');
+      await expect(systemAdminLink).not.toBeVisible();
+
+      // Verify Local Admin sees only 3 tiles (not the fourth tile)
+      const tiles = page.locator(".admin-tile");
+      await expect(tiles).toHaveCount(3);
+
+      // Verify the fourth tile is NOT present
+      const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
+      await expect(mediaApplicationsTile).not.toBeVisible();
     });
   });
 });
