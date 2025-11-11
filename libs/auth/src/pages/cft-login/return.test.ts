@@ -25,7 +25,7 @@ describe("CFT Login Return Handler", () => {
     mockReq = {
       query: { code: "test-code" },
       session: mockSession,
-      login: vi.fn((user, callback) => callback(null))
+      login: vi.fn((_user, callback) => callback(null))
     };
 
     mockRes = {
@@ -158,7 +158,7 @@ describe("CFT Login Return Handler", () => {
 
     vi.mocked(roleValidator.isRejectedRole).mockReturnValue(false);
 
-    mockReq.login = vi.fn((user, callback: any) => callback(new Error("Login failed")));
+    mockReq.login = vi.fn((_user, callback: any) => callback(new Error("Login failed")));
 
     await GET(mockReq as Request, mockRes as Response);
 

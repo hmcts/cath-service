@@ -1,10 +1,11 @@
 // Load environment variables from .env file
-import dotenv from "dotenv";
+
 import fs from "node:fs";
 import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
