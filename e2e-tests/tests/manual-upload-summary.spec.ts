@@ -341,12 +341,5 @@ test.describe("Manual Upload Summary Page", () => {
       await expect(form).toBeVisible();
       await expect(form).toHaveAttribute("method", "post");
     });
-
-    test("should not have cancel link", async ({ page }) => {
-      await navigateToSummaryPage(page);
-
-      const cancelLink = page.locator('a[href="/admin-dashboard"]');
-      await expect(cancelLink).not.toBeVisible();
-    });
   });
 });

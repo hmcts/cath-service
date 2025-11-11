@@ -26,5 +26,13 @@
       <p class="admin-tile__description">{{ tiles[2].description }}</p>
     </a>
   </div>
+  {% if tiles[3] %}
+  <div class="govuk-grid-column-one-half">
+    <a href="/media-applications" class="admin-tile">
+      <h2 class="admin-tile__heading">{{ tiles[3].heading }}</h2>
+      <p class="admin-tile__description">{{ tiles[3].description }}</p>
+    </a>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
