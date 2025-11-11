@@ -2,12 +2,12 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as tokenClient from "../../cft-idam/token-client.js";
 import * as cftIdamConfig from "../../config/cft-idam-config.js";
-import * as roleValidator from "../../role-service/cft-idam-role-validator.js";
+import * as roleService from "../../role-service/index.js";
 import { GET } from "./return.js";
 
 vi.mock("../../cft-idam/token-client.js");
 vi.mock("../../config/cft-idam-config.js");
-vi.mock("../../role-service/cft-idam-role-validator.js");
+vi.mock("../../role-service/index.js");
 
 describe("CFT Login Return Handler", () => {
   let mockReq: Partial<Request>;
@@ -57,7 +57,7 @@ describe("CFT Login Return Handler", () => {
       roles: ["caseworker"]
     });
 
-    vi.mocked(roleValidator.isRejectedRole).mockReturnValue(false);
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(false);
 
     await GET(mockReq as Request, mockRes as Response);
 
@@ -92,7 +92,7 @@ describe("CFT Login Return Handler", () => {
       roles: ["citizen"]
     });
 
-    vi.mocked(roleValidator.isRejectedRole).mockReturnValue(true);
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(true);
 
     await GET(mockReq as Request, mockRes as Response);
 
@@ -132,7 +132,7 @@ describe("CFT Login Return Handler", () => {
       roles: ["caseworker"]
     });
 
-    vi.mocked(roleValidator.isRejectedRole).mockReturnValue(false);
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(false);
 
     mockSession.regenerate = vi.fn((callback) => callback(new Error("Regeneration failed")));
 
@@ -156,7 +156,7 @@ describe("CFT Login Return Handler", () => {
       roles: ["caseworker"]
     });
 
-    vi.mocked(roleValidator.isRejectedRole).mockReturnValue(false);
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(false);
 
     mockReq.login = vi.fn((_user, callback: any) => callback(new Error("Login failed")));
 
@@ -180,7 +180,7 @@ describe("CFT Login Return Handler", () => {
       roles: ["caseworker"]
     });
 
-    vi.mocked(roleValidator.isRejectedRole).mockReturnValue(false);
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(false);
 
     mockSession.save = vi.fn((callback) => callback(new Error("Save failed")));
 

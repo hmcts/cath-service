@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { exchangeCodeForToken, extractUserInfoFromToken } from "../../cft-idam/token-client.js";
 import { getCftIdamConfig } from "../../config/cft-idam-config.js";
-import { isRejectedRole } from "../../role-service/cft-idam-role-validator.js";
+import { isRejectedCFTRole } from "../../role-service/index.js";
 import type { UserProfile } from "../../user-profile.js";
 
 export const GET = async (req: Request, res: Response) => {
@@ -18,7 +18,7 @@ export const GET = async (req: Request, res: Response) => {
     const tokenResponse = await exchangeCodeForToken(code, config);
     const userInfo = extractUserInfoFromToken(tokenResponse);
 
-    if (isRejectedRole(userInfo.roles)) {
+    if (isRejectedCFTRole(userInfo.roles)) {
       console.log(`CFT IDAM user ${userInfo.id} rejected due to role: ${userInfo.roles.join(", ")}`);
       return res.redirect("/cft-rejected");
     }

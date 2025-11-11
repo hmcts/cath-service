@@ -7,5 +7,5 @@ export { requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";
 export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
 export { GET as ssoCallbackHandler } from "./pages/callback/sso.js";
-export { isRejectedRole } from "./role-service/cft-idam-role-validator.js";
+export { isRejectedCFTRole } from "./role-service/index.js";
 export type { UserProfile } from "./user-profile.js";
