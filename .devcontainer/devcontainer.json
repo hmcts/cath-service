@@ -3,6 +3,16 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "runArgs": ["--privileged"],
   "remoteUser": "vscode",
+
+  "initializeCommand": "touch ~/.bash_history ~/.zsh_history && mkdir -p ~/.claude ~/.azure ~/.kube",
+  "mounts": [
+    "source=${localEnv:HOME}/.bash_history,target=/home/vscode/.bash_history,type=bind",
+    "source=${localEnv:HOME}/.zsh_history,target=/home/vscode/.zsh_history,type=bind",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
+    "source=${localEnv:HOME}/.azure,target=/home/vscode/.azure,type=bind",
+    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind"
+  ],
+
   "features": {
     // Core isolation
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
@@ -19,7 +29,6 @@
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
-      "installNpmPackages": "yarn",
       "nvmInstallPath": "/usr/local/share/nvm"
     }
   },
@@ -28,13 +37,13 @@
 
   "customizations": {
     "vscode": {
+      "settings": {
+        "files.autoSave": "onFocusChange"
+      },
       "extensions": [
         "ms-azuretools.vscode-docker",
         "ms-playwright.playwright"
-      ],
-      "settings": {
-        "files.autoSave": "onWindowChange"
-      }
+      ]
     }
   }
 }
