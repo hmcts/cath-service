@@ -32,7 +32,7 @@ test.describe('CFT IDAM Login Flow', () => {
     );
 
     // Should be redirected to account-home
-    await expect(page).toHaveURL('/account-home');
+    await expect(page).toHaveURL(/\/account-home/);
     await assertAuthenticated(page);
   });
 
@@ -54,7 +54,7 @@ test.describe('CFT IDAM Login Flow', () => {
       process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
     );
 
-    await expect(page).toHaveURL('/account-home');
+    await expect(page).toHaveURL(/\/account-home/);
 
     // Navigate to another page - session should persist
     await page.goto('/');
@@ -62,7 +62,7 @@ test.describe('CFT IDAM Login Flow', () => {
 
     // Navigate to account-home again - should not require re-authentication
     await page.goto('/account-home');
-    await expect(page).toHaveURL('/account-home');
+    await expect(page).toHaveURL(/\/account-home/);
   });
 
   test('User with rejected role (citizen) is redirected to cft-rejected page', async ({ page }) => {
@@ -86,7 +86,7 @@ test.describe('CFT IDAM Login Flow', () => {
     );
 
     // User should be redirected to cft-rejected page
-    await expect(page).toHaveURL('/cft-rejected');
+    await expect(page).toHaveURL(/\/cft-rejected/);
 
     // Verify the rejection message is displayed
     const heading = page.getByRole('heading', { name: /you cannot access this service/i });
@@ -164,7 +164,7 @@ test.describe('CFT IDAM Login Flow', () => {
       process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
     );
 
-    await expect(page).toHaveURL('/account-home');
+    await expect(page).toHaveURL(/\/account-home/);
 
     // Logout
     await logout(page);

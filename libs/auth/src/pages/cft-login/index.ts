@@ -10,6 +10,9 @@ export const GET = (req: Request, res: Response) => {
   const config = getCftIdamConfig();
   const locale = (req.query.lng as string) || res.locals.locale || "en";
 
+  // Store language preference in session to preserve it after CFT IDAM redirect
+  req.session.lng = locale;
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     response_type: "code",

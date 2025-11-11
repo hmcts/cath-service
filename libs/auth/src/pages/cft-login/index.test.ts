@@ -16,7 +16,8 @@ describe("CFT Login Handler", () => {
     vi.resetAllMocks();
 
     mockReq = {
-      query: {}
+      query: {},
+      session: {} as any
     };
 
     mockRes = {
@@ -107,5 +108,39 @@ describe("CFT Login Handler", () => {
     expect(mockRes.status).toHaveBeenCalledWith(503);
     expect(mockRes.send).toHaveBeenCalledWith("CFT IDAM authentication is not available. Please check configuration.");
     expect(mockRes.redirect).not.toHaveBeenCalled();
+  });
+
+  it("should store language in session before redirecting to CFT IDAM", () => {
+    vi.mocked(cftIdamConfig.isCftIdamConfigured).mockReturnValue(true);
+    vi.mocked(cftIdamConfig.getCftIdamConfig).mockReturnValue({
+      cftIdamUrl: "https://idam.example.com",
+      clientId: "app-pip-frontend",
+      clientSecret: "secret",
+      redirectUri: "https://localhost:8080/cft-login/return",
+      authorizationEndpoint: "https://idam.example.com",
+      tokenEndpoint: "https://idam.example.com/o/token"
+    });
+
+    mockReq.query = { lng: "cy" };
+
+    GET(mockReq as Request, mockRes as Response);
+
+    expect(mockReq.session.lng).toBe("cy");
+  });
+
+  it("should store default language (en) in session when no lng parameter", () => {
+    vi.mocked(cftIdamConfig.isCftIdamConfigured).mockReturnValue(true);
+    vi.mocked(cftIdamConfig.getCftIdamConfig).mockReturnValue({
+      cftIdamUrl: "https://idam.example.com",
+      clientId: "app-pip-frontend",
+      clientSecret: "secret",
+      redirectUri: "https://localhost:8080/cft-login/return",
+      authorizationEndpoint: "https://idam.example.com",
+      tokenEndpoint: "https://idam.example.com/o/token"
+    });
+
+    GET(mockReq as Request, mockRes as Response);
+
+    expect(mockReq.session.lng).toBe("en");
   });
 });

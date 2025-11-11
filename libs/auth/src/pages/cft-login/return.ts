@@ -6,10 +6,11 @@ import type { UserProfile } from "../../user-profile.js";
 
 export const GET = async (req: Request, res: Response) => {
   const code = req.query.code as string;
+  const lng = req.session.lng || "en";
 
   if (!code) {
     console.error("CFT IDAM callback: No authorization code received");
-    return res.redirect("/sign-in?error=no_code");
+    return res.redirect(`/sign-in?error=no_code&lng=${lng}`);
   }
 
   try {
@@ -20,7 +21,7 @@ export const GET = async (req: Request, res: Response) => {
 
     if (isRejectedCFTRole(userInfo.roles)) {
       console.log(`CFT IDAM user ${userInfo.id} rejected due to role: ${userInfo.roles.join(", ")}`);
-      return res.redirect("/cft-rejected");
+      return res.redirect(`/cft-rejected?lng=${lng}`);
     }
 
     const user: UserProfile = {
@@ -42,19 +43,19 @@ export const GET = async (req: Request, res: Response) => {
     req.session.regenerate((err: Error | null) => {
       if (err) {
         console.error("CFT IDAM callback: Session regeneration failed", err);
-        return res.redirect("/sign-in?error=session_failed");
+        return res.redirect(`/sign-in?error=session_failed&lng=${lng}`);
       }
 
       req.login(user, (loginErr: Error | null) => {
         if (loginErr) {
           console.error("CFT IDAM callback: Login failed", loginErr);
-          return res.redirect("/sign-in?error=login_failed");
+          return res.redirect(`/sign-in?error=login_failed&lng=${lng}`);
         }
 
         req.session.save((saveErr: Error | null) => {
           if (saveErr) {
             console.error("CFT IDAM callback: Session save failed", saveErr);
-            return res.redirect("/sign-in?error=session_save_failed");
+            return res.redirect(`/sign-in?error=session_save_failed&lng=${lng}`);
           }
 
           console.log("CFT IDAM: Session saved successfully");
@@ -65,12 +66,15 @@ export const GET = async (req: Request, res: Response) => {
             passport: req.session.passport
           });
 
-          res.redirect("/account-home");
+          // Clean up language from session and redirect with language parameter
+          delete req.session.lng;
+          res.redirect(`/account-home?lng=${lng}`);
         });
       });
     });
   } catch (error) {
     console.error("CFT IDAM callback error:", error);
-    return res.redirect("/sign-in?error=auth_failed");
+    const lng = req.session.lng || "en";
+    return res.redirect(`/sign-in?error=auth_failed&lng=${lng}`);
   }
 };

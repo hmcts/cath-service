@@ -74,7 +74,7 @@ describe("CFT Login Return Handler", () => {
       expect.any(Function)
     );
     expect(mockSession.save).toHaveBeenCalled();
-    expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?lng=en");
   });
 
   it("should redirect to cft-rejected when user has rejected role", async () => {
@@ -96,7 +96,7 @@ describe("CFT Login Return Handler", () => {
 
     await GET(mockReq as Request, mockRes as Response);
 
-    expect(mockRes.redirect).toHaveBeenCalledWith("/cft-rejected");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/cft-rejected?lng=en");
     expect(mockReq.login).not.toHaveBeenCalled();
   });
 
@@ -105,7 +105,7 @@ describe("CFT Login Return Handler", () => {
 
     await GET(mockReq as Request, mockRes as Response);
 
-    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=no_code");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=no_code&lng=en");
     expect(tokenClient.exchangeCodeForToken).not.toHaveBeenCalled();
   });
 
@@ -114,7 +114,7 @@ describe("CFT Login Return Handler", () => {
 
     await GET(mockReq as Request, mockRes as Response);
 
-    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=auth_failed");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=auth_failed&lng=en");
   });
 
   it("should redirect to sign-in when session regeneration fails", async () => {
@@ -138,7 +138,7 @@ describe("CFT Login Return Handler", () => {
 
     await GET(mockReq as Request, mockRes as Response);
 
-    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=session_failed");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=session_failed&lng=en");
   });
 
   it("should redirect to sign-in when login fails", async () => {
@@ -162,7 +162,7 @@ describe("CFT Login Return Handler", () => {
 
     await GET(mockReq as Request, mockRes as Response);
 
-    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=login_failed");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=login_failed&lng=en");
   });
 
   it("should redirect to sign-in when session save fails", async () => {
@@ -186,6 +186,64 @@ describe("CFT Login Return Handler", () => {
 
     await GET(mockReq as Request, mockRes as Response);
 
-    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=session_save_failed");
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=session_save_failed&lng=en");
+  });
+
+  it("should preserve Welsh language selection through authentication flow", async () => {
+    mockSession.lng = "cy";
+
+    vi.mocked(tokenClient.exchangeCodeForToken).mockResolvedValue({
+      access_token: "token",
+      id_token: "id_token",
+      token_type: "Bearer",
+      expires_in: 3600
+    });
+
+    vi.mocked(tokenClient.extractUserInfoFromToken).mockReturnValue({
+      id: "user-123",
+      email: "test@example.com",
+      displayName: "Test User",
+      roles: ["caseworker"]
+    });
+
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(false);
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?lng=cy");
+    expect(mockSession.lng).toBeUndefined(); // Should be cleaned up
+  });
+
+  it("should preserve Welsh language in error redirects", async () => {
+    mockSession.lng = "cy";
+    mockReq.query = {};
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=no_code&lng=cy");
+  });
+
+  it("should preserve Welsh language when user has rejected role", async () => {
+    mockSession.lng = "cy";
+
+    vi.mocked(tokenClient.exchangeCodeForToken).mockResolvedValue({
+      access_token: "token",
+      id_token: "id_token",
+      token_type: "Bearer",
+      expires_in: 3600
+    });
+
+    vi.mocked(tokenClient.extractUserInfoFromToken).mockReturnValue({
+      id: "user-456",
+      email: "citizen@example.com",
+      displayName: "Citizen User",
+      roles: ["citizen"]
+    });
+
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(true);
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(mockRes.redirect).toHaveBeenCalledWith("/cft-rejected?lng=cy");
   });
 });
