@@ -47,6 +47,17 @@ jobs:
       SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
       SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
 
+      # CFT IDAM Configuration
+      ENABLE_CFT_IDAM: true
+      CFT_IDAM_URL: https://idam-web-public.aat.platform.hmcts.net
+      CFT_IDAM_CLIENT_SECRET: ${{ secrets.CFT_IDAM_CLIENT_SECRET }}
+
+      # CFT IDAM Test Credentials
+      CFT_VALID_TEST_ACCOUNT: ${{ secrets.CFT_VALID_TEST_ACCOUNT }}
+      CFT_VALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_VALID_TEST_ACCOUNT_PASSWORD }}
+      CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
+      CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
