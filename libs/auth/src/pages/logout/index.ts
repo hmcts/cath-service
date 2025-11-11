@@ -11,15 +11,24 @@ function extractTenantId(identityMetadata: string): string | null {
 
 /**
  * Handles user logout
- * Destroys session and redirects to Azure AD logout endpoint
+ * Destroys session and redirects based on authentication provider
+ * - CFT IDAM users: Redirects to session-logged-out page
+ * - SSO users: Redirects to Azure AD logout endpoint
  */
 export const GET = async (req: Request, res: Response) => {
+  const userProvenance = req.user?.provenance;
+
   req.logout(() => {
     req.session.destroy(() => {
       // Clear session cookie
       res.clearCookie("connect.sid");
 
-      // Construct Azure AD logout URL
+      // Check if user logged in via CFT IDAM
+      if (userProvenance === "CFT") {
+        return res.redirect("/session-logged-out");
+      }
+
+      // SSO logout flow: Construct Azure AD logout URL
       const ssoConfig = getSsoConfig();
       const tenantId = extractTenantId(ssoConfig.identityMetadata);
 

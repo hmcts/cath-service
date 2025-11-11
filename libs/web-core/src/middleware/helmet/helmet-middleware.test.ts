@@ -255,6 +255,57 @@ describe("helmet-middleware", () => {
       });
     });
 
+    describe("CFT IDAM URL configuration", () => {
+      it("should include CFT IDAM URL in formAction when provided", () => {
+        configureHelmet({ cftIdamUrl: "https://idam.example.com" });
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).toContain("https://idam.example.com");
+      });
+
+      it("should not include CFT IDAM URL in formAction when not provided", () => {
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).not.toContain("https://idam.example.com");
+      });
+
+      it("should include self in formAction by default", () => {
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).toContain("'self'");
+      });
+
+      it("should include localhost URLs in development mode", () => {
+        process.env.NODE_ENV = "development";
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).toContain("http://localhost:8080");
+        expect(directives?.formAction).toContain("https://localhost:8080");
+      });
+
+      it("should not include localhost URLs in production mode", () => {
+        process.env.NODE_ENV = "production";
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).not.toContain("http://localhost:8080");
+        expect(directives?.formAction).not.toContain("https://localhost:8080");
+      });
+    });
+
     describe("return value", () => {
       it("should return the helmet middleware", () => {
         const mockMiddleware = vi.fn();

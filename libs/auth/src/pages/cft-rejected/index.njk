@@ -1,0 +1,21 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <p class="govuk-body">{{ message }}</p>
+
+    <h2 class="govuk-heading-m">{{ whatYouCanDo }}</h2>
+
+    <p class="govuk-body">{{ contactSupport }}</p>
+
+    <p class="govuk-body">
+      <a href="{{ signInUrl }}" class="govuk-link">{{ returnToSignIn }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

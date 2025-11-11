@@ -79,12 +79,22 @@ describe("select-account page", () => {
 
   describe("POST", () => {
     describe("valid selections", () => {
-      it("should redirect to / for hmcts account", async () => {
+      it("should redirect to CFT login for hmcts account", async () => {
         req.body = { accountType: "hmcts" };
 
         await POST(req as Request, res as Response);
 
-        expect(res.redirect).toHaveBeenCalledWith("/");
+        expect(res.redirect).toHaveBeenCalledWith("/cft-login?lng=en");
+        expect(res.redirect).toHaveBeenCalledTimes(1);
+      });
+
+      it("should redirect to CFT login with Welsh locale", async () => {
+        req.body = { accountType: "hmcts" };
+        res.locals = { locale: "cy" };
+
+        await POST(req as Request, res as Response);
+
+        expect(res.redirect).toHaveBeenCalledWith("/cft-login?lng=cy");
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 

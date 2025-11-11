@@ -41,7 +41,11 @@ export async function createApp(): Promise<Express> {
   app.use(healthcheck());
   app.use(monitoringMiddleware(config.get("applicationInsights")));
   app.use(configureNonce());
-  app.use(configureHelmet());
+  app.use(
+    configureHelmet({
+      cftIdamUrl: process.env.CFT_IDAM_URL
+    })
+  );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
   // Initialize Passport for Azure AD authentication
