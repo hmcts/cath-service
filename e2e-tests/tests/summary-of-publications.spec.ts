@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { prisma } from '@hmcts/postgres';
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -8,6 +11,64 @@ import AxeBuilder from '@axe-core/playwright';
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
 test.describe('Summary of Publications Page', () => {
+  // App runs from repo root, not apps/web
+  const STORAGE_PATH = path.join(process.cwd(), '..', 'storage', 'temp', 'uploads');
+  const TEST_ARTEFACT_IDS = ['test-summary-artefact-1', 'test-summary-artefact-2', 'test-summary-artefact-3'];
+  const TEST_FILE_CONTENT = Buffer.from('Test PDF content for summary page');
+
+  test.beforeAll(async () => {
+    // Ensure storage directory exists
+    await fs.mkdir(STORAGE_PATH, { recursive: true });
+
+    // Create multiple test artefacts for locationId=9
+    for (let i = 0; i < TEST_ARTEFACT_IDS.length; i++) {
+      const artefactId = TEST_ARTEFACT_IDS[i];
+
+      // Clean up any existing data
+      try {
+        await fs.unlink(path.join(STORAGE_PATH, `${artefactId}.pdf`));
+      } catch { /* Ignore */ }
+      try {
+        await prisma.artefact.delete({ where: { artefactId } });
+      } catch { /* Ignore */ }
+
+      // Create test file
+      await fs.writeFile(
+        path.join(STORAGE_PATH, `${artefactId}.pdf`),
+        TEST_FILE_CONTENT
+      );
+
+      // Create artefact record with different dates for sorting tests
+      await prisma.artefact.create({
+        data: {
+          artefactId,
+          locationId: '9', // SJP location
+          listTypeId: 1, // Magistrates Public List
+          contentDate: new Date(2025, 0, 15 - i), // Different dates: 15, 14, 13 January
+          sensitivity: 'PUBLIC',
+          language: 'ENGLISH',
+          displayFrom: new Date('2025-01-01'),
+          displayTo: new Date('2025-12-31')
+        }
+      });
+    }
+  });
+
+  test.afterAll(async () => {
+    // Clean up all test files and database records
+    for (const artefactId of TEST_ARTEFACT_IDS) {
+      try {
+        await fs.unlink(path.join(STORAGE_PATH, `${artefactId}.pdf`));
+      } catch { /* Ignore */ }
+      try {
+        await prisma.artefact.delete({ where: { artefactId } });
+      } catch { /* Ignore */ }
+    }
+
+    // Disconnect from Prisma
+    await prisma.$disconnect();
+  });
+
   test.describe('given user navigates with valid locationId', () => {
     test('should load the page with publications list and accessibility compliance', async ({ page }) => {
       await page.goto('/summary-of-publications?locationId=9');
@@ -24,7 +85,7 @@ test.describe('Summary of Publications Page', () => {
       const backLink = page.locator('.govuk-back-link');
       await expect(backLink).toBeVisible();
 
-      // Check for publication links (locationId=9 has multiple publications in mock data)
+      // Check for publication links (created in beforeAll for locationId=9)
       const publicationLinks = page.locator('a[href^="/file-publication"]');
       await expect(publicationLinks.first()).toBeVisible();
 

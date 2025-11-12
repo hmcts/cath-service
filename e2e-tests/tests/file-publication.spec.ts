@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { loginWithSSO } from '../utils/sso-helpers.js';
+import { prisma } from '@hmcts/postgres';
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -11,7 +12,8 @@ import { loginWithSSO } from '../utils/sso-helpers.js';
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
 test.describe('File Publication Page', () => {
-  const STORAGE_PATH = path.join(process.cwd(), 'apps', 'web', 'storage', 'temp', 'uploads');
+  // App runs from repo root, not apps/web
+  const STORAGE_PATH = path.join(process.cwd(), '..', 'storage', 'temp', 'uploads');
   const TEST_ARTEFACT_ID = 'test-artefact-e2e';
   const TEST_FILE_CONTENT = Buffer.from('Test PDF content for E2E testing');
 
@@ -20,13 +22,48 @@ test.describe('File Publication Page', () => {
     await fs.mkdir(STORAGE_PATH, { recursive: true });
   });
 
+  test.afterAll(async () => {
+    // Disconnect from Prisma
+    await prisma.$disconnect();
+  });
+
   test.describe('given user views a valid PDF publication', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async () => {
+      // Clean up any existing test data first
+      try {
+        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+      } catch {
+        // Ignore if file doesn't exist
+      }
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: TEST_ARTEFACT_ID }
+        });
+      } catch {
+        // Ignore if record doesn't exist
+      }
+
       // Create a test file before each test
       await fs.writeFile(
         path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
         TEST_FILE_CONTENT
       );
+
+      // Create artefact record in database
+      await prisma.artefact.create({
+        data: {
+          artefactId: TEST_ARTEFACT_ID,
+          locationId: '1',
+          listTypeId: 1, // Magistrates Public List
+          contentDate: new Date('2025-01-15'),
+          sensitivity: 'PUBLIC',
+          language: 'ENGLISH',
+          displayFrom: new Date('2025-01-01'),
+          displayTo: new Date('2025-12-31')
+        }
+      });
     });
 
     test.afterEach(async () => {
@@ -35,6 +72,15 @@ test.describe('File Publication Page', () => {
         await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
       } catch {
         // Ignore if file doesn't exist
+      }
+
+      // Clean up database record
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: TEST_ARTEFACT_ID }
+        });
+      } catch {
+        // Ignore if record doesn't exist
       }
     });
 
@@ -131,8 +177,8 @@ test.describe('File Publication Page', () => {
       await expect(heading).toBeVisible();
       await expect(heading).toContainText(/page not found/i);
 
-      // Check for helpful error message
-      const bodyText = page.locator('.govuk-body').first();
+      // Check for helpful error message (inside grid-row to avoid cookie banner)
+      const bodyText = page.locator('.govuk-grid-row .govuk-body');
       await expect(bodyText).toBeVisible();
       await expect(bodyText).toContainText(/attempted to view a page that no longer exists/i);
 
@@ -160,8 +206,8 @@ test.describe('File Publication Page', () => {
       await expect(heading).toBeVisible();
       await expect(heading).toContainText(/heb ddod o hyd/i);
 
-      // Check for Welsh body text
-      const bodyText = page.locator('.govuk-body').first();
+      // Check for Welsh body text (inside grid-row to avoid cookie banner)
+      const bodyText = page.locator('.govuk-grid-row .govuk-body');
       await expect(bodyText).toBeVisible();
       await expect(bodyText).toContainText(/rydych wedi ceisio gweld tudalen/i);
 
@@ -188,12 +234,40 @@ test.describe('File Publication Page', () => {
 
   test.describe('given user navigates from summary page', () => {
     test.beforeAll(async () => {
+      // Clean up any existing test data first
+      try {
+        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+      } catch {
+        // Ignore
+      }
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: TEST_ARTEFACT_ID }
+        });
+      } catch {
+        // Ignore
+      }
+
       // Create a test file for navigation test
       await fs.mkdir(STORAGE_PATH, { recursive: true });
       await fs.writeFile(
         path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
         TEST_FILE_CONTENT
       );
+
+      // Create artefact record in database
+      await prisma.artefact.create({
+        data: {
+          artefactId: TEST_ARTEFACT_ID,
+          locationId: '9', // Match the locationId in the test
+          listTypeId: 1,
+          contentDate: new Date('2025-01-15'),
+          sensitivity: 'PUBLIC',
+          language: 'ENGLISH',
+          displayFrom: new Date('2025-01-01'),
+          displayTo: new Date('2025-12-31')
+        }
+      });
     });
 
     test.afterAll(async () => {
@@ -202,6 +276,15 @@ test.describe('File Publication Page', () => {
         await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
       } catch {
         // Ignore if file doesn't exist
+      }
+
+      // Clean up database record
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: TEST_ARTEFACT_ID }
+        });
+      } catch {
+        // Ignore
       }
     });
 
@@ -227,11 +310,39 @@ test.describe('File Publication Page', () => {
       const jsonArtefactId = 'test-json-e2e';
       const jsonContent = JSON.stringify({ test: 'data' });
 
+      // Clean up any existing test data first
+      try {
+        await fs.unlink(path.join(STORAGE_PATH, `${jsonArtefactId}.json`));
+      } catch {
+        // Ignore
+      }
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: jsonArtefactId }
+        });
+      } catch {
+        // Ignore
+      }
+
       // Create JSON test file
       await fs.writeFile(
         path.join(STORAGE_PATH, `${jsonArtefactId}.json`),
         jsonContent
       );
+
+      // Create artefact record in database
+      await prisma.artefact.create({
+        data: {
+          artefactId: jsonArtefactId,
+          locationId: '9', // Match the locationId in the test
+          listTypeId: 1,
+          contentDate: new Date('2025-01-15'),
+          sensitivity: 'PUBLIC',
+          language: 'ENGLISH',
+          displayFrom: new Date('2025-01-01'),
+          displayTo: new Date('2025-12-31')
+        }
+      });
 
       try {
         // Navigate to summary page and check for download link
@@ -249,22 +360,62 @@ test.describe('File Publication Page', () => {
       } finally {
         // Clean up
         await fs.unlink(path.join(STORAGE_PATH, `${jsonArtefactId}.json`));
+        await prisma.artefact.delete({
+          where: { artefactId: jsonArtefactId }
+        });
       }
     });
   });
 
   test.describe('given user uses keyboard navigation', () => {
     test.beforeEach(async () => {
+      // Clean up any existing test data first
+      try {
+        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+      } catch {
+        // Ignore
+      }
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: TEST_ARTEFACT_ID }
+        });
+      } catch {
+        // Ignore
+      }
+
       await fs.mkdir(STORAGE_PATH, { recursive: true });
       await fs.writeFile(
         path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
         TEST_FILE_CONTENT
       );
+
+      // Create artefact record in database
+      await prisma.artefact.create({
+        data: {
+          artefactId: TEST_ARTEFACT_ID,
+          locationId: '1',
+          listTypeId: 1,
+          contentDate: new Date('2025-01-15'),
+          sensitivity: 'PUBLIC',
+          language: 'ENGLISH',
+          displayFrom: new Date('2025-01-01'),
+          displayTo: new Date('2025-12-31')
+        }
+      });
     });
 
     test.afterEach(async () => {
       try {
         await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+      } catch {
+        // Ignore
+      }
+
+      // Clean up database record
+      try {
+        await prisma.artefact.delete({
+          where: { artefactId: TEST_ARTEFACT_ID }
+        });
       } catch {
         // Ignore
       }
