@@ -15,3 +15,24 @@ export async function saveUploadedFile(artefactId: string, originalFileName: str
   const filePath = path.join(TEMP_STORAGE_BASE, newFileName);
   await fs.writeFile(filePath, fileBuffer);
 }
+
+export async function getUploadedFile(artefactId: string): Promise<{ fileData: Buffer; fileName: string } | null> {
+  try {
+    const files = await fs.readdir(TEMP_STORAGE_BASE);
+    const matchingFile = files.find((file) => file.startsWith(artefactId));
+
+    if (!matchingFile) {
+      return null;
+    }
+
+    const filePath = path.join(TEMP_STORAGE_BASE, matchingFile);
+    const fileData = await fs.readFile(filePath);
+
+    return {
+      fileData,
+      fileName: matchingFile
+    };
+  } catch (_error) {
+    return null;
+  }
+}

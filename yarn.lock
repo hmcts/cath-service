@@ -864,6 +864,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
   dependencies:
+    "@hmcts/admin-pages": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"

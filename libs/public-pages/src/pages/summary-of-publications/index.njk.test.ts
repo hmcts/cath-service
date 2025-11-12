@@ -30,11 +30,11 @@ describe("summary-of-publications template", () => {
     });
 
     it("should have English language label", () => {
-      expect(en.languageEnglish).toBe("English");
+      expect(en.languageEnglish).toBe("English (Saesneg)");
     });
 
     it("should have Welsh language label", () => {
-      expect(en.languageWelsh).toBe("Welsh");
+      expect(en.languageWelsh).toBe("Welsh (Cymraeg)");
     });
   });
 
@@ -52,11 +52,11 @@ describe("summary-of-publications template", () => {
     });
 
     it("should have English language label", () => {
-      expect(cy.languageEnglish).toBe("Saesneg");
+      expect(cy.languageEnglish).toBe("English (Saesneg)");
     });
 
     it("should have Welsh language label", () => {
-      expect(cy.languageWelsh).toBe("Cymraeg");
+      expect(cy.languageWelsh).toBe("Welsh (Cymraeg)");
     });
   });
 
@@ -66,7 +66,7 @@ describe("summary-of-publications template", () => {
     });
 
     it("should have all required keys", () => {
-      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh"];
+      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh", "opensInNewWindow", "instructionText"];
 
       for (const key of requiredKeys) {
         expect(en).toHaveProperty(key);

@@ -1,5 +1,7 @@
+import path from "node:path";
+import { getUploadedFile } from "@hmcts/admin-pages";
 import { getLocationById } from "@hmcts/location";
-import { mockListTypes, mockPublications } from "@hmcts/publication";
+import { getArtefactsByLocationId, mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -31,27 +33,35 @@ export const GET = async (req: Request, res: Response) => {
   const locationName = locale === "cy" ? location.welshName : location.name;
   const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
-  // Filter publications by location
-  const filteredPublications = mockPublications.filter((pub) => pub.locationId === locationId);
+  // Fetch publications from database by location
+  const artefacts = await getArtefactsByLocationId(locationId.toString());
 
-  // Map list types and format dates first
-  const publicationsWithDetails = filteredPublications.map((pub) => {
-    const listType = mockListTypes.find((lt) => lt.id === pub.listType);
-    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+  // Map list types, format dates, and fetch file information
+  const publicationsWithDetails = await Promise.all(
+    artefacts.map(async (artefact) => {
+      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+      const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
 
-    // Get language label based on publication language
-    const languageLabel = pub.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
+      // Get language label based on publication language
+      const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
-    return {
-      id: pub.id,
-      listTypeName,
-      listTypeId: pub.listType,
-      contentDate: pub.contentDate,
-      language: pub.language,
-      formattedDate: formatDateAndLocale(pub.contentDate, locale),
-      languageLabel
-    };
-  });
+      // Fetch file information to determine file type
+      const file = await getUploadedFile(artefact.artefactId);
+      const fileExtension = file ? path.extname(file.fileName).toLowerCase() : "";
+      const isPdf = fileExtension === ".pdf";
+
+      return {
+        id: artefact.artefactId,
+        listTypeName,
+        listTypeId: artefact.listTypeId,
+        contentDate: artefact.contentDate,
+        language: artefact.language,
+        formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
+        languageLabel,
+        isPdf
+      };
+    })
+  );
 
   // Sort by list name, then by content date descending, then by language
   publicationsWithDetails.sort((a, b) => {
@@ -73,6 +83,8 @@ export const GET = async (req: Request, res: Response) => {
     cy,
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
+    opensInNewWindow: t.opensInNewWindow,
+    instructionText: t.instructionText,
     publications: publicationsWithDetails
   });
 };
