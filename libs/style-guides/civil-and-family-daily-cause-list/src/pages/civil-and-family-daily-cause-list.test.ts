@@ -346,5 +346,55 @@ describe("civil-and-family-daily-cause-list controller", () => {
         })
       );
     });
+
+    it("should use raw provenance when label not found", async () => {
+      req.query = { artefactId: "test-id" };
+      const mockArtefact = {
+        artefactId: "test-id",
+        locationId: 1,
+        listTypeId: 8,
+        contentDate: new Date("2025-01-13"),
+        language: "ENGLISH",
+        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+        provenance: "UNKNOWN_PROVENANCE",
+        sourceArtefactId: null,
+        displayFrom: new Date("2025-01-13"),
+        displayTo: new Date("2025-01-20"),
+        search: {},
+        payload: "{}",
+        isFlatFile: false
+      };
+      const mockJsonData = {
+        document: {
+          publicationDate: "2025-01-13"
+        },
+        venue: {
+          venueAddress: {
+            line: ["Court Address"]
+          }
+        },
+        courtLists: []
+      };
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
+        isValid: true,
+        errors: []
+      });
+      vi.mocked(renderCauseListData).mockReturnValue({
+        header: { title: "Test Court", publishedDate: "13 January 2025" },
+        openJustice: { statement: "Test statement" },
+        listData: []
+      });
+
+      await GET(req as Request, res as Response);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "civil-and-family-daily-cause-list",
+        expect.objectContaining({
+          dataSource: "UNKNOWN_PROVENANCE"
+        })
+      );
+    });
   });
 });

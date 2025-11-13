@@ -603,4 +603,588 @@ describe("renderCauseListData", () => {
     const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
     expect((sitting as any).caseHearingChannel).toBe("IN PERSON");
   });
+
+  it("should process parties with applicant", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Smith v Jones",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "APPLICANT_PETITIONER",
+                                    individualDetails: {
+                                      title: "Mr",
+                                      individualForenames: "John",
+                                      individualMiddleName: "Paul",
+                                      individualSurname: "Smith"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).applicant).toBe("Mr John Paul Smith");
+  });
+
+  it("should process parties with respondent representative", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Smith v Jones",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "RESPONDENT_REPRESENTATIVE",
+                                    organisationDetails: {
+                                      organisationName: "Legal LLP"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).respondentRepresentative).toBe("Legal LLP");
+  });
+
+  it("should process parties with applicant representative", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Smith v Jones",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "APPLICANT/PETITIONER REPRESENTATIVE",
+                                    individualDetails: {
+                                      individualForenames: "Jane",
+                                      individualSurname: "Doe"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).applicantRepresentative).toBe("Jane Doe");
+  });
+
+  it("should handle multiple parties in same role", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Multiple v Test",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "RESPONDENT",
+                                    individualDetails: {
+                                      individualForenames: "John",
+                                      individualSurname: "Smith"
+                                    }
+                                  },
+                                  {
+                                    partyRole: "RESPONDENT",
+                                    individualDetails: {
+                                      individualForenames: "Jane",
+                                      individualSurname: "Doe"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).respondent).toBe("John Smith, Jane Doe");
+  });
+
+  it("should handle party with alternative role format", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "APPLICANT/PETITIONER",
+                                    organisationDetails: {
+                                      organisationName: "Test Corp"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).applicant).toBe("Test Corp");
+  });
+
+  it("should handle party with empty details", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "APPLICANT_PETITIONER",
+                                    individualDetails: {}
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).applicant).toBe("");
+  });
+
+  it("should handle multiple reporting restrictions", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001",
+                                reportingRestrictionDetail: ["Section 39", "Section 45"]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).formattedReportingRestriction).toBe("Section 39, Section 45");
+  });
+
+  it("should handle empty reporting restrictions", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001",
+                                reportingRestrictionDetail: []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect((caseItem as any).formattedReportingRestriction).toBe("");
+  });
+
+  it("should handle party with unknown role", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001",
+                                party: [
+                                  {
+                                    partyRole: "UNKNOWN_ROLE",
+                                    individualDetails: {
+                                      individualForenames: "John",
+                                      individualSurname: "Doe"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    // Unknown roles should not populate any party fields
+    expect((caseItem as any).applicant).toBe("");
+    expect((caseItem as any).respondent).toBe("");
+  });
 });
