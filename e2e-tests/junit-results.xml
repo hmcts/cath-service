@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="31.181589">
-<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:52:11.191Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.226" errors="0">
-<testcase name="File Publication Page › given user views a valid PDF publication › should load the page with iframe displaying PDF" classname="file-publication.spec.ts" time="0.226">
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="11.775602999999998">
+<testsuite name="file-publication-data.spec.ts" timestamp="2025-11-13T15:54:43.952Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.148" errors="0">
+<testcase name="File Publication Data Endpoint › given performance considerations › should serve larger files within reasonable time" classname="file-publication-data.spec.ts" time="0.148">
 </testcase>
 </testsuite>
 </testsuites>

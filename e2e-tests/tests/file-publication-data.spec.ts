@@ -631,12 +631,17 @@ test.describe('File Publication Data Endpoint', () => {
 
     test('should serve larger files within reasonable time', async ({ page }) => {
       const startTime = Date.now();
-      const response = await page.goto(`/file-publication-data?artefactId=${perfTestId}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${perfTestId}`);
       const endTime = Date.now();
 
       // Should complete within 5 seconds
       expect(endTime - startTime).toBeLessThan(5000);
-      expect(response?.status()).toBe(200);
+      expect(response.status()).toBe(200);
+
+      // Verify it's a PDF
+      const contentType = response.headers()['content-type'];
+      expect(contentType).toContain('application/pdf');
     });
   });
 });
