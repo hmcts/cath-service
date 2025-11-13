@@ -472,16 +472,18 @@ test.describe('File Publication Data Endpoint', () => {
     });
 
     test('should include English language label for English artefact', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${englishArtefactId}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${englishArtefactId}`);
 
-      const contentDisposition = response?.headers()['content-disposition'];
+      const contentDisposition = response.headers()['content-disposition'];
       expect(contentDisposition).toContain('English (Saesneg)');
     });
 
     test('should include Welsh language label for Welsh artefact', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${welshArtefactId}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${welshArtefactId}`);
 
-      const contentDisposition = response?.headers()['content-disposition'];
+      const contentDisposition = response.headers()['content-disposition'];
       expect(contentDisposition).toContain('Welsh (Cymraeg)');
     });
   });
