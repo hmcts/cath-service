@@ -7,40 +7,29 @@ import path from "node:path";
 function findRepoRoot(): string {
   let currentDir = process.cwd();
 
-  console.log("[file-storage:findRepoRoot] Starting from:", currentDir);
-
   while (currentDir !== "/") {
     try {
       const hasPackageJson = fsSync.existsSync(path.join(currentDir, "package.json"));
       const hasLibsDir = fsSync.existsSync(path.join(currentDir, "libs"));
 
-      console.log(`[file-storage:findRepoRoot] Checking ${currentDir}: package.json=${hasPackageJson}, libs=${hasLibsDir}`);
-
       if (hasPackageJson && hasLibsDir) {
-        console.log("[file-storage:findRepoRoot] Found repo root:", currentDir);
         return currentDir;
       }
-    } catch (err) {
-      console.log(`[file-storage:findRepoRoot] Error checking ${currentDir}:`, err);
+    } catch {
+      // Continue searching
     }
 
     const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      console.log("[file-storage:findRepoRoot] Reached filesystem root");
-      break; // Reached root
-    }
+    if (parentDir === currentDir) break; // Reached root
     currentDir = parentDir;
   }
 
   // Fallback to process.cwd() if repo root not found
-  console.log("[file-storage:findRepoRoot] Using fallback:", process.cwd());
   return process.cwd();
 }
 
 const REPO_ROOT = findRepoRoot();
 const TEMP_STORAGE_BASE = path.join(REPO_ROOT, "storage", "temp", "uploads");
-console.log("[file-storage] REPO_ROOT:", REPO_ROOT);
-console.log("[file-storage] TEMP_STORAGE_BASE:", TEMP_STORAGE_BASE);
 
 export async function saveUploadedFile(artefactId: string, originalFileName: string, fileBuffer: Buffer): Promise<void> {
   // Extract file extension from original filename
@@ -57,18 +46,13 @@ export async function saveUploadedFile(artefactId: string, originalFileName: str
 
 export async function getUploadedFile(artefactId: string): Promise<{ fileData: Buffer; fileName: string } | null> {
   try {
-    console.log("[file-storage] Looking for files in:", TEMP_STORAGE_BASE);
-    console.log("[file-storage] Searching for artefactId:", artefactId);
     const files = await fs.readdir(TEMP_STORAGE_BASE);
-    console.log("[file-storage] Found files:", files.length, "files");
     const matchingFile = files.find((file) => file.startsWith(artefactId));
 
     if (!matchingFile) {
-      console.log("[file-storage] No matching file found for:", artefactId);
       return null;
     }
 
-    console.log("[file-storage] Found matching file:", matchingFile);
     const filePath = path.join(TEMP_STORAGE_BASE, matchingFile);
     const fileData = await fs.readFile(filePath);
 
@@ -76,8 +60,7 @@ export async function getUploadedFile(artefactId: string): Promise<{ fileData: B
       fileData,
       fileName: matchingFile
     };
-  } catch (error) {
-    console.log("[file-storage] Error reading files:", error);
+  } catch (_error) {
     return null;
   }
 }

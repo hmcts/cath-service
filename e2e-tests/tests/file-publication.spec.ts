@@ -291,7 +291,7 @@ test.describe('File Publication Page', () => {
       await expect(firstLink).toHaveAttribute('rel', 'noopener noreferrer');
 
       // Verify "opens in new window" text is present
-      await expect(page.locator('.govuk-!-font-size-16').filter({ hasText: /opens in new/i }).first()).toBeVisible();
+      await expect(page.getByText(/opens in a new window/i)).toBeVisible();
     });
   });
 
