@@ -414,4 +414,126 @@ describe("validateForm", () => {
       expect(errors.some((e) => e.text === "Language is required")).toBe(true);
     });
   });
+
+  describe("Civil and Family Daily Cause List validation", () => {
+    it("should error when Civil and Family file is not JSON", () => {
+      const body = {
+        locationId: "123",
+        listType: "8",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "test.pdf" });
+      const errors = validateForm(body, file, mockTranslations);
+      expect(errors).toContainEqual({
+        text: "Civil and Family Daily Cause List must be a JSON file",
+        href: "#file"
+      });
+    });
+
+    it("should error when Civil and Family JSON has invalid schema", () => {
+      const body = {
+        locationId: "123",
+        listType: "8",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const invalidJson = JSON.stringify({ invalid: "data" });
+      const file = createMockFile({
+        originalname: "test.json",
+        buffer: Buffer.from(invalidJson)
+      });
+      const errors = validateForm(body, file, mockTranslations);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some((e) => e.text.includes("Invalid Civil and Family Daily Cause List format"))).toBe(true);
+    });
+
+    it("should error when Civil and Family JSON file is malformed", () => {
+      const body = {
+        locationId: "123",
+        listType: "8",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({
+        originalname: "test.json",
+        buffer: Buffer.from("{ invalid json")
+      });
+      const errors = validateForm(body, file, mockTranslations);
+      expect(errors).toContainEqual({
+        text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
+        href: "#file"
+      });
+    });
+  });
+
+  describe("Location name validation", () => {
+    it("should error when locationName is present but locationId is empty", () => {
+      const body = {
+        locationId: "",
+        locationName: "Test Court",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const errors = validateForm(body, createMockFile(), mockTranslations);
+      expect(errors).toContainEqual({
+        text: "Court is required",
+        href: "#court"
+      });
+    });
+
+    it("should error for court name too short when less than 3 characters", () => {
+      const body = {
+        locationId: "",
+        locationName: "AB",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const errors = validateForm(body, createMockFile(), mockTranslations);
+      expect(errors).toContainEqual({
+        text: "Court name too short",
+        href: "#court"
+      });
+    });
+  });
+
+  describe("Date field length validation", () => {
+    it("should error when day is not 2 characters", () => {
+      const result = validateDate({ day: "5", month: "06", year: "2025" }, "testField", "Required message", "Invalid message");
+      expect(result).toEqual({
+        text: "Invalid message",
+        href: "#testField"
+      });
+    });
+
+    it("should error when month is not 2 characters", () => {
+      const result = validateDate({ day: "15", month: "6", year: "2025" }, "testField", "Required message", "Invalid message");
+      expect(result).toEqual({
+        text: "Invalid message",
+        href: "#testField"
+      });
+    });
+  });
 });

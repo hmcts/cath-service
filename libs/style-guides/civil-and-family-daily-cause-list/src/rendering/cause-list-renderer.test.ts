@@ -282,4 +282,325 @@ describe("renderCauseListData", () => {
     const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
     expect((caseItem as any).formattedReportingRestriction).toBe("Section 39 Children and Young Persons Act 1933");
   });
+
+  it("should format time correctly for afternoon", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T14:30:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T14:30:00.000Z",
+                        sittingEnd: "2025-11-12T15:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
+    expect((sitting as any).time).toBe("2:30pm");
+  });
+
+  it("should handle sitting without end time", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
+    expect((sitting as any).durationAsHours).toBe(0);
+    expect((sitting as any).durationAsMinutes).toBe(0);
+  });
+
+  it("should format judiciaries with presiding judge first", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [
+                      {
+                        johKnownAs: "Judge B",
+                        isPresiding: false
+                      },
+                      {
+                        johKnownAs: "Judge A",
+                        isPresiding: true
+                      }
+                    ],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect((session as any).formattedJudiciaries).toBe("Judge A, Judge B");
+  });
+
+  it("should handle session hearing channel", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sessionChannel: ["VIDEO HEARING"],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
+    expect((sitting as any).caseHearingChannel).toBe("VIDEO HEARING");
+  });
+
+  it("should handle Welsh locale", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: []
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "cy"
+    });
+
+    expect(result.header.contentDate).toContain("Ionawr");
+  });
+
+  it("should handle sitting channel override", () => {
+    const inputData = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z"
+      },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: {
+          line: ["Address"],
+          postCode: "AB1 2CD"
+        }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sessionChannel: ["VIDEO HEARING"],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        channel: ["IN PERSON"],
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseName: "Test v Test",
+                                caseNumber: "T-001"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
+    expect((sitting as any).caseHearingChannel).toBe("IN PERSON");
+  });
 });
