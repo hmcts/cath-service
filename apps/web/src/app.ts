@@ -6,6 +6,7 @@ import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/a
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/style-guides/config";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
@@ -47,7 +48,16 @@ export async function createApp(): Promise<Express> {
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
+  const modulePaths = [
+    __dirname,
+    webCoreModuleRoot,
+    adminModuleRoot,
+    authModuleRoot,
+    civilFamilyCauseListModuleRoot,
+    systemAdminModuleRoot,
+    publicPagesModuleRoot,
+    verifiedPagesModuleRoot
+  ];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -76,6 +86,7 @@ export async function createApp(): Promise<Express> {
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
+  app.use(await createSimpleRouter(civilFamilyCauseListRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));

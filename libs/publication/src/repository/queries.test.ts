@@ -4,7 +4,9 @@ import { createArtefact } from "./queries.js";
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
-      create: vi.fn()
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn()
     }
   }
 }));
@@ -16,7 +18,7 @@ describe("createArtefact", () => {
     vi.clearAllMocks();
   });
 
-  it("should create an artefact with all required fields", async () => {
+  it("should create a new artefact when no existing artefact is found", async () => {
     const artefactData = {
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
       locationId: "1",
@@ -28,6 +30,7 @@ describe("createArtefact", () => {
       displayTo: new Date("2025-10-30")
     };
 
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.artefact.create).mockResolvedValue({
       artefactId: artefactData.artefactId,
       locationId: artefactData.locationId,
@@ -37,11 +40,21 @@ describe("createArtefact", () => {
       language: artefactData.language,
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
-      lastReceivedDate: new Date()
+      lastReceivedDate: new Date(),
+      isFlatFile: true
     });
 
-    await createArtefact(artefactData);
+    const result = await createArtefact(artefactData);
 
+    expect(result).toBe(artefactData.artefactId);
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
+      where: {
+        locationId: artefactData.locationId,
+        listTypeId: artefactData.listTypeId,
+        contentDate: artefactData.contentDate,
+        language: artefactData.language
+      }
+    });
     expect(prisma.artefact.create).toHaveBeenCalledTimes(1);
     expect(prisma.artefact.create).toHaveBeenCalledWith({
       data: {
@@ -52,9 +65,77 @@ describe("createArtefact", () => {
         sensitivity: artefactData.sensitivity,
         language: artefactData.language,
         displayFrom: artefactData.displayFrom,
-        displayTo: artefactData.displayTo
+        displayTo: artefactData.displayTo,
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD"
       }
     });
+    expect(prisma.artefact.update).not.toHaveBeenCalled();
+  });
+
+  it("should update an existing artefact when a match is found", async () => {
+    const existingArtefactId = "existing-artefact-id-123";
+    const artefactData = {
+      artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      locationId: "1",
+      listTypeId: 6,
+      contentDate: new Date("2025-10-23"),
+      sensitivity: "PRIVATE",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-21"),
+      displayTo: new Date("2025-10-31")
+    };
+
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue({
+      artefactId: existingArtefactId,
+      locationId: artefactData.locationId,
+      listTypeId: artefactData.listTypeId,
+      contentDate: artefactData.contentDate,
+      sensitivity: "PUBLIC",
+      language: artefactData.language,
+      displayFrom: new Date("2025-10-20"),
+      displayTo: new Date("2025-10-30"),
+      lastReceivedDate: new Date("2025-10-19"),
+      isFlatFile: true
+    });
+
+    vi.mocked(prisma.artefact.update).mockResolvedValue({
+      artefactId: existingArtefactId,
+      locationId: artefactData.locationId,
+      listTypeId: artefactData.listTypeId,
+      contentDate: artefactData.contentDate,
+      sensitivity: artefactData.sensitivity,
+      language: artefactData.language,
+      displayFrom: artefactData.displayFrom,
+      displayTo: artefactData.displayTo,
+      lastReceivedDate: new Date(),
+      isFlatFile: true
+    });
+
+    const result = await createArtefact(artefactData);
+
+    expect(result).toBe(existingArtefactId);
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
+      where: {
+        locationId: artefactData.locationId,
+        listTypeId: artefactData.listTypeId,
+        contentDate: artefactData.contentDate,
+        language: artefactData.language
+      }
+    });
+    expect(prisma.artefact.update).toHaveBeenCalledTimes(1);
+    expect(prisma.artefact.update).toHaveBeenCalledWith({
+      where: { artefactId: existingArtefactId },
+      data: {
+        sensitivity: artefactData.sensitivity,
+        displayFrom: artefactData.displayFrom,
+        displayTo: artefactData.displayTo,
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        lastReceivedDate: expect.any(Date)
+      }
+    });
+    expect(prisma.artefact.create).not.toHaveBeenCalled();
   });
 
   it("should create an artefact with PRIVATE sensitivity", async () => {
@@ -69,6 +150,7 @@ describe("createArtefact", () => {
       displayTo: new Date("2025-11-20")
     };
 
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.artefact.create).mockResolvedValue({
       artefactId: artefactData.artefactId,
       locationId: artefactData.locationId,
@@ -78,7 +160,8 @@ describe("createArtefact", () => {
       language: artefactData.language,
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
-      lastReceivedDate: new Date()
+      lastReceivedDate: new Date(),
+      isFlatFile: true
     });
 
     await createArtefact(artefactData);
@@ -102,6 +185,7 @@ describe("createArtefact", () => {
       displayTo: new Date("2025-12-05")
     };
 
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.artefact.create).mockResolvedValue({
       artefactId: artefactData.artefactId,
       locationId: artefactData.locationId,
@@ -111,7 +195,8 @@ describe("createArtefact", () => {
       language: artefactData.language,
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
-      lastReceivedDate: new Date()
+      lastReceivedDate: new Date(),
+      isFlatFile: true
     });
 
     await createArtefact(artefactData);
@@ -135,6 +220,7 @@ describe("createArtefact", () => {
       displayTo: new Date("2025-10-28")
     };
 
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.artefact.create).mockRejectedValue(new Error("Database connection error"));
 
     await expect(createArtefact(artefactData)).rejects.toThrow("Database connection error");
@@ -157,6 +243,7 @@ describe("createArtefact", () => {
         displayTo: new Date("2025-10-30")
       };
 
+      vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.artefact.create).mockResolvedValue({
         artefactId: artefactData.artefactId,
         locationId: artefactData.locationId,
@@ -166,7 +253,8 @@ describe("createArtefact", () => {
         language: artefactData.language,
         displayFrom: artefactData.displayFrom,
         displayTo: artefactData.displayTo,
-        lastReceivedDate: new Date()
+        lastReceivedDate: new Date(),
+        isFlatFile: true
       });
 
       await createArtefact(artefactData);
@@ -195,6 +283,7 @@ describe("createArtefact", () => {
       displayTo
     };
 
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.artefact.create).mockResolvedValue({
       artefactId: artefactData.artefactId,
       locationId: artefactData.locationId,
@@ -204,7 +293,8 @@ describe("createArtefact", () => {
       language: artefactData.language,
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
-      lastReceivedDate: new Date()
+      lastReceivedDate: new Date(),
+      isFlatFile: true
     });
 
     await createArtefact(artefactData);
@@ -218,7 +308,9 @@ describe("createArtefact", () => {
         sensitivity: artefactData.sensitivity,
         language: artefactData.language,
         displayFrom,
-        displayTo
+        displayTo,
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD"
       }
     });
   });

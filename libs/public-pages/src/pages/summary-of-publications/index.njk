@@ -23,7 +23,7 @@
         {% for publication in publications %}
           <li style="margin-bottom: 15px;">
             <a href="/publication/{{ publication.id }}" class="govuk-link">
-              {{ publication.listTypeName }} - {{ publication.formattedDate }} - {{ publication.languageLabel }}
+              {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
             </a>
           </li>
         {% endfor %}

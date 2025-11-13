@@ -1,5 +1,6 @@
 import { getLocationById } from "@hmcts/location";
-import { mockListTypes, mockPublications } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres";
+import { mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -31,30 +32,48 @@ export const GET = async (req: Request, res: Response) => {
   const locationName = locale === "cy" ? location.welshName : location.name;
   const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
-  // Filter publications by location
-  const filteredPublications = mockPublications.filter((pub) => pub.locationId === locationId);
+  // Query real artefacts from database, ordered by lastReceivedDate desc to get latest first
+  const artefacts = await prisma.artefact.findMany({
+    where: {
+      locationId: locationId.toString(),
+      displayFrom: { lte: new Date() },
+      displayTo: { gte: new Date() }
+    },
+    orderBy: [{ lastReceivedDate: "desc" }]
+  });
 
-  // Map list types and format dates first
-  const publicationsWithDetails = filteredPublications.map((pub) => {
-    const listType = mockListTypes.find((lt) => lt.id === pub.listType);
+  // Map list types and format dates
+  const publicationsWithDetails = artefacts.map((artefact) => {
+    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
     const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
 
     // Get language label based on publication language
-    const languageLabel = pub.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
+    const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
     return {
-      id: pub.id,
+      id: artefact.artefactId,
       listTypeName,
-      listTypeId: pub.listType,
-      contentDate: pub.contentDate,
-      language: pub.language,
-      formattedDate: formatDateAndLocale(pub.contentDate, locale),
+      listTypeId: artefact.listTypeId,
+      contentDate: artefact.contentDate,
+      language: artefact.language,
+      formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
       languageLabel
     };
   });
 
+  // Deduplicate: keep only the latest publication for each unique combination of list type, content date, and language
+  const seen = new Set<string>();
+  const uniquePublications = publicationsWithDetails.filter((pub) => {
+    const key = `${pub.listTypeId}-${pub.contentDate.toISOString()}-${pub.language}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
   // Sort by list name, then by content date descending, then by language
-  publicationsWithDetails.sort((a, b) => {
+  uniquePublications.sort((a, b) => {
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);
@@ -73,6 +92,6 @@ export const GET = async (req: Request, res: Response) => {
     cy,
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
-    publications: publicationsWithDetails
+    publications: uniquePublications
   });
 };

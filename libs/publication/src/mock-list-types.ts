@@ -47,5 +47,11 @@ export const mockListTypes: ListType[] = [
     name: "CROWN_FIRM_LIST",
     englishFriendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List"
+  },
+  {
+    id: 8,
+    name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Civil and Family Daily Cause List",
+    welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu"
   }
 ];

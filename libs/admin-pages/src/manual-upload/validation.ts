@@ -1,8 +1,11 @@
+import { validateCivilFamilyCauseList } from "@hmcts/style-guides";
 import { type DateInput, parseDate } from "@hmcts/web-core";
 import type { en } from "../pages/manual-upload/en.js";
 import type { ManualUploadFormData, ValidationError } from "./model.js";
 
 export type { ValidationError };
+
+const CIVIL_AND_FAMILY_LIST_TYPE_ID = 8;
 
 export function validateForm(body: ManualUploadFormData, file: Express.Multer.File | undefined, t: typeof en): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -17,6 +20,37 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
     const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
     if (!allowedExtensions.test(file.originalname)) {
       errors.push({ text: t.errorMessages.fileType, href: "#file" });
+    }
+
+    // Special validation for Civil & Family Daily Cause List (must be JSON and valid schema)
+    if (body.listType === CIVIL_AND_FAMILY_LIST_TYPE_ID.toString()) {
+      const isJsonFile = /\.json$/i.test(file.originalname);
+
+      if (!isJsonFile) {
+        errors.push({
+          text: "Civil and Family Daily Cause List must be a JSON file",
+          href: "#file"
+        });
+      } else {
+        // Validate JSON schema
+        try {
+          const fileContent = file.buffer.toString("utf-8");
+          const jsonData = JSON.parse(fileContent);
+          const validationResult = validateCivilFamilyCauseList(jsonData);
+
+          if (!validationResult.isValid) {
+            errors.push({
+              text: `Invalid Civil and Family Daily Cause List format. ${validationResult.errors[0]?.message || "Please check the JSON structure."}`,
+              href: "#file"
+            });
+          }
+        } catch (parseError) {
+          errors.push({
+            text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
+            href: "#file"
+          });
+        }
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes } from "@hmcts/publication";
+import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -76,12 +76,6 @@ const postHandler = async (req: Request, res: Response) => {
       return res.status(404).send("Upload not found");
     }
 
-    // Generate artefact ID
-    const artefactId = randomUUID();
-
-    // Save file to temporary storage with artefactId as filename
-    await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
-
     // Parse date inputs to Date objects
     const contentDate = parseDate(uploadData.hearingStartDate);
     const displayFrom = parseDate(uploadData.displayFrom);
@@ -91,17 +85,26 @@ const postHandler = async (req: Request, res: Response) => {
       throw new Error("Invalid date format");
     }
 
-    // Store metadata in database
-    await createArtefact({
-      artefactId,
+    // Determine if file is JSON-based (Civil & Family Daily Cause List = ID 8)
+    const listTypeId = Number.parseInt(uploadData.listType, 10);
+    const isFlatFile = listTypeId !== 8;
+
+    // Store metadata in database (creates new or updates existing)
+    const artefactId = await createArtefact({
+      artefactId: randomUUID(),
       locationId: uploadData.locationId,
-      listTypeId: Number.parseInt(uploadData.listType, 10),
+      listTypeId,
       contentDate,
       sensitivity: uploadData.sensitivity,
       language: uploadData.language,
       displayFrom,
-      displayTo
+      displayTo,
+      isFlatFile,
+      provenance: Provenance.MANUAL_UPLOAD
     });
+
+    // Save file to temporary storage with artefactId as filename (will overwrite if exists)
+    await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
     // Clear session data
     delete req.session.manualUploadForm;
