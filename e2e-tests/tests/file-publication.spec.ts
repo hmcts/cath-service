@@ -51,7 +51,7 @@ test.describe('File Publication Page', () => {
       const artefact = await prisma.artefact.create({
         data: {
           locationId: '1',
-          listTypeId: 1, // Magistrates Public List
+          listTypeId: 1, // Civil Daily Cause List
           contentDate: new Date('2025-01-15'),
           sensitivity: 'PUBLIC',
           language: 'ENGLISH',
@@ -90,7 +90,7 @@ test.describe('File Publication Page', () => {
       await page.goto(`/file-publication?artefactId=${TEST_ARTEFACT_ID}`);
 
       // Check the page title contains publication details
-      await expect(page).toHaveTitle(/Magistrates Public List/);
+      await expect(page).toHaveTitle(/Civil Daily Cause List/);
 
       // Check for iframe
       const iframe = page.locator('iframe');

@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="12.167849">
-<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:43:20.730Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.437" errors="0">
-<testcase name="File Publication Page › given file does not exist › should display 404 error page with helpful message" classname="file-publication.spec.ts" time="0.437">
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="31.181589">
+<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:52:11.191Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.226" errors="0">
+<testcase name="File Publication Page › given user views a valid PDF publication › should load the page with iframe displaying PDF" classname="file-publication.spec.ts" time="0.226">
 </testcase>
 </testsuite>
 </testsuites>
