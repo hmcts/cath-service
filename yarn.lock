@@ -808,23 +808,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/civil-family-cause-list@workspace:libs/civil-family-cause-list":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/civil-family-cause-list@workspace:libs/civil-family-cause-list"
-  dependencies:
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
-    "@types/luxon": "npm:3.4.2"
-    "@types/node": "npm:22.10.2"
-    ajv: "npm:8.17.1"
-    luxon: "npm:3.5.0"
-    typescript: "npm:5.7.2"
-    vitest: "npm:3.2.4"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/cloud-native-platform@workspace:*, @hmcts/cloud-native-platform@workspace:libs/cloud-native-platform":
   version: 0.0.0-use.local
   resolution: "@hmcts/cloud-native-platform@workspace:libs/cloud-native-platform"

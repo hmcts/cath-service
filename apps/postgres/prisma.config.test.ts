@@ -1,6 +1,14 @@
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock dotenv to avoid side effects
+vi.mock("dotenv/config", () => ({}));
+
+// Mock prisma/config
+vi.mock("prisma/config", () => ({
+  defineConfig: (config: unknown) => config
+}));
+
 // Mock fs to avoid actual file reads during config import
 vi.mock("node:fs", () => ({
   default: {
@@ -14,13 +22,9 @@ describe("Prisma Config", () => {
     vi.clearAllMocks();
   });
 
-  it("should export a default config", async () => {
-    const configModule = await import("./prisma.config.js");
-    expect(configModule.default).toBeDefined();
-  });
-
   it("should have schema path configuration", async () => {
     const configModule = await import("./prisma.config.js");
+    expect(configModule.default).toBeDefined();
     const config = configModule.default;
     expect(config).toHaveProperty("schema");
     expect(typeof config.schema).toBe("string");
