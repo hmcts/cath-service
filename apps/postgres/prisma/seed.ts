@@ -23,26 +23,26 @@ async function main() {
     {
       artefactId: "22222222-2222-2222-2222-222222222222",
       locationId: "9",
-      listTypeId: 8, // Civil and Family Daily Cause List
+      listTypeId: 1, // Single Justice Procedure
       contentDate: new Date("2025-01-16"),
       sensitivity: "PUBLIC",
-      language: "WELSH",
+      language: "ENGLISH",
       displayFrom: new Date("2025-01-01"),
       displayTo: new Date("2026-01-01"),
       provenance: "MANUAL_UPLOAD",
-      isFlatFile: false
+      isFlatFile: true
     },
     {
       artefactId: "33333333-3333-3333-3333-333333333333",
       locationId: "9",
-      listTypeId: 8, // Civil and Family Daily Cause List
+      listTypeId: 2, // Crown Daily List
       contentDate: new Date("2025-01-17"),
       sensitivity: "PUBLIC",
-      language: "BILINGUAL",
+      language: "ENGLISH",
       displayFrom: new Date("2025-01-01"),
       displayTo: new Date("2026-01-01"),
       provenance: "MANUAL_UPLOAD",
-      isFlatFile: false
+      isFlatFile: true
     }
   ];
 
