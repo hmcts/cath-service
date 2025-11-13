@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -7,9 +6,10 @@ async function main() {
   console.log("Starting seed...");
 
   // Create test artefacts for locationId 9 (used in E2E tests)
+  // Using fixed UUIDs so they're consistent across runs and won't be deleted by teardown
   const testArtefacts = [
     {
-      artefactId: randomUUID(),
+      artefactId: "11111111-1111-1111-1111-111111111111",
       locationId: "9",
       listTypeId: 8, // Civil and Family Daily Cause List
       contentDate: new Date("2025-01-15"),
@@ -21,7 +21,7 @@ async function main() {
       isFlatFile: false
     },
     {
-      artefactId: randomUUID(),
+      artefactId: "22222222-2222-2222-2222-222222222222",
       locationId: "9",
       listTypeId: 8, // Civil and Family Daily Cause List
       contentDate: new Date("2025-01-16"),
@@ -33,7 +33,7 @@ async function main() {
       isFlatFile: false
     },
     {
-      artefactId: randomUUID(),
+      artefactId: "33333333-3333-3333-3333-333333333333",
       locationId: "9",
       listTypeId: 8, // Civil and Family Daily Cause List
       contentDate: new Date("2025-01-17"),
@@ -47,13 +47,10 @@ async function main() {
   ];
 
   for (const artefact of testArtefacts) {
-    // Check if artefact already exists to avoid duplicates
-    const existing = await prisma.artefact.findFirst({
+    // Check if artefact already exists by ID to avoid duplicates
+    const existing = await prisma.artefact.findUnique({
       where: {
-        locationId: artefact.locationId,
-        listTypeId: artefact.listTypeId,
-        contentDate: artefact.contentDate,
-        language: artefact.language
+        artefactId: artefact.artefactId
       }
     });
 
@@ -61,7 +58,7 @@ async function main() {
       await prisma.artefact.create({ data: artefact });
       console.log(`Created artefact: ${artefact.artefactId} for locationId ${artefact.locationId}`);
     } else {
-      console.log(`Artefact already exists for locationId ${artefact.locationId}, contentDate ${artefact.contentDate}, language ${artefact.language}`);
+      console.log(`Artefact ${artefact.artefactId} already exists for locationId ${artefact.locationId}`);
     }
   }
 
