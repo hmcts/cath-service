@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as tokenClient from "../../cft-idam/token-client.js";
 import * as cftIdamConfig from "../../config/cft-idam-config.js";
 import * as roleService from "../../role-service/index.js";
-import { GET } from "./return.js";
+import { GET } from "./cft.js";
 
 vi.mock("../../cft-idam/token-client.js");
 vi.mock("../../config/cft-idam-config.js");

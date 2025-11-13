@@ -283,24 +283,15 @@ describe("helmet-middleware", () => {
         expect(directives?.formAction).toContain("'self'");
       });
 
-      it("should include localhost URLs in development mode", () => {
+      it("should not include redundant localhost URLs (covered by 'self')", () => {
         process.env.NODE_ENV = "development";
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
         const directives = helmetCall?.contentSecurityPolicy?.directives;
 
-        expect(directives?.formAction).toContain("http://localhost:8080");
-        expect(directives?.formAction).toContain("https://localhost:8080");
-      });
-
-      it("should not include localhost URLs in production mode", () => {
-        process.env.NODE_ENV = "production";
-        configureHelmet();
-
-        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
-
+        // localhost URLs are not needed as 'self' directive covers them
+        expect(directives?.formAction).toContain("'self'");
         expect(directives?.formAction).not.toContain("http://localhost:8080");
         expect(directives?.formAction).not.toContain("https://localhost:8080");
       });

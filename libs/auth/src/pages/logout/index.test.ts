@@ -67,7 +67,7 @@ describe("Logout handler", () => {
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
     expect(res.redirect).toHaveBeenCalledWith(
-      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F"
+      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out"
     );
   });
 
@@ -92,11 +92,11 @@ describe("Logout handler", () => {
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
     expect(res.redirect).toHaveBeenCalledWith(
-      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F"
+      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out"
     );
   });
 
-  it("should redirect to / when tenant ID cannot be extracted", async () => {
+  it("should redirect to /session-logged-out when tenant ID cannot be extracted", async () => {
     const { getSsoConfig } = await import("../../config/sso-config.js");
 
     vi.mocked(getSsoConfig).mockReturnValue({
@@ -119,7 +119,7 @@ describe("Logout handler", () => {
 
     await GET(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/");
+    expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
   });
 
   it("should continue logout even if logout callback has error", async () => {

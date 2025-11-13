@@ -35,7 +35,7 @@ export function configureHelmet(options: SecurityOptions = {}) {
 
   const frameSources = [...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
 
-  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : []), ...(isDevelopment ? ["http://localhost:8080", "https://localhost:8080"] : [])];
+  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : [])];
 
   return helmet({
     contentSecurityPolicy: {

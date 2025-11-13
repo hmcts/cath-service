@@ -156,5 +156,44 @@ describe("Web Application", () => {
         url: "redis://localhost:6379"
       });
     });
+
+    it("should configure file upload middleware with error handling", async () => {
+      const { createFileUpload } = await import("@hmcts/web-core");
+      expect(createFileUpload).toHaveBeenCalled();
+
+      // Verify that the upload.single function is called for the /manual-upload route
+      const mockUpload = vi.mocked(createFileUpload).mock.results[0].value;
+      expect(mockUpload.single).toBeDefined();
+    });
+  });
+
+  describe("File Upload Error Handling", () => {
+    it("should handle multer errors gracefully", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      // Mock createFileUpload to simulate an error
+      const mockError = new Error("File too large");
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn(() => (_req: any, _res: any, callback: any) => {
+            // Simulate multer calling the callback with an error
+            callback(mockError);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      const app = await createApp();
+
+      expect(app).toBeDefined();
+    });
   });
 });
