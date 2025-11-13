@@ -81,39 +81,41 @@ test.describe('File Publication Data Endpoint', () => {
     });
 
     test('should serve PDF with correct content-type and disposition', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${TEST_ARTEFACT_ID}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${TEST_ARTEFACT_ID}`);
 
       // Verify response
-      expect(response).toBeTruthy();
-      expect(response?.status()).toBe(200);
+      expect(response.status()).toBe(200);
 
       // Check headers
-      const headers = response?.headers();
-      expect(headers?.['content-type']).toBe('application/pdf');
-      expect(headers?.['content-disposition']).toContain('inline');
-      expect(headers?.['content-disposition']).toContain('filename=');
-      expect(headers?.['content-disposition']).toContain('filename*=UTF-8');
+      const headers = response.headers();
+      expect(headers['content-type']).toBe('application/pdf');
+      expect(headers['content-disposition']).toContain('inline');
+      expect(headers['content-disposition']).toContain('filename=');
+      expect(headers['content-disposition']).toContain('filename*=UTF-8');
     });
 
     test('should include formatted filename with list type, date, and language', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${TEST_ARTEFACT_ID}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${TEST_ARTEFACT_ID}`);
 
       // Check Content-Disposition header contains formatted filename
-      const contentDisposition = response?.headers()['content-disposition'];
+      const contentDisposition = response.headers()['content-disposition'];
       expect(contentDisposition).toBeTruthy();
-      expect(contentDisposition).toContain('Magistrates Public List');
+      expect(contentDisposition).toContain('Civil Daily Cause List');
       expect(contentDisposition).toMatch(/\d{1,2}\s\w+\s\d{4}/); // Date format
       expect(contentDisposition).toContain('English (Saesneg)');
       expect(contentDisposition).toContain('.pdf');
     });
 
     test('should serve actual file content', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${TEST_ARTEFACT_ID}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${TEST_ARTEFACT_ID}`);
 
       // Verify response body contains PDF content
-      const body = await response?.body();
+      const body = await response.body();
       expect(body).toBeTruthy();
-      expect(body?.length).toBeGreaterThan(0);
+      expect(body.length).toBeGreaterThan(0);
     });
   });
 

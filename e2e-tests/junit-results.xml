@@ -1,6 +1,26 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="11.916015999999999">
-<testsuite name="file-publication-data.spec.ts" timestamp="2025-11-13T16:18:43.138Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.163" errors="0">
-<testcase name="File Publication Data Endpoint › given JSON file is requested › should serve JSON with correct content-type and disposition" classname="file-publication-data.spec.ts" time="0.163">
+<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="11.932763000000001">
+<testsuite name="file-publication-data.spec.ts" timestamp="2025-11-13T16:39:15.816Z" hostname="chromium" tests="3" failures="0" skipped="0" time="0.278" errors="0">
+<testcase name="File Publication Data Endpoint › given PDF file is requested › should serve PDF with correct content-type and disposition" classname="file-publication-data.spec.ts" time="0.162">
+</testcase>
+<testcase name="File Publication Data Endpoint › given PDF file is requested › should include formatted filename with list type, date, and language" classname="file-publication-data.spec.ts" time="0.056">
+<system-out>
+<![CDATA[[31mprisma:error[39m 
+Invalid `prisma.artefact.delete()` invocation:
+
+
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given PDF file is requested › should serve actual file content" classname="file-publication-data.spec.ts" time="0.06">
+<system-out>
+<![CDATA[[31mprisma:error[39m 
+Invalid `prisma.artefact.delete()` invocation:
+
+
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
+]]>
+</system-out>
 </testcase>
 </testsuite>
 </testsuites>
