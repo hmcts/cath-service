@@ -31,6 +31,11 @@ function findRepoRoot(): string {
 const REPO_ROOT = findRepoRoot();
 const TEMP_STORAGE_BASE = path.join(REPO_ROOT, "storage", "temp", "uploads");
 
+// Export for testing
+export function getStoragePath(): string {
+  return TEMP_STORAGE_BASE;
+}
+
 export async function saveUploadedFile(artefactId: string, originalFileName: string, fileBuffer: Buffer): Promise<void> {
   // Extract file extension from original filename
   const fileExtension = path.extname(originalFileName);

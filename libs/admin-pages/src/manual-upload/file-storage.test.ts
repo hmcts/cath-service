@@ -1,13 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getUploadedFile, saveUploadedFile } from "./file-storage.js";
+import { getStoragePath, getUploadedFile, saveUploadedFile } from "./file-storage.js";
 
 const TEST_ARTEFACT_ID = "test-artefact-123";
 const TEST_FILE_NAME = "test-hearing-list.csv";
 const TEST_FILE_EXTENSION = ".csv";
 const TEST_FILE_CONTENT = Buffer.from("Test,File,Content\n1,2,3");
-const TEST_STORAGE_BASE = path.join(process.cwd(), "storage", "temp", "uploads");
+const TEST_STORAGE_BASE = getStoragePath();
 const TEST_FILE_PATH = path.join(TEST_STORAGE_BASE, `${TEST_ARTEFACT_ID}${TEST_FILE_EXTENSION}`);
 
 describe("file-storage", () => {
