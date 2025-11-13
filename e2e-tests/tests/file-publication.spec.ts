@@ -14,7 +14,7 @@ import { prisma } from '@hmcts/postgres';
 test.describe('File Publication Page', () => {
   // App runs from repo root, not apps/web
   const STORAGE_PATH = path.join(process.cwd(), '..', 'storage', 'temp', 'uploads');
-  const TEST_ARTEFACT_ID = 'test-artefact-e2e';
+  let TEST_ARTEFACT_ID: string;
   const TEST_FILE_CONTENT = Buffer.from('Test PDF content for E2E testing');
 
   test.beforeAll(async () => {
@@ -32,29 +32,24 @@ test.describe('File Publication Page', () => {
 
     test.beforeEach(async () => {
       // Clean up any existing test data first
-      try {
-        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
-      } catch {
-        // Ignore if file doesn't exist
-      }
-      try {
-        await prisma.artefact.delete({
-          where: { artefactId: TEST_ARTEFACT_ID }
-        });
-      } catch {
-        // Ignore if record doesn't exist
+      if (TEST_ARTEFACT_ID) {
+        try {
+          await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+        } catch {
+          // Ignore if file doesn't exist
+        }
+        try {
+          await prisma.artefact.delete({
+            where: { artefactId: TEST_ARTEFACT_ID }
+          });
+        } catch {
+          // Ignore if record doesn't exist
+        }
       }
 
-      // Create a test file before each test
-      await fs.writeFile(
-        path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
-        TEST_FILE_CONTENT
-      );
-
-      // Create artefact record in database
-      await prisma.artefact.create({
+      // Create artefact record in database (Prisma will generate UUID)
+      const artefact = await prisma.artefact.create({
         data: {
-          artefactId: TEST_ARTEFACT_ID,
           locationId: '1',
           listTypeId: 1, // Magistrates Public List
           contentDate: new Date('2025-01-15'),
@@ -64,6 +59,13 @@ test.describe('File Publication Page', () => {
           displayTo: new Date('2025-12-31')
         }
       });
+      TEST_ARTEFACT_ID = artefact.artefactId;
+
+      // Create a test file before each test
+      await fs.writeFile(
+        path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
+        TEST_FILE_CONTENT
+      );
     });
 
     test.afterEach(async () => {
@@ -233,32 +235,13 @@ test.describe('File Publication Page', () => {
   });
 
   test.describe('given user navigates from summary page', () => {
+    let navigationTestId: string;
+
     test.beforeAll(async () => {
-      // Clean up any existing test data first
-      try {
-        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
-      } catch {
-        // Ignore
-      }
-      try {
-        await prisma.artefact.delete({
-          where: { artefactId: TEST_ARTEFACT_ID }
-        });
-      } catch {
-        // Ignore
-      }
-
-      // Create a test file for navigation test
+      // Create artefact record in database (Prisma will generate UUID)
       await fs.mkdir(STORAGE_PATH, { recursive: true });
-      await fs.writeFile(
-        path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
-        TEST_FILE_CONTENT
-      );
-
-      // Create artefact record in database
-      await prisma.artefact.create({
+      const artefact = await prisma.artefact.create({
         data: {
-          artefactId: TEST_ARTEFACT_ID,
           locationId: '9', // Match the locationId in the test
           listTypeId: 1,
           contentDate: new Date('2025-01-15'),
@@ -268,12 +251,19 @@ test.describe('File Publication Page', () => {
           displayTo: new Date('2025-12-31')
         }
       });
+      navigationTestId = artefact.artefactId;
+
+      // Create a test file for navigation test
+      await fs.writeFile(
+        path.join(STORAGE_PATH, `${navigationTestId}.pdf`),
+        TEST_FILE_CONTENT
+      );
     });
 
     test.afterAll(async () => {
       // Clean up test file
       try {
-        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+        await fs.unlink(path.join(STORAGE_PATH, `${navigationTestId}.pdf`));
       } catch {
         // Ignore if file doesn't exist
       }
@@ -281,7 +271,7 @@ test.describe('File Publication Page', () => {
       // Clean up database record
       try {
         await prisma.artefact.delete({
-          where: { artefactId: TEST_ARTEFACT_ID }
+          where: { artefactId: navigationTestId }
         });
       } catch {
         // Ignore
@@ -307,33 +297,12 @@ test.describe('File Publication Page', () => {
 
   test.describe('given different file types', () => {
     test('should handle JSON files with download', async ({ page }) => {
-      const jsonArtefactId = 'test-json-e2e';
+      let jsonArtefactId: string;
       const jsonContent = JSON.stringify({ test: 'data' });
 
-      // Clean up any existing test data first
-      try {
-        await fs.unlink(path.join(STORAGE_PATH, `${jsonArtefactId}.json`));
-      } catch {
-        // Ignore
-      }
-      try {
-        await prisma.artefact.delete({
-          where: { artefactId: jsonArtefactId }
-        });
-      } catch {
-        // Ignore
-      }
-
-      // Create JSON test file
-      await fs.writeFile(
-        path.join(STORAGE_PATH, `${jsonArtefactId}.json`),
-        jsonContent
-      );
-
-      // Create artefact record in database
-      await prisma.artefact.create({
+      // Create artefact record in database (Prisma will generate UUID)
+      const artefact = await prisma.artefact.create({
         data: {
-          artefactId: jsonArtefactId,
           locationId: '9', // Match the locationId in the test
           listTypeId: 1,
           contentDate: new Date('2025-01-15'),
@@ -343,6 +312,13 @@ test.describe('File Publication Page', () => {
           displayTo: new Date('2025-12-31')
         }
       });
+      jsonArtefactId = artefact.artefactId;
+
+      // Create JSON test file
+      await fs.writeFile(
+        path.join(STORAGE_PATH, `${jsonArtefactId}.json`),
+        jsonContent
+      );
 
       try {
         // Navigate to summary page and check for download link
@@ -368,31 +344,31 @@ test.describe('File Publication Page', () => {
   });
 
   test.describe('given user uses keyboard navigation', () => {
+    let keyboardTestId: string;
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async () => {
       // Clean up any existing test data first
-      try {
-        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
-      } catch {
-        // Ignore
-      }
-      try {
-        await prisma.artefact.delete({
-          where: { artefactId: TEST_ARTEFACT_ID }
-        });
-      } catch {
-        // Ignore
+      if (keyboardTestId) {
+        try {
+          await fs.unlink(path.join(STORAGE_PATH, `${keyboardTestId}.pdf`));
+        } catch {
+          // Ignore
+        }
+        try {
+          await prisma.artefact.delete({
+            where: { artefactId: keyboardTestId }
+          });
+        } catch {
+          // Ignore
+        }
       }
 
       await fs.mkdir(STORAGE_PATH, { recursive: true });
-      await fs.writeFile(
-        path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`),
-        TEST_FILE_CONTENT
-      );
 
-      // Create artefact record in database
-      await prisma.artefact.create({
+      // Create artefact record in database (Prisma will generate UUID)
+      const artefact = await prisma.artefact.create({
         data: {
-          artefactId: TEST_ARTEFACT_ID,
           locationId: '1',
           listTypeId: 1,
           contentDate: new Date('2025-01-15'),
@@ -402,11 +378,17 @@ test.describe('File Publication Page', () => {
           displayTo: new Date('2025-12-31')
         }
       });
+      keyboardTestId = artefact.artefactId;
+
+      await fs.writeFile(
+        path.join(STORAGE_PATH, `${keyboardTestId}.pdf`),
+        TEST_FILE_CONTENT
+      );
     });
 
     test.afterEach(async () => {
       try {
-        await fs.unlink(path.join(STORAGE_PATH, `${TEST_ARTEFACT_ID}.pdf`));
+        await fs.unlink(path.join(STORAGE_PATH, `${keyboardTestId}.pdf`));
       } catch {
         // Ignore
       }
@@ -414,7 +396,7 @@ test.describe('File Publication Page', () => {
       // Clean up database record
       try {
         await prisma.artefact.delete({
-          where: { artefactId: TEST_ARTEFACT_ID }
+          where: { artefactId: keyboardTestId }
         });
       } catch {
         // Ignore

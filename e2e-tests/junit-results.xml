@@ -1,0 +1,832 @@
+<testsuites id="" name="" tests="14" failures="7" skipped="3" errors="0" time="39.338529">
+<testsuite name="file-publication-data.spec.ts" timestamp="2025-11-13T13:12:43.640Z" hostname="chromium" tests="14" failures="7" skipped="3" time="11.992" errors="0">
+<testcase name="File Publication Data Endpoint › given PDF file is requested › should serve PDF with correct content-type and disposition" classname="file-publication-data.spec.ts" time="1.876">
+<failure message="file-publication-data.spec.ts:83:5 should serve PDF with correct content-type and disposition" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:83:5 › File Publication Data Endpoint › given PDF file is requested › should serve PDF with correct content-type and disposition 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      86 |       // Verify response
+      87 |       expect(response).toBeTruthy();
+    > 88 |       expect(response?.status()).toBe(200);
+         |                                  ^
+      89 |
+      90 |       // Check headers
+      91 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:88:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      86 |       // Verify response
+      87 |       expect(response).toBeTruthy();
+    > 88 |       expect(response?.status()).toBe(200);
+         |                                  ^
+      89 |
+      90 |       // Check headers
+      91 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:88:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      86 |       // Verify response
+      87 |       expect(response).toBeTruthy();
+    > 88 |       expect(response?.status()).toBe(200);
+         |                                  ^
+      89 |
+      90 |       // Check headers
+      91 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:88:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-ca9c9-ontent-type-and-disposition-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given PDF file is requested › should include formatted filename with list type, date, and language" classname="file-publication-data.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="File Publication Data Endpoint › given PDF file is requested › should serve actual file content" classname="file-publication-data.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="File Publication Data Endpoint › given JSON file is requested › should serve JSON with correct content-type and disposition" classname="file-publication-data.spec.ts" time="1.892">
+<failure message="file-publication-data.spec.ts:180:5 should serve JSON with correct content-type and disposition" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:180:5 › File Publication Data Endpoint › given JSON file is requested › should serve JSON with correct content-type and disposition 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      182 |
+      183 |       // Verify response
+    > 184 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      185 |
+      186 |       // Check headers
+      187 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:184:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      182 |
+      183 |       // Verify response
+    > 184 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      185 |
+      186 |       // Check headers
+      187 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:184:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      182 |
+      183 |       // Verify response
+    > 184 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      185 |
+      186 |       // Check headers
+      187 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:184:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-afb70-ontent-type-and-disposition-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given other file types are requested › should serve unknown file types with octet-stream" classname="file-publication-data.spec.ts" time="1.949">
+<failure message="file-publication-data.spec.ts:256:5 should serve unknown file types with octet-stream" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:256:5 › File Publication Data Endpoint › given other file types are requested › should serve unknown file types with octet-stream 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      258 |
+      259 |       // Verify response
+    > 260 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      261 |
+      262 |       // Check headers
+      263 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:260:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      258 |
+      259 |       // Verify response
+    > 260 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      261 |
+      262 |       // Check headers
+      263 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:260:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      258 |
+      259 |       // Verify response
+    > 260 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      261 |
+      262 |       // Check headers
+      263 |       const headers = response?.headers();
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:260:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-a34c1-ile-types-with-octet-stream-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given artefactId is missing › should return 400 bad request" classname="file-publication-data.spec.ts" time="0.123">
+</testcase>
+<testcase name="File Publication Data Endpoint › given file does not exist › should return 404 with error page" classname="file-publication-data.spec.ts" time="0.186">
+</testcase>
+<testcase name="File Publication Data Endpoint › given file does not exist › should display Welsh error when locale is cy" classname="file-publication-data.spec.ts" time="0.152">
+</testcase>
+<testcase name="File Publication Data Endpoint › given Welsh locale is used › should format filename with Welsh date format" classname="file-publication-data.spec.ts" time="1.855">
+<failure message="file-publication-data.spec.ts:366:5 should format filename with Welsh date format" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:366:5 › File Publication Data Endpoint › given Welsh locale is used › should format filename with Welsh date format 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      369 |       // Check Content-Disposition header
+      370 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 371 |       expect(contentDisposition).toBeTruthy();
+          |                                  ^
+      372 |       expect(contentDisposition).toContain('Magistrates Public List');
+      373 |
+      374 |       // Welsh month names could be present (e.g., "Ionawr", "Chwefror", etc.)
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:371:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      369 |       // Check Content-Disposition header
+      370 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 371 |       expect(contentDisposition).toBeTruthy();
+          |                                  ^
+      372 |       expect(contentDisposition).toContain('Magistrates Public List');
+      373 |
+      374 |       // Welsh month names could be present (e.g., "Ionawr", "Chwefror", etc.)
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:371:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      369 |       // Check Content-Disposition header
+      370 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 371 |       expect(contentDisposition).toBeTruthy();
+          |                                  ^
+      372 |       expect(contentDisposition).toContain('Magistrates Public List');
+      373 |
+      374 |       // Welsh month names could be present (e.g., "Ionawr", "Chwefror", etc.)
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:371:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-126fd-name-with-Welsh-date-format-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given language variants › should include English language label for English artefact" classname="file-publication-data.spec.ts" time="1.162">
+<failure message="file-publication-data.spec.ts:474:5 should include English language label for English artefact" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:474:5 › File Publication Data Endpoint › given language variants › should include English language label for English artefact 
+
+    Error: expect(received).toContain(expected) // indexOf
+
+    Matcher error: received value must not be null nor undefined
+
+    Received has value: undefined
+
+      476 |
+      477 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 478 |       expect(contentDisposition).toContain('English (Saesneg)');
+          |                                  ^
+      479 |     });
+      480 |
+      481 |     test('should include Welsh language label for Welsh artefact', async ({ page }) => {
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:478:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toContain(expected) // indexOf
+
+    Matcher error: received value must not be null nor undefined
+
+    Received has value: undefined
+
+      476 |
+      477 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 478 |       expect(contentDisposition).toContain('English (Saesneg)');
+          |                                  ^
+      479 |     });
+      480 |
+      481 |     test('should include Welsh language label for Welsh artefact', async ({ page }) => {
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:478:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toContain(expected) // indexOf
+
+    Matcher error: received value must not be null nor undefined
+
+    Received has value: undefined
+
+      476 |
+      477 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 478 |       expect(contentDisposition).toContain('English (Saesneg)');
+          |                                  ^
+      479 |     });
+      480 |
+      481 |     test('should include Welsh language label for Welsh artefact', async ({ page }) => {
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:478:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-5c05d--label-for-English-artefact-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given language variants › should include Welsh language label for Welsh artefact" classname="file-publication-data.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="File Publication Data Endpoint › given security considerations › should not allow path traversal in artefactId" classname="file-publication-data.spec.ts" time="1.046">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-4b2de-ath-traversal-in-artefactId-chromium-retry1/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given security considerations › should sanitize special characters in filename" classname="file-publication-data.spec.ts" time="0.559">
+<failure message="file-publication-data.spec.ts:559:5 should sanitize special characters in filename" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:559:5 › File Publication Data Endpoint › given security considerations › should sanitize special characters in filename 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      562 |       // Check that Content-Disposition is properly formatted
+      563 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 564 |       expect(contentDisposition).toBeTruthy();
+          |                                  ^
+      565 |
+      566 |       // Should be properly quoted
+      567 |       expect(contentDisposition).toMatch(/filename="[^"]+"/);
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:564:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      562 |       // Check that Content-Disposition is properly formatted
+      563 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 564 |       expect(contentDisposition).toBeTruthy();
+          |                                  ^
+      565 |
+      566 |       // Should be properly quoted
+      567 |       expect(contentDisposition).toMatch(/filename="[^"]+"/);
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:564:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBeTruthy()
+
+    Received: undefined
+
+      562 |       // Check that Content-Disposition is properly formatted
+      563 |       const contentDisposition = response?.headers()['content-disposition'];
+    > 564 |       expect(contentDisposition).toBeTruthy();
+          |                                  ^
+      565 |
+      566 |       // Should be properly quoted
+      567 |       expect(contentDisposition).toMatch(/filename="[^"]+"/);
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:564:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[[31mprisma:error[39m 
+Invalid `prisma.artefact.delete()` invocation:
+
+
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium/error-context.md]]
+[31mprisma:error[39m 
+Invalid `prisma.artefact.delete()` invocation:
+
+
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry1/trace.zip]]
+[31mprisma:error[39m 
+Invalid `prisma.artefact.delete()` invocation:
+
+
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-b313c-cial-characters-in-filename-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="File Publication Data Endpoint › given performance considerations › should serve larger files within reasonable time" classname="file-publication-data.spec.ts" time="1.192">
+<failure message="file-publication-data.spec.ts:632:5 should serve larger files within reasonable time" type="FAILURE">
+<![CDATA[  [chromium] › file-publication-data.spec.ts:632:5 › File Publication Data Endpoint › given performance considerations › should serve larger files within reasonable time 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      637 |       // Should complete within 5 seconds
+      638 |       expect(endTime - startTime).toBeLessThan(5000);
+    > 639 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      640 |     });
+      641 |   });
+      642 | });
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:639:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      637 |       // Should complete within 5 seconds
+      638 |       expect(endTime - startTime).toBeLessThan(5000);
+    > 639 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      640 |     });
+      641 |   });
+      642 | });
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:639:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/trace.zip
+    Usage:
+
+        yarn playwright show-trace ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      637 |       // Should complete within 5 seconds
+      638 |       expect(endTime - startTime).toBeLessThan(5000);
+    > 639 |       expect(response?.status()).toBe(200);
+          |                                  ^
+      640 |     });
+      641 |   });
+      642 | });
+        at /workspaces/cath-service/e2e-tests/tests/file-publication-data.spec.ts:639:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry2/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/error-context.md]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry1/trace.zip]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry2/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry2/video.webm]]
+
+[[ATTACHMENT|test-results/file-publication-data-File-46fc3-iles-within-reasonable-time-chromium-retry2/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

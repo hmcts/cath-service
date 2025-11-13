@@ -13,7 +13,7 @@ import { prisma } from '@hmcts/postgres';
 test.describe('Summary of Publications Page', () => {
   // App runs from repo root, not apps/web
   const STORAGE_PATH = path.join(process.cwd(), '..', 'storage', 'temp', 'uploads');
-  const TEST_ARTEFACT_IDS = ['test-summary-artefact-1', 'test-summary-artefact-2', 'test-summary-artefact-3'];
+  let TEST_ARTEFACT_IDS: string[] = [];
   const TEST_FILE_CONTENT = Buffer.from('Test PDF content for summary page');
 
   test.beforeAll(async () => {
@@ -21,27 +21,10 @@ test.describe('Summary of Publications Page', () => {
     await fs.mkdir(STORAGE_PATH, { recursive: true });
 
     // Create multiple test artefacts for locationId=9
-    for (let i = 0; i < TEST_ARTEFACT_IDS.length; i++) {
-      const artefactId = TEST_ARTEFACT_IDS[i];
-
-      // Clean up any existing data
-      try {
-        await fs.unlink(path.join(STORAGE_PATH, `${artefactId}.pdf`));
-      } catch { /* Ignore */ }
-      try {
-        await prisma.artefact.delete({ where: { artefactId } });
-      } catch { /* Ignore */ }
-
-      // Create test file
-      await fs.writeFile(
-        path.join(STORAGE_PATH, `${artefactId}.pdf`),
-        TEST_FILE_CONTENT
-      );
-
-      // Create artefact record with different dates for sorting tests
-      await prisma.artefact.create({
+    for (let i = 0; i < 3; i++) {
+      // Create artefact record with different dates for sorting tests (Prisma will generate UUID)
+      const artefact = await prisma.artefact.create({
         data: {
-          artefactId,
           locationId: '9', // SJP location
           listTypeId: 1, // Magistrates Public List
           contentDate: new Date(2025, 0, 15 - i), // Different dates: 15, 14, 13 January
@@ -51,6 +34,13 @@ test.describe('Summary of Publications Page', () => {
           displayTo: new Date('2025-12-31')
         }
       });
+      TEST_ARTEFACT_IDS.push(artefact.artefactId);
+
+      // Create test file
+      await fs.writeFile(
+        path.join(STORAGE_PATH, `${artefact.artefactId}.pdf`),
+        TEST_FILE_CONTENT
+      );
     }
   });
 
