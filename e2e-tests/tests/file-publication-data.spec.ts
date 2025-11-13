@@ -254,16 +254,17 @@ test.describe('File Publication Data Endpoint', () => {
     });
 
     test('should serve unknown file types with octet-stream', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${docxArtefactId}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${docxArtefactId}`);
 
       // Verify response
-      expect(response?.status()).toBe(200);
+      expect(response.status()).toBe(200);
 
       // Check headers
-      const headers = response?.headers();
-      expect(headers?.['content-type']).toBe('application/octet-stream');
-      expect(headers?.['content-disposition']).toContain('attachment');
-      expect(headers?.['content-disposition']).toContain('.docx');
+      const headers = response.headers();
+      expect(headers['content-type']).toBe('application/octet-stream');
+      expect(headers['content-disposition']).toContain('attachment');
+      expect(headers['content-disposition']).toContain('.docx');
     });
   });
 
