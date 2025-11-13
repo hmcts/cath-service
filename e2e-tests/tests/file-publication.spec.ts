@@ -146,7 +146,7 @@ test.describe('File Publication Page', () => {
 
       // Check title includes expected components
       const title = await page.title();
-      expect(title).toMatch(/Magistrates Public List/);
+      expect(title).toMatch(/Civil Daily Cause List/);
       expect(title).toMatch(/English \(Saesneg\)/);
       expect(title).toMatch(/\d{1,2}\s\w+\s\d{4}/); // Date format
     });
