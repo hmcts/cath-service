@@ -179,10 +179,8 @@ test.describe('File Publication Page', () => {
       await expect(heading).toBeVisible();
       await expect(heading).toContainText(/page not found/i);
 
-      // Check for helpful error message (inside grid-row to avoid cookie banner)
-      const bodyText = page.locator('.govuk-grid-row .govuk-body');
-      await expect(bodyText).toBeVisible();
-      await expect(bodyText).toContainText(/attempted to view a page that no longer exists/i);
+      // Check for helpful error message
+      await expect(page.getByText(/attempted to view a page that no longer exists/i)).toBeVisible();
 
       // Check for "Find a court or tribunal" button
       const button = page.locator('a.govuk-button.govuk-button--start');

@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="30.619283000000003">
-<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:38:08.828Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.482" errors="0">
-<testcase name="File Publication Page › given file does not exist › should display Welsh error content when locale is cy" classname="file-publication.spec.ts" time="0.482">
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="12.167849">
+<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:43:20.730Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.437" errors="0">
+<testcase name="File Publication Page › given file does not exist › should display 404 error page with helpful message" classname="file-publication.spec.ts" time="0.437">
 </testcase>
 </testsuite>
 </testsuites>
