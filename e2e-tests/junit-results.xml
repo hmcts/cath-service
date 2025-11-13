@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="11.840988000000001">
-<testsuite name="file-publication-data.spec.ts" timestamp="2025-11-13T16:16:58.505Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.167" errors="0">
-<testcase name="File Publication Data Endpoint › given other file types are requested › should serve unknown file types with octet-stream" classname="file-publication-data.spec.ts" time="0.167">
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="11.916015999999999">
+<testsuite name="file-publication-data.spec.ts" timestamp="2025-11-13T16:18:43.138Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.163" errors="0">
+<testcase name="File Publication Data Endpoint › given JSON file is requested › should serve JSON with correct content-type and disposition" classname="file-publication-data.spec.ts" time="0.163">
 </testcase>
 </testsuite>
 </testsuites>

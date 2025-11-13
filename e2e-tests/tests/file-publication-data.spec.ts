@@ -178,17 +178,18 @@ test.describe('File Publication Data Endpoint', () => {
     });
 
     test('should serve JSON with correct content-type and disposition', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${jsonArtefactId}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${jsonArtefactId}`);
 
       // Verify response
-      expect(response?.status()).toBe(200);
+      expect(response.status()).toBe(200);
 
       // Check headers
-      const headers = response?.headers();
-      expect(headers?.['content-type']).toBe('application/json');
-      expect(headers?.['content-disposition']).toContain('attachment');
-      expect(headers?.['content-disposition']).toContain('filename=');
-      expect(headers?.['content-disposition']).toContain('.json');
+      const headers = response.headers();
+      expect(headers['content-type']).toContain('application/json');
+      expect(headers['content-disposition']).toContain('attachment');
+      expect(headers['content-disposition']).toContain('filename=');
+      expect(headers['content-disposition']).toContain('.json');
     });
   });
 
