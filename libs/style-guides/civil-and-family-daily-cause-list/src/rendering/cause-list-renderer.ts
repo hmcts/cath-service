@@ -94,11 +94,6 @@ function formatTime(isoDateTime: string): string {
   return `${hour12}${minuteStr}${period}`;
 }
 
-function formatDate(isoDateTime: string, locale: string): string {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-  return dt.toFormat("d MMMM yyyy");
-}
-
 function formatContentDate(date: Date, locale: string): string {
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   return date.toLocaleDateString(localeCode, {

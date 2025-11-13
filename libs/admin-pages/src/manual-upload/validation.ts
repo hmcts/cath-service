@@ -44,7 +44,7 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
               href: "#file"
             });
           }
-        } catch (parseError) {
+        } catch {
           errors.push({
             text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
             href: "#file"

@@ -65,7 +65,7 @@ test.describe('Summary of Publications Page', () => {
 
       // Verify first link format (should include formatted list type, date, and language)
       const firstLinkText = await publicationLinks.first().textContent();
-      expect(firstLinkText).toMatch(/\w+.*-.*\d{1,2}\s\w+\s\d{4}.*-.*\w+/); // Matches "List Type - 1 January 2025 - English" format
+      expect(firstLinkText?.trim()).toMatch(/.+\d{1,2}\s\w+\s\d{4}\s-\s.+/); // Matches "List Type DD Month YYYY - Language" format
     });
   });
 

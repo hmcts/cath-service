@@ -16,6 +16,7 @@
     "migrate": "yarn collate && prisma migrate deploy",
     "migrate:dev": "yarn collate && prisma migrate dev",
     "migrate:reset": "yarn collate && prisma migrate reset",
+    "seed": "tsx prisma/seed.ts",
     "studio": "yarn collate && prisma studio",
     "test": "vitest run",
     "test:watch": "vitest watch",
