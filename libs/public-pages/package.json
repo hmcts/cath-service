@@ -26,6 +26,7 @@
     "express": "^5.1.0"
   },
   "dependencies": {
+    "@hmcts/admin-pages": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*"

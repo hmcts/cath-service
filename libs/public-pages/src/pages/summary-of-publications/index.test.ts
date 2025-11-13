@@ -27,6 +27,71 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+// Mock the publication module
+vi.mock("@hmcts/publication", async () => {
+  const actual = await vi.importActual("@hmcts/publication");
+  return {
+    ...actual,
+    getArtefactsByLocationId: vi.fn((locationId: string) => {
+      if (locationId === "9") {
+        return Promise.resolve([
+          {
+            artefactId: "a1",
+            locationId: "9",
+            listTypeId: 4,
+            contentDate: new Date("2025-04-20"),
+            sensitivity: "PUBLIC",
+            language: "ENGLISH",
+            displayFrom: new Date("2025-04-20"),
+            displayTo: new Date("2025-04-21")
+          },
+          {
+            artefactId: "a2",
+            locationId: "9",
+            listTypeId: 4,
+            contentDate: new Date("2025-04-18"),
+            sensitivity: "PUBLIC",
+            language: "ENGLISH",
+            displayFrom: new Date("2025-04-18"),
+            displayTo: new Date("2025-04-19")
+          },
+          {
+            artefactId: "a3",
+            locationId: "9",
+            listTypeId: 3,
+            contentDate: new Date("2025-04-15"),
+            sensitivity: "PUBLIC",
+            language: "ENGLISH",
+            displayFrom: new Date("2025-04-15"),
+            displayTo: new Date("2025-04-16")
+          }
+        ]);
+      }
+      return Promise.resolve([]);
+    })
+  };
+});
+
+// Mock the admin-pages module
+vi.mock("@hmcts/admin-pages", () => ({
+  getUploadedFile: vi.fn((artefactId: string) => {
+    // Return PDF for a1 and a2, non-PDF for a3
+    if (artefactId === "a1" || artefactId === "a2") {
+      return Promise.resolve({
+        fileData: Buffer.from("mock-pdf-data"),
+        fileName: `${artefactId}.pdf`
+      });
+    }
+    if (artefactId === "a3") {
+      return Promise.resolve({
+        fileData: Buffer.from("mock-doc-data"),
+        fileName: `${artefactId}.docx`
+      });
+    }
+    return Promise.resolve(null);
+  })
+}));
+
 describe("Summary of Publications - GET handler", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -99,8 +164,8 @@ describe("Summary of Publications - GET handler", () => {
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.publications).toBeDefined();
       expect(renderCall.publications.length).toBeGreaterThan(0);
-      // All publications should be for locationId 9
-      expect(renderCall.publications.every((p: any) => p.id > 0)).toBe(true);
+      // All publications should have a valid id
+      expect(renderCall.publications.every((p: any) => p.id && p.id.length > 0)).toBe(true);
     });
 
     it("should render publications sorted by date descending", async () => {
@@ -152,6 +217,34 @@ describe("Summary of Publications - GET handler", () => {
 
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.noPublicationsMessage).toBe("Sorry, no lists found for this court");
+    });
+
+    it("should set isPdf flag to true for PDF files", async () => {
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      // a1 and a2 are PDFs, should have isPdf = true
+      const pdfPublications = publications.filter((p: any) => p.id === "a1" || p.id === "a2");
+      expect(pdfPublications.every((p: any) => p.isPdf === true)).toBe(true);
+    });
+
+    it("should set isPdf flag to false for non-PDF files", async () => {
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      // a3 is a DOCX file, should have isPdf = false
+      const nonPdfPublication = publications.find((p: any) => p.id === "a3");
+      expect(nonPdfPublication.isPdf).toBe(false);
     });
   });
 
