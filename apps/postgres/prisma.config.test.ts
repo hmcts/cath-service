@@ -60,4 +60,20 @@ describe("Prisma Config", () => {
     expect(config.schema).toBe(expectedSchemaPath);
     expect(config.migrations.path).toBe(expectedMigrationsPath);
   });
+
+  it("should have seed command configuration", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config).toHaveProperty("seed");
+    expect(config.seed).toHaveProperty("command");
+    expect(typeof config.seed.command).toBe("string");
+  });
+
+  it("should point seed to prisma/seed.ts file", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config.seed.command).toContain("prisma/seed.ts");
+    expect(config.seed.command).toContain("tsx");
+    expect(config.seed.command).toContain("node_modules");
+  });
 });
