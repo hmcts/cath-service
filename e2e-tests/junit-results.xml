@@ -1,6 +1,6 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="17.059316">
-<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:21:25.104Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.219" errors="0">
-<testcase name="File Publication Page › given user navigates from summary page › should open in new window when clicked from summary page" classname="file-publication.spec.ts" time="0.219">
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="30.619283000000003">
+<testsuite name="file-publication.spec.ts" timestamp="2025-11-13T15:38:08.828Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.482" errors="0">
+<testcase name="File Publication Page › given file does not exist › should display Welsh error content when locale is cy" classname="file-publication.spec.ts" time="0.482">
 </testcase>
 </testsuite>
 </testsuites>

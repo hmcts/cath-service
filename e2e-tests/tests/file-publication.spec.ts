@@ -208,10 +208,8 @@ test.describe('File Publication Page', () => {
       await expect(heading).toBeVisible();
       await expect(heading).toContainText(/heb ddod o hyd/i);
 
-      // Check for Welsh body text (inside grid-row to avoid cookie banner)
-      const bodyText = page.locator('.govuk-grid-row .govuk-body');
-      await expect(bodyText).toBeVisible();
-      await expect(bodyText).toContainText(/rydych wedi ceisio gweld tudalen/i);
+      // Check for Welsh body text
+      await expect(page.getByText(/rydych wedi ceisio gweld tudalen/i)).toBeVisible();
 
       // Check for Welsh button text
       const button = page.locator('a.govuk-button.govuk-button--start');
