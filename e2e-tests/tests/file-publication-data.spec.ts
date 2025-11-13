@@ -364,12 +364,13 @@ test.describe('File Publication Data Endpoint', () => {
     });
 
     test('should format filename with Welsh date format', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${welshArtefactId}&lng=cy`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${welshArtefactId}&lng=cy`);
 
       // Check Content-Disposition header
-      const contentDisposition = response?.headers()['content-disposition'];
+      const contentDisposition = response.headers()['content-disposition'];
       expect(contentDisposition).toBeTruthy();
-      expect(contentDisposition).toContain('Magistrates Public List');
+      expect(contentDisposition).toContain('Civil Daily Cause List');
 
       // Welsh month names could be present (e.g., "Ionawr", "Chwefror", etc.)
       // We verify the structure is correct
