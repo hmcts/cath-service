@@ -557,14 +557,17 @@ test.describe('File Publication Data Endpoint', () => {
     });
 
     test('should sanitize special characters in filename', async ({ page }) => {
-      const response = await page.goto(`/file-publication-data?artefactId=${securityTestId}`);
+      // Use request API instead of page.goto to avoid download dialog
+      const response = await page.request.get(`/file-publication-data?artefactId=${securityTestId}`);
 
       // Check that Content-Disposition is properly formatted
-      const contentDisposition = response?.headers()['content-disposition'];
+      const contentDisposition = response.headers()['content-disposition'];
       expect(contentDisposition).toBeTruthy();
 
       // Should be properly quoted
       expect(contentDisposition).toMatch(/filename="[^"]+"/);
+
+      expect(response.status()).toBe(200);
     });
   });
 
