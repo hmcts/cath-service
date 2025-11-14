@@ -3,10 +3,10 @@ import path from "node:path";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
-import { cy } from "../locales/cy.js";
-import { en } from "../locales/en.js";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const TEMP_UPLOAD_DIR = path.join(process.cwd(), "storage/temp/uploads");
 
