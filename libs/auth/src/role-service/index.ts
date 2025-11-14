@@ -44,3 +44,19 @@ export function hasRole(userRole: string | undefined, allowedRoles: string[]): b
   }
   return allowedRoles.includes(userRole);
 }
+
+const REJECTED_ROLE_PATTERN = /^citizen(-.*)?$|^letter-holder$/;
+
+/**
+ * Checks if any of the provided roles match the rejected role pattern
+ * Rejected roles include: citizen, citizen-*, letter-holder
+ * @param roles - Array of role strings to check
+ * @returns true if any role matches the rejected pattern, false otherwise
+ */
+export function isRejectedCFTRole(roles: string[]): boolean {
+  if (!roles || roles.length === 0) {
+    return false;
+  }
+
+  return roles.some((role) => REJECTED_ROLE_PATTERN.test(role));
+}

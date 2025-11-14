@@ -1,9 +1,12 @@
 export { USER_ROLES } from "@hmcts/account";
+export { getCftIdamConfig, isCftIdamConfigured } from "./config/cft-idam-config.js";
 export { configurePassport } from "./config/passport-config.js";
 export { isSsoConfigured } from "./config/sso-config.js";
 export { requireAuth } from "./middleware/authenticate.js";
-export { requireRole } from "./middleware/authorise.js";
+export { blockUserAccess, requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";
 export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
-export { GET as ssoCallbackHandler } from "./pages/callback/sso.js";
+export { GET as cftCallbackHandler } from "./pages/cft-callback/index.js";
+export { GET as ssoCallbackHandler } from "./pages/sso-callback/index.js";
+export { isRejectedCFTRole } from "./role-service/index.js";
 export type { UserProfile } from "./user-profile.js";

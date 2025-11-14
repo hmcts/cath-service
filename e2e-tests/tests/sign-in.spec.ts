@@ -39,7 +39,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user selects HMCTS account", () => {
-    test("should redirect to home page when continue is clicked", async ({ page }) => {
+    test("should redirect to CFT IDAM login when continue is clicked", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Select the HMCTS account radio option
@@ -53,8 +53,10 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify navigation to home page
-      await expect(page).toHaveURL("/");
+      // Verify navigation to CFT IDAM login (external or internal)
+      await page.waitForTimeout(1000); // Wait for redirect
+      const currentUrl = page.url();
+      expect(currentUrl).toMatch(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
     });
   });
 

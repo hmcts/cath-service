@@ -48,7 +48,6 @@ describe("select-account template", () => {
     it("should have create account text and link", () => {
       expect(en.createAccountText).toBe("Don't have a CaTH account?");
       expect(en.createAccountLink).toBe("Create one here");
-      expect(en.createAccountUrl).toBe("/create-media-account");
     });
   });
 
@@ -84,7 +83,6 @@ describe("select-account template", () => {
     it("should have create account text and link", () => {
       expect(cy.createAccountText).toBe("Nid oes gennych gyfrif CaTH?");
       expect(cy.createAccountLink).toBe("Crëwch un yma");
-      expect(cy.createAccountUrl).toBe("/create-media-account");
     });
   });
 
@@ -103,8 +101,7 @@ describe("select-account template", () => {
         "cathLabel",
         "continueButton",
         "createAccountText",
-        "createAccountLink",
-        "createAccountUrl"
+        "createAccountLink"
       ];
 
       for (const key of requiredKeys) {

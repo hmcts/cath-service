@@ -10,7 +10,68 @@ vi.mock("../../config/sso-config.js", () => ({
 }));
 
 describe("Logout handler", () => {
-  it("should logout user and redirect to Azure AD logout with tenant ID", async () => {
+  it("should logout CFT IDAM user and redirect to session-logged-out page", async () => {
+    const req = {
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        displayName: "Test User",
+        role: "VERIFIED",
+        provenance: "CFT"
+      },
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(req.logout).toHaveBeenCalled();
+    expect(req.session.destroy).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
+  });
+
+  it("should logout SSO user and redirect to Azure AD logout with tenant ID", async () => {
+    const req = {
+      user: {
+        id: "user-456",
+        email: "sso@example.com",
+        displayName: "SSO User",
+        provenance: "SSO"
+      },
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(req.logout).toHaveBeenCalled();
+    expect(req.session.destroy).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(res.redirect).toHaveBeenCalledWith(
+      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out"
+    );
+  });
+
+  it("should logout user without provenance and redirect to Azure AD logout with tenant ID", async () => {
     const req = {
       logout: vi.fn((cb) => cb(null)),
       session: {
@@ -31,11 +92,11 @@ describe("Logout handler", () => {
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
     expect(res.redirect).toHaveBeenCalledWith(
-      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2F"
+      "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out"
     );
   });
 
-  it("should redirect to / when tenant ID cannot be extracted", async () => {
+  it("should redirect to /session-logged-out when tenant ID cannot be extracted", async () => {
     const { getSsoConfig } = await import("../../config/sso-config.js");
 
     vi.mocked(getSsoConfig).mockReturnValue({
@@ -58,7 +119,7 @@ describe("Logout handler", () => {
 
     await GET(req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith("/");
+    expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
   });
 
   it("should continue logout even if logout callback has error", async () => {

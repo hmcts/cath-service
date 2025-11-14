@@ -1,9 +1,9 @@
-import { buildVerifiedUserNavigation } from "@hmcts/auth";
-import type { Request, Response } from "express";
+import { blockUserAccess, buildVerifiedUserNavigation } from "@hmcts/auth";
+import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-export const GET = async (req: Request, res: Response) => {
+const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
 
   // Build navigation items using centralized navigation builder
@@ -14,3 +14,5 @@ export const GET = async (req: Request, res: Response) => {
 
   res.render("account-home/index", { en, cy });
 };
+
+export const GET: RequestHandler[] = [blockUserAccess(), getHandler];

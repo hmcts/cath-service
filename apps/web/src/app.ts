@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
-import { authNavigationMiddleware, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
+import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
@@ -41,7 +41,11 @@ export async function createApp(): Promise<Express> {
   app.use(healthcheck());
   app.use(monitoringMiddleware(config.get("applicationInsights")));
   app.use(configureNonce());
-  app.use(configureHelmet());
+  app.use(
+    configureHelmet({
+      cftIdamUrl: process.env.CFT_IDAM_URL
+    })
+  );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
   // Initialize Passport for Azure AD authentication
@@ -73,6 +77,9 @@ export async function createApp(): Promise<Express> {
 
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);
+
+  // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
+  app.get("/cft-login/return", cftCallbackHandler);
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));

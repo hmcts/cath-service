@@ -16,10 +16,14 @@ const SECRET_MAPPINGS = {
   'sso-test-admin-account-ctsc-pwd': 'SSO_TEST_CTSC_ADMIN_PASSWORD',
   'sso-test-no-roles-account-user': 'SSO_TEST_NO_ROLES_EMAIL',
   'sso-test-no-roles-account-pwd': 'SSO_TEST_NO_ROLES_PASSWORD',
+  'cft-valid-test-account': 'CFT_VALID_TEST_ACCOUNT',
+  'cft-valid-test-account-password': 'CFT_VALID_TEST_ACCOUNT_PASSWORD',
+  'cft-invalid-test-account': 'CFT_INVALID_TEST_ACCOUNT',
+  'cft-invalid-test-account-password': 'CFT_INVALID_TEST_ACCOUNT_PASSWORD',
 };
 
 async function loadCredentialsFromAzure() {
-  console.log('🔐 Loading SSO test credentials from Azure Key Vault...');
+  console.log('🔐 Loading test credentials from Azure Key Vault...');
   console.log(`📥 Fetching secrets from ${VAULT_NAME}...`);
 
   try {
@@ -49,11 +53,15 @@ async function loadCredentialsFromAzure() {
 
     console.log('✅ Test credentials loaded successfully');
     console.log('');
-    console.log('Credentials loaded:');
+    console.log('SSO Credentials:');
     console.log(`  - System Admin: ${credentials.SSO_TEST_SYSTEM_ADMIN_EMAIL}`);
     console.log(`  - Local Admin: ${credentials.SSO_TEST_LOCAL_ADMIN_EMAIL}`);
     console.log(`  - CTSC Admin: ${credentials.SSO_TEST_CTSC_ADMIN_EMAIL}`);
     console.log(`  - No Roles User: ${credentials.SSO_TEST_NO_ROLES_EMAIL}`);
+    console.log('');
+    console.log('CFT IDAM Credentials:');
+    console.log(`  - Valid Account: ${credentials.CFT_VALID_TEST_ACCOUNT}`);
+    console.log(`  - Invalid Account: ${credentials.CFT_INVALID_TEST_ACCOUNT}`);
     console.log('');
 
     return credentials;
@@ -75,7 +83,7 @@ async function runPlaywright() {
 
   // Check if running in CI
   if (process.env.CI === 'true') {
-    console.log('ℹ️  Running in CI - using GitHub Secrets for test credentials');
+    console.log('ℹ️  Running in CI - using GitHub Secrets for SSO and CFT IDAM test credentials');
     console.log('');
   } else {
     // Load credentials from Azure Key Vault

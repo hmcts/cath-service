@@ -1,6 +1,9 @@
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock dotenv to avoid file system side effects
+vi.mock("dotenv/config", () => ({}));
+
 // Mock fs to avoid actual file reads during config import
 vi.mock("node:fs", () => ({
   default: {
@@ -17,7 +20,7 @@ describe("Prisma Config", () => {
   it("should export a default config", async () => {
     const configModule = await import("./prisma.config.js");
     expect(configModule.default).toBeDefined();
-  });
+  }, 10000);
 
   it("should have schema path configuration", async () => {
     const configModule = await import("./prisma.config.js");

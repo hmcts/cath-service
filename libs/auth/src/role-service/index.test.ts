@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ssoConfigModule from "../config/sso-config.js";
-import { determineSsoUserRole, hasRole } from "./index.js";
+import { determineSsoUserRole, hasRole, isRejectedCFTRole } from "./index.js";
 
 vi.mock("../config/sso-config.js");
 
@@ -97,6 +97,62 @@ describe("Role Service", () => {
       const userRole = USER_ROLES.SYSTEM_ADMIN;
 
       expect(hasRole(userRole, [])).toBe(false);
+    });
+  });
+
+  describe("isRejectedCFTRole", () => {
+    it("should reject citizen role", () => {
+      expect(isRejectedCFTRole(["citizen"])).toBe(true);
+    });
+
+    it("should reject citizen with suffix roles", () => {
+      expect(isRejectedCFTRole(["citizen-pro"])).toBe(true);
+      expect(isRejectedCFTRole(["citizen-basic"])).toBe(true);
+      expect(isRejectedCFTRole(["citizen-advanced"])).toBe(true);
+    });
+
+    it("should reject letter-holder role", () => {
+      expect(isRejectedCFTRole(["letter-holder"])).toBe(true);
+    });
+
+    it("should reject when citizen is among multiple roles", () => {
+      expect(isRejectedCFTRole(["caseworker", "citizen", "admin"])).toBe(true);
+    });
+
+    it("should reject when letter-holder is among multiple roles", () => {
+      expect(isRejectedCFTRole(["viewer", "letter-holder"])).toBe(true);
+    });
+
+    it("should accept caseworker role", () => {
+      expect(isRejectedCFTRole(["caseworker"])).toBe(false);
+    });
+
+    it("should accept admin role", () => {
+      expect(isRejectedCFTRole(["admin"])).toBe(false);
+    });
+
+    it("should accept multiple valid roles", () => {
+      expect(isRejectedCFTRole(["caseworker", "admin", "viewer"])).toBe(false);
+    });
+
+    it("should accept empty roles array", () => {
+      expect(isRejectedCFTRole([])).toBe(false);
+    });
+
+    it("should handle roles that contain citizen but dont match pattern", () => {
+      expect(isRejectedCFTRole(["non-citizen"])).toBe(false);
+      expect(isRejectedCFTRole(["citizenry"])).toBe(false);
+    });
+
+    it("should handle roles that contain letter-holder but dont match pattern", () => {
+      expect(isRejectedCFTRole(["letter-holder-admin"])).toBe(false);
+      expect(isRejectedCFTRole(["former-letter-holder"])).toBe(false);
+    });
+
+    it("should be case-sensitive", () => {
+      expect(isRejectedCFTRole(["Citizen"])).toBe(false);
+      expect(isRejectedCFTRole(["CITIZEN"])).toBe(false);
+      expect(isRejectedCFTRole(["Letter-Holder"])).toBe(false);
     });
   });
 });

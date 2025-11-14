@@ -22,7 +22,8 @@ async function verifyOidcCallback(_iss: any, _sub: any, profile: any, accessToke
       id: profile.oid || userProfile.id,
       email: profile.upn || profile.email || profile._json?.email || userProfile.email,
       displayName: profile.name || profile._json?.name || userProfile.displayName,
-      role: userRole
+      role: userRole,
+      provenance: "SSO"
     };
 
     return done(null, user);

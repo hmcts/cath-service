@@ -37,3 +37,30 @@ export function requireRole(allowedRoles: string[]): RequestHandler {
     return res.redirect("/login");
   };
 }
+
+/**
+ * Middleware to block SSO users from accessing certain pages
+ * SSO admin users (System Admin, Local Admin, CTSC Admin) are redirected to admin-dashboard
+ * CFT IDAM users are allowed to proceed
+ * @returns Express middleware function
+ */
+export function blockUserAccess(): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction) => {
+    // Allow unauthenticated users (will be handled by other middleware)
+    if (!req.isAuthenticated() || !req.user) {
+      return next();
+    }
+
+    // Check if user authenticated via SSO
+    if (req.user.provenance === "SSO") {
+      // Redirect all SSO admin users to admin-dashboard
+      const userRole = req.user.role;
+      if (userRole === USER_ROLES.SYSTEM_ADMIN || userRole === USER_ROLES.INTERNAL_ADMIN_CTSC || userRole === USER_ROLES.INTERNAL_ADMIN_LOCAL) {
+        return res.redirect("/admin-dashboard");
+      }
+    }
+
+    // Allow CFT IDAM users and others to proceed
+    return next();
+  };
+}

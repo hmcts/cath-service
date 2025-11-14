@@ -7,6 +7,5 @@ export const cy = {
   cathLabel: "Gyda chyfrif gwrandawiadau Llys a thribiwnlys",
   continueButton: "Parhau",
   createAccountText: "Nid oes gennych gyfrif CaTH?",
-  createAccountLink: "Crëwch un yma",
-  createAccountUrl: "/create-media-account"
+  createAccountLink: "Crëwch un yma"
 };

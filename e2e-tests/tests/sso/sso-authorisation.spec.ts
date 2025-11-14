@@ -75,4 +75,40 @@ test.describe('SSO Role-Based Access Control', () => {
     );
     await expect(page).toHaveURL('/system-admin-dashboard');
   });
+
+  test('System Admin cannot access account-home and is redirected to admin-dashboard', async ({ page }) => {
+    await page.goto('/system-admin-dashboard');
+    await loginWithSSO(
+      page,
+      process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!,
+      process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!
+    );
+    await expect(page).toHaveURL('/system-admin-dashboard');
+    await page.goto('/account-home');
+    await expect(page).toHaveURL('/admin-dashboard');
+  });
+
+  test('Local Admin cannot access account-home and is redirected to admin-dashboard', async ({ page }) => {
+    await page.goto('/admin-dashboard');
+    await loginWithSSO(
+      page,
+      process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+      process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+    );
+    await expect(page).toHaveURL('/admin-dashboard');
+    await page.goto('/account-home');
+    await expect(page).toHaveURL('/admin-dashboard');
+  });
+
+  test('CTSC Admin cannot access account-home and is redirected to admin-dashboard', async ({ page }) => {
+    await page.goto('/admin-dashboard');
+    await loginWithSSO(
+      page,
+      process.env.SSO_TEST_CTSC_ADMIN_EMAIL!,
+      process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!
+    );
+    await expect(page).toHaveURL('/admin-dashboard');
+    await page.goto('/account-home');
+    await expect(page).toHaveURL('/admin-dashboard');
+  });
 });

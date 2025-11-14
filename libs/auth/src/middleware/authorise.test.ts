@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { requireRole } from "./authorise.js";
+import { blockUserAccess, requireRole } from "./authorise.js";
 
 describe("requireRole middleware", () => {
   it("should call next for authenticated user with required role", () => {
@@ -172,5 +172,174 @@ describe("requireRole middleware", () => {
     middleware(req, res, next);
 
     expect(next).toHaveBeenCalled();
+  });
+});
+
+describe("blockUserAccess middleware", () => {
+  it("should redirect SSO System Admin to /admin-dashboard", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: {
+        role: USER_ROLES.SYSTEM_ADMIN,
+        provenance: "SSO"
+      }
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/admin-dashboard");
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should redirect SSO Local Admin to /admin-dashboard", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: {
+        role: USER_ROLES.INTERNAL_ADMIN_LOCAL,
+        provenance: "SSO"
+      }
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/admin-dashboard");
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should redirect SSO CTSC Admin to /admin-dashboard", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: {
+        role: USER_ROLES.INTERNAL_ADMIN_CTSC,
+        provenance: "SSO"
+      }
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/admin-dashboard");
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should call next for CFT IDAM user", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: {
+        id: "user-123",
+        email: "user@example.com",
+        displayName: "Test User",
+        role: "VERIFIED",
+        provenance: "CFT"
+      }
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
+  it("should call next for unauthenticated user", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => false,
+      user: undefined
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
+  it("should call next for user without provenance", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: {
+        id: "user-123",
+        email: "user@example.com",
+        displayName: "Test User",
+        role: "VERIFIED",
+        provenance: undefined
+      }
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
+  it("should call next for SSO user without admin role", () => {
+    const middleware = blockUserAccess();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: {
+        id: "user-123",
+        email: "user@example.com",
+        displayName: "Test User",
+        role: "SOME_OTHER_ROLE",
+        provenance: "SSO"
+      }
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
   });
 });

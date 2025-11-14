@@ -242,7 +242,8 @@ describe("passport-config", () => {
           id: "user-123",
           email: "test@example.com",
           displayName: "Test User",
-          role: "SYSTEM_ADMIN"
+          role: "SYSTEM_ADMIN",
+          provenance: "SSO"
         })
       );
     });
@@ -270,7 +271,8 @@ describe("passport-config", () => {
       expect(mockDone).toHaveBeenCalledWith(
         null,
         expect.objectContaining({
-          email: "test@example.com"
+          email: "test@example.com",
+          provenance: "SSO"
         })
       );
     });
@@ -298,7 +300,8 @@ describe("passport-config", () => {
       expect(mockDone).toHaveBeenCalledWith(
         null,
         expect.objectContaining({
-          email: "json@example.com"
+          email: "json@example.com",
+          provenance: "SSO"
         })
       );
     });

@@ -1,17 +1,18 @@
 // Load environment variables from .env file
-import dotenv from "dotenv";
-
-dotenv.config();
 
 import fs from "node:fs";
 import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load .env from project root (two levels up from src/)
+dotenv.config({ path: path.join(__dirname, "../../../.env") });
 
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";

@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { GET } from "./sso.js";
+import { GET } from "./index.js";
 
 // Mock passport
 vi.mock("passport", () => ({
