@@ -25,7 +25,7 @@ test.describe('Summary of Publications Page', () => {
       await expect(backLink).toBeVisible();
 
       // Check for publication links (locationId=9 has multiple publications in mock data)
-      const publicationLinks = page.locator('a[href^="/publication/"]');
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       await expect(publicationLinks.first()).toBeVisible();
 
       // Verify link text includes formatted list type and date
@@ -59,13 +59,30 @@ test.describe('Summary of Publications Page', () => {
       await page.goto('/summary-of-publications?locationId=9');
 
       // Get publication links
-      const publicationLinks = page.locator('a[href^="/publication/"]');
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const count = await publicationLinks.count();
       expect(count).toBeGreaterThan(0);
 
       // Verify first link format (should include formatted list type, date, and language)
       const firstLinkText = await publicationLinks.first().textContent();
       expect(firstLinkText?.trim()).toMatch(/.+\d{1,2}\s\w+\s\d{4}\s-\s.+/); // Matches "List Type DD Month YYYY - Language" format
+    });
+
+    test('should generate direct links to list type pages with artefactId parameter', async ({ page }) => {
+      await page.goto('/summary-of-publications?locationId=9');
+
+      // Get publication links
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
+      const count = await publicationLinks.count();
+      expect(count).toBeGreaterThan(0);
+
+      // Verify first link has correct URL structure (direct to list type page with artefactId)
+      const firstLinkHref = await publicationLinks.first().getAttribute('href');
+      expect(firstLinkHref).toBeTruthy();
+      expect(firstLinkHref).toMatch(/^\/[a-z-]+\?artefactId=[a-zA-Z0-9-]+$/);
+
+      // Verify it's NOT using the old /publication/ route
+      expect(firstLinkHref).not.toContain('/publication/');
     });
   });
 
@@ -78,7 +95,7 @@ test.describe('Summary of Publications Page', () => {
       await expect(page.getByText(/sorry, no lists found for this court/i)).toBeVisible();
 
       // Verify no publication links are displayed
-      const publicationLinks = page.locator('a[href^="/publication/"]');
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       await expect(publicationLinks).toHaveCount(0);
 
       // Run accessibility checks
@@ -269,7 +286,7 @@ test.describe('Summary of Publications Page', () => {
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Verify publication links are visible
-      const publicationLinks = page.locator('a[href^="/publication/"]');
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       await expect(publicationLinks.first()).toBeVisible();
     });
 
@@ -296,7 +313,7 @@ test.describe('Summary of Publications Page', () => {
       await page.goto('/summary-of-publications?locationId=9');
 
       // Get all publication links
-      const publicationLinks = page.locator('a[href^="/publication/"]');
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const count = await publicationLinks.count();
 
       if (count > 1) {

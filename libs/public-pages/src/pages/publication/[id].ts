@@ -1,8 +1,6 @@
 import { prisma } from "@hmcts/postgres";
 import type { Request, Response } from "express";
 
-const CIVIL_AND_FAMILY_LIST_TYPE_ID = 8;
-
 export const GET = async (req: Request, res: Response) => {
   const publicationId = req.params.id;
 
@@ -20,12 +18,8 @@ export const GET = async (req: Request, res: Response) => {
       return res.redirect("/404");
     }
 
-    // Route to appropriate view based on list type
-    if (artefact.listTypeId === CIVIL_AND_FAMILY_LIST_TYPE_ID) {
-      return res.redirect(`/civil-and-family-daily-cause-list?artefactId=${artefact.artefactId}`);
-    }
-
-    // For other list types, show a generic message (or implement specific views later)
+    // This handler is now only used for list types without a dedicated page
+    // List types with implemented pages should have urlPath defined and will be accessed directly
     return res.status(501).render("publication-not-implemented", {
       message: "This publication type is not yet available for viewing."
     });

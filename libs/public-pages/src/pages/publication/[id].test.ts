@@ -58,7 +58,7 @@ describe("publication/[id] page", () => {
       expect(res.redirect).toHaveBeenCalledTimes(1);
     });
 
-    it("should redirect to civil-and-family-daily-cause-list for listTypeId 8", async () => {
+    it("should return 501 for listTypeId 8 (civil-and-family list accessed via direct URL now)", async () => {
       req.params = { id: "test-artefact-id" };
       const mockArtefact = {
         artefactId: "test-artefact-id",
@@ -82,8 +82,10 @@ describe("publication/[id] page", () => {
       expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
         where: { artefactId: "test-artefact-id" }
       });
-      expect(res.redirect).toHaveBeenCalledWith("/civil-and-family-daily-cause-list?artefactId=test-artefact-id");
-      expect(res.redirect).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(501);
+      expect(res.render).toHaveBeenCalledWith("publication-not-implemented", {
+        message: "This publication type is not yet available for viewing."
+      });
     });
 
     it("should return 501 and render not-implemented for unsupported list types", async () => {

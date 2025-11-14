@@ -57,7 +57,8 @@ export const GET = async (req: Request, res: Response) => {
       contentDate: artefact.contentDate,
       language: artefact.language,
       formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
-      languageLabel
+      languageLabel,
+      urlPath: listType?.urlPath
     };
   });
 
