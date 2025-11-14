@@ -2,8 +2,8 @@ import { readFile } from "node:fs/promises";
 import { prisma } from "@hmcts/postgres";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderCauseListData } from "../../rendering/renderer.js";
-import { validateCivilFamilyCauseList } from "../../validation/json-validator.js";
+import { renderCauseListData } from "../rendering/renderer.js";
+import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
 import { GET } from "./index.js";
 
 vi.mock("node:fs/promises");
@@ -14,8 +14,8 @@ vi.mock("@hmcts/postgres", () => ({
     }
   }
 }));
-vi.mock("../../validation/json-validator.js");
-vi.mock("../../rendering/renderer.js");
+vi.mock("../validation/json-validator.js");
+vi.mock("../rendering/renderer.js");
 
 describe("civil-and-family-daily-cause-list controller", () => {
   let req: Partial<Request>;
@@ -46,10 +46,10 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.render).toHaveBeenCalledWith(
-        "civil-and-family-daily-cause-list/error",
+        "errors/common",
         expect.objectContaining({
-          title: expect.any(String),
-          message: expect.any(String)
+          errorTitle: expect.any(String),
+          errorMessage: expect.any(String)
         })
       );
     });
@@ -64,7 +64,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         where: { artefactId: "nonexistent-id" }
       });
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.render).toHaveBeenCalledWith("civil-and-family-daily-cause-list/error", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
 
     it("should return 404 when JSON file cannot be read", async () => {
@@ -91,7 +91,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.render).toHaveBeenCalledWith("civil-and-family-daily-cause-list/error", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
 
     it("should return 400 when JSON validation fails", async () => {
@@ -123,7 +123,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
       expect(validateCivilFamilyCauseList).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith("Validation errors:", ["Validation error"]);
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.render).toHaveBeenCalledWith("civil-and-family-daily-cause-list/error", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
 
     it("should successfully render cause list with valid data in English", async () => {
@@ -175,7 +175,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         locale: "en"
       });
       expect(res.render).toHaveBeenCalledWith(
-        "civil-and-family-daily-cause-list/index",
+        "index",
         expect.objectContaining({
           header: expect.any(Object),
           openJustice: expect.any(Object),
@@ -233,7 +233,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         contentDate: mockArtefact.contentDate,
         locale: "cy"
       });
-      expect(res.render).toHaveBeenCalledWith("civil-and-family-daily-cause-list/index", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("index", expect.any(Object));
     });
 
     it("should default to English when locale is not set", async () => {
@@ -294,7 +294,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith("Error rendering cause list:", expect.any(Error));
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.render).toHaveBeenCalledWith("civil-and-family-daily-cause-list/error", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
 
     it("should use provenance label for data source", async () => {
@@ -340,7 +340,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "civil-and-family-daily-cause-list/index",
+        "index",
         expect.objectContaining({
           dataSource: "Manual Upload"
         })
@@ -390,7 +390,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(res.render).toHaveBeenCalledWith(
-        "civil-and-family-daily-cause-list/index",
+        "index",
         expect.objectContaining({
           dataSource: "UNKNOWN_PROVENANCE"
         })

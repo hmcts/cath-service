@@ -5,6 +5,7 @@ import { authNavigationMiddleware, configurePassport, ssoCallbackHandler } from 
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
@@ -53,6 +54,7 @@ export async function createApp(): Promise<Express> {
     webCoreModuleRoot,
     adminModuleRoot,
     authModuleRoot,
+    listTypesCommonModuleRoot,
     civilFamilyCauseListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
@@ -84,9 +86,11 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);
 
+  // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
+  app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
+
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
-  app.use(await createSimpleRouter(civilFamilyCauseListRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));

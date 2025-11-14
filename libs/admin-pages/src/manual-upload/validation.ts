@@ -39,8 +39,9 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
           const validationResult = validateCivilFamilyCauseList(jsonData);
 
           if (!validationResult.isValid) {
+            const firstError = validationResult.errors[0] as { message?: string } | undefined;
             errors.push({
-              text: `Invalid Civil and Family Daily Cause List format. ${validationResult.errors[0]?.message || "Please check the JSON structure."}`,
+              text: `Invalid Civil and Family Daily Cause List format. ${firstError?.message || "Please check the JSON structure."}`,
               href: "#file"
             });
           }
