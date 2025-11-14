@@ -6,6 +6,7 @@ export { requireAuth } from "./middleware/authenticate.js";
 export { blockUserAccess, requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";
 export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
+export { GET as cftCallbackHandler } from "./pages/cft-callback/index.js";
 export { GET as ssoCallbackHandler } from "./pages/sso-callback/index.js";
 export { isRejectedCFTRole } from "./role-service/index.js";
 export type { UserProfile } from "./user-profile.js";

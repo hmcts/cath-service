@@ -47,7 +47,8 @@ vi.mock("config", () => ({
 vi.mock("@hmcts/auth", () => ({
   configurePassport: vi.fn(),
   authNavigationMiddleware: vi.fn(() => vi.fn()),
-  ssoCallbackHandler: vi.fn()
+  ssoCallbackHandler: vi.fn(),
+  cftCallbackHandler: vi.fn()
 }));
 
 describe("Web Application", () => {
