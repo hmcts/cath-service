@@ -1,8 +1,7 @@
 {
-  "name": "@hmcts/publication",
+  "name": "@hmcts/list-types-common",
   "version": "1.0.0",
   "type": "module",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "production": "./dist/index.js",
@@ -18,12 +17,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
   },
-  "dependencies": {
-    "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
-    "ajv": "8.17.1"
-  },
   "devDependencies": {
+    "@types/node": "22.10.2",
     "typescript": "5.7.2",
     "vitest": "3.2.4"
   }

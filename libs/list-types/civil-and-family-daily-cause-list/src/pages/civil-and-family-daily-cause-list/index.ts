@@ -17,11 +17,11 @@ export const GET = async (req: Request, res: Response) => {
   const artefactId = req.query.artefactId as string;
 
   if (!artefactId) {
-    return res.status(400).render("civil-and-family-daily-cause-list/error", {
+    return res.status(400).render("common/error", {
       en,
       cy,
-      title: t.errorTitle,
-      message: t.errorMessage
+      errorTitle: t.errorTitle,
+      errorMessage: t.errorMessage
     });
   }
 
@@ -31,11 +31,11 @@ export const GET = async (req: Request, res: Response) => {
     });
 
     if (!artefact) {
-      return res.status(404).render("civil-and-family-daily-cause-list/error", {
+      return res.status(404).render("common/error", {
         en,
         cy,
-        title: t.errorTitle,
-        message: t.errorMessage
+        errorTitle: t.errorTitle,
+        errorMessage: t.errorMessage
       });
     }
 
@@ -46,11 +46,11 @@ export const GET = async (req: Request, res: Response) => {
       jsonContent = await readFile(jsonFilePath, "utf-8");
     } catch (error) {
       console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
-      return res.status(404).render("civil-and-family-daily-cause-list/error", {
+      return res.status(404).render("common/error", {
         en,
         cy,
-        title: t.errorTitle,
-        message: t.errorMessage
+        errorTitle: t.errorTitle,
+        errorMessage: t.errorMessage
       });
     }
 
@@ -59,11 +59,11 @@ export const GET = async (req: Request, res: Response) => {
     const validationResult = validateCivilFamilyCauseList(jsonData);
     if (!validationResult.isValid) {
       console.error("Validation errors:", validationResult.errors);
-      return res.status(400).render("civil-and-family-daily-cause-list/error", {
+      return res.status(400).render("common/error", {
         en,
         cy,
-        title: t.errorTitle,
-        message: t.errorMessage
+        errorTitle: t.errorTitle,
+        errorMessage: t.errorMessage
       });
     }
 
@@ -86,11 +86,11 @@ export const GET = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error rendering cause list:", error);
-    return res.status(500).render("civil-and-family-daily-cause-list/error", {
+    return res.status(500).render("common/error", {
       en,
       cy,
-      title: t.errorTitle,
-      message: t.errorMessage
+      errorTitle: t.errorTitle,
+      errorMessage: t.errorMessage
     });
   }
 };

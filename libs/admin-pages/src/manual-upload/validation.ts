@@ -1,4 +1,4 @@
-import { validateCivilFamilyCauseList } from "@hmcts/style-guides";
+import { validateCivilFamilyCauseList } from "@hmcts/civil-and-family-daily-cause-list";
 import { type DateInput, parseDate } from "@hmcts/web-core";
 import type { en } from "../pages/manual-upload/en.js";
 import type { ManualUploadFormData, ValidationError } from "./model.js";

@@ -5,7 +5,7 @@
     "apps/*",
     "e2e-tests",
     "libs/*",
-    "libs/style-guides/*"
+    "libs/list-types/*"
   ],
   "scripts": {
     "test": "turbo test",
