@@ -16,12 +16,16 @@
     "migrate": "yarn collate && prisma migrate deploy",
     "migrate:dev": "yarn collate && prisma migrate dev",
     "migrate:reset": "yarn collate && prisma migrate reset",
+    "seed": "node ../../node_modules/.bin/tsx prisma/seed.ts",
     "studio": "yarn collate && prisma studio",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
+  },
+  "prisma": {
+    "seed": "node ../../node_modules/.bin/tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.0"

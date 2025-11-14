@@ -19,7 +19,9 @@
       "@hmcts/location": ["libs/location/src"],
       "@hmcts/publication": ["libs/publication/src"],
       "@hmcts/redis": ["libs/redis/src"],
-      "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"]
+      "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"],
+      "@hmcts/list-types-common": ["libs/list-types/common/src"],
+      "@hmcts/civil-and-family-daily-cause-list": ["libs/list-types/civil-and-family-daily-cause-list/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

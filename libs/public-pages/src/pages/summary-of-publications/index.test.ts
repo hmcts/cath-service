@@ -27,6 +27,40 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+// Mock the postgres module
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    artefact: {
+      findMany: vi.fn(() => [
+        {
+          artefactId: "test-id-1",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date(),
+          isFlatFile: true
+        },
+        {
+          artefactId: "test-id-2",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-16"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date(),
+          isFlatFile: true
+        }
+      ])
+    }
+  }
+}));
+
 describe("Summary of Publications - GET handler", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -99,8 +133,8 @@ describe("Summary of Publications - GET handler", () => {
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.publications).toBeDefined();
       expect(renderCall.publications.length).toBeGreaterThan(0);
-      // All publications should be for locationId 9
-      expect(renderCall.publications.every((p: any) => p.id > 0)).toBe(true);
+      // All publications should have valid IDs
+      expect(renderCall.publications.every((p: any) => p.id && p.id.length > 0)).toBe(true);
     });
 
     it("should render publications sorted by date descending", async () => {
@@ -207,6 +241,186 @@ describe("Summary of Publications - GET handler", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(redirectSpy).toHaveBeenCalledWith("/400");
+    });
+  });
+
+  describe("Deduplication", () => {
+    it("should show only the latest publication when multiple publications have same list type, content date, and language", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+
+      // Mock data with duplicates
+      const mockArtefacts = [
+        {
+          artefactId: "latest-id",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T12:00:00Z"), // Latest
+          isFlatFile: true
+        },
+        {
+          artefactId: "older-id",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"), // Same date
+          sensitivity: "PUBLIC",
+          language: "ENGLISH", // Same language
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T10:00:00Z"), // Older
+          isFlatFile: true
+        }
+      ];
+
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce(mockArtefacts as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      // Should only have 1 publication (the latest one)
+      expect(publications.length).toBe(1);
+      expect(publications[0].id).toBe("latest-id");
+    });
+
+    it("should keep publications with different content dates", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+
+      const mockArtefacts = [
+        {
+          artefactId: "id-1",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T12:00:00Z"),
+          isFlatFile: true
+        },
+        {
+          artefactId: "id-2",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-16"), // Different date
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-16T10:00:00Z"),
+          isFlatFile: true
+        }
+      ];
+
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce(mockArtefacts as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      // Should have both publications
+      expect(publications.length).toBe(2);
+    });
+
+    it("should keep publications with different languages", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+
+      const mockArtefacts = [
+        {
+          artefactId: "id-english",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T12:00:00Z"),
+          isFlatFile: true
+        },
+        {
+          artefactId: "id-welsh",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"), // Same date
+          sensitivity: "PUBLIC",
+          language: "WELSH", // Different language
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T10:00:00Z"),
+          isFlatFile: true
+        }
+      ];
+
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce(mockArtefacts as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      // Should have both publications
+      expect(publications.length).toBe(2);
+    });
+
+    it("should keep publications with different list types", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+
+      const mockArtefacts = [
+        {
+          artefactId: "id-type-4",
+          locationId: "9",
+          listTypeId: 4,
+          contentDate: new Date("2025-04-15"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T12:00:00Z"),
+          isFlatFile: true
+        },
+        {
+          artefactId: "id-type-5",
+          locationId: "9",
+          listTypeId: 5, // Different list type
+          contentDate: new Date("2025-04-15"), // Same date
+          sensitivity: "PUBLIC",
+          language: "ENGLISH", // Same language
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date("2025-04-15T10:00:00Z"),
+          isFlatFile: true
+        }
+      ];
+
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce(mockArtefacts as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      // Should have both publications
+      expect(publications.length).toBe(2);
     });
   });
 });

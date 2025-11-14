@@ -10,7 +10,7 @@ describe("formatDateAndLocale", () => {
 
     it("should handle different month", () => {
       const result = formatDateAndLocale("2025-01-05", "en");
-      expect(result).toBe("5 January 2025");
+      expect(result).toBe("05 January 2025");
     });
 
     it("should handle end of year date", () => {
@@ -20,7 +20,7 @@ describe("formatDateAndLocale", () => {
 
     it("should handle beginning of year date", () => {
       const result = formatDateAndLocale("2025-01-01", "en");
-      expect(result).toBe("1 January 2025");
+      expect(result).toBe("01 January 2025");
     });
   });
 
@@ -32,7 +32,7 @@ describe("formatDateAndLocale", () => {
 
     it("should handle different month in Welsh", () => {
       const result = formatDateAndLocale("2025-01-05", "cy");
-      expect(result).toBe("5 Ionawr 2025");
+      expect(result).toBe("05 Ionawr 2025");
     });
 
     it("should handle end of year date in Welsh", () => {

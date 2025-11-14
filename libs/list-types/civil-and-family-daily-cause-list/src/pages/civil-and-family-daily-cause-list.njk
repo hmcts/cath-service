@@ -1,0 +1,266 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .govuk-accordion__controls {
+      text-align: right;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+    .govuk-accordion__section-content {
+      overflow: auto hidden;
+    }
+    .govuk-table {
+      overflow: auto hidden;
+    }
+    .search-highlight {
+      background-color: #ffdd00;
+      color: #0b0c0c;
+      padding: 0;
+      font-weight: inherit;
+    }
+  </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
+
+    <p class="govuk-body">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+
+    <details class="govuk-details" data-module="govuk-details" open>
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          {{ t.importantInformation }}
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+        <p class="govuk-body">{{ t.openJusticeIntro }}</p>
+        <p class="govuk-body">
+          {{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}
+        </p>
+        <p class="govuk-body">{{ t.openJusticeDecision }}</p>
+        <p class="govuk-body">{{ t.openJusticePrivate }}</p>
+        <p class="govuk-body">
+          {{ t.openJusticeMoreInfo }}
+          <a href="{{ t.openJusticeLink }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+            {{ t.openJusticeLinkText }}
+          </a>.
+        </p>
+      </div>
+    </details>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
+    </div>
+
+    <div id="court-lists-container">
+    {% for courtList in listData.courtLists %}
+      {% set courtHouse = courtList.courtHouse %}
+      {% if courtHouse.courtHouseAddress %}
+        <div class="govuk-!-margin-bottom-6">
+          <h2 class="govuk-heading-l">{{ courtHouse.courtHouseName }}</h2>
+          {% for line in courtHouse.courtHouseAddress.line %}
+            {% if line | length %}
+              <p class="govuk-body">{{ line }}</p>
+            {% endif %}
+          {% endfor %}
+          {% if courtHouse.courtHouseAddress.town | length %}
+            <p class="govuk-body">{{ courtHouse.courtHouseAddress.town }}</p>
+          {% endif %}
+          {% if courtHouse.courtHouseAddress.county | length %}
+            <p class="govuk-body">{{ courtHouse.courtHouseAddress.county }}</p>
+          {% endif %}
+          {% if courtHouse.courtHouseAddress.postCode | length %}
+            <p class="govuk-body">{{ courtHouse.courtHouseAddress.postCode }}</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="govuk-accordion" data-module="govuk-accordion">
+        {% for courtRoom in courtHouse.courtRoom %}
+          {% for session in courtRoom.session %}
+            <div class="govuk-accordion__section govuk-accordion__section--expanded">
+              <div class="govuk-accordion__section-header">
+                <h2 class="govuk-accordion__section-heading">
+                  <span class="govuk-accordion__section-button">
+                    {% if session.formattedJudiciaries | length %}
+                      {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }}: {{ session.formattedJudiciaries }}
+                    {% else %}
+                      {{ courtRoom.courtRoomName }}
+                    {% endif %}
+                  </span>
+                </h2>
+              </div>
+              <div class="govuk-accordion__section-content">
+                <table class="govuk-table">
+                  <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.time }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.caseRef }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.caseName }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.caseType }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.hearingType }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.location }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.duration }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.applicant }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.respondent }}</th>
+                    </tr>
+                  </thead>
+                  <tbody class="govuk-table__body">
+                    {% for sitting in session.sittings %}
+                      {% set durationText = '' %}
+                      {% if sitting.durationAsHours > 0 %}
+                        {% if sitting.durationAsHours > 1 %}
+                          {% set durationText = sitting.durationAsHours ~ ' hours' %}
+                        {% else %}
+                          {% set durationText = sitting.durationAsHours ~ ' hour' %}
+                        {% endif %}
+                      {% endif %}
+                      {% if sitting.durationAsMinutes > 0 %}
+                        {% if durationText | length %}
+                          {% set durationText = durationText ~ ' ' %}
+                        {% endif %}
+                        {% if sitting.durationAsMinutes > 1 %}
+                          {% set durationText = durationText ~ sitting.durationAsMinutes ~ ' mins' %}
+                        {% else %}
+                          {% set durationText = durationText ~ sitting.durationAsMinutes ~ ' min' %}
+                        {% endif %}
+                      {% endif %}
+
+                      {% for hearing in sitting.hearing %}
+                        {% for case in hearing.case %}
+                          <tr class="govuk-table__row">
+                            <td class="govuk-table__cell no-wrap">{{ sitting.time }}</td>
+                            <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
+                            <td class="govuk-table__cell no-wrap">{{ case.caseName }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                            <td class="govuk-table__cell no-wrap">{{ case.caseType }}</td>
+                            <td class="govuk-table__cell no-wrap">{{ hearing.hearingType }}</td>
+                            <td class="govuk-table__cell no-wrap">{{ sitting.caseHearingChannel }}</td>
+                            <td class="govuk-table__cell no-wrap">{{ durationText }}</td>
+                            <td class="govuk-table__cell no-wrap">
+                              {% if case.applicant %}
+                                {{ case.applicant }}{% if case.applicantRepresentative %}, {{ t.legalAdvisor }}: {{ case.applicantRepresentative }}{% endif %}
+                              {% endif %}
+                            </td>
+                            <td class="govuk-table__cell no-wrap">
+                              {% if case.respondent %}
+                                {{ case.respondent }}{% if case.respondentRepresentative %}, {{ t.legalAdvisor }}: {{ case.respondentRepresentative }}{% endif %}
+                              {% endif %}
+                            </td>
+                          </tr>
+                          {% if case.formattedReportingRestriction | length %}
+                            <tr class="govuk-table__row">
+                              <td class="govuk-table__cell" colspan="9">
+                                <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
+                              </td>
+                            </tr>
+                          {% endif %}
+                        {% endfor %}
+                      {% endfor %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+    </div>
+
+    <p class="govuk-body govuk-!-margin-top-6" style="font-size: 14px;">
+      {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  <script nonce="{{ cspNonce }}">
+    (function() {
+      const searchInput = document.getElementById('case-search-input');
+      const container = document.getElementById('court-lists-container');
+
+      if (!searchInput || !container) return;
+
+      function removeHighlights() {
+        const marks = container.querySelectorAll('mark.search-highlight');
+        marks.forEach(mark => {
+          const parent = mark.parentNode;
+          parent.replaceChild(document.createTextNode(mark.textContent), mark);
+          parent.normalize();
+        });
+      }
+
+      function highlightText(searchTerm) {
+        removeHighlights();
+
+        if (!searchTerm) {
+          return;
+        }
+
+        const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+
+        function highlightNode(node) {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+            const text = node.textContent;
+            const matches = [];
+            let match;
+
+            regex.lastIndex = 0;
+            while ((match = regex.exec(text)) !== null) {
+              matches.push({ index: match.index, length: match[0].length, text: match[0] });
+            }
+
+            if (matches.length > 0) {
+              const fragment = document.createDocumentFragment();
+              let lastIndex = 0;
+
+              matches.forEach(m => {
+                if (m.index > lastIndex) {
+                  fragment.appendChild(document.createTextNode(text.substring(lastIndex, m.index)));
+                }
+                const mark = document.createElement('mark');
+                mark.className = 'search-highlight';
+                mark.textContent = m.text;
+                fragment.appendChild(mark);
+                lastIndex = m.index + m.length;
+              });
+
+              if (lastIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+              }
+
+              node.parentNode.replaceChild(fragment, node);
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE' && node.nodeName !== 'MARK') {
+            Array.from(node.childNodes).forEach(highlightNode);
+          }
+        }
+
+        highlightNode(container);
+      }
+
+      searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.trim();
+        highlightText(searchTerm);
+      });
+    })();
+  </script>
+{% endblock %}
