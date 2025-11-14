@@ -17,6 +17,7 @@ async function main() {
       language: "ENGLISH",
       displayFrom: new Date("2025-01-01"),
       displayTo: new Date("2026-01-01"),
+      lastReceivedDate: new Date("2025-01-15T10:00:00Z"),
       provenance: "MANUAL_UPLOAD",
       isFlatFile: false
     },
@@ -29,6 +30,7 @@ async function main() {
       language: "ENGLISH",
       displayFrom: new Date("2025-01-01"),
       displayTo: new Date("2026-01-01"),
+      lastReceivedDate: new Date("2025-01-16T10:00:00Z"),
       provenance: "MANUAL_UPLOAD",
       isFlatFile: true
     },
@@ -41,6 +43,7 @@ async function main() {
       language: "ENGLISH",
       displayFrom: new Date("2025-01-01"),
       displayTo: new Date("2026-01-01"),
+      lastReceivedDate: new Date("2025-01-17T10:00:00Z"),
       provenance: "MANUAL_UPLOAD",
       isFlatFile: true
     }
