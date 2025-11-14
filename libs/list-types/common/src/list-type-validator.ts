@@ -18,11 +18,7 @@ export function convertListTypeNameToKebabCase(name: string): string {
  * @param listTypes - Array of available list types
  * @returns ValidationResult with isValid flag and errors array
  */
-export async function validateListTypeJson(
-  listTypeId: string,
-  jsonData: unknown,
-  listTypes: ListType[]
-): Promise<ValidationResult> {
+export async function validateListTypeJson(listTypeId: string, jsonData: unknown, listTypes: ListType[]): Promise<ValidationResult> {
   // Find the list type by ID
   const listTypeIdNum = Number.parseInt(listTypeId, 10);
   const listType = listTypes.find((lt) => lt.id === listTypeIdNum);
@@ -65,8 +61,7 @@ export async function validateListTypeJson(
     return validationFunction(jsonData);
   } catch (error) {
     // Handle module not found or import errors
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     // If the module doesn't exist, it means no schema is available for this list type
     if (errorMessage.includes("Cannot find") || errorMessage.includes("Failed to resolve") || errorMessage.includes("Cannot find package")) {
