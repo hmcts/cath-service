@@ -85,9 +85,9 @@ const postHandler = async (req: Request, res: Response) => {
       throw new Error("Invalid date format");
     }
 
-    // Determine if file is JSON-based (Civil & Family Daily Cause List = ID 8)
+    // Determine if file is flat file based on extension (JSON files are structured, others are flat)
     const listTypeId = Number.parseInt(uploadData.listType, 10);
-    const isFlatFile = listTypeId !== 8;
+    const isFlatFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
     const artefactId = await createArtefact({
