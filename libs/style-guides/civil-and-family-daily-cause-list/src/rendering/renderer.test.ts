@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderCauseListData } from "./cause-list-renderer.js";
+import { renderCauseListData } from "./renderer.js";
 
 describe("renderCauseListData", () => {
   it("should render cause list data with correct header information", () => {

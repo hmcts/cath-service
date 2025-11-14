@@ -875,6 +875,11 @@ __metadata:
 "@hmcts/publication@workspace:*, @hmcts/publication@workspace:libs/publication":
   version: 0.0.0-use.local
   resolution: "@hmcts/publication@workspace:libs/publication"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
+    ajv: "npm:8.17.1"
+    typescript: "npm:5.7.2"
+    vitest: "npm:3.2.4"
   languageName: unknown
   linkType: soft
 
@@ -900,11 +905,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/style-guides@workspace:libs/style-guides/civil-and-family-daily-cause-list"
   dependencies:
+    "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.4.2"
     "@types/node": "npm:22.10.2"
-    ajv: "npm:8.17.1"
     luxon: "npm:3.5.0"
     typescript: "npm:5.7.2"
     vitest: "npm:3.2.4"

@@ -1,4 +1,6 @@
 // Business logic exports
 
-export * from "./rendering/cause-list-renderer.js";
-export * from "./validation/json-validator.js";
+export type { ValidationResult } from "@hmcts/publication";
+export * from "./models/cause-list-types.js";
+export * from "./rendering/renderer.js";
+export { validateCivilFamilyCauseList } from "./validation/json-validator.js";

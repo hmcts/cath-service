@@ -5,3 +5,4 @@ export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
 export type { Artefact } from "./repository/model.js";
 export { createArtefact } from "./repository/queries.js";
 export { Sensitivity } from "./sensitivity.js";
+export { type ValidationResult, validateJson } from "./validation/json-validator.js";

@@ -1,16 +1,11 @@
-import Ajv from "ajv";
+import { type ValidationResult, validateJson } from "@hmcts/publication";
 import schema from "../schemas/civil-and-family-daily-cause-list.json" with { type: "json" };
 
-const SCHEMA_VERSION = "1.0";
-
-export function validateCivilFamilyCauseList(jsonData: unknown) {
-  const ajv = new (Ajv as any)({ allErrors: true, strict: false, validateSchema: false });
-  const validate = ajv.compile(schema);
-  const isValid = validate(jsonData);
-
-  return {
-    isValid,
-    errors: validate.errors || [],
-    schemaVersion: SCHEMA_VERSION
-  };
+/**
+ * Validates Civil and Family Daily Cause List JSON data
+ * @param jsonData - The JSON data to validate
+ * @returns ValidationResult
+ */
+export function validateCivilFamilyCauseList(jsonData: unknown): ValidationResult {
+  return validateJson(jsonData, schema, "1.0");
 }

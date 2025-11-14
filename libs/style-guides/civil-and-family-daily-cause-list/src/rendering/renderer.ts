@@ -1,88 +1,6 @@
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
-
-interface Party {
-  partyRole: string;
-  individualDetails?: {
-    title?: string;
-    individualForenames?: string;
-    individualMiddleName?: string;
-    individualSurname?: string;
-  };
-  organisationDetails?: {
-    organisationName?: string;
-  };
-}
-
-interface CauseListCase {
-  caseName: string;
-  caseNumber: string;
-  caseType?: string;
-  caseSequenceIndicator?: string;
-  reportingRestrictionDetail?: string[];
-  party?: Party[];
-}
-
-interface Hearing {
-  hearingType?: string;
-  case: CauseListCase[];
-}
-
-interface Sitting {
-  sittingStart: string;
-  sittingEnd?: string;
-  channel?: string[];
-  hearing: Hearing[];
-}
-
-interface Session {
-  judiciary?: Array<{
-    johKnownAs: string;
-    isPresiding?: boolean;
-  }>;
-  sessionChannel?: string[];
-  sittings: Sitting[];
-}
-
-interface CourtRoom {
-  courtRoomName: string;
-  session: Session[];
-}
-
-interface CourtHouse {
-  courtHouseName: string;
-  courtHouseAddress?: {
-    line?: string[];
-    town?: string;
-    county?: string;
-    postCode?: string;
-  };
-  courtRoom: CourtRoom[];
-}
-
-interface CauseListData {
-  document: {
-    publicationDate: string;
-    documentName?: string;
-    version?: string;
-  };
-  venue: {
-    venueName: string;
-    venueAddress: {
-      line: string[];
-      town?: string;
-      county?: string;
-      postCode: string;
-    };
-    venueContact?: {
-      venueTelephone?: string;
-      venueEmail?: string;
-    };
-  };
-  courtLists: Array<{
-    courtHouse: CourtHouse;
-  }>;
-}
+import type { CauseListCase, CauseListData, Party, RenderOptions, Session, Sitting } from "../models/cause-list-types.js";
 
 function formatTime(isoDateTime: string): string {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London");
@@ -249,12 +167,6 @@ function processParties(caseItem: CauseListCase): void {
 function formatReportingRestrictions(caseItem: CauseListCase): void {
   const restrictions = caseItem.reportingRestrictionDetail?.filter((r) => r.length > 0) || [];
   (caseItem as any).formattedReportingRestriction = restrictions.join(", ");
-}
-
-interface RenderOptions {
-  locationId: string;
-  contentDate: Date;
-  locale: string;
 }
 
 export function renderCauseListData(jsonData: CauseListData, options: RenderOptions) {
