@@ -76,6 +76,9 @@ jobs:
       - name: Generate Prisma client
         run: yarn db:generate
 
+      - name: Seed test database
+        run: yarn workspace @hmcts/postgres run seed
+
       - name: Build packages
         run: yarn build
 
