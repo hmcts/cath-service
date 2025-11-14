@@ -76,8 +76,14 @@ jobs:
       - name: Generate Prisma client
         run: yarn db:generate
 
-      - name: Seed test database
-        run: yarn workspace @hmcts/postgres run seed
+      - name: Start PostgreSQL
+        run: docker compose up -d
+
+      - name: Wait for PostgreSQL to be ready
+        run: timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U hmcts; do sleep 1; done'
+
+      - name: Run database migrations and seed
+        run: yarn db:migrate:dev
 
       - name: Build packages
         run: yarn build
