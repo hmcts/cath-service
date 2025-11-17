@@ -85,11 +85,11 @@ export class PostgresStore extends Store {
   }
 
   private getExpireDate(session: SessionData): Date {
-    let ttl = this.ttl;
+    let sessionTtl = this.ttl;
     if (session.cookie?.maxAge) {
-      ttl = Math.floor(session.cookie.maxAge / 1000);
+      sessionTtl = Math.floor(session.cookie.maxAge / 1000);
     }
-    return new Date(Date.now() + ttl * 1000);
+    return new Date(Date.now() + sessionTtl * 1000);
   }
 
   async get(sid: string, callback: (err: any, session?: SessionData | null) => void): Promise<void> {
