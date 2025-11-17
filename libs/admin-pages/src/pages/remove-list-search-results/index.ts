@@ -47,12 +47,12 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("remove-list-search-results/index", {
     pageTitle: lang.pageTitle,
     heading: lang.heading,
+    subHeading: lang.subHeading,
     showingResults: lang.showingResults,
     resultsText: lang.resultsText,
     noResults: lang.noResults,
     tableHeaders: lang.tableHeaders,
     continueButton: lang.continueButton,
-    backLink: lang.backLink,
     artefactRows,
     resultCount: artefacts.length,
     hideLanguageToggle: true
@@ -94,12 +94,12 @@ const postHandler = async (req: Request, res: Response) => {
     return res.render("remove-list-search-results/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
+      subHeading: lang.subHeading,
       showingResults: lang.showingResults,
       resultsText: lang.resultsText,
       noResults: lang.noResults,
       tableHeaders: lang.tableHeaders,
       continueButton: lang.continueButton,
-      backLink: lang.backLink,
       artefactRows,
       resultCount: artefacts.length,
       errors: [

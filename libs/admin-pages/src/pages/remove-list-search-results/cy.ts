@@ -1,6 +1,7 @@
 export default {
-  pageTitle: "Dewis cynnwys i'w dynnu - Gwrandawiadau llysoedd a thribiwnlysoedd - GOV.UK",
-  heading: "Dewis cynnwys i'w dynnu",
+  pageTitle: "Crynodeb Tynnu Rhestr - Gwrandawiadau llysoedd a thribiwnlysoedd - GOV.UK",
+  heading: "Crynodeb Tynnu Rhestr",
+  subHeading: "Dewis cynnwys i'w dynnu",
   showingResults: "Yn dangos",
   resultsText: "canlyniad(au)",
   noResults: "Ni chanfuwyd cyhoeddiadau ar gyfer y lleoliad hwn",
@@ -14,7 +15,6 @@ export default {
     select: "Dewis"
   },
   continueButton: "Parhau",
-  backLink: "Yn ôl",
   errorSummaryTitle: "Mae problem wedi codi",
-  errorNoSelection: "Dewiswch o leiaf un gyhoeddiad i'w dynnu"
+  errorNoSelection: "Rhaid dewis o leiaf un cyhoeddiad"
 };

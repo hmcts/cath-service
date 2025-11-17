@@ -2,7 +2,7 @@
 
 {% block page_content %}
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
+  <div class="govuk-grid-column-full">
 
     <div class="govuk-panel govuk-panel--confirmation">
       <h1 class="govuk-panel__title">
@@ -13,11 +13,17 @@
       </div>
     </div>
 
-    <p class="govuk-body">
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-top-6">{{ nextSteps }}</p>
+
+    <p class="govuk-body govuk-!-margin-0 govuk-!-font-weight-bold">
       <a href="/remove-list-search{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">{{ removeAnotherLink }}</a>
     </p>
 
-    <p class="govuk-body">
+    <p class="govuk-body govuk-!-margin-0 govuk-!-font-weight-bold">
+      <a href="/manual-upload{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">{{ uploadFileLink }}</a>
+    </p>
+
+    <p class="govuk-body govuk-!-margin-0 govuk-!-font-weight-bold">
       <a href="/admin-dashboard{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">{{ homeLink }}</a>
     </p>
 

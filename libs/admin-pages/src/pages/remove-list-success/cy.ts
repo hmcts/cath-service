@@ -1,7 +1,9 @@
 export default {
-  pageTitle: "Ffeil wedi'i thynnu'n llwyddiannus - Gwrandawiadau llysoedd a thribiwnlysoedd - GOV.UK",
-  heading: "Tynnu ffeil yn llwyddiannus",
-  message: "Mae eich ffeil wedi'i thynnu",
+  pageTitle: "Cynnwys wedi'i dynnu'n llwyddiannus - Gwrandawiadau llysoedd a thribiwnlysoedd - GOV.UK",
+  heading: "Tynnu Cynnwys yn Llwyddiannus",
+  message: "Mae eich cynnwys wedi'i dynnu",
+  nextSteps: "Beth ydych chi eisiau ei wneud nesaf?",
   removeAnotherLink: "Tynnu ffeil arall",
+  uploadFileLink: "Llwytho ffeil i fyny",
   homeLink: "Hafan"
 };

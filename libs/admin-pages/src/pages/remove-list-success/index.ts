@@ -24,7 +24,9 @@ const getHandler = async (req: Request, res: Response) => {
     pageTitle: lang.pageTitle,
     heading: lang.heading,
     message: lang.message,
+    nextSteps: lang.nextSteps,
     removeAnotherLink: lang.removeAnotherLink,
+    uploadFileLink: lang.uploadFileLink,
     homeLink: lang.homeLink,
     hideLanguageToggle: true
   });

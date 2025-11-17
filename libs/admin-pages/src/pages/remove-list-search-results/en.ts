@@ -1,6 +1,7 @@
 export default {
-  pageTitle: "Select content to remove - Court and tribunal hearings - GOV.UK",
-  heading: "Select content to remove",
+  pageTitle: "Remove List Summary - Court and tribunal hearings - GOV.UK",
+  heading: "Remove List Summary",
+  subHeading: "Select content to remove",
   showingResults: "Showing",
   resultsText: "result(s)",
   noResults: "No publications found for this location",
@@ -14,7 +15,6 @@ export default {
     select: "Select"
   },
   continueButton: "Continue",
-  backLink: "Back",
   errorSummaryTitle: "There is a problem",
-  errorNoSelection: "Select at least one publication to remove"
+  errorNoSelection: "At least one publication must be selected"
 };

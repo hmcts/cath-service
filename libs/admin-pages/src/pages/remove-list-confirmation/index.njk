@@ -1,17 +1,11 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
-{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-
-    {{ govukBackLink({
-      text: backLink,
-      href: "/remove-list/select" + ("?lng=cy" if lng == "cy" else "")
-    }) }}
+  <div class="govuk-grid-column-full">
 
     {% if errors %}
       {{ govukErrorSummary({
@@ -22,13 +16,30 @@
 
     <h1 class="govuk-heading-l">{{ heading }}</h1>
 
-    <p class="govuk-body">{{ description }}</p>
-
-    <ul class="govuk-list govuk-list--bullet">
-      {% for summary in artefactSummaries %}
-      <li>{{ summary }}</li>
-      {% endfor %}
-    </ul>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">{{ tableHeaders.listType }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaders.court }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaders.contentDate }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaders.displayDates }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaders.language }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaders.sensitivity }}</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for artefact in artefactData %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">{{ artefact.listType }}</td>
+          <td class="govuk-table__cell">{{ artefact.court }}</td>
+          <td class="govuk-table__cell">{{ artefact.contentDate }}</td>
+          <td class="govuk-table__cell">{{ artefact.displayDates }}</td>
+          <td class="govuk-table__cell">{{ artefact.language }}</td>
+          <td class="govuk-table__cell">{{ artefact.sensitivity }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
     <form method="post" novalidate>
       {{ govukRadios({
@@ -40,7 +51,7 @@
             classes: "govuk-visually-hidden"
           }
         },
-        errorMessage: confirmationError,
+        classes: "govuk-radios--inline",
         items: [
           {
             value: "yes",

@@ -6,7 +6,11 @@ import cy from "./cy.js";
 import en from "./en.js";
 
 function formatDateString(date: Date): string {
-  return date.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+  return date.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function capitalizeFirstLetter(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
 const getHandler = async (req: Request, res: Response) => {
@@ -21,25 +25,35 @@ const getHandler = async (req: Request, res: Response) => {
 
   const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
 
-  const artefactSummaries = artefacts.map((artefact) => {
+  const artefactData = artefacts.map((artefact) => {
     const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
     const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
     const location = getLocationById(Number.parseInt(artefact.locationId, 10));
     const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
 
-    return `${listTypeName}, ${courtName}, ${formatDateString(artefact.contentDate)}`;
+    const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
+    const language = capitalizeFirstLetter(artefact.language);
+    const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
+
+    return {
+      listType: listTypeName,
+      court: courtName,
+      contentDate: formatDateString(artefact.contentDate),
+      displayDates,
+      language,
+      sensitivity
+    };
   });
 
   res.render("remove-list-confirmation/index", {
     pageTitle: lang.pageTitle,
     heading: lang.heading,
-    description: lang.description,
+    tableHeaders: lang.tableHeaders,
     radioYes: lang.radioYes,
     radioNo: lang.radioNo,
     continueButton: lang.continueButton,
-    backLink: lang.backLink,
-    artefactSummaries,
+    artefactData,
     hideLanguageToggle: true
   });
 };
@@ -58,25 +72,35 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (!confirmation) {
     const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-    const artefactSummaries = artefacts.map((artefact) => {
+    const artefactData = artefacts.map((artefact) => {
       const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
       const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
       const location = getLocationById(Number.parseInt(artefact.locationId, 10));
       const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
 
-      return `${listTypeName}, ${courtName}, ${formatDateString(artefact.contentDate)}`;
+      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
+      const language = capitalizeFirstLetter(artefact.language);
+      const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
+
+      return {
+        listType: listTypeName,
+        court: courtName,
+        contentDate: formatDateString(artefact.contentDate),
+        displayDates,
+        language,
+        sensitivity
+      };
     });
 
     return res.render("remove-list-confirmation/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
-      description: lang.description,
+      tableHeaders: lang.tableHeaders,
       radioYes: lang.radioYes,
       radioNo: lang.radioNo,
       continueButton: lang.continueButton,
-      backLink: lang.backLink,
-      artefactSummaries,
+      artefactData,
       errors: [
         {
           text: lang.errorNoSelection,
@@ -84,9 +108,6 @@ const postHandler = async (req: Request, res: Response) => {
         }
       ],
       errorSummaryTitle: lang.errorSummaryTitle,
-      confirmationError: {
-        text: lang.errorNoSelection
-      },
       hideLanguageToggle: true
     });
   }
@@ -115,25 +136,35 @@ const postHandler = async (req: Request, res: Response) => {
     console.error("Error deleting artefacts:", error);
 
     const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-    const artefactSummaries = artefacts.map((artefact) => {
+    const artefactData = artefacts.map((artefact) => {
       const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
       const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
       const location = getLocationById(Number.parseInt(artefact.locationId, 10));
       const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
 
-      return `${listTypeName}, ${courtName}, ${formatDateString(artefact.contentDate)}`;
+      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
+      const language = capitalizeFirstLetter(artefact.language);
+      const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
+
+      return {
+        listType: listTypeName,
+        court: courtName,
+        contentDate: formatDateString(artefact.contentDate),
+        displayDates,
+        language,
+        sensitivity
+      };
     });
 
     return res.render("remove-list-confirmation/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
-      description: lang.description,
+      tableHeaders: lang.tableHeaders,
       radioYes: lang.radioYes,
       radioNo: lang.radioNo,
       continueButton: lang.continueButton,
-      backLink: lang.backLink,
-      artefactSummaries,
+      artefactData,
       errors: [
         {
           text: "An error occurred while removing content. Please try again later.",

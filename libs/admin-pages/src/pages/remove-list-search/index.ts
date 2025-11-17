@@ -6,12 +6,6 @@ import en from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
-  const locale = req.query.lng === "cy" ? "cy" : "en";
-
-  const sessionData = req.session.removalData || {};
-  const locationId = sessionData.locationId || "";
-  const location = locationId ? getLocationById(Number.parseInt(locationId, 10)) : null;
-  const locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
 
   res.render("remove-list-search/index", {
     pageTitle: lang.pageTitle,
@@ -19,8 +13,8 @@ const getHandler = async (req: Request, res: Response) => {
     searchLabel: lang.searchLabel,
     searchHint: lang.searchHint,
     continueButton: lang.continueButton,
-    locationId,
-    locationName,
+    locationId: "",
+    locationName: "",
     hideLanguageToggle: true
   });
 };
@@ -31,19 +25,14 @@ const postHandler = async (req: Request, res: Response) => {
   const locationId = req.body.locationId || "";
 
   if (!locationId) {
-    const sessionData = req.session.removalData || {};
-    const prevLocationId = sessionData.locationId || "";
-    const location = prevLocationId ? getLocationById(Number.parseInt(prevLocationId, 10)) : null;
-    const locationName = location ? (locale === "cy" ? location.welshName : location.name) : "";
-
     return res.render("remove-list-search/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
       searchLabel: lang.searchLabel,
       searchHint: lang.searchHint,
       continueButton: lang.continueButton,
-      locationId: prevLocationId,
-      locationName,
+      locationId: "",
+      locationName: "",
       errors: [
         {
           text: lang.errorLocationRequired,

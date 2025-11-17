@@ -1,11 +1,17 @@
 export default {
   pageTitle: "Confirm removal - Court and tribunal hearings - GOV.UK",
   heading: "Are you sure you want to remove this content?",
-  description: "You are about to remove the following publication(s):",
-  radioYes: "Yes, remove this content",
-  radioNo: "No, cancel and go back",
+  tableHeaders: {
+    listType: "List type",
+    court: "Court or Tribunal Name",
+    contentDate: "Content Date",
+    displayDates: "Display Dates",
+    language: "Language",
+    sensitivity: "Sensitivity"
+  },
+  radioYes: "Yes",
+  radioNo: "No",
   continueButton: "Continue",
-  backLink: "Back",
   errorSummaryTitle: "There is a problem",
-  errorNoSelection: "Select yes or no"
+  errorNoSelection: "Please select an option"
 };

@@ -1,11 +1,17 @@
 export default {
   pageTitle: "Cadarnhau dileu - Gwrandawiadau llysoedd a thribiwnlysoedd - GOV.UK",
   heading: "A ydych yn siŵr eich bod am dynnu'r cynnwys hwn?",
-  description: "Rydych ar fin tynnu'r cyhoeddiad(au) canlynol:",
-  radioYes: "Iawn, tynnwch y cynnwys hwn",
-  radioNo: "Na, canslo a mynd yn ôl",
+  tableHeaders: {
+    listType: "Math o restr",
+    court: "Enw'r Llys neu'r Tribiwnlys",
+    contentDate: "Dyddiad Cynnwys",
+    displayDates: "Dyddiadau Arddangos",
+    language: "Iaith",
+    sensitivity: "Sensitifrwydd"
+  },
+  radioYes: "Iawn",
+  radioNo: "Na",
   continueButton: "Parhau",
-  backLink: "Yn ôl",
   errorSummaryTitle: "Mae problem wedi codi",
-  errorNoSelection: "Dewiswch iawn neu na"
+  errorNoSelection: "Dewiswch opsiwn"
 };
