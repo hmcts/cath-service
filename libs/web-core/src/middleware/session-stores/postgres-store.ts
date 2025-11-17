@@ -7,6 +7,7 @@ export class PostgresStore extends Store {
   private pool: Pool;
   private tableName: string;
   private schemaName: string;
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: used in getExpireDate method
   private ttl: number;
   private disableTouch: boolean;
   private cleanupInterval: number;
