@@ -443,18 +443,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/biome@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/biome@npm:2.3.4"
+"@biomejs/biome@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/biome@npm:2.3.6"
   dependencies:
-    "@biomejs/cli-darwin-arm64": "npm:2.3.4"
-    "@biomejs/cli-darwin-x64": "npm:2.3.4"
-    "@biomejs/cli-linux-arm64": "npm:2.3.4"
-    "@biomejs/cli-linux-arm64-musl": "npm:2.3.4"
-    "@biomejs/cli-linux-x64": "npm:2.3.4"
-    "@biomejs/cli-linux-x64-musl": "npm:2.3.4"
-    "@biomejs/cli-win32-arm64": "npm:2.3.4"
-    "@biomejs/cli-win32-x64": "npm:2.3.4"
+    "@biomejs/cli-darwin-arm64": "npm:2.3.6"
+    "@biomejs/cli-darwin-x64": "npm:2.3.6"
+    "@biomejs/cli-linux-arm64": "npm:2.3.6"
+    "@biomejs/cli-linux-arm64-musl": "npm:2.3.6"
+    "@biomejs/cli-linux-x64": "npm:2.3.6"
+    "@biomejs/cli-linux-x64-musl": "npm:2.3.6"
+    "@biomejs/cli-win32-arm64": "npm:2.3.6"
+    "@biomejs/cli-win32-x64": "npm:2.3.6"
   dependenciesMeta:
     "@biomejs/cli-darwin-arm64":
       optional: true
@@ -474,62 +474,62 @@ __metadata:
       optional: true
   bin:
     biome: bin/biome
-  checksum: 10c0/61bb2e3b98ebb26cc21e5690492bc09793c9135c34fd33230c227d4cb707a19ced578d20df4cab8b257c70cef006312f1050cdba3abdf8c0aa478ca6a347b27f
+  checksum: 10c0/61a234527fee2902690446a4bc9284ae49048808102538a959c8a057709c2452d7a60f97d826eaa181f64d0c8a1824bfd17a2065b476b8c24074528687cfe46f
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-arm64@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-darwin-arm64@npm:2.3.4"
+"@biomejs/cli-darwin-arm64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-darwin-arm64@npm:2.3.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-x64@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-darwin-x64@npm:2.3.4"
+"@biomejs/cli-darwin-x64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-darwin-x64@npm:2.3.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64-musl@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.3.4"
+"@biomejs/cli-linux-arm64-musl@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.3.6"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-linux-arm64@npm:2.3.4"
+"@biomejs/cli-linux-arm64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-arm64@npm:2.3.6"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64-musl@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-linux-x64-musl@npm:2.3.4"
+"@biomejs/cli-linux-x64-musl@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-x64-musl@npm:2.3.6"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-linux-x64@npm:2.3.4"
+"@biomejs/cli-linux-x64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-x64@npm:2.3.6"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-arm64@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-win32-arm64@npm:2.3.4"
+"@biomejs/cli-win32-arm64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-win32-arm64@npm:2.3.6"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-x64@npm:2.3.4":
-  version: 2.3.4
-  resolution: "@biomejs/cli-win32-x64@npm:2.3.4"
+"@biomejs/cli-win32-x64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-win32-x64@npm:2.3.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -787,7 +787,7 @@ __metadata:
     config: "npm:4.1.1"
     cors: "npm:2.8.5"
     express: "npm:5.1.0"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     supertest: "npm:^7.1.4"
   languageName: unknown
   linkType: soft
@@ -839,7 +839,7 @@ __metadata:
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@types/config": "npm:3.3.5"
-    "@types/node": "npm:24.10.0"
+    "@types/node": "npm:24.10.1"
     config: "npm:4.1.1"
   languageName: unknown
   linkType: soft
@@ -990,10 +990,10 @@ __metadata:
     govuk-frontend: "npm:5.13.0"
     helmet: "npm:8.1.0"
     multer: "npm:2.0.2"
-    nodemon: "npm:3.1.10"
+    nodemon: "npm:3.1.11"
     nunjucks: "npm:3.2.4"
     redis: "npm:5.9.0"
-    sass: "npm:1.93.3"
+    sass: "npm:1.94.0"
     supertest: "npm:7.1.4"
     vite: "npm:7.2.2"
     vite-plugin-static-copy: "npm:3.1.4"
@@ -2601,7 +2601,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:24.10.0, @types/node@npm:>=13.7.0":
+"@types/node@npm:24.10.1":
+  version: 24.10.1
+  resolution: "@types/node@npm:24.10.1"
+  dependencies:
+    undici-types: "npm:~7.16.0"
+  checksum: 10c0/d6bca7a78f550fbb376f236f92b405d676003a8a09a1b411f55920ef34286ee3ee51f566203920e835478784df52662b5b2af89159d9d319352e9ea21801c002
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:>=13.7.0":
   version: 24.10.0
   resolution: "@types/node@npm:24.10.0"
   dependencies:
@@ -3360,9 +3369,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cath@workspace:."
   dependencies:
-    "@biomejs/biome": "npm:2.3.4"
+    "@biomejs/biome": "npm:2.3.6"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
-    "@types/node": "npm:24.10.0"
+    "@types/node": "npm:24.10.1"
     "@types/passport": "npm:1.0.17"
     "@types/passport-azure-ad": "npm:4.3.6"
     "@types/supertest": "npm:6.0.3"
@@ -3375,7 +3384,7 @@ __metadata:
     passport-azure-ad: "npm:4.3.5"
     supertest: "npm:7.1.4"
     tsx: "npm:4.20.6"
-    turbo: "npm:2.6.0"
+    turbo: "npm:2.6.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -4875,13 +4884,13 @@ __metadata:
   linkType: hard
 
 "js-yaml@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "js-yaml@npm:4.1.0"
+  version: 4.1.1
+  resolution: "js-yaml@npm:4.1.1"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 10c0/184a24b4eaacfce40ad9074c64fd42ac83cf74d8c8cd137718d456ced75051229e5061b8633c3366b8aada17945a7a356b337828c19da92b51ae62126575018f
+  checksum: 10c0/561c7d7088c40a9bb53cc75becbfb1df6ae49b34b5e6e5a81744b14ae8667ec564ad2527709d1a6e7d5e5fa6d483aa0f373a50ad98d42fde368ec4a190d4fae7
   languageName: node
   linkType: hard
 
@@ -5487,9 +5496,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemon@npm:3.1.10":
-  version: 3.1.10
-  resolution: "nodemon@npm:3.1.10"
+"nodemon@npm:3.1.11":
+  version: 3.1.11
+  resolution: "nodemon@npm:3.1.11"
   dependencies:
     chokidar: "npm:^3.5.2"
     debug: "npm:^4"
@@ -5503,7 +5512,7 @@ __metadata:
     undefsafe: "npm:^2.0.5"
   bin:
     nodemon: bin/nodemon.js
-  checksum: 10c0/95b64d647f2c22e85e375b250517b0a4b32c2d2392ad898444e331f70d6b1ab43b17f53a8a1d68d5879ab8401fc6cd6e26f0d2a8736240984f6b5a8435b407c0
+  checksum: 10c0/f3c17897146f680eaf93f5e1f53b1fd4acbd61e4f7526ec6cbcc993d1c14cee8c722c41b30aa8b101447f672d38e6d7b17c97e77540df191d724826bb16ce474
   languageName: node
   linkType: hard
 
@@ -6331,9 +6340,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.93.3":
-  version: 1.93.3
-  resolution: "sass@npm:1.93.3"
+"sass@npm:1.94.0":
+  version: 1.94.0
+  resolution: "sass@npm:1.94.0"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -6344,7 +6353,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10c0/b9facc64de10c9d1514272c1dcbb48ca99d5f591a1cd43fd27d641275d9d95948f1299107ab5b309e2abb552667cca84a38a1a3df5116eb72eba4144bf850b6a
+  checksum: 10c0/e32968180d4a98b4a6468920ce77ca0428c651dbdfe139572138dc0264d8329a93d652299b1d6ffce20db3d8a4981e497a4e5c3a5e0163d47db41b1e1d913123
   languageName: node
   linkType: hard
 
@@ -6870,58 +6879,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"turbo-darwin-64@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo-darwin-64@npm:2.6.0"
+"turbo-darwin-64@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo-darwin-64@npm:2.6.1"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-darwin-arm64@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo-darwin-arm64@npm:2.6.0"
+"turbo-darwin-arm64@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo-darwin-arm64@npm:2.6.1"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-linux-64@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo-linux-64@npm:2.6.0"
+"turbo-linux-64@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo-linux-64@npm:2.6.1"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-linux-arm64@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo-linux-arm64@npm:2.6.0"
+"turbo-linux-arm64@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo-linux-arm64@npm:2.6.1"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-windows-64@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo-windows-64@npm:2.6.0"
+"turbo-windows-64@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo-windows-64@npm:2.6.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-windows-arm64@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo-windows-arm64@npm:2.6.0"
+"turbo-windows-arm64@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo-windows-arm64@npm:2.6.1"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo@npm:2.6.0":
-  version: 2.6.0
-  resolution: "turbo@npm:2.6.0"
+"turbo@npm:2.6.1":
+  version: 2.6.1
+  resolution: "turbo@npm:2.6.1"
   dependencies:
-    turbo-darwin-64: "npm:2.6.0"
-    turbo-darwin-arm64: "npm:2.6.0"
-    turbo-linux-64: "npm:2.6.0"
-    turbo-linux-arm64: "npm:2.6.0"
-    turbo-windows-64: "npm:2.6.0"
-    turbo-windows-arm64: "npm:2.6.0"
+    turbo-darwin-64: "npm:2.6.1"
+    turbo-darwin-arm64: "npm:2.6.1"
+    turbo-linux-64: "npm:2.6.1"
+    turbo-linux-arm64: "npm:2.6.1"
+    turbo-windows-64: "npm:2.6.1"
+    turbo-windows-arm64: "npm:2.6.1"
   dependenciesMeta:
     turbo-darwin-64:
       optional: true
@@ -6937,7 +6946,7 @@ __metadata:
       optional: true
   bin:
     turbo: bin/turbo
-  checksum: 10c0/736a11be685a5b2841102966574ee44ba068ddcea3201169b922f35e1c216b5550d658a7c755f19f594019e1128910c755b4c884bd59bf421285c17f1b3e1eef
+  checksum: 10c0/9875f8d85c5e1b26fbf95dec77b91a1f05ee4545b754469c6ddabe55759289bef02a08693380439d4443db72003e576df30b5852cbfa0da703c08b6e84c557a5
   languageName: node
   linkType: hard
 

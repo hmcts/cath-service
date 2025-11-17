@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the buildVerifiedUserNavigation function from auth package
+// Mock the buildVerifiedUserNavigation and blockUserAccess functions from auth package
 vi.mock("@hmcts/auth", () => ({
   buildVerifiedUserNavigation: vi.fn((currentPath: string, locale: string = "en") => {
     const translations = {
@@ -13,7 +13,8 @@ vi.mock("@hmcts/auth", () => ({
       { text: t.dashboard, href: "/account-home", current: currentPath === "/account-home", attributes: { "data-test": "dashboard-link" } },
       { text: t.emailSubscriptions, href: "/", current: currentPath === "/", attributes: { "data-test": "email-subscriptions-link" } }
     ];
-  })
+  }),
+  blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
 describe("account-home controller", () => {
@@ -41,7 +42,9 @@ describe("account-home controller", () => {
     it("should render account-home page with English locale", async () => {
       const { GET } = await import("./index.js");
 
-      await GET(mockRequest as Request, mockResponse as Response);
+      // GET is now an array [middleware, handler]
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.render).toHaveBeenCalledWith(
         "account-home/index",
@@ -57,7 +60,8 @@ describe("account-home controller", () => {
       mockResponse.locals = { locale: "cy" };
 
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.render).toHaveBeenCalledWith(
         "account-home/index",
@@ -73,7 +77,8 @@ describe("account-home controller", () => {
       mockResponse.locals = {};
 
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -85,7 +90,8 @@ describe("account-home controller", () => {
       mockResponse.locals = { locale: "en" };
 
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -99,7 +105,8 @@ describe("account-home controller", () => {
       mockResponse.locals = { locale: "cy" };
 
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -111,7 +118,8 @@ describe("account-home controller", () => {
 
     it("should include both en and cy locale data in render", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       const renderCall = (mockResponse.render as any).mock.calls[0][1];
 
@@ -123,7 +131,8 @@ describe("account-home controller", () => {
 
     it("should include navigation items", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -134,7 +143,8 @@ describe("account-home controller", () => {
 
     it("should set first navigation item as current", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -145,7 +155,8 @@ describe("account-home controller", () => {
 
     it("should set second navigation item as not current", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -155,7 +166,8 @@ describe("account-home controller", () => {
 
     it("should include data-test attributes on navigation items", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -166,7 +178,8 @@ describe("account-home controller", () => {
 
     it("should have correct hrefs for navigation items", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -179,7 +192,8 @@ describe("account-home controller", () => {
       mockResponse.locals = { locale: "cy" };
 
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const navigation = (mockResponse as any).locals.navigation;
@@ -195,14 +209,15 @@ describe("account-home controller", () => {
       // Test English
       mockResponse.locals = { locale: "en" };
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       // Check res.locals.navigation instead of render parameters
       const enNav = (mockResponse as any).locals.navigation;
 
       // Reset for Welsh test
       mockResponse.locals = { locale: "cy" };
-      await GET(mockRequest as Request, mockResponse as Response);
+      await handler(mockRequest as Request, mockResponse as Response);
 
       const cyNav = (mockResponse as any).locals.navigation;
 
@@ -217,14 +232,16 @@ describe("account-home controller", () => {
 
     it("should call render exactly once", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.render).toHaveBeenCalledTimes(1);
     });
 
     it("should render with correct template path", async () => {
       const { GET } = await import("./index.js");
-      await GET(mockRequest as Request, mockResponse as Response);
+      const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockRequest as Request, mockResponse as Response);
 
       const templatePath = (mockResponse.render as any).mock.calls[0][0];
       expect(templatePath).toBe("account-home/index");

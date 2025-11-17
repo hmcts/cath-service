@@ -38,7 +38,7 @@ export const POST = async (req: Request, res: Response) => {
   // Redirect based on account type
   switch (selectedAccount) {
     case "hmcts":
-      return res.redirect("/");
+      return res.redirect(`/cft-login?lng=${locale}`);
     case "common-platform":
       return res.redirect("/");
     case "cath":

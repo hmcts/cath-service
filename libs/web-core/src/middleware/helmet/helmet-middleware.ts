@@ -5,6 +5,7 @@ import helmet from "helmet";
 export interface SecurityOptions {
   enableGoogleTagManager?: boolean;
   isDevelopment?: boolean;
+  cftIdamUrl?: string;
 }
 
 export function configureNonce() {
@@ -15,7 +16,7 @@ export function configureNonce() {
 }
 
 export function configureHelmet(options: SecurityOptions = {}) {
-  const { enableGoogleTagManager = true, isDevelopment = process.env.NODE_ENV !== "production" } = options;
+  const { enableGoogleTagManager = true, isDevelopment = process.env.NODE_ENV !== "production", cftIdamUrl } = options;
 
   const scriptSources = [
     "'self'",
@@ -32,7 +33,9 @@ export function configureHelmet(options: SecurityOptions = {}) {
 
   const imageSources = ["'self'", "data:", ...(enableGoogleTagManager ? ["https://*.google-analytics.com", "https://*.googletagmanager.com"] : [])];
 
-  const frameSources = ["'self'", ...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
+  const frameSources = [...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
+
+  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : [])];
 
   return helmet({
     contentSecurityPolicy: {
@@ -43,7 +46,8 @@ export function configureHelmet(options: SecurityOptions = {}) {
         imgSrc: imageSources,
         fontSrc: ["'self'", "data:"],
         connectSrc: connectSources,
-        frameSrc: frameSources
+        formAction: formActionSources,
+        ...(frameSources.length > 0 && { frameSrc: frameSources })
       }
     }
   });

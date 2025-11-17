@@ -11,6 +11,9 @@
     "test:sso": "node run-with-credentials.js tests/sso",
     "test:sso:ui": "node run-with-credentials.js tests/sso --ui",
     "test:sso:debug": "node run-with-credentials.js tests/sso --debug",
+    "test:cft-idam": "node run-with-credentials.js tests/cft-idam",
+    "test:cft-idam:ui": "node run-with-credentials.js tests/cft-idam --ui",
+    "test:cft-idam:debug": "node run-with-credentials.js tests/cft-idam --debug",
     "playwright:install": "npx playwright install"
   },
   "dependencies": {
