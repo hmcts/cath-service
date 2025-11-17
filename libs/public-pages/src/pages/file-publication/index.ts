@@ -1,8 +1,8 @@
 import { getArtefactById, getUploadedFile, mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
+import { cy } from "../artefact-not-found/cy.js";
+import { en } from "../artefact-not-found/en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const artefactId = req.query.artefactId as string;
@@ -20,14 +20,14 @@ export const GET = async (req: Request, res: Response) => {
 
   if (!file) {
     console.log("[file-publication] File not found for artefactId:", artefactId, "rendering error page");
-    return res.status(404).render("file-publication/artefact-not-found", t);
+    return res.status(404).render("artefact-not-found/index", t);
   }
 
   const artefact = await getArtefactById(artefactId);
 
   if (!artefact) {
     console.log("[file-publication] Artefact metadata not found for artefactId:", artefactId);
-    return res.status(404).render("file-publication/artefact-not-found", t);
+    return res.status(404).render("artefact-not-found/index", t);
   }
 
   const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);

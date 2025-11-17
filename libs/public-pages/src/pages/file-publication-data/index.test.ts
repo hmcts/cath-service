@@ -59,7 +59,7 @@ describe("File Publication Data - GET handler", () => {
 
       expect(statusSpy).toHaveBeenCalledWith(404);
       expect(renderSpy).toHaveBeenCalledWith(
-        "file-publication/artefact-not-found",
+        "artefact-not-found/index",
         expect.objectContaining({
           pageTitle: "Page not found",
           bodyText: "You have attempted to view a page that no longer exists. This could be because the publication you are trying to view has expired.",
@@ -80,7 +80,7 @@ describe("File Publication Data - GET handler", () => {
 
       expect(statusSpy).toHaveBeenCalledWith(404);
       expect(renderSpy).toHaveBeenCalledWith(
-        "file-publication/artefact-not-found",
+        "artefact-not-found/index",
         expect.objectContaining({
           pageTitle: "Page not found"
         })
@@ -95,7 +95,7 @@ describe("File Publication Data - GET handler", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(renderSpy).toHaveBeenCalledWith(
-        "file-publication/artefact-not-found",
+        "artefact-not-found/index",
         expect.objectContaining({
           pageTitle: "Heb ddod o hyd i'r dudalen",
           bodyText:
