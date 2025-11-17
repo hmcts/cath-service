@@ -8,6 +8,7 @@ export interface SecurityOptions {
   cftIdamUrl?: string;
 }
 
+
 export function configureNonce() {
   return (_req: Request, res: Response, next: NextFunction) => {
     res.locals.cspNonce = crypto.randomBytes(16).toString("base64");
