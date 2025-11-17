@@ -12,6 +12,7 @@ nodejs:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
+    CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
   keyVaults:
     # Local development uses pip-ss-kv-stg with -dev suffixed secrets
     pip-ss-kv-stg:
@@ -29,3 +30,6 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
         - name: sso-sg-admin-local
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
+        # CFT IDAM secret for local development
+        - name: cft-idam-client-secret
+          alias: CFT_IDAM_CLIENT_SECRET
