@@ -255,6 +255,48 @@ describe("helmet-middleware", () => {
       });
     });
 
+    describe("CFT IDAM URL configuration", () => {
+      it("should include CFT IDAM URL in formAction when provided", () => {
+        configureHelmet({ cftIdamUrl: "https://idam.example.com" });
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).toContain("https://idam.example.com");
+      });
+
+      it("should not include CFT IDAM URL in formAction when not provided", () => {
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).not.toContain("https://idam.example.com");
+      });
+
+      it("should include self in formAction by default", () => {
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        expect(directives?.formAction).toContain("'self'");
+      });
+
+      it("should not include redundant localhost URLs (covered by 'self')", () => {
+        process.env.NODE_ENV = "development";
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = helmetCall?.contentSecurityPolicy?.directives;
+
+        // localhost URLs are not needed as 'self' directive covers them
+        expect(directives?.formAction).toContain("'self'");
+        expect(directives?.formAction).not.toContain("http://localhost:8080");
+        expect(directives?.formAction).not.toContain("https://localhost:8080");
+      });
+    });
+
     describe("return value", () => {
       it("should return the helmet middleware", () => {
         const mockMiddleware = vi.fn();

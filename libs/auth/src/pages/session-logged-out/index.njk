@@ -1,0 +1,15 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div>
+
+    {{ govukPanel({
+      titleText: title,
+      classes: "govuk-panel--confirmation"
+    }) }}
+
+  </div>
+</div>
+{% endblock %}
