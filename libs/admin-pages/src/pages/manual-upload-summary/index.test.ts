@@ -60,20 +60,16 @@ vi.mock("../../manual-upload/storage.js", () => ({
   getManualUpload: vi.fn()
 }));
 
-vi.mock("../../manual-upload/file-storage.js", () => ({
-  saveUploadedFile: vi.fn()
-}));
-
 vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn()
+    createArtefact: vi.fn(),
+    saveUploadedFile: vi.fn()
   };
 });
 
-import { createArtefact } from "@hmcts/publication";
-import { saveUploadedFile } from "../../manual-upload/file-storage.js";
+import { createArtefact, saveUploadedFile } from "@hmcts/publication";
 import { getManualUpload } from "../../manual-upload/storage.js";
 
 describe("manual-upload-summary page", () => {

@@ -1,5 +1,4 @@
-import { getUploadedFile } from "@hmcts/admin-pages";
-import { getArtefactById, mockListTypes } from "@hmcts/publication";
+import { getArtefactById, getUploadedFile, mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";

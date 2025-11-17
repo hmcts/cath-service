@@ -765,6 +765,7 @@ __metadata:
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
   dependencies:
     "@hmcts/location": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
   peerDependencies:
     express: ^5.1.0
@@ -864,7 +865,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
   dependencies:
-    "@hmcts/admin-pages": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"

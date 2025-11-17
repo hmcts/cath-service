@@ -2,20 +2,16 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("@hmcts/admin-pages", () => ({
-  getUploadedFile: vi.fn()
-}));
-
 vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    getArtefactById: vi.fn()
+    getArtefactById: vi.fn(),
+    getUploadedFile: vi.fn()
   };
 });
 
-import { getUploadedFile } from "@hmcts/admin-pages";
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getUploadedFile } from "@hmcts/publication";
 
 describe("File Publication Data - GET handler", () => {
   let mockRequest: Partial<Request>;

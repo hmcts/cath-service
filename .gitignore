@@ -50,3 +50,6 @@ lcov.info
 .claude/claude.env
 .claude/analytics
 
+# Temporary uploads
+apps/web/storage/temp/uploads/
+

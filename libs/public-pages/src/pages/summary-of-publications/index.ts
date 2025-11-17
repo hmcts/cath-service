@@ -1,7 +1,6 @@
 import path from "node:path";
-import { getUploadedFile } from "@hmcts/admin-pages";
 import { getLocationById } from "@hmcts/location";
-import { getArtefactsByLocationId, mockListTypes } from "@hmcts/publication";
+import { getArtefactsByLocationId, getUploadedFile, mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";

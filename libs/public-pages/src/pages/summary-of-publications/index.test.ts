@@ -68,29 +68,25 @@ vi.mock("@hmcts/publication", async () => {
         ]);
       }
       return Promise.resolve([]);
+    }),
+    getUploadedFile: vi.fn((artefactId: string) => {
+      // Return PDF for a1 and a2, non-PDF for a3
+      if (artefactId === "a1" || artefactId === "a2") {
+        return Promise.resolve({
+          fileData: Buffer.from("mock-pdf-data"),
+          fileName: `${artefactId}.pdf`
+        });
+      }
+      if (artefactId === "a3") {
+        return Promise.resolve({
+          fileData: Buffer.from("mock-doc-data"),
+          fileName: `${artefactId}.docx`
+        });
+      }
+      return Promise.resolve(null);
     })
   };
 });
-
-// Mock the admin-pages module
-vi.mock("@hmcts/admin-pages", () => ({
-  getUploadedFile: vi.fn((artefactId: string) => {
-    // Return PDF for a1 and a2, non-PDF for a3
-    if (artefactId === "a1" || artefactId === "a2") {
-      return Promise.resolve({
-        fileData: Buffer.from("mock-pdf-data"),
-        fileName: `${artefactId}.pdf`
-      });
-    }
-    if (artefactId === "a3") {
-      return Promise.resolve({
-        fileData: Buffer.from("mock-doc-data"),
-        fileName: `${artefactId}.docx`
-      });
-    }
-    return Promise.resolve(null);
-  })
-}));
 
 describe("Summary of Publications - GET handler", () => {
   let mockRequest: Partial<Request>;
