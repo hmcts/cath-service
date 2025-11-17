@@ -1,0 +1,26 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <div class="govuk-panel govuk-panel--confirmation">
+      <h1 class="govuk-panel__title">
+        {{ heading }}
+      </h1>
+      <div class="govuk-panel__body">
+        {{ message }}
+      </div>
+    </div>
+
+    <p class="govuk-body">
+      <a href="/remove-list-search{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">{{ removeAnotherLink }}</a>
+    </p>
+
+    <p class="govuk-body">
+      <a href="/admin-dashboard{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">{{ homeLink }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

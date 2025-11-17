@@ -15,3 +15,56 @@ export async function createArtefact(data: Artefact): Promise<void> {
     }
   });
 }
+
+export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
+  const artefacts = await prisma.artefact.findMany({
+    where: {
+      locationId
+    },
+    orderBy: {
+      contentDate: "desc"
+    }
+  });
+
+  return artefacts.map((artefact) => ({
+    artefactId: artefact.artefactId,
+    locationId: artefact.locationId,
+    listTypeId: artefact.listTypeId,
+    contentDate: artefact.contentDate,
+    sensitivity: artefact.sensitivity,
+    language: artefact.language,
+    displayFrom: artefact.displayFrom,
+    displayTo: artefact.displayTo
+  }));
+}
+
+export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact[]> {
+  const artefacts = await prisma.artefact.findMany({
+    where: {
+      artefactId: {
+        in: artefactIds
+      }
+    }
+  });
+
+  return artefacts.map((artefact) => ({
+    artefactId: artefact.artefactId,
+    locationId: artefact.locationId,
+    listTypeId: artefact.listTypeId,
+    contentDate: artefact.contentDate,
+    sensitivity: artefact.sensitivity,
+    language: artefact.language,
+    displayFrom: artefact.displayFrom,
+    displayTo: artefact.displayTo
+  }));
+}
+
+export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
+  await prisma.artefact.deleteMany({
+    where: {
+      artefactId: {
+        in: artefactIds
+      }
+    }
+  });
+}

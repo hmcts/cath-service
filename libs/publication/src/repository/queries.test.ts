@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createArtefact } from "./queries.js";
+import { createArtefact, deleteArtefacts, getArtefactsByIds, getArtefactsByLocation } from "./queries.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
-      create: vi.fn()
+      create: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn()
     }
   }
 }));
@@ -219,6 +221,184 @@ describe("createArtefact", () => {
         language: artefactData.language,
         displayFrom,
         displayTo
+      }
+    });
+  });
+});
+
+describe("getArtefactsByLocation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return artefacts for a given location", async () => {
+    const mockArtefacts = [
+      {
+        artefactId: "550e8400-e29b-41d4-a716-446655440000",
+        locationId: "123",
+        listTypeId: 1,
+        contentDate: new Date("2025-10-25"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-20"),
+        displayTo: new Date("2025-10-30"),
+        lastReceivedDate: new Date()
+      },
+      {
+        artefactId: "550e8400-e29b-41d4-a716-446655440001",
+        locationId: "123",
+        listTypeId: 2,
+        contentDate: new Date("2025-10-24"),
+        sensitivity: "PRIVATE",
+        language: "WELSH",
+        displayFrom: new Date("2025-10-22"),
+        displayTo: new Date("2025-10-28"),
+        lastReceivedDate: new Date()
+      }
+    ];
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+
+    const result = await getArtefactsByLocation("123");
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: { locationId: "123" },
+      orderBy: { contentDate: "desc" }
+    });
+    expect(result).toHaveLength(2);
+    expect(result[0].artefactId).toBe("550e8400-e29b-41d4-a716-446655440000");
+    expect(result[1].artefactId).toBe("550e8400-e29b-41d4-a716-446655440001");
+  });
+
+  it("should return empty array when no artefacts found", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([]);
+
+    const result = await getArtefactsByLocation("999");
+
+    expect(result).toEqual([]);
+  });
+});
+
+describe("getArtefactsByIds", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return artefacts by their IDs", async () => {
+    const mockArtefacts = [
+      {
+        artefactId: "550e8400-e29b-41d4-a716-446655440000",
+        locationId: "123",
+        listTypeId: 1,
+        contentDate: new Date("2025-10-25"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-20"),
+        displayTo: new Date("2025-10-30"),
+        lastReceivedDate: new Date()
+      }
+    ];
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+
+    const result = await getArtefactsByIds(["550e8400-e29b-41d4-a716-446655440000"]);
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: {
+        artefactId: {
+          in: ["550e8400-e29b-41d4-a716-446655440000"]
+        }
+      }
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].artefactId).toBe("550e8400-e29b-41d4-a716-446655440000");
+  });
+
+  it("should return multiple artefacts by their IDs", async () => {
+    const mockArtefacts = [
+      {
+        artefactId: "550e8400-e29b-41d4-a716-446655440000",
+        locationId: "123",
+        listTypeId: 1,
+        contentDate: new Date("2025-10-25"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-20"),
+        displayTo: new Date("2025-10-30"),
+        lastReceivedDate: new Date()
+      },
+      {
+        artefactId: "550e8400-e29b-41d4-a716-446655440001",
+        locationId: "456",
+        listTypeId: 2,
+        contentDate: new Date("2025-10-24"),
+        sensitivity: "PRIVATE",
+        language: "WELSH",
+        displayFrom: new Date("2025-10-22"),
+        displayTo: new Date("2025-10-28"),
+        lastReceivedDate: new Date()
+      }
+    ];
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+
+    const result = await getArtefactsByIds(["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]);
+
+    expect(result).toHaveLength(2);
+  });
+
+  it("should return empty array when no matching IDs found", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([]);
+
+    const result = await getArtefactsByIds(["non-existent-id"]);
+
+    expect(result).toEqual([]);
+  });
+});
+
+describe("deleteArtefacts", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should delete artefacts by their IDs", async () => {
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 2 });
+
+    await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]);
+
+    expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+      where: {
+        artefactId: {
+          in: ["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]
+        }
+      }
+    });
+  });
+
+  it("should delete single artefact", async () => {
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 1 });
+
+    await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000"]);
+
+    expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+      where: {
+        artefactId: {
+          in: ["550e8400-e29b-41d4-a716-446655440000"]
+        }
+      }
+    });
+  });
+
+  it("should handle empty array", async () => {
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 });
+
+    await deleteArtefacts([]);
+
+    expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+      where: {
+        artefactId: {
+          in: []
+        }
       }
     });
   });
