@@ -14,6 +14,36 @@ function formatDateRangeString(from: Date, to: Date): string {
   return `${formatDateString(from)} to ${formatDateString(to)}`;
 }
 
+type SortColumn = "listType" | "courtName" | "contentDate" | "language" | "sensitivity";
+type SortOrder = "asc" | "desc";
+
+interface ArtefactRow {
+  artefactId: string;
+  listType: string;
+  courtName: string;
+  contentDate: string;
+  contentDateRaw: Date;
+  displayDates: string;
+  language: string;
+  sensitivity: string;
+}
+
+function sortArtefacts(rows: ArtefactRow[], sortBy: SortColumn, order: SortOrder): ArtefactRow[] {
+  return [...rows].sort((a, b) => {
+    let comparison = 0;
+
+    if (sortBy === "contentDate") {
+      comparison = a.contentDateRaw.getTime() - b.contentDateRaw.getTime();
+    } else {
+      const aValue = a[sortBy].toLowerCase();
+      const bValue = b[sortBy].toLowerCase();
+      comparison = aValue.localeCompare(bValue);
+    }
+
+    return order === "asc" ? comparison : -comparison;
+  });
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const locale = req.query.lng === "cy" ? "cy" : "en";
@@ -24,12 +54,15 @@ const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/remove-list-search${lng}`);
   }
 
+  const sortBy = (req.query.sort as SortColumn) || "contentDate";
+  const order = (req.query.order as SortOrder) || "desc";
+
   const artefacts = await getArtefactsByLocation(sessionData.locationId);
 
   const location = getLocationById(Number.parseInt(sessionData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
 
-  const artefactRows = artefacts.map((artefact) => {
+  let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
     const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
     const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
@@ -38,11 +71,14 @@ const getHandler = async (req: Request, res: Response) => {
       listType: listTypeName,
       courtName,
       contentDate: formatDateString(artefact.contentDate),
+      contentDateRaw: artefact.contentDate,
       displayDates: formatDateRangeString(artefact.displayFrom, artefact.displayTo),
       language: LANGUAGE_LABELS[artefact.language] || artefact.language,
       sensitivity: SENSITIVITY_LABELS[artefact.sensitivity] || artefact.sensitivity
     };
   });
+
+  artefactRows = sortArtefacts(artefactRows, sortBy, order);
 
   res.render("remove-list-search-results/index", {
     pageTitle: lang.pageTitle,
@@ -55,6 +91,8 @@ const getHandler = async (req: Request, res: Response) => {
     continueButton: lang.continueButton,
     artefactRows,
     resultCount: artefacts.length,
+    sortBy,
+    order,
     hideLanguageToggle: true
   });
 };
@@ -72,11 +110,14 @@ const postHandler = async (req: Request, res: Response) => {
   const selectedArtefacts = Array.isArray(req.body.artefacts) ? req.body.artefacts : req.body.artefacts ? [req.body.artefacts] : [];
 
   if (selectedArtefacts.length === 0) {
+    const sortBy = (req.query.sort as SortColumn) || "contentDate";
+    const order = (req.query.order as SortOrder) || "desc";
+
     const artefacts = await getArtefactsByLocation(sessionData.locationId);
     const location = getLocationById(Number.parseInt(sessionData.locationId, 10));
     const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
 
-    const artefactRows = artefacts.map((artefact) => {
+    let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
       const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
       const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
@@ -85,11 +126,14 @@ const postHandler = async (req: Request, res: Response) => {
         listType: listTypeName,
         courtName,
         contentDate: formatDateString(artefact.contentDate),
+        contentDateRaw: artefact.contentDate,
         displayDates: formatDateRangeString(artefact.displayFrom, artefact.displayTo),
         language: LANGUAGE_LABELS[artefact.language] || artefact.language,
         sensitivity: SENSITIVITY_LABELS[artefact.sensitivity] || artefact.sensitivity
       };
     });
+
+    artefactRows = sortArtefacts(artefactRows, sortBy, order);
 
     return res.render("remove-list-search-results/index", {
       pageTitle: lang.pageTitle,
@@ -102,6 +146,8 @@ const postHandler = async (req: Request, res: Response) => {
       continueButton: lang.continueButton,
       artefactRows,
       resultCount: artefacts.length,
+      sortBy,
+      order,
       errors: [
         {
           text: lang.errorNoSelection,

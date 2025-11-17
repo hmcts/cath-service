@@ -132,3 +132,30 @@
   clear: both;
   border-left: 10px solid #b1b4b6;
 }
+
+// Sortable table headers
+.govuk-table__header--sortable {
+  a {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    position: relative;
+
+    &:hover {
+      text-decoration: underline;
+      color: #1d70b8;
+    }
+
+    &:focus {
+      outline: 3px solid #ffdd00;
+      outline-offset: 0;
+      background-color: #ffdd00;
+      color: #0b0c0c;
+    }
+
+    span {
+      margin-left: 5px;
+      font-size: 1.2em;
+    }
+  }
+}
