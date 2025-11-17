@@ -3,6 +3,7 @@ export interface UserProfile {
   email: string;
   displayName: string;
   role?: string;
+  provenance?: string;
   // The following fields are only used during authentication and not stored in session:
   roles?: string[];
   groupIds?: string[];
