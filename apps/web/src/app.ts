@@ -5,6 +5,7 @@ import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCal
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
+import { moduleRoot as referenceDataUploadModuleRoot, pageRoutes as referenceDataUploadRoutes } from "@hmcts/reference-data-upload/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
@@ -51,7 +52,7 @@ export async function createApp(): Promise<Express> {
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot, referenceDataUploadModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -100,6 +101,17 @@ export async function createApp(): Promise<Express> {
     });
   });
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
+
+  // Register reference data upload with file upload middleware
+  app.post("/reference-data-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        (req as any).fileUploadError = err;
+      }
+      next();
+    });
+  });
+  app.use(await createSimpleRouter(referenceDataUploadRoutes, pageRoutes));
 
   app.use(notFoundHandler());
   app.use(errorHandler());

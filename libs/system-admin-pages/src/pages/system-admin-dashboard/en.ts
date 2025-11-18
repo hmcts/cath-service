@@ -5,7 +5,7 @@ export const en = {
     {
       title: "Upload Reference Data",
       description: "Upload CSV location reference data",
-      href: "/upload-reference-data"
+      href: "/reference-data-upload"
     },
     {
       title: "Delete Court",

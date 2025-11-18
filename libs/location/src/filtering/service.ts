@@ -23,12 +23,12 @@ export interface SubJurisdictionItem {
   checked: boolean;
 }
 
-export function buildJurisdictionItems(
+export async function buildJurisdictionItems(
   selectedJurisdictions: number[],
   locale: "en" | "cy",
   subJurisdictionLabels?: Record<number, string>
-): JurisdictionItem[] {
-  const allJurisdictions = getAllJurisdictions();
+): Promise<JurisdictionItem[]> {
+  const allJurisdictions = await getAllJurisdictions();
 
   return allJurisdictions
     .map((jurisdiction) => ({
@@ -44,8 +44,8 @@ export function buildJurisdictionItems(
     .sort((a, b) => a.text.localeCompare(b.text));
 }
 
-export function buildRegionItems(selectedRegions: number[], locale: "en" | "cy"): RegionItem[] {
-  const allRegions = getAllRegions();
+export async function buildRegionItems(selectedRegions: number[], locale: "en" | "cy"): Promise<RegionItem[]> {
+  const allRegions = await getAllRegions();
 
   return allRegions
     .map((region) => ({
@@ -56,9 +56,9 @@ export function buildRegionItems(selectedRegions: number[], locale: "en" | "cy")
     .sort((a, b) => a.text.localeCompare(b.text));
 }
 
-export function buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions: number[], locale: "en" | "cy"): Record<number, SubJurisdictionItem[]> {
-  const allJurisdictions = getAllJurisdictions();
-  const allSubJurisdictions = getAllSubJurisdictions();
+export async function buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions: number[], locale: "en" | "cy"): Promise<Record<number, SubJurisdictionItem[]>> {
+  const allJurisdictions = await getAllJurisdictions();
+  const allSubJurisdictions = await getAllSubJurisdictions();
 
   const subJurisdictionItemsByJurisdiction: Record<number, SubJurisdictionItem[]> = {};
 
@@ -77,8 +77,9 @@ export function buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions
   return subJurisdictionItemsByJurisdiction;
 }
 
-export function getSubJurisdictionsForJurisdiction(jurisdictionId: number): number[] {
-  return getAllSubJurisdictions()
+export async function getSubJurisdictionsForJurisdiction(jurisdictionId: number): Promise<number[]> {
+  const allSubJurisdictions = await getAllSubJurisdictions();
+  return allSubJurisdictions
     .filter((sub) => sub.jurisdictionId === jurisdictionId)
     .map((sub) => sub.subJurisdictionId);
 }

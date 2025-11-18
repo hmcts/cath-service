@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/location",
+  "name": "@hmcts/reference-data-upload",
   "version": "1.0.0",
   "type": "module",
   "types": "./dist/index.d.ts",
@@ -14,7 +14,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn build:nunjucks",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -22,7 +23,14 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
   },
+  "dependencies": {
+    "papaparse": "5.4.1"
+  },
+  "devDependencies": {
+    "@types/papaparse": "5.3.15"
+  },
   "peerDependencies": {
-    "@prisma/client": "*"
+    "@prisma/client": "*",
+    "express": "5.1.0"
   }
 }

@@ -17,9 +17,12 @@
       "@hmcts/public-pages": ["libs/public-pages/src"],
       "@hmcts/verified-pages": ["libs/verified-pages/src"],
       "@hmcts/location": ["libs/location/src"],
+      "@hmcts/location/config": ["libs/location/src/config"],
       "@hmcts/publication": ["libs/publication/src"],
       "@hmcts/redis": ["libs/redis/src"],
-      "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"]
+      "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"],
+      "@hmcts/reference-data-upload": ["libs/reference-data-upload/src"],
+      "@hmcts/reference-data-upload/config": ["libs/reference-data-upload/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
