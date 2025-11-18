@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
-import { GET } from "./index.js";
-import { en } from "./en.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
+import { en } from "./en.js";
+import { GET } from "./index.js";
 
 describe("artefact-not-found GET", () => {
   let mockRequest: Partial<Request>;
