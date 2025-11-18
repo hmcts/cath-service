@@ -3,15 +3,15 @@ import { getLocationsGroupedByLetter, searchLocations } from "./service.js";
 
 describe("searchLocations", () => {
   describe("priority ordering", () => {
-    it("should prioritize starts-with matches before partial matches", () => {
-      const results = searchLocations("man", "en");
+    it("should prioritize starts-with matches before partial matches", async () => {
+      const results = await searchLocations("man", "en");
 
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].name).toBe("Manchester Civil Justice Centre");
     });
 
-    it("should sort starts-with matches alphabetically", () => {
-      const results = searchLocations("court", "en");
+    it("should sort starts-with matches alphabetically", async () => {
+      const results = await searchLocations("court", "en");
 
       const startsWithMatches = results.filter((loc) => loc.name.toLowerCase().startsWith("court"));
 
@@ -20,8 +20,8 @@ describe("searchLocations", () => {
       }
     });
 
-    it("should sort partial matches alphabetically", () => {
-      const results = searchLocations("justice", "en");
+    it("should sort partial matches alphabetically", async () => {
+      const results = await searchLocations("justice", "en");
 
       const partialMatches = results.filter((loc) => !loc.name.toLowerCase().startsWith("justice") && loc.name.toLowerCase().includes("justice"));
 
@@ -30,8 +30,8 @@ describe("searchLocations", () => {
       }
     });
 
-    it("should return partial matches after starts-with matches", () => {
-      const results = searchLocations("l", "en");
+    it("should return partial matches after starts-with matches", async () => {
+      const results = await searchLocations("l", "en");
 
       const startsWithCount = results.filter((loc) => loc.name.toLowerCase().startsWith("l")).length;
       const partialCount = results.filter((loc) => !loc.name.toLowerCase().startsWith("l") && loc.name.toLowerCase().includes("l")).length;
@@ -51,10 +51,10 @@ describe("searchLocations", () => {
   });
 
   describe("case insensitivity", () => {
-    it("should return results regardless of case", () => {
-      const lower = searchLocations("oxford", "en");
-      const upper = searchLocations("OXFORD", "en");
-      const mixed = searchLocations("OxFoRd", "en");
+    it("should return results regardless of case", async () => {
+      const lower = await searchLocations("oxford", "en");
+      const upper = await searchLocations("OXFORD", "en");
+      const mixed = await searchLocations("OxFoRd", "en");
 
       expect(lower).toEqual(upper);
       expect(upper).toEqual(mixed);
@@ -63,63 +63,63 @@ describe("searchLocations", () => {
   });
 
   describe("partial matching", () => {
-    it("should return partial matches when no starts-with matches exist", () => {
-      const results = searchLocations("justice", "en");
+    it("should return partial matches when no starts-with matches exist", async () => {
+      const results = await searchLocations("justice", "en");
       expect(results.length).toBeGreaterThan(0);
       expect(results.every((loc) => loc.name.toLowerCase().includes("justice"))).toBe(true);
     });
 
-    it("should return matches for single character", () => {
-      const results = searchLocations("o", "en");
+    it("should return matches for single character", async () => {
+      const results = await searchLocations("o", "en");
       expect(results.length).toBeGreaterThan(0);
     });
   });
 
   describe("empty or invalid queries", () => {
-    it("should return empty array for empty string", () => {
-      const results = searchLocations("", "en");
+    it("should return empty array for empty string", async () => {
+      const results = await searchLocations("", "en");
       expect(results).toEqual([]);
     });
 
-    it("should return empty array for whitespace only", () => {
-      const results = searchLocations("   ", "en");
+    it("should return empty array for whitespace only", async () => {
+      const results = await searchLocations("   ", "en");
       expect(results).toEqual([]);
     });
 
-    it("should return empty array for no matches", () => {
-      const results = searchLocations("zzzzzzzzz", "en");
+    it("should return empty array for no matches", async () => {
+      const results = await searchLocations("zzzzzzzzz", "en");
       expect(results).toEqual([]);
     });
   });
 
   describe("Welsh language support", () => {
-    it("should search Welsh names when language is cy", () => {
-      const results = searchLocations("canolfan", "cy");
+    it("should search Welsh names when language is cy", async () => {
+      const results = await searchLocations("canolfan", "cy");
       expect(results.length).toBeGreaterThan(0);
       expect(results.every((loc) => loc.welshName.toLowerCase().includes("canolfan"))).toBe(true);
     });
 
-    it("should prioritize starts-with matches in Welsh", () => {
-      const results = searchLocations("llys", "cy");
+    it("should prioritize starts-with matches in Welsh", async () => {
+      const results = await searchLocations("llys", "cy");
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].welshName.toLowerCase().startsWith("llys")).toBe(true);
     });
 
-    it("should not match English names when searching in Welsh", () => {
-      const results = searchLocations("oxford", "cy");
+    it("should not match English names when searching in Welsh", async () => {
+      const results = await searchLocations("oxford", "cy");
       expect(results.length).toBe(0);
     });
   });
 
   describe("trimming", () => {
-    it("should trim leading whitespace", () => {
-      const results = searchLocations("  oxford", "en");
+    it("should trim leading whitespace", async () => {
+      const results = await searchLocations("  oxford", "en");
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].name).toBe("Oxford Combined Court Centre");
     });
 
-    it("should trim trailing whitespace", () => {
-      const results = searchLocations("oxford  ", "en");
+    it("should trim trailing whitespace", async () => {
+      const results = await searchLocations("oxford  ", "en");
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].name).toBe("Oxford Combined Court Centre");
     });
@@ -127,8 +127,8 @@ describe("searchLocations", () => {
 });
 
 describe("getLocationsGroupedByLetter", () => {
-  it("should group locations by first letter", () => {
-    const grouped = getLocationsGroupedByLetter("en");
+  it("should group locations by first letter", async () => {
+    const grouped = await getLocationsGroupedByLetter("en");
 
     expect(grouped).toHaveProperty("B");
     expect(grouped).toHaveProperty("C");
@@ -139,8 +139,8 @@ describe("getLocationsGroupedByLetter", () => {
     expect(grouped).toHaveProperty("S");
   });
 
-  it("should have locations sorted alphabetically within each group", () => {
-    const grouped = getLocationsGroupedByLetter("en");
+  it("should have locations sorted alphabetically within each group", async () => {
+    const grouped = await getLocationsGroupedByLetter("en");
 
     for (const letter in grouped) {
       const locations = grouped[letter];
@@ -150,8 +150,8 @@ describe("getLocationsGroupedByLetter", () => {
     }
   });
 
-  it("should use first letter in uppercase", () => {
-    const grouped = getLocationsGroupedByLetter("en");
+  it("should use first letter in uppercase", async () => {
+    const grouped = await getLocationsGroupedByLetter("en");
 
     for (const letter in grouped) {
       expect(letter).toBe(letter.toUpperCase());
@@ -159,16 +159,16 @@ describe("getLocationsGroupedByLetter", () => {
     }
   });
 
-  it("should group Welsh locations correctly", () => {
-    const grouped = getLocationsGroupedByLetter("cy");
+  it("should group Welsh locations correctly", async () => {
+    const grouped = await getLocationsGroupedByLetter("cy");
 
     expect(grouped).toHaveProperty("C");
     expect(grouped).toHaveProperty("G");
     expect(grouped).toHaveProperty("L");
   });
 
-  it("should use Welsh names for grouping when language is cy", () => {
-    const grouped = getLocationsGroupedByLetter("cy");
+  it("should use Welsh names for grouping when language is cy", async () => {
+    const grouped = await getLocationsGroupedByLetter("cy");
 
     for (const letter in grouped) {
       const locations = grouped[letter];
@@ -178,20 +178,20 @@ describe("getLocationsGroupedByLetter", () => {
     }
   });
 
-  it("should have all locations distributed across groups", () => {
-    const grouped = getLocationsGroupedByLetter("en");
+  it("should have all locations distributed across groups", async () => {
+    const grouped = await getLocationsGroupedByLetter("en");
 
     let totalCount = 0;
     for (const letter in grouped) {
       totalCount += grouped[letter].length;
     }
 
-    expect(totalCount).toBe(10);
+    expect(totalCount).toBe(13);
   });
 
   describe("filtering", () => {
-    it("should filter by region", () => {
-      const grouped = getLocationsGroupedByLetter("en", { regions: [1] }); // London
+    it("should filter by region", async () => {
+      const grouped = await getLocationsGroupedByLetter("en", { regions: [1] }); // London
 
       let totalCount = 0;
       for (const letter in grouped) {
@@ -209,8 +209,8 @@ describe("getLocationsGroupedByLetter", () => {
       }
     });
 
-    it("should filter by subJurisdiction", () => {
-      const grouped = getLocationsGroupedByLetter("en", { subJurisdictions: [1] }); // Civil Court
+    it("should filter by subJurisdiction", async () => {
+      const grouped = await getLocationsGroupedByLetter("en", { subJurisdictions: [1] }); // Civil Court
 
       let totalCount = 0;
       for (const letter in grouped) {
@@ -227,8 +227,8 @@ describe("getLocationsGroupedByLetter", () => {
       }
     });
 
-    it("should filter by multiple regions", () => {
-      const grouped = getLocationsGroupedByLetter("en", { regions: [1, 5] }); // London and Wales
+    it("should filter by multiple regions", async () => {
+      const grouped = await getLocationsGroupedByLetter("en", { regions: [1, 5] }); // London and Wales
 
       // Check all locations have either London or Wales region
       for (const letter in grouped) {
@@ -238,8 +238,8 @@ describe("getLocationsGroupedByLetter", () => {
       }
     });
 
-    it("should filter by both region and subJurisdiction", () => {
-      const grouped = getLocationsGroupedByLetter("en", { regions: [1], subJurisdictions: [1] });
+    it("should filter by both region and subJurisdiction", async () => {
+      const grouped = await getLocationsGroupedByLetter("en", { regions: [1], subJurisdictions: [1] });
 
       // Check all locations match both filters
       for (const letter in grouped) {
@@ -250,20 +250,20 @@ describe("getLocationsGroupedByLetter", () => {
       }
     });
 
-    it("should return empty object when no locations match filters", () => {
-      const grouped = getLocationsGroupedByLetter("en", { regions: [999] });
+    it("should return empty object when no locations match filters", async () => {
+      const grouped = await getLocationsGroupedByLetter("en", { regions: [999] });
       expect(Object.keys(grouped).length).toBe(0);
     });
 
-    it("should return all locations when no filters provided", () => {
-      const grouped = getLocationsGroupedByLetter("en");
+    it("should return all locations when no filters provided", async () => {
+      const grouped = await getLocationsGroupedByLetter("en");
 
       let totalCount = 0;
       for (const letter in grouped) {
         totalCount += grouped[letter].length;
       }
 
-      expect(totalCount).toBe(10);
+      expect(totalCount).toBe(13);
     });
   });
 });
