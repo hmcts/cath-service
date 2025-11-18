@@ -1,7 +1,7 @@
 import { prisma } from "@hmcts/postgres";
 import type { ParsedLocationData, ValidationError } from "./model.js";
 
-const HTML_TAG_REGEX = /<[^>]+>/;
+const HTML_TAG_REGEX = /<[^<>]*>/;
 
 export async function validateLocationData(data: ParsedLocationData[]): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];

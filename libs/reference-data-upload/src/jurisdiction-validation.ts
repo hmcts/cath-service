@@ -1,6 +1,6 @@
 import { checkJurisdictionExists } from "./jurisdiction-repository.js";
 
-const HTML_TAG_REGEX = /<[^>]+>/;
+const HTML_TAG_REGEX = /<[^<>]*>/;
 
 export interface ValidationError {
   text: string;
