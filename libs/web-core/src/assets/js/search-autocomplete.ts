@@ -2,10 +2,10 @@ import { getAllLocations, searchLocations } from "@hmcts/location";
 // @ts-expect-error - accessible-autocomplete doesn't have proper TypeScript definitions
 import accessibleAutocomplete from "accessible-autocomplete/dist/accessible-autocomplete.min.js";
 
-function initAutocompleteForInput(locationInput: HTMLInputElement) {
+async function initAutocompleteForInput(locationInput: HTMLInputElement) {
   const inputId = locationInput.id;
   const language = (locationInput.getAttribute("data-locale") || "en") as "en" | "cy";
-  const locations = getAllLocations(language);
+  const locations = await getAllLocations(language);
 
   const preselectedLocationId = locationInput.getAttribute("data-location-id");
   const preselectedValue = locationInput.value;
@@ -53,8 +53,8 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
     id: inputId,
     name: `${inputId}-display`,
     defaultValue: preselectedValue,
-    source: (query: string, populateResults: (results: string[]) => void) => {
-      const searchResults = searchLocations(query, language);
+    source: async (query: string, populateResults: (results: string[]) => void) => {
+      const searchResults = await searchLocations(query, language);
       const locationNames = searchResults.map((loc) => (language === "cy" ? loc.welshName : loc.name));
       populateResults(locationNames);
     },
@@ -124,18 +124,18 @@ function initAutocompleteForInput(locationInput: HTMLInputElement) {
   }
 }
 
-export function initSearchAutocomplete() {
+export async function initSearchAutocomplete() {
   // Initialize all autocomplete inputs on the page
   const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
   for (const input of autocompleteInputs) {
-    initAutocompleteForInput(input);
+    await initAutocompleteForInput(input);
   }
 }
 
-export function initAllAutocompletes() {
+export async function initAllAutocompletes() {
   const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
   for (const input of autocompleteInputs) {
-    initAutocompleteForInput(input);
+    await initAutocompleteForInput(input);
   }
 }
 

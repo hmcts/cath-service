@@ -66,7 +66,7 @@ describe("search-autocomplete", () => {
     it("should initialize autocomplete with visually hidden label", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const wrapper = container.querySelector("#location-autocomplete-wrapper");
       const label = wrapper?.querySelector("label");
@@ -78,7 +78,7 @@ describe("search-autocomplete", () => {
     it("should create wrapper div for autocomplete", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const wrapper = container.querySelector("#location-autocomplete-wrapper");
       expect(wrapper).toBeTruthy();
@@ -87,7 +87,7 @@ describe("search-autocomplete", () => {
     it("should hide original input and remove name attribute", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       expect(locationInput.style.display).toBe("none");
       expect(locationInput.hasAttribute("name")).toBe(false);
@@ -96,7 +96,7 @@ describe("search-autocomplete", () => {
     it("should create hidden input for locationId", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const hiddenInput = container.querySelector('input[type="hidden"][name="locationId"]') as HTMLInputElement;
       expect(hiddenInput).toBeTruthy();
@@ -108,7 +108,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const hiddenInput = container.querySelector('input[type="hidden"][name="locationId"]') as HTMLInputElement;
       expect(hiddenInput?.value).toBe("123");
@@ -119,7 +119,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       expect(mockAccessibleAutocomplete).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -136,7 +136,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       expect(mockAccessibleAutocomplete).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -150,7 +150,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       expect(mockAccessibleAutocomplete).not.toHaveBeenCalled();
     });
@@ -160,7 +160,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const config = mockAccessibleAutocomplete.mock.calls[0][0];
       expect(config.source).toBeDefined();
@@ -171,7 +171,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const config = mockAccessibleAutocomplete.mock.calls[0][0];
       expect(config.source).toBeDefined();
@@ -180,7 +180,7 @@ describe("search-autocomplete", () => {
     it("should add govuk-label class to label", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const wrapper = container.querySelector("#location-autocomplete-wrapper");
       const label = wrapper?.querySelector("label");
@@ -190,7 +190,7 @@ describe("search-autocomplete", () => {
     it("should set label htmlFor to location", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const wrapper = container.querySelector("#location-autocomplete-wrapper");
       const label = wrapper?.querySelector("label");
@@ -202,7 +202,7 @@ describe("search-autocomplete", () => {
 
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const wrapper = container.querySelector("#location-autocomplete-wrapper");
       const autocompleteInput = wrapper?.querySelector("#location");
@@ -212,7 +212,7 @@ describe("search-autocomplete", () => {
     it("should not apply error class to autocomplete input when original input has no error", async () => {
       const { initSearchAutocomplete } = await import("./search-autocomplete.js");
 
-      initSearchAutocomplete();
+      await initSearchAutocomplete();
 
       const wrapper = container.querySelector("#location-autocomplete-wrapper");
       const autocompleteInput = wrapper?.querySelector("#location");
