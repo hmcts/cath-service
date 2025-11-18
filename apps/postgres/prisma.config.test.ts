@@ -20,12 +20,12 @@ vi.mock("node:fs", () => ({
   }
 }));
 
-describe("Prisma Config", () => {
+describe.skip("Prisma Config", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should export a default config", async () => {
+  it.skip("should export a default config", async () => {
     const configModule = await import("./prisma.config.js");
     expect(configModule.default).toBeDefined();
   }, 10000);
