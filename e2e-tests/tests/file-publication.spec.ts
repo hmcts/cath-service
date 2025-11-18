@@ -167,12 +167,12 @@ test.describe('File Publication Page', () => {
   });
 
   test.describe('given file does not exist', () => {
-    test('should display 404 error page with helpful message', async ({ page }) => {
+    test('should redirect to 404 error page with helpful message', async ({ page }) => {
       const nonExistentArtefactId = 'non-existent-artefact-12345';
       await page.goto(`/file-publication?artefactId=${nonExistentArtefactId}`);
 
-      // Verify 404 status
-      expect(page.url()).toContain(`artefactId=${nonExistentArtefactId}`);
+      // Verify redirect to artefact-not-found page
+      expect(page.url()).toContain('/artefact-not-found');
 
       // Check for error page heading
       const heading = page.locator('h1.govuk-heading-l');
