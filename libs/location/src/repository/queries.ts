@@ -19,12 +19,12 @@ export async function getAllLocations(language: "en" | "cy"): Promise<Location[]
     }
   });
 
-  const mapped: Location[] = locations.map((loc) => ({
+  const mapped: Location[] = locations.map((loc: any) => ({
     locationId: loc.locationId,
     name: loc.name,
     welshName: loc.welshName,
-    regions: loc.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: loc.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
+    regions: loc.locationRegions.map((lr: any) => lr.region.regionId),
+    subJurisdictions: loc.locationSubJurisdictions.map((lsj: any) => lsj.subJurisdiction.subJurisdictionId)
   }));
 
   return mapped.sort((a, b) => {
@@ -59,8 +59,8 @@ export async function getLocationById(id: number): Promise<Location | undefined>
     locationId: location.locationId,
     name: location.name,
     welshName: location.welshName,
-    regions: location.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: location.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
+    regions: location.locationRegions.map((lr: any) => lr.region.regionId),
+    subJurisdictions: location.locationSubJurisdictions.map((lsj: any) => lsj.subJurisdiction.subJurisdictionId)
   };
 }
 
@@ -69,7 +69,7 @@ export async function getAllJurisdictions(): Promise<Jurisdiction[]> {
     orderBy: { jurisdictionId: "asc" }
   });
 
-  return jurisdictions.map((j) => ({
+  return jurisdictions.map((j: any) => ({
     jurisdictionId: j.jurisdictionId,
     name: j.name,
     welshName: j.welshName
@@ -81,7 +81,7 @@ export async function getAllRegions(): Promise<Region[]> {
     orderBy: { regionId: "asc" }
   });
 
-  return regions.map((r) => ({
+  return regions.map((r: any) => ({
     regionId: r.regionId,
     name: r.name,
     welshName: r.welshName
@@ -93,7 +93,7 @@ export async function getAllSubJurisdictions(): Promise<SubJurisdiction[]> {
     orderBy: { subJurisdictionId: "asc" }
   });
 
-  return subJurisdictions.map((sj) => ({
+  return subJurisdictions.map((sj: any) => ({
     subJurisdictionId: sj.subJurisdictionId,
     name: sj.name,
     welshName: sj.welshName,
@@ -107,7 +107,7 @@ export async function getSubJurisdictionsByJurisdiction(jurisdictionId: number):
     orderBy: { subJurisdictionId: "asc" }
   });
 
-  return subJurisdictions.map((sj) => ({
+  return subJurisdictions.map((sj: any) => ({
     subJurisdictionId: sj.subJurisdictionId,
     name: sj.name,
     welshName: sj.welshName,
