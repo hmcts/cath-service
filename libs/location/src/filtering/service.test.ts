@@ -1,4 +1,43 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Mock the queries module to prevent Prisma initialization
+vi.mock("../repository/queries.js", () => ({
+  getAllJurisdictions: vi.fn(() =>
+    Promise.resolve([
+      { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
+      { jurisdictionId: 2, name: "Criminal", welshName: "Troseddol" },
+      { jurisdictionId: 3, name: "Family", welshName: "Teulu" },
+      { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" },
+      { jurisdictionId: 5, name: "Magistrates", welshName: "Ynadon" },
+      { jurisdictionId: 6, name: "Single Justice", welshName: "Ynad Unigol" }
+    ])
+  ),
+  getAllRegions: vi.fn(() =>
+    Promise.resolve([
+      { regionId: 1, name: "London", welshName: "Llundain" },
+      { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
+      { regionId: 3, name: "South East", welshName: "De-ddwyrain Lloegr" },
+      { regionId: 4, name: "North West", welshName: "Gogledd-orllewin Lloegr" },
+      { regionId: 5, name: "Wales", welshName: "Cymru" },
+      { regionId: 6, name: "National", welshName: "Cenedlaethol" }
+    ])
+  ),
+  getAllSubJurisdictions: vi.fn(() =>
+    Promise.resolve([
+      { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
+      { subJurisdictionId: 2, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 2 },
+      { subJurisdictionId: 3, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 5 },
+      { subJurisdictionId: 4, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 3 },
+      { subJurisdictionId: 5, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
+      { subJurisdictionId: 6, name: "Immigration Tribunal", welshName: "Tribiwnlys Mewnfudo", jurisdictionId: 4 },
+      { subJurisdictionId: 7, name: "Social Security Tribunal", welshName: "Tribiwnlys Nawdd Cymdeithasol", jurisdictionId: 4 },
+      { subJurisdictionId: 8, name: "Tax Tribunal", welshName: "Tribiwnlys Treth", jurisdictionId: 4 },
+      { subJurisdictionId: 9, name: "Mental Health Tribunal", welshName: "Tribiwnlys Iechyd Meddwl", jurisdictionId: 4 },
+      { subJurisdictionId: 10, name: "Single Justice Procedure", welshName: "Gweithdrefn Ynad Unigol", jurisdictionId: 6 }
+    ])
+  )
+}));
+
 import { buildJurisdictionItems, buildRegionItems, buildSubJurisdictionItemsByJurisdiction, getSubJurisdictionsForJurisdiction } from "./service.js";
 
 describe("buildJurisdictionItems", () => {

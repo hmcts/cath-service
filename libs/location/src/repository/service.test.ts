@@ -1,4 +1,113 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Mock the queries module to prevent Prisma initialization
+vi.mock("./queries.js", () => ({
+  getAllLocations: vi.fn((language: "en" | "cy") => {
+    const locations = [
+      {
+        locationId: 1,
+        name: "Birmingham Civil and Family Justice Centre",
+        welshName: "Canolfan Cyfiawnder Sifil a Theulu Birmingham",
+        regions: [2],
+        subJurisdictions: [1, 2]
+      },
+      {
+        locationId: 2,
+        name: "Bristol Crown Court",
+        welshName: "Llys y Goron Bryste",
+        regions: [3],
+        subJurisdictions: [2]
+      },
+      {
+        locationId: 11,
+        name: "Cardiff Crown Court",
+        welshName: "Llys y Goron Caerdydd",
+        regions: [5],
+        subJurisdictions: [2]
+      },
+      {
+        locationId: 3,
+        name: "Cardiff Civil and Family Justice Centre",
+        welshName: "Canolfan Gyfiawnder Sifil a Theulu Caerdydd",
+        regions: [5],
+        subJurisdictions: [1]
+      },
+      {
+        locationId: 4,
+        name: "Leeds Combined Court Centre",
+        welshName: "Canolfan Llysoedd Cyfun Leeds",
+        regions: [4],
+        subJurisdictions: [1, 2]
+      },
+      {
+        locationId: 5,
+        name: "Liverpool Civil and Family Court",
+        welshName: "Llys Sifil a Theulu Lerpwl",
+        regions: [4],
+        subJurisdictions: [1]
+      },
+      {
+        locationId: 12,
+        name: "Liverpool Crown Court",
+        welshName: "Llys y Goron Lerpwl",
+        regions: [4],
+        subJurisdictions: [2]
+      },
+      {
+        locationId: 6,
+        name: "Manchester Civil Justice Centre",
+        welshName: "Canolfan Cyfiawnder Sifil Manceinion",
+        regions: [4],
+        subJurisdictions: [1, 2]
+      },
+      {
+        locationId: 7,
+        name: "Oxford Combined Court Centre",
+        welshName: "Canolfan Llysoedd Cyfun Rhydychen",
+        regions: [3],
+        subJurisdictions: [1, 2]
+      },
+      {
+        locationId: 8,
+        name: "Royal Courts of Justice",
+        welshName: "Llysoedd Barn Brenhinol",
+        regions: [1],
+        subJurisdictions: [1, 2]
+      },
+      {
+        locationId: 9,
+        name: "Single Justice Procedure",
+        welshName: "Gweithdrefn Ynad Unigol",
+        regions: [6],
+        subJurisdictions: [3]
+      },
+      {
+        locationId: 13,
+        name: "Southampton Combined Court Centre",
+        welshName: "Canolfan Llysoedd Cyfun Southampton",
+        regions: [3],
+        subJurisdictions: [1, 2]
+      },
+      {
+        locationId: 10,
+        name: "Swansea Civil and Family Justice Centre",
+        welshName: "Canolfan Cyfiawnder Sifil a Theulu Abertawe",
+        regions: [5],
+        subJurisdictions: [1]
+      }
+    ];
+
+    // Sort by the appropriate name field
+    return Promise.resolve(
+      locations.sort((a, b) => {
+        const nameA = language === "cy" ? a.welshName : a.name;
+        const nameB = language === "cy" ? b.welshName : b.name;
+        return nameA.localeCompare(nameB);
+      })
+    );
+  })
+}));
+
 import { getLocationsGroupedByLetter, searchLocations } from "./service.js";
 
 describe("searchLocations", () => {
