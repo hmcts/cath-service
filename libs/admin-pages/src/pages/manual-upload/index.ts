@@ -83,13 +83,14 @@ const getHandler = async (req: Request, res: Response) => {
 
   // Resolve location name from ID or use stored name
   const locationId = formData.locationId ? Number.parseInt(formData.locationId, 10) : null;
-  const locationName = (locationId && !Number.isNaN(locationId) && getLocationById(locationId)?.name) || formData.locationName || "";
+  const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
+  const locationName = location?.name || formData.locationName || "";
 
   res.render("manual-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
-    locations: getAllLocations(locale),
+    locations: await getAllLocations(locale),
     listTypes: selectOption(LIST_TYPES, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),

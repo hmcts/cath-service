@@ -22,7 +22,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   // Fetch location
-  const location = getLocationById(locationId);
+  const location = await getLocationById(locationId);
   if (!location) {
     return res.redirect("/400");
   }
