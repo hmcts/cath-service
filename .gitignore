@@ -32,6 +32,7 @@ coverage/
 lcov.info
 .playwright-mcp/
 .test-artefacts.json
+e2e-tests/junit-results.xml
 
 # Turborepo
 .turbo/
