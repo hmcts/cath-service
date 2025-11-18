@@ -2,7 +2,7 @@ export default {
   pageTitle: "Cadarnhau dileu - Gwrandawiadau llysoedd a thribiwnlysoedd - GOV.UK",
   heading: "A ydych yn siŵr eich bod am dynnu'r cynnwys hwn?",
   tableHeaders: {
-    listType: "Math o restr",
+    listType: "Math o Restr",
     court: "Enw'r Llys neu'r Tribiwnlys",
     contentDate: "Dyddiad Cynnwys",
     displayDates: "Dyddiadau Arddangos",

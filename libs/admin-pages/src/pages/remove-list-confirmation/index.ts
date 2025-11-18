@@ -13,19 +13,8 @@ function capitalizeFirstLetter(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-const getHandler = async (req: Request, res: Response) => {
-  const lang = req.query.lng === "cy" ? cy : en;
-  const locale = req.query.lng === "cy" ? "cy" : "en";
-
-  const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId || !sessionData.selectedArtefacts || sessionData.selectedArtefacts.length === 0) {
-    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
-    return res.redirect(`/remove-list-search${lng}`);
-  }
-
-  const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-
-  const artefactData = artefacts.map((artefact) => {
+function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof getArtefactsByIds>>, locale: "en" | "cy") {
+  return artefacts.map((artefact) => {
     const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
     const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
@@ -45,6 +34,20 @@ const getHandler = async (req: Request, res: Response) => {
       sensitivity
     };
   });
+}
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const locale = req.query.lng === "cy" ? "cy" : "en";
+
+  const sessionData = req.session.removalData;
+  if (!sessionData || !sessionData.locationId || !sessionData.selectedArtefacts || sessionData.selectedArtefacts.length === 0) {
+    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+    return res.redirect(`/remove-list-search${lng}`);
+  }
+
+  const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
+  const artefactData = transformArtefactsForDisplay(artefacts, locale);
 
   res.render("remove-list-confirmation/index", {
     pageTitle: lang.pageTitle,
@@ -72,26 +75,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (!confirmation) {
     const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-    const artefactData = artefacts.map((artefact) => {
-      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
-
-      const location = getLocationById(Number.parseInt(artefact.locationId, 10));
-      const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
-
-      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
-      const language = capitalizeFirstLetter(artefact.language);
-      const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
-
-      return {
-        listType: listTypeName,
-        court: courtName,
-        contentDate: formatDateString(artefact.contentDate),
-        displayDates,
-        language,
-        sensitivity
-      };
-    });
+    const artefactData = transformArtefactsForDisplay(artefacts, locale);
 
     return res.render("remove-list-confirmation/index", {
       pageTitle: lang.pageTitle,
@@ -136,26 +120,7 @@ const postHandler = async (req: Request, res: Response) => {
     console.error("Error deleting artefacts:", error);
 
     const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-    const artefactData = artefacts.map((artefact) => {
-      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
-
-      const location = getLocationById(Number.parseInt(artefact.locationId, 10));
-      const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
-
-      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
-      const language = capitalizeFirstLetter(artefact.language);
-      const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
-
-      return {
-        listType: listTypeName,
-        court: courtName,
-        contentDate: formatDateString(artefact.contentDate),
-        displayDates,
-        language,
-        sensitivity
-      };
-    });
+    const artefactData = transformArtefactsForDisplay(artefacts, locale);
 
     return res.render("remove-list-confirmation/index", {
       pageTitle: lang.pageTitle,

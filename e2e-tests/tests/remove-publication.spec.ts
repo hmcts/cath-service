@@ -62,26 +62,11 @@ test.describe("Remove Publication Flow", () => {
 
   test("should display remove tab on dashboard", async ({ page }) => {
     // beforeEach already navigated to admin-dashboard, so just verify
-    const removeLink = page.locator('a[href="/remove-list"]');
+    const removeLink = page.locator('a[href="/remove-list-search"]');
     await expect(removeLink).toBeVisible();
 
     const removeHeading = removeLink.locator('h2:has-text("Remove")');
     await expect(removeHeading).toBeVisible();
-  });
-
-  test("should redirect from /remove-list to /remove-list-search", async ({ page }) => {
-    await page.goto("/remove-list");
-
-    // Handle auth redirect if needed
-    if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
-    }
-
-    await expect(page).toHaveURL(/\/remove-list-search/);
   });
 
   test("should display find content page", async ({ page }) => {
