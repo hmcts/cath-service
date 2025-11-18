@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as csvParser from "../../csv-parser.js";
-import * as validation from "../../validation.js";
 import * as enrichment from "../../enrichment-service.js";
 import * as repository from "../../upload-repository.js";
+import * as validation from "../../validation.js";
 
 vi.mock("../../csv-parser.js", () => ({
   parseCsv: vi.fn()
@@ -35,7 +35,7 @@ describe("reference-data-upload-summary page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockSession = {
       save: vi.fn((callback: any) => callback()),
       uploadData: undefined,
@@ -82,9 +82,7 @@ describe("reference-data-upload-summary page", () => {
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockRequest.session!.uploadErrors).toEqual([
-        { text: "Invalid CSV format", href: "#file" }
-      ]);
+      expect(mockRequest.session!.uploadErrors).toEqual([{ text: "Invalid CSV format", href: "#file" }]);
       expect(mockResponse.redirect).toHaveBeenCalledWith("/reference-data-upload");
     });
 
@@ -102,20 +100,21 @@ describe("reference-data-upload-summary page", () => {
         data: mockData
       });
 
-      vi.mocked(validation.validateLocationData).mockResolvedValue([
-        "Invalid location ID"
-      ]);
+      vi.mocked(validation.validateLocationData).mockResolvedValue(["Invalid location ID"]);
 
       const { GET } = await import("./index.js");
       const handler = GET[1];
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockResponse.render).toHaveBeenCalledWith("reference-data-upload-summary/index", expect.objectContaining({
-        fileName: "test.csv",
-        errors: ["Invalid location ID"],
-        hasErrors: true
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "reference-data-upload-summary/index",
+        expect.objectContaining({
+          fileName: "test.csv",
+          errors: ["Invalid location ID"],
+          hasErrors: true
+        })
+      );
     });
 
     it("should render summary with valid data", async () => {

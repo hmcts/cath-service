@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as repository from "../../sub-jurisdiction-repository.js";
 import * as validation from "../../sub-jurisdiction-validation.js";
 
@@ -22,7 +22,7 @@ describe("add-sub-jurisdiction page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockRequest = {
       query: {},
       body: {},
@@ -48,20 +48,23 @@ describe("add-sub-jurisdiction page", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(repository.getAllJurisdictions).toHaveBeenCalled();
-      expect(mockResponse.render).toHaveBeenCalledWith("add-sub-jurisdiction/index", expect.objectContaining({
-        pageTitle: "Add Sub Jurisdiction",
-        jurisdictionItems: expect.arrayContaining([
-          { value: "", text: "Select a jurisdiction" },
-          { value: "1", text: "Civil" },
-          { value: "2", text: "Family" }
-        ]),
-        data: {
-          jurisdictionId: "",
-          name: "",
-          welshName: ""
-        },
-        errors: undefined
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-sub-jurisdiction/index",
+        expect.objectContaining({
+          pageTitle: "Add Sub Jurisdiction",
+          jurisdictionItems: expect.arrayContaining([
+            { value: "", text: "Select a jurisdiction" },
+            { value: "1", text: "Civil" },
+            { value: "2", text: "Family" }
+          ]),
+          data: {
+            jurisdictionId: "",
+            name: "",
+            welshName: ""
+          },
+          errors: undefined
+        })
+      );
     });
 
     it("should render the page with Welsh content when lng=cy", async () => {
@@ -69,9 +72,12 @@ describe("add-sub-jurisdiction page", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("add-sub-jurisdiction/index", expect.objectContaining({
-        pageTitle: "Ychwanegu Is-awdurdodaeth"
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-sub-jurisdiction/index",
+        expect.objectContaining({
+          pageTitle: "Ychwanegu Is-awdurdodaeth"
+        })
+      );
     });
   });
 
@@ -126,10 +132,13 @@ describe("add-sub-jurisdiction page", () => {
       await POST(mockRequest as Request, mockResponse as Response);
 
       expect(repository.getAllJurisdictions).toHaveBeenCalled();
-      expect(mockResponse.render).toHaveBeenCalledWith("add-sub-jurisdiction/index", expect.objectContaining({
-        data: { jurisdictionId: "", name: "", welshName: "" },
-        errors
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-sub-jurisdiction/index",
+        expect.objectContaining({
+          data: { jurisdictionId: "", name: "", welshName: "" },
+          errors
+        })
+      );
       expect(repository.createSubJurisdiction).not.toHaveBeenCalled();
       expect(mockResponse.redirect).not.toHaveBeenCalled();
     });
@@ -141,18 +150,19 @@ describe("add-sub-jurisdiction page", () => {
         welshName: ""
       };
 
-      const errors = [
-        { text: "Enter Sub Jurisdiction Name in Welsh", href: "#welshName" }
-      ];
+      const errors = [{ text: "Enter Sub Jurisdiction Name in Welsh", href: "#welshName" }];
 
       vi.mocked(validation.validateSubJurisdictionData).mockResolvedValue(errors);
 
       await POST(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("add-sub-jurisdiction/index", expect.objectContaining({
-        data: { jurisdictionId: "1", name: "Civil Court", welshName: "" },
-        errors
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-sub-jurisdiction/index",
+        expect.objectContaining({
+          data: { jurisdictionId: "1", name: "Civil Court", welshName: "" },
+          errors
+        })
+      );
     });
 
     it("should reload jurisdiction dropdown on validation failure", async () => {
@@ -168,11 +178,12 @@ describe("add-sub-jurisdiction page", () => {
       await POST(mockRequest as Request, mockResponse as Response);
 
       expect(repository.getAllJurisdictions).toHaveBeenCalledTimes(1);
-      expect(mockResponse.render).toHaveBeenCalledWith("add-sub-jurisdiction/index", expect.objectContaining({
-        jurisdictionItems: expect.arrayContaining([
-          { value: "", text: "Select a jurisdiction" }
-        ])
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-sub-jurisdiction/index",
+        expect.objectContaining({
+          jurisdictionItems: expect.arrayContaining([{ value: "", text: "Select a jurisdiction" }])
+        })
+      );
     });
   });
 });

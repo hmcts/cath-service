@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@hmcts/auth", () => ({
   requireRole: vi.fn(() => (_req: any, _res: any, next: any) => next()),

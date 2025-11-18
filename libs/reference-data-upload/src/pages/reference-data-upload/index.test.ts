@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@hmcts/auth", () => ({
   requireRole: vi.fn(() => (_req: any, _res: any, next: any) => next()),
@@ -15,7 +15,7 @@ describe("reference-data-upload page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockSession = {
       save: vi.fn((callback: any) => callback()),
       uploadErrors: undefined,
@@ -42,10 +42,13 @@ describe("reference-data-upload page", () => {
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockResponse.render).toHaveBeenCalledWith("reference-data-upload/index", expect.objectContaining({
-        pageTitle: "Manually upload a csv file",
-        locale: "en"
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "reference-data-upload/index",
+        expect.objectContaining({
+          pageTitle: "Manually upload a csv file",
+          locale: "en"
+        })
+      );
     });
 
     it("should clear errors from session after rendering", async () => {
@@ -69,9 +72,12 @@ describe("reference-data-upload page", () => {
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockResponse.render).toHaveBeenCalledWith("reference-data-upload/index", expect.objectContaining({
-        errors
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "reference-data-upload/index",
+        expect.objectContaining({
+          errors
+        })
+      );
     });
   });
 
@@ -104,9 +110,7 @@ describe("reference-data-upload page", () => {
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockRequest.session!.uploadErrors).toEqual([
-        { text: "Select a CSV file to upload", href: "#file" }
-      ]);
+      expect(mockRequest.session!.uploadErrors).toEqual([{ text: "Select a CSV file to upload", href: "#file" }]);
       expect(mockResponse.redirect).toHaveBeenCalledWith("/reference-data-upload");
     });
 
@@ -122,9 +126,7 @@ describe("reference-data-upload page", () => {
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockRequest.session!.uploadErrors).toEqual([
-        { text: "Unsupported file type. Please upload a .csv file", href: "#file" }
-      ]);
+      expect(mockRequest.session!.uploadErrors).toEqual([{ text: "Unsupported file type. Please upload a .csv file", href: "#file" }]);
       expect(mockResponse.redirect).toHaveBeenCalledWith("/reference-data-upload");
     });
 
@@ -136,9 +138,7 @@ describe("reference-data-upload page", () => {
 
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockRequest.session!.uploadErrors).toEqual([
-        { text: "File exceeds the maximum size limit (2MB)", href: "#file" }
-      ]);
+      expect(mockRequest.session!.uploadErrors).toEqual([{ text: "File exceeds the maximum size limit (2MB)", href: "#file" }]);
       expect(mockResponse.redirect).toHaveBeenCalledWith("/reference-data-upload");
     });
 

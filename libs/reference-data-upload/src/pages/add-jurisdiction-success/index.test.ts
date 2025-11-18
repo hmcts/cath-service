@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import after mocking
 const { GET } = await import("./index.js");
@@ -10,7 +10,7 @@ describe("add-jurisdiction-success page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockRequest = {
       query: {},
       session: {} as any
@@ -28,9 +28,12 @@ describe("add-jurisdiction-success page", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("add-jurisdiction-success/index", expect.objectContaining({
-        successBannerTitle: "Added Successfully"
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-jurisdiction-success/index",
+        expect.objectContaining({
+          successBannerTitle: "Added Successfully"
+        })
+      );
       expect(mockRequest.session.jurisdictionSuccess).toBeUndefined();
     });
 
@@ -49,9 +52,12 @@ describe("add-jurisdiction-success page", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("add-jurisdiction-success/index", expect.objectContaining({
-        successBannerTitle: "Ychwanegwyd yn Llwyddiannus"
-      }));
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "add-jurisdiction-success/index",
+        expect.objectContaining({
+          successBannerTitle: "Ychwanegwyd yn Llwyddiannus"
+        })
+      );
     });
   });
 });

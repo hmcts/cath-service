@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as downloadService from "../../download-service.js";
 
 vi.mock("../../download-service.js", () => ({
@@ -19,7 +19,7 @@ describe("reference-data-download page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockRequest = {};
 
     mockResponse = {
