@@ -1,0 +1,28 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {{ govukPanel({
+      titleText: successBannerTitle
+    }) }}
+
+    <h2 class="govuk-heading-m">{{ nextStepsTitle }}</h2>
+
+    <ul class="govuk-list">
+      <li>
+        <a href="/add-sub-jurisdiction" class="govuk-link">{{ addAnotherText }}</a>
+      </li>
+      <li>
+        <a href="/add-jurisdiction" class="govuk-link">{{ addJurisdictionText }}</a>
+      </li>
+      <li>
+        <a href="/reference-data-upload" class="govuk-link">{{ backToUploadText }}</a>
+      </li>
+    </ul>
+
+  </div>
+</div>
+{% endblock %}

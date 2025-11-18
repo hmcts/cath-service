@@ -2,6 +2,8 @@ export const cy = {
   pageTitle: "Welsh placeholder",
   warningText: "Welsh placeholder",
   downloadLinkText: "Welsh placeholder",
+  addJurisdictionLinkText: "Ychwanegu Awdurdodaeth",
+  addSubJurisdictionLinkText: "Ychwanegu Is-awdurdodaeth",
   fileUploadLabel: "Welsh placeholder",
   continueButtonText: "Welsh placeholder",
   errorSummaryTitle: "Welsh placeholder",

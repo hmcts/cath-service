@@ -1,0 +1,78 @@
+import type { Request, Response } from "express";
+import { createSubJurisdiction, getAllJurisdictions } from "../../sub-jurisdiction-repository.js";
+import { validateSubJurisdictionData } from "../../sub-jurisdiction-validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+export const GET = async (req: Request, res: Response) => {
+  const language = req.query.lng === "cy" ? "cy" : "en";
+  const content = language === "cy" ? cy : en;
+
+  // Fetch all jurisdictions for dropdown
+  const jurisdictions = await getAllJurisdictions();
+
+  // Build dropdown items
+  const jurisdictionItems = [
+    { value: "", text: "Select a jurisdiction" },
+    ...jurisdictions.map((j) => ({
+      value: j.jurisdictionId.toString(),
+      text: j.displayName
+    }))
+  ];
+
+  res.render("add-sub-jurisdiction/index", {
+    ...content,
+    jurisdictionItems,
+    data: {
+      jurisdictionId: "",
+      name: "",
+      welshName: ""
+    },
+    errors: undefined
+  });
+};
+
+export const POST = async (req: Request, res: Response) => {
+  const language = req.query.lng === "cy" ? "cy" : "en";
+  const content = language === "cy" ? cy : en;
+
+  const formData = {
+    jurisdictionId: req.body.jurisdictionId || "",
+    name: req.body.name || "",
+    welshName: req.body.welshName || ""
+  };
+
+  // Validate the data
+  const errors = await validateSubJurisdictionData(formData);
+
+  if (errors.length > 0) {
+    // Fetch jurisdictions again for dropdown
+    const jurisdictions = await getAllJurisdictions();
+
+    // Build dropdown items
+    const jurisdictionItems = [
+      { value: "", text: "Select a jurisdiction" },
+      ...jurisdictions.map((j) => ({
+        value: j.jurisdictionId.toString(),
+        text: j.displayName
+      }))
+    ];
+
+    return res.render("add-sub-jurisdiction/index", {
+      ...content,
+      jurisdictionItems,
+      data: formData,
+      errors
+    });
+  }
+
+  // Save to database
+  const jurisdictionIdNum = Number.parseInt(formData.jurisdictionId, 10);
+  await createSubJurisdiction(jurisdictionIdNum, formData.name, formData.welshName);
+
+  // Store success flag in session
+  req.session.subJurisdictionSuccess = true;
+
+  // Redirect to success page
+  res.redirect(`/add-sub-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
+};
