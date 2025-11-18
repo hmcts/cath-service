@@ -1,5 +1,173 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getAllJurisdictions, getAllLocations, getAllRegions, getAllSubJurisdictions, getLocationById, getSubJurisdictionsByJurisdiction } from "./queries.js";
+
+// Mock Prisma
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    location: {
+      findMany: vi.fn(),
+      findUnique: vi.fn()
+    },
+    jurisdiction: {
+      findMany: vi.fn()
+    },
+    region: {
+      findMany: vi.fn()
+    },
+    subJurisdiction: {
+      findMany: vi.fn()
+    }
+  }
+}));
+
+const mockLocations = [
+  {
+    locationId: 1,
+    name: "Oxford Combined Court Centre",
+    welshName: "Canolfan Llysoedd Cyfun Rhydychen",
+    locationRegions: [{ region: { regionId: 3 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 2,
+    name: "Bristol Crown Court",
+    welshName: "Llys y Goron Bryste",
+    locationRegions: [{ region: { regionId: 3 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 3,
+    name: "Cardiff Civil and Family Justice Centre",
+    welshName: "Canolfan Gyfiawnder Sifil a Theulu Caerdydd",
+    locationRegions: [{ region: { regionId: 5 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }]
+  },
+  {
+    locationId: 4,
+    name: "Leeds Combined Court Centre",
+    welshName: "Canolfan Llysoedd Cyfun Leeds",
+    locationRegions: [{ region: { regionId: 4 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 5,
+    name: "Liverpool Civil and Family Court",
+    welshName: "Llys Sifil a Theulu Lerpwl",
+    locationRegions: [{ region: { regionId: 4 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }]
+  },
+  {
+    locationId: 6,
+    name: "Manchester Civil Justice Centre",
+    welshName: "Canolfan Cyfiawnder Sifil Manceinion",
+    locationRegions: [{ region: { regionId: 4 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 7,
+    name: "Birmingham Civil and Family Justice Centre",
+    welshName: "Canolfan Cyfiawnder Sifil a Theulu Birmingham",
+    locationRegions: [{ region: { regionId: 2 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 8,
+    name: "Royal Courts of Justice",
+    welshName: "Llysoedd Barn Brenhinol",
+    locationRegions: [{ region: { regionId: 1 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 9,
+    name: "Single Justice Procedure",
+    welshName: "Gweithdrefn Ynad Unigol",
+    locationRegions: [{ region: { regionId: 6 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 3 } }]
+  },
+  {
+    locationId: 10,
+    name: "Swansea Civil and Family Justice Centre",
+    welshName: "Canolfan Cyfiawnder Sifil a Theulu Abertawe",
+    locationRegions: [{ region: { regionId: 5 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }]
+  },
+  {
+    locationId: 11,
+    name: "Cardiff Crown Court",
+    welshName: "Llys y Goron Caerdydd",
+    locationRegions: [{ region: { regionId: 5 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 12,
+    name: "Liverpool Crown Court",
+    welshName: "Llys y Goron Lerpwl",
+    locationRegions: [{ region: { regionId: 4 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 2 } }]
+  },
+  {
+    locationId: 13,
+    name: "Southampton Combined Court Centre",
+    welshName: "Canolfan Llysoedd Cyfun Southampton",
+    locationRegions: [{ region: { regionId: 3 } }],
+    locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
+  }
+];
+
+const mockJurisdictions = [
+  { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
+  { jurisdictionId: 2, name: "Criminal", welshName: "Troseddol" },
+  { jurisdictionId: 3, name: "Family", welshName: "Teulu" },
+  { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" },
+  { jurisdictionId: 5, name: "Magistrates", welshName: "Ynadon" },
+  { jurisdictionId: 6, name: "Single Justice", welshName: "Ynad Unigol" }
+];
+
+const mockRegions = [
+  { regionId: 1, name: "London", welshName: "Llundain" },
+  { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
+  { regionId: 3, name: "South East", welshName: "De-ddwyrain Lloegr" },
+  { regionId: 4, name: "North West", welshName: "Gogledd-orllewin Lloegr" },
+  { regionId: 5, name: "Wales", welshName: "Cymru" },
+  { regionId: 6, name: "National", welshName: "Cenedlaethol" }
+];
+
+const mockSubJurisdictions = [
+  { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
+  { subJurisdictionId: 2, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 2 },
+  { subJurisdictionId: 3, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 5 },
+  { subJurisdictionId: 4, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 3 },
+  { subJurisdictionId: 5, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
+  { subJurisdictionId: 6, name: "Immigration Tribunal", welshName: "Tribiwnlys Mewnfudo", jurisdictionId: 4 },
+  { subJurisdictionId: 7, name: "Social Security Tribunal", welshName: "Tribiwnlys Nawdd Cymdeithasol", jurisdictionId: 4 },
+  { subJurisdictionId: 8, name: "Tax Tribunal", welshName: "Tribiwnlys Treth", jurisdictionId: 4 },
+  { subJurisdictionId: 9, name: "Mental Health Tribunal", welshName: "Tribiwnlys Iechyd Meddwl", jurisdictionId: 4 },
+  { subJurisdictionId: 10, name: "Single Justice Procedure", welshName: "Gweithdrefn Ynad Unigol", jurisdictionId: 6 }
+];
+
+// Import mocked prisma
+const { prisma } = await import("@hmcts/postgres");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Setup default mock implementations
+  vi.mocked(prisma.location.findMany).mockResolvedValue(mockLocations as any);
+  vi.mocked(prisma.location.findUnique).mockImplementation((args: any) => {
+    const id = args?.where?.locationId;
+    const location = mockLocations.find((loc) => loc.locationId === id);
+    return Promise.resolve(location as any);
+  });
+  vi.mocked(prisma.jurisdiction.findMany).mockResolvedValue(mockJurisdictions as any);
+  vi.mocked(prisma.region.findMany).mockResolvedValue(mockRegions as any);
+  vi.mocked(prisma.subJurisdiction.findMany).mockImplementation((args: any) => {
+    const jurisdictionId = args?.where?.jurisdictionId;
+    if (jurisdictionId !== undefined) {
+      const filtered = mockSubJurisdictions.filter((sj) => sj.jurisdictionId === jurisdictionId);
+      return Promise.resolve(filtered as any);
+    }
+    return Promise.resolve(mockSubJurisdictions as any);
+  });
+});
 
 describe("getAllLocations", () => {
   it("should return all locations", async () => {

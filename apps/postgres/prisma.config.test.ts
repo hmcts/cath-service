@@ -4,6 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock dotenv to avoid file system side effects
 vi.mock("dotenv/config", () => ({}));
 
+// Mock Prisma Client to avoid database connection attempts
+vi.mock("@prisma/client", () => ({
+  PrismaClient: vi.fn(() => ({
+    $connect: vi.fn().mockResolvedValue(undefined),
+    $disconnect: vi.fn().mockResolvedValue(undefined)
+  }))
+}));
+
 // Mock fs to avoid actual file reads during config import
 vi.mock("node:fs", () => ({
   default: {
