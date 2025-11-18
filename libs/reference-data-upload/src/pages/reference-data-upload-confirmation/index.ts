@@ -5,7 +5,7 @@ import { en } from "./en.js";
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
-const getHandler = async (req: Request, res: Response) => {
+const getHandler = async (_req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
 

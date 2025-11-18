@@ -27,9 +27,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   // Convert fileBuffer back to Buffer if it was serialized
-  const fileBuffer = Buffer.isBuffer(uploadData.fileBuffer)
-    ? uploadData.fileBuffer
-    : Buffer.from(uploadData.fileBuffer);
+  const fileBuffer = Buffer.isBuffer(uploadData.fileBuffer) ? uploadData.fileBuffer : Buffer.from(uploadData.fileBuffer);
 
   // Parse CSV
   const parseResult = parseCsv(fileBuffer);
@@ -106,9 +104,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   // Convert fileBuffer back to Buffer if it was serialized
-  const fileBuffer = Buffer.isBuffer(uploadData.fileBuffer)
-    ? uploadData.fileBuffer
-    : Buffer.from(uploadData.fileBuffer);
+  const fileBuffer = Buffer.isBuffer(uploadData.fileBuffer) ? uploadData.fileBuffer : Buffer.from(uploadData.fileBuffer);
 
   // Re-parse and validate
   const parseResult = parseCsv(fileBuffer);

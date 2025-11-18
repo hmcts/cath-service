@@ -56,7 +56,10 @@ export async function buildRegionItems(selectedRegions: number[], locale: "en" |
     .sort((a, b) => a.text.localeCompare(b.text));
 }
 
-export async function buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions: number[], locale: "en" | "cy"): Promise<Record<number, SubJurisdictionItem[]>> {
+export async function buildSubJurisdictionItemsByJurisdiction(
+  selectedSubJurisdictions: number[],
+  locale: "en" | "cy"
+): Promise<Record<number, SubJurisdictionItem[]>> {
   const allJurisdictions = await getAllJurisdictions();
   const allSubJurisdictions = await getAllSubJurisdictions();
 
@@ -79,7 +82,5 @@ export async function buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdi
 
 export async function getSubJurisdictionsForJurisdiction(jurisdictionId: number): Promise<number[]> {
   const allSubJurisdictions = await getAllSubJurisdictions();
-  return allSubJurisdictions
-    .filter((sub) => sub.jurisdictionId === jurisdictionId)
-    .map((sub) => sub.subJurisdictionId);
+  return allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId).map((sub) => sub.subJurisdictionId);
 }

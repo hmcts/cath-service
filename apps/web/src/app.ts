@@ -52,7 +52,16 @@ export async function createApp(): Promise<Express> {
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
 
-  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot, referenceDataUploadModuleRoot];
+  const modulePaths = [
+    __dirname,
+    webCoreModuleRoot,
+    adminModuleRoot,
+    authModuleRoot,
+    systemAdminModuleRoot,
+    publicPagesModuleRoot,
+    verifiedPagesModuleRoot,
+    referenceDataUploadModuleRoot
+  ];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {

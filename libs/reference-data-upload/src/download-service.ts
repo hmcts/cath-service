@@ -21,13 +21,9 @@ export async function generateReferenceDataCsv(): Promise<string> {
   });
 
   const csvData = locations.map((location) => {
-    const subJurisdictionNames = location.locationSubJurisdictions
-      .map((lsj) => lsj.subJurisdiction.name)
-      .join(";");
+    const subJurisdictionNames = location.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.name).join(";");
 
-    const regionNames = location.locationRegions
-      .map((lr) => lr.region.name)
-      .join(";");
+    const regionNames = location.locationRegions.map((lr) => lr.region.name).join(";");
 
     return {
       LOCATION_ID: location.locationId,

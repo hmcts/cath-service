@@ -174,12 +174,14 @@ test.describe("System Admin Dashboard", () => {
   });
 
   test.describe("Tile Interaction", () => {
-    test("should navigate to 404 when clicking Upload Reference Data tile", async ({ page }) => {
+    test("should navigate to upload page when clicking Upload Reference Data tile", async ({ page }) => {
       await page.click('a:has-text("Upload Reference Data")');
-      await page.waitForURL("**/upload-reference-data");
+      await page.waitForURL("**/reference-data-upload");
 
-      // Should show 404 as page doesn't exist yet
-      await expect(page.locator("h1")).toContainText(/not found|404/i);
+      // Should show the upload reference data page
+      const heading = page.locator("h1");
+      await expect(heading).toBeVisible();
+      await expect(heading).toHaveText("Manually upload a csv file");
     });
 
     test("should have hover state on tiles", async ({ page }) => {
