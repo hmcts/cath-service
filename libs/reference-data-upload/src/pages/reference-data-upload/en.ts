@@ -1,4 +1,5 @@
 export const en = {
+  title: "Upload reference data",
   pageTitle: "Manually upload a csv file",
   warningText: "Prior to upload you must ensure the file is suitable for location data upload e.g. file should be in correct formats.",
   downloadLinkText: "Download current reference data",

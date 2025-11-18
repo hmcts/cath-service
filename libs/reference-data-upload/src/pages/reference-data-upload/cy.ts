@@ -1,4 +1,5 @@
 export const cy = {
+  title: "Llwytho data cyfeirio i fyny",
   pageTitle: "Welsh placeholder",
   warningText: "Welsh placeholder",
   downloadLinkText: "Welsh placeholder",

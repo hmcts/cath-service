@@ -86,12 +86,12 @@ describe("view-option page", () => {
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 
-      it("should redirect to /summary-of-publications?locationId=9 for sjp-case option", async () => {
+      it("should redirect to /summary-of-publications?locationId=9009 for sjp-case option", async () => {
         req.body = { viewOption: "sjp-case" };
 
         await POST(req as Request, res as Response);
 
-        expect(res.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=9");
+        expect(res.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=9009");
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
     });

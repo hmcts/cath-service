@@ -80,14 +80,14 @@ describe("mockPublications", () => {
     expect(listTypes.size).toBeGreaterThan(1);
   });
 
-  it("should have publications with location ID 9", () => {
-    const loc9Publications = mockPublications.filter((p) => p.locationId === 9);
-    expect(loc9Publications.length).toBeGreaterThan(0);
+  it("should have publications with location ID 9009", () => {
+    const loc9009Publications = mockPublications.filter((p) => p.locationId === 9009);
+    expect(loc9009Publications.length).toBeGreaterThan(0);
   });
 
-  it("should have publications with location ID 1", () => {
-    const loc1Publications = mockPublications.filter((p) => p.locationId === 1);
-    expect(loc1Publications.length).toBeGreaterThan(0);
+  it("should have publications with location ID 9001", () => {
+    const loc9001Publications = mockPublications.filter((p) => p.locationId === 9001);
+    expect(loc9001Publications.length).toBeGreaterThan(0);
   });
 
   it("should have publications with list type 4", () => {

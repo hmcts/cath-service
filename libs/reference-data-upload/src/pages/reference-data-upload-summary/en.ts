@@ -1,5 +1,6 @@
 export const en = {
-  pageTitle: "Check upload details",
+  title: "Reference data upload summary",
+  pageTitle: "Reference data upload summary",
   fileLabel: "File",
   changeLink: "change",
   confirmButtonText: "Confirm",

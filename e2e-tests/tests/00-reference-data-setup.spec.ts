@@ -2,8 +2,12 @@ import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 import { seedAllReferenceData } from "../utils/seed-reference-data.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function authenticateSystemAdmin(page: Page) {
   await page.goto("/system-admin-dashboard");
@@ -43,9 +47,9 @@ test.describe("Reference Data Setup", () => {
     await page.waitForURL(/\/reference-data-upload-summary/, { timeout: 10000 });
     await expect(page.locator("h1")).toHaveText("Reference data upload summary");
 
-    // Step 7: Verify the data in the summary
-    const rows = page.locator(".govuk-summary-list__row");
-    await expect(rows).toHaveCount(10);
+    // Step 7: Verify the data in the summary (table rows in tbody, not summary list rows)
+    const dataRows = page.locator(".govuk-table__body .govuk-table__row");
+    await expect(dataRows).toHaveCount(10);
 
     // Step 8: Confirm the upload
     const confirmButton = page.getByRole("button", { name: /confirm/i });

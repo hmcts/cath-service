@@ -1,5 +1,6 @@
 export const cy = {
-  pageTitle: "Welsh placeholder",
+  title: "Crynodeb llwytho data cyfeirio i fyny",
+  pageTitle: "Crynodeb llwytho data cyfeirio i fyny",
   fileLabel: "Welsh placeholder",
   changeLink: "Welsh placeholder",
   confirmButtonText: "Welsh placeholder",

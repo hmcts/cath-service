@@ -5,9 +5,9 @@ import { GET } from "./index.js";
 // Mock the location module
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn((id: number) => {
-    if (id === 9) {
+    if (id === 9009) {
       return Promise.resolve({
-        locationId: 9,
+        locationId: 9009,
         name: "Single Justice Procedure",
         welshName: "Gweithdrefn Ynad Unigol",
         regions: [],
@@ -77,7 +77,7 @@ describe("Summary of Publications - GET handler", () => {
 
   describe("English locale", () => {
     it("should render page with location name when location found", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -91,7 +91,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should render filtered publications for valid locationId", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -104,7 +104,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should render publications sorted by date descending", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -119,7 +119,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should format list types correctly in English", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -132,7 +132,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should format dates correctly for English locale", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -157,7 +157,7 @@ describe("Summary of Publications - GET handler", () => {
 
   describe("Welsh locale", () => {
     it("should render page with Welsh location name when location found", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "cy" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -171,7 +171,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should format list types correctly in Welsh", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "cy" };
 
       await GET(mockRequest as Request, mockResponse as Response);
@@ -184,7 +184,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should format dates correctly for Welsh locale", async () => {
-      mockRequest.query = { locationId: "9" };
+      mockRequest.query = { locationId: "9009" };
       mockResponse.locals = { locale: "cy" };
 
       await GET(mockRequest as Request, mockResponse as Response);
