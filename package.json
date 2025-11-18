@@ -57,6 +57,7 @@
   },
   "packageManager": "yarn@4.11.0",
   "resolutions": {
+    "glob": "11.1.0",
     "vite": "7.2.2"
   },
   "dependencies": {
