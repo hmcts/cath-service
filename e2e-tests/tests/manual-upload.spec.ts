@@ -23,7 +23,7 @@ async function authenticateSystemAdmin(page: Page) {
 // Helper function to navigate to summary page by completing the upload form
 async function navigateToSummaryPage(page: Page) {
   await authenticateSystemAdmin(page);
-  await page.goto("/manual-upload?locationId=1");
+  await page.goto("/manual-upload?locationId=9001");
   await page.waitForTimeout(1000);
 
   await page.selectOption('select[name="listType"]', "6");
@@ -65,7 +65,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
   test.describe('Complete End-to-End Journey', () => {
     test('should be keyboard accessible throughout entire upload flow', async ({ page }) => {
       // Step 1: Test keyboard accessibility on form page
-      await page.goto('/manual-upload?locationId=1');
+      await page.goto('/manual-upload?locationId=9001');
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
@@ -139,7 +139,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
 
     test('should complete full upload flow from form to success', async ({ page }) => {
       // Step 1: Load manual upload form
-      await page.goto('/manual-upload?locationId=1');
+      await page.goto('/manual-upload?locationId=9001');
       await page.waitForTimeout(1000);
       await expect(page).toHaveTitle('Upload - Manual upload - Court and tribunal hearings - GOV.UK');
 
@@ -327,7 +327,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
     });
 
     test('should display file validation errors for invalid type and large size', async ({ page }) => {
-      await page.goto('/manual-upload?locationId=1');
+      await page.goto('/manual-upload?locationId=9001');
       await page.waitForTimeout(1000);
 
       await page.selectOption('select[name="listType"]', '1');
@@ -455,7 +455,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
     });
 
     test('should validate date range and preserve all form data when validation fails', async ({ page }) => {
-      await page.goto('/manual-upload?locationId=1');
+      await page.goto('/manual-upload?locationId=9001');
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
@@ -687,7 +687,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await completeManualUploadFlow(page);
       await expect(page).toHaveURL("/manual-upload-success");
 
-      await page.goto("/manual-upload?locationId=1");
+      await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
       await page.selectOption('select[name="listType"]', "7");
@@ -723,7 +723,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
     test('should display correctly on mobile viewport throughout entire flow', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
-      await page.goto('/manual-upload?locationId=1');
+      await page.goto('/manual-upload?locationId=9001');
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');

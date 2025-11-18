@@ -3,6 +3,7 @@ import path from "node:path";
 import { prisma } from "@hmcts/postgres";
 
 const ARTEFACT_TRACKING_FILE = path.join(process.cwd(), ".test-artefacts.json");
+const LOCATION_TRACKING_FILE = path.join(process.cwd(), ".test-locations.json");
 const STORAGE_PATH = path.join(process.cwd(), "..", "apps", "web", "storage", "temp", "uploads");
 
 async function globalTeardown() {
@@ -65,6 +66,41 @@ async function globalTeardown() {
     // Clean up tracking file
     if (fs.existsSync(ARTEFACT_TRACKING_FILE)) {
       fs.unlinkSync(ARTEFACT_TRACKING_FILE);
+    }
+
+    // Clean up test locations
+    let existingLocationIds: number[] = [];
+    if (fs.existsSync(LOCATION_TRACKING_FILE)) {
+      existingLocationIds = JSON.parse(fs.readFileSync(LOCATION_TRACKING_FILE, "utf-8"));
+    }
+
+    // Get all current location IDs
+    const currentLocations = await prisma.location.findMany({
+      select: { locationId: true }
+    });
+
+    // Find locations created during tests (not in existing list)
+    const newLocationIds = currentLocations
+      .map((l) => l.locationId)
+      .filter((id) => !existingLocationIds.includes(id));
+
+    // Clean up location records (CASCADE will handle junction tables)
+    if (newLocationIds.length > 0) {
+      const result = await prisma.location.deleteMany({
+        where: {
+          locationId: {
+            in: newLocationIds
+          }
+        }
+      });
+      console.log(`Deleted ${result.count} test location(s) from database`);
+    } else {
+      console.log("No test locations to delete from database");
+    }
+
+    // Clean up location tracking file
+    if (fs.existsSync(LOCATION_TRACKING_FILE)) {
+      fs.unlinkSync(LOCATION_TRACKING_FILE);
     }
 
     await prisma.$disconnect();

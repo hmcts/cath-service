@@ -81,7 +81,7 @@ test.describe('Search Page', () => {
     });
 
     test('should show preselected location value when locationId query param is provided', async ({ page }) => {
-      await page.goto('/search?locationId=1');
+      await page.goto('/search?locationId=9001');
 
       // Check that input has the preselected location value
       const locationInput = page.getByRole('combobox');
@@ -243,7 +243,7 @@ test.describe('Search Page', () => {
 
   test.describe('given user arrives via preselected location', () => {
     test('should display search page with location pre-filled when locationId query param is present', async ({ page }) => {
-      await page.goto('/search?locationId=1');
+      await page.goto('/search?locationId=9001');
 
       // Check that the location input is pre-filled
       const locationInput = page.getByRole('combobox');

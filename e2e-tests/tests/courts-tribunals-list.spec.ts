@@ -57,12 +57,12 @@ test.describe('Courts and Tribunals List Page', () => {
     test('should navigate to summary-of-publications page with locationId parameter', async ({ page }) => {
       await page.goto('/courts-tribunals-list');
 
-      // Click on a location link (e.g., Oxford Combined Court Centre)
-      const locationLink = page.getByRole('link', { name: /oxford combined court centre/i });
+      // Click on a location link (e.g., test court alpha)
+      const locationLink = page.getByRole('link', { name: /test court alpha/i });
       await locationLink.click();
 
       // Verify navigation to summary-of-publications page with locationId parameter
-      await expect(page).toHaveURL('/summary-of-publications?locationId=1');
+      await expect(page).toHaveURL('/summary-of-publications?locationId=9001');
 
       // Note: The summary-of-publications page will be implemented in a future ticket
       // For now, this will show a 404 or error page
@@ -101,10 +101,10 @@ test.describe('Courts and Tribunals List Page', () => {
       await page.goto('/courts-tribunals-list');
 
       // Check for specific locations from our mock data
-      const oxfordLink = page.getByRole('link', { name: /oxford combined court centre/i });
+      const oxfordLink = page.getByRole('link', { name: /test court alpha/i });
       await expect(oxfordLink).toBeVisible();
 
-      const sjpLink = page.getByRole('link', { name: /single justice procedure/i });
+      const sjpLink = page.getByRole('link', { name: /test sjp court/i });
       await expect(sjpLink).toBeVisible();
     });
   });
@@ -190,11 +190,11 @@ test.describe('Courts and Tribunals List Page', () => {
       await page.goto('/courts-tribunals-list');
 
       // Click a location link to verify it's functional
-      const locationLink = page.getByRole('link', { name: /oxford combined court centre/i });
+      const locationLink = page.getByRole('link', { name: /test court alpha/i });
       await locationLink.click();
 
       // Verify navigation to summary-of-publications page with locationId
-      await expect(page).toHaveURL('/summary-of-publications?locationId=1');
+      await expect(page).toHaveURL('/summary-of-publications?locationId=9001');
     });
   });
 
@@ -211,11 +211,11 @@ test.describe('Courts and Tribunals List Page', () => {
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Click on a location
-      const locationLink = page.getByRole('link', { name: /oxford combined court centre/i });
+      const locationLink = page.getByRole('link', { name: /test court alpha/i });
       await locationLink.click();
 
       // Verify navigation to summary-of-publications page
-      await expect(page).toHaveURL('/summary-of-publications?locationId=1');
+      await expect(page).toHaveURL('/summary-of-publications?locationId=9001');
 
       // Note: The summary-of-publications page will be implemented in a future ticket
       // For now, this will show a 404 or error page
