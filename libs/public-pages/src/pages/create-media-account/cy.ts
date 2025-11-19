@@ -1,5 +1,5 @@
 export const cy = {
-  pageTitle: "Gwrandawiadau llys a thribiwnlys - Creu Cyfrif Gweinyddwr System",
+  pageTitle: "Gwrandawiadau llys a thribiwnlys - Creu Cyfrif Cyfryngau",
   title: "Creu cyfrif gwrandawiadau Llys a Thribiwnlys",
   openingParagraph1:
     "Mae cyfrifon gwrandawiadau Llys a Thribiwnlys yn cael eu creu ar gyfer defnyddwyr proffesiynol sydd angen gallu gweld gwybodaeth GLlTEF fel rhestrau gwrandawiadau, ond nid oes ganddynt y gallu i greu cyfrif gan ddefnyddio MyHMCTS neu'r Platfform Cyffredin e.e. aelodau o'r cyfryngau",

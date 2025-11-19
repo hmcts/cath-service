@@ -1,5 +1,5 @@
 export const en = {
-  pageTitle: "Court and tribunal hearings - Create System Admin Account",
+  pageTitle: "Court and tribunal hearings - Create Media Account",
   title: "Create a Court and tribunal hearings account",
   openingParagraph1:
     "A Court and tribunal hearings account is for professional users who require the ability to view HMCTS information such as hearing lists, but do not have the ability to create an account using MyHMCTS or Common Platform e.g. members of the media.",
