@@ -771,7 +771,7 @@ describe("renderCauseListData", () => {
                                 caseNumber: "T-001",
                                 party: [
                                   {
-                                    partyRole: "APPLICANT/PETITIONER REPRESENTATIVE",
+                                    partyRole: "APPLICANT_PETITIONER_REPRESENTATIVE",
                                     individualDetails: {
                                       individualForenames: "Jane",
                                       individualSurname: "Doe"
@@ -910,7 +910,7 @@ describe("renderCauseListData", () => {
                                 caseNumber: "T-001",
                                 party: [
                                   {
-                                    partyRole: "APPLICANT/PETITIONER",
+                                    partyRole: "APPLICANT_PETITIONER",
                                     organisationDetails: {
                                       organisationName: "Test Corp"
                                     }

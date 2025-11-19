@@ -443,18 +443,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/biome@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/biome@npm:2.3.5"
+"@biomejs/biome@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/biome@npm:2.3.6"
   dependencies:
-    "@biomejs/cli-darwin-arm64": "npm:2.3.5"
-    "@biomejs/cli-darwin-x64": "npm:2.3.5"
-    "@biomejs/cli-linux-arm64": "npm:2.3.5"
-    "@biomejs/cli-linux-arm64-musl": "npm:2.3.5"
-    "@biomejs/cli-linux-x64": "npm:2.3.5"
-    "@biomejs/cli-linux-x64-musl": "npm:2.3.5"
-    "@biomejs/cli-win32-arm64": "npm:2.3.5"
-    "@biomejs/cli-win32-x64": "npm:2.3.5"
+    "@biomejs/cli-darwin-arm64": "npm:2.3.6"
+    "@biomejs/cli-darwin-x64": "npm:2.3.6"
+    "@biomejs/cli-linux-arm64": "npm:2.3.6"
+    "@biomejs/cli-linux-arm64-musl": "npm:2.3.6"
+    "@biomejs/cli-linux-x64": "npm:2.3.6"
+    "@biomejs/cli-linux-x64-musl": "npm:2.3.6"
+    "@biomejs/cli-win32-arm64": "npm:2.3.6"
+    "@biomejs/cli-win32-x64": "npm:2.3.6"
   dependenciesMeta:
     "@biomejs/cli-darwin-arm64":
       optional: true
@@ -474,63 +474,63 @@ __metadata:
       optional: true
   bin:
     biome: bin/biome
-  checksum: 10c0/c29264d9e3427b665a169af01aadea5584def961397ff6e1d1be4f16c5d37aca1b1b6ea1e6190c63330d0d8022009261ddc4c42a39727f77d5668b91e427b4f3
+  checksum: 10c0/61a234527fee2902690446a4bc9284ae49048808102538a959c8a057709c2452d7a60f97d826eaa181f64d0c8a1824bfd17a2065b476b8c24074528687cfe46f
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-arm64@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-darwin-arm64@npm:2.3.5"
+"@biomejs/cli-darwin-arm64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-darwin-arm64@npm:2.3.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-x64@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-darwin-x64@npm:2.3.5"
+"@biomejs/cli-darwin-x64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-darwin-x64@npm:2.3.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64-musl@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.3.5"
+"@biomejs/cli-linux-arm64-musl@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.3.6"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.3.5, @biomejs/cli-linux-arm64@npm:^2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-linux-arm64@npm:2.3.5"
-  checksum: 10c0/304db5bbe367ba3a4a08222282c2e53111395a574bf705076fd7d4cea1598f3e29e7f6685de40965b0e3b394a719798a511a0489204277989989a3225e14ec95
+"@biomejs/cli-linux-arm64@npm:2.3.6, @biomejs/cli-linux-arm64@npm:^2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-arm64@npm:2.3.6"
+  checksum: 10c0/b407a65a0fd2f37a4d7991bc60a2b3aa1a8f370027cb00ac3141b4b57d467d0b3765ce023e70d3453cfea8a4274e10d6b85cea72baee1456e885a0b39d7a3a16
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64-musl@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-linux-x64-musl@npm:2.3.5"
+"@biomejs/cli-linux-x64-musl@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-x64-musl@npm:2.3.6"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-linux-x64@npm:2.3.5"
+"@biomejs/cli-linux-x64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-linux-x64@npm:2.3.6"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-arm64@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-win32-arm64@npm:2.3.5"
+"@biomejs/cli-win32-arm64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-win32-arm64@npm:2.3.6"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-x64@npm:2.3.5":
-  version: 2.3.5
-  resolution: "@biomejs/cli-win32-x64@npm:2.3.5"
+"@biomejs/cli-win32-x64@npm:2.3.6":
+  version: 2.3.6
+  resolution: "@biomejs/cli-win32-x64@npm:2.3.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -893,7 +893,7 @@ __metadata:
   dependencies:
     "@prisma/client": "npm:6.19.0"
     dotenv: "npm:^17.2.3"
-    glob: "npm:11.0.3"
+    glob: "npm:11.1.0"
     prisma: "npm:6.19.0"
   languageName: unknown
   linkType: soft
@@ -1029,7 +1029,7 @@ __metadata:
     dotenv: "npm:17.2.3"
     express: "npm:5.1.0"
     express-session: "npm:1.18.2"
-    glob: "npm:11.0.3"
+    glob: "npm:11.1.0"
     govuk-frontend: "npm:5.13.0"
     helmet: "npm:8.1.0"
     multer: "npm:2.0.2"
@@ -3449,8 +3449,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cath@workspace:."
   dependencies:
-    "@biomejs/biome": "npm:2.3.5"
-    "@biomejs/cli-linux-arm64": "npm:^2.3.5"
+    "@biomejs/biome": "npm:2.3.6"
+    "@biomejs/cli-linux-arm64": "npm:^2.3.6"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/node": "npm:24.10.1"
     "@types/passport": "npm:1.0.17"
@@ -4543,25 +4543,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:11.0.3":
-  version: 11.0.3
-  resolution: "glob@npm:11.0.3"
-  dependencies:
-    foreground-child: "npm:^3.3.1"
-    jackspeak: "npm:^4.1.1"
-    minimatch: "npm:^10.0.3"
-    minipass: "npm:^7.1.2"
-    package-json-from-dist: "npm:^1.0.0"
-    path-scurry: "npm:^2.0.0"
-  bin:
-    glob: dist/esm/bin.mjs
-  checksum: 10c0/7d24457549ec2903920dfa3d8e76850e7c02aa709122f0164b240c712f5455c0b457e6f2a1eee39344c6148e39895be8094ae8cfef7ccc3296ed30bce250c661
-  languageName: node
-  linkType: hard
-
-"glob@npm:^10.2.2, glob@npm:^10.4.1":
-  version: 10.4.5
-  resolution: "glob@npm:10.4.5"
+"glob@npm:10.5.0":
+  version: 10.5.0
+  resolution: "glob@npm:10.5.0"
   dependencies:
     foreground-child: "npm:^3.1.0"
     jackspeak: "npm:^3.1.2"
@@ -4571,7 +4555,23 @@ __metadata:
     path-scurry: "npm:^1.11.1"
   bin:
     glob: dist/esm/bin.mjs
-  checksum: 10c0/19a9759ea77b8e3ca0a43c2f07ecddc2ad46216b786bb8f993c445aee80d345925a21e5280c7b7c6c59e860a0154b84e4b2b60321fea92cd3c56b4a7489f160e
+  checksum: 10c0/100705eddbde6323e7b35e1d1ac28bcb58322095bd8e63a7d0bef1a2cdafe0d0f7922a981b2b48369a4f8c1b077be5c171804534c3509dfe950dde15fbe6d828
+  languageName: node
+  linkType: hard
+
+"glob@npm:11.1.0":
+  version: 11.1.0
+  resolution: "glob@npm:11.1.0"
+  dependencies:
+    foreground-child: "npm:^3.3.1"
+    jackspeak: "npm:^4.1.1"
+    minimatch: "npm:^10.1.1"
+    minipass: "npm:^7.1.2"
+    package-json-from-dist: "npm:^1.0.0"
+    path-scurry: "npm:^2.0.0"
+  bin:
+    glob: dist/esm/bin.mjs
+  checksum: 10c0/1ceae07f23e316a6fa74581d9a74be6e8c2e590d2f7205034dd5c0435c53f5f7b712c2be00c3b65bf0a49294a1c6f4b98cd84c7637e29453b5aa13b79f1763a2
   languageName: node
   linkType: hard
 
@@ -5322,12 +5322,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.0.3":
-  version: 10.0.3
-  resolution: "minimatch@npm:10.0.3"
+"minimatch@npm:^10.1.1":
+  version: 10.1.1
+  resolution: "minimatch@npm:10.1.1"
   dependencies:
     "@isaacs/brace-expansion": "npm:^5.0.0"
-  checksum: 10c0/e43e4a905c5d70ac4cec8530ceaeccb9c544b1ba8ac45238e2a78121a01c17ff0c373346472d221872563204eabe929ad02669bb575cb1f0cc30facab369f70f
+  checksum: 10c0/c85d44821c71973d636091fddbfbffe62370f5ee3caf0241c5b60c18cd289e916200acb2361b7e987558cd06896d153e25d505db9fc1e43e6b4b6752e2702902
   languageName: node
   linkType: hard
 
