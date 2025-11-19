@@ -17,9 +17,7 @@ global.fetch = vi.fn((url: string) => {
   if (query) {
     // Search locations
     const searchField = language === "cy" ? "welshName" : "name";
-    const filtered = mockLocations.filter((loc) =>
-      loc[searchField].toLowerCase().includes(query.toLowerCase())
-    );
+    const filtered = mockLocations.filter((loc) => loc[searchField].toLowerCase().includes(query.toLowerCase()));
     return Promise.resolve({
       ok: true,
       json: () => Promise.resolve(filtered)
