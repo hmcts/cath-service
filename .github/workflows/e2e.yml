@@ -124,12 +124,17 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Reset and migrate database
+        env:
+          DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
         run: |
           # Wait for PostgreSQL to be ready
           timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U hmcts; do sleep 1; done'
 
+          # Collate schema first (required before Prisma commands)
+          cd apps/postgres && npx tsx src/collate-schema.ts && cd ../..
+
           # Reset the database to ensure clean state (drops all tables and re-applies migrations)
-          yarn workspace @hmcts/postgres run migrate:reset --force --skip-seed
+          cd apps/postgres && npx prisma migrate reset --force --skip-seed && cd ../..
 
           # Generate Prisma client with all models
           yarn db:generate
