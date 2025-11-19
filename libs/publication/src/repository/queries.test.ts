@@ -27,7 +27,9 @@ describe("createArtefact", () => {
       sensitivity: "PUBLIC",
       language: "ENGLISH",
       displayFrom: new Date("2025-10-20"),
-      displayTo: new Date("2025-10-30")
+      displayTo: new Date("2025-10-30"),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -41,7 +43,9 @@ describe("createArtefact", () => {
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
       lastReceivedDate: new Date(),
-      isFlatFile: true
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0
     });
 
     const result = await createArtefact(artefactData);
@@ -83,7 +87,9 @@ describe("createArtefact", () => {
       sensitivity: "PRIVATE",
       language: "ENGLISH",
       displayFrom: new Date("2025-10-21"),
-      displayTo: new Date("2025-10-31")
+      displayTo: new Date("2025-10-31"),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue({
@@ -96,7 +102,9 @@ describe("createArtefact", () => {
       displayFrom: new Date("2025-10-20"),
       displayTo: new Date("2025-10-30"),
       lastReceivedDate: new Date("2025-10-19"),
-      isFlatFile: true
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0
     });
 
     vi.mocked(prisma.artefact.update).mockResolvedValue({
@@ -109,7 +117,9 @@ describe("createArtefact", () => {
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
       lastReceivedDate: new Date(),
-      isFlatFile: true
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 1
     });
 
     const result = await createArtefact(artefactData);
@@ -132,7 +142,10 @@ describe("createArtefact", () => {
         displayTo: artefactData.displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        lastReceivedDate: expect.any(Date)
+        lastReceivedDate: expect.any(Date),
+        supersededCount: {
+          increment: 1
+        }
       }
     });
     expect(prisma.artefact.create).not.toHaveBeenCalled();
@@ -147,7 +160,9 @@ describe("createArtefact", () => {
       sensitivity: "PRIVATE",
       language: "WELSH",
       displayFrom: new Date("2025-11-10"),
-      displayTo: new Date("2025-11-20")
+      displayTo: new Date("2025-11-20"),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -161,7 +176,9 @@ describe("createArtefact", () => {
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
       lastReceivedDate: new Date(),
-      isFlatFile: true
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0
     });
 
     await createArtefact(artefactData);
@@ -182,7 +199,9 @@ describe("createArtefact", () => {
       sensitivity: "PUBLIC",
       language: "BILINGUAL",
       displayFrom: new Date("2025-11-25"),
-      displayTo: new Date("2025-12-05")
+      displayTo: new Date("2025-12-05"),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -196,7 +215,9 @@ describe("createArtefact", () => {
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
       lastReceivedDate: new Date(),
-      isFlatFile: true
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0
     });
 
     await createArtefact(artefactData);
@@ -217,7 +238,9 @@ describe("createArtefact", () => {
       sensitivity: "PUBLIC",
       language: "ENGLISH",
       displayFrom: new Date("2025-10-22"),
-      displayTo: new Date("2025-10-28")
+      displayTo: new Date("2025-10-28"),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -240,7 +263,9 @@ describe("createArtefact", () => {
         sensitivity: "PUBLIC",
         language: "ENGLISH",
         displayFrom: new Date("2025-10-20"),
-        displayTo: new Date("2025-10-30")
+        displayTo: new Date("2025-10-30"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD"
       };
 
       vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -280,7 +305,9 @@ describe("createArtefact", () => {
       sensitivity: "PUBLIC",
       language: "ENGLISH",
       displayFrom,
-      displayTo
+      displayTo,
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -294,7 +321,9 @@ describe("createArtefact", () => {
       displayFrom: artefactData.displayFrom,
       displayTo: artefactData.displayTo,
       lastReceivedDate: new Date(),
-      isFlatFile: true
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0
     });
 
     await createArtefact(artefactData);

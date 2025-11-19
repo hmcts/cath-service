@@ -20,9 +20,12 @@ export async function createArtefact(data: Artefact): Promise<string> {
         sensitivity: data.sensitivity,
         displayFrom: data.displayFrom,
         displayTo: data.displayTo,
-        isFlatFile: data.isFlatFile ?? true,
-        provenance: data.provenance ?? "MANUAL_UPLOAD",
-        lastReceivedDate: new Date()
+        isFlatFile: data.isFlatFile,
+        provenance: data.provenance,
+        lastReceivedDate: new Date(),
+        supersededCount: {
+          increment: 1
+        }
       }
     });
     return existing.artefactId;
@@ -39,8 +42,8 @@ export async function createArtefact(data: Artefact): Promise<string> {
       language: data.language,
       displayFrom: data.displayFrom,
       displayTo: data.displayTo,
-      isFlatFile: data.isFlatFile ?? true,
-      provenance: data.provenance ?? "MANUAL_UPLOAD"
+      isFlatFile: data.isFlatFile,
+      provenance: data.provenance
     }
   });
   return artefact.artefactId;

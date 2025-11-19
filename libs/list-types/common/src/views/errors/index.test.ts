@@ -6,16 +6,16 @@ import { describe, expect, it } from "vitest";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-describe("common.njk error template", () => {
+describe("index.njk error template", () => {
   describe("Template file", () => {
     it("should exist", () => {
-      const templatePath = path.join(__dirname, "../views/errors/common.njk");
+      const templatePath = path.join(__dirname, "index.njk");
       expect(existsSync(templatePath)).toBe(true);
     });
   });
 
   describe("Template content", () => {
-    const templatePath = path.join(__dirname, "../views/errors/common.njk");
+    const templatePath = path.join(__dirname, "index.njk");
     const templateContent = readFileSync(templatePath, "utf-8");
 
     it("should extend base template", () => {

@@ -7,6 +7,6 @@ export interface Artefact {
   language: string;
   displayFrom: Date;
   displayTo: Date;
-  isFlatFile?: boolean;
-  provenance?: string;
+  isFlatFile: boolean;
+  provenance: string;
 }
