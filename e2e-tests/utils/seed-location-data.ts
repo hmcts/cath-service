@@ -79,136 +79,175 @@ function parseCsv(csvContent: string): CsvLocation[] {
 }
 
 export async function seedLocationData(): Promise<void> {
-  const csvPath = path.join(__dirname, "..", "fixtures", "test-reference-data.csv");
-  const csvContent = fs.readFileSync(csvPath, "utf-8");
-  const locations = parseCsv(csvContent);
+  try {
+    console.log("=== Starting Location Data Seeding ===");
 
-  console.log(`Parsed ${locations.length} locations from CSV`);
+    const csvPath = path.join(__dirname, "..", "fixtures", "test-reference-data.csv");
+    console.log(`Reading CSV from: ${csvPath}`);
 
-  for (const location of locations) {
-    // Create location
-    await (prisma as any).location.upsert({
-      where: { locationId: location.locationId },
-      create: {
-        locationId: location.locationId,
-        name: location.locationName,
-        welshName: location.welshLocationName,
-        email: location.email || null,
-        contactNo: location.contactNo || null,
-      },
-      update: {
-        name: location.locationName,
-        welshName: location.welshLocationName,
-        email: location.email || null,
-        contactNo: location.contactNo || null,
-      },
-    });
+    const csvContent = fs.readFileSync(csvPath, "utf-8");
+    const locations = parseCsv(csvContent);
 
-    // Get sub-jurisdiction IDs
-    const subJurisdictions = await (prisma as any).subJurisdiction.findMany({
-      where: {
-        name: {
-          in: location.subJurisdictionNames,
-        },
-      },
-      select: { subJurisdictionId: true },
-    });
+    console.log(`✓ Parsed ${locations.length} locations from CSV`);
+    console.log(`Location IDs: ${locations.map(l => l.locationId).join(", ")}`);
 
-    // Create location-subJurisdiction relationships
-    for (const subJurisdiction of subJurisdictions) {
-      await (prisma as any).locationSubJurisdiction.upsert({
-        where: {
-          locationId_subJurisdictionId: {
+    for (const location of locations) {
+      try {
+        console.log(`\nProcessing location ${location.locationId}: ${location.locationName}`);
+
+        // Create location
+        await (prisma as any).location.upsert({
+          where: { locationId: location.locationId },
+          create: {
             locationId: location.locationId,
-            subJurisdictionId: subJurisdiction.subJurisdictionId,
+            name: location.locationName,
+            welshName: location.welshLocationName,
+            email: location.email || null,
+            contactNo: location.contactNo || null,
           },
-        },
-        create: {
-          locationId: location.locationId,
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-        },
-        update: {},
-      });
+          update: {
+            name: location.locationName,
+            welshName: location.welshLocationName,
+            email: location.email || null,
+            contactNo: location.contactNo || null,
+          },
+        });
+        console.log(`  ✓ Created location record`);
+
+        // Get sub-jurisdiction IDs
+        const subJurisdictions = await (prisma as any).subJurisdiction.findMany({
+          where: {
+            name: {
+              in: location.subJurisdictionNames,
+            },
+          },
+          select: { subJurisdictionId: true, name: true },
+        });
+        console.log(`  ✓ Found ${subJurisdictions.length} sub-jurisdictions: ${subJurisdictions.map((sj: any) => sj.name).join(", ")}`);
+
+        if (subJurisdictions.length !== location.subJurisdictionNames.length) {
+          console.warn(`  ⚠ Warning: Expected ${location.subJurisdictionNames.length} sub-jurisdictions but found ${subJurisdictions.length}`);
+        }
+
+        // Create location-subJurisdiction relationships
+        for (const subJurisdiction of subJurisdictions) {
+          await (prisma as any).locationSubJurisdiction.upsert({
+            where: {
+              locationId_subJurisdictionId: {
+                locationId: location.locationId,
+                subJurisdictionId: subJurisdiction.subJurisdictionId,
+              },
+            },
+            create: {
+              locationId: location.locationId,
+              subJurisdictionId: subJurisdiction.subJurisdictionId,
+            },
+            update: {},
+          });
+        }
+        console.log(`  ✓ Created ${subJurisdictions.length} sub-jurisdiction relationships`);
+
+        // Get region IDs
+        const regions = await (prisma as any).region.findMany({
+          where: {
+            name: {
+              in: location.regionNames,
+            },
+          },
+          select: { regionId: true, name: true },
+        });
+        console.log(`  ✓ Found ${regions.length} regions: ${regions.map((r: any) => r.name).join(", ")}`);
+
+        if (regions.length !== location.regionNames.length) {
+          console.warn(`  ⚠ Warning: Expected ${location.regionNames.length} regions but found ${regions.length}`);
+        }
+
+        // Create location-region relationships
+        for (const region of regions) {
+          await (prisma as any).locationRegion.upsert({
+            where: {
+              locationId_regionId: {
+                locationId: location.locationId,
+                regionId: region.regionId,
+              },
+            },
+            create: {
+              locationId: location.locationId,
+              regionId: region.regionId,
+            },
+            update: {},
+          });
+        }
+        console.log(`  ✓ Created ${regions.length} region relationships`);
+        console.log(`  ✓ Successfully seeded location ${location.locationId}`);
+      } catch (error) {
+        console.error(`  ✗ Error seeding location ${location.locationId}:`, error);
+        throw error;
+      }
     }
 
-    // Get region IDs
-    const regions = await (prisma as any).region.findMany({
-      where: {
-        name: {
-          in: location.regionNames,
-        },
-      },
-      select: { regionId: true },
-    });
+    console.log(`\n✓ Successfully seeded ${locations.length} locations`);
 
-    // Create location-region relationships
-    for (const region of regions) {
-      await (prisma as any).locationRegion.upsert({
-        where: {
-          locationId_regionId: {
-            locationId: location.locationId,
-            regionId: region.regionId,
-          },
-        },
-        create: {
-          locationId: location.locationId,
-          regionId: region.regionId,
-        },
-        update: {},
-      });
-    }
+    // Seed artefacts for Single Justice Procedure court (locationId 9009)
+    // This is needed for the summary-of-publications page to have data to display
+    console.log("\n=== Seeding Test Artefacts ===");
+    await seedSjpArtefacts();
 
-    console.log(`Seeded location: ${location.locationName} (ID: ${location.locationId})`);
+    console.log("\n=== Location Data Seeding Complete ===");
+  } catch (error) {
+    console.error("\n✗ Fatal error during location data seeding:", error);
+    throw error;
   }
-
-  console.log(`Successfully seeded ${locations.length} locations`);
-
-  // Seed artefacts for Single Justice Procedure court (locationId 9009)
-  // This is needed for the summary-of-publications page to have data to display
-  console.log("Seeding test artefacts for SJP court...");
-  await seedSjpArtefacts();
 }
 
 async function seedSjpArtefacts(): Promise<void> {
-  const sjpLocationId = "9009";
+  try {
+    const sjpLocationId = "9009";
+    console.log(`Seeding artefacts for locationId ${sjpLocationId} (Test SJP Court)`);
 
-  // Create multiple test artefacts for different dates and list types
-  const testArtefacts = [
-    {
-      locationId: sjpLocationId,
-      listTypeId: 6, // Crown Daily List
-      contentDate: new Date("2025-10-23"),
-      sensitivity: "PUBLIC",
-      language: "ENGLISH",
-      displayFrom: new Date("2025-10-20"),
-      displayTo: new Date("2025-10-30"),
-    },
-    {
-      locationId: sjpLocationId,
-      listTypeId: 7, // Crown Warned List
-      contentDate: new Date("2025-10-24"),
-      sensitivity: "PUBLIC",
-      language: "ENGLISH",
-      displayFrom: new Date("2025-10-21"),
-      displayTo: new Date("2025-10-31"),
-    },
-    {
-      locationId: sjpLocationId,
-      listTypeId: 1, // Family Daily Cause List
-      contentDate: new Date("2025-10-25"),
-      sensitivity: "PRIVATE",
-      language: "ENGLISH",
-      displayFrom: new Date("2025-10-22"),
-      displayTo: new Date("2025-11-01"),
-    },
-  ];
+    // Create multiple test artefacts for different dates and list types
+    const testArtefacts = [
+      {
+        locationId: sjpLocationId,
+        listTypeId: 6, // Crown Daily List
+        contentDate: new Date("2025-10-23"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-20"),
+        displayTo: new Date("2025-10-30"),
+      },
+      {
+        locationId: sjpLocationId,
+        listTypeId: 7, // Crown Warned List
+        contentDate: new Date("2025-10-24"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-21"),
+        displayTo: new Date("2025-10-31"),
+      },
+      {
+        locationId: sjpLocationId,
+        listTypeId: 1, // Family Daily Cause List
+        contentDate: new Date("2025-10-25"),
+        sensitivity: "PRIVATE",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-22"),
+        displayTo: new Date("2025-11-01"),
+      },
+    ];
 
-  for (const artefact of testArtefacts) {
-    await prisma.artefact.create({
-      data: artefact,
-    });
-    console.log(`Created artefact for SJP court: ${artefact.listTypeId} - ${artefact.contentDate.toISOString()}`);
+    console.log(`Creating ${testArtefacts.length} artefacts...`);
+
+    for (const artefact of testArtefacts) {
+      const created = await prisma.artefact.create({
+        data: artefact,
+      });
+      console.log(`  ✓ Created artefact ${created.artefactId}: listType=${artefact.listTypeId}, date=${artefact.contentDate.toISOString().split('T')[0]}`);
+    }
+
+    console.log(`✓ Successfully seeded ${testArtefacts.length} artefacts for locationId ${sjpLocationId}`);
+  } catch (error) {
+    console.error("✗ Error seeding artefacts:", error);
+    throw error;
   }
-
-  console.log(`Successfully seeded ${testArtefacts.length} artefacts for SJP court`);
 }
