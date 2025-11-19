@@ -162,4 +162,53 @@ export async function seedLocationData(): Promise<void> {
   }
 
   console.log(`Successfully seeded ${locations.length} locations`);
+
+  // Seed artefacts for Single Justice Procedure court (locationId 9009)
+  // This is needed for the summary-of-publications page to have data to display
+  console.log("Seeding test artefacts for SJP court...");
+  await seedSjpArtefacts();
+}
+
+async function seedSjpArtefacts(): Promise<void> {
+  const sjpLocationId = "9009";
+
+  // Create multiple test artefacts for different dates and list types
+  const testArtefacts = [
+    {
+      locationId: sjpLocationId,
+      listTypeId: 6, // Crown Daily List
+      contentDate: new Date("2025-10-23"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-20"),
+      displayTo: new Date("2025-10-30"),
+    },
+    {
+      locationId: sjpLocationId,
+      listTypeId: 7, // Crown Warned List
+      contentDate: new Date("2025-10-24"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-21"),
+      displayTo: new Date("2025-10-31"),
+    },
+    {
+      locationId: sjpLocationId,
+      listTypeId: 1, // Family Daily Cause List
+      contentDate: new Date("2025-10-25"),
+      sensitivity: "PRIVATE",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-22"),
+      displayTo: new Date("2025-11-01"),
+    },
+  ];
+
+  for (const artefact of testArtefacts) {
+    await prisma.artefact.create({
+      data: artefact,
+    });
+    console.log(`Created artefact for SJP court: ${artefact.listTypeId} - ${artefact.contentDate.toISOString()}`);
+  }
+
+  console.log(`Successfully seeded ${testArtefacts.length} artefacts for SJP court`);
 }
