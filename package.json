@@ -58,7 +58,9 @@
   },
   "packageManager": "yarn@4.11.0",
   "resolutions": {
-    "vite": "7.2.2"
+    "vite": "7.2.2",
+    "glob@^10.2.2": "10.5.0",
+    "glob@^10.4.1": "10.5.0"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "3.0.7",
