@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { prisma } from '@hmcts/postgres';
+import { getStoragePath } from '@hmcts/publication';
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -11,8 +12,7 @@ import { prisma } from '@hmcts/postgres';
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
 test.describe('Summary of Publications Page', () => {
-  // App runs from repo root, not apps/web
-  const STORAGE_PATH = path.join(process.cwd(), '..', 'storage', 'temp', 'uploads');
+  const STORAGE_PATH = getStoragePath();
   let TEST_ARTEFACT_IDS: string[] = [];
   const TEST_FILE_CONTENT = Buffer.from('Test PDF content for summary page');
 
@@ -350,24 +350,30 @@ test.describe('Summary of Publications Page', () => {
       const publicationLinks = page.locator('a[href^="/file-publication"]');
       const count = await publicationLinks.count();
 
-      if (count > 1) {
-        // Extract dates from link text (format: "List Type - DD Month YYYY")
-        const dates: string[] = [];
-        for (let i = 0; i < Math.min(count, 3); i++) {
-          const linkText = await publicationLinks.nth(i).textContent();
-          if (linkText) {
-            dates.push(linkText);
+      // Require at least 2 items to test sorting
+      expect(count).toBeGreaterThanOrEqual(2);
+
+      // Extract dates from link text (format: "List Type - DD Month YYYY")
+      const dates: Date[] = [];
+      for (let i = 0; i < Math.min(count, 3); i++) {
+        const linkText = await publicationLinks.nth(i).textContent();
+        if (linkText) {
+          // Extract date string using regex (DD Month YYYY)
+          const dateMatch = linkText.match(/(\d{1,2}\s\w+\s\d{4})/);
+          expect(dateMatch).toBeTruthy();
+
+          if (dateMatch) {
+            // Parse the date (format: "15 January 2025")
+            const parsedDate = new Date(dateMatch[1]);
+            expect(parsedDate.toString()).not.toBe('Invalid Date');
+            dates.push(parsedDate);
           }
         }
+      }
 
-        // Verify we have dates
-        expect(dates.length).toBeGreaterThan(0);
-
-        // Note: Full date parsing validation would be complex,
-        // but we can verify the structure is correct
-        dates.forEach(dateText => {
-          expect(dateText).toMatch(/\d{1,2}\s\w+\s\d{4}/);
-        });
+      // Verify dates are in descending order (newest first)
+      for (let i = 0; i < dates.length - 1; i++) {
+        expect(dates[i].getTime()).toBeGreaterThanOrEqual(dates[i + 1].getTime());
       }
     });
   });
