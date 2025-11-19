@@ -44,6 +44,8 @@ export const cy = {
     fileRequired: "Darparwch ffeil",
     fileType: "Llwythwch fformat ffeil dilys",
     fileSize: "Ffeil yn rhy fawr, llwythwch ffeil yn llai na 2MB",
+    fileTooMany: "Gallwch ond uwchlwytho un ffeil ar y tro",
+    fileUploadFailed: "Methodd uwchlwytho'r ffeil. Rhowch gynnig arall arni",
     courtRequired: "Rhowch a dewiswch lys dilys",
     courtTooShort: "Rhaid i enw'r llys fod yn dri chymeriad neu fwy",
     listTypeRequired: "Dewiswch fath o restr",

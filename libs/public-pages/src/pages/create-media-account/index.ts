@@ -30,9 +30,30 @@ export const POST = async (req: Request, res: Response) => {
     termsAccepted: req.body.termsAccepted === "on" || req.body.termsAccepted === true
   };
 
-  // Check for file upload errors from multer (e.g., file too large)
+  // Check for file upload errors from multer
   const fileUploadError = (req as any).fileUploadError;
-  const fileForValidation = fileUploadError?.code === "LIMIT_FILE_SIZE" ? undefined : req.file;
+  let fileForValidation = req.file;
+
+  // Map multer error codes to user-friendly messages
+  if (fileUploadError) {
+    fileForValidation = undefined; // Treat any multer error as no file uploaded for validation
+
+    const multerErrorMap: Record<string, string> = {
+      LIMIT_FILE_SIZE: t.errorFileSize,
+      LIMIT_FILE_COUNT: t.errorFileTooMany,
+      LIMIT_FIELD_SIZE: t.errorFileUploadFailed,
+      LIMIT_UNEXPECTED_FILE: t.errorFileUploadFailed
+    };
+
+    // Log the original error if it's an unexpected type
+    if (!multerErrorMap[fileUploadError.code]) {
+      console.error("Unhandled multer error in create-media-account:", {
+        code: fileUploadError.code,
+        message: fileUploadError.message,
+        field: fileUploadError.field
+      });
+    }
+  }
 
   const errors = validateForm(formData, fileForValidation, {
     fullName: t.errorFullNameRequired,
@@ -44,11 +65,20 @@ export const POST = async (req: Request, res: Response) => {
     terms: t.errorTermsRequired
   });
 
-  // If multer rejected due to file size, add our custom error message
-  if (fileUploadError?.code === "LIMIT_FILE_SIZE") {
+  // If multer reported an error, add the appropriate error message
+  if (fileUploadError) {
+    const multerErrorMap: Record<string, string> = {
+      LIMIT_FILE_SIZE: t.errorFileSize,
+      LIMIT_FILE_COUNT: t.errorFileTooMany,
+      LIMIT_FIELD_SIZE: t.errorFileUploadFailed,
+      LIMIT_UNEXPECTED_FILE: t.errorFileUploadFailed
+    };
+
+    const errorMessage = multerErrorMap[fileUploadError.code] || t.errorFileUploadFailed;
+
     errors.push({
       field: "idProof",
-      message: t.errorFileSize,
+      message: errorMessage,
       href: "#idProof"
     });
   }

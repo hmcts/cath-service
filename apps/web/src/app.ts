@@ -52,19 +52,39 @@ export async function createApp(): Promise<Express> {
   // Register multer middleware for file upload routes BEFORE CSRF protection
   // This ensures multipart form bodies are parsed before CSRF validation
   const upload = createFileUpload();
+
+  // Helper function to handle multer errors consistently
+  const handleMulterError = (err: any, req: any, fieldName: string) => {
+    if (!err) return;
+
+    // Store the error for the controller to handle
+    req.fileUploadError = {
+      code: err.code,
+      field: fieldName,
+      message: err.message,
+      originalError: err
+    };
+
+    // Log unexpected multer errors for debugging
+    if (!["LIMIT_FILE_SIZE", "LIMIT_FILE_COUNT", "LIMIT_FIELD_SIZE", "LIMIT_UNEXPECTED_FILE"].includes(err.code)) {
+      console.error(`Unexpected file upload error on ${fieldName}:`, {
+        code: err.code,
+        message: err.message,
+        field: err.field,
+        stack: err.stack
+      });
+    }
+  };
+
   app.post("/create-media-account", (req, res, next) => {
     upload.single("idProof")(req, res, (err) => {
-      if (err) {
-        (req as any).fileUploadError = err;
-      }
+      handleMulterError(err, req, "idProof");
       next();
     });
   });
   app.post("/manual-upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
-      if (err) {
-        (req as any).fileUploadError = err;
-      }
+      handleMulterError(err, req, "file");
       next();
     });
   });

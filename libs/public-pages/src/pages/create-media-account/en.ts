@@ -26,5 +26,7 @@ export const en = {
   errorFileRequired: "Select a file in .jpg, .pdf or .png format",
   errorFileSize: "Your file must be smaller than 2MB",
   errorFileType: "Select a file in .jpg, .pdf or .png format",
+  errorFileTooMany: "You can only upload one file at a time",
+  errorFileUploadFailed: "File upload failed. Please try again",
   errorTermsRequired: "Select the checkbox to agree to the terms and conditions"
 };

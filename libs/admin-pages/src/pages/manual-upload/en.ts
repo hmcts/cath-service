@@ -45,6 +45,8 @@ export const en = {
     fileRequired: "Please provide a file",
     fileType: "Please upload a valid file format",
     fileSize: "File too large, please upload file smaller than 2MB",
+    fileTooMany: "You can only upload one file at a time",
+    fileUploadFailed: "File upload failed. Please try again",
     courtRequired: "Please enter and select a valid court",
     courtTooShort: "Court name must be three characters or more",
     listTypeRequired: "Please select a list type",

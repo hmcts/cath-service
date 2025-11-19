@@ -26,5 +26,7 @@ export const cy = {
   errorFileRequired: "Dewiswch ffeil yn fformat .jpg, .pdf neu .png",
   errorFileSize: "Rhaid i'ch ffeil fod yn llai na 2MB",
   errorFileType: "Dewiswch ffeil yn fformat .jpg, .pdf neu .png",
+  errorFileTooMany: "Gallwch ond uwchlwytho un ffeil ar y tro",
+  errorFileUploadFailed: "Methodd uwchlwytho'r ffeil. Rhowch gynnig arall arni",
   errorTermsRequired: "Dewiswch y blwch i gytuno i'r telerau ac amodau"
 };

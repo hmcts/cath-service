@@ -104,14 +104,33 @@ const postHandler = async (req: Request, res: Response) => {
 
   const formData = transformDateFields(req.body);
 
-  // Check for multer errors (e.g., file too large)
+  // Check for multer errors
   const fileUploadError = (req as any).fileUploadError;
   let errors = validateForm(formData, req.file, t);
 
-  // If multer threw a file size error, replace the "fileRequired" error with the file size error
-  if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
+  // If multer reported an error, replace the "fileRequired" error with the specific multer error
+  if (fileUploadError) {
+    const multerErrorMap: Record<string, string> = {
+      LIMIT_FILE_SIZE: t.errorMessages.fileSize,
+      LIMIT_FILE_COUNT: t.errorMessages.fileTooMany,
+      LIMIT_FIELD_SIZE: t.errorMessages.fileUploadFailed,
+      LIMIT_UNEXPECTED_FILE: t.errorMessages.fileUploadFailed
+    };
+
+    // Log unexpected multer errors for debugging
+    if (!multerErrorMap[fileUploadError.code]) {
+      console.error("Unhandled multer error in manual-upload:", {
+        code: fileUploadError.code,
+        message: fileUploadError.message,
+        field: fileUploadError.field
+      });
+    }
+
+    const errorMessage = multerErrorMap[fileUploadError.code] || t.errorMessages.fileUploadFailed;
+
+    // Replace the generic "fileRequired" error with the specific multer error
     errors = errors.filter((e) => e.text !== t.errorMessages.fileRequired);
-    errors = [{ text: t.errorMessages.fileSize, href: "#file" }, ...errors];
+    errors = [{ text: errorMessage, href: "#file" }, ...errors];
   }
 
   if (errors.length > 0) {
