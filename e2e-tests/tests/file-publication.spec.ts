@@ -324,11 +324,12 @@ test.describe('File Publication Page', () => {
         const downloadLinks = page.locator('a[href^="/file-publication-data"]');
         const count = await downloadLinks.count();
 
-        // Verify download links exist (if there are any JSON files)
-        if (count > 0) {
-          const firstDownloadLink = downloadLinks.first();
-          await expect(firstDownloadLink).toHaveAttribute('download', '');
-        }
+        // Verify download links exist - explicitly assert this
+        expect(count).toBeGreaterThan(0);
+
+        // Assert the first download link has download attribute
+        const firstDownloadLink = downloadLinks.first();
+        await expect(firstDownloadLink).toHaveAttribute('download', '');
       } finally {
         // Clean up
         await fs.unlink(path.join(STORAGE_PATH, `${jsonArtefactId}.json`));
