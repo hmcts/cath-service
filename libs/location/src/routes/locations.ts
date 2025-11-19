@@ -1,6 +1,6 @@
+import type { Request, Response } from "express";
 import { getAllLocations } from "../repository/queries.js";
 import { searchLocations } from "../repository/service.js";
-import type { Request, Response } from "express";
 
 export const GET = async (req: Request, res: Response) => {
   try {
