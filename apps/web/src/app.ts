@@ -4,6 +4,7 @@ import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { moduleRoot as referenceDataUploadModuleRoot, pageRoutes as referenceDataUploadRoutes } from "@hmcts/reference-data-upload/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
@@ -90,6 +91,9 @@ export async function createApp(): Promise<Express> {
 
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
+
+  // Register API routes
+  app.use("/api", await createSimpleRouter(locationApiRoutes));
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));

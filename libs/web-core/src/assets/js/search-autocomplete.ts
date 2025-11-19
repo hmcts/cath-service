@@ -1,11 +1,34 @@
-import { getAllLocations, searchLocations } from "@hmcts/location";
 // @ts-expect-error - accessible-autocomplete doesn't have proper TypeScript definitions
 import accessibleAutocomplete from "accessible-autocomplete/dist/accessible-autocomplete.min.js";
+
+interface Location {
+  locationId: number;
+  name: string;
+  welshName: string;
+  regions: number[];
+  subJurisdictions: number[];
+}
+
+async function fetchLocations(language: "en" | "cy"): Promise<Location[]> {
+  const response = await fetch(`/api/locations?language=${language}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch locations");
+  }
+  return response.json();
+}
+
+async function fetchSearchResults(query: string, language: "en" | "cy"): Promise<Location[]> {
+  const response = await fetch(`/api/locations?q=${encodeURIComponent(query)}&language=${language}`);
+  if (!response.ok) {
+    throw new Error("Failed to search locations");
+  }
+  return response.json();
+}
 
 async function initAutocompleteForInput(locationInput: HTMLInputElement) {
   const inputId = locationInput.id;
   const language = (locationInput.getAttribute("data-locale") || "en") as "en" | "cy";
-  const locations = await getAllLocations(language);
+  const locations = await fetchLocations(language);
 
   const preselectedLocationId = locationInput.getAttribute("data-location-id");
   const preselectedValue = locationInput.value;
@@ -54,7 +77,7 @@ async function initAutocompleteForInput(locationInput: HTMLInputElement) {
     name: `${inputId}-display`,
     defaultValue: preselectedValue,
     source: async (query: string, populateResults: (results: string[]) => void) => {
-      const searchResults = await searchLocations(query, language);
+      const searchResults = await fetchSearchResults(query, language);
       const locationNames = searchResults.map((loc) => (language === "cy" ? loc.welshName : loc.name));
       populateResults(locationNames);
     },
