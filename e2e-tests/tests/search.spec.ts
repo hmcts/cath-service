@@ -85,7 +85,7 @@ test.describe('Search Page', () => {
 
       // Check that input has the preselected location value
       const locationInput = page.getByRole('combobox');
-      await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
+      await expect(locationInput).toHaveValue('Test Court Alpha');
     });
   });
 
@@ -247,7 +247,7 @@ test.describe('Search Page', () => {
 
       // Check that the location input is pre-filled
       const locationInput = page.getByRole('combobox');
-      await expect(locationInput).toHaveValue('Oxford Combined Court Centre');
+      await expect(locationInput).toHaveValue('Test Court Alpha');
 
       // Run accessibility checks
       const accessibilityScanResults = await new AxeBuilder({ page })
