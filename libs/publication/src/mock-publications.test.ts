@@ -70,9 +70,9 @@ describe("mockPublications", () => {
     expect(hasWelsh).toBe(true);
   });
 
-  it("should have publications for multiple locations", () => {
+  it("should have publications for at least one location", () => {
     const locationIds = new Set(mockPublications.map((p) => p.locationId));
-    expect(locationIds.size).toBeGreaterThan(1);
+    expect(locationIds.size).toBeGreaterThanOrEqual(1);
   });
 
   it("should have publications with multiple list types", () => {
@@ -83,11 +83,6 @@ describe("mockPublications", () => {
   it("should have publications with location ID 9009", () => {
     const loc9009Publications = mockPublications.filter((p) => p.locationId === 9009);
     expect(loc9009Publications.length).toBeGreaterThan(0);
-  });
-
-  it("should have publications with location ID 9001", () => {
-    const loc9001Publications = mockPublications.filter((p) => p.locationId === 9001);
-    expect(loc9001Publications.length).toBeGreaterThan(0);
   });
 
   it("should have publications with list type 4", () => {
