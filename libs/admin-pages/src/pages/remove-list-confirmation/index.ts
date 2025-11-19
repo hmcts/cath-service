@@ -36,6 +36,32 @@ function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof getAr
   });
 }
 
+async function renderConfirmationPage(
+  res: Response,
+  sessionData: NonNullable<Request["session"]["removalData"]>,
+  lang: typeof en | typeof cy,
+  locale: "en" | "cy",
+  errors?: Array<{ text: string; href: string }>
+) {
+  const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
+  const artefactData = transformArtefactsForDisplay(artefacts, locale);
+
+  return res.render("remove-list-confirmation/index", {
+    pageTitle: lang.pageTitle,
+    heading: lang.heading,
+    tableHeaders: lang.tableHeaders,
+    radioYes: lang.radioYes,
+    radioNo: lang.radioNo,
+    continueButton: lang.continueButton,
+    artefactData,
+    ...(errors && {
+      errors,
+      errorSummaryTitle: lang.errorSummaryTitle
+    }),
+    hideLanguageToggle: true
+  });
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const locale = req.query.lng === "cy" ? "cy" : "en";
@@ -46,19 +72,7 @@ const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/remove-list-search${lng}`);
   }
 
-  const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-  const artefactData = transformArtefactsForDisplay(artefacts, locale);
-
-  res.render("remove-list-confirmation/index", {
-    pageTitle: lang.pageTitle,
-    heading: lang.heading,
-    tableHeaders: lang.tableHeaders,
-    radioYes: lang.radioYes,
-    radioNo: lang.radioNo,
-    continueButton: lang.continueButton,
-    artefactData,
-    hideLanguageToggle: true
-  });
+  return renderConfirmationPage(res, sessionData, lang, locale);
 };
 
 const postHandler = async (req: Request, res: Response) => {
@@ -74,26 +88,12 @@ const postHandler = async (req: Request, res: Response) => {
   const confirmation = req.body.confirmation;
 
   if (!confirmation) {
-    const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-    const artefactData = transformArtefactsForDisplay(artefacts, locale);
-
-    return res.render("remove-list-confirmation/index", {
-      pageTitle: lang.pageTitle,
-      heading: lang.heading,
-      tableHeaders: lang.tableHeaders,
-      radioYes: lang.radioYes,
-      radioNo: lang.radioNo,
-      continueButton: lang.continueButton,
-      artefactData,
-      errors: [
-        {
-          text: lang.errorNoSelection,
-          href: "#confirmation"
-        }
-      ],
-      errorSummaryTitle: lang.errorSummaryTitle,
-      hideLanguageToggle: true
-    });
+    return renderConfirmationPage(res, sessionData, lang, locale, [
+      {
+        text: lang.errorNoSelection,
+        href: "#confirmation"
+      }
+    ]);
   }
 
   if (confirmation === "no") {
@@ -119,26 +119,12 @@ const postHandler = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error deleting artefacts:", error);
 
-    const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-    const artefactData = transformArtefactsForDisplay(artefacts, locale);
-
-    return res.render("remove-list-confirmation/index", {
-      pageTitle: lang.pageTitle,
-      heading: lang.heading,
-      tableHeaders: lang.tableHeaders,
-      radioYes: lang.radioYes,
-      radioNo: lang.radioNo,
-      continueButton: lang.continueButton,
-      artefactData,
-      errors: [
-        {
-          text: "An error occurred while removing content. Please try again later.",
-          href: "#"
-        }
-      ],
-      errorSummaryTitle: lang.errorSummaryTitle,
-      hideLanguageToggle: true
-    });
+    return renderConfirmationPage(res, sessionData, lang, locale, [
+      {
+        text: "An error occurred while removing content. Please try again later.",
+        href: "#"
+      }
+    ]);
   }
 };
 
