@@ -1,5 +1,7 @@
 import { checkSubJurisdictionExistsInJurisdiction } from "./sub-jurisdiction-repository.js";
 
+const HTML_TAG_REGEX = /<[^<>]*>/;
+
 export interface ValidationError {
   text: string;
   href: string;
@@ -39,6 +41,21 @@ export async function validateSubJurisdictionData(data: SubJurisdictionFormData)
   // If any required field is empty, return early
   if (errors.length > 0) {
     return errors;
+  }
+
+  // Check for HTML tags
+  if (data.name && HTML_TAG_REGEX.test(data.name)) {
+    errors.push({
+      text: "Sub Jurisdiction name (English) contains HTML tags which are not allowed",
+      href: "#name"
+    });
+  }
+
+  if (data.welshName && HTML_TAG_REGEX.test(data.welshName)) {
+    errors.push({
+      text: "Sub Jurisdiction name (Welsh) contains HTML tags which are not allowed",
+      href: "#welshName"
+    });
   }
 
   // Parse jurisdictionId to number

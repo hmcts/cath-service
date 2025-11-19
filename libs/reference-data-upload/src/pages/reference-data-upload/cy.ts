@@ -11,6 +11,7 @@ export const cy = {
   errorMessages: {
     fileRequired: "Welsh placeholder",
     fileSize: "Welsh placeholder",
-    fileType: "Welsh placeholder"
+    fileType: "Welsh placeholder",
+    sessionError: "Welsh placeholder"
   }
 };

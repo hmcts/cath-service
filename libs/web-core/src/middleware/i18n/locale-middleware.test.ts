@@ -177,7 +177,7 @@ describe("translationMiddleware", () => {
 
   it("should preserve existing query parameters when switching language", () => {
     const middleware = translationMiddleware(translations);
-    const req = { query: { locationId: "9", filter: "active" } } as Request;
+    const req = { query: { locationId: "9009", filter: "active" } } as Request;
     const res = {
       locals: { locale: "en" }
     } as Response;
@@ -185,7 +185,7 @@ describe("translationMiddleware", () => {
 
     middleware(req, res, next);
 
-    expect(res.locals.languageToggle.link).toContain("locationId=9");
+    expect(res.locals.languageToggle.link).toContain("locationId=9009");
     expect(res.locals.languageToggle.link).toContain("filter=active");
     expect(res.locals.languageToggle.link).toContain("lng=cy");
     expect(next).toHaveBeenCalled();

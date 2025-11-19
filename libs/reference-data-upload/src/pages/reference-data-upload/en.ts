@@ -11,6 +11,7 @@ export const en = {
   errorMessages: {
     fileRequired: "Select a CSV file to upload",
     fileSize: "File exceeds the maximum size limit (2MB)",
-    fileType: "Unsupported file type. Please upload a .csv file"
+    fileType: "Unsupported file type. Please upload a .csv file",
+    sessionError: "An error occurred while saving your data. Please try again."
   }
 };

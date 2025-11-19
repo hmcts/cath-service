@@ -20,12 +20,17 @@ vi.mock("node:fs", () => ({
   }
 }));
 
+/**
+ * These tests verify Prisma configuration exports and require a running Postgres/Prisma environment.
+ * They are integration tests, not unit tests, so they are skipped in the standard test run.
+ * TODO: Enable these tests in CI with a dedicated Prisma test environment
+ */
 describe.skip("Prisma Config", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it.skip("should export a default config", async () => {
+  it("should export a default config", async () => {
     const configModule = await import("./prisma.config.js");
     expect(configModule.default).toBeDefined();
   }, 10000);

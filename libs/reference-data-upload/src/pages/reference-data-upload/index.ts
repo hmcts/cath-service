@@ -13,7 +13,7 @@ function saveSession(session: any): Promise<void> {
 }
 
 const getHandler = async (req: Request, res: Response) => {
-  const locale = "en";
+  const locale = (req.query.lng === "cy" ? "cy" : "en") as "en" | "cy";
   const t = getTranslations(locale);
 
   const errors = req.session.uploadErrors || [];
@@ -28,7 +28,7 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const locale = "en" as "en" | "cy";
+  const locale = (req.query.lng === "cy" ? "cy" : "en") as "en" | "cy";
   const t = getTranslations(locale);
 
   const errors: ValidationError[] = [];
@@ -49,7 +49,12 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (errors.length > 0) {
     req.session.uploadErrors = errors;
-    await saveSession(req.session);
+    try {
+      await saveSession(req.session);
+    } catch (error) {
+      console.error("Error saving session:", error);
+      req.session.uploadErrors = [{ text: t.errorMessages.sessionError, href: "#" }];
+    }
     return res.redirect("/reference-data-upload");
   }
 
@@ -60,8 +65,14 @@ const postHandler = async (req: Request, res: Response) => {
     mimeType: req.file!.mimetype
   };
 
-  await saveSession(req.session);
-  res.redirect("/reference-data-upload-summary");
+  try {
+    await saveSession(req.session);
+    return res.redirect("/reference-data-upload-summary");
+  } catch (error) {
+    console.error("Error saving session:", error);
+    req.session.uploadErrors = [{ text: t.errorMessages.sessionError, href: "#" }];
+    return res.redirect("/reference-data-upload");
+  }
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

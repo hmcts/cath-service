@@ -7,15 +7,29 @@ import {
   getMaxSubJurisdictionId
 } from "./sub-jurisdiction-repository.js";
 
+const { mockCreate, mockQueryRaw } = vi.hoisted(() => ({
+  mockCreate: vi.fn(),
+  mockQueryRaw: vi.fn()
+}));
+
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     subJurisdiction: {
       findFirst: vi.fn(),
-      create: vi.fn()
+      create: mockCreate
     },
     jurisdiction: {
       findMany: vi.fn()
-    }
+    },
+    $transaction: vi.fn(async (callback: any) => {
+      const tx = {
+        subJurisdiction: {
+          create: mockCreate
+        },
+        $queryRaw: mockQueryRaw
+      };
+      return await callback(tx);
+    })
   }
 }));
 
@@ -151,14 +165,9 @@ describe("checkSubJurisdictionExistsInJurisdiction", () => {
 
 describe("createSubJurisdiction", () => {
   it("should create sub-jurisdiction with auto-incremented ID", async () => {
-    vi.mocked(prisma.subJurisdiction.findFirst).mockResolvedValue({
-      subJurisdictionId: 8,
-      name: "Test",
-      welshName: "Test",
-      jurisdictionId: 1
-    } as any);
+    mockQueryRaw.mockResolvedValue([{ max: 8 }]);
 
-    vi.mocked(prisma.subJurisdiction.create).mockResolvedValue({
+    mockCreate.mockResolvedValue({
       subJurisdictionId: 9,
       name: "New Court",
       welshName: "Llys Newydd",
@@ -167,7 +176,7 @@ describe("createSubJurisdiction", () => {
 
     await createSubJurisdiction(1, "New Court", "Llys Newydd");
 
-    expect(prisma.subJurisdiction.create).toHaveBeenCalledWith({
+    expect(mockCreate).toHaveBeenCalledWith({
       data: {
         subJurisdictionId: 9,
         jurisdictionId: 1,
@@ -178,14 +187,9 @@ describe("createSubJurisdiction", () => {
   });
 
   it("should trim whitespace from names", async () => {
-    vi.mocked(prisma.subJurisdiction.findFirst).mockResolvedValue({
-      subJurisdictionId: 8,
-      name: "Test",
-      welshName: "Test",
-      jurisdictionId: 1
-    } as any);
+    mockQueryRaw.mockResolvedValue([{ max: 8 }]);
 
-    vi.mocked(prisma.subJurisdiction.create).mockResolvedValue({
+    mockCreate.mockResolvedValue({
       subJurisdictionId: 9,
       name: "Test",
       welshName: "Test",
@@ -194,7 +198,7 @@ describe("createSubJurisdiction", () => {
 
     await createSubJurisdiction(1, "  Test  ", "  Test  ");
 
-    expect(prisma.subJurisdiction.create).toHaveBeenCalledWith({
+    expect(mockCreate).toHaveBeenCalledWith({
       data: {
         subJurisdictionId: 9,
         jurisdictionId: 1,
@@ -205,9 +209,9 @@ describe("createSubJurisdiction", () => {
   });
 
   it("should start from 1 when no sub-jurisdictions exist", async () => {
-    vi.mocked(prisma.subJurisdiction.findFirst).mockResolvedValue(null);
+    mockQueryRaw.mockResolvedValue([{ max: null }]);
 
-    vi.mocked(prisma.subJurisdiction.create).mockResolvedValue({
+    mockCreate.mockResolvedValue({
       subJurisdictionId: 1,
       name: "First",
       welshName: "Cyntaf",
@@ -216,7 +220,7 @@ describe("createSubJurisdiction", () => {
 
     await createSubJurisdiction(1, "First", "Cyntaf");
 
-    expect(prisma.subJurisdiction.create).toHaveBeenCalledWith({
+    expect(mockCreate).toHaveBeenCalledWith({
       data: {
         subJurisdictionId: 1,
         jurisdictionId: 1,

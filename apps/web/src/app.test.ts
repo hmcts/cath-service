@@ -141,8 +141,8 @@ describe("Web Application", () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (should have 8 total calls)
-      expect(calls.length).toBeGreaterThanOrEqual(7);
+      // Verify system-admin routes were registered (8 total calls)
+      expect(calls.length).toBe(8);
     });
 
     it("should configure error handlers at the end", async () => {
