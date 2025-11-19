@@ -64,7 +64,7 @@ export const locationData: {
       subJurisdictions: [1, 2]
     },
     {
-      locationId: 9,
+      locationId: 9009,
       name: "Single Justice Procedure",
       welshName: "Gweithdrefn Un Ynad",
       regions: [1, 2, 3, 4, 5],
