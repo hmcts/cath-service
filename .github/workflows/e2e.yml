@@ -21,12 +21,42 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: hmcts
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hmcts -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
     env:
       # Application configuration
       BASE_URL: https://localhost:8080
       PORT: 8080
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Database Configuration (using service containers)
+      DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
+      REDIS_URL: redis://localhost:6379
 
       # SSO Configuration (using existing GitHub Secrets)
       SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
@@ -89,6 +119,20 @@ jobs:
 
       - name: Build packages
         run: yarn build
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Reset and migrate database
+        run: |
+          # Wait for PostgreSQL to be ready
+          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U hmcts; do sleep 1; done'
+
+          # Reset the database to ensure clean state (drops all tables and re-applies migrations)
+          yarn workspace @hmcts/postgres run migrate:reset --force --skip-seed
+
+          # Generate Prisma client with all models
+          yarn db:generate
 
       - name: Generate self-signed certificates for CI
         run: |

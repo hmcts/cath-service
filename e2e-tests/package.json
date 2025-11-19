@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "pretest:e2e": "cd .. && yarn db:generate",
     "test:e2e": "node run-with-credentials.js",
     "test:e2e:ui": "node run-with-credentials.js --ui",
     "test:e2e:headed": "node run-with-credentials.js --headed",

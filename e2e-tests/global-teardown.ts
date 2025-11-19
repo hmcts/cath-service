@@ -75,27 +75,31 @@ async function globalTeardown() {
     }
 
     // Get all current location IDs
-    const currentLocations = await prisma.location.findMany({
-      select: { locationId: true }
-    });
-
-    // Find locations created during tests (not in existing list)
-    const newLocationIds = currentLocations
-      .map((l) => l.locationId)
-      .filter((id) => !existingLocationIds.includes(id));
-
-    // Clean up location records (CASCADE will handle junction tables)
-    if (newLocationIds.length > 0) {
-      const result = await prisma.location.deleteMany({
-        where: {
-          locationId: {
-            in: newLocationIds
-          }
-        }
+    try {
+      const currentLocations = await (prisma as any).location.findMany({
+        select: { locationId: true }
       });
-      console.log(`Deleted ${result.count} test location(s) from database`);
-    } else {
-      console.log("No test locations to delete from database");
+
+      // Find locations created during tests (not in existing list)
+      const newLocationIds = currentLocations
+        .map((l: any) => l.locationId)
+        .filter((id: number) => !existingLocationIds.includes(id));
+
+      // Clean up location records (CASCADE will handle junction tables)
+      if (newLocationIds.length > 0) {
+        const result = await (prisma as any).location.deleteMany({
+          where: {
+            locationId: {
+              in: newLocationIds
+            }
+          }
+        });
+        console.log(`Deleted ${result.count} test location(s) from database`);
+      } else {
+        console.log("No test locations to delete from database");
+      }
+    } catch (error) {
+      console.log("Could not clean up locations (table may not exist)");
     }
 
     // Clean up location tracking file
