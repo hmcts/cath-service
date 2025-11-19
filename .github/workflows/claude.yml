@@ -65,3 +65,4 @@ jobs:
           claude_args: |
             --append-system-prompt "You are running in a GitHub Action. The environment has been set up and yarn install has been run. You can use bash and yarn commands. Run yarn format, yarn lint and yarn test before committing changes."
             --allowedTools "Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
+            --allowedWrites "**/*"
