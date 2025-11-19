@@ -48,9 +48,13 @@ e2e-tests/junit-results.xml
 
 # agentic env vars
 .mcp.env
+.mcp.json
 .claude/claude.env
 .claude/analytics
 
 # Temporary uploads
 apps/web/storage/temp/uploads/
+
+# Local storage
+storage/
 

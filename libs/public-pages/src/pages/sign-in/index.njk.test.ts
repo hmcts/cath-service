@@ -46,8 +46,8 @@ describe("select-account template", () => {
     });
 
     it("should have create account text and link", () => {
-      expect(en.createAccountText).toBe("Don't have a CaTH account?");
-      expect(en.createAccountLink).toBe("Create one here");
+      expect(en.createAccountText).toBe("Don't have an account?");
+      expect(en.createAccountLink).toBe("Create a Court and tribunal hearings account");
     });
   });
 
@@ -81,8 +81,8 @@ describe("select-account template", () => {
     });
 
     it("should have create account text and link", () => {
-      expect(cy.createAccountText).toBe("Nid oes gennych gyfrif CaTH?");
-      expect(cy.createAccountLink).toBe("Crëwch un yma");
+      expect(cy.createAccountText).toBe("Nid oes gennych gyfrif?");
+      expect(cy.createAccountLink).toBe("Creu cyfrif gwrandawiadau Llys a Thribiwnlys");
     });
   });
 

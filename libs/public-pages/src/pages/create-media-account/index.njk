@@ -1,0 +1,100 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  {% if errors %}
+    {{ govukErrorSummary({
+      titleText: errorSummaryTitle,
+      errorList: errors
+    }) }}
+  {% endif %}
+
+  <h1 class="govuk-heading-l">{{ title }}</h1>
+
+  <p class="govuk-body">{{ openingParagraph1 }}</p>
+  <p class="govuk-body">{{ openingParagraph2 }}</p>
+  <p class="govuk-hint">{{ openingParagraph3 }}</p>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+    {{ govukInput({
+      id: "fullName",
+      name: "fullName",
+      classes: "govuk-input govuk-!-width-one-half",
+      label: {
+        text: fullNameLabel
+      },
+      value: data.fullName if data else "",
+      errorMessage: { text: errorFullName } if errorFullName else undefined
+    }) }}
+
+    {{ govukInput({
+      id: "email",
+      name: "email",
+      type: "email",
+      classes: "govuk-input govuk-!-width-one-half",
+      label: {
+        text: emailLabel
+      },
+      hint: {
+        text: emailHint
+      },
+      value: data.email if data else "",
+      errorMessage: { text: errorEmail } if errorEmail else undefined
+    }) }}
+
+    {{ govukInput({
+      id: "employer",
+      name: "employer",
+      classes: "govuk-input govuk-!-width-one-half",
+      label: {
+        text: employerLabel
+      },
+      value: data.employer if data else "",
+      errorMessage: { text: errorEmployer } if errorEmployer else undefined
+    }) }}
+
+    {{ govukFileUpload({
+      id: "idProof",
+      name: "idProof",
+      label: {
+        text: idProofLabel
+      },
+      hint: {
+        text: idProofHint
+      },
+      errorMessage: { text: errorIdProof } if errorIdProof else undefined
+    }) }}
+
+    <h2 class="govuk-heading-m">{{ termsTitle }}</h2>
+    <p class="govuk-body">{{ termsText }}</p>
+
+    {{ govukCheckboxes({
+      name: "termsAccepted",
+      items: [
+        {
+          id: "termsAccepted",
+          value: "on",
+          text: termsCheckbox,
+          checked: data.termsAccepted if data else false
+        }
+      ],
+      errorMessage: { text: errorTermsAccepted } if errorTermsAccepted else undefined
+    }) }}
+
+    {{ govukButton({
+      text: continueButton
+    }) }}
+  </form>
+
+  <p class="govuk-body govuk-!-margin-top-8">
+    <a href="#" class="govuk-link">{{ backToTop }}</a>
+  </p>
+</div>
+{% endblock %}

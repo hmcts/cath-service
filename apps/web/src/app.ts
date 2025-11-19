@@ -10,6 +10,7 @@ import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoute
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
+  configureCsrf,
   configureGovuk,
   configureHelmet,
   configureNonce,
@@ -47,6 +48,28 @@ export async function createApp(): Promise<Express> {
     })
   );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
+
+  // Register multer middleware for file upload routes BEFORE CSRF protection
+  // This ensures multipart form bodies are parsed before CSRF validation
+  const upload = createFileUpload();
+  app.post("/create-media-account", (req, res, next) => {
+    upload.single("idProof")(req, res, (err) => {
+      if (err) {
+        (req as any).fileUploadError = err;
+      }
+      next();
+    });
+  });
+  app.post("/manual-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        (req as any).fileUploadError = err;
+      }
+      next();
+    });
+  });
+
+  app.use(configureCsrf());
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -95,19 +118,6 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
-
-  // Register admin pages with multer middleware for file upload
-  const upload = createFileUpload();
-  app.post("/manual-upload", (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      if (err) {
-        // Multer error occurred, but don't throw - let the route handler deal with validation
-        // Store the error so the POST handler can check it
-        (req as any).fileUploadError = err;
-      }
-      next();
-    });
-  });
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());

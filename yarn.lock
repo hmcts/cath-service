@@ -934,6 +934,7 @@ __metadata:
   peerDependencies:
     "@hmcts/cookie-manager": ^1.1.0
     connect-redis: ^9.0.0
+    csrf-sync: ^4.2.1
     express: ^5.1.0
     express-session: ^1.18.2
     govuk-frontend: ^5.2.0
@@ -3372,6 +3373,7 @@ __metadata:
     "@vitest/ui": "npm:3.2.4"
     accessible-autocomplete: "npm:^3.0.1"
     concurrently: "npm:9.2.1"
+    csrf-sync: "npm:^4.2.1"
     happy-dom: "npm:^20.0.5"
     passport: "npm:0.7.0"
     passport-azure-ad: "npm:4.3.5"
@@ -3693,6 +3695,15 @@ __metadata:
     shebang-command: "npm:^2.0.0"
     which: "npm:^2.0.1"
   checksum: 10c0/053ea8b2135caff68a9e81470e845613e374e7309a47731e81639de3eaeb90c3d01af0e0b44d2ab9d50b43467223b88567dfeb3262db942dc063b9976718ffc1
+  languageName: node
+  linkType: hard
+
+"csrf-sync@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "csrf-sync@npm:4.2.1"
+  dependencies:
+    http-errors: "npm:^2.0.0"
+  checksum: 10c0/4d3280e12af95ed71f6dcdd28d768add96899f768aa23a8afdb7d548dec66b0bbfc16445dfdf462a586fb4c9bd4fc0e0cdce69287283fe2fea7e5dbc5ac2bcbc
   languageName: node
   linkType: hard
 

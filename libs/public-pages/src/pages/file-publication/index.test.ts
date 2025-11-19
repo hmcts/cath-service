@@ -47,24 +47,16 @@ describe("File Publication - GET handler", () => {
       expect(redirectSpy).toHaveBeenCalledWith("/400");
     });
 
-    it("should return 404 when file not found", async () => {
+    it("should redirect to artefact-not-found when file not found", async () => {
       mockRequest.query = { artefactId: "non-existent" };
       vi.mocked(getUploadedFile).mockResolvedValue(null);
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(statusSpy).toHaveBeenCalledWith(404);
-      expect(renderSpy).toHaveBeenCalledWith(
-        "artefact-not-found/index",
-        expect.objectContaining({
-          pageTitle: "Page not found",
-          bodyText: "You have attempted to view a page that no longer exists. This could be because the publication you are trying to view has expired.",
-          buttonText: "Find a court or tribunal"
-        })
-      );
+      expect(redirectSpy).toHaveBeenCalledWith("/artefact-not-found");
     });
 
-    it("should return 404 when artefact metadata not found", async () => {
+    it("should redirect to artefact-not-found when artefact metadata not found", async () => {
       mockRequest.query = { artefactId: "test-artefact" };
       vi.mocked(getUploadedFile).mockResolvedValue({
         fileData: Buffer.from("test"),
@@ -74,31 +66,17 @@ describe("File Publication - GET handler", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(statusSpy).toHaveBeenCalledWith(404);
-      expect(renderSpy).toHaveBeenCalledWith(
-        "artefact-not-found/index",
-        expect.objectContaining({
-          pageTitle: "Page not found"
-        })
-      );
+      expect(redirectSpy).toHaveBeenCalledWith("/artefact-not-found");
     });
 
-    it("should render Welsh error content when locale is cy", async () => {
+    it("should redirect to artefact-not-found regardless of locale", async () => {
       mockRequest.query = { artefactId: "non-existent" };
       mockResponse.locals = { locale: "cy" };
       vi.mocked(getUploadedFile).mockResolvedValue(null);
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(renderSpy).toHaveBeenCalledWith(
-        "artefact-not-found/index",
-        expect.objectContaining({
-          pageTitle: "Heb ddod o hyd i'r dudalen",
-          bodyText:
-            "Rydych wedi ceisio gweld tudalen sydd ddim yn bodoli mwyach. Gallai hyn fod oherwydd bod y cyhoeddiad rydych yn ceisio'i weld wedi dod i ben.",
-          buttonText: "Dod o hyd i lys neu dribiwnlys"
-        })
-      );
+      expect(redirectSpy).toHaveBeenCalledWith("/artefact-not-found");
     });
   });
 
