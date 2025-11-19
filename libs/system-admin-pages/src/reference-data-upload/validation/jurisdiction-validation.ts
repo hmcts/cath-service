@@ -1,4 +1,4 @@
-import { checkJurisdictionExists } from "./jurisdiction-repository.js";
+import { checkJurisdictionExists } from "../repository/jurisdiction-repository.js";
 
 const HTML_TAG_REGEX = /<[^<>]*>/;
 

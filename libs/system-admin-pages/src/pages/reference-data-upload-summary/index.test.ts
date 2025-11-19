@@ -1,23 +1,23 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as csvParser from "../../csv-parser.js";
-import * as enrichment from "../../enrichment-service.js";
-import * as repository from "../../upload-repository.js";
-import * as validation from "../../validation.js";
+import * as csvParser from "../reference-data-upload/parsers/csv-parser.js";
+import * as repository from "../reference-data-upload/repository/upload-repository.js";
+import * as enrichment from "../reference-data-upload/services/enrichment-service.js";
+import * as validation from "../reference-data-upload/validation/validation.js";
 
-vi.mock("../../csv-parser.js", () => ({
+vi.mock("../reference-data-upload/parsers/csv-parser.js", () => ({
   parseCsv: vi.fn()
 }));
 
-vi.mock("../../validation.js", () => ({
+vi.mock("../reference-data-upload/validation/validation.js", () => ({
   validateLocationData: vi.fn()
 }));
 
-vi.mock("../../enrichment-service.js", () => ({
+vi.mock("../reference-data-upload/services/enrichment-service.js", () => ({
   enrichLocationData: vi.fn()
 }));
 
-vi.mock("../../upload-repository.js", () => ({
+vi.mock("../reference-data-upload/repository/upload-repository.js", () => ({
   upsertLocations: vi.fn()
 }));
 

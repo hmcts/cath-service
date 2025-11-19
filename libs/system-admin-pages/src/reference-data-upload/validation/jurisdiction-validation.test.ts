@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import * as repository from "./jurisdiction-repository.js";
+import * as repository from "../repository/jurisdiction-repository.js";
 import { validateJurisdictionData } from "./jurisdiction-validation.js";
 
-vi.mock("./jurisdiction-repository.js", () => ({
+vi.mock("../repository/jurisdiction-repository.js", () => ({
   checkJurisdictionExists: vi.fn()
 }));
 

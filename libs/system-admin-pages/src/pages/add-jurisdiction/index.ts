@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { createJurisdiction } from "../../jurisdiction-repository.js";
-import { validateJurisdictionData } from "../../jurisdiction-validation.js";
+import { createJurisdiction } from "../reference-data-upload/repository/jurisdiction-repository.js";
+import { validateJurisdictionData } from "../reference-data-upload/validation/jurisdiction-validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

@@ -1,5 +1,5 @@
 import { prisma } from "@hmcts/postgres";
-import type { ParsedLocationData } from "./model.js";
+import type { ParsedLocationData } from "../model.js";
 
 export async function upsertLocations(data: ParsedLocationData[]): Promise<void> {
   await prisma.$transaction(async (tx) => {

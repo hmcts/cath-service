@@ -28,10 +28,12 @@
     "express": "^5.1.0"
   },
   "dependencies": {
-    "@hmcts/auth": "workspace:*"
+    "@hmcts/auth": "workspace:*",
+    "papaparse": "5.4.1"
   },
   "devDependencies": {
     "@types/express": "5.0.1",
-    "@types/express-session": "1.18.2"
+    "@types/express-session": "1.18.2",
+    "@types/papaparse": "5.3.15"
   }
 }

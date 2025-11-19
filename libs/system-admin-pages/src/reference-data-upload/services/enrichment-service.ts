@@ -1,5 +1,5 @@
 import { prisma } from "@hmcts/postgres";
-import type { EnrichedLocationData, ParsedLocationData } from "./model.js";
+import type { EnrichedLocationData, ParsedLocationData } from "../model.js";
 
 export async function enrichLocationData(data: ParsedLocationData[]): Promise<EnrichedLocationData[]> {
   const enriched: EnrichedLocationData[] = [];

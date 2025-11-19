@@ -1,10 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import { parseCsv } from "../../csv-parser.js";
-import { enrichLocationData } from "../../enrichment-service.js";
-import type { UploadSessionData } from "../../model.js";
-import { upsertLocations } from "../../upload-repository.js";
-import { validateLocationData } from "../../validation.js";
+import type { UploadSessionData } from "../reference-data-upload/model.js";
+import { parseCsv } from "../reference-data-upload/parsers/csv-parser.js";
+import { upsertLocations } from "../reference-data-upload/repository/upload-repository.js";
+import { enrichLocationData } from "../reference-data-upload/services/enrichment-service.js";
+import { validateLocationData } from "../reference-data-upload/validation/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
