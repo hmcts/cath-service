@@ -5,7 +5,7 @@ CREATE TABLE "media_application" (
     "email" TEXT NOT NULL,
     "employer" TEXT NOT NULL,
     "file_name" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "status" TEXT NOT NULL DEFAULT 'PENDING' CHECK ("status" IN ('PENDING', 'APPROVED', 'REJECTED')),
     "request_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
