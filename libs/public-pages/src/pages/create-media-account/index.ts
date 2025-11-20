@@ -55,7 +55,7 @@ export const POST = async (req: Request, res: Response) => {
     }
   }
 
-  const errors = validateForm(formData, fileForValidation, {
+  let errors = validateForm(formData, fileForValidation, {
     fullName: t.errorFullNameRequired,
     email: t.errorEmailRequired,
     employer: t.errorEmployerRequired,
@@ -65,7 +65,7 @@ export const POST = async (req: Request, res: Response) => {
     terms: t.errorTermsRequired
   });
 
-  // If multer reported an error, add the appropriate error message
+  // If multer reported an error, replace any generic file error with the specific multer error
   if (fileUploadError) {
     const multerErrorMap: Record<string, string> = {
       LIMIT_FILE_SIZE: t.errorFileSize,
@@ -76,6 +76,10 @@ export const POST = async (req: Request, res: Response) => {
 
     const errorMessage = multerErrorMap[fileUploadError.code] || t.errorFileUploadFailed;
 
+    // Remove any existing idProof errors to avoid duplicates
+    errors = errors.filter((error) => error.field !== "idProof");
+
+    // Add the specific multer error
     errors.push({
       field: "idProof",
       message: errorMessage,

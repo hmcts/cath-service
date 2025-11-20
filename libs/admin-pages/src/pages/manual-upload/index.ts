@@ -108,7 +108,7 @@ const postHandler = async (req: Request, res: Response) => {
   const fileUploadError = (req as any).fileUploadError;
   let errors = validateForm(formData, req.file, t);
 
-  // If multer reported an error, replace the "fileRequired" error with the specific multer error
+  // If multer reported an error, replace any file error with the specific multer error
   if (fileUploadError) {
     const multerErrorMap: Record<string, string> = {
       LIMIT_FILE_SIZE: t.errorMessages.fileSize,
@@ -128,8 +128,9 @@ const postHandler = async (req: Request, res: Response) => {
 
     const errorMessage = multerErrorMap[fileUploadError.code] || t.errorMessages.fileUploadFailed;
 
-    // Replace the generic "fileRequired" error with the specific multer error
-    errors = errors.filter((e) => e.text !== t.errorMessages.fileRequired);
+    // Remove any existing file errors to avoid duplicates (filter by href/field)
+    errors = errors.filter((e) => e.href !== "#file");
+    // Add the specific multer error at the beginning
     errors = [{ text: errorMessage, href: "#file" }, ...errors];
   }
 
