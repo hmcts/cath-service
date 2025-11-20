@@ -18,6 +18,8 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   res.render("add-jurisdiction-success/index", {
-    ...content
+    ...content,
+    jurisdictionSuccess,
+    locale: language
   });
 };

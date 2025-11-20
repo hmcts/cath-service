@@ -1,15 +1,11 @@
+import type { ValidationError } from "../model.js";
 import { checkJurisdictionExists } from "../repository/jurisdiction-repository.js";
 
 const HTML_TAG_REGEX = /<[^<>]*>/;
 
-export interface ValidationError {
-  text: string;
-  href: string;
-}
-
 export interface JurisdictionFormData {
-  name: string;
-  welshName: string;
+  name: string | undefined;
+  welshName: string | undefined;
 }
 
 export async function validateJurisdictionData(data: JurisdictionFormData): Promise<ValidationError[]> {

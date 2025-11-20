@@ -97,7 +97,7 @@ export async function createApp(): Promise<Express> {
   app.post("/reference-data-upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
       if (err) {
-        (req as any).fileUploadError = err;
+        req.fileUploadError = err;
       }
       next();
     });
@@ -110,7 +110,7 @@ export async function createApp(): Promise<Express> {
       if (err) {
         // Multer error occurred, but don't throw - let the route handler deal with validation
         // Store the error so the POST handler can check it
-        (req as any).fileUploadError = err;
+        req.fileUploadError = err;
       }
       next();
     });

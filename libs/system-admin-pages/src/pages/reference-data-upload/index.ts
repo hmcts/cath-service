@@ -34,7 +34,7 @@ const postHandler = async (req: Request, res: Response) => {
   const errors: ValidationError[] = [];
 
   // Check for multer errors (e.g., file too large)
-  const fileUploadError = (req as any).fileUploadError;
+  const fileUploadError = req.fileUploadError;
 
   if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
     errors.push({ text: t.errorMessages.fileSize, href: "#file" });

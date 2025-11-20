@@ -13,13 +13,13 @@
 
     <ul class="govuk-list">
       <li>
-        <a href="/add-jurisdiction" class="govuk-link">{{ addAnotherText }}</a>
+        <a href="/add-jurisdiction{{ '?lng=cy' if locale === 'cy' else '' }}" class="govuk-link">{{ addAnotherText }}</a>
       </li>
       <li>
-        <a href="/add-sub-jurisdiction" class="govuk-link">{{ addSubJurisdictionText }}</a>
+        <a href="/add-sub-jurisdiction{{ '?lng=cy' if locale === 'cy' else '' }}" class="govuk-link">{{ addSubJurisdictionText }}</a>
       </li>
       <li>
-        <a href="/reference-data-upload" class="govuk-link">{{ backToUploadText }}</a>
+        <a href="/reference-data-upload{{ '?lng=cy' if locale === 'cy' else '' }}" class="govuk-link">{{ backToUploadText }}</a>
       </li>
     </ul>
 

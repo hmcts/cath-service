@@ -2,6 +2,7 @@ export const cy = {
   back: "Yn ôl",
   pageTitle: "Ychwanegu Is-awdurdodaeth",
   jurisdictionLabel: "Dewiswch Awdurdodaeth",
+  jurisdictionPlaceholder: "Dewiswch awdurdodaeth",
   nameLabel: "Rhowch Enw Is-awdurdodaeth (Saesneg)",
   nameHint: "Er enghraifft Civil Court",
   welshNameLabel: "Rhowch Enw Is-awdurdodaeth (Cymraeg)",

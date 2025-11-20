@@ -39,14 +39,23 @@ export const POST = async (req: Request, res: Response) => {
   }
 
   // Save to database
-  await createJurisdiction(formData.name, formData.welshName);
+  try {
+    await createJurisdiction(formData.name, formData.welshName);
 
-  // Store success message in session
-  req.session.jurisdictionSuccess = {
-    name: formData.name.trim(),
-    welshName: formData.welshName.trim()
-  };
+    // Store success message in session
+    req.session.jurisdictionSuccess = {
+      name: formData.name.trim(),
+      welshName: formData.welshName.trim()
+    };
 
-  // Redirect to success page
-  res.redirect(`/add-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
+    // Redirect to success page
+    res.redirect(`/add-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
+  } catch (error) {
+    console.error("Error creating jurisdiction:", error);
+    return res.render("add-jurisdiction/index", {
+      ...content,
+      data: formData,
+      errors: [{ text: content.databaseError, href: "#name" }]
+    });
+  }
 };

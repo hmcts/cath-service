@@ -6,5 +6,6 @@ export const en = {
   welshNameLabel: "Jurisdiction name (Welsh)",
   welshNameHint: "For example Sifil",
   saveButtonText: "Save",
-  errorSummaryTitle: "There is a problem"
+  errorSummaryTitle: "There is a problem",
+  databaseError: "Failed to create jurisdiction. Please try again."
 };

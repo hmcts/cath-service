@@ -13,7 +13,7 @@ export const GET = async (req: Request, res: Response) => {
 
   // Build dropdown items
   const jurisdictionItems = [
-    { value: "", text: "Select a jurisdiction" },
+    { value: "", text: content.jurisdictionPlaceholder },
     ...jurisdictions.map((j: JurisdictionOption) => ({
       value: j.jurisdictionId.toString(),
       text: j.displayName

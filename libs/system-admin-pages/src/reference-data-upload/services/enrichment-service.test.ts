@@ -1,7 +1,7 @@
 import { prisma } from "@hmcts/postgres";
 import { describe, expect, it, vi } from "vitest";
+import type { ParsedLocationData } from "../model.js";
 import { enrichLocationData } from "./enrichment-service.js";
-import type { ParsedLocationData } from "./model.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {

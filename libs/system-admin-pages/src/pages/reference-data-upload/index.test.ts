@@ -131,7 +131,7 @@ describe("reference-data-upload page", () => {
     });
 
     it("should handle file size error from multer", async () => {
-      (mockRequest as any).fileUploadError = { code: "LIMIT_FILE_SIZE" };
+      mockRequest.fileUploadError = { code: "LIMIT_FILE_SIZE" } as any;
 
       const { POST } = await import("./index.js");
       const handler = POST[1];

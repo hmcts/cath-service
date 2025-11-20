@@ -6,5 +6,6 @@ export const cy = {
   welshNameLabel: "Enw awdurdodaeth (Cymraeg)",
   welshNameHint: "Er enghraifft Sifil",
   saveButtonText: "Cadw",
-  errorSummaryTitle: "Mae yna broblem"
+  errorSummaryTitle: "Mae yna broblem",
+  databaseError: "Methodd â chreu awdurdodaeth. Rhowch gynnig arall arni."
 };
