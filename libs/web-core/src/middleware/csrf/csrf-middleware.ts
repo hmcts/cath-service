@@ -8,7 +8,7 @@ declare module "express-session" {
   }
 }
 
-const CSRF_SECRET_LENGTH = 32;
+const CSRF_SECRET_LENGTH = 128;
 
 const { csrfSynchronisedProtection, generateToken } = csrfSync({
   getTokenFromRequest: (req) => req.body?._csrf || req.query?._csrf,
