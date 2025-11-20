@@ -109,8 +109,20 @@ export const POST = async (req: Request, res: Response) => {
     });
   }
 
+  // Defensive check: file should exist at this point (validated above)
+  if (!req.file) {
+    console.error("Unexpected missing file after validation passed");
+    return res.status(400).render("create-media-account/index", {
+      en,
+      cy,
+      data: formData,
+      errors: [{ text: t.errorFileRequired, href: "#idProof" }],
+      errorIdProof: t.errorFileRequired
+    });
+  }
+
   try {
-    const fileExtension = path.extname(req.file!.originalname);
+    const fileExtension = path.extname(req.file.originalname);
 
     const mediaApplication = await prisma.mediaApplication.create({
       data: {
@@ -125,7 +137,7 @@ export const POST = async (req: Request, res: Response) => {
     const fileName = `${mediaApplication.id}${fileExtension}`;
     const filePath = path.join(UPLOAD_DIR, fileName);
 
-    await writeFile(filePath, req.file!.buffer);
+    await writeFile(filePath, req.file.buffer);
 
     await prisma.mediaApplication.update({
       where: { id: mediaApplication.id },
