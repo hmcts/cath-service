@@ -47,7 +47,7 @@ const postHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const location = getLocationById(Number.parseInt(locationId, 10));
+  const location = await getLocationById(Number.parseInt(locationId, 10));
   if (!location) {
     return res.status(400).send("Invalid location");
   }
