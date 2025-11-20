@@ -137,12 +137,23 @@ export const POST = async (req: Request, res: Response) => {
     const fileName = `${mediaApplication.id}${fileExtension}`;
     const filePath = path.join(UPLOAD_DIR, fileName);
 
-    await writeFile(filePath, req.file.buffer);
-
+    // Update DB with fileName before writing file to avoid orphaned files
     await prisma.mediaApplication.update({
       where: { id: mediaApplication.id },
       data: { fileName }
     });
+
+    try {
+      await writeFile(filePath, req.file.buffer);
+    } catch (fileError) {
+      // File write failed - clear the fileName in DB to maintain consistency
+      console.error("File write failed, clearing fileName from database:", fileError);
+      await prisma.mediaApplication.update({
+        where: { id: mediaApplication.id },
+        data: { fileName: "" }
+      });
+      throw fileError; // Re-throw to be caught by outer catch
+    }
 
     const redirectUrl = locale === "cy" ? "/account-request-submitted?lng=cy" : "/account-request-submitted";
     return res.redirect(303, redirectUrl);
