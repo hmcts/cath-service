@@ -33,7 +33,7 @@ async function completeAddRegionFlow(page: Page, name: string, welshName: string
   await navigateToAddRegion(page);
   await fillRegionForm(page, name, welshName);
   await page.getByRole('button', { name: /save/i }).click();
-  await page.waitForURL(/\/add-region-success/, { timeout: 10000 });
+  await page.waitForURL(/\/add-region-success/, { timeout: 15000 });
 }
 
 test.describe('Add Region End-to-End Flow', () => {
@@ -45,15 +45,16 @@ test.describe('Add Region End-to-End Flow', () => {
 
       // Step 2: Fill out the form with unique region name
       const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 100000);
-      const regionName = `Test Region ${timestamp}-${random}`;
-      const welshRegionName = `Rhanbarth Prawf ${timestamp}-${random}`;
+      const random = Math.floor(Math.random() * 1000000);
+      const workerId = process.env.TEST_WORKER_INDEX || '0';
+      const regionName = `Test Region ${timestamp}-${random}-${workerId}`;
+      const welshRegionName = `Rhanbarth Prawf ${timestamp}-${random}-${workerId}`;
 
       await fillRegionForm(page, regionName, welshRegionName);
 
       // Step 3: Submit form and verify navigation to success
       await page.getByRole('button', { name: /save/i }).click();
-      await page.waitForURL('/add-region-success', { timeout: 10000 });
+      await page.waitForURL('/add-region-success', { timeout: 15000 });
 
       // Step 4: Verify success page content
       const successPanel = page.locator('.govuk-panel');
@@ -363,14 +364,15 @@ test.describe('Add Region End-to-End Flow', () => {
       await page.goto('/add-region?lng=cy');
 
       const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 100000);
-      await fillRegionForm(page, `Welsh Flow Region ${timestamp}-${random}`, `Llif Cymraeg ${timestamp}-${random}`);
+      const random = Math.floor(Math.random() * 1000000);
+      const workerId = process.env.TEST_WORKER_INDEX || '0';
+      await fillRegionForm(page, `Welsh Flow Region ${timestamp}-${random}-${workerId}`, `Llif Cymraeg ${timestamp}-${random}-${workerId}`);
 
       const saveButton = page.getByRole('button', { name: /cadw/i });
       await saveButton.click();
 
       // Wait for success page (may or may not have lng=cy in URL)
-      await page.waitForURL(/\/add-region-success/, { timeout: 10000 });
+      await page.waitForURL(/\/add-region-success/, { timeout: 15000 });
 
       const successPanel = page.locator('.govuk-panel');
       await expect(successPanel).toBeVisible();
@@ -405,8 +407,9 @@ test.describe('Add Region End-to-End Flow', () => {
   test.describe('Add Region Success Page', () => {
     test('should display success page with all navigation links', async ({ page }) => {
       const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 100000);
-      await completeAddRegionFlow(page, `Success Test ${timestamp}`, `Prawf Llwyddiant ${timestamp}`);
+      const random = Math.floor(Math.random() * 1000000);
+      const workerId = process.env.TEST_WORKER_INDEX || '0';
+      await completeAddRegionFlow(page, `Success Test ${timestamp}-${random}-${workerId}`, `Prawf Llwyddiant ${timestamp}-${random}-${workerId}`);
 
       await expect(page).toHaveURL('/add-region-success');
 
@@ -466,8 +469,9 @@ test.describe('Add Region End-to-End Flow', () => {
 
     test('should meet WCAG 2.2 AA standards on success page', async ({ page }) => {
       const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 100000);
-      await completeAddRegionFlow(page, `Accessibility Test ${timestamp}-${random}`, `Prawf Hygyrchedd ${timestamp}-${random}`);
+      const random = Math.floor(Math.random() * 1000000);
+      const workerId = process.env.TEST_WORKER_INDEX || '0';
+      await completeAddRegionFlow(page, `Accessibility Test ${timestamp}-${random}-${workerId}`, `Prawf Hygyrchedd ${timestamp}-${random}-${workerId}`);
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
@@ -510,8 +514,9 @@ test.describe('Add Region End-to-End Flow', () => {
       await page.setViewportSize({ width: 375, height: 667 });
 
       const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 100000);
-      await completeAddRegionFlow(page, `Mobile Test ${timestamp}-${random}`, `Prawf Symudol ${timestamp}-${random}`);
+      const random = Math.floor(Math.random() * 1000000);
+      const workerId = process.env.TEST_WORKER_INDEX || '0';
+      await completeAddRegionFlow(page, `Mobile Test ${timestamp}-${random}-${workerId}`, `Prawf Symudol ${timestamp}-${random}-${workerId}`);
 
       const successPanel = page.locator('.govuk-panel');
       await expect(successPanel).toBeVisible();
