@@ -984,6 +984,7 @@ __metadata:
     config: "npm:4.1.1"
     connect-redis: "npm:9.0.0"
     cookie-parser: "npm:1.4.7"
+    csrf-sync: "npm:^4.2.1"
     dotenv: "npm:17.2.3"
     express: "npm:5.1.0"
     express-session: "npm:1.18.2"
