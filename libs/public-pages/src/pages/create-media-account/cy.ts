@@ -4,7 +4,7 @@ export const cy = {
   openingParagraph1:
     "Mae cyfrifon gwrandawiadau Llys a Thribiwnlys yn cael eu creu ar gyfer defnyddwyr proffesiynol sydd angen gallu gweld gwybodaeth GLlTEF fel rhestrau gwrandawiadau, ond nid oes ganddynt y gallu i greu cyfrif gan ddefnyddio MyHMCTS neu'r Platfform Cyffredin e.e. aelodau o'r cyfryngau",
   openingParagraph2:
-    "Unwaith y bydd deiliad cyfrif wedi mewngofnodi, byddant yn gallu dewis pa wybodaeth maent am ei dderbyn trwy e-bost a hefyd gweld gwybodaeth ar-lein nad yw ar gael i'r cyhoedd, ynghyd â gwybodaeth sydd ar gael i'r cyhoedd.",
+    "Bydd deiliad cyfrif, unwaith y bydd wedi mewngofnodi, yn gallu dewis pa wybodaeth y mae eisiau ei chael drwy e-bost a hefyd gweld gwybodaeth ar-lein nad yw ar gael i'r cyhoedd, ynghyd â gwybodaeth sydd ar gael i'r cyhoedd.",
   openingParagraph3: "Byddwn yn cadw'r wybodaeth bersonol a roir gennych yma i reoli eich cyfrif defnyddiwr a'n gwasanaethau",
   fullNameLabel: "Enw llawn",
   emailLabel: "Cyfeiriad e-bost",
