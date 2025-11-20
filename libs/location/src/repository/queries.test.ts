@@ -192,10 +192,10 @@ describe("getAllLocations", () => {
   });
 
   it("should not mutate original data", async () => {
-    const results1 = await getAllLocations("en");
-    const results2 = await getAllLocations("en");
+    const mockSnapshot = structuredClone(mockLocations);
+    await getAllLocations("en");
 
-    expect(results1).toEqual(results2);
+    expect(mockLocations).toEqual(mockSnapshot);
   });
 });
 
@@ -323,8 +323,9 @@ describe("getSubJurisdictionsByJurisdiction", () => {
   });
 
   it("should not mutate original data", async () => {
-    const result1 = await getSubJurisdictionsByJurisdiction(1);
-    const result2 = await getSubJurisdictionsByJurisdiction(1);
-    expect(result1).toEqual(result2);
+    const mockSnapshot = structuredClone(mockSubJurisdictions);
+    await getSubJurisdictionsByJurisdiction(1);
+
+    expect(mockSubJurisdictions).toEqual(mockSnapshot);
   });
 });

@@ -70,10 +70,11 @@ export async function checkSubJurisdictionExistsInJurisdiction(
 export async function createSubJurisdiction(jurisdictionId: number, name: string, welshName: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     // Lock the table to prevent race conditions
+    await tx.$executeRaw`LOCK TABLE sub_jurisdiction IN EXCLUSIVE MODE`;
+
     const maxIdResult = await tx.$queryRaw<Array<{ max: number | null }>>`
       SELECT COALESCE(MAX(sub_jurisdiction_id), 0) as max
       FROM sub_jurisdiction
-      FOR UPDATE
     `;
     const maxId = maxIdResult[0]?.max ?? 0;
     const newId = maxId + 1;

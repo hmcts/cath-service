@@ -7,9 +7,10 @@ import {
   getMaxSubJurisdictionId
 } from "./sub-jurisdiction-repository.js";
 
-const { mockCreate, mockQueryRaw } = vi.hoisted(() => ({
+const { mockCreate, mockQueryRaw, mockExecuteRaw } = vi.hoisted(() => ({
   mockCreate: vi.fn(),
-  mockQueryRaw: vi.fn()
+  mockQueryRaw: vi.fn(),
+  mockExecuteRaw: vi.fn()
 }));
 
 vi.mock("@hmcts/postgres", () => ({
@@ -26,7 +27,8 @@ vi.mock("@hmcts/postgres", () => ({
         subJurisdiction: {
           create: mockCreate
         },
-        $queryRaw: mockQueryRaw
+        $queryRaw: mockQueryRaw,
+        $executeRaw: mockExecuteRaw
       };
       return await callback(tx);
     })

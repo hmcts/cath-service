@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import type { ValidationError } from "../reference-data-upload/model.js";
+import type { ValidationError } from "../../reference-data-upload/model.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -51,11 +51,15 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.uploadErrors = errors;
     try {
       await saveSession(req.session);
+      return res.redirect("/reference-data-upload");
     } catch (error) {
       console.error("Error saving session:", error);
-      req.session.uploadErrors = [{ text: t.errorMessages.sessionError, href: "#" }];
+      return res.status(500).render("reference-data-upload/index", {
+        ...t,
+        errors: [{ text: t.errorMessages.sessionError, href: "#" }],
+        locale
+      });
     }
-    return res.redirect("/reference-data-upload");
   }
 
   // Store file in session

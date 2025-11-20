@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as downloadService from "../reference-data-upload/services/download-service.js";
+import * as downloadService from "../../reference-data-upload/services/download-service.js";
 
-vi.mock("../reference-data-upload/services/download-service.js", () => ({
+vi.mock("../../reference-data-upload/services/download-service.js", () => ({
   generateReferenceDataCsv: vi.fn()
 }));
 

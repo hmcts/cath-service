@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { RequestHandler, Response } from "express";
-import { generateReferenceDataCsv } from "../reference-data-upload/services/download-service.js";
+import { generateReferenceDataCsv } from "../../reference-data-upload/services/download-service.js";
 
 const getHandler = async (_req: any, res: Response) => {
   const csvContent = await generateReferenceDataCsv();

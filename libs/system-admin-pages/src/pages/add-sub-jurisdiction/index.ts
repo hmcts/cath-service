@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { createSubJurisdiction, getAllJurisdictions } from "../reference-data-upload/repository/sub-jurisdiction-repository.js";
-import { validateSubJurisdictionData } from "../reference-data-upload/validation/sub-jurisdiction-validation.js";
+import { createSubJurisdiction, getAllJurisdictions, type JurisdictionOption } from "../../reference-data-upload/repository/sub-jurisdiction-repository.js";
+import { validateSubJurisdictionData } from "../../reference-data-upload/validation/sub-jurisdiction-validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -14,7 +14,7 @@ export const GET = async (req: Request, res: Response) => {
   // Build dropdown items
   const jurisdictionItems = [
     { value: "", text: "Select a jurisdiction" },
-    ...jurisdictions.map((j) => ({
+    ...jurisdictions.map((j: JurisdictionOption) => ({
       value: j.jurisdictionId.toString(),
       text: j.displayName
     }))
@@ -52,7 +52,7 @@ export const POST = async (req: Request, res: Response) => {
     // Build dropdown items
     const jurisdictionItems = [
       { value: "", text: "Select a jurisdiction" },
-      ...jurisdictions.map((j) => ({
+      ...jurisdictions.map((j: JurisdictionOption) => ({
         value: j.jurisdictionId.toString(),
         text: j.displayName
       }))

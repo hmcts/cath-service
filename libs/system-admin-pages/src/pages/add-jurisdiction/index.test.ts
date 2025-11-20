@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as repository from "../reference-data-upload/repository/jurisdiction-repository.js";
-import * as validation from "../reference-data-upload/validation/jurisdiction-validation.js";
+import * as repository from "../../reference-data-upload/repository/jurisdiction-repository.js";
+import * as validation from "../../reference-data-upload/validation/jurisdiction-validation.js";
 
 // Mock the modules
-vi.mock("../reference-data-upload/repository/jurisdiction-repository.js", () => ({
+vi.mock("../../reference-data-upload/repository/jurisdiction-repository.js", () => ({
   createJurisdiction: vi.fn()
 }));
 
-vi.mock("../reference-data-upload/validation/jurisdiction-validation.js", () => ({
+vi.mock("../../reference-data-upload/validation/jurisdiction-validation.js", () => ({
   validateJurisdictionData: vi.fn()
 }));
 

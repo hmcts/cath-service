@@ -52,15 +52,7 @@ export async function createApp(): Promise<Express> {
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
 
-  const modulePaths = [
-    __dirname,
-    webCoreModuleRoot,
-    adminModuleRoot,
-    authModuleRoot,
-    systemAdminModuleRoot,
-    publicPagesModuleRoot,
-    verifiedPagesModuleRoot
-  ];
+  const modulePaths = [__dirname, webCoreModuleRoot, adminModuleRoot, authModuleRoot, systemAdminModuleRoot, publicPagesModuleRoot, verifiedPagesModuleRoot];
 
   await configureGovuk(app, modulePaths, {
     nunjucksGlobals: {
@@ -95,12 +87,24 @@ export async function createApp(): Promise<Express> {
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
-  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
-  // Register admin pages with multer middleware for file upload
+  // Register file upload middleware for admin pages
   const upload = createFileUpload();
+
+  // Register reference data upload with file upload middleware
+  app.post("/reference-data-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        (req as any).fileUploadError = err;
+      }
+      next();
+    });
+  });
+  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
+
+  // Register manual upload with file upload middleware
   app.post("/manual-upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
       if (err) {
