@@ -1,4 +1,5 @@
 import { prisma } from "@hmcts/postgres";
+import type { PrismaClient } from "@prisma/client";
 
 export interface JurisdictionOption {
   jurisdictionId: number;
@@ -68,7 +69,7 @@ export async function checkSubJurisdictionExistsInJurisdiction(
 }
 
 export async function createSubJurisdiction(jurisdictionId: number, name: string, welshName: string): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">) => {
     // Lock the table to prevent race conditions
     await tx.$executeRaw`LOCK TABLE sub_jurisdiction IN EXCLUSIVE MODE`;
 

@@ -1,8 +1,9 @@
 import { prisma } from "@hmcts/postgres";
+import type { PrismaClient } from "@prisma/client";
 import type { ParsedLocationData } from "../model.js";
 
 export async function upsertLocations(data: ParsedLocationData[]): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">) => {
     for (const row of data) {
       // Get sub-jurisdiction IDs from names
       const subJurisdictions = await tx.subJurisdiction.findMany({
