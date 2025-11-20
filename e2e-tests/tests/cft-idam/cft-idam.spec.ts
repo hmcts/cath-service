@@ -147,18 +147,12 @@ test.describe('CFT IDAM Login Flow', () => {
     await expect(page).toHaveURL(/\/account-home/);
   });
 
-  test('CFT login endpoint is accessible when configured', async ({ page }) => {
+  test('CFT login endpoint redirects to IDAM when configured', async ({ page }) => {
     await page.goto('/cft-login');
+    await page.waitForLoadState('networkidle');
 
-    // Should redirect to CFT IDAM or show config error
-    await page.waitForTimeout(2000);
-    const currentUrl = page.url();
-
-    // Should either be on IDAM page or show 503 error
-    const isOnIdamPage = currentUrl.includes('idam-web-public.aat.platform.hmcts.net');
-    const isOnErrorPage = currentUrl.includes('cft-login');
-
-    expect(isOnIdamPage || isOnErrorPage).toBe(true);
+    // Should redirect to CFT IDAM
+    await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net/);
   });
 });
 
