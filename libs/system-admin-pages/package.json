@@ -31,7 +31,7 @@
     "@hmcts/auth": "workspace:*"
   },
   "devDependencies": {
-    "@types/express": "5.0.1",
+    "@types/express": "5.0.5",
     "@types/express-session": "1.18.2"
   }
 }
