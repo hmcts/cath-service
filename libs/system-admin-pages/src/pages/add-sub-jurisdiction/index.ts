@@ -1,10 +1,11 @@
-import type { Request, Response } from "express";
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import type { Request, RequestHandler, Response } from "express";
 import { createSubJurisdiction, getAllJurisdictions, type JurisdictionOption } from "../../reference-data-upload/repository/sub-jurisdiction-repository.js";
 import { validateSubJurisdictionData } from "../../reference-data-upload/validation/sub-jurisdiction-validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-export const GET = async (req: Request, res: Response) => {
+export const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
 
@@ -32,7 +33,7 @@ export const GET = async (req: Request, res: Response) => {
   });
 };
 
-export const POST = async (req: Request, res: Response) => {
+export const postHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
 
@@ -76,3 +77,6 @@ export const POST = async (req: Request, res: Response) => {
   // Redirect to success page
   res.redirect(`/add-sub-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
 };
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];

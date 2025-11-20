@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper function to authenticate as System Admin
-async function _authenticateSystemAdmin(page: Page) {
+async function authenticateSystemAdmin(page: Page) {
   await page.goto("/system-admin-dashboard");
 
   if (page.url().includes("login.microsoftonline.com")) {
@@ -38,6 +38,10 @@ async function completeAddSubJurisdictionFlow(page: Page, jurisdictionId: string
 }
 
 test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
+  test.beforeEach(async ({ page }) => {
+    await authenticateSystemAdmin(page);
+  });
+
   test.describe("Complete End-to-End Journey", () => {
     test("should complete full sub-jurisdiction creation flow from form to success", async ({ page }) => {
       // Step 1: Load add sub-jurisdiction form

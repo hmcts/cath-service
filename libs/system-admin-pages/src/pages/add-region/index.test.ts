@@ -13,7 +13,7 @@ vi.mock("../../reference-data-upload/validation/region-validation.js", () => ({
 }));
 
 // Import after mocking
-const { GET, POST } = await import("./index.js");
+const { getHandler: GET, postHandler: POST } = await import("./index.js");
 
 describe("add-region page", () => {
   let mockRequest: Partial<Request>;

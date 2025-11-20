@@ -14,7 +14,7 @@ vi.mock("../../reference-data-upload/validation/sub-jurisdiction-validation.js",
 }));
 
 // Import after mocking
-const { GET, POST } = await import("./index.js");
+const { getHandler: GET, postHandler: POST } = await import("./index.js");
 
 describe("add-sub-jurisdiction page", () => {
   let mockRequest: Partial<Request>;
