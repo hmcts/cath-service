@@ -106,8 +106,8 @@ const postHandler = async (req: Request, res: Response) => {
   const formData = transformDateFields(req.body);
 
   // Check for multer errors (e.g., file too large)
-  const fileUploadError = req.fileUploadError;
-  let errors = validateForm(formData, req.file, t);
+  const fileUploadError = (req as any).fileUploadError;
+  let errors = await validateForm(formData, req.file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error
   if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {

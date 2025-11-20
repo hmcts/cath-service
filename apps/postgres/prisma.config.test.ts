@@ -4,12 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock dotenv to avoid file system side effects
 vi.mock("dotenv/config", () => ({}));
 
-// Mock Prisma Client to avoid database connection attempts
-vi.mock("@prisma/client", () => ({
-  PrismaClient: vi.fn(() => ({
-    $connect: vi.fn().mockResolvedValue(undefined),
-    $disconnect: vi.fn().mockResolvedValue(undefined)
-  }))
+// Mock prisma/config
+vi.mock("prisma/config", () => ({
+  defineConfig: (config: unknown) => config
 }));
 
 // Mock fs to avoid actual file reads during config import
@@ -37,6 +34,7 @@ describe.skip("Prisma Config", () => {
 
   it("should have schema path configuration", async () => {
     const configModule = await import("./prisma.config.js");
+    expect(configModule.default).toBeDefined();
     const config = configModule.default;
     expect(config).toHaveProperty("schema");
     expect(typeof config.schema).toBe("string");
@@ -71,5 +69,21 @@ describe.skip("Prisma Config", () => {
     const expectedMigrationsPath = path.join("prisma", "migrations");
     expect(config.schema).toBe(expectedSchemaPath);
     expect(config.migrations.path).toBe(expectedMigrationsPath);
+  });
+
+  it("should have seed command configuration", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config).toHaveProperty("seed");
+    expect(config.seed).toHaveProperty("command");
+    expect(typeof config.seed.command).toBe("string");
+  });
+
+  it("should point seed to prisma/seed.ts file", async () => {
+    const configModule = await import("./prisma.config.js");
+    const config = configModule.default;
+    expect(config.seed.command).toContain("prisma/seed.ts");
+    expect(config.seed.command).toContain("tsx");
+    expect(config.seed.command).toContain("node_modules");
   });
 });

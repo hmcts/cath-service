@@ -18,6 +18,9 @@ model Artefact {
   displayFrom       DateTime @map("display_from")
   displayTo         DateTime @map("display_to")
   lastReceivedDate  DateTime @default(now()) @map("last_received_date")
+  isFlatFile        Boolean  @map("is_flat_file")
+  provenance        String
+  supersededCount   Int      @default(0) @map("superseded_count")
 
   @@map("artefact")
 }
