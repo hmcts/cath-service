@@ -397,7 +397,7 @@ test.describe("Create Media Account", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const errorSummaryHeading = errorSummary.getByRole("heading", { name: /mae problem wedi codi/i });
+      const errorSummaryHeading = errorSummary.getByRole("heading", { name: /mae yna broblem/i });
       await expect(errorSummaryHeading).toBeVisible();
 
       // Verify language toggle still shows English option (we're in Welsh mode)
