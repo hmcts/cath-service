@@ -198,5 +198,173 @@ describe("Web Application", () => {
 
       expect(app).toBeDefined();
     });
+
+    it("should handle known multer error codes without logging", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      // Mock createFileUpload with known error codes
+      const mockError = { code: "LIMIT_FILE_SIZE", message: "File too large", field: "file" };
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn(() => (req: any, _res: any, callback: any) => {
+            req.fileUploadError = mockError;
+            callback(mockError);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      // Known error codes should NOT trigger unexpected error logging
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith(expect.stringContaining("Unexpected file upload error"), expect.anything());
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should log unexpected multer error codes", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      // Mock createFileUpload with unknown error code
+      const mockError = { code: "UNKNOWN_ERROR", message: "Unknown error", field: "file", stack: "error stack" };
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn(() => (req: any, _res: any, callback: any) => {
+            req.fileUploadError = mockError;
+            callback(mockError);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      // Unknown error codes should trigger unexpected error logging
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Unexpected file upload error"),
+        expect.objectContaining({
+          code: "UNKNOWN_ERROR",
+          message: "Unknown error"
+        })
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe("Redis Connection", () => {
+    it("should handle Redis connection errors", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockRedisClient = {
+        on: vi.fn((event: string, handler: Function) => {
+          if (event === "error") {
+            // Simulate error event
+            handler(new Error("Redis connection failed"));
+          }
+        }),
+        connect: vi.fn().mockResolvedValue(undefined)
+      };
+
+      vi.doMock("redis", () => ({
+        createClient: vi.fn(() => mockRedisClient)
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      // Verify error handler was registered
+      expect(mockRedisClient.on).toHaveBeenCalledWith("error", expect.any(Function));
+
+      // Verify error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Redis Client Error", expect.any(Error));
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe("File Publication Data Rewrite", () => {
+    it("should rewrite file-publication-data URL with filename", async () => {
+      const mockReq = {
+        url: "/file-publication-data/test-file.pdf?artefactId=123"
+      };
+      const mockRes = {};
+      const mockNext = vi.fn();
+
+      // Get the middleware by simulating app.get() call
+      let filePublicationMiddleware: any;
+      const mockApp = {
+        ...app,
+        get: vi.fn((path: string, handler: any) => {
+          if (path === "/file-publication-data/:filename") {
+            filePublicationMiddleware = handler;
+          }
+        })
+      };
+
+      // Re-import to capture the middleware
+      vi.resetModules();
+      vi.clearAllMocks();
+      const { createApp } = await import("./app.js");
+      const newApp = await createApp();
+
+      // Find the file-publication-data middleware
+      // Access through app stack (Express internal)
+      const stack = (newApp as any)._router?.stack || [];
+      const fileRoute = stack.find((layer: any) => layer.route?.path === "/file-publication-data/:filename");
+
+      if (fileRoute) {
+        const middleware = fileRoute.route.stack[0].handle;
+        middleware(mockReq, mockRes, mockNext);
+
+        // URL should be rewritten to remove filename
+        expect(mockReq.url).toBe("/file-publication-data?artefactId=123");
+        expect(mockNext).toHaveBeenCalled();
+      }
+    });
+
+    it("should rewrite file-publication-data URL without query parameters", async () => {
+      const mockReq = {
+        url: "/file-publication-data/test-file.pdf"
+      };
+      const mockRes = {};
+      const mockNext = vi.fn();
+
+      const stack = (app as any)._router?.stack || [];
+      const fileRoute = stack.find((layer: any) => layer.route?.path === "/file-publication-data/:filename");
+
+      if (fileRoute) {
+        const middleware = fileRoute.route.stack[0].handle;
+        middleware(mockReq, mockRes, mockNext);
+
+        // URL should be rewritten to remove filename
+        expect(mockReq.url).toBe("/file-publication-data");
+        expect(mockNext).toHaveBeenCalled();
+      }
+    });
   });
 });
