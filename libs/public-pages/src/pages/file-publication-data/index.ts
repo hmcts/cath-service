@@ -48,10 +48,10 @@ export const GET = async (req: Request, res: Response) => {
   // URL-encode for filename* parameter for better browser compatibility
   const encodedFileName = encodeURIComponent(displayFileName);
 
-  if (fileName.endsWith(".pdf")) {
+  if (fileExtension.toLowerCase() === ".pdf") {
     res.set("Content-Type", "application/pdf");
     res.set("Content-Disposition", `inline; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
-  } else if (fileName.endsWith(".json")) {
+  } else if (fileExtension.toLowerCase() === ".json") {
     res.set("Content-Type", "application/json");
     res.set("Content-Disposition", `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
   } else {
