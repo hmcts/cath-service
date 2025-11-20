@@ -3,6 +3,7 @@ import { exchangeCodeForToken, extractUserInfoFromToken } from "../../cft-idam/t
 import { getCftIdamConfig } from "../../config/cft-idam-config.js";
 import { isRejectedCFTRole } from "../../role-service/index.js";
 import type { UserProfile } from "../../user-profile.js";
+import { createOrUpdateUser } from "../../user-repository/index.js";
 
 export const GET = async (req: Request, res: Response) => {
   const code = req.query.code as string;
@@ -39,6 +40,25 @@ export const GET = async (req: Request, res: Response) => {
       role: user.role,
       provenance: user.provenance
     });
+
+    // Create or update user record in database
+    try {
+      const nameParts = userInfo.displayName.split(" ");
+      const firstName = nameParts[0] || undefined;
+      const surname = nameParts.slice(1).join(" ") || undefined;
+
+      await createOrUpdateUser({
+        email: userInfo.email,
+        firstName,
+        surname,
+        userProvenance: "CFT_IDAM",
+        userProvenanceId: userInfo.id,
+        role: "VERIFIED"
+      });
+    } catch (error) {
+      console.error("Error creating/updating CFT user:", error);
+      // Continue with authentication even if database write fails
+    }
 
     req.session.regenerate((err: Error | null) => {
       if (err) {
