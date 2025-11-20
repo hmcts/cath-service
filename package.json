@@ -64,7 +64,6 @@
     "@microsoft/microsoft-graph-client": "3.0.7",
     "@types/passport": "1.0.17",
     "accessible-autocomplete": "^3.0.1",
-    "csrf-sync": "^4.2.1",
     "passport": "0.7.0",
     "passport-azure-ad": "4.3.5"
   }

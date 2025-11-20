@@ -3335,7 +3335,6 @@ __metadata:
     "@vitest/ui": "npm:3.2.4"
     accessible-autocomplete: "npm:^3.0.1"
     concurrently: "npm:9.2.1"
-    csrf-sync: "npm:^4.2.1"
     happy-dom: "npm:^20.0.5"
     passport: "npm:0.7.0"
     passport-azure-ad: "npm:4.3.5"
@@ -3646,6 +3645,15 @@ __metadata:
     object-assign: "npm:^4"
     vary: "npm:^1"
   checksum: 10c0/373702b7999409922da80de4a61938aabba6929aea5b6fd9096fefb9e8342f626c0ebd7507b0e8b0b311380744cc985f27edebc0a26e0ddb784b54e1085de761
+  languageName: node
+  linkType: hard
+
+"csrf-sync@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "csrf-sync@npm:4.2.1"
+  dependencies:
+    http-errors: "npm:^2.0.0"
+  checksum: 10c0/4d3280e12af95ed71f6dcdd28d768add96899f768aa23a8afdb7d548dec66b0bbfc16445dfdf462a586fb4c9bd4fc0e0cdce69287283fe2fea7e5dbc5ac2bcbc
   languageName: node
   linkType: hard
 
