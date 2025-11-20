@@ -17,12 +17,12 @@ test.describe('CFT IDAM Login Flow', () => {
     await hmctsRadio.check();
     await expect(hmctsRadio).toBeChecked();
 
-    // Click continue
+    // Click continue and wait for navigation
     const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
-
-    // Should redirect to CFT IDAM
-    await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
+    await Promise.all([
+      page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/, { timeout: 10000 }),
+      continueButton.click()
+    ]);
 
     // Perform CFT IDAM login
     await loginWithCftIdam(
@@ -46,7 +46,12 @@ test.describe('CFT IDAM Login Flow', () => {
     const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
     await hmctsRadio.check();
     const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
+
+    // Wait for navigation after clicking continue
+    await Promise.all([
+      page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/, { timeout: 10000 }),
+      continueButton.click()
+    ]);
 
     await loginWithCftIdam(
       page,
@@ -76,7 +81,12 @@ test.describe('CFT IDAM Login Flow', () => {
     const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
     await hmctsRadio.check();
     const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
+
+    // Wait for navigation after clicking continue
+    await Promise.all([
+      page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/, { timeout: 10000 }),
+      continueButton.click()
+    ]);
 
     // Login with account that has rejected role
     await loginWithCftIdam(
@@ -105,7 +115,12 @@ test.describe('CFT IDAM Login Flow', () => {
     const hmctsRadio = page.getByRole('radio', { name: /gyda chyfrif myhmcts/i });
     await hmctsRadio.check();
     const continueButton = page.getByRole('button', { name: /parhau/i });
-    await continueButton.click();
+
+    // Wait for navigation after clicking continue
+    await Promise.all([
+      page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/, { timeout: 10000 }),
+      continueButton.click()
+    ]);
 
     // Check that language parameter is included in CFT IDAM redirect
     const currentUrl = page.url();
@@ -156,7 +171,12 @@ test.describe('CFT IDAM Login Flow', () => {
     const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
     await hmctsRadio.check();
     const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
+
+    // Wait for navigation after clicking continue
+    await Promise.all([
+      page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/, { timeout: 10000 }),
+      continueButton.click()
+    ]);
 
     await loginWithCftIdam(
       page,
@@ -191,7 +211,12 @@ test.describe('CFT IDAM Login Flow', () => {
     const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
     await hmctsRadio.check();
     const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
+
+    // Wait for navigation after clicking continue
+    await Promise.all([
+      page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/, { timeout: 10000 }),
+      continueButton.click()
+    ]);
 
     await loginWithCftIdam(
       page,
