@@ -195,9 +195,9 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(continueButton).toBeVisible();
 
       // Verify create account link in Welsh
-      const createAccountText = page.getByText(/nid oes gennych gyfrif cath/i);
+      const createAccountText = page.getByText(/nid oes gennych gyfrif\?/i);
       await expect(createAccountText).toBeVisible();
-      const createAccountLink = page.getByRole("link", { name: /crëwch un yma/i });
+      const createAccountLink = page.getByRole("link", { name: /creu cyfrif gwrandawiadau llys a thribiwnlys/i });
       await expect(createAccountLink).toBeVisible();
 
       // Run accessibility checks in Welsh
