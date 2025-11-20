@@ -30,9 +30,9 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(continueButton).toBeVisible();
 
       // Check for create account link
-      const createAccountText = page.getByText(/don't have a cath account/i);
+      const createAccountText = page.getByText(/don't have an account/i);
       await expect(createAccountText).toBeVisible();
-      const createAccountLink = page.getByRole("link", { name: /create one here/i });
+      const createAccountLink = page.getByRole("link", { name: /create a court and tribunal hearings account/i });
       await expect(createAccountLink).toBeVisible();
       await expect(createAccountLink).toHaveAttribute("href", "/create-media-account");
     });
@@ -264,7 +264,7 @@ test.describe("Sign In Account Selection Page", () => {
       await page.goto("/sign-in");
 
       // Find and click the create account link
-      const createAccountLink = page.getByRole("link", { name: /create one here/i });
+      const createAccountLink = page.getByRole("link", { name: /create a court and tribunal hearings account/i });
       await expect(createAccountLink).toBeVisible();
       await createAccountLink.click();
 
