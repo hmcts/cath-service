@@ -3,17 +3,16 @@ import AxeBuilder from "@axe-core/playwright";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("Admin Dashboard", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/admin-dashboard");
-    await loginWithSSO(
-      page,
-      process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-      process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-    );
-    await page.waitForURL("/admin-dashboard");
-  });
-
   test.describe("Content Display", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
+    });
     test("should load the admin dashboard at /admin-dashboard", async ({ page }) => {
       await expect(page).toHaveTitle(/Court and tribunal hearings/i);
     });
@@ -65,6 +64,16 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Accessibility", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
+    });
+
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
@@ -89,6 +98,16 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Keyboard Navigation", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
+    });
+
     test("should allow keyboard navigation through all tiles", async ({ page }) => {
       const tileLinks = page.locator("a.admin-tile");
       const count = await tileLinks.count();
@@ -136,6 +155,12 @@ test.describe("Admin Dashboard", () => {
     test("should display correctly on mobile viewport (375x667)", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
 
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
@@ -147,6 +172,12 @@ test.describe("Admin Dashboard", () => {
     test("should display correctly on tablet viewport (768x1024)", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
 
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
@@ -158,6 +189,12 @@ test.describe("Admin Dashboard", () => {
     test("should display correctly on desktop viewport (1920x1080)", async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
 
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
@@ -168,6 +205,16 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Tile Interaction", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
+    });
+
     test("should navigate to manual upload when clicking Upload tile", async ({ page }) => {
       await page.click('a[href="/manual-upload"]');
       await page.waitForURL("**/manual-upload");
