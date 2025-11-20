@@ -5,6 +5,7 @@ export const en = {
   downloadLinkText: "Download current reference data",
   addJurisdictionLinkText: "Add Jurisdiction",
   addSubJurisdictionLinkText: "Add Sub Jurisdiction",
+  addRegionLinkText: "Add Region",
   fileUploadLabel: "Manually upload a csv file (saved as Comma-separated Values .csv), max size 2MB",
   continueButtonText: "Continue",
   errorSummaryTitle: "There is a problem",
