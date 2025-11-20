@@ -107,6 +107,12 @@ describe("Web Application", () => {
       expect(expressSessionRedis).toHaveBeenCalled();
     });
 
+    it("should configure CSRF protection middleware", async () => {
+      const { configureCsrf } = await import("@hmcts/web-core");
+      expect(configureCsrf).toHaveBeenCalled();
+      expect(configureCsrf).toHaveBeenCalledTimes(1);
+    });
+
     it("should configure GOV.UK Frontend", async () => {
       const { configureGovuk } = await import("@hmcts/web-core");
       expect(configureGovuk).toHaveBeenCalled();
