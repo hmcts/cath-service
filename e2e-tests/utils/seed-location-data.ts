@@ -216,6 +216,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: new Date("2025-10-20"),
         displayTo: new Date("2025-10-30"),
         isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
       },
       {
         locationId: sjpLocationId,
@@ -226,6 +227,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: new Date("2025-10-21"),
         displayTo: new Date("2025-10-31"),
         isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
       },
       {
         locationId: sjpLocationId,
@@ -236,6 +238,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: new Date("2025-10-22"),
         displayTo: new Date("2025-11-01"),
         isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
       },
     ];
 
