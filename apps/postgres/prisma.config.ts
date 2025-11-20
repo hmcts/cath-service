@@ -7,5 +7,10 @@ export default defineConfig({
   schema: path.join("dist", "schema.prisma"),
   migrations: {
     path: path.join("prisma", "migrations")
+  },
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
   }
 });
