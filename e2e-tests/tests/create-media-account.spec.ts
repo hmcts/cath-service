@@ -182,19 +182,19 @@ test.describe("Create Media Account", () => {
       await expect(errorSummaryHeading).toBeVisible();
 
       // Check for specific error messages
-      const fullNameError = errorSummary.getByRole("link", { name: /enter your full name/i });
+      const fullNameError = errorSummary.getByRole("link", { name: /full name field must be populated/i });
       await expect(fullNameError).toBeVisible();
       await expect(fullNameError).toHaveAttribute("href", "#fullName");
 
-      const emailError = errorSummary.getByRole("link", { name: /enter an email address in the correct format/i });
+      const emailError = errorSummary.getByRole("link", { name: /email address field must be populated/i });
       await expect(emailError).toBeVisible();
       await expect(emailError).toHaveAttribute("href", "#email");
 
-      const employerError = errorSummary.getByRole("link", { name: /enter your employer/i });
+      const employerError = errorSummary.getByRole("link", { name: /your employers name will be needed to support your application for an account/i });
       await expect(employerError).toBeVisible();
       await expect(employerError).toHaveAttribute("href", "#employer");
 
-      const fileError = errorSummary.getByRole("link", { name: /select a file in .jpg, .pdf or .png format/i });
+      const fileError = errorSummary.getByRole("link", { name: /we will need id evidence to support your application for an account/i });
       await expect(fileError).toBeVisible();
       await expect(fileError).toHaveAttribute("href", "#idProof");
 
@@ -266,10 +266,10 @@ test.describe("Create Media Account", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const fileError = errorSummary.getByRole("link", { name: /select a file in .jpg, .pdf or .png format/i });
+      const fileError = errorSummary.getByRole("link", { name: /id evidence must be a jpg, pdf or png/i });
       await expect(fileError).toBeVisible();
 
-      const inlineError = page.locator(".govuk-error-message").filter({ hasText: /select a file in .jpg, .pdf or .png format/i });
+      const inlineError = page.locator(".govuk-error-message").filter({ hasText: /id evidence must be a jpg, pdf or png/i });
       await expect(inlineError).toBeVisible();
     });
 
@@ -301,10 +301,10 @@ test.describe("Create Media Account", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const fileError = errorSummary.getByRole("link", { name: /your file must be smaller than 2mb/i });
+      const fileError = errorSummary.getByRole("link", { name: /id evidence needs to be less than 2mbs/i });
       await expect(fileError).toBeVisible();
 
-      const inlineError = page.locator(".govuk-error-message").filter({ hasText: /your file must be smaller than 2mb/i });
+      const inlineError = page.locator(".govuk-error-message").filter({ hasText: /id evidence needs to be less than 2mbs/i });
       await expect(inlineError).toBeVisible();
     });
   });
@@ -336,7 +336,7 @@ test.describe("Create Media Account", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const emailError = errorSummary.getByRole("link", { name: /enter an email address in the correct format/i });
+      const emailError = errorSummary.getByRole("link", { name: /email address field must be populated/i });
       await expect(emailError).toBeVisible();
     });
   });
