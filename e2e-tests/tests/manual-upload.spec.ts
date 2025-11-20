@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-import { loginWithSSO } from '../utils/sso-helpers.js';
+import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -57,23 +57,23 @@ async function completeManualUploadFlow(page: Page) {
   await page.waitForURL("/manual-upload-success", { timeout: 10000 });
 }
 
-test.describe('Manual Upload End-to-End Flow', () => {
+test.describe("Manual Upload End-to-End Flow", () => {
   test.beforeEach(async ({ page }) => {
     await authenticateSystemAdmin(page);
   });
 
-  test.describe('Complete End-to-End Journey', () => {
-    test('should be keyboard accessible throughout entire upload flow', async ({ page }) => {
+  test.describe("Complete End-to-End Journey", () => {
+    test("should be keyboard accessible throughout entire upload flow", async ({ page }) => {
       // Step 1: Test keyboard accessibility on form page
-      await page.goto('/manual-upload?locationId=9001');
+      await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.click();
       await expect(fileInput).toBeFocused();
 
-      await page.keyboard.press('Tab');
-      const focusedElement = page.locator(':focus');
+      await page.keyboard.press("Tab");
+      const focusedElement = page.locator(":focus");
       await expect(focusedElement).toBeVisible();
 
       // Step 2: Fill form and submit
@@ -137,11 +137,11 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test('should complete full upload flow from form to success', async ({ page }) => {
+    test("should complete full upload flow from form to success", async ({ page }) => {
       // Step 1: Load manual upload form
-      await page.goto('/manual-upload?locationId=9001');
+      await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
-      await expect(page).toHaveTitle('Upload - Manual upload - Court and tribunal hearings - GOV.UK');
+      await expect(page).toHaveTitle("Upload - Manual upload - Court and tribunal hearings - GOV.UK");
 
       // Step 2: Fill out the form
       await page.selectOption('select[name="listType"]', "6");
@@ -195,13 +195,13 @@ test.describe('Manual Upload End-to-End Flow', () => {
     });
   });
 
-  test.describe('Manual Upload Form Page', () => {
-    test('should load the page with all form fields and accessibility compliance', async ({ page }) => {
-      await page.goto('/manual-upload');
+  test.describe("Manual Upload Form Page", () => {
+    test("should load the page with all form fields and accessibility compliance", async ({ page }) => {
+      await page.goto("/manual-upload");
 
-      await expect(page).toHaveTitle('Upload - Manual upload - Court and tribunal hearings - GOV.UK');
+      await expect(page).toHaveTitle("Upload - Manual upload - Court and tribunal hearings - GOV.UK");
 
-      const heading = page.getByRole('heading', { name: /manual upload/i });
+      const heading = page.getByRole("heading", { name: /manual upload/i });
       await expect(heading).toBeVisible();
 
       const warningTitle = page.getByText(/warning/i);
@@ -210,8 +210,8 @@ test.describe('Manual Upload End-to-End Flow', () => {
       const fileUpload = page.locator('input[name="file"]');
       await expect(fileUpload).toBeVisible();
 
-      const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
-      await courtInput.waitFor({ state: 'visible', timeout: 10000 });
+      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: "visible", timeout: 10000 });
       await expect(courtInput).toBeVisible();
 
       const listTypeSelect = page.locator('select[name="listType"]');
@@ -244,24 +244,24 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(displayToMonth).toBeVisible();
       await expect(displayToYear).toBeVisible();
 
-      const continueButton = page.getByRole('button', { name: /continue/i });
+      const continueButton = page.getByRole("button", { name: /continue/i });
       await expect(continueButton).toBeVisible();
 
-      const languageToggle = page.locator('.language');
+      const languageToggle = page.locator(".language");
       await expect(languageToggle).not.toBeVisible();
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .disableRules(['target-size', 'link-name'])
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name"])
         .analyze();
 
       if (accessibilityScanResults.violations.length > 0) {
-        console.log('Accessibility violations found:');
-        accessibilityScanResults.violations.forEach(violation => {
+        console.log("Accessibility violations found:");
+        accessibilityScanResults.violations.forEach((violation) => {
           console.log(`- ${violation.id}: ${violation.description}`);
           console.log(`  Impact: ${violation.impact}`);
           console.log(`  Affected nodes: ${violation.nodes.length}`);
-          violation.nodes.forEach(node => {
+          violation.nodes.forEach((node) => {
             console.log(`    ${node.target}`);
           });
         });
@@ -269,8 +269,8 @@ test.describe('Manual Upload End-to-End Flow', () => {
 
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      const fileInset = page.locator('.govuk-inset-text').nth(0);
-      const listTypeInset = page.locator('.govuk-inset-text').nth(1);
+      const fileInset = page.locator(".govuk-inset-text").nth(0);
+      const listTypeInset = page.locator(".govuk-inset-text").nth(1);
 
       await expect(fileInset).toBeVisible();
       await expect(listTypeInset).toBeVisible();
@@ -297,79 +297,79 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(displayToHelp).toBeVisible();
     });
 
-    test('should display validation errors for all required fields when form is empty', async ({ page }) => {
-      await page.goto('/manual-upload');
+    test("should display validation errors for all required fields when form is empty", async ({ page }) => {
+      await page.goto("/manual-upload");
 
-      const continueButton = page.getByRole('button', { name: /continue/i });
+      const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await expect(page).toHaveURL('/manual-upload');
+      await expect(page).toHaveURL("/manual-upload");
 
-      const errorSummary = page.locator('.govuk-error-summary');
+      const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const errorSummaryHeading = errorSummary.getByRole('heading', { name: /there is a problem/i });
+      const errorSummaryHeading = errorSummary.getByRole("heading", { name: /there is a problem/i });
       await expect(errorSummaryHeading).toBeVisible();
 
-      const errorLinks = errorSummary.locator('.govuk-error-summary__list a');
+      const errorLinks = errorSummary.locator(".govuk-error-summary__list a");
       const errorCount = await errorLinks.count();
       expect(errorCount).toBeGreaterThan(0);
 
-      const fileErrorMessage = page.locator('#file').locator('..').locator('.govuk-error-message');
+      const fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
       await expect(fileErrorMessage).toBeVisible();
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .disableRules(['target-size', 'link-name'])
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name"])
         .analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test('should display file validation errors for invalid type and large size', async ({ page }) => {
-      await page.goto('/manual-upload?locationId=9001');
+    test("should display file validation errors for invalid type and large size", async ({ page }) => {
+      await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
-      await page.selectOption('select[name="listType"]', '1');
-      await page.fill('input[name="hearingStartDate-day"]', '15');
-      await page.fill('input[name="hearingStartDate-month"]', '06');
-      await page.fill('input[name="hearingStartDate-year"]', '2025');
-      await page.selectOption('select[name="sensitivity"]', 'PUBLIC');
-      await page.selectOption('select[name="language"]', 'ENGLISH');
-      await page.fill('input[name="displayFrom-day"]', '10');
-      await page.fill('input[name="displayFrom-month"]', '06');
-      await page.fill('input[name="displayFrom-year"]', '2025');
-      await page.fill('input[name="displayTo-day"]', '20');
-      await page.fill('input[name="displayTo-month"]', '06');
-      await page.fill('input[name="displayTo-year"]', '2025');
+      await page.selectOption('select[name="listType"]', "1");
+      await page.fill('input[name="hearingStartDate-day"]', "15");
+      await page.fill('input[name="hearingStartDate-month"]', "06");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "10");
+      await page.fill('input[name="displayFrom-month"]', "06");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "20");
+      await page.fill('input[name="displayTo-month"]', "06");
+      await page.fill('input[name="displayTo-year"]', "2025");
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: 'test.txt',
-        mimeType: 'text/plain',
-        buffer: Buffer.from('test content')
+        name: "test.txt",
+        mimeType: "text/plain",
+        buffer: Buffer.from("test content")
       });
 
-      const continueButton = page.getByRole('button', { name: /continue/i });
+      const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
       await expect(page).toHaveURL(/\/manual-upload/);
 
-      let errorSummary = page.locator('.govuk-error-summary');
+      let errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      let errorLink = errorSummary.getByRole('link', { name: /please upload a valid file format/i });
+      let errorLink = errorSummary.getByRole("link", { name: /please upload a valid file format/i });
       await expect(errorLink).toBeVisible();
-      await expect(errorLink).toHaveAttribute('href', '#file');
+      await expect(errorLink).toHaveAttribute("href", "#file");
 
-      let inlineErrorMessage = page.locator('#file').locator('..').locator('.govuk-error-message');
+      let inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
       await expect(inlineErrorMessage).toBeVisible();
       await expect(inlineErrorMessage).toContainText(/please upload a valid file format/i);
 
       const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
       await fileInput.setInputFiles({
-        name: 'large-file.pdf',
-        mimeType: 'application/pdf',
+        name: "large-file.pdf",
+        mimeType: "application/pdf",
         buffer: largeBuffer
       });
 
@@ -377,143 +377,143 @@ test.describe('Manual Upload End-to-End Flow', () => {
 
       await expect(page).toHaveURL(/\/manual-upload/);
 
-      errorSummary = page.locator('.govuk-error-summary');
+      errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      errorLink = errorSummary.getByRole('link', { name: /file too large/i });
+      errorLink = errorSummary.getByRole("link", { name: /file too large/i });
       await expect(errorLink).toBeVisible();
-      await expect(errorLink).toHaveAttribute('href', '#file');
+      await expect(errorLink).toHaveAttribute("href", "#file");
 
-      inlineErrorMessage = page.locator('#file').locator('..').locator('.govuk-error-message');
+      inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
       await expect(inlineErrorMessage).toBeVisible();
       await expect(inlineErrorMessage).toContainText(/file too large, please upload file smaller than 2mb/i);
     });
 
-    test('should show court name input with autocomplete initialized', async ({ page }) => {
-      await page.goto('/manual-upload');
+    test("should show court name input with autocomplete initialized", async ({ page }) => {
+      await page.goto("/manual-upload");
 
-      const autocompleteInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
-      await autocompleteInput.waitFor({ state: 'visible', timeout: 10000 });
+      const autocompleteInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await autocompleteInput.waitFor({ state: "visible", timeout: 10000 });
 
       await expect(autocompleteInput).toBeVisible();
-      await expect(autocompleteInput).toHaveAttribute('role', 'combobox');
+      await expect(autocompleteInput).toHaveAttribute("role", "combobox");
     });
 
-    test('should validate court name with empty, short, invalid inputs and preserve values', async ({ page }) => {
-      await page.goto('/manual-upload');
+    test("should validate court name with empty, short, invalid inputs and preserve values", async ({ page }) => {
+      await page.goto("/manual-upload");
 
-      const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
-      await courtInput.waitFor({ state: 'visible', timeout: 10000 });
+      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: "visible", timeout: 10000 });
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: 'test.pdf',
-        mimeType: 'application/pdf',
-        buffer: Buffer.from('test content')
+        name: "test.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("test content")
       });
 
-      const continueButton = page.getByRole('button', { name: /continue/i });
+      const continueButton = page.getByRole("button", { name: /continue/i });
 
       await continueButton.click();
 
-      let errorSummary = page.locator('.govuk-error-summary');
-      let errorLink = errorSummary.getByRole('link', { name: /court name must be three characters or more/i });
+      let errorSummary = page.locator(".govuk-error-summary");
+      let errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
       await expect(errorLink).toBeVisible();
 
-      let inlineError = page.locator('.govuk-error-message').filter({ hasText: /court name must be three characters or more/i });
+      let inlineError = page.locator(".govuk-error-message").filter({ hasText: /court name must be three characters or more/i });
       await expect(inlineError).toBeVisible();
 
-      await courtInput.fill('AB');
+      await courtInput.fill("AB");
       await continueButton.click();
 
-      errorSummary = page.locator('.govuk-error-summary');
+      errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
-      errorLink = errorSummary.getByRole('link', { name: /court name must be three characters or more/i });
+      errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
       await expect(errorLink).toBeVisible();
 
-      inlineError = page.locator('#court-error.govuk-error-message');
+      inlineError = page.locator("#court-error.govuk-error-message");
       await expect(inlineError).toBeVisible();
       await expect(inlineError).toContainText(/court name must be three characters or more/i);
 
-      await courtInput.fill('Invalid Court Name That Does Not Exist');
+      await courtInput.fill("Invalid Court Name That Does Not Exist");
       await continueButton.click();
 
-      errorSummary = page.locator('.govuk-error-summary');
+      errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
-      errorLink = errorSummary.getByRole('link', { name: /please enter and select a valid court/i });
+      errorLink = errorSummary.getByRole("link", { name: /please enter and select a valid court/i });
       await expect(errorLink).toBeVisible();
 
-      inlineError = page.locator('#court-error.govuk-error-message');
+      inlineError = page.locator("#court-error.govuk-error-message");
       await expect(inlineError).toBeVisible();
       await expect(inlineError).toContainText(/please enter and select a valid court/i);
 
-      const preservedCourtName = 'Invalid Court Name';
+      const preservedCourtName = "Invalid Court Name";
       await courtInput.fill(preservedCourtName);
       await continueButton.click();
 
       await expect(courtInput).toHaveValue(preservedCourtName);
     });
 
-    test('should validate date range and preserve all form data when validation fails', async ({ page }) => {
-      await page.goto('/manual-upload?locationId=9001');
+    test("should validate date range and preserve all form data when validation fails", async ({ page }) => {
+      await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: 'test.pdf',
-        mimeType: 'application/pdf',
-        buffer: Buffer.from('test content')
+        name: "test.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("test content")
       });
 
-      await page.selectOption('select[name="listType"]', '1');
-      await page.fill('input[name="hearingStartDate-day"]', '15');
-      await page.fill('input[name="hearingStartDate-month"]', '06');
-      await page.fill('input[name="hearingStartDate-year"]', '2025');
-      await page.selectOption('select[name="sensitivity"]', 'PUBLIC');
-      await page.selectOption('select[name="language"]', 'ENGLISH');
-      await page.fill('input[name="displayFrom-day"]', '20');
-      await page.fill('input[name="displayFrom-month"]', '06');
-      await page.fill('input[name="displayFrom-year"]', '2025');
-      await page.fill('input[name="displayTo-day"]', '10');
-      await page.fill('input[name="displayTo-month"]', '06');
-      await page.fill('input[name="displayTo-year"]', '2025');
+      await page.selectOption('select[name="listType"]', "1");
+      await page.fill('input[name="hearingStartDate-day"]', "15");
+      await page.fill('input[name="hearingStartDate-month"]', "06");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "06");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "10");
+      await page.fill('input[name="displayTo-month"]', "06");
+      await page.fill('input[name="displayTo-year"]', "2025");
 
-      const continueButton = page.getByRole('button', { name: /continue/i });
+      const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      const errorSummary = page.locator('.govuk-error-summary');
+      const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
-      const errorLink = errorSummary.getByRole('link', { name: /display to date must be after display from date/i });
+      const errorLink = errorSummary.getByRole("link", { name: /display to date must be after display from date/i });
       await expect(errorLink).toBeVisible();
 
-      const inlineError = page.locator('#displayTo-error.govuk-error-message');
+      const inlineError = page.locator("#displayTo-error.govuk-error-message");
       await expect(inlineError).toBeVisible();
       await expect(inlineError).toContainText(/display to date must be after display from date/i);
 
-      await page.selectOption('select[name="sensitivity"]', 'PRIVATE');
-      await page.selectOption('select[name="language"]', 'WELSH');
-      await page.fill('input[name="displayFrom-day"]', '10');
-      await page.fill('input[name="displayTo-day"]', '20');
+      await page.selectOption('select[name="sensitivity"]', "PRIVATE");
+      await page.selectOption('select[name="language"]', "WELSH");
+      await page.fill('input[name="displayFrom-day"]', "10");
+      await page.fill('input[name="displayTo-day"]', "20");
 
       await continueButton.click();
 
-      await expect(page.locator('select[name="listType"]')).toHaveValue('1');
-      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue('15');
-      await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue('06');
-      await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue('2025');
-      await expect(page.locator('select[name="sensitivity"]')).toHaveValue('PRIVATE');
-      await expect(page.locator('select[name="language"]')).toHaveValue('WELSH');
-      await expect(page.locator('input[name="displayFrom-day"]')).toHaveValue('10');
-      await expect(page.locator('input[name="displayFrom-month"]')).toHaveValue('06');
-      await expect(page.locator('input[name="displayFrom-year"]')).toHaveValue('2025');
-      await expect(page.locator('input[name="displayTo-day"]')).toHaveValue('20');
-      await expect(page.locator('input[name="displayTo-month"]')).toHaveValue('06');
-      await expect(page.locator('input[name="displayTo-year"]')).toHaveValue('2025');
+      await expect(page.locator('select[name="listType"]')).toHaveValue("1");
+      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("15");
+      await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue("06");
+      await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue("2025");
+      await expect(page.locator('select[name="sensitivity"]')).toHaveValue("PRIVATE");
+      await expect(page.locator('select[name="language"]')).toHaveValue("WELSH");
+      await expect(page.locator('input[name="displayFrom-day"]')).toHaveValue("10");
+      await expect(page.locator('input[name="displayFrom-month"]')).toHaveValue("06");
+      await expect(page.locator('input[name="displayFrom-year"]')).toHaveValue("2025");
+      await expect(page.locator('input[name="displayTo-day"]')).toHaveValue("20");
+      await expect(page.locator('input[name="displayTo-month"]')).toHaveValue("06");
+      await expect(page.locator('input[name="displayTo-year"]')).toHaveValue("2025");
     });
   });
 
-  test.describe('Manual Upload Summary Page', () => {
-    test('should display summary page with all elements and correct data', async ({ page }) => {
+  test.describe("Manual Upload Summary Page", () => {
+    test("should display summary page with all elements and correct data", async ({ page }) => {
       await navigateToSummaryPage(page);
 
       await expect(page).toHaveURL(/\/manual-upload-summary\?uploadId=/);
@@ -588,19 +588,17 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(form).toHaveAttribute("method", "post");
     });
 
-    test('should meet WCAG 2.2 AA standards on summary page', async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on summary page", async ({ page }) => {
       await navigateToSummaryPage(page);
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
 
-  test.describe('Manual Upload Success Page', () => {
-    test('should display success page with all elements and navigation links', async ({ page }) => {
+  test.describe("Manual Upload Success Page", () => {
+    test("should display success page with all elements and navigation links", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       await expect(page).toHaveURL("/manual-upload-success");
@@ -635,12 +633,12 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test('should redirect to manual-upload if accessed directly without upload session', async ({ page }) => {
+    test("should redirect to manual-upload if accessed directly without upload session", async ({ page }) => {
       await page.goto("/manual-upload-success");
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test('should support Welsh language with correct translations', async ({ page }) => {
+    test("should support Welsh language with correct translations", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       const welshToggle = page.locator('a[href*="lng=cy"]');
@@ -664,18 +662,15 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(homeLink).toBeVisible();
     });
 
-    test('should meet WCAG 2.2 AA standards on success page', async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on success page", async ({ page }) => {
       await completeManualUploadFlow(page);
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-
-    test('should not allow access after refreshing the page', async ({ page }) => {
+    test("should not allow access after refreshing the page", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       await page.reload();
@@ -683,7 +678,7 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test('should allow multiple sequential uploads', async ({ page }) => {
+    test("should allow multiple sequential uploads", async ({ page }) => {
       await completeManualUploadFlow(page);
       await expect(page).toHaveURL("/manual-upload-success");
 
@@ -719,16 +714,16 @@ test.describe('Manual Upload End-to-End Flow', () => {
     });
   });
 
-  test.describe('Responsive Design Across All Pages', () => {
-    test('should display correctly on mobile viewport throughout entire flow', async ({ page }) => {
+  test.describe("Responsive Design Across All Pages", () => {
+    test("should display correctly on mobile viewport throughout entire flow", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
-      await page.goto('/manual-upload?locationId=9001');
+      await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
       await expect(fileInput).toBeVisible();
-      const courtInput = page.getByRole('combobox', { name: /court name or tribunal name/i });
+      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
       await expect(courtInput).toBeVisible();
 
       await page.selectOption('select[name="listType"]', "6");

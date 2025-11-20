@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
 test.describe("Account Home Page", () => {
   test.describe("Page Load and Content", () => {
@@ -27,9 +27,7 @@ test.describe("Account Home Page", () => {
       const container = page.locator(".verified-tiles-container");
       await expect(container).toBeVisible();
 
-      const display = await container.evaluate((el) =>
-        window.getComputedStyle(el).display
-      );
+      const display = await container.evaluate((el) => window.getComputedStyle(el).display);
       expect(display).toBe("flex");
     });
   });
@@ -71,12 +69,8 @@ test.describe("Account Home Page", () => {
       const section = page.locator(".verified-tile").first();
       const heading = section.locator("h2");
 
-      const color = await heading.evaluate((el) =>
-        window.getComputedStyle(el).color
-      );
-      const textDecoration = await heading.evaluate((el) =>
-        window.getComputedStyle(el).textDecoration
-      );
+      const color = await heading.evaluate((el) => window.getComputedStyle(el).color);
+      const textDecoration = await heading.evaluate((el) => window.getComputedStyle(el).textDecoration);
 
       expect(color).toBe("rgb(29, 112, 184)");
       expect(textDecoration).toContain("none");
@@ -104,7 +98,9 @@ test.describe("Account Home Page", () => {
       const section = page.locator(".verified-tile").nth(1);
       const description = section.locator("p.verified-tile-description");
       await expect(description).toBeVisible();
-      await expect(description).toHaveText("Cases ready to be decided by a magistrate without a hearing. Includes TV licensing, minor traffic offences such as speeding and more.");
+      await expect(description).toHaveText(
+        "Cases ready to be decided by a magistrate without a hearing. Includes TV licensing, minor traffic offences such as speeding and more."
+      );
     });
 
     test("should navigate to SJP summary page when box is clicked", async ({ page }) => {
@@ -152,9 +148,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
-      const bgColor = await section.evaluate((el) =>
-        window.getComputedStyle(el).backgroundColor
-      );
+      const bgColor = await section.evaluate((el) => window.getComputedStyle(el).backgroundColor);
 
       // #f3f2f1 converts to rgb(243, 242, 241)
       expect(bgColor).toBe("rgb(243, 242, 241)");
@@ -164,9 +158,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
-      const border = await section.evaluate((el) =>
-        window.getComputedStyle(el).border
-      );
+      const border = await section.evaluate((el) => window.getComputedStyle(el).border);
 
       expect(border).toContain("1px");
       expect(border).toContain("solid");
@@ -180,9 +172,7 @@ test.describe("Account Home Page", () => {
       expect(count).toBe(3);
 
       for (let i = 0; i < count; i++) {
-        const flex = await sections.nth(i).evaluate((el) =>
-          window.getComputedStyle(el).flex
-        );
+        const flex = await sections.nth(i).evaluate((el) => window.getComputedStyle(el).flex);
         expect(flex).toContain("1");
       }
     });
@@ -191,9 +181,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
-      const cursor = await section.evaluate((el) =>
-        window.getComputedStyle(el).cursor
-      );
+      const cursor = await section.evaluate((el) => window.getComputedStyle(el).cursor);
 
       expect(cursor).toBe("pointer");
     });
@@ -205,9 +193,7 @@ test.describe("Account Home Page", () => {
       await section.hover();
       await page.waitForTimeout(100);
 
-      const boxShadow = await section.evaluate((el) =>
-        window.getComputedStyle(el).boxShadow
-      );
+      const boxShadow = await section.evaluate((el) => window.getComputedStyle(el).boxShadow);
 
       expect(boxShadow).not.toBe("none");
     });
@@ -235,21 +221,17 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const heading = page.locator(".verified-tile-heading").first();
 
-      const fontWeight = await heading.evaluate((el) =>
-        window.getComputedStyle(el).fontWeight
-      );
+      const fontWeight = await heading.evaluate((el) => window.getComputedStyle(el).fontWeight);
 
       // Bold is typically 700
-      expect(Number.parseInt(fontWeight)).toBeGreaterThanOrEqual(700);
+      expect(Number.parseInt(fontWeight, 10)).toBeGreaterThanOrEqual(700);
     });
 
     test("should have blue color on section headings", async ({ page }) => {
       await page.goto("/account-home");
       const heading = page.locator(".verified-tile-heading").first();
 
-      const color = await heading.evaluate((el) =>
-        window.getComputedStyle(el).color
-      );
+      const color = await heading.evaluate((el) => window.getComputedStyle(el).color);
 
       // GOV.UK link blue: rgb(29, 112, 184)
       expect(color).toBe("rgb(29, 112, 184)");
@@ -259,9 +241,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const heading = page.locator(".verified-tile-heading").first();
 
-      const textDecoration = await heading.evaluate((el) =>
-        window.getComputedStyle(el).textDecoration
-      );
+      const textDecoration = await heading.evaluate((el) => window.getComputedStyle(el).textDecoration);
 
       expect(textDecoration).toContain("none");
     });
@@ -270,9 +250,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const description = page.locator(".verified-tile-description").first();
 
-      const color = await description.evaluate((el) =>
-        window.getComputedStyle(el).color
-      );
+      const color = await description.evaluate((el) => window.getComputedStyle(el).color);
 
       // Black color: rgb(11, 12, 12)
       expect(color).toBe("rgb(11, 12, 12)");
@@ -282,9 +260,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const box = page.locator(".verified-tile").first();
 
-      const textDecoration = await box.evaluate((el) =>
-        window.getComputedStyle(el).textDecoration
-      );
+      const textDecoration = await box.evaluate((el) => window.getComputedStyle(el).textDecoration);
 
       expect(textDecoration).toContain("none");
     });
@@ -296,9 +272,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
 
       const container = page.locator(".verified-tiles-container");
-      const flexDirection = await container.evaluate((el) =>
-        window.getComputedStyle(el).flexDirection
-      );
+      const flexDirection = await container.evaluate((el) => window.getComputedStyle(el).flexDirection);
 
       expect(flexDirection).toBe("row");
     });
@@ -307,9 +281,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
 
       const container = page.locator(".verified-tiles-container");
-      const gap = await container.evaluate((el) =>
-        window.getComputedStyle(el).gap
-      );
+      const gap = await container.evaluate((el) => window.getComputedStyle(el).gap);
 
       // 1.5em gap
       expect(parseFloat(gap)).toBeGreaterThan(20);
@@ -327,7 +299,7 @@ test.describe("Account Home Page", () => {
       }
 
       // All boxes should have roughly the same y-coordinate (same row)
-      const yPositions = boundingBoxes.map(box => box?.y || 0);
+      const yPositions = boundingBoxes.map((box) => box?.y || 0);
       const maxYDiff = Math.max(...yPositions) - Math.min(...yPositions);
       expect(maxYDiff).toBeLessThan(10); // Allow small rendering differences
     });
@@ -357,7 +329,9 @@ test.describe("Account Home Page", () => {
       await expect(courtHearingsDesc).toHaveText("Gweld amser, lleoliad, math o wrandawiadau a mwy.");
 
       const sjpDesc = page.locator(".verified-tile-description").nth(1);
-      await expect(sjpDesc).toHaveText("Achosion sy'n barod i gael eu penderfynu gan ynad heb wrandawiad. Yn cynnwys trwyddedu teledu, mân dramgwyddau traffig fel goryrru a mwy.");
+      await expect(sjpDesc).toHaveText(
+        "Achosion sy'n barod i gael eu penderfynu gan ynad heb wrandawiad. Yn cynnwys trwyddedu teledu, mân dramgwyddau traffig fel goryrru a mwy."
+      );
 
       const emailDesc = page.locator(".verified-tile-description").nth(2);
       await expect(emailDesc).toHaveText("Cael e-byst am wrandawiadau o wahanol lysoedd a thribiwnlysoedd a rheoli eich tanysgrifiadau.");
@@ -423,9 +397,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
 
       const heading = page.locator(".verified-tile-heading").first();
-      const color = await heading.evaluate((el) =>
-        window.getComputedStyle(el).color
-      );
+      const color = await heading.evaluate((el) => window.getComputedStyle(el).color);
 
       // GOV.UK link blue should be rgb(29, 112, 184)
       expect(color).toBe("rgb(29, 112, 184)");
@@ -480,9 +452,7 @@ test.describe("Account Home Page", () => {
       const box = page.locator(".verified-tile").first();
       await box.focus();
 
-      const outline = await box.evaluate((el) =>
-        window.getComputedStyle(el).outline
-      );
+      const outline = await box.evaluate((el) => window.getComputedStyle(el).outline);
 
       // Should have a visible focus outline
       expect(outline).not.toBe("none");

@@ -1,15 +1,11 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("System Admin Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/system-admin-dashboard");
-    await loginWithSSO(
-      page,
-      process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!,
-      process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!
-    );
+    await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
     await page.waitForURL("/system-admin-dashboard");
   });
 
@@ -31,7 +27,6 @@ test.describe("System Admin Dashboard", () => {
     });
 
     test("should display correct tile titles and links", async ({ page }) => {
-
       const tileData = [
         { title: "Upload Reference Data", href: "/upload-reference-data" },
         { title: "Delete Court", href: "/delete-court" },
@@ -72,9 +67,7 @@ test.describe("System Admin Dashboard", () => {
 
   test.describe("Accessibility", () => {
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
@@ -124,14 +117,14 @@ test.describe("System Admin Dashboard", () => {
 
       // Verify tiles are keyboard accessible by checking tabindex
       const firstTile = tileLinks.first();
-      const tabindex = await firstTile.getAttribute('tabindex');
+      const tabindex = await firstTile.getAttribute("tabindex");
 
       // Links without tabindex=-1 are keyboard accessible by default
-      expect(tabindex === null || tabindex !== '-1').toBe(true);
+      expect(tabindex === null || tabindex !== "-1").toBe(true);
 
       // Verify link elements are focusable (they are by default in HTML)
       const tagName = await firstTile.evaluate((el) => el.tagName.toLowerCase());
-      expect(tagName).toBe('a');
+      expect(tagName).toBe("a");
 
       // Verify all 8 tiles are accessible links
       await expect(tileLinks).toHaveCount(8);
