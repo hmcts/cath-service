@@ -20,7 +20,7 @@ export const GET = async (_req: Request, res: Response) => {
 };
 
 export const POST = async (req: Request, res: Response) => {
-  const locale = res.locals.locale || "en";
+  const locale = res.locals?.locale || "en";
   const t = locale === "cy" ? cy : en;
 
   const formData = {
