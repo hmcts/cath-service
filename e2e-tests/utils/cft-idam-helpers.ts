@@ -8,14 +8,23 @@ import { expect } from '@playwright/test';
  * @param password - User password
  */
 export async function loginWithCftIdam(page: Page, email: string, password: string): Promise<void> {
-  // Wait for CFT IDAM login page
-  try {
-    await page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net/, { timeout: 10000 });
-  } catch (error) {
-    const currentUrl = page.url();
+  // If we're at /cft-login, wait for redirect to IDAM
+  const currentUrl = page.url();
+  if (currentUrl.includes('/cft-login')) {
+    try {
+      await page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net/, { timeout: 10000 });
+    } catch (error) {
+      const finalUrl = page.url();
+      throw new Error(
+        `Failed to redirect from /cft-login to CFT IDAM login page. Current URL: ${finalUrl}. ` +
+        `This might indicate that CFT IDAM is not properly configured or ENABLE_CFT_IDAM=true is not set.`
+      );
+    }
+  } else if (!currentUrl.includes('idam-web-public.aat.platform.hmcts.net')) {
+    // Not at cft-login and not at IDAM - unexpected state
     throw new Error(
-      `Failed to redirect to CFT IDAM login page. Current URL: ${currentUrl}. ` +
-      `This might indicate that CFT IDAM is not properly configured or ENABLE_CFT_IDAM=true is not set.`
+      `Unexpected URL before CFT IDAM login. Current URL: ${currentUrl}. ` +
+      `Expected to be at /cft-login or IDAM login page. This might indicate a form submission failure.`
     );
   }
 
