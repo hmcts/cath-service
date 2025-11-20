@@ -15,6 +15,7 @@
     {% endif %}
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
         {{ govukRadios({
           name: "viewOption",

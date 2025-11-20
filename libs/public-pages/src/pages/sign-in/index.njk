@@ -15,6 +15,7 @@
     {% endif %}
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       {{ govukRadios({
         name: "accountType",
         fieldset: {
