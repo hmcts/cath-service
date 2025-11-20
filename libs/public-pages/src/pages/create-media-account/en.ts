@@ -20,13 +20,13 @@ export const en = {
   continueButton: "Continue",
   backToTop: "Back to top",
   errorSummaryTitle: "There is a problem",
-  errorFullNameRequired: "Enter your full name",
-  errorEmailRequired: "Enter an email address in the correct format, like name@example.com",
-  errorEmployerRequired: "Enter your employer",
-  errorFileRequired: "Select a file in .jpg, .pdf or .png format",
-  errorFileSize: "Your file must be smaller than 2MB",
-  errorFileType: "Select a file in .jpg, .pdf or .png format",
+  errorFullNameRequired: "There is a problem - Full name field must be populated",
+  errorEmailRequired: "There is a problem - Email address field must be populated",
+  errorEmployerRequired: "There is a problem - Your employers name will be needed to support your application for an account",
+  errorFileRequired: "There is a problem - We will need ID evidence to support your application for an account",
+  errorFileSize: "There is a problem - ID evidence needs to be less than 2Mbs",
+  errorFileType: "There is a problem - ID evidence must be a JPG, PDF or PNG",
   errorFileTooMany: "You can only upload one file at a time",
   errorFileUploadFailed: "File upload failed. Please try again",
-  errorTermsRequired: "Select the checkbox to agree to the terms and conditions"
+  errorTermsRequired: "There is a problem - You must check the box to confirm you agree to the terms and conditions"
 };
