@@ -15,9 +15,7 @@ export function redirectUnauthenticated(req: Request, res: Response): void {
   req.session.returnTo = req.originalUrl;
 
   // Admin/internal pages should go directly to SSO when configured
-  const isAdminPage =
-    req.originalUrl.startsWith("/admin-dashboard") ||
-    req.originalUrl.startsWith("/system-admin-dashboard");
+  const isAdminPage = req.originalUrl.startsWith("/admin-dashboard") || req.originalUrl.startsWith("/system-admin-dashboard");
 
   if (isAdminPage && isSsoConfigured()) {
     // Redirect directly to SSO login for admin pages
