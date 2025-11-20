@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { isSsoConfigured } from "../config/sso-config.js";
 import { hasRole } from "../role-service/index.js";
+import { redirectUnauthenticated } from "./redirect-helpers.js";
 
 /**
  * Middleware to require specific roles for protected routes
@@ -13,18 +13,7 @@ export function requireRole(allowedRoles: string[]): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     // First check if user is authenticated
     if (!req.isAuthenticated() || !req.user) {
-      req.session.returnTo = req.originalUrl;
-
-      // Admin/internal pages should go directly to SSO when configured
-      const isAdminPage = req.originalUrl.startsWith("/admin-dashboard") || req.originalUrl.startsWith("/system-admin-dashboard");
-
-      if (isAdminPage && isSsoConfigured()) {
-        // Redirect directly to SSO login for admin pages
-        return res.redirect("/login");
-      }
-
-      // Redirect to sign-in page (account selection) for other pages
-      return res.redirect("/sign-in");
+      return redirectUnauthenticated(req, res);
     }
 
     const userRole = req.user.role;

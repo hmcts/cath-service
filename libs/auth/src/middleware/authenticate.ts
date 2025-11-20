@@ -1,5 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { isSsoConfigured } from "../config/sso-config.js";
+import { redirectUnauthenticated } from "./redirect-helpers.js";
 
 /**
  * Middleware to require authentication for protected routes
@@ -14,18 +14,6 @@ export function requireAuth(): RequestHandler {
       return next();
     }
 
-    // Save the original URL to redirect after login
-    req.session.returnTo = req.originalUrl;
-
-    // Admin/internal pages should go directly to SSO when configured
-    const isAdminPage = req.originalUrl.startsWith("/admin-dashboard") || req.originalUrl.startsWith("/system-admin-dashboard");
-
-    if (isAdminPage && isSsoConfigured()) {
-      // Redirect directly to SSO login for admin pages
-      return res.redirect("/login");
-    }
-
-    // Redirect to sign-in page (account selection) for other pages
-    res.redirect("/sign-in");
+    redirectUnauthenticated(req, res);
   };
 }
