@@ -1,4 +1,4 @@
-import * as Papa from "papaparse";
+import Papa from "papaparse";
 import type { CsvRow, ParsedLocationData } from "../model.js";
 
 const REQUIRED_HEADERS = ["LOCATION_ID", "LOCATION_NAME", "WELSH_LOCATION_NAME", "EMAIL", "CONTACT_NO", "SUB_JURISDICTION_NAME", "REGION_NAME"];
