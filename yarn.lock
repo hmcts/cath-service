@@ -915,9 +915,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:
+    "@prisma/adapter-pg": "npm:^7.0.0"
     "@prisma/client": "npm:7.0.0"
+    "@types/pg": "npm:^8"
     dotenv: "npm:^17.2.3"
     glob: "npm:11.1.0"
+    pg: "npm:^8.16.3"
     prisma: "npm:7.0.0"
   languageName: unknown
   linkType: soft
@@ -2127,6 +2130,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@prisma/adapter-pg@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@prisma/adapter-pg@npm:7.0.0"
+  dependencies:
+    "@prisma/driver-adapter-utils": "npm:7.0.0"
+    pg: "npm:^8.16.3"
+    postgres-array: "npm:3.0.4"
+  checksum: 10c0/76106731cfea854ccae60eeb12d6d5bf05df4daad04599b7a9912d5ea5d6ba6d8f502d27970293dc861087023a53d822fdcec18f443c35f42b8d7ec562f01161
+  languageName: node
+  linkType: hard
+
 "@prisma/client-runtime-utils@npm:7.0.0":
   version: 7.0.0
   resolution: "@prisma/client-runtime-utils@npm:7.0.0"
@@ -2199,6 +2213,15 @@ __metadata:
     valibot: "npm:1.1.0"
     zeptomatch: "npm:2.0.2"
   checksum: 10c0/010b919bf12e22aa30be0ec748dda532bdf8d7e88bfb4d1244bc2a40d2f2649f81d396c75f3e29943e468706f60853bd24d64bdf0cff875ee2c6538c12f2c69d
+  languageName: node
+  linkType: hard
+
+"@prisma/driver-adapter-utils@npm:7.0.0":
+  version: 7.0.0
+  resolution: "@prisma/driver-adapter-utils@npm:7.0.0"
+  dependencies:
+    "@prisma/debug": "npm:7.0.0"
+  checksum: 10c0/bcf39427e30444b234255c5fa52ea02958d95d5b0a648d863b2e1377c5b07666ff77035154990eb495e6e10952fdd76b9987bd9ae11e98b40a942977ad841f4d
   languageName: node
   linkType: hard
 
@@ -2811,7 +2834,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:*, @types/pg@npm:8.15.6":
+"@types/pg@npm:*, @types/pg@npm:8.15.6, @types/pg@npm:^8":
   version: 8.15.6
   resolution: "@types/pg@npm:8.15.6"
   dependencies:
@@ -6041,7 +6064,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg@npm:8.16.3":
+"pg@npm:8.16.3, pg@npm:^8.16.3":
   version: 8.16.3
   resolution: "pg@npm:8.16.3"
   dependencies:
@@ -6136,6 +6159,13 @@ __metadata:
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
   checksum: 10c0/5127cc7c91ed7a133a1b7318012d8bfa112da9ef092dddf369ae699a1f10ebbd89b1b9f25f3228795b84585c72aabd5ced5fc11f2ba467eedf7b081a66fad024
+  languageName: node
+  linkType: hard
+
+"postgres-array@npm:3.0.4":
+  version: 3.0.4
+  resolution: "postgres-array@npm:3.0.4"
+  checksum: 10c0/47f3e648da512bacdd6a5ed55cf770605ec271330789faeece0fd13805a49f376d6e5c9e0e353377be11a9545e727dceaa2473566c505432bf06366ccd04c6b2
   languageName: node
   linkType: hard
 

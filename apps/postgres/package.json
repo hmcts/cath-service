@@ -24,9 +24,12 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
-    "@prisma/client": "7.0.0"
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "7.0.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/pg": "^8",
     "dotenv": "^17.2.3",
     "glob": "11.1.0",
     "prisma": "7.0.0"
