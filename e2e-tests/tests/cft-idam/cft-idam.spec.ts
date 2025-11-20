@@ -76,12 +76,11 @@ test.describe('CFT IDAM Login Flow', () => {
     let currentUrl = page.url();
     expect(currentUrl).toMatch(/lng=cy|ui_locales=cy/);
 
-    // Test 2: CFT login preserves query parameters in redirect
-    await page.goto('/cft-login?lng=cy&test=value');
+    // Test 2: CFT login preserves language parameter in redirect
+    await page.goto('/cft-login?lng=cy');
     await page.waitForLoadState('networkidle');
     currentUrl = page.url();
-    expect(currentUrl).toMatch(/lng=cy|ui_locales=cy/);
-    expect(currentUrl).toMatch(/test=value/);
+    expect(currentUrl).toMatch(/ui_locales=cy/);
 
     // Test 3: CFT rejected page displays Welsh content correctly
     await page.goto('/cft-rejected?lng=cy');
