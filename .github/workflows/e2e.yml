@@ -26,7 +26,7 @@ jobs:
       BASE_URL: https://localhost:8080
       PORT: 8080
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: postgresql://hmcts@localhost:5433/postgres
 
       # SSO Configuration (using existing GitHub Secrets)
       SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
@@ -86,6 +86,33 @@ jobs:
 
       - name: Generate Prisma client
         run: yarn db:generate
+
+      - name: Start PostgreSQL
+        run: docker compose up -d
+
+      - name: Wait for PostgreSQL to be ready
+        run: timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U hmcts; do sleep 1; done'
+
+      - name: Run database migrations
+        run: yarn db:migrate
+
+      - name: Seed test database
+        run: |
+          echo "Running seed script..."
+          yarn workspace @hmcts/postgres run seed
+          echo "Seed script completed"
+
+      - name: Verify seed data exists
+        run: |
+          echo "Verifying seed data for locationId=9..."
+          ARTEFACT_COUNT=$(docker compose exec -T postgres psql -U hmcts -d postgres -t -c "SELECT COUNT(*) FROM artefact WHERE location_id = '9';")
+          ARTEFACT_COUNT=$(echo $ARTEFACT_COUNT | xargs)
+          echo "Found $ARTEFACT_COUNT artefacts for locationId=9"
+          if [ "$ARTEFACT_COUNT" -lt 3 ]; then
+            echo "ERROR: Expected at least 3 seeded artefacts, found $ARTEFACT_COUNT"
+            exit 1
+          fi
+          echo "✓ Seed data verification successful"
 
       - name: Build packages
         run: yarn build

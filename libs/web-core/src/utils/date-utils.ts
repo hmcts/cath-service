@@ -9,14 +9,14 @@ export function formatDateAndLocale(dateString: string, locale: string): string 
 
   if (locale === "cy") {
     return date.toLocaleDateString("cy-GB", {
-      day: "numeric",
+      day: "2-digit",
       month: "long",
       year: "numeric"
     });
   }
 
   return date.toLocaleDateString("en-GB", {
-    day: "numeric",
+    day: "2-digit",
     month: "long",
     year: "numeric"
   });
