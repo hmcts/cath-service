@@ -1,5 +1,5 @@
 import { prisma } from "@hmcts/postgres";
-import Papa from "papaparse";
+import * as Papa from "papaparse";
 
 export async function generateReferenceDataCsv(): Promise<string> {
   const locations = await prisma.location.findMany({
@@ -20,10 +20,10 @@ export async function generateReferenceDataCsv(): Promise<string> {
     }
   });
 
-  const csvData = locations.map((location) => {
-    const subJurisdictionNames = location.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.name).join(";");
+  const csvData = locations.map((location: any) => {
+    const subJurisdictionNames = location.locationSubJurisdictions.map((lsj: any) => lsj.subJurisdiction.name).join(";");
 
-    const regionNames = location.locationRegions.map((lr) => lr.region.name).join(";");
+    const regionNames = location.locationRegions.map((lr: any) => lr.region.name).join(";");
 
     return {
       LOCATION_ID: location.locationId,

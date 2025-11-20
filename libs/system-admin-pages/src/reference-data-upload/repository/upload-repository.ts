@@ -16,7 +16,7 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
         }
       });
 
-      const subJurisdictionIds = subJurisdictions.map((sj) => sj.subJurisdictionId);
+      const subJurisdictionIds = subJurisdictions.map((sj: { subJurisdictionId: number }) => sj.subJurisdictionId);
 
       // Get region IDs from names
       const regions = await tx.region.findMany({
@@ -30,7 +30,7 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
         }
       });
 
-      const regionIds = regions.map((r) => r.regionId);
+      const regionIds = regions.map((r: { regionId: number }) => r.regionId);
 
       // Upsert location
       await tx.location.upsert({
@@ -68,7 +68,7 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
       // Create new junction records
       if (subJurisdictionIds.length > 0) {
         await tx.locationSubJurisdiction.createMany({
-          data: subJurisdictionIds.map((subJurisdictionId) => ({
+          data: subJurisdictionIds.map((subJurisdictionId: number) => ({
             locationId: row.locationId,
             subJurisdictionId
           }))
@@ -77,7 +77,7 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
 
       if (regionIds.length > 0) {
         await tx.locationRegion.createMany({
-          data: regionIds.map((regionId) => ({
+          data: regionIds.map((regionId: number) => ({
             locationId: row.locationId,
             regionId
           }))

@@ -159,7 +159,7 @@ export async function validateLocationData(data: ParsedLocationData[]): Promise<
       }
     });
 
-    const existingNames = new Set(existingSubJurisdictions.map((sj) => sj.name));
+    const existingNames = new Set(existingSubJurisdictions.map((sj: any) => sj.name));
     const missingSubJurisdictions = allSubJurisdictionNames.filter((name) => !existingNames.has(name));
 
     for (const missing of missingSubJurisdictions) {
@@ -189,7 +189,7 @@ export async function validateLocationData(data: ParsedLocationData[]): Promise<
       }
     });
 
-    const existingNames = new Set(existingRegions.map((r) => r.name));
+    const existingNames = new Set(existingRegions.map((r: any) => r.name));
     const missingRegions = allRegionNames.filter((name) => !existingNames.has(name));
 
     for (const missing of missingRegions) {

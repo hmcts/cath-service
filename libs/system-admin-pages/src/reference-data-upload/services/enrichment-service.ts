@@ -17,9 +17,9 @@ export async function enrichLocationData(data: ParsedLocationData[]): Promise<En
       }
     });
 
-    const jurisdictionNames = [...new Set(subJurisdictions.map((sj) => sj.jurisdiction.name))];
-    const jurisdictionWelshNames = [...new Set(subJurisdictions.map((sj) => sj.jurisdiction.welshName))];
-    const subJurisdictionWelshNames = subJurisdictions.map((sj) => sj.welshName);
+    const jurisdictionNames: string[] = [...new Set(subJurisdictions.map((sj: any) => sj.jurisdiction.name))];
+    const jurisdictionWelshNames: string[] = [...new Set(subJurisdictions.map((sj: any) => sj.jurisdiction.welshName))];
+    const subJurisdictionWelshNames = subJurisdictions.map((sj: any) => sj.welshName);
 
     // Get regions
     const regions = await prisma.region.findMany({
@@ -30,7 +30,7 @@ export async function enrichLocationData(data: ParsedLocationData[]): Promise<En
       }
     });
 
-    const regionWelshNames = regions.map((r) => r.welshName);
+    const regionWelshNames = regions.map((r: any) => r.welshName);
 
     enriched.push({
       ...row,

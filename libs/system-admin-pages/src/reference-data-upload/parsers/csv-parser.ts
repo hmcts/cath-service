@@ -1,4 +1,4 @@
-import Papa from "papaparse";
+import * as Papa from "papaparse";
 import type { CsvRow, ParsedLocationData } from "../model.js";
 
 const REQUIRED_HEADERS = ["LOCATION_ID", "LOCATION_NAME", "WELSH_LOCATION_NAME", "EMAIL", "CONTACT_NO", "SUB_JURISDICTION_NAME", "REGION_NAME"];
@@ -29,13 +29,13 @@ export function parseCsv(fileBuffer: Buffer): ParseResult {
   });
 
   // Filter out delimiter auto-detection warnings - these are not real errors
-  const realErrors = parseResult.errors.filter((err) => !err.message.includes("Unable to auto-detect delimiting character"));
+  const realErrors = parseResult.errors.filter((err: any) => !err.message.includes("Unable to auto-detect delimiting character"));
 
   if (realErrors.length > 0) {
     return {
       success: false,
       data: [],
-      errors: realErrors.map((err) => `CSV parsing error at row ${err.row}: ${err.message}`)
+      errors: realErrors.map((err: any) => `CSV parsing error at row ${err.row}: ${err.message}`)
     };
   }
 
@@ -70,14 +70,14 @@ export function parseCsv(fileBuffer: Buffer): ParseResult {
 
     const subJurisdictionNames = row.SUB_JURISDICTION_NAME
       ? row.SUB_JURISDICTION_NAME.split(";")
-          .map((name) => name.trim())
-          .filter((name) => name.length > 0)
+          .map((name: string) => name.trim())
+          .filter((name: string) => name.length > 0)
       : [];
 
     const regionNames = row.REGION_NAME
       ? row.REGION_NAME.split(";")
-          .map((name) => name.trim())
-          .filter((name) => name.length > 0)
+          .map((name: string) => name.trim())
+          .filter((name: string) => name.length > 0)
       : [];
 
     parsedData.push({

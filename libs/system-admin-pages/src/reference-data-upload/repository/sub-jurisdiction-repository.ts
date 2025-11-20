@@ -29,7 +29,7 @@ export async function getAllJurisdictions(): Promise<JurisdictionOption[]> {
     }
   });
 
-  return jurisdictions.map((j) => ({
+  return jurisdictions.map((j: { jurisdictionId: number; name: string }) => ({
     jurisdictionId: j.jurisdictionId,
     displayName: j.name
   }));
