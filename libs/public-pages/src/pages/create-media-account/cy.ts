@@ -12,7 +12,7 @@ export const cy = {
   employerLabel: "Cyflogwr",
   idProofLabel: "Prawf o hunaniaeth",
   idProofHint:
-    "Uwchlwythwch lun clir o'ch Cerdyn Wasg y DU neu gerdyn adnabod gwaith. Dim ond i gadarnhau pwy ydych ar gyfer y gwasanaeth hwn y byddwn yn defnyddio hwn, a byddwn yn ei ddileu wedi i'ch cais gael ei gymeradwyo neu ei wrthod. Trwy uwchlwytho eich dogfen, rydych yn cadarnhau eich bod yn cydsynio i'r prosesu hwn o'ch data. Rhaid iddi fod yn ffeil jpg, pdf neu png ac yn llai na 2mb o ran maint",
+    "Llwytho llun clir o Gerdyn y Wasg neu gerdyn adnabod gwaith. Dim ond i gadarnhau pwy ydych ar gyfer y gwasanaeth hwn y byddwn yn defnyddio hwn, a byddwn yn ei ddileu wedi i'ch cais gael ei gymeradwyo neu ei wrthod. Trwy lwytho eich dogfen, rydych yn cadarnhau eich bod yn cydsynio i'ch data gael ei brosesu. Rhaid i'r ffeil fod ar ffurf jpg, pdf neu png a rhaid bod yn llai na 2MB mewn maint.",
   termsTitle: "Telerau ac amodau",
   termsText:
     "Caniateir ichi gael cyfrif ar gyfer gwrandawiadau llys a thribiwnlys ar yr amod bod gennych resymau cyfreithiol dros gael mynediad at wybodaeth nad yw ar gael i'r cyhoedd e.e. rydych yn aelod o sefydliad cyfryngau ac angen gwybodaeth ychwanegol i riportio ar wrandawiadau. Os bydd eich amgylchiadau'n newid ac nid oes gennych mwyach resymau cyfreithiol dros gael cyfrif ar gyfer gwrandawiadau llys a thribiwnlys e.e. rydych yn gadael eich cyflogwr a enwyd uchod, eich cyfrifoldeb chi yw hysbysu GLlTEM am hyn fel y gellir dadactifadu eich cyfrif.",
