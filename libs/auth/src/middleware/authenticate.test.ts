@@ -1,8 +1,18 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requireAuth } from "./authenticate.js";
 
+vi.mock("../config/sso-config.js", () => ({
+  isSsoConfigured: vi.fn()
+}));
+
+import { isSsoConfigured } from "../config/sso-config.js";
+
 describe("requireAuth middleware", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should call next() if user is authenticated", () => {
     const middleware = requireAuth();
     const req = {
@@ -17,7 +27,30 @@ describe("requireAuth middleware", () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
-  it("should redirect to /auth/login if user is not authenticated", () => {
+  it("should redirect to /login for admin-dashboard when SSO is configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(true);
+
+    const middleware = requireAuth();
+    const req = {
+      isAuthenticated: () => false,
+      originalUrl: "/admin-dashboard",
+      session: {}
+    } as unknown as Request;
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/login");
+    expect(next).not.toHaveBeenCalled();
+    expect(req.session.returnTo).toBe("/admin-dashboard");
+  });
+
+  it("should redirect to /login for system-admin-dashboard when SSO is configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(true);
+
     const middleware = requireAuth();
     const req = {
       isAuthenticated: () => false,
@@ -34,5 +67,68 @@ describe("requireAuth middleware", () => {
     expect(res.redirect).toHaveBeenCalledWith("/login");
     expect(next).not.toHaveBeenCalled();
     expect(req.session.returnTo).toBe("/system-admin-dashboard");
+  });
+
+  it("should redirect to /sign-in for admin pages when SSO is not configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(false);
+
+    const middleware = requireAuth();
+    const req = {
+      isAuthenticated: () => false,
+      originalUrl: "/admin-dashboard",
+      session: {}
+    } as unknown as Request;
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    expect(next).not.toHaveBeenCalled();
+    expect(req.session.returnTo).toBe("/admin-dashboard");
+  });
+
+  it("should redirect to /sign-in for non-admin pages when SSO is configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(true);
+
+    const middleware = requireAuth();
+    const req = {
+      isAuthenticated: () => false,
+      originalUrl: "/account-home",
+      session: {}
+    } as unknown as Request;
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    expect(next).not.toHaveBeenCalled();
+    expect(req.session.returnTo).toBe("/account-home");
+  });
+
+  it("should redirect to /sign-in for non-admin pages when SSO is not configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(false);
+
+    const middleware = requireAuth();
+    const req = {
+      isAuthenticated: () => false,
+      originalUrl: "/account-home",
+      session: {}
+    } as unknown as Request;
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    expect(next).not.toHaveBeenCalled();
+    expect(req.session.returnTo).toBe("/account-home");
   });
 });

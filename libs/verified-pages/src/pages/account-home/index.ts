@@ -1,4 +1,4 @@
-import { blockUserAccess, buildVerifiedUserNavigation } from "@hmcts/auth";
+import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -15,4 +15,4 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("account-home/index", { en, cy });
 };
 
-export const GET: RequestHandler[] = [blockUserAccess(), getHandler];
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
