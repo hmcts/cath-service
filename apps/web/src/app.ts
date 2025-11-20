@@ -10,6 +10,7 @@ import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoute
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
+  configureCsrf,
   configureGovuk,
   configureHelmet,
   configureNonce,
@@ -48,6 +49,48 @@ export async function createApp(): Promise<Express> {
   );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
+  // Register multer middleware for file upload routes BEFORE CSRF protection
+  // This ensures multipart form bodies are parsed before CSRF validation
+  const upload = createFileUpload();
+
+  // Helper function to handle multer errors consistently
+  const handleMulterError = (err: any, req: any, fieldName: string) => {
+    if (!err) return;
+
+    // Store the error for the controller to handle
+    req.fileUploadError = {
+      code: err.code,
+      field: fieldName,
+      message: err.message,
+      originalError: err
+    };
+
+    // Log unexpected multer errors for debugging
+    if (!["LIMIT_FILE_SIZE", "LIMIT_FILE_COUNT", "LIMIT_FIELD_SIZE", "LIMIT_UNEXPECTED_FILE"].includes(err.code)) {
+      console.error(`Unexpected file upload error on ${fieldName}:`, {
+        code: err.code,
+        message: err.message,
+        field: err.field,
+        stack: err.stack
+      });
+    }
+  };
+
+  app.post("/create-media-account", (req, res, next) => {
+    upload.single("idProof")(req, res, (err) => {
+      handleMulterError(err, req, "idProof");
+      next();
+    });
+  });
+  app.post("/manual-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      handleMulterError(err, req, "file");
+      next();
+    });
+  });
+
+  app.use(configureCsrf());
+
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
 
@@ -81,24 +124,20 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
 
+  // Handle file-publication-data with optional filename in path for better PDF viewer display
+  // The filename is cosmetic - the actual file is retrieved using the artefactId query parameter
+  app.get("/file-publication-data/:filename", (req, res, next) => {
+    // Rewrite URL to remove filename from path, keeping query parameters
+    const queryIndex = req.url.indexOf("?");
+    req.url = "/file-publication-data" + (queryIndex >= 0 ? req.url.substring(queryIndex) : "");
+    next();
+  });
+
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
-
-  // Register admin pages with multer middleware for file upload
-  const upload = createFileUpload();
-  app.post("/manual-upload", (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      if (err) {
-        // Multer error occurred, but don't throw - let the route handler deal with validation
-        // Store the error so the POST handler can check it
-        (req as any).fileUploadError = err;
-      }
-      next();
-    });
-  });
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());

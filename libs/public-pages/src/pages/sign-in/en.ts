@@ -6,6 +6,6 @@ export const en = {
   commonPlatformLabel: "With a Common Platform account",
   cathLabel: "With a Court and tribunal hearings account",
   continueButton: "Continue",
-  createAccountText: "Don't have a CaTH account?",
-  createAccountLink: "Create one here"
+  createAccountText: "Don't have an account?",
+  createAccountLink: "Create a Court and tribunal hearings account"
 };

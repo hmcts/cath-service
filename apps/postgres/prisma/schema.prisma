@@ -22,3 +22,16 @@ model Artefact {
   @@map("artefact")
 }
 
+model MediaApplication {
+  id          String   @id @default(cuid())
+  fullName    String   @map("full_name")
+  email       String
+  employer    String
+  fileName    String   @map("file_name")
+  status      String   @default("PENDING")
+  requestDate DateTime @default(now()) @map("request_date")
+  statusDate  DateTime @default(now()) @map("status_date")
+
+  @@map("media_application")
+}
+

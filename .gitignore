@@ -32,6 +32,7 @@ coverage/
 lcov.info
 .playwright-mcp/
 .test-artefacts.json
+e2e-tests/junit-results.xml
 
 # Turborepo
 .turbo/
@@ -47,6 +48,13 @@ lcov.info
 
 # agentic env vars
 .mcp.env
+.mcp.json
 .claude/claude.env
 .claude/analytics
+
+# Temporary uploads
+apps/web/storage/temp/uploads/
+
+# Local storage
+storage/
 

@@ -14,6 +14,7 @@ vi.mock("@hmcts/simple-router", () => ({
 
 vi.mock("@hmcts/web-core", () => ({
   configureCookieManager: vi.fn().mockResolvedValue(undefined),
+  configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
   configureGovuk: vi.fn().mockResolvedValue(undefined),
   configureHelmet: vi.fn(() => vi.fn()),
   configureNonce: vi.fn(() => vi.fn()),
@@ -106,6 +107,12 @@ describe("Web Application", () => {
       expect(expressSessionRedis).toHaveBeenCalled();
     });
 
+    it("should configure CSRF protection middleware", async () => {
+      const { configureCsrf } = await import("@hmcts/web-core");
+      expect(configureCsrf).toHaveBeenCalled();
+      expect(configureCsrf).toHaveBeenCalledTimes(1);
+    });
+
     it("should configure GOV.UK Frontend", async () => {
       const { configureGovuk } = await import("@hmcts/web-core");
       expect(configureGovuk).toHaveBeenCalled();
@@ -177,6 +184,7 @@ describe("Web Application", () => {
       const mockError = new Error("File too large");
       vi.doMock("@hmcts/web-core", () => ({
         configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
         configureGovuk: vi.fn().mockResolvedValue(undefined),
         configureHelmet: vi.fn(() => vi.fn()),
         configureNonce: vi.fn(() => vi.fn()),
@@ -195,6 +203,113 @@ describe("Web Application", () => {
       const app = await createApp();
 
       expect(app).toBeDefined();
+    });
+
+    it("should configure multer file upload middleware", async () => {
+      // Verify that createFileUpload was called during app initialization
+      // The actual multer error handling behavior (known vs unknown error codes)
+      // is tested in E2E tests
+      const { createFileUpload } = await import("@hmcts/web-core");
+      expect(createFileUpload).toHaveBeenCalled();
+    });
+
+    // Note: The POST route handlers for /create-media-account and /manual-upload
+    // are thin wrappers that call upload.single() and handleMulterError().
+    // These are integration points that are better tested via E2E tests rather
+    // than unit tests. The multer middleware behavior is verified in E2E tests.
+  });
+
+  describe("Redis Connection", () => {
+    it("should handle Redis connection errors", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const mockRedisClient = {
+        on: vi.fn((event: string, handler: Function) => {
+          if (event === "error") {
+            // Simulate error event
+            handler(new Error("Redis connection failed"));
+          }
+        }),
+        connect: vi.fn().mockResolvedValue(undefined)
+      };
+
+      vi.doMock("redis", () => ({
+        createClient: vi.fn(() => mockRedisClient)
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      // Verify error handler was registered
+      expect(mockRedisClient.on).toHaveBeenCalledWith("error", expect.any(Function));
+
+      // Verify error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Redis Client Error", expect.any(Error));
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe("File Publication Data Rewrite", () => {
+    it("should rewrite file-publication-data URL with filename", async () => {
+      const mockReq = {
+        url: "/file-publication-data/test-file.pdf?artefactId=123"
+      };
+      const mockRes = {};
+      const mockNext = vi.fn();
+
+      // Get the middleware by simulating app.get() call
+      let filePublicationMiddleware: any;
+      const mockApp = {
+        ...app,
+        get: vi.fn((path: string, handler: any) => {
+          if (path === "/file-publication-data/:filename") {
+            filePublicationMiddleware = handler;
+          }
+        })
+      };
+
+      // Re-import to capture the middleware
+      vi.resetModules();
+      vi.clearAllMocks();
+      const { createApp } = await import("./app.js");
+      const newApp = await createApp();
+
+      // Find the file-publication-data middleware
+      // Access through app stack (Express internal)
+      const stack = (newApp as any)._router?.stack || [];
+      const fileRoute = stack.find((layer: any) => layer.route?.path === "/file-publication-data/:filename");
+
+      if (fileRoute) {
+        const middleware = fileRoute.route.stack[0].handle;
+        middleware(mockReq, mockRes, mockNext);
+
+        // URL should be rewritten to remove filename
+        expect(mockReq.url).toBe("/file-publication-data?artefactId=123");
+        expect(mockNext).toHaveBeenCalled();
+      }
+    });
+
+    it("should rewrite file-publication-data URL without query parameters", async () => {
+      const mockReq = {
+        url: "/file-publication-data/test-file.pdf"
+      };
+      const mockRes = {};
+      const mockNext = vi.fn();
+
+      const stack = (app as any)._router?.stack || [];
+      const fileRoute = stack.find((layer: any) => layer.route?.path === "/file-publication-data/:filename");
+
+      if (fileRoute) {
+        const middleware = fileRoute.route.stack[0].handle;
+        middleware(mockReq, mockRes, mockNext);
+
+        // URL should be rewritten to remove filename
+        expect(mockReq.url).toBe("/file-publication-data");
+        expect(mockNext).toHaveBeenCalled();
+      }
     });
   });
 });

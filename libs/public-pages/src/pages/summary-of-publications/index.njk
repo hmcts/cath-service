@@ -19,12 +19,19 @@
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
     {% if publications.length > 0 %}
+      <p class="govuk-body">{{ instructionText }}</p>
       <ul class="govuk-list">
         {% for publication in publications %}
           <li style="margin-bottom: 15px;">
-            <a href="/publication/{{ publication.id }}" class="govuk-link">
-              {{ publication.listTypeName }} - {{ publication.formattedDate }} - {{ publication.languageLabel }}
+            {% if publication.isPdf %}
+            <a href="/file-publication?artefactId={{ publication.id }}" class="govuk-body govuk-!-font-size-16 govuk-link" target="_blank" rel="noopener noreferrer">
+              {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+            </a> <span class="govuk-!-font-size-16">{{ opensInNewWindow }}</span>
+            {% else %}
+            <a href="/file-publication-data?artefactId={{ publication.id }}" class="govuk-body govuk-!-font-size-16 govuk-link" download>
+              {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
             </a>
+            {% endif %}
           </li>
         {% endfor %}
       </ul>

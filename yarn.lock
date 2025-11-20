@@ -765,6 +765,7 @@ __metadata:
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
   dependencies:
     "@hmcts/location": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
   peerDependencies:
     express: ^5.1.0
@@ -933,6 +934,7 @@ __metadata:
   peerDependencies:
     "@hmcts/cookie-manager": ^1.1.0
     connect-redis: ^9.0.0
+    csrf-sync: ^4.2.1
     express: ^5.1.0
     express-session: ^1.18.2
     govuk-frontend: ^5.2.0
@@ -982,6 +984,7 @@ __metadata:
     config: "npm:4.1.1"
     connect-redis: "npm:9.0.0"
     cookie-parser: "npm:1.4.7"
+    csrf-sync: "npm:^4.2.1"
     dotenv: "npm:17.2.3"
     express: "npm:5.1.0"
     express-session: "npm:1.18.2"
@@ -3642,6 +3645,15 @@ __metadata:
     object-assign: "npm:^4"
     vary: "npm:^1"
   checksum: 10c0/373702b7999409922da80de4a61938aabba6929aea5b6fd9096fefb9e8342f626c0ebd7507b0e8b0b311380744cc985f27edebc0a26e0ddb784b54e1085de761
+  languageName: node
+  linkType: hard
+
+"csrf-sync@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "csrf-sync@npm:4.2.1"
+  dependencies:
+    http-errors: "npm:^2.0.0"
+  checksum: 10c0/4d3280e12af95ed71f6dcdd28d768add96899f768aa23a8afdb7d548dec66b0bbfc16445dfdf462a586fb4c9bd4fc0e0cdce69287283fe2fea7e5dbc5ac2bcbc
   languageName: node
   linkType: hard
 

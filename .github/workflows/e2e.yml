@@ -127,10 +127,21 @@ jobs:
           yarn workspace e2e-tests run test:e2e 2>&1 | tee e2e-server-logs.txt
 
       # Publish test results to PR checks
+      - name: Check if junit results exist
+        id: check-junit
+        if: always()
+        run: |
+          if [ -f e2e-tests/junit-results.xml ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ junit-results.xml not found - tests may not have run in CI mode"
+          fi
+
       - name: Test Report
         id: test-report
         uses: dorny/test-reporter@v2
-        if: always()
+        if: always() && steps.check-junit.outputs.exists == 'true'
         with:
           name: E2E Test Results
           path: e2e-tests/junit-results.xml
@@ -160,7 +171,7 @@ jobs:
       # Publish test results as a PR comment
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && steps.check-junit.outputs.exists == 'true'
         with:
           files: e2e-tests/junit-results.xml
           check_name: E2E Test Results
