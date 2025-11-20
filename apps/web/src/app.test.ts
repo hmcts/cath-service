@@ -212,6 +212,11 @@ describe("Web Application", () => {
       const { createFileUpload } = await import("@hmcts/web-core");
       expect(createFileUpload).toHaveBeenCalled();
     });
+
+    // Note: The POST route handlers for /create-media-account and /manual-upload
+    // are thin wrappers that call upload.single() and handleMulterError().
+    // These are integration points that are better tested via E2E tests rather
+    // than unit tests. The multer middleware behavior is verified in E2E tests.
   });
 
   describe("Redis Connection", () => {
