@@ -535,8 +535,8 @@ test.describe("Create Media Account", () => {
       await expect(errorHeading).toBeVisible();
 
       // Verify error links have accessible names
-      const fullNameError = errorSummary.getByRole("link", { name: /enter your full name/i });
-      await expect(fullNameError).toHaveAccessibleName(/enter your full name/i);
+      const fullNameError = errorSummary.getByRole("link", { name: /full name field must be populated/i });
+      await expect(fullNameError).toHaveAccessibleName(/full name field must be populated/i);
       await expect(fullNameError).toHaveAttribute("href", "#fullName");
 
       // Verify inline error messages are visible
