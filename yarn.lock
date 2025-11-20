@@ -499,9 +499,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.3.6":
+"@biomejs/cli-linux-arm64@npm:2.3.6, @biomejs/cli-linux-arm64@npm:^2.3.6":
   version: 2.3.6
   resolution: "@biomejs/cli-linux-arm64@npm:2.3.6"
+  checksum: 10c0/b407a65a0fd2f37a4d7991bc60a2b3aa1a8f370027cb00ac3141b4b57d467d0b3765ce023e70d3453cfea8a4274e10d6b85cea72baee1456e885a0b39d7a3a16
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
@@ -3403,6 +3404,7 @@ __metadata:
   resolution: "cath@workspace:."
   dependencies:
     "@biomejs/biome": "npm:2.3.6"
+    "@biomejs/cli-linux-arm64": "npm:^2.3.6"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/node": "npm:24.10.1"
     "@types/passport": "npm:1.0.17"

@@ -1,5 +1,10 @@
-import type { ValidationResult } from "@hmcts/publication";
 import type { ListType } from "./mock-list-types.js";
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: unknown[];
+  schemaVersion: string;
+}
 
 /**
  * Converts list type name to kebab-case for dynamic imports
