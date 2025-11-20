@@ -376,8 +376,8 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(continueButton).toHaveAccessibleName(/continue/i);
 
       // Verify create account link has accessible name
-      const createAccountLink = page.getByRole("link", { name: /create one here/i });
-      await expect(createAccountLink).toHaveAccessibleName(/create one here/i);
+      const createAccountLink = page.getByRole("link", { name: /create a court and tribunal hearings account/i });
+      await expect(createAccountLink).toHaveAccessibleName(/create a court and tribunal hearings account/i);
     });
 
     test("should announce error messages properly to screen readers", async ({ page }) => {
