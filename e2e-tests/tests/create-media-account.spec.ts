@@ -91,10 +91,12 @@ test.describe("Create Media Account", () => {
 
       // Submit the form
       const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
 
-      // Verify redirect to confirmation page
-      await expect(page).toHaveURL("/account-request-submitted");
+      // Wait for navigation after clicking continue
+      await Promise.all([
+        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
+        continueButton.click()
+      ]);
 
       // Verify confirmation page content
       const bannerTitle = page.getByRole("heading", { name: /details submitted/i });
@@ -125,9 +127,12 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
 
-      await expect(page).toHaveURL("/account-request-submitted");
+      // Wait for navigation after clicking continue
+      await Promise.all([
+        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
+        continueButton.click()
+      ]);
     });
 
     test("should accept PNG file format", async ({ page }) => {
@@ -148,9 +153,12 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
 
-      await expect(page).toHaveURL("/account-request-submitted");
+      // Wait for navigation after clicking continue
+      await Promise.all([
+        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
+        continueButton.click()
+      ]);
     });
   });
 
@@ -418,10 +426,12 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /parhau/i });
-      await continueButton.click();
 
-      // Verify redirect to Welsh confirmation page
-      await expect(page).toHaveURL(/\/account-request-submitted.*lng=cy/);
+      // Wait for navigation to Welsh confirmation page
+      await Promise.all([
+        page.waitForURL(/\/account-request-submitted.*lng=cy/, { timeout: 10000 }),
+        continueButton.click()
+      ]);
 
       // Verify Welsh confirmation page content
       const bannerTitle = page.getByRole("heading", { name: /cyflwyno manylion/i });
@@ -579,10 +589,12 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
 
-      // Now test the confirmation page
-      await expect(page).toHaveURL("/account-request-submitted");
+      // Wait for navigation after clicking continue
+      await Promise.all([
+        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
+        continueButton.click()
+      ]);
 
       // Check panel component
       const panel = page.locator(".govuk-panel");
@@ -620,9 +632,12 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
 
-      await expect(page).toHaveURL("/account-request-submitted");
+      // Wait for navigation after clicking continue
+      await Promise.all([
+        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
+        continueButton.click()
+      ]);
 
       // Run accessibility checks
       const accessibilityScanResults = await new AxeBuilder({ page })
