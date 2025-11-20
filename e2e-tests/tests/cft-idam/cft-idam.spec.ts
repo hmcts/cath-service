@@ -78,7 +78,7 @@ test.describe('CFT IDAM Login Flow', () => {
 
     // Test 2: CFT login preserves query parameters in redirect
     await page.goto('/cft-login?lng=cy&test=value');
-    await page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
+    await page.waitForLoadState('networkidle');
     currentUrl = page.url();
     expect(currentUrl).toMatch(/lng=cy|ui_locales=cy/);
     expect(currentUrl).toMatch(/test=value/);
