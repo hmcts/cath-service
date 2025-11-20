@@ -79,4 +79,27 @@ jobs:
             The environment has been set up and dependencies installed.
             You have access to JIRA via MCP tools (jira_search, jira_get_issue, jira_add_comment).
             You have access to the /expressjs-monorepo:qk-plan command from the hmcts/.claude marketplace.
+
             Automate JIRA ticket planning for prioritized backlog items.
+
+            Task:
+            1. Use jira_search to find all VIBE tickets with status "Prioritized Backlog"
+            2. For each ticket, check if a branch feature/VIBE-[num]-[slug] exists
+            3. For tickets without branches:
+               a. Create the branch with appropriate slug from ticket title
+               b. Run /expressjs-monorepo:qk-plan VIBE-[num] to generate technical planning
+               c. Commit generated docs to the branch
+               d. Push the branch to remote
+               e. Extract a 2-3 sentence summary from the plan.md
+               f. Use jira_add_comment to post the summary with links to:
+                  - Branch URL
+                  - Specification doc URL
+                  - Tasks doc URL
+
+            Important:
+            - Process all tickets sequentially (not in parallel)
+            - If a ticket fails, log the error and continue with next ticket
+            - Include error handling for JIRA API failures
+            - Format JIRA comments clearly with headings and links
+
+            Process all tickets systematically and provide clear logging.
