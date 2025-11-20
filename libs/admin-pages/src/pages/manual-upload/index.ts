@@ -130,17 +130,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     const errorMessage = multerErrorMap[fileUploadError.code];
 
-    // Only proceed if we have a valid error message (mapped or fallback)
     if (errorMessage) {
-      // Log unexpected multer errors for debugging
-      if (!multerErrorMap[fileUploadError.code]) {
-        console.error("Unhandled multer error in manual-upload:", {
-          code: fileUploadError.code,
-          message: fileUploadError.message ?? "unknown",
-          field: fileUploadError.field ?? "unknown"
-        });
-      }
-
       // Remove any existing file errors to avoid duplicates (filter by href/field)
       errors = errors.filter((e) => e.href !== "#file");
       // Add the specific multer error at the beginning
