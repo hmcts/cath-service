@@ -67,7 +67,7 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const { header, openJustice, listData } = renderCauseListData(jsonData, {
+    const { header, openJustice, listData } = await renderCauseListData(jsonData, {
       locationId: artefact.locationId,
       contentDate: artefact.contentDate,
       locale
