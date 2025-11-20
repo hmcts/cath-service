@@ -14,6 +14,7 @@ vi.mock("@hmcts/simple-router", () => ({
 
 vi.mock("@hmcts/web-core", () => ({
   configureCookieManager: vi.fn().mockResolvedValue(undefined),
+  configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
   configureGovuk: vi.fn().mockResolvedValue(undefined),
   configureHelmet: vi.fn(() => vi.fn()),
   configureNonce: vi.fn(() => vi.fn()),
@@ -177,6 +178,7 @@ describe("Web Application", () => {
       const mockError = new Error("File too large");
       vi.doMock("@hmcts/web-core", () => ({
         configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
         configureGovuk: vi.fn().mockResolvedValue(undefined),
         configureHelmet: vi.fn(() => vi.fn()),
         configureNonce: vi.fn(() => vi.fn()),
