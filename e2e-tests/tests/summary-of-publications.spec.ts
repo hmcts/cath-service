@@ -88,8 +88,8 @@ test.describe("Summary of Publications Page", () => {
 
   test.describe("given location has no publications", () => {
     test("should display no publications message", async ({ page }) => {
-      // Using locationId=9001 which exists but has no publications
-      await page.goto("/summary-of-publications?locationId=9001");
+      // Using locationId=9002 which exists but has no publications
+      await page.goto("/summary-of-publications?locationId=9002");
 
       // Check for empty state message using getByText for specificity
       await expect(page.getByText(/sorry, no lists found for this court/i)).toBeVisible();
@@ -234,7 +234,7 @@ test.describe("Summary of Publications Page", () => {
     });
 
     test("should preserve language selection with no publications message", async ({ page }) => {
-      await page.goto("/summary-of-publications?locationId=9001&lng=cy");
+      await page.goto("/summary-of-publications?locationId=9002&lng=cy");
 
       // Wait for page to load
       await page.waitForSelector("h1.govuk-heading-l");
