@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Summary of Publications Page", () => {
   test.describe("given user navigates with valid locationId", () => {
     test("should load the page with publications list and accessibility compliance", async ({ page }) => {
-      await page.goto("/summary-of-publications?locationId=9009");
+      await page.goto("/summary-of-publications?locationId=9");
 
       // Check the page has loaded
       await expect(page).toHaveTitle(/.*/);
@@ -24,7 +24,7 @@ test.describe("Summary of Publications Page", () => {
       const backLink = page.locator(".govuk-back-link");
       await expect(backLink).toBeVisible();
 
-      // Check for publication links (locationId=9009 has multiple publications in mock data)
+      // Check for publication links (locationId=9 has multiple publications in mock data)
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       await expect(publicationLinks.first()).toBeVisible();
 
@@ -56,7 +56,7 @@ test.describe("Summary of Publications Page", () => {
     });
 
     test("should display publications as clickable links with correct format", async ({ page }) => {
-      await page.goto("/summary-of-publications?locationId=9009");
+      await page.goto("/summary-of-publications?locationId=9");
 
       // Get publication links
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
@@ -160,7 +160,7 @@ test.describe("Summary of Publications Page", () => {
       await continueButton.click();
 
       // Verify we're on summary-of-publications page
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9009");
+      await expect(page).toHaveURL("/summary-of-publications?locationId=9");
 
       // Use page.goBack() to verify browser history works
       await page.goBack();
@@ -170,7 +170,7 @@ test.describe("Summary of Publications Page", () => {
 
   test.describe("given user toggles language", () => {
     test("should display Welsh content when language is changed to Welsh", async ({ page }) => {
-      await page.goto("/summary-of-publications?locationId=9009");
+      await page.goto("/summary-of-publications?locationId=9");
 
       // Wait for page to load
       await page.waitForSelector("h1.govuk-heading-l");
@@ -186,7 +186,7 @@ test.describe("Summary of Publications Page", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify URL has Welsh parameter AND locationId is preserved
-      await expect(page).toHaveURL(/.*locationId=9009.*lng=cy/);
+      await expect(page).toHaveURL(/.*locationId=9.*lng=cy/);
 
       // Verify language toggle now shows English option
       await expect(languageToggle).toContainText("English");
@@ -205,7 +205,7 @@ test.describe("Summary of Publications Page", () => {
     });
 
     test("should switch back to English when language toggle is clicked again", async ({ page }) => {
-      await page.goto("/summary-of-publications?locationId=9009&lng=cy");
+      await page.goto("/summary-of-publications?locationId=9&lng=cy");
 
       // Wait for page to load
       await page.waitForSelector("h1.govuk-heading-l");
@@ -224,7 +224,7 @@ test.describe("Summary of Publications Page", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify URL has English parameter AND locationId is preserved
-      await expect(page).toHaveURL(/.*locationId=9009.*lng=en/);
+      await expect(page).toHaveURL(/.*locationId=9.*lng=en/);
 
       // Verify language toggle now shows Welsh option
       await expect(languageToggle).toContainText("Cymraeg");
@@ -276,7 +276,7 @@ test.describe("Summary of Publications Page", () => {
       await continueButton.click();
 
       // Verify navigation
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9009");
+      await expect(page).toHaveURL("/summary-of-publications?locationId=9");
 
       // Final accessibility check on summary-of-publications page
       accessibilityScanResults = await new AxeBuilder({ page })
@@ -299,9 +299,9 @@ test.describe("Summary of Publications Page", () => {
       await continueButton.click();
 
       // Verify we're on the correct page
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9009");
+      await expect(page).toHaveURL("/summary-of-publications?locationId=9");
 
-      // Verify heading includes location name (locationId=9009 should resolve to a location in mock data)
+      // Verify heading includes location name (locationId=9 should resolve to a location in mock data)
       const heading = page.locator("h1.govuk-heading-l");
       await expect(heading).toBeVisible();
       await expect(heading).toContainText("What do you want to view from");
@@ -310,7 +310,7 @@ test.describe("Summary of Publications Page", () => {
 
   test.describe("given publications are sorted by date", () => {
     test("should display publications in descending date order (newest first)", async ({ page }) => {
-      await page.goto("/summary-of-publications?locationId=9009");
+      await page.goto("/summary-of-publications?locationId=9");
 
       // Get all publication links
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');

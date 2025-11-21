@@ -58,7 +58,7 @@ export async function verifySeedData(): Promise<VerificationResult> {
     }
 
     // Verify specific test locations exist
-    const requiredLocationIds = [9001, 9009];
+    const requiredLocationIds = [9001, 9];
     for (const locationId of requiredLocationIds) {
       const location = locations.find((l: any) => l.locationId === locationId);
       if (!location) {
@@ -80,12 +80,12 @@ export async function verifySeedData(): Promise<VerificationResult> {
     const artefacts = await prisma.artefact.findMany();
     console.log(`✓ Found ${artefacts.length} artefacts`);
 
-    // Verify locationId=9009 has artefacts
-    const sjpArtefacts = artefacts.filter((a: any) => a.locationId === "9009");
+    // Verify locationId=9 has artefacts
+    const sjpArtefacts = artefacts.filter((a: any) => a.locationId === "9");
     if (sjpArtefacts.length === 0) {
-      errors.push("Location 9009 (SJP Court) has no artefacts");
+      errors.push("Location 9 (SJP Court) has no artefacts");
     } else {
-      console.log(`  ✓ Location 9009 has ${sjpArtefacts.length} artefacts`);
+      console.log(`  ✓ Location 9 has ${sjpArtefacts.length} artefacts`);
     }
 
     // Verify locationId=9001 has NO artefacts (for "no publications" test)

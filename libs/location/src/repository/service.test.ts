@@ -75,7 +75,7 @@ vi.mock("./queries.js", () => ({
         subJurisdictions: [1, 2]
       },
       {
-        locationId: 9009,
+        locationId: 9,
         name: "Single Justice Procedure",
         welshName: "Gweithdrefn Ynad Unigol",
         regions: [6],

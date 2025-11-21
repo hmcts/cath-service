@@ -1,6 +1,15 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@hmcts/auth", () => ({
+  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  USER_ROLES: {
+    SYSTEM_ADMIN: "SYSTEM_ADMIN",
+    INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
+    INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
+  }
+}));
+
 describe("remove-list-success page", () => {
   describe("GET handler", () => {
     it("should redirect to search page if no success flag in session", async () => {

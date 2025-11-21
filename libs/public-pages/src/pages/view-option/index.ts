@@ -39,7 +39,7 @@ export const POST = async (req: Request, res: Response) => {
   }
 
   if (selectedOption === "sjp-case") {
-    return res.redirect("/summary-of-publications?locationId=9009");
+    return res.redirect("/summary-of-publications?locationId=9");
   }
 
   const errors: ViewOptionError[] = [

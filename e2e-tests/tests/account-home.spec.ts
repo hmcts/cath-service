@@ -90,7 +90,7 @@ test.describe("Account Home Page", () => {
     test("should have SJP cases box as clickable link", async ({ page }) => {
       await page.goto("/account-home");
       const box = page.locator(".verified-tile").nth(1);
-      await expect(box).toHaveAttribute("href", "/summary-of-publications?locationId=9009");
+      await expect(box).toHaveAttribute("href", "/summary-of-publications?locationId=9");
     });
 
     test("should display description paragraph", async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe("Account Home Page", () => {
       await page.goto("/account-home");
       const box = page.locator(".verified-tile").nth(1);
       await box.click();
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9009");
+      await expect(page).toHaveURL("/summary-of-publications?locationId=9");
     });
   });
 
@@ -349,7 +349,7 @@ test.describe("Account Home Page", () => {
 
       const boxes = page.locator(".verified-tile");
       await expect(boxes.nth(0)).toHaveAttribute("href", "/search");
-      await expect(boxes.nth(1)).toHaveAttribute("href", "/summary-of-publications?locationId=9009");
+      await expect(boxes.nth(1)).toHaveAttribute("href", "/summary-of-publications?locationId=9");
       await expect(boxes.nth(2)).toHaveAttribute("href", "/");
     });
   });

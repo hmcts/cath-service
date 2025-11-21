@@ -14,26 +14,28 @@ function capitalizeFirstLetter(text: string): string {
 }
 
 async function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof getArtefactsByIds>>, locale: "en" | "cy") {
-  return Promise.all(artefacts.map(async (artefact) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-    const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
+  return Promise.all(
+    artefacts.map(async (artefact) => {
+      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
-    const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
-    const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
+      const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
+      const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
 
-    const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
-    const language = capitalizeFirstLetter(artefact.language);
-    const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
+      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
+      const language = capitalizeFirstLetter(artefact.language);
+      const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
 
-    return {
-      listType: listTypeName,
-      court: courtName,
-      contentDate: formatDateString(artefact.contentDate),
-      displayDates,
-      language,
-      sensitivity
-    };
-  }));
+      return {
+        listType: listTypeName,
+        court: courtName,
+        contentDate: formatDateString(artefact.contentDate),
+        displayDates,
+        language,
+        sensitivity
+      };
+    })
+  );
 }
 
 async function renderConfirmationPage(

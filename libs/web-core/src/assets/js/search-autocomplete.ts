@@ -10,7 +10,7 @@ interface Location {
 }
 
 async function fetchLocations(language: "en" | "cy"): Promise<Location[]> {
-  const response = await fetch(`/api/locations?language=${language}`);
+  const response = await fetch(`/locations?language=${language}`);
   if (!response.ok) {
     throw new Error("Failed to fetch locations");
   }
@@ -18,7 +18,7 @@ async function fetchLocations(language: "en" | "cy"): Promise<Location[]> {
 }
 
 async function fetchSearchResults(query: string, language: "en" | "cy"): Promise<Location[]> {
-  const response = await fetch(`/api/locations?q=${encodeURIComponent(query)}&language=${language}`);
+  const response = await fetch(`/locations?q=${encodeURIComponent(query)}&language=${language}`);
   if (!response.ok) {
     throw new Error("Failed to search locations");
   }

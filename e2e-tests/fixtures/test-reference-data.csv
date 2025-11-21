@@ -7,5 +7,5 @@ LOCATION_ID,LOCATION_NAME,WELSH_LOCATION_NAME,EMAIL,CONTACT_NO,SUB_JURISDICTION_
 9006,Test Court Zeta,Llys Prawf Zeta,test.zeta@test.hmcts.net,01234567895,Civil Court;Crown Court,North
 9007,Test Court Eta,Llys Prawf Eta,test.eta@test.hmcts.net,01234567896,Civil Court;Family Court,South East
 9008,Test Court Theta,Llys Prawf Theta,test.theta@test.hmcts.net,01234567897,Civil Court;Family Court,North
-9009,Test SJP Court,Llys Prawf SJP,sjp@test.hmcts.net,01234567898,Magistrates Court,London;Midlands;South East;North;Wales
+9,Test SJP Court,Llys Prawf SJP,sjp@test.hmcts.net,01234567898,Magistrates Court,London;Midlands;South East;North;Wales
 9010,Test Court Iota,Llys Prawf Iota,test.iota@test.hmcts.net,01234567899,Civil Court;Crown Court,North

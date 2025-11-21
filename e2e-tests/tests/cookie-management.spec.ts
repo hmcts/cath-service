@@ -164,7 +164,14 @@ test.describe("Cookie Management", () => {
       const cookies = await page.context().cookies();
       const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
       expect(cookiePolicy).toBeDefined();
-      const policyValue = JSON.parse(decodeURIComponent(cookiePolicy!.value));
+      // Cookie value may be double-encoded, decode until we get valid JSON
+      let decodedValue = cookiePolicy!.value;
+      try {
+        decodedValue = decodeURIComponent(decodedValue);
+      } catch (e) {
+        // Already decoded
+      }
+      const policyValue = JSON.parse(decodedValue);
       expect(policyValue.analytics).toBe("on");
       expect(policyValue.preferences).toBe("off");
     });

@@ -188,7 +188,7 @@ export async function seedLocationData(): Promise<void> {
 
     console.log(`\n✓ Successfully seeded ${locations.length} locations`);
 
-    // Seed artefacts for Single Justice Procedure court (locationId 9009)
+    // Seed artefacts for Single Justice Procedure court (locationId 9)
     // This is needed for the summary-of-publications page to have data to display
     console.log("\n=== Seeding Test Artefacts ===");
     await seedSjpArtefacts();
@@ -202,41 +202,53 @@ export async function seedLocationData(): Promise<void> {
 
 async function seedSjpArtefacts(): Promise<void> {
   try {
-    const sjpLocationId = "9009";
+    const sjpLocationId = "9";
     console.log(`Seeding artefacts for locationId ${sjpLocationId} (Test SJP Court)`);
 
     // Create multiple test artefacts for different dates and list types
+    // Use dates relative to now to ensure they're always visible
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const oneWeekAgo = new Date(today);
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const oneWeekFromNow = new Date(today);
+    oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+
     const testArtefacts = [
       {
         locationId: sjpLocationId,
         listTypeId: 6, // Crown Daily List
-        contentDate: new Date("2025-10-23"),
+        contentDate: yesterday,
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: new Date("2025-10-20"),
-        displayTo: new Date("2025-10-30"),
+        displayFrom: oneWeekAgo,
+        displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
       },
       {
         locationId: sjpLocationId,
         listTypeId: 7, // Crown Warned List
-        contentDate: new Date("2025-10-24"),
+        contentDate: today,
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: new Date("2025-10-21"),
-        displayTo: new Date("2025-10-31"),
+        displayFrom: oneWeekAgo,
+        displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
       },
       {
         locationId: sjpLocationId,
         listTypeId: 1, // Family Daily Cause List
-        contentDate: new Date("2025-10-25"),
+        contentDate: twoDaysAgo,
         sensitivity: "PRIVATE",
         language: "ENGLISH",
-        displayFrom: new Date("2025-10-22"),
-        displayTo: new Date("2025-11-01"),
+        displayFrom: oneWeekAgo,
+        displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
       },

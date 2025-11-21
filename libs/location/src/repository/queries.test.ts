@@ -78,7 +78,7 @@ const mockLocations = [
     locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
   },
   {
-    locationId: 9009,
+    locationId: 9,
     name: "Single Justice Procedure",
     welshName: "Gweithdrefn Ynad Unigol",
     locationRegions: [{ region: { regionId: 6 } }],
@@ -213,7 +213,7 @@ describe("getLocationById", () => {
   });
 
   it("should return Single Justice Procedure location", async () => {
-    const location = await getLocationById(9009);
+    const location = await getLocationById(9);
     expect(location).toBeDefined();
     expect(location?.name).toBe("Single Justice Procedure");
   });
