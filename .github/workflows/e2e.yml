@@ -114,14 +114,19 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for PostgreSQL service to be ready
+        run: timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U hmcts; do sleep 1; done'
+
+      - name: Collate Prisma schema
+        run: |
+          echo "Collating Prisma schema from all modules..."
+          cd apps/postgres && npx tsx src/collate-schema.ts && cd ../..
+
       - name: Generate Prisma client
         run: yarn db:generate
-
-      - name: Start PostgreSQL
-        run: docker compose up -d
-
-      - name: Wait for PostgreSQL to be ready
-        run: timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U hmcts; do sleep 1; done'
 
       - name: Run database migrations
         run: yarn db:migrate
@@ -135,7 +140,7 @@ jobs:
       - name: Verify seed data exists
         run: |
           echo "Verifying seed data for locationId=9..."
-          ARTEFACT_COUNT=$(docker compose exec -T postgres psql -U hmcts -d postgres -t -c "SELECT COUNT(*) FROM artefact WHERE location_id = '9';")
+          ARTEFACT_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM artefact WHERE location_id = '9';")
           ARTEFACT_COUNT=$(echo $ARTEFACT_COUNT | xargs)
           echo "Found $ARTEFACT_COUNT artefacts for locationId=9"
           if [ "$ARTEFACT_COUNT" -lt 3 ]; then
@@ -146,25 +151,6 @@ jobs:
 
       - name: Build packages
         run: yarn build
-
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Reset and migrate database
-        env:
-          DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
-        run: |
-          # Wait for PostgreSQL to be ready
-          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U hmcts; do sleep 1; done'
-
-          # Collate schema first (required before Prisma commands)
-          cd apps/postgres && npx tsx src/collate-schema.ts && cd ../..
-
-          # Reset the database to ensure clean state (drops all tables and re-applies migrations)
-          cd apps/postgres && npx prisma migrate reset --force --skip-seed && cd ../..
-
-          # Generate Prisma client with all models
-          yarn db:generate
 
       - name: Generate self-signed certificates for CI
         run: |

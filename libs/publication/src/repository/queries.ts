@@ -60,7 +60,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
   });
 
   return artefacts.map(
-    (artefact): Artefact => ({
+    (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
@@ -85,7 +85,7 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
   });
 
   return artefacts.map(
-    (artefact): Artefact => ({
+    (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
