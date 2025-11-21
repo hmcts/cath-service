@@ -44,14 +44,10 @@ export const GET = async (req: Request, res: Response) => {
 
     // Create or update user record in database
     try {
-      const nameParts = userInfo.displayName.split(" ");
-      const firstName = nameParts[0] || undefined;
-      const surname = nameParts.slice(1).join(" ") || undefined;
-
       await createOrUpdateUser({
         email: userInfo.email,
-        firstName,
-        surname,
+        firstName: userInfo.firstName,
+        surname: userInfo.surname,
         userProvenance: "CFT_IDAM",
         userProvenanceId: userInfo.id,
         role: "VERIFIED"

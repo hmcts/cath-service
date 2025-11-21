@@ -8,6 +8,7 @@ vi.mock("@hmcts/postgres", () => ({
     user: {
       create: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       update: vi.fn()
     }
   }
@@ -145,11 +146,11 @@ describe("User Repository", () => {
         lastSignedInDate: new Date()
       };
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+      vi.mocked(prisma.user.findFirst).mockResolvedValue(mockUser);
 
       const result = await findUserByEmail(email);
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      expect(prisma.user.findFirst).toHaveBeenCalledWith({
         where: { email }
       });
       expect(result).toEqual(mockUser);
