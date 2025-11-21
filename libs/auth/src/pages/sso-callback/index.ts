@@ -1,4 +1,5 @@
 import { USER_ROLES } from "@hmcts/account";
+import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import passport from "passport";
 import { isSsoConfigured } from "../../config/sso-config.js";
@@ -41,7 +42,11 @@ export const GET = [
         role: req.user.role as "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN"
       });
     } catch (error) {
-      console.error("Error creating/updating SSO user:", error);
+      trackException(error as Error, {
+        area: "SSO callback",
+        userEmail: req.user?.email,
+        userId: req.user?.id
+      });
       // Continue with authentication even if database write fails
     }
 

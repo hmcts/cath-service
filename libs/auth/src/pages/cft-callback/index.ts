@@ -1,3 +1,4 @@
+import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import { exchangeCodeForToken, extractUserInfoFromToken } from "../../cft-idam/token-client.js";
 import { getCftIdamConfig } from "../../config/cft-idam-config.js";
@@ -56,7 +57,11 @@ export const GET = async (req: Request, res: Response) => {
         role: "VERIFIED"
       });
     } catch (error) {
-      console.error("Error creating/updating CFT user:", error);
+      trackException(error as Error, {
+        area: "CFT callback",
+        userEmail: userInfo.email,
+        userId: userInfo.id
+      });
       // Continue with authentication even if database write fails
     }
 
