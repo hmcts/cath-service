@@ -4,7 +4,8 @@
   "workspaces": [
     "apps/*",
     "e2e-tests",
-    "libs/*"
+    "libs/*",
+    "libs/list-types/*"
   ],
   "scripts": {
     "test": "turbo test",
@@ -41,7 +42,8 @@
   "license": "MIT",
   "description": "",
   "devDependencies": {
-    "@biomejs/biome": "2.3.6",
+    "@biomejs/biome": "2.3.7",
+    "@biomejs/cli-linux-arm64": "^2.3.6",
     "@types/node": "24.10.1",
     "@types/passport-azure-ad": "4.3.6",
     "@types/supertest": "6.0.3",

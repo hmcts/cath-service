@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the buildVerifiedUserNavigation and blockUserAccess functions from auth package
+// Mock the buildVerifiedUserNavigation, requireAuth, and blockUserAccess functions from auth package
 vi.mock("@hmcts/auth", () => ({
   buildVerifiedUserNavigation: vi.fn((currentPath: string, locale: string = "en") => {
     const translations = {
@@ -14,6 +14,7 @@ vi.mock("@hmcts/auth", () => ({
       { text: t.emailSubscriptions, href: "/", current: currentPath === "/", attributes: { "data-test": "email-subscriptions-link" } }
     ];
   }),
+  requireAuth: vi.fn(() => (_req: any, _res: any, next: any) => next()),
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 

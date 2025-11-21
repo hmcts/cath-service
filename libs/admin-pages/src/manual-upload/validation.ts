@@ -1,10 +1,11 @@
+import { mockListTypes, validateListTypeJson } from "@hmcts/list-types-common";
 import { type DateInput, parseDate } from "@hmcts/web-core";
 import type { en } from "../pages/manual-upload/en.js";
 import type { ManualUploadFormData, ValidationError } from "./model.js";
 
 export type { ValidationError };
 
-export function validateForm(body: ManualUploadFormData, file: Express.Multer.File | undefined, t: typeof en): ValidationError[] {
+export async function validateForm(body: ManualUploadFormData, file: Express.Multer.File | undefined, t: typeof en): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
   // File validation
@@ -17,6 +18,32 @@ export function validateForm(body: ManualUploadFormData, file: Express.Multer.Fi
     const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
     if (!allowedExtensions.test(file.originalname)) {
       errors.push({ text: t.errorMessages.fileType, href: "#file" });
+    }
+
+    // Validate JSON files against their schema
+    const isJsonFile = /\.json$/i.test(file.originalname);
+
+    if (isJsonFile && body.listType) {
+      try {
+        const fileContent = file.buffer.toString("utf-8");
+        const jsonData = JSON.parse(fileContent);
+
+        // Dynamically validate based on list type
+        const validationResult = await validateListTypeJson(body.listType, jsonData, mockListTypes);
+
+        if (!validationResult.isValid) {
+          const firstError = validationResult.errors[0] as { message?: string } | undefined;
+          errors.push({
+            text: `Invalid JSON file format. ${firstError?.message || "Please check the JSON structure."}`,
+            href: "#file"
+          });
+        }
+      } catch {
+        errors.push({
+          text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
+          href: "#file"
+        });
+      }
     }
   }
 

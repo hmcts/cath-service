@@ -1,0 +1,106 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <p class="govuk-body">{{ showingResults }} {{ resultCount }} {{ resultsText }}</p>
+
+    {% if resultCount > 0 %}
+      <h2 class="govuk-label govuk-label--m">{{ subHeading }}</h2>
+
+      <form method="post" novalidate>
+        <div class="govuk-table-container">
+          <table class="govuk-table">
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                  <a href="?sort=listType&order={{ 'desc' if sortBy == 'listType' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                    {{ tableHeaders.listType }}
+                    {% if sortBy == 'listType' %}
+                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% endif %}
+                  </a>
+                </th>
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                  <a href="?sort=courtName&order={{ 'desc' if sortBy == 'courtName' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                    {{ tableHeaders.courtName }}
+                    {% if sortBy == 'courtName' %}
+                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% endif %}
+                  </a>
+                </th>
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                  <a href="?sort=contentDate&order={{ 'desc' if sortBy == 'contentDate' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                    {{ tableHeaders.contentDate }}
+                    {% if sortBy == 'contentDate' %}
+                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% endif %}
+                  </a>
+                </th>
+                <th scope="col" class="govuk-table__header">{{ tableHeaders.displayDates }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                  <a href="?sort=language&order={{ 'desc' if sortBy == 'language' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                    {{ tableHeaders.language }}
+                    {% if sortBy == 'language' %}
+                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% endif %}
+                  </a>
+                </th>
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                  <a href="?sort=sensitivity&order={{ 'desc' if sortBy == 'sensitivity' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                    {{ tableHeaders.sensitivity }}
+                    {% if sortBy == 'sensitivity' %}
+                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% endif %}
+                  </a>
+                </th>
+                <th scope="col" class="govuk-table__header">{{ tableHeaders.select }}</th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for row in artefactRows %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ row.listType }}</td>
+                <td class="govuk-table__cell">{{ row.courtName }}</td>
+                <td class="govuk-table__cell">{{ row.contentDate }}</td>
+                <td class="govuk-table__cell">{{ row.displayDates }}</td>
+                <td class="govuk-table__cell">{{ row.language }}</td>
+                <td class="govuk-table__cell">{{ row.sensitivity }}</td>
+                <td class="govuk-table__cell">
+                  <div class="govuk-checkboxes govuk-checkboxes--small">
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="artefact-{{ loop.index }}" name="artefacts" type="checkbox" value="{{ row.artefactId }}">
+                      <label class="govuk-label govuk-checkboxes__label" for="artefact-{{ loop.index }}">
+                        <span class="govuk-visually-hidden">Select {{ row.listType }} for {{ row.courtName }}</span>
+                      </label>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {{ govukButton({
+          text: continueButton
+        }) }}
+      </form>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
