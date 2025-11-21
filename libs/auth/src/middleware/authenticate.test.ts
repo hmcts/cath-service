@@ -1,8 +1,18 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requireAuth } from "./authenticate.js";
 
+vi.mock("./redirect-helpers.js", () => ({
+  redirectUnauthenticated: vi.fn()
+}));
+
+import { redirectUnauthenticated } from "./redirect-helpers.js";
+
 describe("requireAuth middleware", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should call next() if user is authenticated", () => {
     const middleware = requireAuth();
     const req = {
@@ -15,24 +25,21 @@ describe("requireAuth middleware", () => {
     middleware(req, res, next);
 
     expect(next).toHaveBeenCalledOnce();
+    expect(redirectUnauthenticated).not.toHaveBeenCalled();
   });
 
-  it("should redirect to /auth/login if user is not authenticated", () => {
+  it("should call redirectUnauthenticated if user is not authenticated", () => {
     const middleware = requireAuth();
     const req = {
       isAuthenticated: () => false,
-      originalUrl: "/system-admin-dashboard",
-      session: {}
+      originalUrl: "/admin-dashboard"
     } as unknown as Request;
-    const res = {
-      redirect: vi.fn()
-    } as unknown as Response;
+    const res = {} as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/login");
+    expect(redirectUnauthenticated).toHaveBeenCalledWith(req, res);
     expect(next).not.toHaveBeenCalled();
-    expect(req.session.returnTo).toBe("/system-admin-dashboard");
   });
 });

@@ -7,9 +7,6 @@ import { loginWithCftIdam, assertAuthenticated, assertNotAuthenticated, logout }
 
 test.describe('CFT IDAM Login Flow', () => {
   test('Valid user can select HMCTS account and login via CFT IDAM', async ({ page }) => {
-    // Skip if credentials are not configured
-    test.skip(!process.env.CFT_VALID_TEST_ACCOUNT || !process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD, 'CFT IDAM test credentials not configured');
-
     await page.goto('/sign-in');
 
     // Select HMCTS account option
@@ -36,40 +33,8 @@ test.describe('CFT IDAM Login Flow', () => {
     await assertAuthenticated(page);
   });
 
-  test('Valid user maintains session after login', async ({ page }) => {
-    // Skip if credentials are not configured
-    test.skip(!process.env.CFT_VALID_TEST_ACCOUNT || !process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD, 'CFT IDAM test credentials not configured');
-
-    await page.goto('/sign-in');
-
-    // Login via CFT IDAM
-    const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
-
-    await loginWithCftIdam(
-      page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-    );
-
-    await expect(page).toHaveURL(/\/account-home/);
-
-    // Navigate to another page - session should persist
-    await page.goto('/');
-    await assertAuthenticated(page);
-
-    // Navigate to account-home again - should not require re-authentication
-    await page.goto('/account-home');
-    await expect(page).toHaveURL(/\/account-home/);
-  });
-
   test('User with rejected role (citizen) is redirected to cft-rejected page', async ({ page }) => {
     // Note: The "invalid" account is actually valid but has a rejected role (citizen)
-    // Skip if credentials are not configured
-    test.skip(!process.env.CFT_INVALID_TEST_ACCOUNT || !process.env.CFT_INVALID_TEST_ACCOUNT_PASSWORD, 'CFT IDAM invalid test credentials not configured');
-
     await page.goto('/sign-in');
 
     // Select HMCTS account
@@ -93,8 +58,8 @@ test.describe('CFT IDAM Login Flow', () => {
     await expect(heading).toBeVisible();
   });
 
-
-  test('Language parameter is preserved through CFT IDAM redirect', async ({ page }) => {
+  test('Language and query parameters are preserved through CFT IDAM flow', async ({ page }) => {
+    // Test 1: Language parameter is preserved through CFT IDAM redirect
     await page.goto('/sign-in?lng=cy');
 
     // Verify we're in Welsh mode
@@ -108,81 +73,60 @@ test.describe('CFT IDAM Login Flow', () => {
     await continueButton.click();
 
     // Check that language parameter is included in CFT IDAM redirect
-    const currentUrl = page.url();
+    let currentUrl = page.url();
     expect(currentUrl).toMatch(/lng=cy|ui_locales=cy/);
+
+    // Test 2: CFT login preserves language parameter in redirect
+    await page.goto('/cft-login?lng=cy');
+    await page.waitForLoadState('networkidle');
+    currentUrl = page.url();
+    expect(currentUrl).toMatch(/ui_locales=cy/);
+
+    // Test 3: CFT rejected page displays Welsh content correctly
+    await page.goto('/cft-rejected?lng=cy');
+
+    // Verify language toggle shows English
+    const languageToggle = page.locator('.language');
+    await expect(languageToggle).toContainText('English');
+
+    // Check for Welsh content
+    const welshHeading = page.locator('h1');
+    await expect(welshHeading).toBeVisible();
+
+    // Check return link still works
+    const signInLink = page.getByRole('link', { name: /yn ôl.*fewngofnodi|return.*sign/i });
+    await expect(signInLink).toHaveAttribute('href', '/sign-in');
+
+    // Run accessibility checks in Welsh
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .disableRules(['target-size', 'link-name'])
+      .analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test.skip('Direct access to protected resource redirects to sign-in', async ({ page }) => {
-    // Note: This test is currently skipped because the application allows access to /account-home without authentication
-    // TODO: Implement authentication middleware to protect this route
+  test('Authorization flow handles errors and protected resource access', async ({ page }) => {
+    // Test 1: Direct access to protected resource redirects to sign-in
     await page.goto('/account-home');
-
-    // Should redirect to sign-in page (unauthenticated)
     await expect(page).toHaveURL(/sign-in/);
     await assertNotAuthenticated(page);
-  });
 
-  test('Authorization flow handles missing code parameter', async ({ page }) => {
-    // Directly access the CFT IDAM return URL without code parameter
+    // Test 2: Authorization flow handles missing code parameter
     await page.goto('/cft-login/return');
-
-    // Should redirect to sign-in with error
     await expect(page).toHaveURL(/sign-in.*error/);
-
-    // Verify error parameter is present
-    const url = new URL(page.url());
+    let url = new URL(page.url());
     expect(url.searchParams.get('error')).toBeTruthy();
-  });
 
-  test('Authorization flow handles invalid code parameter', async ({ page }) => {
-    // Access the CFT IDAM return URL with invalid code
+    // Test 3: Authorization flow handles invalid code parameter
     await page.goto('/cft-login/return?code=invalid-code-12345');
-
-    // Should redirect to sign-in with error (token exchange will fail)
     await expect(page).toHaveURL(/sign-in.*error/);
-
-    // Verify error parameter is present
-    const url = new URL(page.url());
+    url = new URL(page.url());
     expect(url.searchParams.get('error')).toBeTruthy();
-  });
-
-  test('User can logout after CFT IDAM login', async ({ page }) => {
-    // Skip if credentials are not configured
-    test.skip(!process.env.CFT_VALID_TEST_ACCOUNT || !process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD, 'CFT IDAM test credentials not configured');
-
-    await page.goto('/sign-in');
-
-    // Login
-    const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    const continueButton = page.getByRole('button', { name: /continue/i });
-    await continueButton.click();
-
-    await loginWithCftIdam(
-      page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-    );
-
-    await expect(page).toHaveURL(/\/account-home/);
-
-    // Logout
-    await logout(page);
-
-    // Verify logged out
-    await expect(page).toHaveURL('/session-logged-out');
-
-    // Note: /account-home is not currently protected by authentication middleware
-    // TODO: Once authentication middleware is implemented, add test to verify redirect to sign-in
   });
 
   test('CFT IDAM login preserves original destination URL', async ({ page }) => {
-    // Note: This test depends on the application's redirect behavior
-    // Skip if the feature is not implemented
-    test.skip();
-
     // Try to access a specific protected page
-    await page.goto('/admin-dashboard');
+    await page.goto('/account-home');
 
     // Should redirect to sign-in
     await expect(page).toHaveURL(/sign-in/);
@@ -200,26 +144,102 @@ test.describe('CFT IDAM Login Flow', () => {
     );
 
     // Should be redirected back to original destination
-    await expect(page).toHaveURL('/admin-dashboard');
+    await expect(page).toHaveURL(/\/account-home/);
   });
 
-  test('CFT IDAM is not available when disabled', async ({ page }) => {
-    // This test would need CFT IDAM to be disabled
-    // Skip in normal test runs
-    test.skip();
-
+  test('CFT login endpoint redirects to IDAM when configured', async ({ page }) => {
     await page.goto('/cft-login');
+    await page.waitForLoadState('networkidle');
 
-    // Should return 503 error
-    await expect(page).toHaveURL(/cft-login/);
-    const content = await page.content();
-    expect(content).toContain('503');
+    // Should redirect to CFT IDAM
+    await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net/);
+  });
+});
+
+test.describe('CFT IDAM Session Management', () => {
+  test('Complete session lifecycle: login, navigation, reload, and logout', async ({ page }) => {
+    // Test 1: Accessing protected route without session redirects to sign-in
+    await page.goto('/account-home');
+    await expect(page).toHaveURL(/sign-in/);
+    await assertNotAuthenticated(page);
+
+    // Test 2: Login via CFT IDAM
+    await page.goto('/sign-in');
+    const hmctsRadio = page.getByRole('radio', { name: /with a myhmcts account/i });
+    await hmctsRadio.check();
+    const continueButton = page.getByRole('button', { name: /continue/i });
+    await continueButton.click();
+
+    await loginWithCftIdam(
+      page,
+      process.env.CFT_VALID_TEST_ACCOUNT!,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+    );
+
+    await expect(page).toHaveURL(/\/account-home/);
+    await assertAuthenticated(page);
+
+    // Test 3: Session persists across page navigations
+    await page.goto('/');
+    await assertAuthenticated(page);
+    await page.goto('/account-home');
+    await expect(page).toHaveURL(/\/account-home/);
+    await assertAuthenticated(page);
+
+    // Test 4: Session persists after page reload
+    await page.reload();
+    await assertAuthenticated(page);
+
+    // Test 5: User can logout
+    await logout(page);
+    await expect(page).toHaveURL('/session-logged-out');
+  });
+
+  test('Multiple concurrent sessions from same user are handled correctly', async ({ browser }) => {
+    const context1 = await browser.newContext();
+    const page1 = await context1.newPage();
+    const context2 = await browser.newContext();
+    const page2 = await context2.newPage();
+
+    // Login in first context
+    await page1.goto('/sign-in');
+    const hmctsRadio1 = page1.getByRole('radio', { name: /with a myhmcts account/i });
+    await hmctsRadio1.check();
+    const continueButton1 = page1.getByRole('button', { name: /continue/i });
+    await continueButton1.click();
+    await loginWithCftIdam(
+      page1,
+      process.env.CFT_VALID_TEST_ACCOUNT!,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+    );
+    await assertAuthenticated(page1);
+
+    // Login in second context
+    await page2.goto('/sign-in');
+    const hmctsRadio2 = page2.getByRole('radio', { name: /with a myhmcts account/i });
+    await hmctsRadio2.check();
+    const continueButton2 = page2.getByRole('button', { name: /continue/i });
+    await continueButton2.click();
+    await loginWithCftIdam(
+      page2,
+      process.env.CFT_VALID_TEST_ACCOUNT!,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+    );
+    await assertAuthenticated(page2);
+
+    // Both sessions should remain valid
+    await page1.reload();
+    await assertAuthenticated(page1);
+    await page2.reload();
+    await assertAuthenticated(page2);
+
+    await context1.close();
+    await context2.close();
   });
 });
 
 test.describe('CFT IDAM Rejected Page', () => {
-  test.skip('CFT rejected page displays correct content and is accessible', async ({ page }) => {
-    // Note: This test is skipped because it requires a user with rejected role
+  test('CFT rejected page displays correct content and is accessible', async ({ page }) => {
     // Enable when CFT_REJECTED_ROLE_ACCOUNT is available
 
     // Navigate to rejected page (normally after authentication)
@@ -250,32 +270,7 @@ test.describe('CFT IDAM Rejected Page', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test.skip('CFT rejected page displays Welsh content correctly', async ({ page }) => {
-    // Note: This test is skipped because it requires a user with rejected role
-
-    await page.goto('/cft-rejected?lng=cy');
-
-    // Verify language toggle shows English
-    const languageToggle = page.locator('.language');
-    await expect(languageToggle).toContainText('English');
-
-    // Check for Welsh content
-    const heading = page.locator('h1');
-    await expect(heading).toBeVisible();
-
-    // Check return link still works
-    const signInLink = page.getByRole('link');
-    await expect(signInLink).toHaveAttribute('href', '/sign-in');
-
-    // Run accessibility checks in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-      .disableRules(['target-size', 'link-name'])
-      .analyze();
-    expect(accessibilityScanResults.violations).toEqual([]);
-  });
-
-  test.skip('CFT rejected page supports keyboard navigation', async ({ page }) => {
+  test('CFT rejected page supports keyboard navigation', async ({ page }) => {
     await page.goto('/cft-rejected');
 
     // Tab through interactive elements
@@ -301,31 +296,5 @@ test.describe('CFT IDAM Rejected Page', () => {
     // Press Enter to navigate
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('/sign-in');
-  });
-});
-
-test.describe('CFT IDAM Configuration', () => {
-  test('CFT login endpoint is accessible when configured', async ({ page }) => {
-    await page.goto('/cft-login');
-
-    // Should redirect to CFT IDAM or show config error
-    await page.waitForTimeout(2000);
-    const currentUrl = page.url();
-
-    // Should either be on IDAM page or show 503 error
-    const isOnIdamPage = currentUrl.includes('idam-web-public.aat.platform.hmcts.net');
-    const isOnErrorPage = currentUrl.includes('cft-login');
-
-    expect(isOnIdamPage || isOnErrorPage).toBe(true);
-  });
-
-  test('CFT login preserves query parameters in redirect', async ({ page }) => {
-    await page.goto('/cft-login?lng=cy&test=value');
-
-    await page.waitForTimeout(2000);
-    const currentUrl = page.url();
-
-    // Language parameter should be preserved
-    expect(currentUrl).toMatch(/lng=cy|ui_locales=cy/);
   });
 });

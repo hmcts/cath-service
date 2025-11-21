@@ -1,6 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { hasRole } from "../role-service/index.js";
+import { redirectUnauthenticated } from "./redirect-helpers.js";
 
 /**
  * Middleware to require specific roles for protected routes
@@ -12,8 +13,7 @@ export function requireRole(allowedRoles: string[]): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     // First check if user is authenticated
     if (!req.isAuthenticated() || !req.user) {
-      req.session.returnTo = req.originalUrl;
-      return res.redirect("/login");
+      return redirectUnauthenticated(req, res);
     }
 
     const userRole = req.user.role;
@@ -32,9 +32,9 @@ export function requireRole(allowedRoles: string[]): RequestHandler {
       return res.redirect("/admin-dashboard");
     }
 
-    // User has no role - redirect to login
+    // User has no role - redirect to sign-in
     req.session.returnTo = req.originalUrl;
-    return res.redirect("/login");
+    return res.redirect("/sign-in");
   };
 }
 

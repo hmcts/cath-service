@@ -1,10 +1,35 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 
 test.describe("Account Home Page", () => {
+  // Authenticate before each test
+  test.beforeEach(async ({ page }) => {
+    // Navigate to sign-in page
+    await page.goto("/sign-in");
+
+    // Select HMCTS account option
+    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
+    await hmctsRadio.check();
+
+    // Click continue
+    const continueButton = page.getByRole("button", { name: /continue/i });
+    await continueButton.click();
+
+    // Perform CFT IDAM login
+    await loginWithCftIdam(
+      page,
+      process.env.CFT_VALID_TEST_ACCOUNT!,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+    );
+
+    // Should be redirected to account-home after successful login
+    await expect(page).toHaveURL(/\/account-home/);
+  });
+
   test.describe("Page Load and Content", () => {
     test("should load the account home page", async ({ page }) => {
-      await page.goto("/account-home");
+      // Already on account-home from beforeEach
       await expect(page).toHaveTitle(/Dashboard - Your account/i);
     });
 
