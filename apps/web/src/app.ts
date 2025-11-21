@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import "@hmcts/web-core"; // Import for Express type augmentation
 import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";

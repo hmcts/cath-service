@@ -34,16 +34,22 @@ const postHandler = async (req: Request, res: Response) => {
 
   const errors: ValidationError[] = [];
 
-  // Check for multer errors (e.g., file too large)
+  // Check for multer errors (e.g., file too large, invalid file type)
   const fileUploadError = req.fileUploadError;
 
-  if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
-    errors.push({ text: t.errorMessages.fileSize, href: "#file" });
+  if (fileUploadError) {
+    // Handle any multer error
+    if (fileUploadError.code === "LIMIT_FILE_SIZE") {
+      errors.push({ text: t.errorMessages.fileSize, href: "#file" });
+    } else {
+      // Generic error for other multer errors (invalid file type, missing field, etc.)
+      errors.push({ text: t.errorMessages.fileRequired, href: "#file" });
+    }
   } else if (!req.file) {
     errors.push({ text: t.errorMessages.fileRequired, href: "#file" });
   } else {
-    // Validate file type
-    if (!req.file.originalname.toLowerCase().endsWith(".csv")) {
+    // Validate file type - req.file is guaranteed to exist here
+    if (req.file.originalname && !req.file.originalname.toLowerCase().endsWith(".csv")) {
       errors.push({ text: t.errorMessages.fileType, href: "#file" });
     }
   }

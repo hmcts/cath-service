@@ -1,4 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/web-core"; // Import for Express type augmentation
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
@@ -106,7 +107,7 @@ const postHandler = async (req: Request, res: Response) => {
   const formData = transformDateFields(req.body);
 
   // Check for multer errors (e.g., file too large)
-  const fileUploadError = (req as any).fileUploadError;
+  const fileUploadError = req.fileUploadError;
   let errors = await validateForm(formData, req.file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error

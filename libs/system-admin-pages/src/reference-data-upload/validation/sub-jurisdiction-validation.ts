@@ -1,11 +1,7 @@
+import type { ValidationError } from "../model.js";
 import { checkSubJurisdictionExistsInJurisdiction } from "../repository/sub-jurisdiction-repository.js";
 
 const HTML_TAG_REGEX = /<[^<>]*>/;
-
-export interface ValidationError {
-  text: string;
-  href: string;
-}
 
 export interface SubJurisdictionFormData {
   jurisdictionId: string;

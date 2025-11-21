@@ -154,12 +154,12 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       const nameInput = page.locator('input[name="name"]');
       await expect(nameInput).toBeVisible();
       const nameLabel = page.locator('label[for="name"]');
-      await expect(nameLabel).toContainText("Sub Jurisdiction Name (English)");
+      await expect(nameLabel).toContainText("Enter Sub-Jurisdiction Name (English)");
 
       const welshNameInput = page.locator('input[name="welshName"]');
       await expect(welshNameInput).toBeVisible();
       const welshNameLabel = page.locator('label[for="welshName"]');
-      await expect(welshNameLabel).toContainText("Sub Jurisdiction Name (Welsh)");
+      await expect(welshNameLabel).toContainText("Enter Sub-Jurisdiction Name (Welsh)");
 
       const saveButton = page.getByRole("button", { name: /save/i });
       await expect(saveButton).toBeVisible();
@@ -186,11 +186,11 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(jurisdictionError).toBeVisible();
       await expect(jurisdictionError).toHaveAttribute("href", "#jurisdictionId");
 
-      const nameError = errorLinks.filter({ hasText: "Enter Sub Jurisdiction Name in English" });
+      const nameError = errorLinks.filter({ hasText: "Enter Sub-Jurisdiction Name in English" });
       await expect(nameError).toBeVisible();
       await expect(nameError).toHaveAttribute("href", "#name");
 
-      const welshNameError = errorLinks.filter({ hasText: "Enter Sub Jurisdiction Name in Welsh" });
+      const welshNameError = errorLinks.filter({ hasText: "Enter Sub-Jurisdiction Name in Welsh" });
       await expect(welshNameError).toBeVisible();
       await expect(welshNameError).toHaveAttribute("href", "#welshName");
     });
@@ -233,7 +233,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const errorLink = errorSummary.getByRole("link", { name: "Enter Sub Jurisdiction Name in English" });
+      const errorLink = errorSummary.getByRole("link", { name: "Enter Sub-Jurisdiction Name in English" });
       await expect(errorLink).toBeVisible();
 
       // Verify other values are preserved
@@ -256,7 +256,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const errorLink = errorSummary.getByRole("link", { name: "Enter Sub Jurisdiction Name in Welsh" });
+      const errorLink = errorSummary.getByRole("link", { name: "Enter Sub-Jurisdiction Name in Welsh" });
       await expect(errorLink).toBeVisible();
 
       // Verify English name value is preserved
@@ -279,10 +279,10 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const nameError = errorSummary.getByRole("link", { name: "Sub Jurisdiction name (English) contains HTML tags which are not allowed" });
+      const nameError = errorSummary.getByRole("link", { name: "Sub-Jurisdiction name (English) contains HTML tags which are not allowed" });
       await expect(nameError).toBeVisible();
 
-      const welshNameError = errorSummary.getByRole("link", { name: "Sub Jurisdiction name (Welsh) contains HTML tags which are not allowed" });
+      const welshNameError = errorSummary.getByRole("link", { name: "Sub-Jurisdiction name (Welsh) contains HTML tags which are not allowed" });
       await expect(welshNameError).toBeVisible();
     });
 
@@ -314,7 +314,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(errorSummary).toBeVisible();
 
       const errorLink = errorSummary.locator(".govuk-error-summary__list a").filter({
-        hasText: `Sub Jurisdiction '${duplicateName}' already exists in the selected jurisdiction`
+        hasText: `Sub-Jurisdiction '${duplicateName}' already exists in the selected jurisdiction`
       });
       await expect(errorLink).toBeVisible();
     });
@@ -347,7 +347,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(errorSummary).toBeVisible();
 
       const errorLink = errorSummary.locator(".govuk-error-summary__list a").filter({
-        hasText: `Sub Jurisdiction Name '${duplicateWelshName}' already exists in the selected jurisdiction`
+        hasText: `Sub-Jurisdiction Name '${duplicateWelshName}' already exists in the selected jurisdiction`
       });
       await expect(errorLink).toBeVisible();
     });
@@ -383,10 +383,10 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(jurisdictionLabel).toContainText("Dewiswch Awdurdodaeth");
 
       const nameLabel = page.locator('label[for="name"]');
-      await expect(nameLabel).toContainText("Enw Is-awdurdodaeth (Saesneg)");
+      await expect(nameLabel).toContainText("Rhowch Enw Is-awdurdodaeth (Saesneg)");
 
       const welshNameLabel = page.locator('label[for="welshName"]');
-      await expect(welshNameLabel).toContainText("Enw Is-awdurdodaeth (Cymraeg)");
+      await expect(welshNameLabel).toContainText("Rhowch Enw Is-awdurdodaeth (Cymraeg)");
 
       const saveButton = page.getByRole("button", { name: /cadw/i });
       await expect(saveButton).toBeVisible();
