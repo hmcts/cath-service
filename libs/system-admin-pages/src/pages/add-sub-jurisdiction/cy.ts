@@ -1,5 +1,4 @@
 export const cy = {
-  back: "Yn ôl",
   pageTitle: "Ychwanegu Is-awdurdodaeth",
   jurisdictionLabel: "Dewiswch Awdurdodaeth",
   jurisdictionPlaceholder: "Dewiswch awdurdodaeth",

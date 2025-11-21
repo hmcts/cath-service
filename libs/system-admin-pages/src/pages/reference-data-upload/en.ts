@@ -4,7 +4,7 @@ export const en = {
   warningText: "Prior to upload you must ensure the file is suitable for location data upload e.g. file should be in correct formats.",
   downloadLinkText: "Download current reference data",
   addJurisdictionLinkText: "Add Jurisdiction",
-  addSubJurisdictionLinkText: "Add Sub Jurisdiction",
+  addSubJurisdictionLinkText: "Add Sub-Jurisdiction",
   addRegionLinkText: "Add Region",
   fileUploadLabel: "Manually upload a csv file (saved as Comma-separated Values .csv), max size 2MB",
   continueButtonText: "Continue",

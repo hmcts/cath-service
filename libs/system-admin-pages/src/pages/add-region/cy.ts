@@ -1,5 +1,4 @@
 export const cy = {
-  back: "Yn ôl",
   pageTitle: "Ychwanegu Rhanbarth",
   nameLabel: "Enw rhanbarth (Saesneg)",
   nameHint: "Er enghraifft London",

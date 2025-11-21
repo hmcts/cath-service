@@ -1,5 +1,4 @@
 export const en = {
-  back: "Back",
   pageTitle: "Add Jurisdiction",
   nameLabel: "Jurisdiction name (English)",
   nameHint: "For example Civil",

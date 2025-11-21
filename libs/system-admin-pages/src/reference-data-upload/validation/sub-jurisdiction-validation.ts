@@ -26,14 +26,14 @@ export async function validateSubJurisdictionData(data: SubJurisdictionFormData)
 
   if (!data.name || data.name.trim().length === 0) {
     errors.push({
-      text: "Enter Sub Jurisdiction Name in English",
+      text: "Enter Sub-Jurisdiction Name in English",
       href: "#name"
     });
   }
 
   if (!data.welshName || data.welshName.trim().length === 0) {
     errors.push({
-      text: "Enter Sub Jurisdiction Name in Welsh",
+      text: "Enter Sub-Jurisdiction Name in Welsh",
       href: "#welshName"
     });
   }
@@ -46,14 +46,14 @@ export async function validateSubJurisdictionData(data: SubJurisdictionFormData)
   // Check for HTML tags
   if (data.name && HTML_TAG_REGEX.test(data.name)) {
     errors.push({
-      text: "Sub Jurisdiction name (English) contains HTML tags which are not allowed",
+      text: "Sub-Jurisdiction name (English) contains HTML tags which are not allowed",
       href: "#name"
     });
   }
 
   if (data.welshName && HTML_TAG_REGEX.test(data.welshName)) {
     errors.push({
-      text: "Sub Jurisdiction name (Welsh) contains HTML tags which are not allowed",
+      text: "Sub-Jurisdiction name (Welsh) contains HTML tags which are not allowed",
       href: "#welshName"
     });
   }
@@ -73,14 +73,14 @@ export async function validateSubJurisdictionData(data: SubJurisdictionFormData)
 
   if (nameExists) {
     errors.push({
-      text: `Sub Jurisdiction '${data.name.trim()}' already exists in the selected jurisdiction`,
+      text: `Sub-Jurisdiction '${data.name.trim()}' already exists in the selected jurisdiction`,
       href: "#name"
     });
   }
 
   if (welshNameExists) {
     errors.push({
-      text: `Sub Jurisdiction Name '${data.welshName.trim()}' already exists in the selected jurisdiction`,
+      text: `Sub-Jurisdiction Name '${data.welshName.trim()}' already exists in the selected jurisdiction`,
       href: "#welshName"
     });
   }

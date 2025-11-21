@@ -163,15 +163,38 @@ test.describe("Cookie Management", () => {
       // Check that preferences were saved
       const cookies = await page.context().cookies();
       const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
-      expect(cookiePolicy).toBeDefined();
-      // Cookie value may be double-encoded, decode until we get valid JSON
-      let decodedValue = cookiePolicy!.value;
-      try {
-        decodedValue = decodeURIComponent(decodedValue);
-      } catch (e) {
-        // Already decoded
+
+      if (!cookiePolicy || !cookiePolicy.value) {
+        throw new Error(`cookie_policy not found or has no value. Available cookies: ${cookies.map(c => c.name).join(", ")}`);
       }
-      const policyValue = JSON.parse(decodedValue);
+
+      // Cookie value may be double-encoded, decode until we get valid JSON
+      let decodedValue = cookiePolicy.value;
+      const MAX_DECODE_ATTEMPTS = 3;
+      let policyValue: any;
+
+      for (let attempt = 0; attempt < MAX_DECODE_ATTEMPTS; attempt++) {
+        try {
+          policyValue = JSON.parse(decodedValue);
+          break; // Successfully parsed, exit loop
+        } catch (jsonError) {
+          // If JSON parsing fails, try to decode URI component
+          if (attempt < MAX_DECODE_ATTEMPTS - 1) {
+            try {
+              decodedValue = decodeURIComponent(decodedValue);
+            } catch (decodeError: any) {
+              if (decodeError instanceof URIError) {
+                throw new Error(`Failed to decode cookie value after ${attempt + 1} attempts. Raw value: ${cookiePolicy.value}`);
+              }
+              throw decodeError; // Rethrow unexpected errors
+            }
+          } else {
+            // Last attempt failed
+            throw new Error(`Failed to parse cookie as JSON after ${MAX_DECODE_ATTEMPTS} attempts. Final decoded value: ${decodedValue}, Raw value: ${cookiePolicy.value}`);
+          }
+        }
+      }
+
       expect(policyValue.analytics).toBe("on");
       expect(policyValue.preferences).toBe("off");
     });

@@ -1,7 +1,7 @@
 // @ts-expect-error - accessible-autocomplete doesn't have proper TypeScript definitions
 import accessibleAutocomplete from "accessible-autocomplete/dist/accessible-autocomplete.min.js";
 
-interface Location {
+interface CourtLocation {
   locationId: number;
   name: string;
   welshName: string;
@@ -9,35 +9,53 @@ interface Location {
   subJurisdictions: number[];
 }
 
-async function fetchLocations(language: "en" | "cy"): Promise<Location[]> {
-  const response = await fetch(`/locations?language=${language}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch locations");
+async function fetchLocations(language: "en" | "cy"): Promise<CourtLocation[]> {
+  try {
+    const response = await fetch(`/locations?language=${language}`);
+    if (!response.ok) {
+      console.error(`Failed to fetch locations: ${response.status} ${response.statusText}`);
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching locations:", error);
+    return [];
   }
-  return response.json();
 }
 
-async function fetchSearchResults(query: string, language: "en" | "cy"): Promise<Location[]> {
-  const response = await fetch(`/locations?q=${encodeURIComponent(query)}&language=${language}`);
-  if (!response.ok) {
-    throw new Error("Failed to search locations");
+async function fetchSearchResults(query: string, language: "en" | "cy"): Promise<CourtLocation[]> {
+  try {
+    const response = await fetch(`/locations?q=${encodeURIComponent(query)}&language=${language}`);
+    if (!response.ok) {
+      console.error(`Failed to search locations: ${response.status} ${response.statusText}`);
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error searching locations:", error);
+    return [];
   }
-  return response.json();
 }
 
 async function initAutocompleteForInput(locationInput: HTMLInputElement) {
-  const inputId = locationInput.id;
-  const language = (locationInput.getAttribute("data-locale") || "en") as "en" | "cy";
-  const locations = await fetchLocations(language);
+  try {
+    const inputId = locationInput.id;
+    const language = (locationInput.getAttribute("data-locale") || "en") as "en" | "cy";
+    const locations = await fetchLocations(language);
 
-  const preselectedLocationId = locationInput.getAttribute("data-location-id");
-  const preselectedValue = locationInput.value;
-  const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
-  const noResultsMessage = locationInput.getAttribute("data-no-results-message") || "No results found";
-  const hasError = locationInput.classList.contains("govuk-input--error");
+    if (locations.length === 0) {
+      console.warn(`No locations fetched for input ${inputId}. Autocomplete not initialized.`);
+      return;
+    }
 
-  const container = locationInput.parentElement;
-  if (!container) return;
+    const preselectedLocationId = locationInput.getAttribute("data-location-id");
+    const preselectedValue = locationInput.value;
+    const searchLabel = locationInput.getAttribute("data-search-label") || "Search for a court or tribunal";
+    const noResultsMessage = locationInput.getAttribute("data-no-results-message") || "No results found";
+    const hasError = locationInput.classList.contains("govuk-input--error");
+
+    const container = locationInput.parentElement;
+    if (!container) return;
 
   // Check if autocomplete has already been initialized for this input
   if (document.getElementById(`${inputId}-autocomplete-wrapper`)) {
@@ -145,25 +163,44 @@ async function initAutocompleteForInput(locationInput: HTMLInputElement) {
       });
     }
   }
+  } catch (error) {
+    console.error(`Error initializing autocomplete for input ${locationInput.id}:`, error);
+    // Leave the original input intact so the form is still usable
+  }
 }
 
 export async function initSearchAutocomplete() {
-  // Initialize all autocomplete inputs on the page
+  // Initialize all autocomplete inputs concurrently
   const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
-  for (const input of autocompleteInputs) {
-    await initAutocompleteForInput(input);
-  }
+  const promises = Array.from(autocompleteInputs).map(input => initAutocompleteForInput(input));
+  const results = await Promise.allSettled(promises);
+
+  // Log any failures
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Failed to initialize autocomplete for input ${autocompleteInputs[index].id}:`, result.reason);
+    }
+  });
 }
 
 export async function initAllAutocompletes() {
+  // Initialize all autocomplete inputs concurrently
   const autocompleteInputs = document.querySelectorAll('input[data-autocomplete="true"]') as NodeListOf<HTMLInputElement>;
-  for (const input of autocompleteInputs) {
-    await initAutocompleteForInput(input);
-  }
+  const promises = Array.from(autocompleteInputs).map(input => initAutocompleteForInput(input));
+  const results = await Promise.allSettled(promises);
+
+  // Log any failures
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Failed to initialize autocomplete for input ${autocompleteInputs[index].id}:`, result.reason);
+    }
+  });
 }
 
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
-    initAllAutocompletes();
+    void initAllAutocompletes().catch((error) => {
+      console.error("Error initializing autocompletes on DOMContentLoaded:", error);
+    });
   });
 }

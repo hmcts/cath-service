@@ -42,7 +42,7 @@ describe("validateSubJurisdictionData", () => {
     });
 
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].text).toContain("Enter Sub Jurisdiction Name in English");
+    expect(errors[0].text).toContain("Enter Sub-Jurisdiction Name in English");
     expect(errors[0].href).toBe("#name");
   });
 
@@ -54,7 +54,7 @@ describe("validateSubJurisdictionData", () => {
     });
 
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].text).toContain("Enter Sub Jurisdiction Name in Welsh");
+    expect(errors[0].text).toContain("Enter Sub-Jurisdiction Name in Welsh");
     expect(errors[0].href).toBe("#welshName");
   });
 
@@ -67,8 +67,8 @@ describe("validateSubJurisdictionData", () => {
 
     expect(errors).toHaveLength(3);
     expect(errors[0].text).toContain("Select a jurisdiction");
-    expect(errors[1].text).toContain("Enter Sub Jurisdiction Name in English");
-    expect(errors[2].text).toContain("Enter Sub Jurisdiction Name in Welsh");
+    expect(errors[1].text).toContain("Enter Sub-Jurisdiction Name in English");
+    expect(errors[2].text).toContain("Enter Sub-Jurisdiction Name in Welsh");
   });
 
   it("should return error for invalid jurisdiction ID", async () => {

@@ -15,7 +15,7 @@
       }) }}
     {% endif %}
 
-    <div style="background-color: #f0f4f5; padding: 20px; margin-bottom: 30px;">
+    <div class="reference-data-upload__warning-box">
       <h2 class="govuk-heading-m">Warning</h2>
       <div class="govuk-warning-text">
         <span class="govuk-warning-text__icon govuk-!-margin-1" aria-hidden="true">!</span>
@@ -26,13 +26,13 @@
       </div>
     </div>
 
-    <h1 class="govuk-heading-xl" style="margin-bottom: 30px;">{{ pageTitle }}</h1>
+    <h1 class="govuk-heading-xl reference-data-upload__heading">{{ pageTitle }}</h1>
 
     <p class="govuk-body">
       <a href="/reference-data-download" class="govuk-link">{{ downloadLinkText }}</a>
     </p>
 
-    <div class="govuk-button-group" style="margin-bottom: 30px;">
+    <div class="govuk-button-group reference-data-upload__button-group">
       <a href="/add-jurisdiction" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
         {{ addJurisdictionLinkText }}
       </a>
@@ -46,7 +46,7 @@
 
     <form method="post" enctype="multipart/form-data" novalidate>
 
-      <div style="clear: both; border-left: 10px solid #b1b4b6; padding-left: 15px;">
+      <div class="reference-data-upload__file-upload-container">
         {% set fileError = (errors | selectattr("href", "equalto", "#file") | first) if errors else undefined %}
         <div class="govuk-form-group{% if fileError %} govuk-form-group--error{% endif %}">
           {{ govukFileUpload({

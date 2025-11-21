@@ -1,4 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import type { ValidationError } from "../../reference-data-upload/model.js";
 import { cy } from "./cy.js";

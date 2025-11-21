@@ -51,7 +51,7 @@ describe("add-sub-jurisdiction page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith(
         "add-sub-jurisdiction/index",
         expect.objectContaining({
-          pageTitle: "Add Sub Jurisdiction",
+          pageTitle: "Add Sub-Jurisdiction",
           jurisdictionItems: expect.arrayContaining([
             { value: "", text: "Select a jurisdiction" },
             { value: "1", text: "Civil" },
@@ -123,8 +123,8 @@ describe("add-sub-jurisdiction page", () => {
 
       const errors = [
         { text: "Select a jurisdiction", href: "#jurisdictionId" },
-        { text: "Enter Sub Jurisdiction Name in English", href: "#name" },
-        { text: "Enter Sub Jurisdiction Name in Welsh", href: "#welshName" }
+        { text: "Enter Sub-Jurisdiction Name in English", href: "#name" },
+        { text: "Enter Sub-Jurisdiction Name in Welsh", href: "#welshName" }
       ];
 
       vi.mocked(validation.validateSubJurisdictionData).mockResolvedValue(errors);
@@ -150,7 +150,7 @@ describe("add-sub-jurisdiction page", () => {
         welshName: ""
       };
 
-      const errors = [{ text: "Enter Sub Jurisdiction Name in Welsh", href: "#welshName" }];
+      const errors = [{ text: "Enter Sub-Jurisdiction Name in Welsh", href: "#welshName" }];
 
       vi.mocked(validation.validateSubJurisdictionData).mockResolvedValue(errors);
 

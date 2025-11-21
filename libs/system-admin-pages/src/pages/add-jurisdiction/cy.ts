@@ -1,5 +1,4 @@
 export const cy = {
-  back: "Yn ôl",
   pageTitle: "Ychwanegu Awdurdodaeth",
   nameLabel: "Enw awdurdodaeth (Saesneg)",
   nameHint: "Er enghraifft Civil",

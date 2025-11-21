@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/web-core": "workspace:*",
     "papaparse": "5.4.1"
   },
   "devDependencies": {

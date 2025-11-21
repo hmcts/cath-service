@@ -1,5 +1,4 @@
 export const en = {
-  back: "Back",
   pageTitle: "Add Region",
   nameLabel: "Region name (English)",
   nameHint: "For example London",
