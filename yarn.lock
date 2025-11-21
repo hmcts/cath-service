@@ -499,17 +499,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.3.7":
+"@biomejs/cli-linux-arm64@npm:2.3.7, @biomejs/cli-linux-arm64@npm:^2.3.6":
   version: 2.3.7
   resolution: "@biomejs/cli-linux-arm64@npm:2.3.7"
-  conditions: os=linux & cpu=arm64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@biomejs/cli-linux-arm64@npm:^2.3.6":
-  version: 2.3.6
-  resolution: "@biomejs/cli-linux-arm64@npm:2.3.6"
-  checksum: 10c0/b407a65a0fd2f37a4d7991bc60a2b3aa1a8f370027cb00ac3141b4b57d467d0b3765ce023e70d3453cfea8a4274e10d6b85cea72baee1456e885a0b39d7a3a16
+  checksum: 10c0/4fd920c0732a49e0ed8ba0675531672ab41a7735c08bf1aec565ab01d2862bfd79cc602bdf7950fdce9fdeab395c26aea1636bf1ad2f5c4ed4f3886ab448d90e
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
