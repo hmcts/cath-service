@@ -83,10 +83,10 @@ jobs:
             Automate JIRA ticket planning for prioritized backlog items.
 
             Task:
-            1. Use jira_search to find all VIBE tickets with status "Prioritized Backlog"
+            1. Use jira_search to find all VIBE tickets with status "Ready for Progress"
             2. For each ticket, check if a branch feature/VIBE-[num]-[slug] exists
             3. For tickets without branches:
-               a. Create the branch with appropriate slug from ticket title
+               a. Create the branch with appropriate slug from ticket title then run Run /expressjs-monorepo:qk-start VIBE-[num] to fetch the ticket details
                b. Run /expressjs-monorepo:qk-plan VIBE-[num] to generate technical planning
                c. Commit generated docs to the branch
                d. Push the branch to remote
