@@ -46,7 +46,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
     test("should complete full sub-jurisdiction creation flow from form to success", async ({ page }) => {
       // Step 1: Load add sub-jurisdiction form
       await page.goto("/add-sub-jurisdiction");
-      await expect(page.locator("h1")).toHaveText("Add Sub Jurisdiction");
+      await expect(page.locator("h1")).toHaveText("Add Sub-Jurisdiction");
 
       // Step 2: Verify jurisdiction dropdown is populated
       const jurisdictionSelect = page.locator('select[name="jurisdictionId"]');
@@ -144,7 +144,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
 
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
-      await expect(heading).toHaveText("Add Sub Jurisdiction");
+      await expect(heading).toHaveText("Add Sub-Jurisdiction");
 
       const jurisdictionSelect = page.locator('select[name="jurisdictionId"]');
       await expect(jurisdictionSelect).toBeVisible();

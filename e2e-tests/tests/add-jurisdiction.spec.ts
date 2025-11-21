@@ -71,7 +71,7 @@ test.describe("Add Jurisdiction End-to-End Flow", () => {
       await expect(addAnotherLink).toBeVisible();
       await expect(addAnotherLink).toHaveAttribute("href", "/add-jurisdiction");
 
-      const addSubJurisdictionLink = page.getByRole("link", { name: "Add Sub Jurisdiction" });
+      const addSubJurisdictionLink = page.getByRole("link", { name: "Add Sub-Jurisdiction" });
       await expect(addSubJurisdictionLink).toBeVisible();
       await expect(addSubJurisdictionLink).toHaveAttribute("href", "/add-sub-jurisdiction");
 
@@ -401,7 +401,7 @@ test.describe("Add Jurisdiction End-to-End Flow", () => {
       await expect(addAnotherLink).toBeVisible();
       await expect(addAnotherLink).toHaveAttribute("href", "/add-jurisdiction");
 
-      const addSubJurisdictionLink = page.getByRole("link", { name: "Add Sub Jurisdiction" });
+      const addSubJurisdictionLink = page.getByRole("link", { name: "Add Sub-Jurisdiction" });
       await expect(addSubJurisdictionLink).toBeVisible();
       await expect(addSubJurisdictionLink).toHaveAttribute("href", "/add-sub-jurisdiction");
 
