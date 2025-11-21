@@ -23,8 +23,8 @@
     "lint:fix": "biome check --write ."
   },
   "devDependencies": {
-    "@types/node": "22.10.2",
-    "typescript": "5.7.2",
+    "@types/node": "22.19.1",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
   }
 }
