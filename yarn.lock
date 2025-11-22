@@ -773,7 +773,7 @@ __metadata:
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/multer": "npm:2.0.0"
-    "@types/node": "npm:22.19.1"
+    "@types/node": "npm:24.10.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
@@ -827,7 +827,7 @@ __metadata:
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:22.19.1"
+    "@types/node": "npm:24.10.1"
     luxon: "npm:3.7.2"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
@@ -875,7 +875,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
   dependencies:
-    "@types/node": "npm:22.19.1"
+    "@types/node": "npm:24.10.1"
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -2616,15 +2616,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~7.10.0"
   checksum: 10c0/439a3c7edf88a298e0c92e46f670234070b892589c3b06e82cc86c47a7e1cf220f4a4b4736ec6ac7e4b9e1c40d7b6d443a1e22f99dd17f13f9dd15de3b32011b
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:22.19.1":
-  version: 22.19.1
-  resolution: "@types/node@npm:22.19.1"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/6edd93aea86da740cb7872626839cd6f4a67a049d3a3a6639cb592c620ec591408a30989ab7410008d1a0b2d4985ce50f1e488e79c033e4476d3bec6833b0a2f
   languageName: node
   linkType: hard
 
