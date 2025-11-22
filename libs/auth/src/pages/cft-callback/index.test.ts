@@ -54,6 +54,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-123",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -89,6 +91,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-456",
       email: "citizen@example.com",
       displayName: "Citizen User",
+      firstName: "Citizen",
+      surname: "User",
       roles: ["citizen"]
     });
 
@@ -129,6 +133,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-789",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -153,6 +159,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-999",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -177,6 +185,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-000",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -203,6 +213,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-123",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -237,6 +249,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-456",
       email: "citizen@example.com",
       displayName: "Citizen User",
+      firstName: "Citizen",
+      surname: "User",
       roles: ["citizen"]
     });
 

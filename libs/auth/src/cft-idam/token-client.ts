@@ -12,6 +12,8 @@ export interface CftIdamUserInfo {
   id: string;
   email: string;
   displayName: string;
+  firstName?: string;
+  surname?: string;
   roles: string[];
 }
 
@@ -73,9 +75,11 @@ export function extractUserInfoFromToken(tokenResponse: TokenResponse): CftIdamU
   }
 
   return {
-    id: claims.sub || claims.uid || claims.id,
-    email: claims.email || claims.upn || "",
-    displayName: claims.name || claims.given_name || claims.email || "User",
+    id: claims.uid,
+    email: claims.sub || claims.email || "",
+    displayName: claims.name || claims.given_name,
+    firstName: claims.given_name,
+    surname: claims.family_name,
     roles
   };
 }
