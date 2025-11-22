@@ -6,24 +6,24 @@ import { GET } from "./index.js";
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn((id: number) => {
     if (id === 9) {
-      return {
+      return Promise.resolve({
         locationId: 9,
         name: "Single Justice Procedure",
         welshName: "Gweithdrefn Ynad Unigol",
         regions: [],
         subJurisdictions: []
-      };
+      });
     }
     if (id === 1) {
-      return {
+      return Promise.resolve({
         locationId: 1,
         name: "Test Location",
         welshName: "Lleoliad Prawf",
         regions: [],
         subJurisdictions: []
-      };
+      });
     }
-    return undefined;
+    return Promise.resolve(undefined);
   })
 }));
 

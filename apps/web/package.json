@@ -23,6 +23,7 @@
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
+    "@hmcts/location": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",

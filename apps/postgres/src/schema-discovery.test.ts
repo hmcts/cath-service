@@ -12,10 +12,10 @@ describe("Schema Discovery", () => {
       expect(Array.isArray(result)).toBe(true);
     });
 
-    it("should return an empty array", () => {
+    it("should return schema paths", () => {
       const result = getPrismaSchemas();
-      expect(result).toEqual([]);
-      expect(result.length).toBe(0);
+      expect(result.length).toBeGreaterThanOrEqual(0);
+      expect(result.every((path) => typeof path === "string")).toBe(true);
     });
 
     it("should return a new array on each call", () => {

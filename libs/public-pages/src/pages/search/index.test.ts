@@ -1,5 +1,22 @@
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
+
+// Mock @hmcts/location to prevent database connections
+vi.mock("@hmcts/location", () => ({
+  getLocationById: vi.fn((id: number) => {
+    if (id === 1) {
+      return Promise.resolve({
+        locationId: 1,
+        name: "Oxford Combined Court Centre",
+        welshName: "Canolfan Llysoedd Cyfun Rhydychen",
+        regions: [3],
+        subJurisdictions: [1, 2]
+      });
+    }
+    return Promise.resolve(undefined);
+  })
+}));
+
 import { GET, POST } from "./index.js";
 
 describe("search page", () => {

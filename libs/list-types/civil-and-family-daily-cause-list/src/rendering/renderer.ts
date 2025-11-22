@@ -167,8 +167,8 @@ function formatReportingRestrictions(caseItem: CauseListCase): void {
   (caseItem as any).formattedReportingRestriction = restrictions.join(", ");
 }
 
-export function renderCauseListData(jsonData: CauseListData, options: RenderOptions) {
-  const location = getLocationById(Number.parseInt(options.locationId, 10));
+export async function renderCauseListData(jsonData: CauseListData, options: RenderOptions) {
+  const location = await getLocationById(Number.parseInt(options.locationId, 10));
   const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || jsonData.venue.venueName;
 
   const header = {

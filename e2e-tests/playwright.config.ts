@@ -34,7 +34,11 @@ export default defineConfig({
   webServer: {
     // ENABLE_SSO=true required to test SSO flows (SSO disabled by default in development)
     // ENABLE_CFT_IDAM=true required to test CFT IDAM flows
-    command: 'NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true yarn dev:nowatch',
+    // In CI: use dev:ci (skips docker-compose, service containers are used instead)
+    // Locally: use dev:nowatch (starts docker-compose and runs migrations)
+    command: process.env.CI
+      ? 'NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true yarn dev:ci'
+      : 'NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true yarn dev:nowatch',
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
     reuseExistingServer: !process.env.CI,

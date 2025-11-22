@@ -1,15 +1,14 @@
-import { locationData } from "../location-data.js";
 import { getAllLocations, type Location } from "./queries.js";
 
 export type { Location } from "./queries.js";
 
-export function searchLocations(query: string, language: "en" | "cy"): Location[] {
+export async function searchLocations(query: string, language: "en" | "cy"): Promise<Location[]> {
   if (!query || query.trim().length === 0) {
     return [];
   }
 
   const searchTerm = query.toLowerCase().trim();
-  const locations = locationData.locations;
+  const locations = await getAllLocations(language);
 
   const startsWithMatches: Location[] = [];
   const partialMatches: Location[] = [];
@@ -40,14 +39,14 @@ export function searchLocations(query: string, language: "en" | "cy"): Location[
   return [...startsWithMatches, ...partialMatches];
 }
 
-export function getLocationsGroupedByLetter(
+export async function getLocationsGroupedByLetter(
   language: "en" | "cy",
   filters?: {
     regions?: number[];
     subJurisdictions?: number[];
   }
-): Record<string, Location[]> {
-  let locations = getAllLocations(language);
+): Promise<Record<string, Location[]>> {
+  let locations = await getAllLocations(language);
 
   // Apply filters if provided
   if (filters) {

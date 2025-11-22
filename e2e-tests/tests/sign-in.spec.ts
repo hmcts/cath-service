@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -404,7 +404,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(errorLink).toHaveAttribute("href", "#accountType");
 
       // Verify radio group has error message associated
-      const radioGroup = page.locator(".govuk-radios");
+      const _radioGroup = page.locator(".govuk-radios");
       const errorMessage = page.locator(".govuk-error-message");
       await expect(errorMessage).toBeVisible();
       await expect(errorMessage).toContainText(/please select an option/i);
@@ -491,24 +491,24 @@ test.describe("Sign In Account Selection Page", () => {
             'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
         );
-        return elements.map(el => ({
+        return elements.map((el) => ({
           tagName: el.tagName,
           type: (el as HTMLInputElement).type || null,
           text: el.textContent?.trim().substring(0, 50) || "",
-          role: el.getAttribute("role"),
+          role: el.getAttribute("role")
         }));
       });
 
       // Verify radio buttons are in the focus order
-      const radioElements = focusableElements.filter(el => el.type === "radio");
+      const radioElements = focusableElements.filter((el) => el.type === "radio");
       expect(radioElements.length).toBe(3);
 
       // Verify button is in focus order
-      const buttonElements = focusableElements.filter(el => el.tagName === "BUTTON");
+      const buttonElements = focusableElements.filter((el) => el.tagName === "BUTTON");
       expect(buttonElements.length).toBeGreaterThanOrEqual(1);
 
       // Verify links are in focus order
-      const linkElements = focusableElements.filter(el => el.tagName === "A");
+      const linkElements = focusableElements.filter((el) => el.tagName === "A");
       expect(linkElements.length).toBeGreaterThan(0);
     });
 

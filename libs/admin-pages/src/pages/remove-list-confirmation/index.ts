@@ -13,27 +13,29 @@ function capitalizeFirstLetter(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof getArtefactsByIds>>, locale: "en" | "cy") {
-  return artefacts.map((artefact) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-    const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
+async function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof getArtefactsByIds>>, locale: "en" | "cy") {
+  return Promise.all(
+    artefacts.map(async (artefact) => {
+      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
 
-    const location = getLocationById(Number.parseInt(artefact.locationId, 10));
-    const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
+      const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
+      const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
 
-    const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
-    const language = capitalizeFirstLetter(artefact.language);
-    const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
+      const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
+      const language = capitalizeFirstLetter(artefact.language);
+      const sensitivity = capitalizeFirstLetter(artefact.sensitivity);
 
-    return {
-      listType: listTypeName,
-      court: courtName,
-      contentDate: formatDateString(artefact.contentDate),
-      displayDates,
-      language,
-      sensitivity
-    };
-  });
+      return {
+        listType: listTypeName,
+        court: courtName,
+        contentDate: formatDateString(artefact.contentDate),
+        displayDates,
+        language,
+        sensitivity
+      };
+    })
+  );
 }
 
 async function renderConfirmationPage(
@@ -44,7 +46,7 @@ async function renderConfirmationPage(
   errors?: Array<{ text: string; href: string }>
 ) {
   const artefacts = await getArtefactsByIds(sessionData.selectedArtefacts);
-  const artefactData = transformArtefactsForDisplay(artefacts, locale);
+  const artefactData = await transformArtefactsForDisplay(artefacts, locale);
 
   return res.render("remove-list-confirmation/index", {
     pageTitle: lang.pageTitle,

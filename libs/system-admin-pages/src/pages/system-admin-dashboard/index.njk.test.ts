@@ -17,17 +17,12 @@ describe("system-admin-dashboard template", () => {
 
   describe("English locale", () => {
     it("should have required properties", () => {
-      expect(en).toHaveProperty("back");
       expect(en).toHaveProperty("title");
       expect(en).toHaveProperty("tiles");
     });
 
     it("should have correct title", () => {
       expect(en.title).toBe("System Admin Dashboard");
-    });
-
-    it("should have correct back text", () => {
-      expect(en.back).toBe("Back");
     });
 
     it("should have 8 tiles", () => {

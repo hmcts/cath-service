@@ -21,12 +21,42 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: hmcts
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hmcts -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
     env:
       # Application configuration
       BASE_URL: https://localhost:8080
       PORT: 8080
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-      DATABASE_URL: postgresql://hmcts@localhost:5433/postgres
+
+      # Database Configuration (using service containers)
+      DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
+      REDIS_URL: redis://localhost:6379
 
       # SSO Configuration (using existing GitHub Secrets)
       SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
@@ -84,14 +114,19 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for PostgreSQL service to be ready
+        run: timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U hmcts; do sleep 1; done'
+
+      - name: Collate Prisma schema
+        run: |
+          echo "Collating Prisma schema from all modules..."
+          cd apps/postgres && npx tsx src/collate-schema.ts && cd ../..
+
       - name: Generate Prisma client
         run: yarn db:generate
-
-      - name: Start PostgreSQL
-        run: docker compose up -d
-
-      - name: Wait for PostgreSQL to be ready
-        run: timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U hmcts; do sleep 1; done'
 
       - name: Run database migrations
         run: yarn db:migrate
@@ -105,7 +140,7 @@ jobs:
       - name: Verify seed data exists
         run: |
           echo "Verifying seed data for locationId=9..."
-          ARTEFACT_COUNT=$(docker compose exec -T postgres psql -U hmcts -d postgres -t -c "SELECT COUNT(*) FROM artefact WHERE location_id = '9';")
+          ARTEFACT_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM artefact WHERE location_id = '9';")
           ARTEFACT_COUNT=$(echo $ARTEFACT_COUNT | xargs)
           echo "Found $ARTEFACT_COUNT artefacts for locationId=9"
           if [ "$ARTEFACT_COUNT" -lt 3 ]; then

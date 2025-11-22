@@ -25,31 +25,39 @@ const mockSubJurisdictions = [
 ];
 
 vi.mock("@hmcts/location", () => ({
-  getAllJurisdictions: vi.fn(() => mockJurisdictions),
-  getAllRegions: vi.fn(() => mockRegions),
-  getAllSubJurisdictions: vi.fn(() => mockSubJurisdictions),
+  getAllJurisdictions: vi.fn(() => Promise.resolve(mockJurisdictions)),
+  getAllRegions: vi.fn(() => Promise.resolve(mockRegions)),
+  getAllSubJurisdictions: vi.fn(() => Promise.resolve(mockSubJurisdictions)),
+  getSubJurisdictionsForJurisdiction: vi.fn((jurisdictionId: number) => {
+    const filtered = mockSubJurisdictions.filter((sj) => sj.jurisdictionId === jurisdictionId);
+    return Promise.resolve(filtered.map((sj) => sj.subJurisdictionId));
+  }),
   buildJurisdictionItems: vi.fn((selectedJurisdictions: number[], locale: "en" | "cy", subJurisdictionLabels?: Record<number, string>) => {
-    return mockJurisdictions
-      .map((jurisdiction) => ({
-        value: jurisdiction.jurisdictionId.toString(),
-        text: locale === "cy" ? jurisdiction.welshName : jurisdiction.name,
-        checked: selectedJurisdictions.includes(jurisdiction.jurisdictionId),
-        jurisdictionId: jurisdiction.jurisdictionId,
-        subJurisdictionLabel: subJurisdictionLabels?.[jurisdiction.jurisdictionId],
-        attributes: {
-          "data-jurisdiction": jurisdiction.jurisdictionId.toString()
-        }
-      }))
-      .sort((a, b) => a.text.localeCompare(b.text));
+    return Promise.resolve(
+      mockJurisdictions
+        .map((jurisdiction) => ({
+          value: jurisdiction.jurisdictionId.toString(),
+          text: locale === "cy" ? jurisdiction.welshName : jurisdiction.name,
+          checked: selectedJurisdictions.includes(jurisdiction.jurisdictionId),
+          jurisdictionId: jurisdiction.jurisdictionId,
+          subJurisdictionLabel: subJurisdictionLabels?.[jurisdiction.jurisdictionId],
+          attributes: {
+            "data-jurisdiction": jurisdiction.jurisdictionId.toString()
+          }
+        }))
+        .sort((a, b) => a.text.localeCompare(b.text))
+    );
   }),
   buildRegionItems: vi.fn((selectedRegions: number[], locale: "en" | "cy") => {
-    return mockRegions
-      .map((region) => ({
-        value: region.regionId.toString(),
-        text: locale === "cy" ? region.welshName : region.name,
-        checked: selectedRegions.includes(region.regionId)
-      }))
-      .sort((a, b) => a.text.localeCompare(b.text));
+    return Promise.resolve(
+      mockRegions
+        .map((region) => ({
+          value: region.regionId.toString(),
+          text: locale === "cy" ? region.welshName : region.name,
+          checked: selectedRegions.includes(region.regionId)
+        }))
+        .sort((a, b) => a.text.localeCompare(b.text))
+    );
   }),
   buildSubJurisdictionItemsByJurisdiction: vi.fn((selectedSubJurisdictions: number[], locale: "en" | "cy") => {
     const result: Record<number, any[]> = {};
@@ -63,10 +71,7 @@ vi.mock("@hmcts/location", () => ({
         }))
         .sort((a, b) => a.text.localeCompare(b.text));
     });
-    return result;
-  }),
-  getSubJurisdictionsForJurisdiction: vi.fn((jurisdictionId: number) => {
-    return mockSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId).map((sub) => sub.subJurisdictionId);
+    return Promise.resolve(result);
   }),
   getLocationsGroupedByLetter: vi.fn((_language: string, filters?: any) => {
     const allLocations = {
@@ -92,7 +97,7 @@ vi.mock("@hmcts/location", () => ({
     };
 
     if (!filters || (!filters.regions && !filters.subJurisdictions)) {
-      return allLocations;
+      return Promise.resolve(allLocations);
     }
 
     const filtered: Record<string, any[]> = {};
@@ -107,7 +112,7 @@ vi.mock("@hmcts/location", () => ({
         filtered[letter] = matchingLocations;
       }
     }
-    return filtered;
+    return Promise.resolve(filtered);
   })
 }));
 

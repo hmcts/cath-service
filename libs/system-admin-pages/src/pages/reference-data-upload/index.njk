@@ -1,0 +1,70 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <div class="reference-data-upload__warning-box">
+      <h2 class="govuk-heading-m">Warning</h2>
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon govuk-!-margin-1" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          {{ warningText }}
+        </strong>
+      </div>
+    </div>
+
+    <h1 class="govuk-heading-xl reference-data-upload__heading">{{ pageTitle }}</h1>
+
+    <p class="govuk-body">
+      <a href="/reference-data-download" class="govuk-link">{{ downloadLinkText }}</a>
+    </p>
+
+    <div class="govuk-button-group reference-data-upload__button-group">
+      <a href="/add-jurisdiction" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+        {{ addJurisdictionLinkText }}
+      </a>
+      <a href="/add-sub-jurisdiction" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+        {{ addSubJurisdictionLinkText }}
+      </a>
+      <a href="/add-region" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+        {{ addRegionLinkText }}
+      </a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+
+      <div class="reference-data-upload__file-upload-container">
+        {% set fileError = (errors | selectattr("href", "equalto", "#file") | first) if errors else undefined %}
+        <div class="govuk-form-group{% if fileError %} govuk-form-group--error{% endif %}">
+          {{ govukFileUpload({
+            id: "file",
+            name: "file",
+            label: {
+              text: fileUploadLabel
+            },
+            errorMessage: { text: fileError.text } if fileError else undefined
+          }) }}
+        </div>
+      </div>
+
+      {{ govukButton({
+        text: continueButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

@@ -161,7 +161,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         isValid: true,
         errors: []
       });
-      vi.mocked(renderCauseListData).mockReturnValue({
+      vi.mocked(renderCauseListData).mockResolvedValue({
         header: { title: "Test Court", publishedDate: "13 January 2025" },
         openJustice: { statement: "Test statement" },
         listData: []
@@ -220,7 +220,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         isValid: true,
         errors: []
       });
-      vi.mocked(renderCauseListData).mockReturnValue({
+      vi.mocked(renderCauseListData).mockResolvedValue({
         header: { title: "Llys Prawf", publishedDate: "13 Ionawr 2025" },
         openJustice: { statement: "Datganiad prawf" },
         listData: []
@@ -271,7 +271,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         isValid: true,
         errors: []
       });
-      vi.mocked(renderCauseListData).mockReturnValue({
+      vi.mocked(renderCauseListData).mockResolvedValue({
         header: { title: "Test Court", publishedDate: "13 January 2025" },
         openJustice: { statement: "Test statement" },
         listData: []
@@ -331,7 +331,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         isValid: true,
         errors: []
       });
-      vi.mocked(renderCauseListData).mockReturnValue({
+      vi.mocked(renderCauseListData).mockResolvedValue({
         header: { title: "Test Court", publishedDate: "13 January 2025" },
         openJustice: { statement: "Test statement" },
         listData: []
@@ -381,7 +381,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         isValid: true,
         errors: []
       });
-      vi.mocked(renderCauseListData).mockReturnValue({
+      vi.mocked(renderCauseListData).mockResolvedValue({
         header: { title: "Test Court", publishedDate: "13 January 2025" },
         openJustice: { statement: "Test statement" },
         listData: []

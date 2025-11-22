@@ -59,7 +59,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const artefacts = await getArtefactsByLocation(sessionData.locationId);
 
-  const location = getLocationById(Number.parseInt(sessionData.locationId, 10));
+  const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
 
   let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
@@ -114,7 +114,7 @@ const postHandler = async (req: Request, res: Response) => {
     const order = (req.query.order as SortOrder) || "desc";
 
     const artefacts = await getArtefactsByLocation(sessionData.locationId);
-    const location = getLocationById(Number.parseInt(sessionData.locationId, 10));
+    const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
     const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
 
     let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {

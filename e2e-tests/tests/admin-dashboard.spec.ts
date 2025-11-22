@@ -1,15 +1,11 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("Admin Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/admin-dashboard");
-    await loginWithSSO(
-      page,
-      process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-      process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-    );
+    await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
     await page.waitForURL("/admin-dashboard");
   });
 
@@ -31,8 +27,7 @@ test.describe("Admin Dashboard", () => {
     });
 
     test("should display correct tile titles and links", async ({ page }) => {
-
-      const tileData = [
+      const _tileData = [
         { title: "Upload", href: "/manual-upload" },
         { title: "Upload Excel File", href: "/non-strategic-upload" },
         { title: "Remove", href: "/remove-list-search" }
@@ -66,9 +61,7 @@ test.describe("Admin Dashboard", () => {
 
   test.describe("Accessibility", () => {
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
@@ -118,14 +111,14 @@ test.describe("Admin Dashboard", () => {
 
       // Verify tiles are keyboard accessible by checking tabindex
       const firstTile = tileLinks.first();
-      const tabindex = await firstTile.getAttribute('tabindex');
+      const tabindex = await firstTile.getAttribute("tabindex");
 
       // Links without tabindex=-1 are keyboard accessible by default
-      expect(tabindex === null || tabindex !== '-1').toBe(true);
+      expect(tabindex === null || tabindex !== "-1").toBe(true);
 
       // Verify link elements are focusable (they are by default in HTML)
       const tagName = await firstTile.evaluate((el) => el.tagName.toLowerCase());
-      expect(tagName).toBe('a');
+      expect(tagName).toBe("a");
 
       // Verify all 3 tiles are accessible links
       await expect(tileLinks).toHaveCount(3);
@@ -190,11 +183,7 @@ test.describe("Admin Dashboard", () => {
       await context.clearCookies();
 
       await page.goto("/admin-dashboard");
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!,
-        process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
 
       // System Admin will be redirected to /system-admin-dashboard first (their primary dashboard)
       // Then navigate to admin dashboard
@@ -219,11 +208,7 @@ test.describe("Admin Dashboard", () => {
       await context.clearCookies();
 
       await page.goto("/admin-dashboard");
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_CTSC_ADMIN_EMAIL!,
-        process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
 
       const heading = page.locator("h1");

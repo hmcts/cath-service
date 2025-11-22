@@ -103,6 +103,11 @@ export const locationData: {
       regionId: 5,
       name: "Wales",
       welshName: "Cymru"
+    },
+    {
+      regionId: 6,
+      name: "Yorkshire",
+      welshName: "Swydd Efrog"
     }
   ],
   jurisdictions: [
@@ -169,6 +174,12 @@ export const locationData: {
       name: "Magistrates Court",
       welshName: "Llys Ynadon",
       jurisdictionId: 3
+    },
+    {
+      subJurisdictionId: 8,
+      name: "Social Security and Child Support",
+      welshName: "Nawdd Cymdeithasol a Chynhaliaeth Plant",
+      jurisdictionId: 4
     }
   ]
 };

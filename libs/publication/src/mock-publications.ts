@@ -76,26 +76,5 @@ export const mockPublications: Publication[] = [
     listType: 4,
     contentDate: "2025-02-25",
     language: "ENGLISH"
-  },
-  {
-    id: 11,
-    locationId: 1,
-    listType: 1,
-    contentDate: "2025-04-18",
-    language: "ENGLISH"
-  },
-  {
-    id: 12,
-    locationId: 1,
-    listType: 2,
-    contentDate: "2025-04-15",
-    language: "ENGLISH"
-  },
-  {
-    id: 13,
-    locationId: 1,
-    listType: 5,
-    contentDate: "2025-04-10",
-    language: "WELSH"
   }
 ];

@@ -1,6 +1,7 @@
 export const en = {
   govUk: "GOV.UK",
   phase: "beta",
+  back: "Back",
   navigation: {
     signIn: "Sign in"
   },
