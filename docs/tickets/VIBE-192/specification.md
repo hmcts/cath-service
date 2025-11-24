@@ -1,50 +1,34 @@
 # VIBE-192: Verified User – Email subscriptions
 
-## Problem Statement
+## Overview
 
-Verified users need the ability to subscribe to email notifications for court and tribunal hearing publications. Currently, there is no mechanism for users to manage their notification preferences or receive automated updates when new publications are available for courts they are interested in.
-
-The system needs to allow users to:
-- Browse available courts and tribunals
-- Subscribe to notifications for specific locations
-- Manage their subscriptions (view, add, remove)
-- Receive emails when new publications are posted
+Verified users need the ability to subscribe to email notifications for court and tribunal hearing publications. This feature allows users to select one or more court/tribunal locations and receive notifications when new publications are available.
 
 ## User Story
 
 **As a** verified user of the Court and Tribunal Hearings service
 **I want to** subscribe to email notifications for specific courts and tribunals
-**So that** I can be automatically informed when new hearing publications are available without manually checking the service
+**So that** I can be automatically informed when new hearing publications are available
 
 ## Acceptance Criteria
 
 ### Functional Requirements
 
-1. **Subscription Management Page**
-   - Authenticated users can access an email subscriptions management page from their account dashboard
-   - Page displays list of currently active subscriptions
-   - Each subscription shows: court/tribunal name, location, date subscribed
-   - Users can remove existing subscriptions with confirmation
-   - Empty state shown when user has no subscriptions
+1. **User Access**
+   - Only verified users can access subscription management
+   - Feature is accessible from user account dashboard
+   - Requires authentication to view or modify subscriptions
 
-2. **Add Subscription Flow**
-   - Users can add new subscriptions by selecting a court/tribunal location
-   - Location search/browse functionality to find courts
-   - Confirmation message shown when subscription is successfully added
-   - Duplicate subscriptions prevented (cannot subscribe to same location twice)
-   - Maximum subscription limit of 50 locations per user
+2. **Subscription Management**
+   - Users can view their current subscriptions
+   - Users can add new subscriptions by searching/selecting courts
+   - Users can remove existing subscriptions
+   - Users must maintain at least one subscription (cannot remove all)
+   - Duplicate subscriptions prevented (cannot subscribe to same venue twice)
 
-3. **Email Notifications**
-   - Users receive email when new publications are posted for subscribed locations
-   - Emails contain: court name, publication type, date, direct link to view publication
-   - Emails sent within 15 minutes of publication being available
-   - Unsubscribe link included in all notification emails
-   - Users can manage email frequency preference (immediate, daily digest, weekly digest)
-
-4. **Data Management**
-   - User email taken from their verified account profile
-   - Subscription data persists across sessions
-   - Users can export their subscription list
+3. **Data Persistence**
+   - Subscriptions stored in database with: subscription_id (UUID), user_id, location_id, date_added
+   - User's subscriptions persist across sessions
    - Account deletion removes all associated subscriptions
 
 ### Non-Functional Requirements
@@ -57,30 +41,39 @@ The system needs to allow users to:
 
 2. **Welsh Language Support**
    - All UI text available in Welsh and English
-   - Email notifications sent in user's preferred language
-   - Language preference persists from user profile
+   - Language toggle available on all pages
+   - Content matches user's selected language preference
 
-3. **Performance**
-   - Subscription list loads within 2 seconds
-   - Add/remove operations complete within 1 second
-   - Email notifications sent within 15 minutes of publication
-
-4. **Security**
-   - Only authenticated verified users can manage subscriptions
+3. **Security**
+   - Authentication required for all subscription operations
    - CSRF protection on all forms
-   - Email addresses validated and sanitized
-   - Rate limiting on subscription changes (max 10 per minute)
+   - Input validation on all fields
+   - Users can only manage their own subscriptions
 
-## Page Structure and Wireframes
+## Page Flows
 
-### 1. Email Subscriptions Dashboard (`/account/email-subscriptions`)
+### Page 1: Your email subscriptions
 
-**Layout:**
+**URL**: `/account/email-subscriptions`
+**Methods**: GET, POST
+
+**Purpose**: Display user's current subscriptions with ability to add more or remove existing ones
+
+**Empty State** (no subscriptions):
 ```
-[GOV.UK Header]
-[Phase Banner]
-[Breadcrumb: Home > Your account > Email subscriptions]
+Your email subscriptions
+────────────────────────
 
+You have no email subscriptions
+
+Subscribe to courts and tribunals to receive email notifications
+when new hearing publications are available.
+
+[Add subscription] button
+```
+
+**With Subscriptions**:
+```
 Your email subscriptions
 ────────────────────────
 
@@ -88,77 +81,67 @@ You are subscribed to 3 courts and tribunals
 
 [Add subscription] button
 
-Current subscriptions:
 ┌──────────────────────────────────────────────────┐
 │ Birmingham Civil and Family Justice Centre       │
 │ Subscribed: 12 January 2025                      │
-│ [Remove subscription] link                       │
+│ [Remove] link                                    │
 └──────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────┐
 │ Manchester Crown Court                           │
 │ Subscribed: 5 January 2025                       │
-│ [Remove subscription] link                       │
+│ [Remove] link                                    │
 └──────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────┐
 │ Cardiff Employment Tribunal                      │
 │ Subscribed: 28 December 2024                     │
-│ [Remove subscription] link                       │
+│ [Remove] link                                    │
 └──────────────────────────────────────────────────┘
-
-Email preferences
-─────────────────
-○ Send emails immediately when publications are available
-● Send a daily digest email (selected)
-○ Send a weekly digest email
-
-[Save preferences] button
 ```
 
-**Empty State:**
+**GOV.UK Components**:
+- govukButton (Add subscription)
+- govukSummaryList (subscription list)
+- govukWarningText (empty state)
+- govukNotificationBanner (success messages after add/remove)
+
+**Validation**:
+- None on this page (display only, actions redirect to other pages)
+
+---
+
+### Page 2: Subscribe by court or tribunal name
+
+**URL**: `/account/email-subscriptions/add`
+**Methods**: GET, POST
+
+**Purpose**: Search for courts/tribunals and select one to subscribe to
+
+**Layout**:
 ```
-Your email subscriptions
-────────────────────────
+Subscribe by court or tribunal name
+────────────────────────────────────
 
-You have no email subscriptions
+Search for a court or tribunal by name:
 
-Add a subscription to get email notifications when new
-court and tribunal hearing publications are available.
-
-[Add subscription] button
-```
-
-### 2. Add Subscription Page (`/account/email-subscriptions/add`)
-
-**Layout:**
-```
-[GOV.UK Header]
-[Phase Banner]
-[Breadcrumb: Home > Your account > Email subscriptions > Add subscription]
-
-Add email subscription
-──────────────────────
-
-Search for a court or tribunal
-
-[Search input field]
+[Search input field                           ]
 [Search] button
 
-Or browse by region:
-• England and Wales
-• Scotland
-• Northern Ireland
+Or browse all courts and tribunals alphabetically:
+
+[Browse A-Z] link
 ```
 
-### 3. Subscription Search Results (`/account/email-subscriptions/search`)
-
-**Layout:**
+**After Search** (query parameter: `?q=birmingham`):
 ```
-Search results for "Birmingham"
-───────────────────────────────
+Subscribe by court or tribunal name
+────────────────────────────────────
 
-5 results found
+Search results for "birmingham" (5 results)
+
+[New search input with "birmingham" pre-filled   ]
+[Search] button
 
 ┌──────────────────────────────────────────────────┐
 │ Birmingham Civil and Family Justice Centre       │
@@ -172,391 +155,454 @@ Search results for "Birmingham"
 │ [Subscribe] button                               │
 └──────────────────────────────────────────────────┘
 
-[More results...]
+... more results ...
 ```
 
-### 4. Confirm Subscription (`/account/email-subscriptions/confirm`)
-
-**Layout:**
+**Browse A-Z View** (URL: `/account/email-subscriptions/add?view=browse`):
 ```
-Confirm subscription
-────────────────────
+Subscribe by court or tribunal name
+────────────────────────────────────
 
-Birmingham Civil and Family Justice Centre
-Bull Street, Birmingham, B4 6DS
+Browse all courts and tribunals
+
+[A] [B] [C] [D] [E] [F] [G] [H] [I] [J] [K] [L] [M]
+[N] [O] [P] [Q] [R] [S] [T] [U] [V] [W] [X] [Y] [Z]
+
+Courts and tribunals beginning with 'B'
+
+• Birmingham Civil and Family Justice Centre [Subscribe]
+• Birmingham Crown Court [Subscribe]
+• Blackpool Magistrates Court [Subscribe]
+... more ...
+```
+
+**GOV.UK Components**:
+- govukInput (search field)
+- govukButton (Search, Subscribe buttons)
+- govukBackLink (return to dashboard)
+
+**Validation**:
+- Search query minimum 2 characters
+- At least one result must be returned (or show "No results" message)
+- Cannot subscribe to a location user is already subscribed to (show error)
+
+---
+
+### Page 3: Confirm your email subscriptions
+
+**URL**: `/account/email-subscriptions/confirm`
+**Methods**: GET, POST
+
+**Purpose**: Review selected subscription before confirming, with option to remove
+
+**Layout** (single subscription pending):
+```
+Confirm your email subscriptions
+─────────────────────────────────
+
+Review your subscription before confirming:
+
+┌──────────────────────────────────────────────────┐
+│ Birmingham Civil and Family Justice Centre       │
+│ Bull Street, Birmingham, B4 6DS                  │
+│ [Remove] link                                    │
+└──────────────────────────────────────────────────┘
 
 You will receive email notifications when new hearing
 publications are available for this court.
 
 [Confirm subscription] button
+[Cancel] link (returns to add page)
+```
+
+**With Multiple Selections** (if user selected multiple in one session):
+```
+Confirm your email subscriptions
+─────────────────────────────────
+
+Review your subscriptions before confirming:
+
+┌──────────────────────────────────────────────────┐
+│ Birmingham Civil and Family Justice Centre       │
+│ [Remove] link                                    │
+└──────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────┐
+│ Manchester Crown Court                           │
+│ [Remove] link                                    │
+└──────────────────────────────────────────────────┘
+
+[Confirm subscriptions] button
 [Cancel] link
 ```
 
-### 5. Remove Subscription Confirmation (`/account/email-subscriptions/remove`)
-
-**Layout:**
+**Error State** (tried to remove all):
 ```
-Remove subscription
-───────────────────
+[Error Summary]
+There is a problem
+• You must subscribe to at least one court or tribunal
 
-Are you sure you want to remove your subscription to:
+Confirm your email subscriptions
+─────────────────────────────────
 
-Birmingham Civil and Family Justice Centre
+[No subscriptions shown]
 
-You will no longer receive email notifications for this court.
-
-[Yes, remove subscription] button
-[No, keep subscription] link
+[Back to search] link
 ```
 
-## Data Model
+**GOV.UK Components**:
+- govukSummaryList (subscription list with remove actions)
+- govukButton (Confirm)
+- govukBackLink
+- govukErrorSummary (validation errors)
 
-### New Database Tables
+**Validation**:
+- Must have at least one subscription selected
+- Cannot proceed with zero subscriptions
+- All selected locations must be valid location IDs
+
+---
+
+### Page 4: Subscription confirmation
+
+**URL**: `/account/email-subscriptions/confirmation`
+**Method**: GET (only accessed after successful POST)
+
+**Purpose**: Confirm successful subscription addition
+
+**Layout** (single subscription):
+```
+┌─────────────────────────────────────────────────┐
+│ ✓ Subscription confirmed                        │
+└─────────────────────────────────────────────────┘
+
+You have subscribed to email notifications for:
+• Birmingham Civil and Family Justice Centre
+
+You will receive an email when new hearing publications
+are available for this court.
+
+[View your subscriptions] button
+[Back to service home] link
+```
+
+**Layout** (multiple subscriptions):
+```
+┌─────────────────────────────────────────────────┐
+│ ✓ Subscriptions confirmed                       │
+└─────────────────────────────────────────────────┘
+
+You have subscribed to email notifications for:
+• Birmingham Civil and Family Justice Centre
+• Manchester Crown Court
+
+You will receive emails when new hearing publications
+are available for these courts.
+
+[View your subscriptions] button
+[Back to service home] link
+```
+
+**GOV.UK Components**:
+- govukPanel (success confirmation - green banner)
+- govukButton
+- govukBackLink
+
+**Note**: This page should only be accessible after a successful POST to confirm. Direct access should redirect to the subscriptions dashboard.
+
+---
+
+## Database Schema
+
+### New Table: subscription
 
 ```prisma
 model Subscription {
-  subscriptionId   String   @id @default(uuid()) @map("subscription_id") @db.Uuid
-  userId          String   @map("user_id")
-  locationId      String   @map("location_id")
-  emailFrequency  String   @default("IMMEDIATE") @map("email_frequency") // IMMEDIATE, DAILY, WEEKLY
-  subscribedAt    DateTime @default(now()) @map("subscribed_at")
-  unsubscribedAt  DateTime? @map("unsubscribed_at")
-  isActive        Boolean  @default(true) @map("is_active")
+  subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
+  userId         String   @map("user_id")
+  locationId     String   @map("location_id")
+  subscribedAt   DateTime @default(now()) @map("subscribed_at")
+  isActive       Boolean  @default(true) @map("is_active")
 
-  @@unique([userId, locationId])
-  @@index([userId])
-  @@index([locationId])
-  @@index([isActive])
+  @@unique([userId, locationId], name: "unique_user_location")
+  @@index([userId], name: "idx_subscription_user")
+  @@index([locationId], name: "idx_subscription_location")
+  @@index([isActive], name: "idx_subscription_active")
   @@map("subscription")
 }
-
-model NotificationQueue {
-  queueId         String   @id @default(uuid()) @map("queue_id") @db.Uuid
-  subscriptionId  String   @map("subscription_id") @db.Uuid
-  artefactId      String   @map("artefact_id") @db.Uuid
-  status          String   @default("PENDING") // PENDING, SENT, FAILED
-  attemptCount    Int      @default(0) @map("attempt_count")
-  createdAt       DateTime @default(now()) @map("created_at")
-  sentAt          DateTime? @map("sent_at")
-  errorMessage    String?   @map("error_message")
-
-  @@index([status])
-  @@index([createdAt])
-  @@map("notification_queue")
-}
-
-model EmailLog {
-  logId           String   @id @default(uuid()) @map("log_id") @db.Uuid
-  userId          String   @map("user_id")
-  emailAddress    String   @map("email_address")
-  subject         String
-  templateId      String   @map("template_id")
-  status          String   // SENT, FAILED, BOUNCED
-  sentAt          DateTime @default(now()) @map("sent_at")
-  errorMessage    String?   @map("error_message")
-
-  @@index([userId])
-  @@index([sentAt])
-  @@map("email_log")
-}
 ```
 
-### User Profile Extension
+**Field Descriptions**:
+- `subscription_id`: Unique identifier for the subscription (UUID)
+- `user_id`: ID of the user who created the subscription
+- `location_id`: ID of the court/tribunal location
+- `subscribed_at`: Timestamp when subscription was created (maps to "date_added" requirement)
+- `is_active`: Soft delete flag (true = active, false = deleted)
 
-The existing `UserProfile` interface in `@hmcts/auth` should be extended to include email notification preferences:
+**Indexes**:
+- `userId`: Find all subscriptions for a user (dashboard page)
+- `locationId`: Find all users subscribed to a location (for notifications)
+- `isActive`: Filter active subscriptions efficiently
+- Unique constraint on (userId, locationId): Prevent duplicate subscriptions
 
-```typescript
-interface UserProfile {
-  id: string;
-  email: string;
-  displayName: string;
-  role?: string;
-  provenance?: string;
-  emailFrequency?: string; // IMMEDIATE, DAILY, WEEKLY
-  locale?: string; // en, cy
-}
-```
-
-## URL Structure
-
-| Page | URL | Method | Auth Required |
-|------|-----|--------|---------------|
-| Subscriptions Dashboard | `/account/email-subscriptions` | GET | Yes (Verified) |
-| Add Subscription | `/account/email-subscriptions/add` | GET | Yes (Verified) |
-| Search Courts | `/account/email-subscriptions/search` | GET | Yes (Verified) |
-| Confirm Subscription | `/account/email-subscriptions/confirm` | POST | Yes (Verified) |
-| Remove Subscription | `/account/email-subscriptions/remove` | POST | Yes (Verified) |
-| Update Preferences | `/account/email-subscriptions/preferences` | POST | Yes (Verified) |
-| Unsubscribe via Email | `/unsubscribe/[token]` | GET | No |
+---
 
 ## Validation Rules
 
-### Subscription Management
+### Page 1: Dashboard
+- No validation required (display only)
 
-1. **User ID Validation**
-   - Must be authenticated verified user
-   - User ID must exist in session
-   - User email must be verified
+### Page 2: Add Subscription
+- Search query: Minimum 2 characters, maximum 100 characters
+- Location ID: Must exist in location data
+- Duplicate check: User cannot subscribe to a location they're already subscribed to
+- Error messages:
+  - "Enter at least 2 characters to search"
+  - "You are already subscribed to this court"
+  - "No results found for '{query}'"
 
-2. **Location ID Validation**
-   - Must be a valid court/tribunal location ID
-   - Must exist in the system
-   - Cannot be empty or null
+### Page 3: Confirm
+- Must have at least one subscription in the confirmation list
+- All location IDs must be valid
+- Cannot proceed with empty list
+- Error messages:
+  - "You must subscribe to at least one court or tribunal"
+  - "Invalid location selected"
 
-3. **Duplicate Prevention**
-   - Check for existing active subscription (userId + locationId)
-   - Return appropriate error message if duplicate
+### Page 4: Confirmation
+- No validation (display only)
+- Redirect to dashboard if accessed directly without prior confirmation
 
-4. **Subscription Limits**
-   - Maximum 50 active subscriptions per user
-   - Return error when limit exceeded
+---
 
-5. **Email Frequency**
-   - Must be one of: IMMEDIATE, DAILY, WEEKLY
-   - Default to IMMEDIATE if not specified
+## URL Structure
 
-### Email Notifications
+| Page | URL | Methods | Auth Required |
+|------|-----|---------|---------------|
+| Dashboard | `/account/email-subscriptions` | GET, POST | Yes (Verified) |
+| Add Subscription | `/account/email-subscriptions/add` | GET, POST | Yes (Verified) |
+| Confirm | `/account/email-subscriptions/confirm` | GET, POST | Yes (Verified) |
+| Confirmation | `/account/email-subscriptions/confirmation` | GET | Yes (Verified) |
 
-1. **Email Address Validation**
-   - Must be valid email format
-   - Must match user profile email
-   - Maximum 254 characters
+**Query Parameters**:
+- `/add?q=search-term`: Search results
+- `/add?view=browse`: Browse A-Z view
+- `/add?view=browse&letter=B`: Browse specific letter
 
-2. **Content Validation**
-   - Subject line maximum 998 characters
-   - Template ID must exist
-   - All required template variables provided
+---
 
-3. **Rate Limiting**
-   - Maximum 10 subscription changes per user per minute
-   - Maximum 100 notification emails per user per day
+## Session Storage
+
+Track pending subscriptions during the add/confirm flow:
+
+```typescript
+interface EmailSubscriptionsSession {
+  pendingSubscriptions?: string[]; // Array of location IDs
+  confirmationComplete?: boolean;  // Flag for confirmation page access
+}
+```
+
+**Flow**:
+1. User clicks "Subscribe" on Page 2 → Add location ID to `pendingSubscriptions` array
+2. User navigates to Page 3 → Display all locations in `pendingSubscriptions`
+3. User clicks "Remove" on Page 3 → Remove location ID from array
+4. User clicks "Confirm" on Page 3 → Save to database, set `confirmationComplete` = true
+5. User views Page 4 → Show success, clear session data
+
+---
 
 ## Accessibility Requirements
 
 ### WCAG 2.2 AA Compliance
 
 1. **Keyboard Navigation**
-   - All interactive elements accessible via keyboard
-   - Logical tab order maintained
+   - All interactive elements accessible via Tab key
+   - Logical tab order throughout forms
    - Focus indicators visible on all interactive elements
    - Skip links provided for main content
 
 2. **Screen Readers**
-   - Semantic HTML used throughout
-   - ARIA labels on all form controls
-   - Status messages announced via aria-live regions
+   - Semantic HTML5 elements (nav, main, section)
+   - ARIA labels on search input: "Search for a court or tribunal"
+   - ARIA live region for search results count
    - Clear link text (avoid "click here")
+   - Error messages linked to form fields via aria-describedby
 
 3. **Visual Design**
-   - Color contrast ratio minimum 4.5:1 for text
+   - Color contrast ratio minimum 4.5:1 for text (GOV.UK Design System compliant)
    - Text resizable up to 200% without loss of functionality
    - No information conveyed by color alone
-   - Focus states clearly visible
+   - Focus states clearly visible (GOV.UK defaults)
 
 4. **Forms**
-   - Clear labels associated with inputs
-   - Error messages linked to inputs
-   - Error summary at top of page
-   - Fieldset and legend for grouped controls
+   - Labels associated with inputs via for/id
+   - Error messages in error summary and inline
+   - Error summary receives focus when errors present
+   - Fieldset/legend for grouped controls
 
 5. **Progressive Enhancement**
    - Core functionality works without JavaScript
    - Forms submit via standard HTTP POST
-   - Search functionality works with page refresh
-   - JavaScript enhances but doesn't replace functionality
+   - Search works with page refresh
+   - JavaScript enhances (e.g., autocomplete) but doesn't replace
 
-### Screen Reader Testing
+---
 
-Must be tested with:
-- JAWS (Windows)
-- NVDA (Windows)
-- VoiceOver (macOS/iOS)
-- TalkBack (Android)
+## Welsh Language Content
+
+All pages must provide Welsh translations for:
+
+### Page 1 - Dashboard
+- EN: "Your email subscriptions", "You have no email subscriptions", "You are subscribed to X courts and tribunals", "Add subscription", "Remove", "Subscribed: {date}"
+- CY: "Eich tanysgrifiadau e-bost", "Nid oes gennych unrhyw danysgrifiadau e-bost", "Rydych wedi tanysgrifio i X llys a thribiwnlys", "Ychwanegu tanysgrifiad", "Dileu", "Tanysgrifiwyd: {dyddiad}"
+
+### Page 2 - Add Subscription
+- EN: "Subscribe by court or tribunal name", "Search for a court or tribunal by name", "Search", "Subscribe", "Browse A-Z", "Search results for", "results"
+- CY: "Tanysgrifio yn ôl enw llys neu dribiwnlys", "Chwilio am lys neu dribiwnlys yn ôl enw", "Chwilio", "Tanysgrifio", "Pori A-Z", "Canlyniadau chwilio ar gyfer", "canlyniad"
+
+### Page 3 - Confirm
+- EN: "Confirm your email subscriptions", "Review your subscription before confirming", "You will receive email notifications...", "Confirm subscription", "Cancel", "Remove"
+- CY: "Cadarnhau eich tanysgrifiadau e-bost", "Adolygu eich tanysgrifiad cyn cadarnhau", "Byddwch yn derbyn hysbysiadau e-bost...", "Cadarnhau tanysgrifiad", "Canslo", "Dileu"
+
+### Page 4 - Confirmation
+- EN: "Subscription confirmed", "You have subscribed to email notifications for:", "View your subscriptions", "Back to service home"
+- CY: "Tanysgrifiad wedi'i gadarnhau", "Rydych wedi tanysgrifio i hysbysiadau e-bost ar gyfer:", "Gweld eich tanysgrifiadau", "Yn ôl i hafan y gwasanaeth"
+
+### Error Messages
+- EN: "There is a problem", "You must subscribe to at least one court or tribunal", "Enter at least 2 characters to search", "You are already subscribed to this court"
+- CY: "Mae problem wedi codi", "Mae'n rhaid i chi danysgrifio i o leiaf un llys neu dribiwnlys", "Rhowch o leiaf 2 nod i chwilio", "Rydych eisoes wedi tanysgrifio i'r llys hwn"
+
+---
 
 ## Test Scenarios
 
 ### Unit Tests
 
 1. **Subscription Service**
-   - `createSubscription()` - Creates new subscription successfully
-   - `createSubscription()` - Prevents duplicate subscriptions
-   - `createSubscription()` - Enforces 50 subscription limit
-   - `getSubscriptionsByUserId()` - Returns user's subscriptions
-   - `removeSubscription()` - Deactivates subscription
-   - `validateLocationId()` - Validates court location exists
+   - `createSubscription()` creates new subscription successfully
+   - `createSubscription()` prevents duplicate subscriptions
+   - `getSubscriptionsByUserId()` returns user's active subscriptions
+   - `removeSubscription()` deactivates subscription (soft delete)
+   - `removeSubscription()` validates user owns subscription
 
-2. **Email Service**
-   - `sendNotificationEmail()` - Sends email successfully
-   - `sendNotificationEmail()` - Handles email failure gracefully
-   - `queueNotification()` - Adds notification to queue
-   - `processNotificationQueue()` - Processes pending notifications
-   - `generateUnsubscribeToken()` - Creates secure unsubscribe token
-
-3. **Validation**
-   - Email format validation
-   - Location ID validation
-   - User ID validation
-   - Rate limiting enforcement
+2. **Validation Functions**
+   - `validateLocationId()` returns true for valid location
+   - `validateLocationId()` returns false for invalid location
+   - `validateMinimumSubscriptions()` prevents removing all subscriptions
+   - `validateDuplicateSubscription()` detects duplicates
 
 ### Integration Tests
 
-1. **Subscription Flow**
-   - User adds subscription via web interface
+1. **Complete Add Flow**
+   - User searches for court
+   - User selects court from results
+   - User confirms subscription
    - Subscription saved to database
-   - Confirmation message displayed
-   - Subscription appears in user's list
+   - Success message displayed
 
-2. **Notification Flow**
-   - New publication created
-   - Subscriptions identified
-   - Notifications queued
-   - Emails sent to subscribers
-   - Email log updated
-
-3. **Unsubscribe Flow**
-   - User clicks unsubscribe link in email
-   - Token validated
-   - Subscription removed
-   - Confirmation page displayed
+2. **Remove Flow**
+   - User removes subscription from dashboard
+   - Subscription marked inactive in database
+   - Confirmation message shown
+   - Subscription no longer appears in list
 
 ### E2E Tests (Playwright)
 
-1. **Add Subscription**
-   ```typescript
-   test('verified user can add email subscription', async ({ page }) => {
-     await page.goto('/account/email-subscriptions');
-     await page.click('text=Add subscription');
-     await page.fill('[name="search"]', 'Birmingham');
-     await page.click('text=Search');
-     await page.click('text=Subscribe').first();
-     await page.click('text=Confirm subscription');
-     await expect(page.locator('text=Subscription added')).toBeVisible();
-   });
-   ```
+```typescript
+test('verified user can add email subscription', async ({ page }) => {
+  // Login as verified user
+  await page.goto('/login');
+  // ... authentication ...
 
-2. **Remove Subscription**
-   ```typescript
-   test('user can remove subscription', async ({ page }) => {
-     await page.goto('/account/email-subscriptions');
-     await page.click('text=Remove subscription').first();
-     await page.click('text=Yes, remove subscription');
-     await expect(page.locator('text=Subscription removed')).toBeVisible();
-   });
-   ```
+  // Navigate to subscriptions
+  await page.goto('/account/email-subscriptions');
+  await expect(page.locator('h1')).toContainText('Your email subscriptions');
 
-3. **Update Email Preferences**
-   ```typescript
-   test('user can change email frequency', async ({ page }) => {
-     await page.goto('/account/email-subscriptions');
-     await page.check('[value="DAILY"]');
-     await page.click('text=Save preferences');
-     await expect(page.locator('text=Preferences updated')).toBeVisible();
-   });
-   ```
+  // Add subscription
+  await page.click('text=Add subscription');
+  await page.fill('[name="search"]', 'Birmingham');
+  await page.click('button:has-text("Search")');
+  await page.click('button:has-text("Subscribe")').first();
 
-4. **Accessibility**
-   ```typescript
-   test('subscriptions page is accessible', async ({ page }) => {
-     await page.goto('/account/email-subscriptions');
-     const results = await new AxeBuilder({ page }).analyze();
-     expect(results.violations).toEqual([]);
-   });
-   ```
+  // Confirm
+  await page.click('button:has-text("Confirm subscription")');
 
-### Manual Test Scenarios
+  // Verify success
+  await expect(page.locator('.govuk-panel__title')).toContainText('Subscription confirmed');
+});
 
-1. **Screen Reader Navigation**
-   - Navigate entire subscription flow using only screen reader
-   - Verify all form labels are announced
-   - Verify error messages are announced
+test('user cannot remove all subscriptions', async ({ page }) => {
+  await page.goto('/account/email-subscriptions/confirm');
 
-2. **Keyboard-Only Navigation**
-   - Complete entire subscription flow using only keyboard
-   - Verify logical tab order
-   - Verify all actions accessible via keyboard
+  // Remove all subscriptions
+  await page.click('a:has-text("Remove")');
 
-3. **Email Testing**
-   - Verify emails received in Gmail, Outlook, Apple Mail
-   - Verify formatting correct across email clients
-   - Verify links work correctly
-   - Verify unsubscribe link functions
+  // Try to confirm
+  await page.click('button:has-text("Confirm subscription")');
 
-4. **Welsh Language Testing**
-   - Switch to Welsh language
-   - Verify all UI text in Welsh
-   - Verify emails sent in Welsh
-   - Verify validation messages in Welsh
+  // Verify error
+  await expect(page.locator('.govuk-error-summary')).toBeVisible();
+  await expect(page.locator('.govuk-error-message')).toContainText('at least one');
+});
+
+test('subscriptions page is accessible', async ({ page }) => {
+  await page.goto('/account/email-subscriptions');
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('Welsh language toggle works', async ({ page }) => {
+  await page.goto('/account/email-subscriptions');
+  await page.click('a[href*="lng=cy"]');
+  await expect(page.locator('h1')).toContainText('Eich tanysgrifiadau e-bost');
+});
+```
+
+---
 
 ## Security Considerations
 
 1. **Authentication & Authorization**
-   - Require verified user authentication
+   - All pages require `requireAuth()` middleware
+   - All pages require `blockUserAccess()` (verified users only)
+   - Users can only view/modify their own subscriptions
    - Validate user owns subscription before removal
-   - CSRF tokens on all state-changing forms
 
-2. **Data Protection**
-   - Email addresses stored securely
-   - Unsubscribe tokens time-limited (7 days)
-   - Rate limiting on subscription changes
-   - SQL injection prevention via Prisma
+2. **CSRF Protection**
+   - All POST forms include CSRF token
+   - Tokens validated on server side
 
-3. **Email Security**
-   - SPF, DKIM, DMARC configured
-   - Unsubscribe links use secure tokens
-   - No sensitive data in email content
-   - Email addresses not exposed in logs
+3. **Input Validation**
+   - Search queries sanitized
+   - Location IDs validated against known locations
+   - Maximum subscription limits enforced
 
-4. **Privacy**
-   - Comply with GDPR
-   - Allow users to export subscription data
-   - Delete all subscriptions on account deletion
-   - Privacy notice updated to mention email notifications
+4. **Data Protection**
+   - No email addresses stored in subscriptions (use user_id reference)
+   - Soft deletes preserve audit trail
+   - No sensitive data in URLs or logs
 
-## Technical Dependencies
+---
 
-### Required Libraries
-
-- `@hmcts/auth` - User authentication and profiles
-- `@hmcts/location` - Court location data
-- `@hmcts/publication` - Publication data
-- GOV Notify API or similar email service
-- Prisma ORM for database operations
-
-### Infrastructure
-
-- Scheduled job for processing notification queue
-- Email service integration (GOV Notify recommended)
-- Database indexes for performance
-- Redis cache for rate limiting
-
-## Performance Targets
+## Performance Requirements
 
 - Subscription list page load: < 2 seconds
-- Add/remove subscription: < 1 second
-- Email notification sending: < 15 minutes after publication
-- Support 10,000 active subscriptions
-- Support 1,000 concurrent users
+- Search results: < 1 second
+- Add/remove operations: < 1 second
+- Support up to 50 subscriptions per user
+- Support 10,000 concurrent verified users
 
-## Monitoring & Analytics
+---
 
-1. **Metrics to Track**
-   - Number of active subscriptions
-   - Subscription additions per day
-   - Subscription removals per day
-   - Email open rates
-   - Email click-through rates
-   - Unsubscribe rate
+## Out of Scope
 
-2. **Alerts**
-   - Email delivery failures > 5%
-   - Notification queue processing delayed > 30 minutes
-   - Subscription service errors > 1%
+The following are explicitly NOT included in this ticket:
 
-## Future Enhancements (Out of Scope)
-
-- SMS notifications
-- Push notifications
-- Subscription to specific case types
-- Custom notification rules
-- Email templates with more detail
-- Integration with calendar apps
+- Email notification sending (separate ticket)
+- Email frequency preferences (immediate/daily/weekly)
+- Unsubscribe via email link
+- Subscription to specific case types or hearing types
+- Bulk subscription import/export
+- SMS or push notifications
+- Notification history
+- Email templates and GOV Notify integration
