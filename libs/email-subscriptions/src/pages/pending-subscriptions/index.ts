@@ -14,6 +14,7 @@ const en = {
   removeLink: "Remove",
   notificationMessage: "You will receive email notifications when new hearing publications are available for this court.",
   notificationMessagePlural: "You will receive email notifications when new hearing publications are available for these courts.",
+  errorSummaryTitle: "There is a problem",
   errorAtLeastOne: "You must subscribe to at least one court or tribunal",
   backToSearch: "Back to search",
   back: "Back"
@@ -30,6 +31,7 @@ const cy = {
   removeLink: "Dileu",
   notificationMessage: "Byddwch yn derbyn hysbysiadau e-bost pan fydd cyhoeddiadau gwrandawiad newydd ar gael ar gyfer y llys hwn.",
   notificationMessagePlural: "Byddwch yn derbyn hysbysiadau e-bost pan fydd cyhoeddiadau gwrandawiad newydd ar gael ar gyfer y llysoedd hyn.",
+  errorSummaryTitle: "Mae problem wedi codi",
   errorAtLeastOne: "Mae'n rhaid i chi danysgrifio i o leiaf un llys neu dribiwnlys",
   backToSearch: "Yn ôl i chwilio",
   back: "Yn ôl"
@@ -103,7 +105,7 @@ const postHandler = async (req: Request, res: Response) => {
       return res.render("pending-subscriptions/index", {
         ...t,
         errors: {
-          titleText: "There is a problem",
+          titleText: t.errorSummaryTitle,
           errorList: [{ text: t.errorAtLeastOne }]
         },
         locations: [],
@@ -152,7 +154,7 @@ const postHandler = async (req: Request, res: Response) => {
       res.render("pending-subscriptions/index", {
         ...t,
         errors: {
-          titleText: "There is a problem",
+          titleText: t.errorSummaryTitle,
           errorList: [{ text: errorMessage }]
         },
         locations: pendingLocations,
