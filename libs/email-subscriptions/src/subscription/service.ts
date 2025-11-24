@@ -81,8 +81,8 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 
   await Promise.all([
     ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId)),
-    ...toAdd.map((locationId) => {
-      const locationValid = validateLocationId(locationId);
+    ...toAdd.map(async (locationId) => {
+      const locationValid = await validateLocationId(locationId);
       if (!locationValid) {
         throw new Error(`Invalid location ID: ${locationId}`);
       }
