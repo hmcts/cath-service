@@ -36,6 +36,8 @@ model MediaApplication {
   statusDate  DateTime @default(now()) @map("status_date")
 
   @@map("media_application")
+}
+
 model User {
   userId             String    @id @default(uuid()) @map("user_id") @db.Uuid
   email              String    @db.VarChar(255)
