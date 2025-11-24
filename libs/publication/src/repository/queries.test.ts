@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createArtefact, deleteArtefacts, getArtefactsByIds, getArtefactsByLocation } from "./queries.js";
+import { createArtefact, deleteArtefacts, getArtefactById, getArtefactsByIds, getArtefactsByLocation, getArtefactsByLocationId } from "./queries.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       findMany: vi.fn(),
