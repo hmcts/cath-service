@@ -1,7 +1,16 @@
 import * as locationModule from "@hmcts/location";
 import * as publicationModule from "@hmcts/publication";
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@hmcts/auth", () => ({
+  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  USER_ROLES: {
+    SYSTEM_ADMIN: "SYSTEM_ADMIN",
+    INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
+    INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
+  }
+}));
 
 vi.mock("@hmcts/location");
 vi.mock("@hmcts/publication");
@@ -16,23 +25,28 @@ vi.mocked(publicationModule).deleteArtefacts = mockDeleteArtefacts;
 vi.mocked(publicationModule).mockListTypes = [{ id: 1, englishFriendlyName: "Test List", welshFriendlyName: "Test List Welsh" }];
 
 describe("remove-list-confirmation page", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("GET handler", () => {
     it("should redirect to search page if no session data", async () => {
       const { GET } = await import("./index.js");
       const handler = GET[1] as (req: Request, res: Response) => Promise<void>;
 
+      const mockRedirect = vi.fn();
       const mockReq = {
         query: {},
         session: {}
       } as unknown as Request;
 
       const mockRes = {
-        redirect: vi.fn()
+        redirect: mockRedirect
       } as unknown as Response;
 
       await handler(mockReq, mockRes);
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/remove-list-search");
+      expect(mockRedirect).toHaveBeenCalledWith("/remove-list-search");
     });
 
     it("should render page with artefact details", async () => {
