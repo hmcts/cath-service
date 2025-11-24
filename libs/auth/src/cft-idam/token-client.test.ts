@@ -77,9 +77,11 @@ describe("Token Client", () => {
   describe("extractUserInfoFromToken", () => {
     it("should extract user info from id_token", () => {
       const payload = {
-        sub: "user-123",
-        email: "test@example.com",
+        uid: "user-123",
+        sub: "test@example.com",
         name: "Test User",
+        given_name: "Test",
+        family_name: "User",
         roles: ["caseworker", "admin"]
       };
 
@@ -98,15 +100,19 @@ describe("Token Client", () => {
         id: "user-123",
         email: "test@example.com",
         displayName: "Test User",
+        firstName: "Test",
+        surname: "User",
         roles: ["caseworker", "admin"]
       });
     });
 
     it("should fall back to access_token if id_token not present", () => {
       const payload = {
-        sub: "user-456",
-        email: "another@example.com",
+        uid: "user-456",
+        sub: "another@example.com",
         name: "Another User",
+        given_name: "Another",
+        family_name: "User",
         roles: ["viewer"]
       };
 
@@ -124,15 +130,19 @@ describe("Token Client", () => {
         id: "user-456",
         email: "another@example.com",
         displayName: "Another User",
+        firstName: "Another",
+        surname: "User",
         roles: ["viewer"]
       });
     });
 
     it("should handle empty roles array", () => {
       const payload = {
-        sub: "user-789",
-        email: "noroles@example.com",
+        uid: "user-789",
+        sub: "noroles@example.com",
         name: "No Roles User",
+        given_name: "No Roles",
+        family_name: "User",
         roles: []
       };
 
@@ -150,9 +160,11 @@ describe("Token Client", () => {
 
     it("should handle missing roles claim", () => {
       const payload = {
-        sub: "user-999",
-        email: "missing@example.com",
-        name: "Missing Roles"
+        uid: "user-999",
+        sub: "missing@example.com",
+        name: "Missing Roles",
+        given_name: "Missing",
+        family_name: "Roles"
       };
 
       const idToken = `header.${btoa(JSON.stringify(payload))}.signature`;
@@ -167,11 +179,13 @@ describe("Token Client", () => {
       expect(userInfo.roles).toEqual([]);
     });
 
-    it("should use alternative claim names for id", () => {
+    it("should use uid for id and sub for email", () => {
       const payload = {
         uid: "uid-123",
-        email: "uid@example.com",
-        name: "UID User"
+        sub: "uid@example.com",
+        name: "UID User",
+        given_name: "UID",
+        family_name: "User"
       };
 
       const idToken = `header.${btoa(JSON.stringify(payload))}.signature`;
@@ -184,6 +198,7 @@ describe("Token Client", () => {
       });
 
       expect(userInfo.id).toBe("uid-123");
+      expect(userInfo.email).toBe("uid@example.com");
     });
 
     it("should throw error when no token is present", () => {
