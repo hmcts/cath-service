@@ -117,7 +117,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Check for multer errors with proper type safety
   const fileUploadError = (req as RequestWithFileUploadError).fileUploadError;
-  let errors = validateForm(formData, req.file, t);
+  let errors = await validateForm(formData, req.file, t);
 
   // If multer reported an error, replace any file error with the specific multer error
   if (fileUploadError && typeof fileUploadError.code === "string") {
