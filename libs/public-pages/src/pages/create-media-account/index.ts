@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@hmcts/postgres";
 import type { Request, Response } from "express";
@@ -9,6 +9,18 @@ import { validateForm } from "./validation.js";
 
 const REPO_ROOT = path.join(process.cwd(), "../..");
 const UPLOAD_DIR = path.join(REPO_ROOT, "apps/web/storage/temp/uploads");
+
+// Ensure upload directory exists
+async function ensureUploadDir() {
+  try {
+    await mkdir(UPLOAD_DIR, { recursive: true });
+  } catch (error) {
+    // Ignore error if directory already exists
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+      throw error;
+    }
+  }
+}
 
 export const GET = async (_req: Request, res: Response) => {
   res.render("create-media-account/index", {
@@ -144,6 +156,8 @@ export const POST = async (req: Request, res: Response) => {
     });
 
     try {
+      // Ensure upload directory exists
+      await ensureUploadDir();
       await writeFile(filePath, req.file.buffer);
     } catch (fileError) {
       // File write failed - clear the fileName in DB to maintain consistency
