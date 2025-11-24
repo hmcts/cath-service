@@ -8,6 +8,9 @@ import { GET } from "./index.js";
 vi.mock("../../cft-idam/token-client.js");
 vi.mock("../../config/cft-idam-config.js");
 vi.mock("../../role-service/index.js");
+vi.mock("@hmcts/account/repository/query", () => ({
+  createOrUpdateUser: vi.fn()
+}));
 
 describe("CFT Login Return Handler", () => {
   let mockReq: Partial<Request>;
@@ -54,6 +57,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-123",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -89,6 +94,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-456",
       email: "citizen@example.com",
       displayName: "Citizen User",
+      firstName: "Citizen",
+      surname: "User",
       roles: ["citizen"]
     });
 
@@ -129,6 +136,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-789",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -153,6 +162,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-999",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -177,6 +188,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-000",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -203,6 +216,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-123",
       email: "test@example.com",
       displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
       roles: ["caseworker"]
     });
 
@@ -237,6 +252,8 @@ describe("CFT Login Return Handler", () => {
       id: "user-456",
       email: "citizen@example.com",
       displayName: "Citizen User",
+      firstName: "Citizen",
+      surname: "User",
       roles: ["citizen"]
     });
 
