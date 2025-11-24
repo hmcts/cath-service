@@ -1,11 +1,33 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
 // 2. Crown copyright logo link missing accessible text (WCAG 2.4.4, 4.1.2)
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
+
+// Helper function to wait for form submission and check for errors
+async function submitFormAndWaitForRedirect(page: Page, expectedUrl: string | RegExp) {
+  await page.waitForLoadState("networkidle");
+
+  const currentUrl = page.url();
+  const urlMatches = typeof expectedUrl === "string"
+    ? currentUrl.includes(expectedUrl)
+    : expectedUrl.test(currentUrl);
+
+  if (!urlMatches) {
+    // If not redirected, check for errors on the page
+    const errorSummary = page.locator(".govuk-error-summary");
+    if (await errorSummary.isVisible()) {
+      const errors = await page.locator(".govuk-error-summary__list li").allTextContents();
+      throw new Error(`Form submission failed with errors: ${errors.join(", ")}`);
+    }
+    const expectedUrlStr = typeof expectedUrl === "string" ? expectedUrl : expectedUrl.toString();
+    throw new Error(`Expected redirect to ${expectedUrlStr} but stayed on ${currentUrl}`);
+  }
+}
 
 test.describe("Create Media Account", () => {
   test.describe("given user is on the create media account page", () => {
@@ -92,21 +114,7 @@ test.describe("Create Media Account", () => {
       // Submit the form
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
-
-      // Wait for either success redirect or error display
-      await page.waitForLoadState("networkidle");
-
-      // Check if we're on the success page or if there are errors
-      const currentUrl = page.url();
-      if (!currentUrl.includes("/account-request-submitted")) {
-        // If not redirected, check for errors on the page
-        const errorSummary = page.locator(".govuk-error-summary");
-        if (await errorSummary.isVisible()) {
-          const errors = await page.locator(".govuk-error-summary__list li").allTextContents();
-          throw new Error(`Form submission failed with errors: ${errors.join(", ")}`);
-        }
-        throw new Error(`Expected redirect to /account-request-submitted but stayed on ${currentUrl}`);
-      }
+      await submitFormAndWaitForRedirect(page, "/account-request-submitted");
 
       // Verify confirmation page content
       const bannerTitle = page.getByRole("heading", { name: /details submitted/i });
@@ -137,12 +145,8 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-
-      // Wait for navigation after clicking continue
-      await Promise.all([
-        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
-        continueButton.click()
-      ]);
+      await continueButton.click();
+      await submitFormAndWaitForRedirect(page, "/account-request-submitted");
     });
 
     test("should accept PNG file format", async ({ page }) => {
@@ -163,12 +167,8 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-
-      // Wait for navigation after clicking continue
-      await Promise.all([
-        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
-        continueButton.click()
-      ]);
+      await continueButton.click();
+      await submitFormAndWaitForRedirect(page, "/account-request-submitted");
     });
   });
 
@@ -436,12 +436,8 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /parhau/i });
-
-      // Wait for navigation to Welsh confirmation page
-      await Promise.all([
-        page.waitForURL(/\/account-request-submitted.*lng=cy/, { timeout: 10000 }),
-        continueButton.click()
-      ]);
+      await continueButton.click();
+      await submitFormAndWaitForRedirect(page, /\/account-request-submitted.*lng=cy/);
 
       // Verify Welsh confirmation page content
       const bannerTitle = page.getByRole("heading", { name: /cyflwyno manylion/i });
@@ -599,12 +595,8 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-
-      // Wait for navigation after clicking continue
-      await Promise.all([
-        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
-        continueButton.click()
-      ]);
+      await continueButton.click();
+      await submitFormAndWaitForRedirect(page, "/account-request-submitted");
 
       // Check panel component
       const panel = page.locator(".govuk-panel");
@@ -642,12 +634,8 @@ test.describe("Create Media Account", () => {
       await termsCheckbox.check();
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-
-      // Wait for navigation after clicking continue
-      await Promise.all([
-        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
-        continueButton.click()
-      ]);
+      await continueButton.click();
+      await submitFormAndWaitForRedirect(page, "/account-request-submitted");
 
       // Run accessibility checks
       const accessibilityScanResults = await new AxeBuilder({ page })
