@@ -39,8 +39,8 @@
   },
   "devDependencies": {
     "@types/luxon": "3.7.1",
-    "@types/multer": "1.4.13",
-    "@types/node": "22.19.1",
+    "@types/multer": "2.0.0",
+    "@types/node": "24.10.1",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   }
