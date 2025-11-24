@@ -295,7 +295,18 @@ test.describe("Admin Dashboard", () => {
       await expect(mediaApplicationsTile).toContainText("Manage Media Account Requests");
     });
 
-    test("Local Admin can access admin dashboard", async ({ page }) => {
+    test("Local Admin can access admin dashboard", async ({ page, context }) => {
+      // Clear existing session
+      await context.clearCookies();
+
+      await page.goto("/admin-dashboard");
+      await loginWithSSO(
+        page,
+        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
+        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
+      );
+      await page.waitForURL("/admin-dashboard");
+
       const heading = page.locator("h1");
       await expect(heading).toHaveText("Admin Dashboard");
 
