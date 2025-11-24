@@ -36,7 +36,7 @@
     <form action="/location-name-search"  method="get">
       <div class="govuk-!-text-align-left">
         {{ govukButton({
-          text: backToSearch
+          text: addSubscriptions
         }) }}
       </div>
     </form>
@@ -50,46 +50,50 @@
       }) }}
     {% endif %}
 
-    <p class="govuk-body">{{ reviewMessage }}</p>
+    <style nonce="{{ cspNonce }}">
+      .subscription-table .govuk-table__cell {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+      }
+      .subscription-table .govuk-table__row {
+        border-bottom: 1px solid #b1b4b6;
+      }
+    </style>
 
-    <form action="/location-name-search"  method="get">
-      <table class="govuk-table">
-        <thead class="govuk-table__head">
-          <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">{{ heading }}</th>
-            <th scope="col" class="govuk-table__header govuk-!-text-align-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="govuk-table__body">
-        {% for location in locations %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">{{ location.name }}</td>
-            <td class="govuk-table__cell govuk-!-text-align-right">
-              <form method="post" style="display: inline;">
-                <input type="hidden" name="action" value="remove">
-                <input type="hidden" name="locationId" value="{{ location.locationId }}">
-                <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
-                  {{ removeLink }}
-                </button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+    <table class="govuk-table subscription-table" style="margin-bottom: 20px;">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">{{ heading }}</th>
+          <th scope="col" class="govuk-table__header govuk-!-text-align-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+      {% for location in locations %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">{{ location.name }}</td>
+          <td class="govuk-table__cell govuk-!-text-align-right">
+            <form method="post" style="display: inline;">
+              <input type="hidden" name="action" value="remove">
+              <input type="hidden" name="locationId" value="{{ location.locationId }}">
+              <button type="submit" class="govuk-link govuk-body-m" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer; font-size: 19px;">
+                {{ removeLink }}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
 
-      <p class="govuk-body">{{ notificationMessage }}</p>
+    <p class="govuk-body">
+      <a class="govuk-link" href="/location-name-search">{{ addAnotherSubscription }}</a>
+    </p>
 
-      <form method="post">
-        <input type="hidden" name="action" value="confirm">
-        {{ govukButton({
-          text: confirmButton
-        }) }}
-      </form>
-
-      <p class="govuk-body">
-        <a class="govuk-link" href="/location-name-search">{{ cancelLink }}</a>
-      </p>
+    <form method="post">
+      <input type="hidden" name="action" value="confirm">
+      {{ govukButton({
+        text: confirmButton
+      }) }}
     </form>
   {% endif %}
   </div>

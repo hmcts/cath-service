@@ -1,106 +1,190 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/input/macro.njk" import govukInput %}
-{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
 {% endblock %}
 
-{% block beforeContent %}
-  {{ govukBackLink({
-    text: back,
-    href: "/account/email-subscriptions"
-  }) }}
-{% endblock %}
-
 {% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+    <p class="govuk-body">{{ description }}</p>
+  </div>
+</div>
 
-<h1 class="govuk-heading-xl">{{ heading }}</h1>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-quarter filter-column">
+    <div style="border: 1px solid #b1b4b6;">
 
-{% if showSearch or showResults %}
-  <form method="get" novalidate>
-    {{ govukInput({
-      id: "search",
-      name: "q",
-      label: {
-        text: searchLabel,
-        classes: "govuk-label--m"
-      },
-      value: query if query else ""
-    }) }}
-
-    {{ govukButton({
-      text: searchButton
-    }) }}
-  </form>
-
-  <p class="govuk-body">
-    <a href="/account/email-subscriptions/add?view=browse" class="govuk-link">{{ browseLink }}</a>
-  </p>
-{% endif %}
-
-{% if showResults %}
-  <h2 class="govuk-heading-m govuk-!-margin-top-6">
-    {{ searchResults.replace('{query}', query) }}
-  </h2>
-
-  <p class="govuk-body">{{ resultsCount.replace('{count}', resultsCount) }}</p>
-
-  {% if results.length > 0 %}
-    {% for location in results %}
-      <div class="govuk-summary-card">
-        <div class="govuk-summary-card__title-wrapper">
-          <h3 class="govuk-summary-card__title">{{ location.name if locale === 'en' else location.welshName }}</h3>
-        </div>
-        <div class="govuk-summary-card__content">
-          {% if location.isSubscribed %}
-            <p class="govuk-body">{{ alreadySubscribed }}</p>
-          {% else %}
-            <form method="post" style="display: inline;">
-              <input type="hidden" name="locationId" value="{{ location.locationId }}">
-              {{ govukButton({
-                text: subscribeButton,
-                classes: "govuk-button--secondary"
-              }) }}
-            </form>
-          {% endif %}
-        </div>
+      {# Filter Panel Title #}
+      <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
+        <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ filterHeading }}</h2>
       </div>
-    {% endfor %}
-  {% else %}
-    <p class="govuk-body">{{ noResults.replace('{query}', query) }}</p>
-  {% endif %}
-{% endif %}
 
-{% if showBrowse %}
-  <h2 class="govuk-heading-m">{{ browseHeading }}</h2>
+      {# Selected Filters Section #}
+      <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
+        <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFiltersHeading }}</h3>
+        <a href="/location-name-search" class="govuk-link">{{ clearFilters }}</a>
+        {% if selectedJurisdictions.length > 0 or selectedRegions.length > 0 or selectedSubJurisdictions.length > 0 %}
+          <div class="filter-tags govuk-!-margin-top-4">
+            {% for i in range(0, selectedJurisdictions.length) %}
+              <span class="filter-tag">
+              {{ selectedJurisdictionsDisplay[i] }}
+              <a href="{{ jurisdictionRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedJurisdictionsDisplay[i] }} filter">×</a>
+            </span>
+            {% endfor %}
+            {% for i in range(0, selectedSubJurisdictions.length) %}
+              <span class="filter-tag">
+              {{ selectedSubJurisdictionsDisplay[i] }}
+              <a href="{{ subJurisdictionRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedSubJurisdictionsDisplay[i] }} filter">×</a>
+            </span>
+            {% endfor %}
+            {% for i in range(0, selectedRegions.length) %}
+              <span class="filter-tag">
+              {{ selectedRegionsDisplay[i] }}
+              <a href="{{ regionRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedRegionsDisplay[i] }} filter">×</a>
+            </span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
 
-  <div class="govuk-!-margin-bottom-6">
-    {% for let in letters %}
-      <a href="/account/email-subscriptions/add?view=browse&letter={{ let }}" class="govuk-link govuk-!-margin-right-3{% if let === selectedLetter %} govuk-!-font-weight-bold{% endif %}">{{ let }}</a>
-    {% endfor %}
+      {# Filter Controls Section #}
+      <div class="govuk-!-padding-4">
+        <form method="get" novalidate>
+          {{ govukButton({
+            text: applyFilters
+          }) }}
+
+          {# Mobile hide filters button #}
+          <button type="button" class="govuk-button govuk-button--secondary mobile-filter-toggle" id="hide-filters-btn" data-module="govuk-button" style="display: none;">
+            {{ hideFilters }}
+          </button>
+
+          <div class="filter-section">
+            <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="jurisdiction-section">
+              <span class="filter-section-heading">{{ jurisdictionHeading }}</span>
+              <span class="filter-section-icon" aria-hidden="true">−</span>
+            </button>
+            <div id="jurisdiction-section" class="filter-section-content">
+              {{ govukCheckboxes({
+                name: "jurisdiction",
+                classes: "govuk-checkboxes--small",
+                items: jurisdictionItems
+              }) }}
+
+              {# Sub-jurisdiction sections #}
+              {% for item in jurisdictionItems %}
+                {% if subJurisdictionItemsByJurisdiction[item.jurisdictionId].length > 0 %}
+                  <div class="sub-jurisdiction-section filter-section" data-parent-jurisdiction="{{ item.value }}" style="display: {% if item.checked %}block{% else %}none{% endif %};">
+                    <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="sub-section-{{ item.value }}">
+                      <span class="filter-section-heading">{{ item.subJurisdictionLabel }}</span>
+                      <span class="filter-section-icon" aria-hidden="true">−</span>
+                    </button>
+                    <div id="sub-section-{{ item.value }}" class="filter-section-content">
+                      {{ govukCheckboxes({
+                        name: "subJurisdiction",
+                        classes: "govuk-checkboxes--small",
+                        items: subJurisdictionItemsByJurisdiction[item.jurisdictionId]
+                      }) }}
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="region-section">
+              <span class="filter-section-heading">{{ regionHeading }}</span>
+              <span class="filter-section-icon" aria-hidden="true">−</span>
+            </button>
+            <div id="region-section" class="filter-section-content">
+              {{ govukCheckboxes({
+                name: "region",
+                classes: "govuk-checkboxes--small",
+                items: regionItems
+              }) }}
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
   </div>
 
-  <h3 class="govuk-heading-m">{{ letterHeading.replace('{letter}', selectedLetter) }}</h3>
+  <div class="govuk-grid-column-three-quarters courts-column">
+    {# Mobile filter toggle button #}
+    <button type="button" class="govuk-button govuk-button--secondary mobile-filter-toggle" id="show-filters-btn" data-module="govuk-button">
+      {{ showFilters }}
+    </button>
 
-  <ul class="govuk-list">
-    {% for location in locations %}
-      <li class="govuk-!-margin-bottom-3">
-        <strong>{{ location.name if locale === 'en' else location.welshName }}</strong>
-        {% if location.isSubscribed %}
-          <span class="govuk-body-s"> ({{ alreadySubscribed }})</span>
-        {% else %}
-          <form method="post" style="display: inline;">
-            <input type="hidden" name="locationId" value="{{ location.locationId }}">
-            <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
-              {{ subscribeButton }}
-            </button>
-          </form>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-{% endif %}
+    <form method="post" novalidate>
+      <table class="govuk-table court-table">
+        <tbody class="govuk-table__body">
+        {% for row in tableRows %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell court-table-letter">
+              {% if row.letter %}
+                <span class="court-letter">{{ row.letter }}</span>
+              {% endif %}
+            </td>
+            <td class="govuk-table__cell">
+              <div class="govuk-checkboxes govuk-checkboxes--small">
+                <div class="govuk-checkboxes__item">
+                  <input class="govuk-checkboxes__input" id="location-{{ row.location.locationId }}" name="locationIds" type="checkbox" value="{{ row.location.locationId }}">
+                  <label class="govuk-label govuk-checkboxes__label" for="location-{{ row.location.locationId }}">
+                    {% if locale === "cy" %}
+                      {{ row.location.welshName }}
+                    {% else %}
+                      {{ row.location.name }}
+                    {% endif %}
+                  </label>
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+      <h2 class="govuk-heading-m">{{ totalSelected }}</h2>
+      <div class="selection-counter-box govuk-!-padding-top-3 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2 govuk-!-margin-bottom-4" style="background-color: #f3f2f1;">
+        <p class="govuk-body"><span id="selectionCount">0</span> {{ selected }}</p>
+      </div>
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+    <script nonce="{{ cspNonce }}">
+      (function() {
+        const checkboxes = document.querySelectorAll('input[name="locationIds"]');
+        const countElement = document.getElementById('selectionCount');
+
+        function updateCount() {
+          const checkedCount = document.querySelectorAll('input[name="locationIds"]:checked').length;
+          countElement.textContent = checkedCount;
+        }
+
+        checkboxes.forEach(function(checkbox) {
+          checkbox.addEventListener('change', updateCount);
+        });
+
+        // Initial count
+        updateCount();
+      })();
+    </script>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ backToTop }}</a>
+  </div>
+</div>
 
 {% endblock %}

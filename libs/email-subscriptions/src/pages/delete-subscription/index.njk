@@ -1,0 +1,53 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageTitle %}
+  {{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+<div class="parent-box">
+
+  <h2 class="govuk-heading-l">{{ header }}</h2>
+  <form action="/delete-subscription" method="post">
+    {{ govukInput({
+      id: "subscription",
+      name: "subscription",
+      type: "hidden",
+      value: subscriptionId
+    }) }}
+    {{ govukRadios({
+      idPrefix: "unsubscribe-confirm",
+      name: "unsubscribe-confirm",
+      items: [
+        {
+          value: "yes",
+          text: radio1
+        },
+        {
+          value: "no",
+          text: radio2
+        }
+      ]
+    }) }}
+    {{ govukButton({
+      text: continueButton
+    }) }}
+  </form>
+</div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  <script nonce="{{ cspNonce }}">
+    const button = document.getElementsByClassName('govuk-button')[0];
+    button.addEventListener('click', (e) => {
+      const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
+      if (!checkedRadios.length) {
+        e.preventDefault();
+      }
+    });
+  </script>
+{% endblock %}

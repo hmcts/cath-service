@@ -1,10 +1,10 @@
 import { prisma } from "@hmcts/postgres";
 import {
-  countActiveSubscriptionsByUserId,
+  countSubscriptionsByUserId,
   createSubscriptionRecord,
-  deactivateSubscriptionRecord,
-  findActiveSubscriptionsByUserId,
-  findSubscriptionByUserAndLocation
+  deleteSubscriptionRecord,
+  findSubscriptionByUserAndLocation,
+  findSubscriptionsByUserId
 } from "./queries.js";
 import { validateLocationId } from "./validation.js";
 
@@ -17,30 +17,20 @@ export async function createSubscription(userId: string, locationId: string) {
   }
 
   const existing = await findSubscriptionByUserAndLocation(userId, locationId);
-  if (existing?.isActive) {
+  if (existing) {
     throw new Error("You are already subscribed to this court");
   }
 
-  const count = await countActiveSubscriptionsByUserId(userId);
+  const count = await countSubscriptionsByUserId(userId);
   if (count >= MAX_SUBSCRIPTIONS) {
     throw new Error(`Maximum ${MAX_SUBSCRIPTIONS} subscriptions allowed`);
-  }
-
-  if (existing && !existing.isActive) {
-    return prisma.subscription.update({
-      where: { subscriptionId: existing.subscriptionId },
-      data: {
-        isActive: true,
-        subscribedAt: new Date()
-      }
-    });
   }
 
   return createSubscriptionRecord(userId, locationId);
 }
 
 export async function getSubscriptionsByUserId(userId: string) {
-  return findActiveSubscriptionsByUserId(userId);
+  return findSubscriptionsByUserId(userId);
 }
 
 export async function removeSubscription(subscriptionId: string, userId: string) {
@@ -56,11 +46,7 @@ export async function removeSubscription(subscriptionId: string, userId: string)
     throw new Error("Unauthorized");
   }
 
-  if (!subscription.isActive) {
-    throw new Error("Subscription already removed");
-  }
-
-  return deactivateSubscriptionRecord(subscriptionId);
+  return deleteSubscriptionRecord(subscriptionId);
 }
 
 export async function createMultipleSubscriptions(userId: string, locationIds: string[]) {
@@ -73,5 +59,39 @@ export async function createMultipleSubscriptions(userId: string, locationIds: s
     succeeded: succeeded.length,
     failed: failed.length,
     errors: failed.map((r) => (r.status === "rejected" ? r.reason.message : "Unknown error"))
+  };
+}
+
+export async function replaceUserSubscriptions(userId: string, newLocationIds: string[]) {
+  const existingSubscriptions = await findSubscriptionsByUserId(userId);
+  const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId);
+
+  const newLocationIdSet = new Set(newLocationIds);
+  const existingLocationIdSet = new Set(existingLocationIds);
+
+  const toDelete = existingSubscriptions.filter((sub) => !newLocationIdSet.has(sub.locationId));
+  const toAdd = newLocationIds.filter((locId) => !existingLocationIdSet.has(locId));
+
+  if (toAdd.length > 0) {
+    const currentCount = existingLocationIds.length - toDelete.length;
+    if (currentCount + toAdd.length > MAX_SUBSCRIPTIONS) {
+      throw new Error(`Maximum ${MAX_SUBSCRIPTIONS} subscriptions allowed`);
+    }
+  }
+
+  await Promise.all([
+    ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId)),
+    ...toAdd.map((locationId) => {
+      const locationValid = validateLocationId(locationId);
+      if (!locationValid) {
+        throw new Error(`Invalid location ID: ${locationId}`);
+      }
+      return createSubscriptionRecord(userId, locationId);
+    })
+  ]);
+
+  return {
+    added: toAdd.length,
+    removed: toDelete.length
   };
 }

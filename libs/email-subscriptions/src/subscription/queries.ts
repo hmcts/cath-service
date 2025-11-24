@@ -1,13 +1,12 @@
 import { prisma } from "@hmcts/postgres";
 
-export async function findActiveSubscriptionsByUserId(userId: string) {
+export async function findSubscriptionsByUserId(userId: string) {
   return prisma.subscription.findMany({
     where: {
-      userId,
-      isActive: true
+      userId
     },
     orderBy: {
-      subscribedAt: "desc"
+      dateAdded: "desc"
     }
   });
 }
@@ -23,11 +22,10 @@ export async function findSubscriptionByUserAndLocation(userId: string, location
   });
 }
 
-export async function countActiveSubscriptionsByUserId(userId: string) {
+export async function countSubscriptionsByUserId(userId: string) {
   return prisma.subscription.count({
     where: {
-      userId,
-      isActive: true
+      userId
     }
   });
 }
@@ -36,18 +34,13 @@ export async function createSubscriptionRecord(userId: string, locationId: strin
   return prisma.subscription.create({
     data: {
       userId,
-      locationId,
-      isActive: true
+      locationId
     }
   });
 }
 
-export async function deactivateSubscriptionRecord(subscriptionId: string) {
-  return prisma.subscription.update({
-    where: { subscriptionId },
-    data: {
-      isActive: false,
-      unsubscribedAt: new Date()
-    }
+export async function deleteSubscriptionRecord(subscriptionId: string) {
+  return prisma.subscription.delete({
+    where: { subscriptionId }
   });
 }

@@ -8,5 +8,5 @@ export async function validateLocationId(locationId: string): Promise<boolean> {
 
 export async function validateDuplicateSubscription(userId: string, locationId: string): Promise<boolean> {
   const existing = await findSubscriptionByUserAndLocation(userId, locationId);
-  return !existing || !existing.isActive;
+  return !existing;
 }

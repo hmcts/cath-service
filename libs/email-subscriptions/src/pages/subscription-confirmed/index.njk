@@ -13,22 +13,20 @@
   classes: "govuk-panel--confirmation"
 }) }}
 
-<p class="govuk-body govuk-!-margin-top-6">{{ message }}</p>
-
-<ul class="govuk-list govuk-list--bullet">
-  {% for location in locations %}
-    <li>{{ location }}</li>
-  {% endfor %}
-</ul>
-
-<p class="govuk-body govuk-!-margin-top-6">{{ notificationMessage }}</p>
-
-<a href="/subscription-management" role="button" draggable="false" class="govuk-button govuk-!-margin-top-6" data-module="govuk-button">
-  {{ viewSubscriptionsButton }}
-</a>
-
-<p class="govuk-body govuk-!-margin-top-3">
-  <a href="/" class="govuk-link">{{ homeLink }}</a>
+<p class="govuk-body govuk-!-margin-top-6">
+  {{ continueText }} <a href="/account-home" class="govuk-link">{{ yourAccountLink }}</a> {{ inOrderTo }}:
 </p>
+
+<ul class="govuk-list govuk-list--bullet govuk-!-margin-top-4">
+  <li>
+    <a href="/location-name-search" class="govuk-link">{{ addNewSubscriptionLink }}</a>
+  </li>
+  <li>
+    <a href="/subscription-management" class="govuk-link">{{ manageSubscriptionsLink }}</a>
+  </li>
+  <li>
+    <a href="/search" class="govuk-link">{{ findCourtLink }}</a>
+  </li>
+</ul>
 
 {% endblock %}

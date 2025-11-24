@@ -53,29 +53,12 @@ describe("Validation Functions", () => {
       expect(queries.findSubscriptionByUserAndLocation).toHaveBeenCalledWith(userId, locationId);
     });
 
-    it("should return true if existing subscription is inactive", async () => {
+    it("should return false if subscription exists", async () => {
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
         locationId,
-        subscribedAt: new Date(),
-        unsubscribedAt: new Date(),
-        isActive: false
-      });
-
-      const result = await validateDuplicateSubscription(userId, locationId);
-
-      expect(result).toBe(true);
-    });
-
-    it("should return false if active subscription exists", async () => {
-      vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue({
-        subscriptionId: "sub123",
-        userId,
-        locationId,
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       });
 
       const result = await validateDuplicateSubscription(userId, locationId);

@@ -1,76 +1,46 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
-{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
-{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
 {% endblock %}
 
 {% block page_content %}
+<div class="parent-box">
 
-{% if errors %}
-  {{ govukErrorSummary({
-    titleText: errors.titleText,
-    errorList: errors.errorList
-  }) }}
-{% endif %}
+  <h1 class="govuk-heading-l">{{ heading }}</h1>
 
-{% if successBanner %}
-  {{ govukNotificationBanner({
-    type: "success",
-    text: successBanner.text
-  }) }}
-{% endif %}
-
-<h1 class="govuk-heading-xl">{{ heading }}</h1>
-
-{% if count === 0 %}
-  {{ govukWarningText({
-    text: noSubscriptions,
-    iconFallbackText: "Warning"
+  {{ govukButton({
+    text: addButton,
+    href: '/location-name-search'
   }) }}
 
-  <p class="govuk-body">{{ noSubscriptionsMessage }}</p>
+  {% if count > 0 %}
+    <table class="govuk-table" id="locations-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header govuk-!-width-three-quarters" aria-sort="none">{{ tableHeaderLocation }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
+          <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for subscription in subscriptions %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ subscription.locationName }}</td>
+            <td class="govuk-table__cell" style="white-space: nowrap;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+            <td class="govuk-table__cell govuk-table__cell--numeric">
+              <a href="/delete-subscription?subscriptionId={{ subscription.subscriptionId }}" class="govuk-link">
+                {{ removeLink }}
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="govuk-body">{{ noSubscriptions }}</p>
+  {% endif %}
 
-  <a href="/location-name-search" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
-    {{ addButton }}
-  </a>
-{% else %}
-  <p class="govuk-body">{{ subscribedCount.replace('{count}', count) }}</p>
-
-  <a href="/location-name-search" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
-    {{ addButton }}
-  </a>
-
-  <div class="govuk-!-margin-top-6">
-    {% for subscription in subscriptions %}
-      <div class="govuk-summary-card">
-        <div class="govuk-summary-card__title-wrapper">
-          <h2 class="govuk-summary-card__title">{{ subscription.locationName }}</h2>
-          <ul class="govuk-summary-card__actions">
-            <li class="govuk-summary-card__action">
-              <form method="post" style="display: inline;">
-                <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
-                <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
-                  {{ removeLink }}
-                </button>
-              </form>
-            </li>
-          </ul>
-        </div>
-        <div class="govuk-summary-card__content">
-          <dl class="govuk-summary-list">
-            <div class="govuk-summary-list__row">
-              <dt class="govuk-summary-list__key">{{ subscribedLabel }}</dt>
-              <dd class="govuk-summary-list__value">{{ subscription.subscribedAt | date('D MMMM YYYY') }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-
+</div>
 {% endblock %}

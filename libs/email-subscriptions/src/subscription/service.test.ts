@@ -1,7 +1,13 @@
 import { prisma } from "@hmcts/postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./queries.js";
-import { createMultipleSubscriptions, createSubscription, getSubscriptionsByUserId, removeSubscription } from "./service.js";
+import {
+  createMultipleSubscriptions,
+  createSubscription,
+  getSubscriptionsByUserId,
+  removeSubscription,
+  replaceUserSubscriptions
+} from "./service.js";
 import * as validation from "./validation.js";
 
 vi.mock("@hmcts/postgres", () => ({
@@ -32,14 +38,12 @@ describe("Subscription Service", () => {
     it("should create a new subscription successfully", async () => {
       vi.mocked(validation.validateLocationId).mockResolvedValue(true);
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue(null);
-      vi.mocked(queries.countActiveSubscriptionsByUserId).mockResolvedValue(5);
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(5);
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
         locationId,
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       });
 
       const result = await createSubscription(userId, locationId);
@@ -63,9 +67,7 @@ describe("Subscription Service", () => {
         subscriptionId: "sub123",
         userId,
         locationId,
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       });
 
       await expect(createSubscription(userId, locationId)).rejects.toThrow("You are already subscribed to this court");
@@ -74,40 +76,9 @@ describe("Subscription Service", () => {
     it("should throw error if subscription limit reached", async () => {
       vi.mocked(validation.validateLocationId).mockResolvedValue(true);
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue(null);
-      vi.mocked(queries.countActiveSubscriptionsByUserId).mockResolvedValue(50);
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(50);
 
       await expect(createSubscription(userId, locationId)).rejects.toThrow("Maximum 50 subscriptions allowed");
-    });
-
-    it("should reactivate inactive subscription", async () => {
-      const inactiveSubscription = {
-        subscriptionId: "sub123",
-        userId,
-        locationId,
-        subscribedAt: new Date("2024-01-01"),
-        unsubscribedAt: new Date("2024-02-01"),
-        isActive: false
-      };
-
-      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
-      vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue(inactiveSubscription);
-      vi.mocked(queries.countActiveSubscriptionsByUserId).mockResolvedValue(5);
-      vi.mocked(prisma.subscription.update).mockResolvedValue({
-        ...inactiveSubscription,
-        isActive: true,
-        subscribedAt: new Date()
-      });
-
-      const result = await createSubscription(userId, locationId);
-
-      expect(result.isActive).toBe(true);
-      expect(prisma.subscription.update).toHaveBeenCalledWith({
-        where: { subscriptionId: inactiveSubscription.subscriptionId },
-        data: {
-          isActive: true,
-          subscribedAt: expect.any(Date)
-        }
-      });
     });
   });
 
@@ -119,18 +90,16 @@ describe("Subscription Service", () => {
           subscriptionId: "sub1",
           userId,
           locationId: "456",
-          subscribedAt: new Date(),
-          unsubscribedAt: null,
-          isActive: true
+          dateAdded: new Date()
         }
       ];
 
-      vi.mocked(queries.findActiveSubscriptionsByUserId).mockResolvedValue(subscriptions);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(subscriptions);
 
       const result = await getSubscriptionsByUserId(userId);
 
       expect(result).toEqual(subscriptions);
-      expect(queries.findActiveSubscriptionsByUserId).toHaveBeenCalledWith(userId);
+      expect(queries.findSubscriptionsByUserId).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -143,22 +112,16 @@ describe("Subscription Service", () => {
         subscriptionId,
         userId,
         locationId: "456",
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       };
 
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(subscription);
-      vi.mocked(queries.deactivateSubscriptionRecord).mockResolvedValue({
-        ...subscription,
-        isActive: false,
-        unsubscribedAt: new Date()
-      });
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(subscription);
 
       const result = await removeSubscription(subscriptionId, userId);
 
-      expect(result.isActive).toBe(false);
-      expect(queries.deactivateSubscriptionRecord).toHaveBeenCalledWith(subscriptionId);
+      expect(result).toBeDefined();
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith(subscriptionId);
     });
 
     it("should throw error if subscription not found", async () => {
@@ -172,29 +135,12 @@ describe("Subscription Service", () => {
         subscriptionId,
         userId: "differentUser",
         locationId: "456",
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       };
 
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(subscription);
 
       await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Unauthorized");
-    });
-
-    it("should throw error if subscription already removed", async () => {
-      const subscription = {
-        subscriptionId,
-        userId,
-        locationId: "456",
-        subscribedAt: new Date(),
-        unsubscribedAt: new Date(),
-        isActive: false
-      };
-
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(subscription);
-
-      await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Subscription already removed");
     });
   });
 
@@ -205,14 +151,12 @@ describe("Subscription Service", () => {
 
       vi.mocked(validation.validateLocationId).mockResolvedValue(true);
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue(null);
-      vi.mocked(queries.countActiveSubscriptionsByUserId).mockResolvedValue(5);
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(5);
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
         locationId: "456",
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       });
 
       const result = await createMultipleSubscriptions(userId, locationIds);
@@ -229,14 +173,12 @@ describe("Subscription Service", () => {
       vi.mocked(validation.validateLocationId).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue(null);
-      vi.mocked(queries.countActiveSubscriptionsByUserId).mockResolvedValue(5);
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(5);
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
         locationId: "456",
-        subscribedAt: new Date(),
-        unsubscribedAt: null,
-        isActive: true
+        dateAdded: new Date()
       });
 
       const result = await createMultipleSubscriptions(userId, locationIds);
@@ -245,6 +187,115 @@ describe("Subscription Service", () => {
       expect(result.failed).toBe(1);
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0]).toBe("Invalid location ID");
+    });
+  });
+
+  describe("replaceUserSubscriptions", () => {
+    const userId = "user123";
+
+    it("should replace subscriptions by adding new and removing old", async () => {
+      const existingSubscriptions = [
+        { subscriptionId: "sub1", userId, locationId: "456", dateAdded: new Date() },
+        { subscriptionId: "sub2", userId, locationId: "789", dateAdded: new Date() }
+      ];
+      const newLocationIds = ["789", "101"];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
+      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(existingSubscriptions[0]);
+      vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
+        subscriptionId: "sub3",
+        userId,
+        locationId: "101",
+        dateAdded: new Date()
+      });
+
+      const result = await replaceUserSubscriptions(userId, newLocationIds);
+
+      expect(result.added).toBe(1);
+      expect(result.removed).toBe(1);
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith("sub1");
+      expect(queries.createSubscriptionRecord).toHaveBeenCalledWith(userId, "101");
+    });
+
+    it("should only add subscriptions when no existing ones", async () => {
+      const newLocationIds = ["456", "789"];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
+      vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
+        subscriptionId: "sub1",
+        userId,
+        locationId: "456",
+        dateAdded: new Date()
+      });
+
+      const result = await replaceUserSubscriptions(userId, newLocationIds);
+
+      expect(result.added).toBe(2);
+      expect(result.removed).toBe(0);
+      expect(queries.deleteSubscriptionRecord).not.toHaveBeenCalled();
+    });
+
+    it("should only remove subscriptions when new list is empty", async () => {
+      const existingSubscriptions = [
+        { subscriptionId: "sub1", userId, locationId: "456", dateAdded: new Date() },
+        { subscriptionId: "sub2", userId, locationId: "789", dateAdded: new Date() }
+      ];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(existingSubscriptions[0]);
+
+      const result = await replaceUserSubscriptions(userId, []);
+
+      expect(result.added).toBe(0);
+      expect(result.removed).toBe(2);
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledTimes(2);
+      expect(queries.createSubscriptionRecord).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when exceeding max subscriptions", async () => {
+      const existingSubscriptions = Array.from({ length: 48 }, (_, i) => ({
+        subscriptionId: `sub${i}`,
+        userId,
+        locationId: `${i}`,
+        dateAdded: new Date()
+      }));
+      // Keep all existing 48 and try to add 3 new ones = 51 total
+      const newLocationIds = [...Array.from({ length: 48 }, (_, i) => `${i}`), "456", "789", "101"];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
+      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
+
+      await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow(
+        "Maximum 50 subscriptions allowed"
+      );
+    });
+
+    it("should throw error for invalid location ID", async () => {
+      const newLocationIds = ["456", "invalid"];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(validation.validateLocationId).mockReturnValue(false);
+
+      await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow("Invalid location ID");
+    });
+
+    it("should keep same subscriptions when lists match", async () => {
+      const existingSubscriptions = [
+        { subscriptionId: "sub1", userId, locationId: "456", dateAdded: new Date() },
+        { subscriptionId: "sub2", userId, locationId: "789", dateAdded: new Date() }
+      ];
+      const newLocationIds = ["456", "789"];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
+
+      const result = await replaceUserSubscriptions(userId, newLocationIds);
+
+      expect(result.added).toBe(0);
+      expect(result.removed).toBe(0);
+      expect(queries.deleteSubscriptionRecord).not.toHaveBeenCalled();
+      expect(queries.createSubscriptionRecord).not.toHaveBeenCalled();
     });
   });
 });

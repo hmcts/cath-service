@@ -4,6 +4,7 @@ declare module "express-session" {
       pendingSubscriptions?: string[];
       confirmationComplete?: boolean;
       confirmedLocations?: string[];
+      subscriptionToRemove?: string;
     };
     successMessage?: string;
   }
