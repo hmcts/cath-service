@@ -1,13 +1,7 @@
 import { prisma } from "@hmcts/postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./queries.js";
-import {
-  createMultipleSubscriptions,
-  createSubscription,
-  getSubscriptionsByUserId,
-  removeSubscription,
-  replaceUserSubscriptions
-} from "./service.js";
+import { createMultipleSubscriptions, createSubscription, getSubscriptionsByUserId, removeSubscription, replaceUserSubscriptions } from "./service.js";
 import * as validation from "./validation.js";
 
 vi.mock("@hmcts/postgres", () => ({
@@ -267,9 +261,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
       vi.mocked(validation.validateLocationId).mockResolvedValue(true);
 
-      await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow(
-        "Maximum 50 subscriptions allowed"
-      );
+      await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow("Maximum 50 subscriptions allowed");
     });
 
     it("should throw error for invalid location ID", async () => {
