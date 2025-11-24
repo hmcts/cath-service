@@ -8,6 +8,9 @@ import { GET } from "./index.js";
 vi.mock("../../cft-idam/token-client.js");
 vi.mock("../../config/cft-idam-config.js");
 vi.mock("../../role-service/index.js");
+vi.mock("@hmcts/account/repository/query", () => ({
+  createOrUpdateUser: vi.fn()
+}));
 
 describe("CFT Login Return Handler", () => {
   let mockReq: Partial<Request>;

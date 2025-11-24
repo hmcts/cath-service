@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CreateUserInput } from "./index.js";
-import { createOrUpdateUser, createUser, findUserByEmail, findUserByProvenanceId, updateUser } from "./index.js";
+import type { User } from "./model.js";
+import { createOrUpdateUser, createUser, findUserByEmail, findUserByProvenanceId, updateUser } from "./query.js";
 
 // Mock @hmcts/postgres
 vi.mock("@hmcts/postgres", () => ({
@@ -24,7 +24,7 @@ describe("User Repository", () => {
 
   describe("createUser", () => {
     it("should create a new user with all fields", async () => {
-      const input: CreateUserInput = {
+      const input: User = {
         email: "test@example.com",
         firstName: "John",
         surname: "Doe",
@@ -36,8 +36,8 @@ describe("User Repository", () => {
       const mockUser = {
         userId: "user-123",
         email: input.email,
-        firstName: input.firstName,
-        surname: input.surname,
+        firstName: input.firstName ?? null,
+        surname: input.surname ?? null,
         userProvenance: input.userProvenance,
         userProvenanceId: input.userProvenanceId,
         role: input.role,
@@ -45,7 +45,7 @@ describe("User Repository", () => {
         lastSignedInDate: new Date()
       };
 
-      vi.mocked(prisma.user.create).mockResolvedValue(mockUser);
+      vi.mocked(prisma.user.create).mockResolvedValue(mockUser as any);
 
       const result = await createUser(input);
 
@@ -64,7 +64,7 @@ describe("User Repository", () => {
     });
 
     it("should create a user without optional fields", async () => {
-      const input: CreateUserInput = {
+      const input: User = {
         email: "test@example.com",
         userProvenance: "CFT_IDAM",
         userProvenanceId: "123e4567-e89b-12d3-a456-426614174001",
@@ -211,7 +211,7 @@ describe("User Repository", () => {
 
   describe("createOrUpdateUser", () => {
     it("should create a new user if not exists", async () => {
-      const input: CreateUserInput = {
+      const input: User = {
         email: "test@example.com",
         firstName: "John",
         surname: "Doe",
@@ -224,9 +224,11 @@ describe("User Repository", () => {
       vi.mocked(prisma.user.create).mockResolvedValue({
         userId: "user-123",
         ...input,
+        firstName: input.firstName ?? null,
+        surname: input.surname ?? null,
         createdDate: new Date(),
         lastSignedInDate: new Date()
-      });
+      } as any);
 
       await createOrUpdateUser(input);
 
@@ -238,7 +240,7 @@ describe("User Repository", () => {
     });
 
     it("should update existing user if found", async () => {
-      const input: CreateUserInput = {
+      const input: User = {
         email: "test@example.com",
         firstName: "John",
         surname: "Doe",
@@ -282,7 +284,7 @@ describe("User Repository", () => {
     });
 
     it("should update last signed in date when user exists", async () => {
-      const input: CreateUserInput = {
+      const input: User = {
         email: "test@example.com",
         userProvenance: "CFT_IDAM",
         userProvenanceId: "123e4567-e89b-12d3-a456-426614174000",

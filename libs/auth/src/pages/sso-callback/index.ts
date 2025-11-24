@@ -1,9 +1,9 @@
 import { USER_ROLES } from "@hmcts/account";
+import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import passport from "passport";
 import { isSsoConfigured } from "../../config/sso-config.js";
-import { createOrUpdateUser } from "../../user-repository/index.js";
 
 /**
  * Handles OAuth callback from Azure AD
@@ -47,7 +47,7 @@ export const GET = [
         userEmail: req.user?.email,
         userId: req.user?.id
       });
-      // Continue with authentication even if database write fails
+      return res.redirect("/login?error=db_error");
     }
 
     // Determine default redirect based on user role

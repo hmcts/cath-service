@@ -1,20 +1,7 @@
 import { prisma } from "@hmcts/postgres";
+import type { UpdateUserInput, User } from "./model.js";
 
-export interface CreateUserInput {
-  email: string;
-  firstName?: string;
-  surname?: string;
-  userProvenance: "SSO" | "CFT_IDAM" | "CRIME_IDAM" | "B2C_IDAM";
-  userProvenanceId: string;
-  role: "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN";
-}
-
-export interface UpdateUserInput {
-  role?: "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN";
-  lastSignedInDate?: Date;
-}
-
-export async function createUser(input: CreateUserInput) {
+export async function createUser(input: User) {
   return await prisma.user.create({
     data: {
       email: input.email,
@@ -50,7 +37,7 @@ export async function updateUser(userProvenanceId: string, input: UpdateUserInpu
   });
 }
 
-export async function createOrUpdateUser(input: CreateUserInput) {
+export async function createOrUpdateUser(input: User) {
   const existingUser = await findUserByProvenanceId(input.userProvenanceId);
 
   if (existingUser) {

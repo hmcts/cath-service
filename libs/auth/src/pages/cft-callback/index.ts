@@ -1,10 +1,10 @@
+import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import { exchangeCodeForToken, extractUserInfoFromToken } from "../../cft-idam/token-client.js";
 import { getCftIdamConfig } from "../../config/cft-idam-config.js";
 import { isRejectedCFTRole } from "../../role-service/index.js";
 import type { UserProfile } from "../../user-profile.js";
-import { createOrUpdateUser } from "../../user-repository/index.js";
 
 export const GET = async (req: Request, res: Response) => {
   const code = req.query.code as string;
@@ -58,7 +58,7 @@ export const GET = async (req: Request, res: Response) => {
         userEmail: userInfo.email,
         userId: userInfo.id
       });
-      // Continue with authentication even if database write fails
+      return res.redirect(`/sign-in?error=db_error&lng=${lng}`);
     }
 
     req.session.regenerate((err: Error | null) => {
