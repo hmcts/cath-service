@@ -208,7 +208,7 @@ test.describe("Create Media Account", () => {
       await expect(fileError).toBeVisible();
       await expect(fileError).toHaveAttribute("href", "#idProof");
 
-      const termsError = errorSummary.getByRole("link", { name: /select the checkbox to agree to the terms and conditions/i });
+      const termsError = errorSummary.getByRole("link", { name: /you must check the box to confirm you agree to the terms and conditions/i });
       await expect(termsError).toBeVisible();
       await expect(termsError).toHaveAttribute("href", "#termsAccepted");
 
