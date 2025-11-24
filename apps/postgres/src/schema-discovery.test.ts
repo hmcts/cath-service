@@ -12,10 +12,10 @@ describe("Schema Discovery", () => {
       expect(Array.isArray(result)).toBe(true);
     });
 
-    it("should return an empty array", () => {
+    it("should return array with email-subscriptions schema", () => {
       const result = getPrismaSchemas();
-      expect(result).toEqual([]);
-      expect(result.length).toBe(0);
+      expect(result.length).toBe(1);
+      expect(result[0]).toContain("email-subscriptions");
     });
 
     it("should return a new array on each call", () => {

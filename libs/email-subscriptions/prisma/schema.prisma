@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subscription {
+  subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
+  userId         String   @map("user_id")
+  locationId     String   @map("location_id")
+  subscribedAt   DateTime @default(now()) @map("subscribed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  isActive       Boolean  @default(true) @map("is_active")
+
+  @@unique([userId, locationId], name: "unique_user_location")
+  @@index([userId], name: "idx_subscription_user")
+  @@index([locationId], name: "idx_subscription_location")
+  @@index([isActive], name: "idx_subscription_active")
+  @@map("subscription")
+}

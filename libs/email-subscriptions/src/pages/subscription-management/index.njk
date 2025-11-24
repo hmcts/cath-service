@@ -1,0 +1,76 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block pageTitle %}
+  {{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+
+{% if errors %}
+  {{ govukErrorSummary({
+    titleText: errors.titleText,
+    errorList: errors.errorList
+  }) }}
+{% endif %}
+
+{% if successBanner %}
+  {{ govukNotificationBanner({
+    type: "success",
+    text: successBanner.text
+  }) }}
+{% endif %}
+
+<h1 class="govuk-heading-xl">{{ heading }}</h1>
+
+{% if count === 0 %}
+  {{ govukWarningText({
+    text: noSubscriptions,
+    iconFallbackText: "Warning"
+  }) }}
+
+  <p class="govuk-body">{{ noSubscriptionsMessage }}</p>
+
+  <a href="/location-name-search" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
+    {{ addButton }}
+  </a>
+{% else %}
+  <p class="govuk-body">{{ subscribedCount.replace('{count}', count) }}</p>
+
+  <a href="/location-name-search" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
+    {{ addButton }}
+  </a>
+
+  <div class="govuk-!-margin-top-6">
+    {% for subscription in subscriptions %}
+      <div class="govuk-summary-card">
+        <div class="govuk-summary-card__title-wrapper">
+          <h2 class="govuk-summary-card__title">{{ subscription.locationName }}</h2>
+          <ul class="govuk-summary-card__actions">
+            <li class="govuk-summary-card__action">
+              <form method="post" style="display: inline;">
+                <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
+                  {{ removeLink }}
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
+        <div class="govuk-summary-card__content">
+          <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">{{ subscribedLabel }}</dt>
+              <dd class="govuk-summary-list__value">{{ subscription.subscribedAt | date('D MMMM YYYY') }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% endblock %}

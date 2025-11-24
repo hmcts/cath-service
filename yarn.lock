@@ -871,6 +871,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/email-subscriptions@workspace:libs/email-subscriptions":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/email-subscriptions@workspace:libs/email-subscriptions"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/list-types-common@workspace:*, @hmcts/list-types-common@workspace:libs/list-types/common":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"

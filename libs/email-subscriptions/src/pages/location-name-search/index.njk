@@ -1,0 +1,106 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: back,
+    href: "/account/email-subscriptions"
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+
+<h1 class="govuk-heading-xl">{{ heading }}</h1>
+
+{% if showSearch or showResults %}
+  <form method="get" novalidate>
+    {{ govukInput({
+      id: "search",
+      name: "q",
+      label: {
+        text: searchLabel,
+        classes: "govuk-label--m"
+      },
+      value: query if query else ""
+    }) }}
+
+    {{ govukButton({
+      text: searchButton
+    }) }}
+  </form>
+
+  <p class="govuk-body">
+    <a href="/account/email-subscriptions/add?view=browse" class="govuk-link">{{ browseLink }}</a>
+  </p>
+{% endif %}
+
+{% if showResults %}
+  <h2 class="govuk-heading-m govuk-!-margin-top-6">
+    {{ searchResults.replace('{query}', query) }}
+  </h2>
+
+  <p class="govuk-body">{{ resultsCount.replace('{count}', resultsCount) }}</p>
+
+  {% if results.length > 0 %}
+    {% for location in results %}
+      <div class="govuk-summary-card">
+        <div class="govuk-summary-card__title-wrapper">
+          <h3 class="govuk-summary-card__title">{{ location.name if locale === 'en' else location.welshName }}</h3>
+        </div>
+        <div class="govuk-summary-card__content">
+          {% if location.isSubscribed %}
+            <p class="govuk-body">{{ alreadySubscribed }}</p>
+          {% else %}
+            <form method="post" style="display: inline;">
+              <input type="hidden" name="locationId" value="{{ location.locationId }}">
+              {{ govukButton({
+                text: subscribeButton,
+                classes: "govuk-button--secondary"
+              }) }}
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="govuk-body">{{ noResults.replace('{query}', query) }}</p>
+  {% endif %}
+{% endif %}
+
+{% if showBrowse %}
+  <h2 class="govuk-heading-m">{{ browseHeading }}</h2>
+
+  <div class="govuk-!-margin-bottom-6">
+    {% for let in letters %}
+      <a href="/account/email-subscriptions/add?view=browse&letter={{ let }}" class="govuk-link govuk-!-margin-right-3{% if let === selectedLetter %} govuk-!-font-weight-bold{% endif %}">{{ let }}</a>
+    {% endfor %}
+  </div>
+
+  <h3 class="govuk-heading-m">{{ letterHeading.replace('{letter}', selectedLetter) }}</h3>
+
+  <ul class="govuk-list">
+    {% for location in locations %}
+      <li class="govuk-!-margin-bottom-3">
+        <strong>{{ location.name if locale === 'en' else location.welshName }}</strong>
+        {% if location.isSubscribed %}
+          <span class="govuk-body-s"> ({{ alreadySubscribed }})</span>
+        {% else %}
+          <form method="post" style="display: inline;">
+            <input type="hidden" name="locationId" value="{{ location.locationId }}">
+            <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
+              {{ subscribeButton }}
+            </button>
+          </form>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% endblock %}

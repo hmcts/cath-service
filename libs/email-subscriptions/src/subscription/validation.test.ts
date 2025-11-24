@@ -1,0 +1,86 @@
+import * as location from "@hmcts/location";
+import { describe, expect, it, vi } from "vitest";
+import * as queries from "./queries.js";
+import { validateDuplicateSubscription, validateLocationId } from "./validation.js";
+
+vi.mock("@hmcts/location");
+vi.mock("./queries.js");
+
+describe("Validation Functions", () => {
+  describe("validateLocationId", () => {
+    it("should return true for valid location ID", async () => {
+      vi.mocked(location.getLocationById).mockReturnValue({
+        locationId: 456,
+        name: "Test Court",
+        welshName: "Llys Prawf",
+        region: "England"
+      });
+
+      const result = await validateLocationId("456");
+
+      expect(result).toBe(true);
+      expect(location.getLocationById).toHaveBeenCalledWith(456);
+    });
+
+    it("should return false for invalid location ID", async () => {
+      vi.mocked(location.getLocationById).mockReturnValue(undefined);
+
+      const result = await validateLocationId("999");
+
+      expect(result).toBe(false);
+      expect(location.getLocationById).toHaveBeenCalledWith(999);
+    });
+
+    it("should return false for non-numeric location ID", async () => {
+      vi.mocked(location.getLocationById).mockReturnValue(undefined);
+
+      const result = await validateLocationId("invalid");
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("validateDuplicateSubscription", () => {
+    const userId = "user123";
+    const locationId = "456";
+
+    it("should return true if no existing subscription", async () => {
+      vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue(null);
+
+      const result = await validateDuplicateSubscription(userId, locationId);
+
+      expect(result).toBe(true);
+      expect(queries.findSubscriptionByUserAndLocation).toHaveBeenCalledWith(userId, locationId);
+    });
+
+    it("should return true if existing subscription is inactive", async () => {
+      vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue({
+        subscriptionId: "sub123",
+        userId,
+        locationId,
+        subscribedAt: new Date(),
+        unsubscribedAt: new Date(),
+        isActive: false
+      });
+
+      const result = await validateDuplicateSubscription(userId, locationId);
+
+      expect(result).toBe(true);
+    });
+
+    it("should return false if active subscription exists", async () => {
+      vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue({
+        subscriptionId: "sub123",
+        userId,
+        locationId,
+        subscribedAt: new Date(),
+        unsubscribedAt: null,
+        isActive: true
+      });
+
+      const result = await validateDuplicateSubscription(userId, locationId);
+
+      expect(result).toBe(false);
+    });
+  });
+});
