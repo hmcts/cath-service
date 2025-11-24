@@ -56,6 +56,8 @@ export async function createApp(): Promise<Express> {
   const upload = createFileUpload();
 
   // Helper function to handle multer errors consistently
+  // Note: This function is tested via E2E tests in create-media-account.spec.ts
+  /* v8 ignore start */
   const handleMulterError = (err: any, req: any, fieldName: string) => {
     if (!err) return;
 
@@ -77,7 +79,10 @@ export async function createApp(): Promise<Express> {
       });
     }
   };
+  /* v8 ignore stop */
 
+  // File upload middleware registration - tested via E2E tests
+  /* v8 ignore start */
   app.post("/create-media-account", (req, res, next) => {
     upload.single("idProof")(req, res, (err) => {
       handleMulterError(err, req, "idProof");
@@ -90,6 +95,7 @@ export async function createApp(): Promise<Express> {
       next();
     });
   });
+  /* v8 ignore stop */
 
   app.use(configureCsrf());
 

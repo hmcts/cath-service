@@ -176,47 +176,10 @@ describe("Web Application", () => {
   });
 
   describe("File Upload Error Handling", () => {
-    it("should handle multer errors gracefully", async () => {
-      vi.resetModules();
-      vi.clearAllMocks();
-
-      // Mock createFileUpload to simulate an error
-      const mockError = new Error("File too large");
-      vi.doMock("@hmcts/web-core", () => ({
-        configureCookieManager: vi.fn().mockResolvedValue(undefined),
-        configureCsrf: vi.fn(() => [vi.fn((_req: any, _res: any, next: any) => next())]),
-        configureGovuk: vi.fn().mockResolvedValue(undefined),
-        configureHelmet: vi.fn(() => vi.fn()),
-        configureNonce: vi.fn(() => vi.fn()),
-        createFileUpload: vi.fn(() => ({
-          single: vi.fn(() => (_req: any, _res: any, callback: any) => {
-            // Simulate multer calling the callback with an error
-            callback(mockError);
-          })
-        })),
-        errorHandler: vi.fn(() => vi.fn()),
-        expressSessionRedis: vi.fn(() => vi.fn()),
-        notFoundHandler: vi.fn(() => vi.fn())
-      }));
-
-      const { createApp } = await import("./app.js");
-      const app = await createApp();
-
-      expect(app).toBeDefined();
-    });
-
     it("should configure multer file upload middleware", async () => {
-      // Verify that createFileUpload was called during app initialization
-      // The actual multer error handling behavior (known vs unknown error codes)
-      // is tested in E2E tests
       const { createFileUpload } = await import("@hmcts/web-core");
       expect(createFileUpload).toHaveBeenCalled();
     });
-
-    // Note: The POST route handlers for /create-media-account and /manual-upload
-    // are thin wrappers that call upload.single() and handleMulterError().
-    // These are integration points that are better tested via E2E tests rather
-    // than unit tests. The multer middleware behavior is verified in E2E tests.
   });
 
   describe("Redis Connection", () => {
