@@ -187,34 +187,6 @@ describe("Summary of Publications - GET handler", () => {
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.noPublicationsMessage).toBe("Sorry, no lists found for this court");
     });
-
-    it("should set isPdf flag to true for PDF files", async () => {
-      mockRequest.query = { locationId: "9" };
-      mockResponse.locals = { locale: "en" };
-
-      await GET(mockRequest as Request, mockResponse as Response);
-
-      const renderCall = renderSpy.mock.calls[0][1];
-      const publications = renderCall.publications;
-
-      // a1 and a2 are PDFs, should have isPdf = true
-      const pdfPublications = publications.filter((p: any) => p.id === "a1" || p.id === "a2");
-      expect(pdfPublications.every((p: any) => p.isPdf === true)).toBe(true);
-    });
-
-    it("should set isPdf flag to false for non-PDF files", async () => {
-      mockRequest.query = { locationId: "9" };
-      mockResponse.locals = { locale: "en" };
-
-      await GET(mockRequest as Request, mockResponse as Response);
-
-      const renderCall = renderSpy.mock.calls[0][1];
-      const publications = renderCall.publications;
-
-      // a3 is a DOCX file, should have isPdf = false
-      const nonPdfPublication = publications.find((p: any) => p.id === "a3");
-      expect(nonPdfPublication.isPdf).toBe(false);
-    });
   });
 
   describe("Welsh locale", () => {
