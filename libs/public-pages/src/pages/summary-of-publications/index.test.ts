@@ -133,8 +133,8 @@ describe("Summary of Publications - GET handler", () => {
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.publications).toBeDefined();
       expect(renderCall.publications.length).toBeGreaterThan(0);
-      // All publications should be for locationId 9
-      expect(renderCall.publications.every((p: any) => p.id > 0)).toBe(true);
+      // All publications should have valid IDs
+      expect(renderCall.publications.every((p: any) => p.id && p.id.length > 0)).toBe(true);
     });
 
     it("should render publications sorted by date descending", async () => {
