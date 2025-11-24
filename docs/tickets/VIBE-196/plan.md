@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan details the implementation of an unsubscribe feature that allows verified users to opt out of email notifications about court and tribunal hearings. The implementation follows HMCTS monorepo standards with a focus on simplicity, accessibility, and security.
+This plan details the implementation of an email subscription management feature that allows verified users to view their subscriptions and unsubscribe from email notifications about court and tribunal hearings. The implementation follows HMCTS monorepo standards with a focus on simplicity, accessibility, and GOV.UK Design System patterns.
 
 ## Architecture Decisions
 
@@ -12,9 +12,10 @@ Create a new feature module: `libs/email-subscriptions`
 
 **Rationale**:
 - Follows established monorepo patterns
-- Encapsulates all unsubscribe functionality in a single module
-- Allows for future expansion (e.g., subscription preferences, re-subscribe)
+- Encapsulates all subscription functionality in a single module
+- Allows for future expansion (re-subscribe, granular preferences)
 - Clear separation of concerns
+- Reusable across different parts of the application
 
 ### 2. Database Schema Approach
 
@@ -40,8 +41,9 @@ model User {
 - YAGNI: Only add fields needed for this feature
 - Snake_case database fields with camelCase TypeScript mapping (HMCTS standard)
 - Indexed email field for efficient lookups
-- Timestamp tracking for audit compliance
+- Timestamp tracking for audit compliance (GDPR requirement)
 - Default to true (subscribed) for new users
+- Singular table name (user not users) following HMCTS conventions
 
 ### 3. Authentication Integration
 
@@ -51,6 +53,7 @@ The system already has authentication infrastructure through `UserProfile` in se
 1. Use `requireAuth()` middleware from `@hmcts/auth` to protect routes
 2. Access user email from `req.user.email` (from UserProfile)
 3. Query/update User record based on authenticated user's email
+4. Use `blockUserAccess()` to ensure only verified users (not SSO) can access
 
 **Session Access Pattern**:
 ```typescript
@@ -61,16 +64,42 @@ const userEmail = req.user.email;
 
 ### 4. Page Flow
 
-**Two-page flow** (minimal complexity):
-1. `/unsubscribe` - Confirmation page with unsubscribe button
-2. `/unsubscribe/confirmation` - Success confirmation
+**Three-page flow** (matching JIRA specification):
+
+1. `/email-subscriptions` - List of subscriptions with unsubscribe links
+2. `/email-subscriptions/unsubscribe-confirm` - Yes/No radio confirmation
+3. `/email-subscriptions/unsubscribe-success` - Green success banner
 
 **Rationale**:
-- Simple, clear user journey
 - Follows GOV.UK "one thing per page" principle
-- No unnecessary steps
+- Clear user journey with explicit confirmation
+- Prevents accidental unsubscribes (two-step process)
+- Success page provides clear feedback and next actions
+- Matches existing HMCTS patterns (e.g., remove-list flow)
 
-### 5. Data Flow
+### 5. Session Management Strategy
+
+Use Express session to track state between pages:
+
+```typescript
+interface EmailSubscriptionSession {
+  unsubscribeSuccess?: boolean;  // Flag for success page guard
+}
+```
+
+**Flow**:
+1. List page → Click "Unsubscribe" → Navigate to confirmation
+2. Confirmation page → Select "Yes" → Update DB → Set session flag → Redirect to success
+3. Success page → Check session flag → Display success → Clear flag
+4. If "No" selected → Redirect back to list page (no DB changes)
+
+**Rationale**:
+- Simple session state (just a boolean flag)
+- Prevents direct access to success page without completing flow
+- Follows pattern used in remove-list-success
+- Session automatically expires if user abandons flow
+
+### 6. Data Flow Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -79,33 +108,44 @@ const userEmail = req.user.email;
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ requireAuth() middleware checks authentication               │
+│ requireAuth() + blockUserAccess() middleware                │
 │ - If not authenticated → redirect to login                  │
-│ - If authenticated → continue                               │
+│ - If SSO user → block access (verified users only)          │
+│ - If verified user → continue                               │
 └────────────────────────┬────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ GET /unsubscribe                                            │
-│ - Fetch user by email from req.user.email                   │
-│ - Display confirmation page with user's email               │
-│ - Show consequences of unsubscribing                        │
+│ GET /email-subscriptions                                    │
+│ - Query: findOrCreateUser(req.user.email)                   │
+│ - Display: User's email and subscription status             │
+│ - Show: "Unsubscribe" link if subscribed                    │
 └────────────────────────┬────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ POST /unsubscribe                                           │
-│ - Validate CSRF token                                       │
-│ - Call unsubscribeUser(userEmail) service                   │
-│ - Update emailNotifications = false                         │
-│ - Redirect to /unsubscribe/confirmation                     │
+│ GET /email-subscriptions/unsubscribe-confirm                │
+│ - Display: Yes/No radios with consequences                  │
+│ - Validate: Session is still valid                          │
 └────────────────────────┬────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ GET /unsubscribe/confirmation                               │
-│ - Display success message                                   │
-│ - Provide link back to account home                         │
+│ POST /email-subscriptions/unsubscribe-confirm               │
+│ - Validate: Radio selection required                        │
+│ - If "No" → redirect to /email-subscriptions                │
+│ - If "Yes" → call unsubscribeUser(email)                    │
+│            → set session.unsubscribeSuccess = true          │
+│            → redirect to success page                       │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│ GET /email-subscriptions/unsubscribe-success                │
+│ - Guard: Check session.unsubscribeSuccess flag              │
+│ - If false → redirect to /email-subscriptions               │
+│ - Display: Green notification banner                        │
+│ - Clear: session.unsubscribeSuccess flag                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -115,15 +155,31 @@ const userEmail = req.user.email;
 
 **Files**:
 - `apps/postgres/prisma/schema.prisma` (add User model)
-- Migration files (auto-generated)
+- Migration files (auto-generated via Prisma)
 
 **Tasks**:
-1. Add User model to Prisma schema
+1. Add User model to Prisma schema with fields specified above
 2. Run `yarn db:migrate:dev` to generate migration
 3. Apply migration to development database
-4. Verify in Prisma Studio
+4. Run `yarn db:generate` to update Prisma client
+5. Verify in Prisma Studio (`yarn db:studio`)
 
-**Acceptance**: User table exists with correct fields and indexes
+**Schema Addition**:
+```prisma
+model User {
+  id                         String    @id @default(cuid())
+  email                      String    @unique
+  emailNotifications         Boolean   @default(true) @map("email_notifications")
+  emailNotificationsUpdatedAt DateTime? @map("email_notifications_updated_at")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
+
+  @@map("user")
+  @@index([email])
+}
+```
+
+**Acceptance**: User table exists with correct fields, indexes, and constraints
 
 ### Phase 2: Module Scaffold
 
@@ -134,10 +190,59 @@ const userEmail = req.user.email;
 - `libs/email-subscriptions/src/index.ts`
 
 **Tasks**:
-1. Create module directory structure
-2. Configure package.json with build scripts
-3. Set up TypeScript configuration
+1. Create module directory structure:
+   ```bash
+   mkdir -p libs/email-subscriptions/src/pages
+   mkdir -p libs/email-subscriptions/src/email-subscriptions
+   ```
+2. Configure package.json with build scripts (include build:nunjucks)
+3. Set up TypeScript configuration (extends root tsconfig)
 4. Register module in root tsconfig.json paths
+5. Create config.ts with pageRoutes export
+6. Create index.ts for business logic exports
+
+**package.json**:
+```json
+{
+  "name": "@hmcts/email-subscriptions",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && yarn build:nunjucks",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "peerDependencies": {
+    "express": "^5.1.0"
+  }
+}
+```
+
+**Root tsconfig.json addition**:
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@hmcts/email-subscriptions": ["libs/email-subscriptions/src"]
+    }
+  }
+}
+```
 
 **Acceptance**: Module compiles successfully with `yarn build`
 
@@ -210,98 +315,292 @@ export async function unsubscribeUser(email: string) {
 
   return { success: true };
 }
+
+export async function getUserSubscriptionStatus(email: string) {
+  const user = await findOrCreateUser(email);
+
+  return {
+    email: user.email,
+    isSubscribed: user.emailNotifications
+  };
+}
 ```
+
+**Test Coverage**:
+- Test findOrCreateUser creates user if not exists
+- Test findOrCreateUser returns existing user
+- Test updateEmailNotificationPreference updates correctly
+- Test unsubscribeUser handles already unsubscribed state
+- Test unsubscribeUser sets emailNotifications to false
+- Mock Prisma client in tests using Vitest
 
 **Acceptance**: All unit tests pass with >80% coverage
 
 ### Phase 4: Page Controllers and Templates
 
+#### 4.1 Email Subscriptions List Page
+
 **Files**:
-- `libs/email-subscriptions/src/pages/unsubscribe/index.ts`
-- `libs/email-subscriptions/src/pages/unsubscribe/index.njk`
-- `libs/email-subscriptions/src/pages/unsubscribe/confirmation/index.ts`
-- `libs/email-subscriptions/src/pages/unsubscribe/confirmation/index.njk`
+- `libs/email-subscriptions/src/pages/email-subscriptions/index.ts`
+- `libs/email-subscriptions/src/pages/email-subscriptions/index.njk`
+- `libs/email-subscriptions/src/pages/email-subscriptions/en.ts`
+- `libs/email-subscriptions/src/pages/email-subscriptions/cy.ts`
 
-**Implementation**:
-
+**Controller Implementation**:
 ```typescript
-// pages/unsubscribe/index.ts
-import type { Request, Response } from "express";
-import { unsubscribeUser } from "../../email-subscriptions/service.js";
-import { findOrCreateUser } from "../../email-subscriptions/queries.js";
+// index.ts
+import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import type { Request, RequestHandler, Response } from "express";
+import { getUserSubscriptionStatus } from "../../email-subscriptions/service.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
-const en = {
-  title: "Unsubscribe from email notifications",
-  heading: "Unsubscribe from email notifications",
-  description: "You are currently subscribed to email notifications about court and tribunal hearings.",
-  yourEmail: "Your email address",
-  consequences: "If you unsubscribe, you will no longer receive:",
+const getHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const lang = locale === "cy" ? cy : en;
+
+  const status = await getUserSubscriptionStatus(req.user.email);
+
+  // Build navigation items for verified user
+  if (!res.locals.navigation) {
+    res.locals.navigation = {};
+  }
+  res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+  res.render("email-subscriptions/index", {
+    en,
+    cy,
+    userEmail: status.email,
+    isSubscribed: status.isSubscribed
+  });
+};
+
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+```
+
+**Content Files**:
+```typescript
+// en.ts
+export const en = {
+  pageTitle: "Your email subscriptions",
+  heading: "Your email subscriptions",
+  subscribedTo: "You are subscribed to email notifications at:",
+  subscriptionCard: {
+    title: "Court and tribunal hearing notifications",
+    description: "Get email notifications about upcoming court and tribunal hearings, including updates about changes to hearing times or locations.",
+    unsubscribeButton: "Unsubscribe"
+  },
+  notSubscribed: {
+    message: "You are not currently subscribed to email notifications.",
+    description: "Subscribe to receive notifications about court and tribunal hearings."
+  }
+};
+
+// cy.ts
+export const cy = {
+  pageTitle: "Eich tanysgrifiadau e-bost",
+  heading: "Eich tanysgrifiadau e-bost",
+  subscribedTo: "Rydych wedi tanysgrifio i hysbysiadau e-bost yn:",
+  subscriptionCard: {
+    title: "Hysbysiadau gwrandawiadau llys a thribiwnlys",
+    description: "Cael hysbysiadau e-bost am wrandawiadau llys a thribiwnlys sydd i ddod, gan gynnwys diweddariadau am newidiadau i amseroedd neu leoliadau gwrandawiadau.",
+    unsubscribeButton: "Dad-danysgrifio"
+  },
+  notSubscribed: {
+    message: "Nid ydych wedi tanysgrifio i hysbysiadau e-bost ar hyn o bryd.",
+    description: "Tanysgrifio i dderbyn hysbysiadau am wrandawiadau llys a thribiwnlys."
+  }
+};
+```
+
+**Template**:
+```html
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    {% if isSubscribed %}
+      <p class="govuk-body">{{ subscribedTo }}</p>
+      <p class="govuk-body govuk-!-font-weight-bold">{{ userEmail }}</p>
+
+      <div class="govuk-inset-text">
+        <h2 class="govuk-heading-m">{{ subscriptionCard.title }}</h2>
+        <p class="govuk-body">{{ subscriptionCard.description }}</p>
+
+        <a href="/email-subscriptions/unsubscribe-confirm"
+           class="govuk-button govuk-button--secondary"
+           data-module="govuk-button">
+          {{ subscriptionCard.unsubscribeButton }}
+        </a>
+      </div>
+    {% else %}
+      <p class="govuk-body">{{ notSubscribed.message }}</p>
+      <p class="govuk-body">{{ notSubscribed.description }}</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+```
+
+#### 4.2 Unsubscribe Confirmation Page
+
+**Files**:
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-confirm/index.ts`
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-confirm/index.njk`
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-confirm/en.ts`
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-confirm/cy.ts`
+
+**Controller Implementation**:
+```typescript
+// index.ts
+import { blockUserAccess, requireAuth } from "@hmcts/auth";
+import type { Request, RequestHandler, Response } from "express";
+import { unsubscribeUser } from "../../../email-subscriptions/service.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+function renderConfirmationPage(
+  res: Response,
+  lang: typeof en | typeof cy,
+  errors?: Array<{ text: string; href: string }>
+) {
+  return res.render("email-subscriptions/unsubscribe-confirm/index", {
+    pageTitle: lang.pageTitle,
+    heading: lang.heading,
+    description: lang.description,
+    consequencesList: lang.consequencesList,
+    resubscribeInfo: lang.resubscribeInfo,
+    radioYes: lang.radioYes,
+    radioNo: lang.radioNo,
+    continueButton: lang.continueButton,
+    ...(errors && {
+      errors,
+      errorSummaryTitle: lang.errorSummaryTitle
+    }),
+    hideLanguageToggle: true
+  });
+}
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  return renderConfirmationPage(res, lang);
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const confirmation = req.body.confirmation;
+
+  if (!confirmation) {
+    return renderConfirmationPage(res, lang, [
+      {
+        text: lang.errorNoSelection,
+        href: "#confirmation"
+      }
+    ]);
+  }
+
+  if (confirmation === "no") {
+    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+    return res.redirect(`/email-subscriptions${lng}`);
+  }
+
+  try {
+    await unsubscribeUser(req.user.email);
+
+    req.session.unsubscribeSuccess = true;
+
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err: Error | null | undefined) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+    res.redirect(`/email-subscriptions/unsubscribe-success${lng}`);
+  } catch (error) {
+    console.error("Error unsubscribing user:", error);
+
+    return renderConfirmationPage(res, lang, [
+      {
+        text: lang.errorGeneric,
+        href: "#"
+      }
+    ]);
+  }
+};
+
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];
+```
+
+**Content Files**:
+```typescript
+// en.ts
+export const en = {
+  pageTitle: "Are you sure you want to unsubscribe?",
+  heading: "Are you sure you want to unsubscribe?",
+  description: "If you unsubscribe from court and tribunal hearing notifications, you will no longer receive:",
   consequencesList: [
     "Email notifications about upcoming hearings",
     "Updates about changes to hearing times or locations",
     "Reminders about hearings you are interested in"
   ],
-  resubscribe: "You can subscribe again at any time by visiting the Email subscriptions page.",
-  button: "Unsubscribe from email notifications",
-  cancel: "Cancel"
+  resubscribeInfo: "You can subscribe again at any time by visiting the email subscriptions page.",
+  radioYes: "Yes",
+  radioNo: "No",
+  continueButton: "Continue",
+  errorSummaryTitle: "There is a problem",
+  errorNoSelection: "Select yes if you want to unsubscribe",
+  errorGeneric: "An error occurred. Please try again later."
 };
 
-const cy = {
-  title: "Dad-danysgrifio o hysbysiadau e-bost",
-  heading: "Dad-danysgrifio o hysbysiadau e-bost",
-  description: "Rydych wedi tanysgrifio i hysbysiadau e-bost am wrandawiadau llys a thribiwnlys.",
-  yourEmail: "Eich cyfeiriad e-bost",
-  consequences: "Os byddwch yn dad-danysgrifio, ni fyddwch yn derbyn:",
+// cy.ts
+export const cy = {
+  pageTitle: "Ydych chi'n siŵr eich bod am ddad-danysgrifio?",
+  heading: "Ydych chi'n siŵr eich bod am ddad-danysgrifio?",
+  description: "Os byddwch yn dad-danysgrifio o hysbysiadau gwrandawiadau llys a thribiwnlys, ni fyddwch yn derbyn:",
   consequencesList: [
     "Hysbysiadau e-bost am wrandawiadau sydd i ddod",
     "Diweddariadau am newidiadau i amseroedd neu leoliadau gwrandawiadau",
     "Atgofion am wrandawiadau sydd o ddiddordeb i chi"
   ],
-  resubscribe: "Gallwch danysgrifio eto unrhyw bryd trwy ymweld â'r tudalen Tanysgrifiadau e-bost.",
-  button: "Dad-danysgrifio o hysbysiadau e-bost",
-  cancel: "Canslo"
-};
-
-export const GET = async (req: Request, res: Response) => {
-  const user = await findOrCreateUser(req.user.email);
-
-  res.render("unsubscribe/index", {
-    en,
-    cy,
-    userEmail: user.email
-  });
-};
-
-export const POST = async (req: Request, res: Response) => {
-  try {
-    await unsubscribeUser(req.user.email);
-    res.redirect("/unsubscribe/confirmation");
-  } catch (error) {
-    res.render("errors/500", {
-      en: { title: "Something went wrong" },
-      cy: { title: "Aeth rhywbeth o'i le" }
-    });
-  }
+  resubscribeInfo: "Gallwch danysgrifio eto unrhyw bryd trwy ymweld â'r tudalen tanysgrifiadau e-bost.",
+  radioYes: "Iawn",
+  radioNo: "Na",
+  continueButton: "Parhau",
+  errorSummaryTitle: "Mae problem wedi codi",
+  errorNoSelection: "Dewiswch iawn os ydych am ddad-danysgrifio",
+  errorGeneric: "Digwyddodd gwall. Rhowch gynnig arall arni yn nes ymlaen."
 };
 ```
 
-**Template Pattern**:
+**Template**:
 ```html
-{% extends "layouts/default.njk" %}
+{% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
 
-{% block content %}
+{% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
     <h1 class="govuk-heading-l">{{ heading }}</h1>
 
     <p class="govuk-body">{{ description }}</p>
-
-    <p class="govuk-body">
-      <strong>{{ yourEmail }}:</strong> {{ userEmail }}
-    </p>
-
-    <p class="govuk-body">{{ consequences }}</p>
 
     <ul class="govuk-list govuk-list--bullet">
       {% for item in consequencesList %}
@@ -309,87 +608,326 @@ export const POST = async (req: Request, res: Response) => {
       {% endfor %}
     </ul>
 
-    <p class="govuk-body">{{ resubscribe }}</p>
+    <p class="govuk-body">{{ resubscribeInfo }}</p>
 
     <form method="post" novalidate>
-      {{ govukButton({ text: button, preventDoubleClick: true }) }}
-      <p class="govuk-body">
-        <a href="/account-home" class="govuk-link">{{ cancel }}</a>
-      </p>
+      {{ govukRadios({
+        name: "confirmation",
+        fieldset: {
+          legend: {
+            text: heading,
+            isPageHeading: false,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        classes: "govuk-radios--inline",
+        items: [
+          {
+            value: "yes",
+            text: radioYes
+          },
+          {
+            value: "no",
+            text: radioNo
+          }
+        ],
+        errorMessage: errors[0] if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
     </form>
+
   </div>
 </div>
 {% endblock %}
 ```
 
-**Acceptance**: Pages render correctly in both English and Welsh
+#### 4.3 Unsubscribe Success Page
+
+**Files**:
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-success/index.ts`
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-success/index.njk`
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-success/en.ts`
+- `libs/email-subscriptions/src/pages/email-subscriptions/unsubscribe-success/cy.ts`
+
+**Controller Implementation**:
+```typescript
+// index.ts
+import { blockUserAccess, requireAuth } from "@hmcts/auth";
+import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+
+  if (!req.session.unsubscribeSuccess) {
+    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+    return res.redirect(`/email-subscriptions${lng}`);
+  }
+
+  delete req.session.unsubscribeSuccess;
+
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err: Error | null | undefined) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+  res.render("email-subscriptions/unsubscribe-success/index", {
+    pageTitle: lang.pageTitle,
+    bannerTitle: lang.bannerTitle,
+    confirmationMessage: lang.confirmationMessage,
+    userEmail: req.user.email,
+    whatNextHeading: lang.whatNextHeading,
+    whatNextDescription: lang.whatNextDescription,
+    viewSubscriptionsLink: lang.viewSubscriptionsLink,
+    returnToAccountLink: lang.returnToAccountLink,
+    hideLanguageToggle: true,
+    lng: req.query.lng
+  });
+};
+
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+```
+
+**Content Files**:
+```typescript
+// en.ts
+export const en = {
+  pageTitle: "You have unsubscribed from email notifications",
+  bannerTitle: "Success",
+  confirmationMessage: "You have unsubscribed from email notifications",
+  userEmail: "You will no longer receive email notifications about court and tribunal hearings at",
+  whatNextHeading: "What happens next",
+  whatNextDescription: "You can subscribe again at any time by visiting your email subscriptions page.",
+  viewSubscriptionsLink: "View your email subscriptions",
+  returnToAccountLink: "Return to your account"
+};
+
+// cy.ts
+export const cy = {
+  pageTitle: "Rydych wedi dad-danysgrifio o hysbysiadau e-bost",
+  bannerTitle: "Llwyddiant",
+  confirmationMessage: "Rydych wedi dad-danysgrifio o hysbysiadau e-bost",
+  userEmail: "Ni fyddwch yn derbyn hysbysiadau e-bost am wrandawiadau llys a thribiwnlys yn",
+  whatNextHeading: "Beth sy'n digwydd nesaf",
+  whatNextDescription: "Gallwch danysgrifio eto unrhyw bryd trwy ymweld â'ch tudalen tanysgrifiadau e-bost.",
+  viewSubscriptionsLink: "Gweld eich tanysgrifiadau e-bost",
+  returnToAccountLink: "Dychwelyd i'ch cyfrif"
+};
+```
+
+**Template**:
+```html
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {{ govukNotificationBanner({
+      type: "success",
+      titleText: bannerTitle,
+      html: '<p class="govuk-notification-banner__heading">' + confirmationMessage + '</p>'
+    }) }}
+
+    <p class="govuk-body">{{ userEmail }} <strong>{{ userEmail }}</strong></p>
+
+    <h2 class="govuk-heading-m">{{ whatNextHeading }}</h2>
+
+    <p class="govuk-body">{{ whatNextDescription }}</p>
+
+    <p class="govuk-body govuk-!-font-weight-bold">
+      <a href="/email-subscriptions{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">
+        {{ viewSubscriptionsLink }}
+      </a>
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold">
+      <a href="/account-home{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">
+        {{ returnToAccountLink }}
+      </a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+```
+
+**Acceptance**: All pages render correctly in both English and Welsh
 
 ### Phase 5: Application Integration
 
-**Files**:
+**Files to Modify**:
 - `apps/web/src/app.ts` (register module)
 - `libs/verified-pages/src/pages/account-home/index.njk` (update link)
-- `libs/auth/src/middleware/navigation-helper.ts` (update navigation)
+- `libs/auth/src/middleware/navigation-helper.ts` (update navigation link)
 
 **Tasks**:
-1. Import email-subscriptions config in apps/web/src/app.ts
-2. Register pageRoutes with createSimpleRouter
-3. Add requireAuth() middleware to unsubscribe routes
-4. Update Email subscriptions links to point to /unsubscribe
-5. Test module loading
 
-**Integration Code**:
+1. **Register module in web app**:
 ```typescript
 // apps/web/src/app.ts
 import { pageRoutes as emailSubscriptionsPages } from "@hmcts/email-subscriptions/config";
 
-// Register routes with authentication
-app.use("/unsubscribe", requireAuth());
+// Add with other verified page routes
 app.use(await createSimpleRouter(emailSubscriptionsPages));
 ```
 
-**Acceptance**: Module routes are accessible and properly authenticated
+2. **Update account home dashboard link**:
+```html
+<!-- libs/verified-pages/src/pages/account-home/index.njk -->
+<a href="/email-subscriptions" class="verified-tile">
+  <h2 class="govuk-heading-s verified-tile-heading">
+    {{ sections.emailSubscriptions.title }}
+  </h2>
+  <p class="govuk-body verified-tile-description">
+    {{ sections.emailSubscriptions.description }}
+  </p>
+</a>
+```
+
+3. **Update navigation helper**:
+```typescript
+// libs/auth/src/middleware/navigation-helper.ts
+export function buildVerifiedUserNavigation(currentPath: string, locale: string = "en"): NavigationItem[] {
+  // ... existing code ...
+  {
+    text: t.emailSubscriptions,
+    href: "/email-subscriptions",
+    current: currentPath === "/email-subscriptions",
+    attributes: {
+      "data-test": "email-subscriptions-link"
+    }
+  }
+  // ...
+}
+```
+
+**Acceptance**: Module routes are accessible, properly authenticated, and navigation links work
 
 ### Phase 6: Testing
 
-**E2E Tests** (`e2e-tests/tests/unsubscribe.spec.ts`):
+#### 6.1 Unit Tests
+
+**Files**:
+- `libs/email-subscriptions/src/email-subscriptions/queries.test.ts`
+- `libs/email-subscriptions/src/email-subscriptions/service.test.ts`
+- `libs/email-subscriptions/src/pages/*/index.test.ts`
+
+**Test Coverage**:
+- Database queries (with mocked Prisma)
+- Service functions (business logic)
+- Controller GET handlers
+- Controller POST handlers with validation
+
+#### 6.2 E2E Tests
+
+**File**: `e2e-tests/tests/email-subscriptions.spec.ts`
 
 ```typescript
 import { test, expect } from '@playwright/test';
 
-test.describe('Unsubscribe Flow', () => {
-  test('authenticated user can unsubscribe', async ({ page }) => {
+test.describe('Email Subscriptions Flow', () => {
+  test.beforeEach(async ({ page }) => {
     // Login as verified user
     await page.goto('/login');
     await loginAsVerifiedUser(page);
-
-    // Navigate to unsubscribe
-    await page.goto('/unsubscribe');
-    await expect(page.locator('h1')).toContainText('Unsubscribe from email notifications');
-
-    // Submit unsubscribe
-    await page.click('button:has-text("Unsubscribe from email notifications")');
-
-    // Verify confirmation
-    await expect(page).toHaveURL('/unsubscribe/confirmation');
-    await expect(page.locator('h1')).toContainText('You have been unsubscribed');
-
-    // Verify database state
-    const user = await prisma.user.findUnique({
-      where: { email: 'test@example.com' }
-    });
-    expect(user.emailNotifications).toBe(false);
   });
 
-  test('unauthenticated user redirected to login', async ({ page }) => {
-    await page.goto('/unsubscribe');
-    await expect(page).toHaveURL(/\/login/);
+  test('user can view subscriptions list', async ({ page }) => {
+    await page.goto('/email-subscriptions');
+
+    await expect(page.locator('h1')).toContainText('Your email subscriptions');
+    await expect(page.locator('text=Court and tribunal hearing notifications')).toBeVisible();
+  });
+
+  test('user can unsubscribe with Yes', async ({ page }) => {
+    await page.goto('/email-subscriptions');
+    await page.click('text=Unsubscribe');
+
+    await expect(page.locator('h1')).toContainText('Are you sure you want to unsubscribe?');
+
+    await page.check('input[value="yes"]');
+    await page.click('button:has-text("Continue")');
+
+    await expect(page).toHaveURL('/email-subscriptions/unsubscribe-success');
+    await expect(page.locator('text=Success')).toBeVisible();
+    await expect(page.locator('text=You have unsubscribed from email notifications')).toBeVisible();
+  });
+
+  test('user can cancel with No', async ({ page }) => {
+    await page.goto('/email-subscriptions');
+    await page.click('text=Unsubscribe');
+
+    await page.check('input[value="no"]');
+    await page.click('button:has-text("Continue")');
+
+    await expect(page).toHaveURL('/email-subscriptions');
+    await expect(page.locator('text=Unsubscribe')).toBeVisible();
+  });
+
+  test('validation error when no radio selected', async ({ page }) => {
+    await page.goto('/email-subscriptions/unsubscribe-confirm');
+    await page.click('button:has-text("Continue")');
+
+    await expect(page.locator('text=There is a problem')).toBeVisible();
+    await expect(page.locator('text=Select yes if you want to unsubscribe')).toBeVisible();
   });
 
   test('Welsh translation works', async ({ page }) => {
+    await page.goto('/email-subscriptions?lng=cy');
+
+    await expect(page.locator('h1')).toContainText('Eich tanysgrifiadau e-bost');
+  });
+
+  test('direct access to success page redirects', async ({ page }) => {
+    await page.goto('/email-subscriptions/unsubscribe-success');
+
+    await expect(page).toHaveURL('/email-subscriptions');
+  });
+
+  test('unauthenticated user redirected to login', async ({ page }) => {
+    await page.goto('/logout');
+    await page.goto('/email-subscriptions');
+
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
+
+test.describe('Accessibility', () => {
+  test('subscriptions list page meets WCAG AA', async ({ page }) => {
     await loginAsVerifiedUser(page);
-    await page.goto('/unsubscribe?lng=cy');
-    await expect(page.locator('h1')).toContainText('Dad-danysgrifio o hysbysiadau e-bost');
+    await page.goto('/email-subscriptions');
+
+    const results = await runAxeCore(page);
+    expect(results.violations).toHaveLength(0);
+  });
+
+  test('confirmation page meets WCAG AA', async ({ page }) => {
+    await loginAsVerifiedUser(page);
+    await page.goto('/email-subscriptions/unsubscribe-confirm');
+
+    const results = await runAxeCore(page);
+    expect(results.violations).toHaveLength(0);
+  });
+
+  test('success page meets WCAG AA', async ({ page }) => {
+    await loginAsVerifiedUser(page);
+
+    // Complete unsubscribe flow
+    await page.goto('/email-subscriptions');
+    await page.click('text=Unsubscribe');
+    await page.check('input[value="yes"]');
+    await page.click('button:has-text("Continue")');
+
+    const results = await runAxeCore(page);
+    expect(results.violations).toHaveLength(0);
   });
 });
 ```
@@ -398,62 +936,98 @@ test.describe('Unsubscribe Flow', () => {
 
 ## Security Considerations
 
-### 1. Authentication
+### 1. Authentication & Authorization
 - All routes protected with `requireAuth()` middleware
+- Additional `blockUserAccess()` to restrict to verified users only (not SSO)
 - Session validation on every request
-- User can only unsubscribe their own email
+- User can only unsubscribe their own email (from req.user)
 
 ### 2. CSRF Protection
 - Forms include CSRF token (handled by Express session middleware)
 - POST requests validated for CSRF token
+- Protects against cross-site request forgery attacks
 
 ### 3. Input Validation
 - Email comes from authenticated session (trusted source)
-- No user input to validate in this flow
+- Radio button validation server-side
+- No free-text input fields to validate
 - All database operations use Prisma (SQL injection protected)
 
 ### 4. Data Protection
-- Email addresses not logged
-- Minimal PII stored
-- User email already in system (from authentication)
+- Email addresses not logged to console/files
+- Minimal PII stored (only email, which is already in auth system)
+- Session data automatically expires
+- GDPR compliant (audit timestamp, clear consent withdrawal)
+
+### 5. Session Security
+- HttpOnly cookies prevent XSS access
+- Secure flag in production (HTTPS only)
+- SameSite attribute prevents CSRF
+- Session timeout after inactivity
 
 ## Performance Considerations
 
-- **Database**: Simple index on email field for fast lookups
+- **Database**: Simple index on email field for O(log n) lookups
 - **Queries**: Minimal - one SELECT, one UPDATE per unsubscribe
-- **Caching**: Not needed for this infrequent operation
-- **Page Weight**: Minimal - text only, no heavy assets
+- **Caching**: Not needed for infrequent operations
+- **Page Weight**: Text-only pages, minimal assets
+- **Response Time**: Target < 2 seconds for all pages
 
 ## Rollback Plan
 
-If issues arise:
-1. Remove route registration from apps/web/src/app.ts
-2. Revert navigation link changes
-3. Migration rollback: `yarn db:migrate:dev --rollback`
-4. Remove @hmcts/email-subscriptions from dependencies
+If issues arise post-deployment:
+
+1. Remove route registration from `apps/web/src/app.ts`
+2. Revert navigation link changes in verified-pages and auth
+3. Migration rollback: `prisma migrate rollback`
+4. Remove `@hmcts/email-subscriptions` from dependencies
+5. Restart application
+
+Database rollback:
+```sql
+-- Emergency manual rollback if needed
+DROP TABLE user CASCADE;
+```
+
+## Deployment Checklist
+
+- [ ] All unit tests passing
+- [ ] All E2E tests passing
+- [ ] Accessibility tests passing (zero violations)
+- [ ] Code reviewed and approved
+- [ ] Database migration tested on staging
+- [ ] Welsh translations reviewed by native speaker
+- [ ] Performance tested (page load < 2s)
+- [ ] Security review completed
+- [ ] Documentation updated
+- [ ] Smoke tests passed on staging
 
 ## Success Metrics
 
-- User can unsubscribe in < 3 clicks
-- Page load time < 2 seconds
-- Zero accessibility violations
-- 100% test coverage on business logic
-- Database query time < 100ms
+- Users complete unsubscribe flow in < 5 clicks
+- Page load time < 2 seconds for all pages
+- Zero accessibility violations (Axe-core)
+- 100% of automated tests passing
+- > 80% code coverage on business logic
+- Zero production errors in first week post-launch
 
 ## Future Enhancements (Out of Scope)
 
-- Granular subscription preferences (specific courts)
-- Temporary pause notifications
+- Granular subscription preferences (specific courts/tribunals)
+- Temporary pause notifications (snooze feature)
 - Unsubscribe via email link (no login required)
-- Re-subscribe functionality
-- Subscription history/audit log
+- Re-subscribe button on list page
+- Subscription history/audit log for users
+- Email frequency preferences (immediate, daily, weekly)
+- Multiple notification types (hearing updates, case status, etc.)
 
 ## Dependencies
 
-- `@hmcts/auth` - Authentication middleware
-- `@hmcts/postgres` - Database access
-- `express` - HTTP framework
-- `govuk-frontend` - UI components
+- `@hmcts/auth` - Authentication and authorization middleware
+- `@hmcts/postgres` - Database access via Prisma
+- `govuk-frontend` - UI components and styles
+- `express` v5.1.0 - Web framework
+- `express-session` - Session management
 - `nunjucks` - Template rendering
 
 ## Estimated Effort
@@ -461,21 +1035,30 @@ If issues arise:
 - **Database setup**: 1 hour
 - **Module scaffold**: 1 hour
 - **Business logic**: 2 hours
-- **Pages & templates**: 3 hours
-- **Integration**: 1 hour
-- **Testing**: 3 hours
-- **Code review & docs**: 1 hour
+- **Page 1 (list)**: 2 hours
+- **Page 2 (confirmation)**: 2 hours
+- **Page 3 (success)**: 1 hour
+- **Integration**: 2 hours
+- **Unit testing**: 2 hours
+- **E2E testing**: 2 hours
+- **Code review & documentation**: 1 hour
 
-**Total**: 12 hours (1.5 development days)
+**Total**: 16 hours (2 development days)
 
 ## Definition of Done
 
 - [ ] Database migration applied successfully
+- [ ] User model exists with correct schema
 - [ ] Module builds without errors
+- [ ] All three pages render correctly
 - [ ] All unit tests passing (>80% coverage)
 - [ ] All E2E tests passing
 - [ ] Accessibility tests pass (zero Axe violations)
 - [ ] Both English and Welsh translations complete
+- [ ] Navigation links updated and working
+- [ ] Session management working correctly
+- [ ] Error handling tested and working
 - [ ] Code reviewed and approved
-- [ ] Documentation updated
+- [ ] Documentation updated (CLAUDE.md if needed)
 - [ ] Deployed to staging and smoke tested
+- [ ] GDPR compliance verified (audit trail, consent withdrawal)
