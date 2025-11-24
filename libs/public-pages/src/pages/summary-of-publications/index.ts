@@ -1,4 +1,3 @@
-import path from "node:path";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
 import { mockListTypes } from "@hmcts/publication";

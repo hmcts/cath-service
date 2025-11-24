@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes, Provenance, saveUploadedFile } from "@hmcts/publication";
+import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import { getManualUpload } from "../../manual-upload/storage.js";

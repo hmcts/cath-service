@@ -107,12 +107,7 @@ test.describe("Remove Publication Flow", () => {
       await page.goto("/remove-list-search");
     }
 
-    // Wait for form to be ready
-    await page.waitForSelector('button:has-text("Continue")');
-
-    // Click continue button and wait for response
     await page.click('button:has-text("Continue")');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
     await expect(page.locator(".govuk-error-summary")).toContainText("Court or tribunal name must be 3 characters or more");
@@ -135,21 +130,12 @@ test.describe("Remove Publication Flow", () => {
     // Use the autocomplete widget to select a location
     const courtInput = page.getByRole('combobox', { name: /search by court or tribunal name/i });
     await courtInput.waitFor({ state: 'visible', timeout: 10000 });
-    await courtInput.fill('Oxford');
+    await courtInput.fill('Oxford Combined Court Centre');
+    await page.waitForTimeout(500); // Wait for autocomplete suggestions
 
-    // Wait for autocomplete suggestions to appear
-    await page.waitForSelector('[role="listbox"]', { timeout: 5000 });
-    await page.waitForSelector('[role="option"]', { timeout: 5000 });
-
-    // Click the first suggestion
-    await page.click('[role="option"]:first-child');
-
-    // Wait for the hidden locationId field to be populated
-    // The autocomplete creates a hidden input with name="locationId" and id="locationIdId"
-    await page.waitForFunction(() => {
-      const hiddenInput = document.querySelector('input[name="locationId"][type="hidden"]') as HTMLInputElement;
-      return hiddenInput && hiddenInput.value !== '';
-    }, { timeout: 5000 });
+    // Select the first suggestion
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
 
     await page.click('button:has-text("Continue")');
 

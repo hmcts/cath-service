@@ -44,7 +44,6 @@
     <h1 class="govuk-heading-xl">{{ title }}</h1>
 
     <form method="post" enctype="multipart/form-data" novalidate>
-      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
 
       {% set fileErrorText = getError(errors, "#file") %}
       <div class="govuk-inset-text">

@@ -9,17 +9,6 @@ import { validateForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-interface FileUploadError {
-  code?: string;
-  message?: string;
-  field?: string;
-  originalError?: Error;
-}
-
-interface RequestWithFileUploadError extends Request {
-  fileUploadError?: FileUploadError;
-}
-
 const LIST_TYPES = [
   { value: "", text: "<Please choose a list type>" },
   ...mockListTypes.map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
@@ -115,41 +104,14 @@ const postHandler = async (req: Request, res: Response) => {
 
   const formData = transformDateFields(req.body);
 
-  // Check for multer errors with proper type safety
-  const fileUploadError = (req as RequestWithFileUploadError).fileUploadError;
+  // Check for multer errors (e.g., file too large)
+  const fileUploadError = (req as any).fileUploadError;
   let errors = await validateForm(formData, req.file, t);
 
-  // If multer reported an error, replace any file error with the specific multer error
-  if (fileUploadError && typeof fileUploadError.code === "string") {
-    const multerErrorMap: Record<string, string> = {
-      LIMIT_FILE_SIZE: t.errorMessages.fileSize,
-      LIMIT_FILE_COUNT: t.errorMessages.fileTooMany,
-      LIMIT_FIELD_SIZE: t.errorMessages.fileUploadFailed,
-      LIMIT_UNEXPECTED_FILE: t.errorMessages.fileUploadFailed
-    };
-
-    const errorMessage = multerErrorMap[fileUploadError.code];
-
-    if (errorMessage) {
-      // Remove any existing file errors to avoid duplicates (filter by href/field)
-      errors = errors.filter((e) => e.href !== "#file");
-      // Add the specific multer error at the beginning
-      errors = [{ text: errorMessage, href: "#file" }, ...errors];
-    } else {
-      // Unknown error code - use fallback
-      console.error("Unknown multer error code in manual-upload:", {
-        code: fileUploadError.code,
-        message: fileUploadError.message ?? "unknown",
-        field: fileUploadError.field ?? "unknown"
-      });
-      errors = errors.filter((e) => e.href !== "#file");
-      errors = [{ text: t.errorMessages.fileUploadFailed, href: "#file" }, ...errors];
-    }
-  } else if (fileUploadError) {
-    // fileUploadError exists but doesn't have a valid code property
-    console.error("Invalid fileUploadError shape in manual-upload:", fileUploadError);
-    errors = errors.filter((e) => e.href !== "#file");
-    errors = [{ text: t.errorMessages.fileUploadFailed, href: "#file" }, ...errors];
+  // If multer threw a file size error, replace the "fileRequired" error with the file size error
+  if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
+    errors = errors.filter((e) => e.text !== t.errorMessages.fileRequired);
+    errors = [{ text: t.errorMessages.fileSize, href: "#file" }, ...errors];
   }
 
   if (errors.length > 0) {

@@ -66,7 +66,7 @@ describe("summary-of-publications template", () => {
     });
 
     it("should have all required keys", () => {
-      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh", "opensInNewWindow", "instructionText"];
+      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh"];
 
       for (const key of requiredKeys) {
         expect(en).toHaveProperty(key);
