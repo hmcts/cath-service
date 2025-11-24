@@ -91,12 +91,22 @@ test.describe("Create Media Account", () => {
 
       // Submit the form
       const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
 
-      // Wait for navigation after clicking continue
-      await Promise.all([
-        page.waitForURL("/account-request-submitted", { timeout: 10000 }),
-        continueButton.click()
-      ]);
+      // Wait for either success redirect or error display
+      await page.waitForLoadState("networkidle");
+
+      // Check if we're on the success page or if there are errors
+      const currentUrl = page.url();
+      if (!currentUrl.includes("/account-request-submitted")) {
+        // If not redirected, check for errors on the page
+        const errorSummary = page.locator(".govuk-error-summary");
+        if (await errorSummary.isVisible()) {
+          const errors = await page.locator(".govuk-error-summary__list li").allTextContents();
+          throw new Error(`Form submission failed with errors: ${errors.join(", ")}`);
+        }
+        throw new Error(`Expected redirect to /account-request-submitted but stayed on ${currentUrl}`);
+      }
 
       // Verify confirmation page content
       const bannerTitle = page.getByRole("heading", { name: /details submitted/i });
