@@ -107,7 +107,12 @@ test.describe("Remove Publication Flow", () => {
       await page.goto("/remove-list-search");
     }
 
+    // Wait for form to be ready
+    await page.waitForSelector('button:has-text("Continue")');
+
+    // Click continue button and wait for response
     await page.click('button:has-text("Continue")');
+    await page.waitForLoadState('networkidle');
 
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
     await expect(page.locator(".govuk-error-summary")).toContainText("Court or tribunal name must be 3 characters or more");
