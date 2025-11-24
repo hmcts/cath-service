@@ -1,4 +1,5 @@
 export { type ListType, mockListTypes } from "@hmcts/list-types-common";
+export { getStoragePath, getUploadedFile, saveUploadedFile } from "./file-storage.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
