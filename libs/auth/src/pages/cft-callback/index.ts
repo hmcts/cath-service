@@ -1,3 +1,5 @@
+import { createOrUpdateUser } from "@hmcts/account/repository/query";
+import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import { exchangeCodeForToken, extractUserInfoFromToken } from "../../cft-idam/token-client.js";
 import { getCftIdamConfig } from "../../config/cft-idam-config.js";
@@ -39,6 +41,25 @@ export const GET = async (req: Request, res: Response) => {
       role: user.role,
       provenance: user.provenance
     });
+
+    // Create or update user record in database
+    try {
+      await createOrUpdateUser({
+        email: userInfo.email,
+        firstName: userInfo.firstName,
+        surname: userInfo.surname,
+        userProvenance: "CFT_IDAM",
+        userProvenanceId: userInfo.id,
+        role: "VERIFIED"
+      });
+    } catch (error) {
+      trackException(error as Error, {
+        area: "CFT callback",
+        userEmail: userInfo.email,
+        userId: userInfo.id
+      });
+      return res.redirect(`/sign-in?error=db_error&lng=${lng}`);
+    }
 
     req.session.regenerate((err: Error | null) => {
       if (err) {
