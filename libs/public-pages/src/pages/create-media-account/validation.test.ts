@@ -73,9 +73,58 @@ describe("validateEmail", () => {
     });
   });
 
+  it("should return error when email has no TLD", () => {
+    const result = validateEmail("test@example", "Enter an email address");
+    expect(result).toEqual({
+      field: "email",
+      message: "Enter an email address",
+      href: "#email"
+    });
+  });
+
+  it("should return error when email exceeds maximum length", () => {
+    const longEmail = "a".repeat(250) + "@example.com"; // Total > 254 chars
+    const result = validateEmail(longEmail, "Enter an email address");
+    expect(result).toEqual({
+      field: "email",
+      message: "Enter an email address",
+      href: "#email"
+    });
+  });
+
   it("should return null for valid email", () => {
     const result = validateEmail("test@example.com", "Enter an email address");
     expect(result).toBeNull();
+  });
+
+  it("should return null for valid email with plus sign", () => {
+    const result = validateEmail("test+tag@example.com", "Enter an email address");
+    expect(result).toBeNull();
+  });
+
+  it("should return null for valid email with dots", () => {
+    const result = validateEmail("first.last@example.co.uk", "Enter an email address");
+    expect(result).toBeNull();
+  });
+
+  it("should handle email with special characters in local part", () => {
+    const result = validateEmail("test.name+tag@example.com", "Enter an email address");
+    expect(result).toBeNull();
+  });
+
+  it("should protect against ReDoS with long invalid input", () => {
+    const start = Date.now();
+    const maliciousInput = "a".repeat(100) + "@";
+    const result = validateEmail(maliciousInput, "Enter an email address");
+    const duration = Date.now() - start;
+
+    expect(result).toEqual({
+      field: "email",
+      message: "Enter an email address",
+      href: "#email"
+    });
+    // Should complete in under 100ms (ReDoS would take much longer)
+    expect(duration).toBeLessThan(100);
   });
 });
 

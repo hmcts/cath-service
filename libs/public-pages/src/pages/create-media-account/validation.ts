@@ -1,7 +1,9 @@
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 maximum
+// ReDoS-safe email regex - requires at least one dot in domain
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
 export interface ValidationError {
   field: string;
@@ -41,7 +43,16 @@ export function validateFullName(fullName: string | undefined, errorMessage: str
 }
 
 export function validateEmail(email: string | undefined, errorMessage: string): ValidationError | null {
-  if (!email || email.trim().length === 0 || !EMAIL_REGEX.test(email.trim())) {
+  if (!email || email.trim().length === 0) {
+    return {
+      field: "email",
+      message: errorMessage,
+      href: "#email"
+    };
+  }
+  const trimmedEmail = email.trim();
+  // Prevent ReDoS by checking length before regex
+  if (trimmedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_REGEX.test(trimmedEmail)) {
     return {
       field: "email",
       message: errorMessage,
