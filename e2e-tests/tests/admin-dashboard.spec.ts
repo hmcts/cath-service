@@ -34,7 +34,7 @@ test.describe("Admin Dashboard", () => {
       const tileData = [
         { title: "Upload", href: "/manual-upload" },
         { title: "Upload Excel File", href: "/non-strategic-upload" },
-        { title: "Remove", href: "/remove-list" }
+        { title: "Remove", href: "/remove-list-search" }
       ];
 
       // Use more specific selector to avoid matching multiple tiles
@@ -44,8 +44,8 @@ test.describe("Admin Dashboard", () => {
       await expect(page.locator('a.admin-tile[href="/non-strategic-upload"]')).toBeVisible();
       await expect(page.locator('a.admin-tile[href="/non-strategic-upload"]')).toContainText("Upload Excel File");
 
-      await expect(page.locator('a.admin-tile[href="/remove-list"]')).toBeVisible();
-      await expect(page.locator('a.admin-tile[href="/remove-list"]')).toContainText("Remove");
+      await expect(page.locator('a.admin-tile[href="/remove-list-search"]')).toBeVisible();
+      await expect(page.locator('a.admin-tile[href="/remove-list-search"]')).toContainText("Remove");
     });
 
     test("should display descriptions for all tiles", async ({ page }) => {

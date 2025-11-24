@@ -424,7 +424,7 @@ describe("manual-upload-summary page", () => {
     it("should save file, create database record, and redirect to success page", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/storage/test-artefact-id-123/test-hearing-list.pdf");
-      vi.mocked(createArtefact).mockResolvedValue();
+      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
 
       const session = {
         manualUploadForm: { locationId: "1" },

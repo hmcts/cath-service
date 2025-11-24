@@ -52,11 +52,11 @@ describe("summary-of-publications template", () => {
     });
 
     it("should have English language label", () => {
-      expect(cy.languageEnglish).toBe("English (Saesneg)");
+      expect(cy.languageEnglish).toBe("Saesneg (English)");
     });
 
     it("should have Welsh language label", () => {
-      expect(cy.languageWelsh).toBe("Welsh (Cymraeg)");
+      expect(cy.languageWelsh).toBe("Cymraeg (Welsh)");
     });
   });
 

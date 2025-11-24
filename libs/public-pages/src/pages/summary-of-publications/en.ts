@@ -3,7 +3,5 @@ export const en = {
   titleSuffix: "?",
   noPublicationsMessage: "Sorry, no lists found for this court",
   languageEnglish: "English (Saesneg)",
-  languageWelsh: "Welsh (Cymraeg)",
-  opensInNewWindow: "(opens in a new window)",
-  instructionText: "Select the list you want to view from the link(s) below:"
+  languageWelsh: "Welsh (Cymraeg)"
 };

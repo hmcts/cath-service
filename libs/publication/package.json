@@ -17,5 +17,14 @@
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/postgres": "workspace:*",
+    "ajv": "8.17.1"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
   }
 }

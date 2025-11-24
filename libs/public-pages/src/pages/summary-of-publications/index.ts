@@ -1,6 +1,7 @@
 import path from "node:path";
 import { getLocationById } from "@hmcts/location";
-import { getArtefactsByLocationId, getUploadedFile, mockListTypes } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres";
+import { mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -32,38 +33,49 @@ export const GET = async (req: Request, res: Response) => {
   const locationName = locale === "cy" ? location.welshName : location.name;
   const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
-  // Fetch publications from database by location
-  const artefacts = await getArtefactsByLocationId(locationId.toString());
+  // Query real artefacts from database, ordered by lastReceivedDate desc to get latest first
+  const artefacts = await prisma.artefact.findMany({
+    where: {
+      locationId: locationId.toString(),
+      displayFrom: { lte: new Date() },
+      displayTo: { gte: new Date() }
+    },
+    orderBy: [{ lastReceivedDate: "desc" }]
+  });
 
-  // Map list types, format dates, and fetch file information
-  const publicationsWithDetails = await Promise.all(
-    artefacts.map(async (artefact) => {
-      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-      const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+  // Map list types and format dates
+  const publicationsWithDetails = artefacts.map((artefact) => {
+    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
 
-      // Get language label based on publication language
-      const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
+    // Get language label based on publication language
+    const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
-      // Fetch file information to determine file type
-      const file = await getUploadedFile(artefact.artefactId);
-      const fileExtension = file ? path.extname(file.fileName).toLowerCase() : "";
-      const isPdf = fileExtension === ".pdf";
+    return {
+      id: artefact.artefactId,
+      listTypeName,
+      listTypeId: artefact.listTypeId,
+      contentDate: artefact.contentDate,
+      language: artefact.language,
+      formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
+      languageLabel,
+      urlPath: listType?.urlPath
+    };
+  });
 
-      return {
-        id: artefact.artefactId,
-        listTypeName,
-        listTypeId: artefact.listTypeId,
-        contentDate: artefact.contentDate,
-        language: artefact.language,
-        formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
-        languageLabel,
-        isPdf
-      };
-    })
-  );
+  // Deduplicate: keep only the latest publication for each unique combination of list type, content date, and language
+  const seen = new Set<string>();
+  const uniquePublications = publicationsWithDetails.filter((pub) => {
+    const key = `${pub.listTypeId}-${pub.contentDate.toISOString()}-${pub.language}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 
   // Sort by list name, then by content date descending, then by language
-  publicationsWithDetails.sort((a, b) => {
+  uniquePublications.sort((a, b) => {
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);
@@ -82,8 +94,6 @@ export const GET = async (req: Request, res: Response) => {
     cy,
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
-    opensInNewWindow: t.opensInNewWindow,
-    instructionText: t.instructionText,
-    publications: publicationsWithDetails
+    publications: uniquePublications
   });
 };

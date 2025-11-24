@@ -23,14 +23,14 @@
       <ul class="govuk-list">
         {% for publication in publications %}
           <li style="margin-bottom: 15px;">
-            {% if publication.isPdf %}
-            <a href="/file-publication?artefactId={{ publication.id }}" class="govuk-body govuk-!-font-size-16 govuk-link" target="_blank" rel="noopener noreferrer">
-              {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
-            </a> <span class="govuk-!-font-size-16">{{ opensInNewWindow }}</span>
+            {% if publication.urlPath %}
+              <a href="/{{ publication.urlPath }}?artefactId={{ publication.id }}" class="govuk-link">
+                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+              </a>
             {% else %}
-            <a href="/file-publication-data?artefactId={{ publication.id }}" class="govuk-body govuk-!-font-size-16 govuk-link" download>
-              {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
-            </a>
+              <a href="/publication/{{ publication.id }}" class="govuk-link">
+                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+              </a>
             {% endif %}
           </li>
         {% endfor %}

@@ -1,9 +1,18 @@
 import { USER_ROLES } from "@hmcts/account";
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { blockUserAccess, requireRole } from "./authorise.js";
 
+vi.mock("./redirect-helpers.js", () => ({
+  redirectUnauthenticated: vi.fn()
+}));
+
+import { redirectUnauthenticated } from "./redirect-helpers.js";
+
 describe("requireRole middleware", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   it("should call next for authenticated user with required role", () => {
     const middleware = requireRole([USER_ROLES.SYSTEM_ADMIN]);
 
@@ -22,49 +31,40 @@ describe("requireRole middleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it("should redirect to /auth/login for unauthenticated user", () => {
+  it("should call redirectUnauthenticated for unauthenticated user", () => {
     const middleware = requireRole([USER_ROLES.SYSTEM_ADMIN]);
 
     const req = {
       isAuthenticated: () => false,
       user: undefined,
-      originalUrl: "/system-admin-dashboard",
-      session: {}
+      originalUrl: "/system-admin-dashboard"
     } as unknown as Request;
 
-    const res = {
-      redirect: vi.fn()
-    } as unknown as Response;
-
+    const res = {} as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/login");
-    expect(req.session.returnTo).toBe("/system-admin-dashboard");
+    expect(redirectUnauthenticated).toHaveBeenCalledWith(req, res);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("should redirect to /auth/login when user object is missing", () => {
+  it("should call redirectUnauthenticated when user object is missing", () => {
     const middleware = requireRole([USER_ROLES.SYSTEM_ADMIN]);
 
     const req = {
       isAuthenticated: () => true,
       user: null,
-      originalUrl: "/system-admin-dashboard",
-      session: {}
+      originalUrl: "/system-admin-dashboard"
     } as unknown as Request;
 
-    const res = {
-      redirect: vi.fn()
-    } as unknown as Response;
-
+    const res = {} as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/login");
-    expect(req.session.returnTo).toBe("/system-admin-dashboard");
+    expect(redirectUnauthenticated).toHaveBeenCalledWith(req, res);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("should redirect system admin to /system-admin-dashboard when lacking required role", () => {
@@ -133,7 +133,7 @@ describe("requireRole middleware", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("should redirect to /auth/login when user has no role", () => {
+  it("should redirect to /sign-in when user has no role", () => {
     const middleware = requireRole([USER_ROLES.SYSTEM_ADMIN]);
 
     const req = {
@@ -151,7 +151,7 @@ describe("requireRole middleware", () => {
 
     middleware(req, res, next);
 
-    expect(res.redirect).toHaveBeenCalledWith("/login");
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
     expect(req.session.returnTo).toBe("/system-admin-dashboard");
     expect(next).not.toHaveBeenCalled();
   });
