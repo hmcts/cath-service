@@ -125,7 +125,9 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
     sensitivity: artefact.sensitivity,
     language: artefact.language,
     displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo
+    displayTo: artefact.displayTo,
+    isFlatFile: artefact.isFlatFile,
+    provenance: artefact.provenance
   };
 }
 
@@ -147,6 +149,8 @@ export async function getArtefactsByLocationId(locationId: string): Promise<Arte
     sensitivity: artefact.sensitivity,
     language: artefact.language,
     displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo
+    displayTo: artefact.displayTo,
+    isFlatFile: artefact.isFlatFile,
+    provenance: artefact.provenance
   }));
 }
