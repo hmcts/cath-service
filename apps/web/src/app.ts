@@ -139,15 +139,6 @@ export async function createApp(): Promise<Express> {
   // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
 
-  // Handle file-publication-data with optional filename in path for better PDF viewer display
-  // The filename is cosmetic - the actual file is retrieved using the artefactId query parameter
-  app.get("/file-publication-data/:filename", (req, res, next) => {
-    // Rewrite URL to remove filename from path, keeping query parameters
-    const queryIndex = req.url.indexOf("?");
-    req.url = "/file-publication-data" + (queryIndex >= 0 ? req.url.substring(queryIndex) : "");
-    next();
-  });
-
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
