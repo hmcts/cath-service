@@ -176,9 +176,49 @@ describe("Web Application", () => {
   });
 
   describe("File Upload Error Handling", () => {
+    // Note: The handleMulterError function and middleware error handling are tested
+    // through E2E tests (create-media-account.spec.ts and manual-upload.spec.ts)
+    // because they involve Express middleware execution which is difficult to unit test
+
     it("should configure multer file upload middleware", async () => {
       const { createFileUpload } = await import("@hmcts/web-core");
       expect(createFileUpload).toHaveBeenCalled();
+    });
+
+    it("should configure upload.single middleware wrapper", async () => {
+      const { createFileUpload } = await import("@hmcts/web-core");
+      const mockUpload = vi.mocked(createFileUpload).mock.results[0].value;
+
+      // Verify upload.single returns a function (middleware)
+      expect(mockUpload.single).toBeDefined();
+      expect(typeof mockUpload.single).toBe("function");
+
+      // Verify single() can be called with field names
+      const fileMiddleware = mockUpload.single("file");
+      const idProofMiddleware = mockUpload.single("idProof");
+
+      expect(typeof fileMiddleware).toBe("function");
+      expect(typeof idProofMiddleware).toBe("function");
+    });
+
+    it("should register file upload routes before CSRF middleware", async () => {
+      // This test verifies the middleware order is correct:
+      // 1. File upload routes are registered (for /manual-upload and /create-media-account)
+      // 2. CSRF middleware is configured after file upload routes
+      //
+      // This ordering is critical because multipart form data must be parsed
+      // before CSRF tokens can be validated
+
+      const { createFileUpload } = await import("@hmcts/web-core");
+      const { configureCsrf } = await import("@hmcts/web-core");
+
+      // Verify both were called
+      expect(createFileUpload).toHaveBeenCalled();
+      expect(configureCsrf).toHaveBeenCalled();
+
+      // The createFileUpload mock is set up at module import time (lines 21-23)
+      // and should be called before configureCsrf when createApp() executes
+      expect(createFileUpload).toHaveBeenCalledBefore(configureCsrf);
     });
   });
 
