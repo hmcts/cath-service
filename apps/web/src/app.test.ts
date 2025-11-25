@@ -672,7 +672,11 @@ describe("Web Application", () => {
       expect(errorHandler).toHaveBeenCalled();
 
       // notFoundHandler should be called before errorHandler (lines 155-156)
-      expect(notFoundHandler).toHaveBeenCalledBefore(errorHandler);
+      // Verify call order using invocationCallOrder
+      const notFoundHandlerOrder = vi.mocked(notFoundHandler).mock.invocationCallOrder[0];
+      const errorHandlerOrder = vi.mocked(errorHandler).mock.invocationCallOrder[0];
+
+      expect(notFoundHandlerOrder).toBeLessThan(errorHandlerOrder);
     });
   });
 
