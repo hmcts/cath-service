@@ -12,6 +12,11 @@ vi.mock("@hmcts/postgres", () => ({
     }
   }
 }));
+vi.mock("./validation.js", () => ({
+  validateForm: vi.fn()
+}));
+
+import { validateForm } from "./validation.js";
 
 describe("create-media-account GET", () => {
   it("should render the form with empty data", async () => {
@@ -34,6 +39,38 @@ describe("create-media-account GET", () => {
 describe("create-media-account POST", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock for validateForm - tests can override as needed
+    vi.mocked(validateForm).mockImplementation((formData, file, messages) => {
+      const errors: any[] = [];
+      if (!formData.fullName) errors.push({ field: "fullName", message: messages.fullName, href: "#fullName" });
+
+      // Email validation
+      if (!formData.email) {
+        errors.push({ field: "email", message: messages.email, href: "#email" });
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        errors.push({ field: "email", message: "Enter a valid email address", href: "#email" });
+      }
+
+      if (!formData.employer) errors.push({ field: "employer", message: messages.employer, href: "#employer" });
+
+      // File validation
+      if (!file) {
+        errors.push({ field: "idProof", message: messages.fileRequired, href: "#idProof" });
+      } else {
+        // Check file size (2MB limit)
+        if (file.size > 2 * 1024 * 1024) {
+          errors.push({ field: "idProof", message: messages.fileSize, href: "#idProof" });
+        }
+        // Check file type
+        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        if (!allowedTypes.includes(file.mimetype)) {
+          errors.push({ field: "idProof", message: messages.fileType, href: "#idProof" });
+        }
+      }
+
+      if (!formData.termsAccepted) errors.push({ field: "termsAccepted", message: messages.terms, href: "#termsAccepted" });
+      return errors;
+    });
   });
 
   it("should return validation errors when form is invalid", async () => {
@@ -119,7 +156,8 @@ describe("create-media-account POST", () => {
 
     const res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      status: vi.fn().mockReturnThis()
     } as any;
 
     await POST(req, res);
@@ -150,7 +188,8 @@ describe("create-media-account POST", () => {
 
     const res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      status: vi.fn().mockReturnThis()
     } as any;
 
     await POST(req, res);
@@ -181,7 +220,8 @@ describe("create-media-account POST", () => {
 
     const res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      status: vi.fn().mockReturnThis()
     } as any;
 
     await POST(req, res);
@@ -710,27 +750,20 @@ describe("create-media-account POST", () => {
   });
 
   describe("Defensive file check (lines 125-134)", () => {
-    it("should handle unexpected missing file after validation passes", async () => {
+    it("should trigger defensive check when validation passes but file is missing (lines 125-134)", async () => {
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      // This test is difficult to trigger in practice because validateForm would catch missing files
-      // However, the defensive check at line 125 exists for edge cases where validation logic changes
-      // or race conditions occur. This test verifies the defensive code path by providing a file
-      // during validation but making it undefined afterwards (simulating a race condition or memory issue)
+      // Mock validateForm to return no errors (validation passes)
+      vi.mocked(validateForm).mockReturnValue([]);
 
-      // Note: In reality, validation WILL catch the missing file, so this defensive check
-      // is more of a safety measure that's hard to unit test without mocking validateForm itself.
-      // The defensive check is better tested through integration tests or by manual code review.
-
-      // Instead, let's verify validation catches missing files properly
       const req = {
         body: {
           fullName: "John Smith",
           email: "john@example.com",
           employer: "BBC News",
-          termsAccepted: true
+          termsAccepted: "on"
         },
-        file: undefined // File is missing
+        file: undefined // File is missing even though validation passed
       } as any;
 
       const res = {
@@ -741,10 +774,24 @@ describe("create-media-account POST", () => {
 
       await POST(req, res);
 
-      // Validation should catch this and render with errors
+      // Should log error (line 126)
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Unexpected missing file after validation passed");
+
+      // Should return 400 status (line 127)
+      expect(res.status).toHaveBeenCalledWith(400);
+
+      // Should render error page (lines 127-133)
       expect(res.render).toHaveBeenCalledWith(
         "create-media-account/index",
         expect.objectContaining({
+          en: expect.any(Object),
+          cy: expect.any(Object),
+          data: {
+            fullName: "John Smith",
+            email: "john@example.com",
+            employer: "BBC News",
+            termsAccepted: true
+          },
           errors: expect.arrayContaining([
             expect.objectContaining({
               href: "#idProof"
@@ -752,6 +799,36 @@ describe("create-media-account POST", () => {
           ])
         })
       );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should include errorIdProof in render data (line 132)", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      // Mock validateForm to return no errors
+      vi.mocked(validateForm).mockReturnValue([]);
+
+      const req = {
+        body: {
+          fullName: "Test User",
+          email: "test@example.com",
+          employer: "Test Corp",
+          termsAccepted: "on"
+        },
+        file: undefined
+      } as any;
+
+      const res = {
+        render: vi.fn(),
+        redirect: vi.fn(),
+        status: vi.fn().mockReturnThis()
+      } as any;
+
+      await POST(req, res);
+
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      expect(renderCall[1]).toHaveProperty("errorIdProof");
 
       consoleErrorSpy.mockRestore();
     });
