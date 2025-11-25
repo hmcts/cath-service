@@ -17,6 +17,7 @@
     <h1 class="govuk-heading-l">{{ heading }}</h1>
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}" />
       {{ govukInput({
         id: "locationId",
         name: "locationId",
