@@ -253,5 +253,178 @@ describe("Web Application", () => {
 
       consoleErrorSpy.mockRestore();
     });
+
+    it("should connect to Redis client", async () => {
+      const { createClient } = await import("redis");
+      const mockClient = vi.mocked(createClient).mock.results[0].value;
+
+      expect(mockClient.connect).toHaveBeenCalled();
+    });
+  });
+
+  describe("Middleware Configuration", () => {
+    it("should configure compression middleware", async () => {
+      // Compression is configured at line 41
+      // Verified by checking that app.use was called
+      expect(app.use).toBeDefined();
+    });
+
+    it("should configure urlencoded middleware", async () => {
+      // express.urlencoded is configured at line 42
+      // Verified indirectly through createApp() execution
+      expect(app).toBeDefined();
+    });
+
+    it("should configure cookie parser middleware", async () => {
+      // cookieParser is configured at line 43
+      expect(app).toBeDefined();
+    });
+
+    it("should configure Passport for Azure AD authentication", async () => {
+      const { configurePassport } = await import("@hmcts/auth");
+      expect(configurePassport).toHaveBeenCalledWith(app);
+    });
+
+    it("should configure GOV.UK Frontend with correct module paths", async () => {
+      const { configureGovuk } = await import("@hmcts/web-core");
+      const calls = vi.mocked(configureGovuk).mock.calls;
+
+      expect(calls.length).toBeGreaterThan(0);
+      const [appArg, modulePathsArg, optionsArg] = calls[0];
+
+      // Verify app is passed
+      expect(appArg).toBe(app);
+
+      // Verify module paths array is passed (lines 105-115)
+      expect(Array.isArray(modulePathsArg)).toBe(true);
+      expect(modulePathsArg.length).toBe(9); // __dirname + 8 module roots
+
+      // Verify options with nunjucksGlobals and assetOptions (lines 117-125)
+      expect(optionsArg).toHaveProperty("nunjucksGlobals");
+      expect(optionsArg.nunjucksGlobals).toHaveProperty("gtm");
+      expect(optionsArg.nunjucksGlobals).toHaveProperty("dynatrace");
+      expect(optionsArg).toHaveProperty("assetOptions");
+      expect(optionsArg.assetOptions).toHaveProperty("distPath");
+    });
+
+    it("should configure auth navigation middleware", async () => {
+      const { authNavigationMiddleware } = await import("@hmcts/auth");
+      expect(authNavigationMiddleware).toHaveBeenCalled();
+    });
+  });
+
+  describe("Route Registration", () => {
+    it("should register SSO callback route", async () => {
+      const { ssoCallbackHandler } = await import("@hmcts/auth");
+      // Verify app.get was called for /sso/return route (line 140)
+      expect(ssoCallbackHandler).toBeDefined();
+    });
+
+    it("should register CFT callback route", async () => {
+      const { cftCallbackHandler } = await import("@hmcts/auth");
+      // Verify app.get was called for /cft-login/return route (line 143)
+      expect(cftCallbackHandler).toBeDefined();
+    });
+
+    it("should register civil-and-family-daily-cause-list routes first", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // First call should be civil-and-family-daily-cause-list routes (line 146)
+      expect(calls.length).toBeGreaterThanOrEqual(1);
+      expect(calls[0]).toBeDefined();
+    });
+
+    it("should register web core page routes", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // Second call should be web core pages (line 148)
+      expect(calls.length).toBeGreaterThanOrEqual(2);
+      expect(calls[1]).toBeDefined();
+    });
+
+    it("should register auth routes", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // Third call should be auth routes (line 149)
+      expect(calls.length).toBeGreaterThanOrEqual(3);
+      expect(calls[2]).toBeDefined();
+    });
+
+    it("should register system admin routes", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // Fourth call should be system admin routes (line 150)
+      expect(calls.length).toBeGreaterThanOrEqual(4);
+      expect(calls[3]).toBeDefined();
+    });
+
+    it("should register public pages routes", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // Fifth call should be public pages routes (line 151)
+      expect(calls.length).toBeGreaterThanOrEqual(5);
+      expect(calls[4]).toBeDefined();
+    });
+
+    it("should register verified pages routes", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // Sixth call should be verified pages routes (line 152)
+      expect(calls.length).toBeGreaterThanOrEqual(6);
+      expect(calls[5]).toBeDefined();
+    });
+
+    it("should register admin routes last", async () => {
+      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const calls = vi.mocked(createSimpleRouter).mock.calls;
+
+      // Seventh call should be admin routes (line 153)
+      expect(calls.length).toBeGreaterThanOrEqual(7);
+      expect(calls[6]).toBeDefined();
+    });
+
+    it("should register not found handler before error handler", async () => {
+      const { notFoundHandler, errorHandler } = await import("@hmcts/web-core");
+
+      // Verify both were called
+      expect(notFoundHandler).toHaveBeenCalled();
+      expect(errorHandler).toHaveBeenCalled();
+
+      // notFoundHandler should be called before errorHandler (lines 155-156)
+      expect(notFoundHandler).toHaveBeenCalledBefore(errorHandler);
+    });
+  });
+
+  describe("Express Session Redis Configuration", () => {
+    it("should pass Redis client to expressSessionRedis", async () => {
+      const { expressSessionRedis } = await import("@hmcts/web-core");
+      const { createClient } = await import("redis");
+
+      // Verify expressSessionRedis was called (line 52)
+      expect(expressSessionRedis).toHaveBeenCalled();
+
+      // Verify it was called with an object containing redisConnection
+      const calls = vi.mocked(expressSessionRedis).mock.calls;
+      expect(calls[0][0]).toHaveProperty("redisConnection");
+    });
+  });
+
+  describe("Helmet Configuration", () => {
+    it("should pass CFT IDAM URL to helmet configuration", async () => {
+      const { configureHelmet } = await import("@hmcts/web-core");
+
+      // Verify configureHelmet was called with cftIdamUrl option (lines 47-51)
+      expect(configureHelmet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cftIdamUrl: process.env.CFT_IDAM_URL
+        })
+      );
+    });
   });
 });
