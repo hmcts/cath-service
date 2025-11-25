@@ -132,25 +132,5 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
 }
 
 export async function getArtefactsByLocationId(locationId: string): Promise<Artefact[]> {
-  const artefacts = await prisma.artefact.findMany({
-    where: {
-      locationId
-    },
-    orderBy: {
-      contentDate: "desc"
-    }
-  });
-
-  return artefacts.map((artefact) => ({
-    artefactId: artefact.artefactId,
-    locationId: artefact.locationId,
-    listTypeId: artefact.listTypeId,
-    contentDate: artefact.contentDate,
-    sensitivity: artefact.sensitivity,
-    language: artefact.language,
-    displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo,
-    isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance
-  }));
+  return getArtefactsByLocation(locationId);
 }
