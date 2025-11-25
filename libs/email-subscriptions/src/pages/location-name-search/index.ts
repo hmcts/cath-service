@@ -7,11 +7,18 @@ import {
   getAllRegions,
   getAllSubJurisdictions,
   getLocationsGroupedByLetter,
-  getSubJurisdictionsForJurisdiction
+  getSubJurisdictionsForJurisdiction,
+  type Location
 } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+interface TableRow {
+  letter: string;
+  location: Location;
+  isFirst: boolean;
+}
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -21,13 +28,21 @@ const getHandler = async (req: Request, res: Response) => {
   const regionParam = req.query.region;
   const subJurisdictionParam = req.query.subJurisdiction;
 
-  const selectedJurisdictions = Array.isArray(jurisdictionParam) ? jurisdictionParam.map(Number) : jurisdictionParam ? [Number(jurisdictionParam)] : [];
+  const selectedJurisdictions = Array.isArray(jurisdictionParam)
+    ? jurisdictionParam.map(Number).filter(Number.isFinite)
+    : jurisdictionParam && Number.isFinite(Number(jurisdictionParam))
+      ? [Number(jurisdictionParam)]
+      : [];
 
-  const selectedRegions = Array.isArray(regionParam) ? regionParam.map(Number) : regionParam ? [Number(regionParam)] : [];
+  const selectedRegions = Array.isArray(regionParam)
+    ? regionParam.map(Number).filter(Number.isFinite)
+    : regionParam && Number.isFinite(Number(regionParam))
+      ? [Number(regionParam)]
+      : [];
 
   const selectedSubJurisdictions = Array.isArray(subJurisdictionParam)
-    ? subJurisdictionParam.map(Number)
-    : subJurisdictionParam
+    ? subJurisdictionParam.map(Number).filter(Number.isFinite)
+    : subJurisdictionParam && Number.isFinite(Number(subJurisdictionParam))
       ? [Number(subJurisdictionParam)]
       : [];
 
@@ -50,7 +65,7 @@ const getHandler = async (req: Request, res: Response) => {
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
   // Recalculate grouped locations with effective filters
-  const filteredGroupedLocations = getLocationsGroupedByLetter(locale, {
+  const filteredGroupedLocations: Record<string, Location[]> = getLocationsGroupedByLetter(locale, {
     regions: selectedRegions.length > 0 ? selectedRegions : undefined,
     subJurisdictions: effectiveSubJurisdictions.length > 0 ? effectiveSubJurisdictions : undefined
   });
@@ -147,9 +162,9 @@ const getHandler = async (req: Request, res: Response) => {
   const availableLetters = Object.keys(filteredGroupedLocations);
 
   // Build table rows for location listings
-  const tableRows: any[] = [];
-  Object.entries(filteredGroupedLocations).forEach(([letter, locations]) => {
-    locations.forEach((location: any, index: number) => {
+  const tableRows: TableRow[] = [];
+  Object.entries(filteredGroupedLocations).forEach(([letter, locations]: [string, Location[]]) => {
+    locations.forEach((location: Location, index: number) => {
       tableRows.push({
         letter: index === 0 ? letter : "",
         location,
@@ -180,13 +195,10 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  console.log("POST /location-name-search - req.body:", JSON.stringify(req.body));
   const locationIds = req.body.locationIds;
-  console.log("locationIds:", locationIds);
 
   // Handle both single and multiple selections
   const selectedLocationIds = Array.isArray(locationIds) ? locationIds : locationIds ? [locationIds] : [];
-  console.log("selectedLocationIds:", selectedLocationIds);
 
   if (!req.session.emailSubscriptions) {
     req.session.emailSubscriptions = {};

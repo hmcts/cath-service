@@ -445,7 +445,7 @@ test.describe("Email Subscriptions", () => {
     test("should support Welsh language", async ({ page }) => {
       await page.goto("/subscription-management?lng=cy");
 
-      const deleteLinks = page.getByRole("link", { name: /dileu/i });
+      const deleteLinks = page.getByRole("button", { name: /dileu/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {
