@@ -4,8 +4,8 @@ import path from "node:path";
 
 // Find repository root by going up from cwd until we find a directory that contains both
 // package.json and a 'libs' directory (monorepo structure)
-function findRepoRoot(): string {
-  let currentDir = process.cwd();
+export function findRepoRoot(startDir: string = process.cwd()): string {
+  let currentDir = startDir;
 
   while (currentDir !== "/") {
     try {
