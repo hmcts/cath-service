@@ -65,7 +65,8 @@ export async function getUploadedFile(artefactId: string): Promise<{ fileData: B
       fileData,
       fileName: matchingFile
     };
-  } catch (_error) {
+  } catch (error) {
+    console.error(`Failed to read uploaded file for artefactId ${artefactId}:`, error);
     return null;
   }
 }

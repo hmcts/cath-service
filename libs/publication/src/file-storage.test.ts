@@ -164,6 +164,8 @@ describe("file-storage", () => {
 
   describe("getUploadedFile error handling (lines 68-70)", () => {
     it("should return null when readdir throws an error (lines 68-70)", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
       // Mock fs.readdir to throw an error
       const originalReaddir = fs.readdir;
       vi.spyOn(fs, "readdir").mockRejectedValueOnce(new Error("Permission denied"));
@@ -171,12 +173,16 @@ describe("file-storage", () => {
       const result = await getUploadedFile("test-error-artefact");
 
       expect(result).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId test-error-artefact:", expect.any(Error));
 
       // Restore original implementation
       fs.readdir = originalReaddir;
+      consoleErrorSpy.mockRestore();
     });
 
     it("should return null when readFile throws an error (lines 68-70)", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
       // First save a file
       await saveUploadedFile(TEST_ARTEFACT_ID, TEST_FILE_NAME, TEST_FILE_CONTENT);
 
@@ -187,12 +193,16 @@ describe("file-storage", () => {
       const result = await getUploadedFile(TEST_ARTEFACT_ID);
 
       expect(result).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(`Failed to read uploaded file for artefactId ${TEST_ARTEFACT_ID}:`, expect.any(Error));
 
       // Restore original implementation
       fs.readFile = originalReadFile;
+      consoleErrorSpy.mockRestore();
     });
 
     it("should handle ENOENT error gracefully (lines 68-70)", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
       // Mock fs operations to simulate directory not existing
       const enoentError: any = new Error("ENOENT: no such file or directory");
       enoentError.code = "ENOENT";
@@ -201,9 +211,14 @@ describe("file-storage", () => {
       const result = await getUploadedFile("missing-artefact");
 
       expect(result).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId missing-artefact:", expect.any(Error));
+
+      consoleErrorSpy.mockRestore();
     });
 
     it("should handle EACCES error gracefully (lines 68-70)", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
       // Mock fs operations to simulate permission denied
       const eaccesError: any = new Error("EACCES: permission denied");
       eaccesError.code = "EACCES";
@@ -212,6 +227,9 @@ describe("file-storage", () => {
       const result = await getUploadedFile("permission-denied-artefact");
 
       expect(result).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId permission-denied-artefact:", expect.any(Error));
+
+      consoleErrorSpy.mockRestore();
     });
   });
 });
