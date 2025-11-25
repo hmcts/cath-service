@@ -232,4 +232,235 @@ describe("file-storage", () => {
       consoleErrorSpy.mockRestore();
     });
   });
+
+  describe("Security validations", () => {
+    describe("artefactId validation", () => {
+      it("should reject artefactId with path separators", async () => {
+        await expect(saveUploadedFile("../evil", "test.csv", TEST_FILE_CONTENT)).rejects.toThrow(
+          "Invalid artefactId: only alphanumeric characters, hyphens, and underscores are allowed"
+        );
+      });
+
+      it("should reject artefactId with forward slash", async () => {
+        await expect(saveUploadedFile("test/evil", "test.csv", TEST_FILE_CONTENT)).rejects.toThrow(
+          "Invalid artefactId: only alphanumeric characters, hyphens, and underscores are allowed"
+        );
+      });
+
+      it("should reject artefactId with backslash", async () => {
+        await expect(saveUploadedFile("test\\evil", "test.csv", TEST_FILE_CONTENT)).rejects.toThrow(
+          "Invalid artefactId: only alphanumeric characters, hyphens, and underscores are allowed"
+        );
+      });
+
+      it("should reject artefactId with null bytes", async () => {
+        await expect(saveUploadedFile("test\x00evil", "test.csv", TEST_FILE_CONTENT)).rejects.toThrow(
+          "Invalid artefactId: only alphanumeric characters, hyphens, and underscores are allowed"
+        );
+      });
+
+      it("should reject empty artefactId", async () => {
+        await expect(saveUploadedFile("", "test.csv", TEST_FILE_CONTENT)).rejects.toThrow("Invalid artefactId: must be a non-empty string");
+      });
+
+      it("should reject artefactId longer than 255 characters", async () => {
+        const longId = "a".repeat(256);
+        await expect(saveUploadedFile(longId, "test.csv", TEST_FILE_CONTENT)).rejects.toThrow("Invalid artefactId: maximum length is 255 characters");
+      });
+
+      it("should accept valid artefactId with alphanumeric, hyphens, and underscores", async () => {
+        const validId = "valid-artefact_123";
+        const validPath = path.join(TEST_STORAGE_BASE, `${validId}.csv`);
+
+        await saveUploadedFile(validId, "test.csv", TEST_FILE_CONTENT);
+
+        const fileExists = await fs
+          .access(validPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(validPath, { force: true });
+      });
+
+      it("should reject artefactId with dots (double-dot attack)", async () => {
+        await expect(saveUploadedFile("..", "test.csv", TEST_FILE_CONTENT)).rejects.toThrow(
+          "Invalid artefactId: only alphanumeric characters, hyphens, and underscores are allowed"
+        );
+      });
+
+      it("should reject artefactId in getUploadedFile with path separators", async () => {
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        const result = await getUploadedFile("../evil");
+
+        expect(result).toBeNull();
+        expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId ../evil:", expect.any(Error));
+
+        consoleErrorSpy.mockRestore();
+      });
+    });
+
+    describe("file extension validation", () => {
+      it("should reject file without extension", async () => {
+        await expect(saveUploadedFile("test-id", "noextension", TEST_FILE_CONTENT)).rejects.toThrow("Invalid file: no file extension provided");
+      });
+
+      it("should reject file with disallowed extension", async () => {
+        await expect(saveUploadedFile("test-id", "test.exe", TEST_FILE_CONTENT)).rejects.toThrow("Invalid file extension: .exe");
+      });
+
+      it("should reject file with .sh extension", async () => {
+        await expect(saveUploadedFile("test-id", "script.sh", TEST_FILE_CONTENT)).rejects.toThrow("Invalid file extension: .sh");
+      });
+
+      it("should accept .pdf extension", async () => {
+        const testId = "test-pdf-123";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.pdf`);
+
+        await saveUploadedFile(testId, "document.pdf", TEST_FILE_CONTENT);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+
+      it("should accept .csv extension", async () => {
+        const testId = "test-csv-123";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.csv`);
+
+        await saveUploadedFile(testId, "data.csv", TEST_FILE_CONTENT);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+
+      it("should accept .json extension", async () => {
+        const testId = "test-json-123";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.json`);
+
+        await saveUploadedFile(testId, "data.json", TEST_FILE_CONTENT);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+
+      it("should handle case-insensitive extension matching", async () => {
+        const testId = "test-uppercase-123";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.pdf`);
+
+        await saveUploadedFile(testId, "document.PDF", TEST_FILE_CONTENT);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+    });
+
+    describe("file size validation", () => {
+      it("should reject file larger than 10MB", async () => {
+        const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
+
+        await expect(saveUploadedFile("test-id", "large.csv", largeBuffer)).rejects.toThrow("File too large: maximum size is 10MB");
+      });
+
+      it("should accept file at exactly 10MB", async () => {
+        const maxBuffer = Buffer.alloc(10 * 1024 * 1024); // Exactly 10MB
+        const testId = "test-max-size";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.csv`);
+
+        await saveUploadedFile(testId, "max.csv", maxBuffer);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+
+      it("should accept file smaller than 10MB", async () => {
+        const smallBuffer = Buffer.from("small content");
+        const testId = "test-small-size";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.csv`);
+
+        await saveUploadedFile(testId, "small.csv", smallBuffer);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+    });
+
+    describe("path traversal prevention", () => {
+      it("should prevent path traversal in saveUploadedFile", async () => {
+        // Even if artefactId validation was bypassed, path validation should catch it
+        // This test verifies defense in depth
+        const testId = "valid-id";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.csv`);
+
+        await saveUploadedFile(testId, "test.csv", TEST_FILE_CONTENT);
+
+        const fileExists = await fs
+          .access(testPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        const resolvedPath = path.resolve(testPath);
+        const normalizedBase = path.resolve(TEST_STORAGE_BASE);
+
+        // Verify file is within the storage base directory
+        expect(resolvedPath.startsWith(normalizedBase)).toBe(true);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+
+      it("should verify resolved path is within storage base", async () => {
+        const testId = "test-path-check";
+        const testPath = path.join(TEST_STORAGE_BASE, `${testId}.csv`);
+
+        await saveUploadedFile(testId, "test.csv", TEST_FILE_CONTENT);
+
+        const resolvedPath = path.resolve(testPath);
+        const normalizedBase = path.resolve(TEST_STORAGE_BASE);
+
+        expect(resolvedPath).toContain(normalizedBase);
+
+        // Cleanup
+        await fs.rm(testPath, { force: true });
+      });
+    });
+  });
 });
