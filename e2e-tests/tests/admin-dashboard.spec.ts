@@ -4,7 +4,8 @@ import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("Admin Dashboard", () => {
   test.describe("Content Display", () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, context }) => {
+      await context.clearCookies();
       await page.goto("/admin-dashboard");
       await loginWithSSO(
         page,
@@ -64,7 +65,8 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Accessibility", () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, context }) => {
+      await context.clearCookies();
       await page.goto("/admin-dashboard");
       await loginWithSSO(
         page,
@@ -98,7 +100,8 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Keyboard Navigation", () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, context }) => {
+      await context.clearCookies();
       await page.goto("/admin-dashboard");
       await loginWithSSO(
         page,
@@ -205,7 +208,8 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Tile Interaction", () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, context }) => {
+      await context.clearCookies();
       await page.goto("/admin-dashboard");
       await loginWithSSO(
         page,
