@@ -212,21 +212,45 @@ describe("Web Application", () => {
       expect(createFileUpload).toHaveBeenCalled();
       expect(configureCsrf).toHaveBeenCalled();
 
-      // The createFileUpload mock is set up at module import time (lines 21-23)
-      // and should be called before configureCsrf when createApp() executes
-      expect(createFileUpload).toHaveBeenCalledBefore(configureCsrf);
+      // Verify createFileUpload was called before configureCsrf by comparing invocation order
+      const createFileUploadOrder = vi.mocked(createFileUpload).mock.invocationCallOrder[0];
+      const configureCsrfOrder = vi.mocked(configureCsrf).mock.invocationCallOrder[0];
+
+      expect(createFileUploadOrder).toBeLessThan(configureCsrfOrder);
     });
 
-    it("should register POST route for /create-media-account with multer middleware", () => {
-      // Verify app.post was called for create-media-account route
-      // The middleware wraps upload.single("idProof") with error handling
+    it("should register POST route for /create-media-account with multer middleware", async () => {
+      // Verify file upload middleware was configured before routes were registered
+      // Note: Direct route inspection via app._router.stack is not reliable in test environment
+      // due to mocking, so we verify the middleware configuration which is required for the routes
+      const { createFileUpload } = await import("@hmcts/web-core");
+      expect(createFileUpload).toHaveBeenCalled();
+
+      const mockUpload = vi.mocked(createFileUpload).mock.results[0]?.value;
+      expect(mockUpload).toBeDefined();
+      expect(mockUpload.single).toBeDefined();
+      expect(typeof mockUpload.single).toBe("function");
+
+      // Verify app.post exists and is callable (confirms routes can be registered)
       expect(app.post).toBeDefined();
+      expect(typeof app.post).toBe("function");
     });
 
-    it("should register POST route for /manual-upload with multer middleware", () => {
-      // Verify app.post was called for manual-upload route
-      // The middleware wraps upload.single("file") with error handling
+    it("should register POST route for /manual-upload with multer middleware", async () => {
+      // Verify file upload middleware was configured before routes were registered
+      // Note: Direct route inspection via app._router.stack is not reliable in test environment
+      // due to mocking, so we verify the middleware configuration which is required for the routes
+      const { createFileUpload } = await import("@hmcts/web-core");
+      expect(createFileUpload).toHaveBeenCalled();
+
+      const mockUpload = vi.mocked(createFileUpload).mock.results[0]?.value;
+      expect(mockUpload).toBeDefined();
+      expect(mockUpload.single).toBeDefined();
+      expect(typeof mockUpload.single).toBe("function");
+
+      // Verify app.post exists and is callable (confirms routes can be registered)
       expect(app.post).toBeDefined();
+      expect(typeof app.post).toBe("function");
     });
   });
 
