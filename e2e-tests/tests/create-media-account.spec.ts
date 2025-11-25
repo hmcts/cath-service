@@ -452,31 +452,60 @@ test.describe("Create Media Account", () => {
     test("should allow keyboard navigation through all interactive elements", async ({ page }) => {
       await page.goto("/create-media-account");
 
-      // Tab through to the full name input
+      // Start from the page and tab through each interactive element in order
+      await page.keyboard.press("Tab"); // Skip to content link
+      await page.keyboard.press("Tab"); // GOV.UK link
+      await page.keyboard.press("Tab"); // Service name link
+
+      // Tab to language toggle
+      const languageToggle = page.getByRole("link", { name: /cymraeg/i });
+      await expect(languageToggle).toBeFocused();
+
+      await page.keyboard.press("Tab"); // Tab to navigation
+
+      // Tab to form fields
       await page.keyboard.press("Tab");
+      const fullNameInput = page.getByLabel(/full name/i);
+      await expect(fullNameInput).toBeFocused();
 
-      // Find the continue button and verify it can be reached by keyboard
-      let focused = false;
-      for (let i = 0; i < 20 && !focused; i++) {
-        await page.keyboard.press("Tab");
-        const continueButton = page.getByRole("button", { name: /continue/i });
-        try {
-          await expect(continueButton).toBeFocused({ timeout: 100 });
-          focused = true;
-        } catch {
-          // Continue tabbing
-        }
-      }
+      await page.keyboard.press("Tab");
+      const emailInput = page.getByLabel(/email address/i);
+      await expect(emailInput).toBeFocused();
 
-      // Verify continue button is focused
+      await page.keyboard.press("Tab");
+      const employerInput = page.getByLabel(/employer/i);
+      await expect(employerInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      const fileInput = page.locator('input[name="idProof"]');
+      await expect(fileInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      const termsCheckbox = page.getByRole("checkbox", { name: /please tick this box to agree to the above terms/i });
+      await expect(termsCheckbox).toBeFocused();
+
+      await page.keyboard.press("Tab");
       const continueButton = page.getByRole("button", { name: /continue/i });
       await expect(continueButton).toBeFocused();
+
+      // Press Enter on the Continue button to submit empty form
+      await page.keyboard.press("Enter");
+
+      // Verify validation errors appear
+      const errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+
+      // Verify error summary links are keyboard accessible
+      await page.keyboard.press("Tab"); // Back to top link
+      await page.keyboard.press("Tab"); // First error link
+      const firstErrorLink = errorSummary.locator("a").first();
+      await expect(firstErrorLink).toBeFocused();
     });
 
     test("should allow form submission via keyboard", async ({ page }) => {
       await page.goto("/create-media-account");
 
-      // Fill form using keyboard
+      // Fill form using keyboard navigation
       await page.getByLabel(/full name/i).focus();
       await page.keyboard.type("John Smith");
 
@@ -486,12 +515,32 @@ test.describe("Create Media Account", () => {
       await page.keyboard.press("Tab");
       await page.keyboard.type("Example Media Ltd");
 
-      // Note: File upload would typically require user interaction
-      // Skip file and terms for this test, just verify keyboard navigation works
+      // Tab to file input and use setInputFiles (file selection is not keyboard-testable in real browsers)
+      await page.keyboard.press("Tab");
+      const fileInput = page.locator('input[name="idProof"]');
+      await fileInput.setInputFiles({
+        name: "id.jpg",
+        mimeType: "image/jpeg",
+        buffer: Buffer.from("fake-image-content")
+      });
 
+      // Tab to terms checkbox and activate with Space
+      await page.keyboard.press("Tab");
+      const termsCheckbox = page.getByRole("checkbox", { name: /please tick this box to agree to the above terms/i });
+      await expect(termsCheckbox).toBeFocused();
+      await page.keyboard.press("Space");
+      await expect(termsCheckbox).toBeChecked();
+
+      // Tab to Continue button and activate with Enter
+      await page.keyboard.press("Tab");
       const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.focus();
       await expect(continueButton).toBeFocused();
+      await page.keyboard.press("Enter");
+
+      // Verify successful submission - redirects to success page
+      await page.waitForURL("**/account-request-submitted");
+      const successHeading = page.locator("h1");
+      await expect(successHeading).toContainText(/request submitted/i);
     });
   });
 
