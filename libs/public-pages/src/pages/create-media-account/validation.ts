@@ -1,6 +1,6 @@
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
-const ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+const ALLOWED_FILE_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
+const ALLOWED_FILE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".pdf"]);
 const MAX_EMAIL_LENGTH = 254; // RFC 5321 maximum
 // ReDoS-safe email regex - requires at least one dot in domain
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -95,7 +95,7 @@ export function validateFile(
   }
 
   const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf("."));
-  if (!ALLOWED_FILE_TYPES.includes(file.mimetype) || !ALLOWED_FILE_EXTENSIONS.includes(fileExtension)) {
+  if (!ALLOWED_FILE_TYPES.has(file.mimetype) || !ALLOWED_FILE_EXTENSIONS.has(fileExtension)) {
     return {
       field: "idProof",
       message: errorMessageType,
