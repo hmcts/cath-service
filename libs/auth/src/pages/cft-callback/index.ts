@@ -26,25 +26,10 @@ export const GET = async (req: Request, res: Response) => {
       return res.redirect(`/cft-rejected?lng=${lng}`);
     }
 
-    const user: UserProfile = {
-      id: userInfo.id,
-      email: userInfo.email,
-      displayName: userInfo.displayName,
-      role: "VERIFIED",
-      provenance: "CFT"
-    };
-
-    console.log("CFT IDAM: Creating user session with:", {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      role: user.role,
-      provenance: user.provenance
-    });
-
     // Create or update user record in database
+    let dbUser: Awaited<ReturnType<typeof createOrUpdateUser>>;
     try {
-      await createOrUpdateUser({
+      dbUser = await createOrUpdateUser({
         email: userInfo.email,
         firstName: userInfo.firstName,
         surname: userInfo.surname,
@@ -60,6 +45,22 @@ export const GET = async (req: Request, res: Response) => {
       });
       return res.redirect(`/sign-in?error=db_error&lng=${lng}`);
     }
+
+    const user: UserProfile = {
+      id: dbUser.userId,
+      email: userInfo.email,
+      displayName: userInfo.displayName,
+      role: "VERIFIED",
+      provenance: "CFT"
+    };
+
+    console.log("CFT IDAM: Creating user session with:", {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.role,
+      provenance: user.provenance
+    });
 
     req.session.regenerate((err: Error | null) => {
       if (err) {

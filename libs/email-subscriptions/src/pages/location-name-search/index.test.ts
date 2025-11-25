@@ -27,7 +27,9 @@ describe("location-name-search", () => {
     mockReq = {
       query: {},
       body: {},
-      session: {} as any,
+      session: {
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any,
       path: "/location-name-search"
     };
     mockRes = {
@@ -76,7 +78,9 @@ describe("location-name-search", () => {
   describe("POST", () => {
     it("should handle single location selection", async () => {
       mockReq.body = { locationIds: "123" };
-      mockReq.session = {} as any;
+      mockReq.session = {
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any;
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
@@ -86,7 +90,9 @@ describe("location-name-search", () => {
 
     it("should handle multiple location selections", async () => {
       mockReq.body = { locationIds: ["123", "456"] };
-      mockReq.session = {} as any;
+      mockReq.session = {
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any;
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
@@ -96,7 +102,9 @@ describe("location-name-search", () => {
 
     it("should handle no selection", async () => {
       mockReq.body = {};
-      mockReq.session = {} as any;
+      mockReq.session = {
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any;
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 

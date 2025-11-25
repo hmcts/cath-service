@@ -268,7 +268,7 @@ describe("Subscription Service", () => {
       const newLocationIds = ["456", "invalid"];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
-      vi.mocked(validation.validateLocationId).mockReturnValue(false);
+      vi.mocked(validation.validateLocationId).mockResolvedValue(false);
 
       await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow("Invalid location ID");
     });

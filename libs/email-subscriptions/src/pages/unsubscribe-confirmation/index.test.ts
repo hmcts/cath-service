@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as subscriptionService from "../../repository/service.js";
 import { GET } from "./index.js";
 
@@ -38,6 +38,10 @@ describe("unsubscribe-confirmation", () => {
     vi.clearAllMocks();
   });
 
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   describe("GET", () => {
     it("should redirect if no subscriptionToRemove in session", async () => {
       mockReq.session = { emailSubscriptions: {} } as any;
@@ -72,18 +76,13 @@ describe("unsubscribe-confirmation", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
-    it("should use test-user-id when no user in request", async () => {
+    it("should redirect to sign-in when no user in request", async () => {
       mockReq.user = undefined;
-      vi.mocked(subscriptionService.removeSubscription).mockResolvedValue({
-        subscriptionId: "sub123",
-        userId: "test-user-id",
-        locationId: "456",
-        dateAdded: new Date()
-      });
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(subscriptionService.removeSubscription).toHaveBeenCalledWith("sub123", "test-user-id");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
+      expect(subscriptionService.removeSubscription).not.toHaveBeenCalled();
     });
   });
 });

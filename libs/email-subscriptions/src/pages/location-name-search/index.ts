@@ -174,7 +174,8 @@ const getHandler = async (req: Request, res: Response) => {
     regionItems,
     subJurisdictionItemsByJurisdiction,
     availableLetters,
-    tableRows
+    tableRows,
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -191,7 +192,14 @@ const postHandler = async (req: Request, res: Response) => {
   // Replace pending subscriptions entirely with new selection
   req.session.emailSubscriptions.pendingSubscriptions = selectedLocationIds;
 
-  res.redirect("/pending-subscriptions");
+  // Save session before redirect to ensure data persists
+  req.session.save((err: Error | null) => {
+    if (err) {
+      console.error("Error saving session:", err);
+      return res.redirect("/location-name-search");
+    }
+    res.redirect("/pending-subscriptions");
+  });
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];

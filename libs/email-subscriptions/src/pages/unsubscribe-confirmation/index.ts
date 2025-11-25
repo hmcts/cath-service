@@ -7,8 +7,12 @@ import { en } from "./en.js";
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
-  const userId = req.user?.id || "test-user-id";
 
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
+
+  const userId = req.user.id;
   const subscriptionId = req.session.emailSubscriptions?.subscriptionToRemove;
 
   if (!subscriptionId) {

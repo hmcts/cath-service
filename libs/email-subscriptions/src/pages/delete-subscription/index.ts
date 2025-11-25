@@ -14,6 +14,10 @@ const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
 
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
+
   const rawSubscriptionId = req.query.subscriptionId as string;
   const subscriptionId = rawSubscriptionId?.trim();
 
@@ -22,10 +26,10 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   if (!isValidUUID(subscriptionId)) {
-    return res.status(400).send("Invalid subscription ID format");
+    return res.redirect("/subscription-management");
   }
 
-  const userId = req.user?.id || "test-user-id";
+  const userId = req.user.id;
 
   try {
     const subscription = await findSubscriptionById(subscriptionId);
@@ -45,7 +49,8 @@ const getHandler = async (req: Request, res: Response) => {
 
     res.render("delete-subscription/index", {
       ...t,
-      subscriptionId
+      subscriptionId,
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   } catch (error) {
     console.error("Error fetching subscription:", error);
@@ -56,40 +61,74 @@ const getHandler = async (req: Request, res: Response) => {
 const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
-  const { subscription, "unsubscribe-confirm": unsubscribeConfirm } = req.body;
 
-  if (!unsubscribeConfirm) {
-    if (!res.locals.navigation) {
-      res.locals.navigation = {};
-    }
-    res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
-
-    return res.render("delete-subscription/index", {
-      ...t,
-      subscriptionId: subscription,
-      errors: {
-        titleText: t.errorSummaryTitle,
-        errorList: [
-          {
-            text: t.errorNoSelection,
-            href: "#unsubscribe-confirm"
-          }
-        ]
-      }
-    });
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
   }
 
+  const { subscription, subscriptionId: bodySubscriptionId, "unsubscribe-confirm": unsubscribeConfirm } = req.body;
+  const subscriptionId = subscription || bodySubscriptionId;
+
+  // If no subscriptionId in body, redirect to subscription management
+  if (!subscriptionId) {
+    return res.redirect("/subscription-management");
+  }
+
+  // Validate UUID format
+  if (!isValidUUID(subscriptionId)) {
+    return res.redirect("/subscription-management");
+  }
+
+  const userId = req.user.id;
+
+  // Verify user owns the subscription
+  try {
+    const sub = await findSubscriptionById(subscriptionId);
+    if (!sub || sub.userId !== userId) {
+      return res.redirect("/subscription-management");
+    }
+  } catch (error) {
+    console.error("Error validating subscription ownership:", error);
+    return res.redirect("/subscription-management");
+  }
+
+  // If this is a direct POST from subscription-management (no confirmation yet)
+  if (!unsubscribeConfirm) {
+    // Redirect to GET to show confirmation page
+    return res.redirect(`/delete-subscription?subscriptionId=${subscriptionId}`);
+  }
+
+  // Handle confirmation page submission
   if (unsubscribeConfirm === "no") {
     return res.redirect("/subscription-management");
   }
 
-  if (unsubscribeConfirm === "yes" && subscription) {
+  if (unsubscribeConfirm === "yes") {
     req.session.emailSubscriptions = req.session.emailSubscriptions || {};
-    req.session.emailSubscriptions.subscriptionToRemove = subscription;
+    req.session.emailSubscriptions.subscriptionToRemove = subscriptionId;
     return res.redirect("/unsubscribe-confirmation");
   }
 
-  res.redirect("/subscription-management");
+  // If we get here with an invalid choice, show error
+  if (!res.locals.navigation) {
+    res.locals.navigation = {};
+  }
+  res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+  return res.render("delete-subscription/index", {
+    ...t,
+    subscriptionId,
+    csrfToken: (req as any).csrfToken?.() || "",
+    errors: {
+      titleText: t.errorSummaryTitle,
+      errorList: [
+        {
+          text: t.errorNoSelection,
+          href: "#unsubscribe-confirm"
+        }
+      ]
+    }
+  });
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];

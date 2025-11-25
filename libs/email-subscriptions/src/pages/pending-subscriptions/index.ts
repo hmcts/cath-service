@@ -58,8 +58,12 @@ const getHandler = async (req: Request, res: Response) => {
 const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
-  // TODO: Remove this mock user ID - for testing only
-  const userId = req.user?.id || "test-user-id";
+
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
+
+  const userId = req.user.id;
   const { action, locationId } = req.body;
 
   const pendingLocationIds = req.session.emailSubscriptions?.pendingSubscriptions || [];

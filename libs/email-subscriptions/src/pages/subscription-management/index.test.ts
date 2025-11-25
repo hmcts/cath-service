@@ -78,13 +78,13 @@ describe("subscription-management", () => {
       );
     });
 
-    it("should use test-user-id when no user in request", async () => {
+    it("should redirect to sign-in when no user in request", async () => {
       mockReq.user = undefined;
-      vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([]);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(subscriptionService.getSubscriptionsByUserId).toHaveBeenCalledWith("test-user-id");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
+      expect(subscriptionService.getSubscriptionsByUserId).not.toHaveBeenCalled();
     });
   });
 });

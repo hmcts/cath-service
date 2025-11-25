@@ -373,7 +373,7 @@ test.describe("Email Subscriptions", () => {
       await page.goto("/subscription-management");
 
       // Check if there are any subscriptions to delete
-      const deleteLinks = page.getByRole("link", { name: /remove/i });
+      const deleteLinks = page.getByRole("button", { name: /remove/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {
@@ -395,7 +395,7 @@ test.describe("Email Subscriptions", () => {
     test("should require selection before continuing", async ({ page }) => {
       await page.goto("/subscription-management");
 
-      const deleteLinks = page.getByRole("link", { name: /remove/i });
+      const deleteLinks = page.getByRole("button", { name: /remove/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {
@@ -414,7 +414,7 @@ test.describe("Email Subscriptions", () => {
     test("should return to subscription management when selecting no", async ({ page }) => {
       await page.goto("/subscription-management");
 
-      const deleteLinks = page.getByRole("link", { name: /remove/i });
+      const deleteLinks = page.getByRole("button", { name: /remove/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {
@@ -459,7 +459,7 @@ test.describe("Email Subscriptions", () => {
     test("should display success message after removing subscription", async ({ page }) => {
       await page.goto("/subscription-management");
 
-      const deleteLinks = page.getByRole("link", { name: /remove/i });
+      const deleteLinks = page.getByRole("button", { name: /remove/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {
@@ -485,7 +485,7 @@ test.describe("Email Subscriptions", () => {
     test("should have link back to subscription management", async ({ page }) => {
       await page.goto("/subscription-management");
 
-      const deleteLinks = page.getByRole("link", { name: /remove/i });
+      const deleteLinks = page.getByRole("button", { name: /remove/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {
@@ -507,7 +507,7 @@ test.describe("Email Subscriptions", () => {
     test("should be accessible", async ({ page }) => {
       await page.goto("/subscription-management");
 
-      const deleteLinks = page.getByRole("link", { name: /remove/i });
+      const deleteLinks = page.getByRole("button", { name: /remove/i });
       const count = await deleteLinks.count();
 
       if (count > 0) {

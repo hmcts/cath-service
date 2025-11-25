@@ -1,9 +1,18 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: back,
+    href: "/subscription-management"
+  }) }}
 {% endblock %}
 
 {% block page_content %}
@@ -122,6 +131,12 @@
     </button>
 
     <form method="post" novalidate>
+      {{ govukInput({
+        id: "_csrf",
+        name: "_csrf",
+        type: "hidden",
+        value: csrfToken
+      }) }}
       <table class="govuk-table court-table">
         <tbody class="govuk-table__body">
         {% for row in tableRows %}

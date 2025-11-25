@@ -45,13 +45,12 @@ describe("delete-subscription", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
-    it("should return 400 if subscriptionId is not a valid UUID", async () => {
+    it("should redirect if subscriptionId is not a valid UUID", async () => {
       mockReq.query = { subscriptionId: "invalid-uuid" };
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.send).toHaveBeenCalledWith("Invalid subscription ID format");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
     it("should redirect if subscription not found", async () => {
@@ -108,30 +107,30 @@ describe("delete-subscription", () => {
   });
 
   describe("POST", () => {
-    it("should render with error if no option selected", async () => {
-      mockReq.body = { subscription: "sub123" };
+    it("should redirect to GET page when no confirmation choice provided", async () => {
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscriptionId: validSubscriptionId };
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+        subscriptionId: validSubscriptionId,
+        userId: "user123",
+        locationId: "456",
+        dateAdded: new Date()
+      });
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "delete-subscription/index",
-        expect.objectContaining({
-          subscriptionId: "sub123",
-          errors: expect.objectContaining({
-            titleText: expect.any(String),
-            errorList: expect.arrayContaining([
-              expect.objectContaining({
-                text: expect.any(String),
-                href: "#unsubscribe-confirm"
-              })
-            ])
-          })
-        })
-      );
+      expect(mockRes.redirect).toHaveBeenCalledWith(`/delete-subscription?subscriptionId=${validSubscriptionId}`);
     });
 
     it("should redirect to subscription-management if user selects no", async () => {
-      mockReq.body = { subscription: "sub123", "unsubscribe-confirm": "no" };
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId, "unsubscribe-confirm": "no" };
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+        subscriptionId: validSubscriptionId,
+        userId: "user123",
+        locationId: "456",
+        dateAdded: new Date()
+      });
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
@@ -139,12 +138,19 @@ describe("delete-subscription", () => {
     });
 
     it("should store subscription in session and redirect if user selects yes", async () => {
-      mockReq.body = { subscription: "sub123", "unsubscribe-confirm": "yes" };
+      const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
+      mockReq.body = { subscription: validSubscriptionId, "unsubscribe-confirm": "yes" };
       mockReq.session = {} as any;
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+        subscriptionId: validSubscriptionId,
+        userId: "user123",
+        locationId: "456",
+        dateAdded: new Date()
+      });
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockReq.session.emailSubscriptions?.subscriptionToRemove).toBe("sub123");
+      expect(mockReq.session.emailSubscriptions?.subscriptionToRemove).toBe(validSubscriptionId);
       expect(mockRes.redirect).toHaveBeenCalledWith("/unsubscribe-confirmation");
     });
 

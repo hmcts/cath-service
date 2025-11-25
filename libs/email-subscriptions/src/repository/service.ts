@@ -79,15 +79,18 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
     }
   }
 
+  // Validate all location IDs before performing any mutations
+  const validationResults = await Promise.all(toAdd.map((locationId) => validateLocationId(locationId)));
+
+  const invalidLocations = toAdd.filter((_, index) => !validationResults[index]);
+  if (invalidLocations.length > 0) {
+    throw new Error(`Invalid location ID: ${invalidLocations[0]}`);
+  }
+
+  // Perform deletions and creations after validation passes
   await Promise.all([
     ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId)),
-    ...toAdd.map(async (locationId) => {
-      const locationValid = await validateLocationId(locationId);
-      if (!locationValid) {
-        throw new Error(`Invalid location ID: ${locationId}`);
-      }
-      return createSubscriptionRecord(userId, locationId);
-    })
+    ...toAdd.map((locationId) => createSubscriptionRecord(userId, locationId))
   ]);
 
   return {

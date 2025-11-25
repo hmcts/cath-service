@@ -1,5 +1,6 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
@@ -27,12 +28,16 @@
       <tbody class="govuk-table__body">
         {% for subscription in subscriptions %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell">{{ subscription.locationName }}</td>
-            <td class="govuk-table__cell" style="white-space: nowrap;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+            <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.locationName }}</td>
+            <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
             <td class="govuk-table__cell govuk-table__cell--numeric">
-              <a href="/delete-subscription?subscriptionId={{ subscription.subscriptionId }}" class="govuk-link">
-                {{ removeLink }}
-              </a>
+              <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
+                <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; text-decoration: underline; font-size: inherit; font-family: inherit; line-height: inherit; color: #1d70b8;" aria-label="Remove subscription for {{ subscription.locationName }}">
+                  {{ removeLink }}
+                </button>
+              </form>
             </td>
           </tr>
         {% endfor %}
