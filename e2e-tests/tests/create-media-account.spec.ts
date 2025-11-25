@@ -536,8 +536,8 @@ test.describe("Create Media Account", () => {
 
       // Verify successful submission - redirects to success page
       await page.waitForURL("**/account-request-submitted");
-      const successHeading = page.locator("h1");
-      await expect(successHeading).toContainText(/request submitted/i);
+      const successHeading = page.getByRole("heading", { name: /details submitted/i });
+      await expect(successHeading).toBeVisible();
     });
   });
 
