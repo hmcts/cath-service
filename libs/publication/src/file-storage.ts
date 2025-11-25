@@ -117,13 +117,30 @@ export async function getUploadedFile(artefactId: string): Promise<{ fileData: B
     validateArtefactId(artefactId);
 
     const files = await fs.readdir(TEMP_STORAGE_BASE);
-    const matchingFile = files.find((file) => file.startsWith(artefactId));
 
-    if (!matchingFile) {
+    // Create strict regex that matches only:
+    // 1. Exact artefactId, or
+    // 2. artefactId followed by a single extension (e.g., .pdf, .csv)
+    // This prevents matching "test-123-other.pdf" when looking for "test-123"
+    const escapedArtefactId = artefactId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const strictPattern = new RegExp(`^${escapedArtefactId}(\\.[^./\\\\]+)?$`);
+
+    const matchingFiles = files.filter((file) => strictPattern.test(file));
+
+    // Handle zero matches
+    if (matchingFiles.length === 0) {
       return null;
     }
 
-    // Construct and validate file path
+    // Handle multiple matches - this shouldn't happen with our strict pattern, but be defensive
+    if (matchingFiles.length > 1) {
+      console.error(`Multiple files found for artefactId ${artefactId}:`, matchingFiles);
+      throw new Error(`Ambiguous file match: multiple files found for artefactId ${artefactId}`);
+    }
+
+    const matchingFile = matchingFiles[0];
+
+    // Construct and validate file path to prevent directory traversal
     const filePath = path.resolve(path.join(TEMP_STORAGE_BASE, matchingFile));
     validateFilePath(filePath);
 

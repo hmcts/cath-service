@@ -98,7 +98,7 @@ describe("file-storage", () => {
       await fs.rm(path.join(TEST_STORAGE_BASE, `${artefactId}.pdf`), { force: true });
     });
 
-    it("should match files that start with artefactId", async () => {
+    it("should match files with exact artefactId or artefactId plus extension", async () => {
       const artefactId = "test-match-123";
       const jsonContent = Buffer.from('{"test": "data"}');
       await saveUploadedFile(artefactId, "data.json", jsonContent);
@@ -106,11 +106,75 @@ describe("file-storage", () => {
       const result = await getUploadedFile(artefactId);
 
       expect(result).not.toBeNull();
-      expect(result?.fileName).toContain(artefactId);
+      expect(result?.fileName).toBe(`${artefactId}.json`);
       expect(result?.fileData.toString()).toBe(jsonContent.toString());
 
       // Cleanup
       await fs.rm(path.join(TEST_STORAGE_BASE, `${artefactId}.json`), { force: true });
+    });
+
+    it("should NOT match files that start with artefactId but have additional characters before extension", async () => {
+      const artefactId = "test-strict-123";
+      const targetFile = path.join(TEST_STORAGE_BASE, `${artefactId}.pdf`);
+      const ambiguousFile = path.join(TEST_STORAGE_BASE, `${artefactId}-other.pdf`);
+
+      // Create both files
+      await fs.mkdir(TEST_STORAGE_BASE, { recursive: true });
+      await fs.writeFile(targetFile, Buffer.from("target content"));
+      await fs.writeFile(ambiguousFile, Buffer.from("ambiguous content"));
+
+      const result = await getUploadedFile(artefactId);
+
+      // Should only match the exact file, not the one with additional characters
+      expect(result).not.toBeNull();
+      expect(result?.fileName).toBe(`${artefactId}.pdf`);
+      expect(result?.fileData.toString()).toBe("target content");
+
+      // Cleanup
+      await fs.rm(targetFile, { force: true });
+      await fs.rm(ambiguousFile, { force: true });
+    });
+
+    it("should handle multiple matching files by throwing error", async () => {
+      const artefactId = "test-multi-123";
+      const file1 = path.join(TEST_STORAGE_BASE, `${artefactId}.pdf`);
+      const file2 = path.join(TEST_STORAGE_BASE, `${artefactId}.csv`);
+
+      // This scenario shouldn't happen in normal operation (saveUploadedFile prevents it)
+      // but test defensive behavior
+      await fs.mkdir(TEST_STORAGE_BASE, { recursive: true });
+      await fs.writeFile(file1, Buffer.from("pdf content"));
+      await fs.writeFile(file2, Buffer.from("csv content"));
+
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const result = await getUploadedFile(artefactId);
+
+      // Should return null due to caught error
+      expect(result).toBeNull();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(`Failed to read uploaded file for artefactId ${artefactId}:`, expect.any(Error));
+
+      // Cleanup
+      await fs.rm(file1, { force: true });
+      await fs.rm(file2, { force: true });
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should escape special regex characters in artefactId", async () => {
+      // Test that artefactId with regex special chars doesn't break the pattern
+      const artefactId = "test-file-1";
+      const file = path.join(TEST_STORAGE_BASE, `${artefactId}.pdf`);
+
+      await fs.mkdir(TEST_STORAGE_BASE, { recursive: true });
+      await fs.writeFile(file, Buffer.from("content"));
+
+      const result = await getUploadedFile(artefactId);
+
+      expect(result).not.toBeNull();
+      expect(result?.fileName).toBe(`${artefactId}.pdf`);
+
+      // Cleanup
+      await fs.rm(file, { force: true });
     });
 
     it("should return file data as Buffer", async () => {
