@@ -31,7 +31,10 @@ test.describe("Remove Publication Flow", () => {
 
     // Upload a test publication for locationId=1 (Oxford Combined Court Centre)
     await page.goto('/manual-upload?locationId=1');
-    await page.waitForTimeout(1000); // Wait for autocomplete to initialize
+
+    // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+    await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+    await page.waitForTimeout(500);
 
     await page.locator('input[name="file"]').setInputFiles({
       name: 'e2e-test-publication.pdf',
@@ -127,6 +130,9 @@ test.describe("Remove Publication Flow", () => {
       await page.goto("/remove-list-search");
     }
 
+    // Wait for autocomplete to initialize
+    await page.waitForSelector('#locationId-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+
     // Use the autocomplete widget to select a location
     const courtInput = page.getByRole('combobox', { name: /search by court or tribunal name/i });
     await courtInput.waitFor({ state: 'visible', timeout: 10000 });
@@ -136,6 +142,9 @@ test.describe("Remove Publication Flow", () => {
     // Select the first suggestion
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
+
+    // Wait for the autocomplete to update the hidden locationId field
+    await page.waitForTimeout(500);
 
     await page.click('button:has-text("Continue")');
 
