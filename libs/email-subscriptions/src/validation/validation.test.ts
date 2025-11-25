@@ -1,10 +1,10 @@
 import * as location from "@hmcts/location";
 import { describe, expect, it, vi } from "vitest";
-import * as queries from "./repository/queries.js";
+import * as queries from "../repository/queries.js";
 import { validateDuplicateSubscription, validateLocationId } from "./validation.js";
 
 vi.mock("@hmcts/location");
-vi.mock("./repository/queries.js");
+vi.mock("../repository/queries.js");
 
 describe("Validation Functions", () => {
   describe("validateLocationId", () => {

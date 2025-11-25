@@ -1,10 +1,12 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as subscriptionService from "../../subscription/repository/service.js";
+import * as subscriptionService from "../../repository/service.js";
 import { GET, POST } from "./index.js";
 
 vi.mock("@hmcts/auth", () => ({
-  buildVerifiedUserNavigation: vi.fn(() => [])
+  buildVerifiedUserNavigation: vi.fn(() => []),
+  requireAuth: vi.fn(() => (_req: any, _res: any, next: any) => next()),
+  blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -15,7 +17,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("../../subscription/repository/service.js", () => ({
+vi.mock("../../repository/service.js", () => ({
   replaceUserSubscriptions: vi.fn()
 }));
 
@@ -47,7 +49,7 @@ describe("pending-subscriptions", () => {
 
   describe("GET", () => {
     it("should render page with pending subscriptions", async () => {
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
@@ -64,7 +66,7 @@ describe("pending-subscriptions", () => {
     it("should render error when no pending subscriptions", async () => {
       mockReq.session = { emailSubscriptions: { pendingSubscriptions: [] } } as any;
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
@@ -78,7 +80,7 @@ describe("pending-subscriptions", () => {
     it("should handle single pending subscription", async () => {
       mockReq.session = { emailSubscriptions: { pendingSubscriptions: ["456"] } } as any;
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
@@ -93,7 +95,7 @@ describe("pending-subscriptions", () => {
     it("should remove location when action is remove", async () => {
       mockReq.body = { action: "remove", locationId: "456" };
 
-      await POST[0](mockReq as Request, mockRes as Response, vi.fn());
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session?.emailSubscriptions?.pendingSubscriptions).toEqual(["789"]);
       expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
@@ -103,7 +105,7 @@ describe("pending-subscriptions", () => {
       mockReq.session = { emailSubscriptions: { pendingSubscriptions: ["456"] } } as any;
       mockReq.body = { action: "remove", locationId: "456" };
 
-      await POST[0](mockReq as Request, mockRes as Response, vi.fn());
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
@@ -120,7 +122,7 @@ describe("pending-subscriptions", () => {
         removed: 0
       });
 
-      await POST[0](mockReq as Request, mockRes as Response, vi.fn());
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(subscriptionService.replaceUserSubscriptions).toHaveBeenCalledWith("user123", ["456", "789"]);
       expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
@@ -131,7 +133,7 @@ describe("pending-subscriptions", () => {
       mockReq.session = { emailSubscriptions: { pendingSubscriptions: [] } } as any;
       mockReq.body = { action: "confirm" };
 
-      await POST[0](mockReq as Request, mockRes as Response, vi.fn());
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/location-name-search");
     });
@@ -140,7 +142,7 @@ describe("pending-subscriptions", () => {
       mockReq.body = { action: "confirm" };
       vi.mocked(subscriptionService.replaceUserSubscriptions).mockRejectedValue(new Error("Test error"));
 
-      await POST[0](mockReq as Request, mockRes as Response, vi.fn());
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",

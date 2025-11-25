@@ -11,7 +11,12 @@ vi.mock("@hmcts/auth", () => ({
     const t = locale === "cy" ? translations.cy : translations.en;
     return [
       { text: t.dashboard, href: "/account-home", current: currentPath === "/account-home", attributes: { "data-test": "dashboard-link" } },
-      { text: t.emailSubscriptions, href: "/", current: currentPath === "/", attributes: { "data-test": "email-subscriptions-link" } }
+      {
+        text: t.emailSubscriptions,
+        href: "/subscription-management",
+        current: currentPath === "/subscription-management",
+        attributes: { "data-test": "email-subscriptions-link" }
+      }
     ];
   }),
   requireAuth: vi.fn(() => (_req: any, _res: any, next: any) => next()),
@@ -186,7 +191,7 @@ describe("account-home controller", () => {
       const navigation = (mockResponse as any).locals.navigation;
 
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
-      expect(navigation.verifiedItems[1].href).toBe("/");
+      expect(navigation.verifiedItems[1].href).toBe("/subscription-management");
     });
 
     it("should maintain same navigation structure for Welsh locale", async () => {
@@ -201,7 +206,7 @@ describe("account-home controller", () => {
 
       expect(navigation.verifiedItems).toHaveLength(2);
       expect(navigation.verifiedItems[0].href).toBe("/account-home");
-      expect(navigation.verifiedItems[1].href).toBe("/");
+      expect(navigation.verifiedItems[1].href).toBe("/subscription-management");
       expect(navigation.verifiedItems[0].current).toBe(true);
       expect(navigation.verifiedItems[1].current).toBe(false);
     });

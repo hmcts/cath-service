@@ -1,10 +1,12 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as subscriptionService from "../../subscription/repository/service.js";
+import * as subscriptionService from "../../repository/service.js";
 import { GET } from "./index.js";
 
 vi.mock("@hmcts/auth", () => ({
-  buildVerifiedUserNavigation: vi.fn(() => [])
+  buildVerifiedUserNavigation: vi.fn(() => []),
+  requireAuth: vi.fn(() => (_req: any, _res: any, next: any) => next()),
+  blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -15,7 +17,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("../../subscription/repository/service.js", () => ({
+vi.mock("../../repository/service.js", () => ({
   getSubscriptionsByUserId: vi.fn()
 }));
 
@@ -48,7 +50,7 @@ describe("subscription-management", () => {
 
       vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue(mockSubscriptions);
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(subscriptionService.getSubscriptionsByUserId).toHaveBeenCalledWith("user123");
       expect(mockRes.render).toHaveBeenCalledWith(
@@ -66,7 +68,7 @@ describe("subscription-management", () => {
     it("should render page with no subscriptions", async () => {
       vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([]);
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-management/index",
@@ -80,7 +82,7 @@ describe("subscription-management", () => {
       mockReq.user = undefined;
       vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([]);
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(subscriptionService.getSubscriptionsByUserId).toHaveBeenCalledWith("test-user-id");
     });

@@ -1,6 +1,6 @@
-import { buildVerifiedUserNavigation } from "@hmcts/auth";
+import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import { removeSubscription } from "../../subscription/repository/service.js";
+import { removeSubscription } from "../../repository/service.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -36,4 +36,4 @@ const getHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const GET: RequestHandler[] = [getHandler];
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];

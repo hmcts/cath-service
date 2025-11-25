@@ -1,2 +1,2 @@
-export * from "./subscription/repository/service.js";
-export * from "./subscription/validation.js";
+export * from "./repository/service.js";
+export * from "./validation/validation.js";

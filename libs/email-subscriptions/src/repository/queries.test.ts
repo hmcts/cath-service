@@ -4,6 +4,7 @@ import {
   countSubscriptionsByUserId,
   createSubscriptionRecord,
   deleteSubscriptionRecord,
+  findSubscriptionById,
   findSubscriptionByUserAndLocation,
   findSubscriptionsByUserId
 } from "./queries.js";
@@ -106,6 +107,37 @@ describe("Subscription Queries", () => {
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
 
       const result = await findSubscriptionByUserAndLocation(userId, locationId);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findSubscriptionById", () => {
+    it("should find subscription by ID", async () => {
+      const subscriptionId = "sub123";
+      const mockSubscription = {
+        subscriptionId,
+        userId: "user123",
+        locationId: "456",
+        dateAdded: new Date()
+      };
+
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(mockSubscription);
+
+      const result = await findSubscriptionById(subscriptionId);
+
+      expect(result).toEqual(mockSubscription);
+      expect(prisma.subscription.findUnique).toHaveBeenCalledWith({
+        where: { subscriptionId }
+      });
+    });
+
+    it("should return null when subscription not found", async () => {
+      const subscriptionId = "sub123";
+
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
+
+      const result = await findSubscriptionById(subscriptionId);
 
       expect(result).toBeNull();
     });

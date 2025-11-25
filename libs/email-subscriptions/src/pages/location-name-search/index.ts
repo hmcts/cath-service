@@ -1,4 +1,4 @@
-import { buildVerifiedUserNavigation } from "@hmcts/auth";
+import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import {
   buildJurisdictionItems,
   buildRegionItems,
@@ -194,6 +194,5 @@ const postHandler = async (req: Request, res: Response) => {
   res.redirect("/pending-subscriptions");
 };
 
-// TODO: Restore auth middleware - temporarily removed for testing
-export const GET: RequestHandler[] = [getHandler];
-export const POST: RequestHandler[] = [postHandler];
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];

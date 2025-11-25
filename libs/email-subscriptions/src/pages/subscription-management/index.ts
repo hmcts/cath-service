@@ -1,7 +1,7 @@
-import { buildVerifiedUserNavigation } from "@hmcts/auth";
+import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
-import { getSubscriptionsByUserId } from "../../subscription/repository/service.js";
+import { getSubscriptionsByUserId } from "../../repository/service.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -33,5 +33,4 @@ const getHandler = async (req: Request, res: Response) => {
   });
 };
 
-// TODO: Restore auth middleware - temporarily removed for testing
-export const GET: RequestHandler[] = [getHandler];
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];

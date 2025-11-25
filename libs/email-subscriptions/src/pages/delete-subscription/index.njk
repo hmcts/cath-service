@@ -2,16 +2,34 @@
 {% from "govuk/components/radios/macro.njk" import govukRadios %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% block pageTitle %}
-  {{ title }} - {{ serviceName }} - {{ govUk }}
+  {% if errors %}
+    There is a problem - {{ title }} - {{ serviceName }} - {{ govUk }}
+  {% else %}
+    {{ title }} - {{ serviceName }} - {{ govUk }}
+  {% endif %}
 {% endblock %}
 
 {% block page_content %}
 <div class="parent-box">
 
+  {% if errors %}
+    {{ govukErrorSummary({
+      titleText: errors.titleText,
+      errorList: errors.errorList
+    }) }}
+  {% endif %}
+
   <h2 class="govuk-heading-l">{{ header }}</h2>
-  <form action="/delete-subscription" method="post">
+  <form action="/delete-subscription" method="post" id="delete-subscription-form">
+    {{ govukInput({
+      id: "_csrf",
+      name: "_csrf",
+      type: "hidden",
+      value: csrfToken
+    }) }}
     {{ govukInput({
       id: "subscription",
       name: "subscription",
@@ -42,12 +60,27 @@
 {% block bodyEnd %}
   {{ super() }}
   <script nonce="{{ cspNonce }}">
-    const button = document.getElementsByClassName('govuk-button')[0];
-    button.addEventListener('click', (e) => {
-      const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
-      if (!checkedRadios.length) {
-        e.preventDefault();
-      }
-    });
+    const form = document.getElementById('delete-subscription-form');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        const checkedRadios = form.querySelectorAll('input[name="unsubscribe-confirm"]:checked');
+        if (!checkedRadios.length) {
+          e.preventDefault();
+          const radiosContainer = form.querySelector('[id^="unsubscribe-confirm"]');
+          if (radiosContainer && radiosContainer.parentElement) {
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'govuk-error-message';
+            errorMessage.id = 'unsubscribe-confirm-error';
+            errorMessage.innerHTML = '<span class="govuk-visually-hidden">Error:</span> {{ errorNoSelection }}';
+
+            const existingError = form.querySelector('#unsubscribe-confirm-error');
+            if (!existingError) {
+              radiosContainer.parentElement.insertBefore(errorMessage, radiosContainer);
+              radiosContainer.parentElement.classList.add('govuk-form-group--error');
+            }
+          }
+        }
+      });
+    }
   </script>
 {% endblock %}

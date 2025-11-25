@@ -39,6 +39,12 @@ export async function createSubscriptionRecord(userId: string, locationId: strin
   });
 }
 
+export async function findSubscriptionById(subscriptionId: string) {
+  return prisma.subscription.findUnique({
+    where: { subscriptionId }
+  });
+}
+
 export async function deleteSubscriptionRecord(subscriptionId: string) {
   return prisma.subscription.delete({
     where: { subscriptionId }

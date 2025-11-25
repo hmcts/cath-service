@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 vi.mock("@hmcts/auth", () => ({
-  buildVerifiedUserNavigation: vi.fn(() => [])
+  buildVerifiedUserNavigation: vi.fn(() => []),
+  requireAuth: vi.fn(() => (_req: any, _res: any, next: any) => next()),
+  blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -41,7 +43,7 @@ describe("subscription-confirmed", () => {
 
   describe("GET", () => {
     it("should render page with confirmed locations", async () => {
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-confirmed/index",
@@ -57,7 +59,7 @@ describe("subscription-confirmed", () => {
     it("should redirect if confirmation not complete", async () => {
       mockReq.session = { emailSubscriptions: {} } as any;
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
@@ -70,7 +72,7 @@ describe("subscription-confirmed", () => {
         }
       } as any;
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-confirmed/index",
@@ -88,7 +90,7 @@ describe("subscription-confirmed", () => {
         }
       } as any;
 
-      await GET[0](mockReq as Request, mockRes as Response, vi.fn());
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-confirmed/index",

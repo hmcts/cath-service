@@ -1,4 +1,5 @@
 import { prisma } from "@hmcts/postgres";
+import { validateLocationId } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
   createSubscriptionRecord,
@@ -6,7 +7,6 @@ import {
   findSubscriptionByUserAndLocation,
   findSubscriptionsByUserId
 } from "./queries.js";
-import { validateLocationId } from "../validation.js";
 
 const MAX_SUBSCRIPTIONS = 50;
 
