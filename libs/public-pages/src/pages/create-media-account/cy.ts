@@ -22,10 +22,11 @@ export const cy = {
   errorSummaryTitle: "Mae yna broblem",
   errorFullNameRequired: "Mae yna broblem - Rhaid rhoi enw llawn",
   errorEmailRequired: "Mae yna broblem - Rhaid rhoi cyfeiriad e-bost",
+  errorEmailInvalid: "Mae yna broblem - Rhaid i'r cyfeiriad e-bost fod yn y fformat cywir",
   errorEmployerRequired: "Mae yna broblem - bydd angen enw eich cyflogwr i gefnogi eich cais am gyfrif",
   errorFileRequired: "Mae yna broblem - Bydd angen tystiolaeth adnabod arnom i gefnogi eich cais am gyfrif",
-  errorFileSize: "Mae yna broblem - Rhaid i’r dystiolaeth i brofi hunaniaeth fod yn llai na 2Mbs",
-  errorFileType: "Mae yna broblem - Rhaid i’r dystiolaeth i brofi hunaniaeth fod ar ffurf JPG, PDF neu PNG",
+  errorFileSize: "Mae yna broblem - Rhaid i'r dystiolaeth i brofi hunaniaeth fod yn llai na 2Mbs",
+  errorFileType: "Mae yna broblem - Rhaid i'r dystiolaeth i brofi hunaniaeth fod ar ffurf JPG, PDF neu PNG",
   errorFileTooMany: "Mae yna broblem - Gallwch ond uwchlwytho un ffeil ar y tro",
   errorFileUploadFailed: "Methodd uwchlwytho'r ffeil. Rhowch gynnig arall arni",
   errorTermsRequired: "Mae yna broblem - Rhaid i chi wirio'r blwch i gadarnhau eich bod yn cytuno i'r telerau ac amodau"

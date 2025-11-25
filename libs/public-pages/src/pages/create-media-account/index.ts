@@ -70,6 +70,7 @@ export const POST = async (req: Request, res: Response) => {
   let errors = validateForm(formData, fileForValidation, {
     fullName: t.errorFullNameRequired,
     email: t.errorEmailRequired,
+    emailInvalid: t.errorEmailInvalid,
     employer: t.errorEmployerRequired,
     fileRequired: t.errorFileRequired,
     fileType: t.errorFileType,

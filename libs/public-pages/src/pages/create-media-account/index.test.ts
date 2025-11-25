@@ -48,7 +48,7 @@ describe("create-media-account POST", () => {
       if (!formData.email) {
         errors.push({ field: "email", message: messages.email, href: "#email" });
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        errors.push({ field: "email", message: "Enter a valid email address", href: "#email" });
+        errors.push({ field: "email", message: messages.emailInvalid, href: "#email" });
       }
 
       if (!formData.employer) errors.push({ field: "employer", message: messages.employer, href: "#employer" });

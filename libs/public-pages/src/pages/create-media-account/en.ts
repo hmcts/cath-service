@@ -22,6 +22,7 @@ export const en = {
   errorSummaryTitle: "There is a problem",
   errorFullNameRequired: "There is a problem - Full name field must be populated",
   errorEmailRequired: "There is a problem - Email address field must be populated",
+  errorEmailInvalid: "There is a problem - Email address must be in the correct format",
   errorEmployerRequired: "There is a problem - Your employers name will be needed to support your application for an account",
   errorFileRequired: "There is a problem - We will need ID evidence to support your application for an account",
   errorFileSize: "There is a problem - ID evidence needs to be less than 2Mbs",

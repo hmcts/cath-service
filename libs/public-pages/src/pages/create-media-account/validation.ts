@@ -42,11 +42,11 @@ export function validateFullName(fullName: string | undefined, errorMessage: str
   return null;
 }
 
-export function validateEmail(email: string | undefined, errorMessage: string): ValidationError | null {
+export function validateEmail(email: string | undefined, errorMessageRequired: string, errorMessageInvalid: string): ValidationError | null {
   if (!email || email.trim().length === 0) {
     return {
       field: "email",
-      message: errorMessage,
+      message: errorMessageRequired,
       href: "#email"
     };
   }
@@ -55,7 +55,7 @@ export function validateEmail(email: string | undefined, errorMessage: string): 
   if (trimmedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_REGEX.test(trimmedEmail)) {
     return {
       field: "email",
-      message: errorMessage,
+      message: errorMessageInvalid,
       href: "#email"
     };
   }
@@ -131,6 +131,7 @@ export function validateForm(
   errorMessages: {
     fullName: string;
     email: string;
+    emailInvalid: string;
     employer: string;
     fileRequired: string;
     fileType: string;
@@ -143,7 +144,7 @@ export function validateForm(
   const fullNameError = validateFullName(formData.fullName, errorMessages.fullName);
   if (fullNameError) errors.push(fullNameError);
 
-  const emailError = validateEmail(formData.email, errorMessages.email);
+  const emailError = validateEmail(formData.email, errorMessages.email, errorMessages.emailInvalid);
   if (emailError) errors.push(emailError);
 
   const employerError = validateEmployer(formData.employer, errorMessages.employer);

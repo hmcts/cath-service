@@ -346,7 +346,7 @@ test.describe("Create Media Account", () => {
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      const emailError = errorSummary.getByRole("link", { name: /email address field must be populated/i });
+      const emailError = errorSummary.getByRole("link", { name: /email address must be in the correct format/i });
       await expect(emailError).toBeVisible();
     });
   });
