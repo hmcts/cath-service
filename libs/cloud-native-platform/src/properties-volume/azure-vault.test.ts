@@ -7,11 +7,15 @@ import { addFromAzureVault } from "./azure-vault.js";
 
 // Mock all external dependencies
 vi.mock("@azure/identity", () => ({
-  DefaultAzureCredential: vi.fn()
+  DefaultAzureCredential: vi.fn(function() {
+    return {};
+  })
 }));
 
 vi.mock("@azure/keyvault-secrets", () => ({
-  SecretClient: vi.fn()
+  SecretClient: vi.fn(function() {
+    return {};
+  })
 }));
 
 vi.mock("node:fs", () => ({
