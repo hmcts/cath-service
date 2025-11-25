@@ -1,5 +1,5 @@
 import { getLocationById } from "@hmcts/location";
-import { findSubscriptionByUserAndLocation } from "./queries.js";
+import { findSubscriptionByUserAndLocation } from "./repository/queries.js";
 
 export async function validateLocationId(locationId: string): Promise<boolean> {
   const location = getLocationById(Number.parseInt(locationId, 10));

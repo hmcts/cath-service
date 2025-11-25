@@ -1,7 +1,7 @@
 import { buildVerifiedUserNavigation } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
-import { getSubscriptionsByUserId } from "../../subscription/service.js";
+import { getSubscriptionsByUserId } from "../../subscription/repository/service.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

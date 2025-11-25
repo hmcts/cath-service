@@ -6,7 +6,7 @@ import {
   findSubscriptionByUserAndLocation,
   findSubscriptionsByUserId
 } from "./queries.js";
-import { validateLocationId } from "./validation.js";
+import { validateLocationId } from "../validation.js";
 
 const MAX_SUBSCRIPTIONS = 50;
 

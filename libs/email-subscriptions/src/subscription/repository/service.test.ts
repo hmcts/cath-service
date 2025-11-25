@@ -2,7 +2,7 @@ import { prisma } from "@hmcts/postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./queries.js";
 import { createMultipleSubscriptions, createSubscription, getSubscriptionsByUserId, removeSubscription, replaceUserSubscriptions } from "./service.js";
-import * as validation from "./validation.js";
+import * as validation from "../validation.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
@@ -14,7 +14,7 @@ vi.mock("@hmcts/postgres", () => ({
 }));
 
 vi.mock("./queries.js");
-vi.mock("./validation.js");
+vi.mock("../validation.js");
 
 describe("Subscription Service", () => {
   beforeEach(() => {

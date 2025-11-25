@@ -1,13 +1,13 @@
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as subscriptionService from "../../subscription/service.js";
+import * as subscriptionService from "../../subscription/repository/service.js";
 import { GET } from "./index.js";
 
 vi.mock("@hmcts/auth", () => ({
   buildVerifiedUserNavigation: vi.fn(() => [])
 }));
 
-vi.mock("../../subscription/service.js", () => ({
+vi.mock("../../subscription/repository/service.js", () => ({
   removeSubscription: vi.fn()
 }));
 
