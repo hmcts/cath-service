@@ -24,7 +24,10 @@ async function authenticateSystemAdmin(page: Page) {
 async function navigateToSummaryPage(page: Page) {
   await authenticateSystemAdmin(page);
   await page.goto("/manual-upload?locationId=1");
-  await page.waitForTimeout(1000);
+
+  // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+  await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+  await page.waitForTimeout(500);
 
   await page.selectOption('select[name="listType"]', "6");
   await page.fill('input[name="hearingStartDate-day"]', "23");
@@ -66,7 +69,10 @@ test.describe('Manual Upload End-to-End Flow', () => {
     test('should be keyboard accessible throughout entire upload flow', async ({ page }) => {
       // Step 1: Test keyboard accessibility on form page
       await page.goto('/manual-upload?locationId=1');
-      await page.waitForTimeout(1000);
+
+      // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+      await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+      await page.waitForTimeout(500);
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.click();
@@ -140,7 +146,11 @@ test.describe('Manual Upload End-to-End Flow', () => {
     test('should complete full upload flow from form to success', async ({ page }) => {
       // Step 1: Load manual upload form
       await page.goto('/manual-upload?locationId=1');
-      await page.waitForTimeout(1000);
+
+      // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+      await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+      await page.waitForTimeout(500);
+
       await expect(page).toHaveTitle('Upload - Manual upload - Court and tribunal hearings - GOV.UK');
 
       // Step 2: Fill out the form
@@ -328,7 +338,10 @@ test.describe('Manual Upload End-to-End Flow', () => {
 
     test('should display file validation errors for invalid type and large size', async ({ page }) => {
       await page.goto('/manual-upload?locationId=1');
-      await page.waitForTimeout(1000);
+
+      // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+      await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+      await page.waitForTimeout(500);
 
       await page.selectOption('select[name="listType"]', '1');
       await page.fill('input[name="hearingStartDate-day"]', '15');
@@ -456,7 +469,10 @@ test.describe('Manual Upload End-to-End Flow', () => {
 
     test('should validate date range and preserve all form data when validation fails', async ({ page }) => {
       await page.goto('/manual-upload?locationId=1');
-      await page.waitForTimeout(1000);
+
+      // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+      await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+      await page.waitForTimeout(500);
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
@@ -688,7 +704,10 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await expect(page).toHaveURL("/manual-upload-success");
 
       await page.goto("/manual-upload?locationId=1");
-      await page.waitForTimeout(1000);
+
+      // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+      await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+      await page.waitForTimeout(500);
 
       await page.selectOption('select[name="listType"]', "7");
       await page.fill('input[name="hearingStartDate-day"]', "25");
@@ -724,7 +743,10 @@ test.describe('Manual Upload End-to-End Flow', () => {
       await page.setViewportSize({ width: 375, height: 667 });
 
       await page.goto('/manual-upload?locationId=1');
-      await page.waitForTimeout(1000);
+
+      // Wait for autocomplete to initialize (ensures JS has loaded and processed the locationId)
+      await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
+      await page.waitForTimeout(500);
 
       const fileInput = page.locator('input[name="file"]');
       await expect(fileInput).toBeVisible();

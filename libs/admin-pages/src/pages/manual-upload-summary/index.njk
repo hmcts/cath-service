@@ -136,6 +136,7 @@
     }) }}
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}" />
       {{ govukButton({
         text: confirmButton
       }) }}

@@ -44,6 +44,11 @@
     <h1 class="govuk-heading-xl">{{ title }}</h1>
 
     <form method="post" enctype="multipart/form-data" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}" />
+      {# Server-rendered hidden field ensures locationId is submitted even before autocomplete JS initializes #}
+      {% if data.locationId %}
+        <input type="hidden" name="locationId" value="{{ data.locationId }}" />
+      {% endif %}
 
       {% set fileErrorText = getError(errors, "#file") %}
       <div class="govuk-inset-text">

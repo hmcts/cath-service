@@ -34,8 +34,11 @@ function parseDateInput(body: any, prefix: string) {
 }
 
 function transformDateFields(body: any): ManualUploadFormData {
+  // Handle locationId which may be an array if both hidden and visible inputs are submitted before JS initializes
+  const locationId = Array.isArray(body.locationId) ? body.locationId.find((id: string) => id && id.trim() !== "") || body.locationId[0] : body.locationId;
+
   return {
-    locationId: body.locationId,
+    locationId,
     locationName: body["court-display"],
     listType: body.listType,
     hearingStartDate: parseDateInput(body, "hearingStartDate"),
