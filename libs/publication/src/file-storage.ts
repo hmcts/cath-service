@@ -12,7 +12,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export function findRepoRoot(startDir: string = process.cwd()): string {
   let currentDir = startDir;
 
-  while (currentDir !== "/") {
+  while (true) {
     try {
       const hasPackageJson = fsSync.existsSync(path.join(currentDir, "package.json"));
       const hasLibsDir = fsSync.existsSync(path.join(currentDir, "libs"));
@@ -25,7 +25,7 @@ export function findRepoRoot(startDir: string = process.cwd()): string {
     }
 
     const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) break; // Reached root
+    if (parentDir === currentDir) break; // Reached root (works on both UNIX and Windows)
     currentDir = parentDir;
   }
 
