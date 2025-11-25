@@ -152,7 +152,14 @@ describe("file-storage", () => {
 
       // Should return null due to caught error
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(`Failed to read uploaded file for artefactId ${artefactId}:`, expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Multiple files found for artefact", {
+        message: "Ambiguous file match detected",
+        fileCount: 2
+      });
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file", {
+        message: expect.stringContaining("multiple files"),
+        operation: "getUploadedFile"
+      });
 
       // Cleanup
       await fs.rm(file1, { force: true });
@@ -237,7 +244,10 @@ describe("file-storage", () => {
       const result = await getUploadedFile("test-error-artefact");
 
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId test-error-artefact:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file", {
+        message: "Permission denied",
+        operation: "getUploadedFile"
+      });
 
       // Restore original implementation
       fs.readdir = originalReaddir;
@@ -257,7 +267,10 @@ describe("file-storage", () => {
       const result = await getUploadedFile(TEST_ARTEFACT_ID);
 
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(`Failed to read uploaded file for artefactId ${TEST_ARTEFACT_ID}:`, expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file", {
+        message: "File read error",
+        operation: "getUploadedFile"
+      });
 
       // Restore original implementation
       fs.readFile = originalReadFile;
@@ -275,7 +288,10 @@ describe("file-storage", () => {
       const result = await getUploadedFile("missing-artefact");
 
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId missing-artefact:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file", {
+        message: "ENOENT: no such file or directory",
+        operation: "getUploadedFile"
+      });
 
       consoleErrorSpy.mockRestore();
     });
@@ -291,7 +307,10 @@ describe("file-storage", () => {
       const result = await getUploadedFile("permission-denied-artefact");
 
       expect(result).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId permission-denied-artefact:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file", {
+        message: "EACCES: permission denied",
+        operation: "getUploadedFile"
+      });
 
       consoleErrorSpy.mockRestore();
     });
@@ -360,7 +379,10 @@ describe("file-storage", () => {
         const result = await getUploadedFile("../evil");
 
         expect(result).toBeNull();
-        expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file for artefactId ../evil:", expect.any(Error));
+        expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to read uploaded file", {
+          message: "Invalid artefactId: only alphanumeric characters, hyphens, and underscores are allowed",
+          operation: "getUploadedFile"
+        });
 
         consoleErrorSpy.mockRestore();
       });

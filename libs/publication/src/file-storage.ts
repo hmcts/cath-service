@@ -134,7 +134,10 @@ export async function getUploadedFile(artefactId: string): Promise<{ fileData: B
 
     // Handle multiple matches - this shouldn't happen with our strict pattern, but be defensive
     if (matchingFiles.length > 1) {
-      console.error(`Multiple files found for artefactId ${artefactId}:`, matchingFiles);
+      console.error("Multiple files found for artefact", {
+        message: "Ambiguous file match detected",
+        fileCount: matchingFiles.length
+      });
       throw new Error(`Ambiguous file match: multiple files found for artefactId ${artefactId}`);
     }
 
@@ -151,7 +154,10 @@ export async function getUploadedFile(artefactId: string): Promise<{ fileData: B
       fileName: matchingFile
     };
   } catch (error) {
-    console.error(`Failed to read uploaded file for artefactId ${artefactId}:`, error);
+    console.error("Failed to read uploaded file", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      operation: "getUploadedFile"
+    });
     return null;
   }
 }
