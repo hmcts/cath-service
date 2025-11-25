@@ -151,7 +151,7 @@ test.describe("Email Subscriptions", () => {
       await addButton.click();
       await expect(page).toHaveURL("/location-name-search");
 
-      const backLink = page.getByRole("link", { name: /back/i });
+      const backLink = page.locator(".govuk-back-link");
       await backLink.click();
 
       await expect(page).toHaveURL("/subscription-management");
@@ -214,11 +214,14 @@ test.describe("Email Subscriptions", () => {
       await page.waitForLoadState("networkidle");
 
       // Select a location
-      const firstCheckbox = page.locator("input[type='checkbox']").first();
-      await firstCheckbox.waitFor({ state: "visible", timeout: 10000 });
+      const postForm = page.locator("form[method='post']");
+      const firstCheckbox = postForm.locator("input[type='checkbox']").first();
+      await firstCheckbox.waitFor({ state: "visible" });
       await firstCheckbox.check();
+      await expect(firstCheckbox).toBeChecked();
 
-      const continueButton = page.getByRole("button", { name: /continue/i });
+      // Click continue button within the POST form
+      const continueButton = postForm.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
       await expect(page).toHaveURL("/pending-subscriptions");
@@ -288,12 +291,14 @@ test.describe("Email Subscriptions", () => {
       await page.waitForLoadState("networkidle");
 
       // Select a location
-      const firstCheckbox = page.locator("input[type='checkbox']").first();
-      await firstCheckbox.waitFor({ state: "visible", timeout: 10000 });
+      const postForm = page.locator("form[method='post']");
+      const firstCheckbox = postForm.locator("input[type='checkbox']").first();
+      await firstCheckbox.waitFor({ state: "visible" });
       await firstCheckbox.check();
+      await expect(firstCheckbox).toBeChecked();
 
       // Continue
-      const continueButton = page.getByRole("button", { name: /continue/i });
+      const continueButton = postForm.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
       // Confirm subscription
@@ -313,11 +318,13 @@ test.describe("Email Subscriptions", () => {
       await page.goto("/location-name-search");
       await page.waitForLoadState("networkidle");
 
-      const firstCheckbox = page.locator("input[type='checkbox']").first();
-      await firstCheckbox.waitFor({ state: "visible", timeout: 10000 });
+      const postForm = page.locator("form[method='post']");
+      const firstCheckbox = postForm.locator("input[type='checkbox']").first();
+      await firstCheckbox.waitFor({ state: "visible" });
       await firstCheckbox.check();
+      await expect(firstCheckbox).toBeChecked();
 
-      const continueButton = page.getByRole("button", { name: /continue/i });
+      const continueButton = postForm.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
       const confirmButton = page.getByRole("button", { name: /confirm/i });
@@ -333,11 +340,13 @@ test.describe("Email Subscriptions", () => {
       await page.goto("/location-name-search");
       await page.waitForLoadState("networkidle");
 
-      const firstCheckbox = page.locator("input[type='checkbox']").first();
-      await firstCheckbox.waitFor({ state: "visible", timeout: 10000 });
+      const postForm = page.locator("form[method='post']");
+      const firstCheckbox = postForm.locator("input[type='checkbox']").first();
+      await firstCheckbox.waitFor({ state: "visible" });
       await firstCheckbox.check();
+      await expect(firstCheckbox).toBeChecked();
 
-      const continueButton = page.getByRole("button", { name: /continue/i });
+      const continueButton = postForm.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
       const confirmButton = page.getByRole("button", { name: /confirm/i });
@@ -405,9 +414,9 @@ test.describe("Email Subscriptions", () => {
         const continueButton = page.getByRole("button", { name: /continue/i });
         await continueButton.click();
 
-        // Should show error
-        const errorSummary = page.locator(".govuk-error-summary");
-        await expect(errorSummary).toBeVisible();
+        // Should show error (inline error message, not error summary)
+        const errorMessage = page.getByText(/select yes if you want to remove this subscription/i);
+        await expect(errorMessage).toBeVisible();
       }
     });
 
@@ -497,6 +506,7 @@ test.describe("Email Subscriptions", () => {
         const continueButton = page.getByRole("button", { name: /continue/i });
         await continueButton.click();
 
+        // Should show unsubscribe confirmation page
         await expect(page).toHaveURL("/unsubscribe-confirmation");
 
         const manageLink = page.getByRole("link", { name: /manage.*subscriptions/i });
@@ -588,15 +598,17 @@ test.describe("Email Subscriptions", () => {
       const addButton = page.getByRole("button", { name: /add email subscription/i });
       await addButton.click();
       await expect(page).toHaveURL("/location-name-search");
-      await page.waitForLoadState("networkidle");
 
       // Select a location
-      const firstCheckbox = page.locator("input[type='checkbox']").first();
-      await firstCheckbox.waitFor({ state: "visible", timeout: 10000 });
+      await page.waitForLoadState("networkidle");
+      const postForm = page.locator("form[method='post']");
+      const firstCheckbox = postForm.locator("input[type='checkbox']").first();
+      await firstCheckbox.waitFor({ state: "visible" });
       await firstCheckbox.check();
+      await expect(firstCheckbox).toBeChecked();
 
       // Continue to pending subscriptions
-      const continueButton = page.getByRole("button", { name: /continue/i });
+      const continueButton = postForm.getByRole("button", { name: /continue/i });
       await continueButton.click();
       await expect(page).toHaveURL("/pending-subscriptions");
 

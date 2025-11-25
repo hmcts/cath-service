@@ -159,8 +159,8 @@ const getHandler = async (req: Request, res: Response) => {
   });
 
   res.render("location-name-search/index", {
-    en,
-    cy,
+    ...content,
+    locale,
     selectedJurisdictions,
     selectedRegions,
     selectedSubJurisdictions,
@@ -180,10 +180,13 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
+  console.log("POST /location-name-search - req.body:", JSON.stringify(req.body));
   const locationIds = req.body.locationIds;
+  console.log("locationIds:", locationIds);
 
   // Handle both single and multiple selections
   const selectedLocationIds = Array.isArray(locationIds) ? locationIds : locationIds ? [locationIds] : [];
+  console.log("selectedLocationIds:", selectedLocationIds);
 
   if (!req.session.emailSubscriptions) {
     req.session.emailSubscriptions = {};

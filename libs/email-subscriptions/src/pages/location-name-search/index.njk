@@ -2,7 +2,6 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
-{% from "govuk/components/input/macro.njk" import govukInput %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
@@ -131,12 +130,7 @@
     </button>
 
     <form method="post" novalidate>
-      {{ govukInput({
-        id: "_csrf",
-        name: "_csrf",
-        type: "hidden",
-        value: csrfToken
-      }) }}
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       <table class="govuk-table court-table">
         <tbody class="govuk-table__body">
         {% for row in tableRows %}
@@ -151,7 +145,7 @@
                 <div class="govuk-checkboxes__item">
                   <input class="govuk-checkboxes__input" id="location-{{ row.location.locationId }}" name="locationIds" type="checkbox" value="{{ row.location.locationId }}">
                   <label class="govuk-label govuk-checkboxes__label" for="location-{{ row.location.locationId }}">
-                    {% if locale === "cy" %}
+                    {% if locale == "cy" %}
                       {{ row.location.welshName }}
                     {% else %}
                       {{ row.location.name }}
@@ -171,7 +165,8 @@
       </div>
 
       {{ govukButton({
-        text: continueButton
+        text: continueButton,
+        type: "submit"
       }) }}
     </form>
 
