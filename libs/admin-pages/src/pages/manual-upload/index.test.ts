@@ -866,4 +866,240 @@ describe("manual-upload page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
     });
   });
+
+  describe("transformDateFields - locationId array handling (line 38)", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+      // Mock validateForm to return empty errors (validation passes)
+      vi.mocked(validateForm).mockReturnValue(Promise.resolve([]) as any);
+    });
+
+    it("should handle locationId as a string (normal case)", async () => {
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
+      const req = {
+        body: {
+          locationId: "1", // String value (normal case)
+          "court-display": "Test Court",
+          listType: "1",
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "12",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "1",
+          "displayFrom-month": "12",
+          "displayFrom-year": "2025",
+          "displayTo-day": "31",
+          "displayTo-month": "12",
+          "displayTo-year": "2025"
+        },
+        file: {
+          originalname: "test.pdf",
+          mimetype: "application/pdf",
+          size: 1000,
+          buffer: Buffer.from("test")
+        },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Verify storeManualUpload was called with the string locationId
+      expect(storeManualUpload).toHaveBeenCalled();
+      const callArgs = vi.mocked(storeManualUpload).mock.calls[0][0];
+      expect(callArgs.locationId).toBe("1");
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
+    });
+
+    it("should handle locationId as an array and find first non-empty value (line 38)", async () => {
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
+      const req = {
+        body: {
+          locationId: ["", "2"], // Array with empty string and valid ID (race condition case)
+          "court-display": "Another Court",
+          listType: "1",
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "12",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "1",
+          "displayFrom-month": "12",
+          "displayFrom-year": "2025",
+          "displayTo-day": "31",
+          "displayTo-month": "12",
+          "displayTo-year": "2025"
+        },
+        file: {
+          originalname: "test.pdf",
+          mimetype: "application/pdf",
+          size: 1000,
+          buffer: Buffer.from("test")
+        },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Verify storeManualUpload was called with the non-empty locationId from the array
+      expect(storeManualUpload).toHaveBeenCalled();
+      const callArgs = vi.mocked(storeManualUpload).mock.calls[0][0];
+      expect(callArgs.locationId).toBe("2");
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
+    });
+
+    it("should handle locationId as an array with whitespace and find trimmed non-empty value (line 38)", async () => {
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
+      const req = {
+        body: {
+          locationId: ["  ", "1"], // Array with whitespace-only string and valid ID
+          "court-display": "Test Court",
+          listType: "2",
+          "hearingStartDate-day": "20",
+          "hearingStartDate-month": "1",
+          "hearingStartDate-year": "2026",
+          sensitivity: "PRIVATE",
+          language: "ENGLISH",
+          "displayFrom-day": "15",
+          "displayFrom-month": "1",
+          "displayFrom-year": "2026",
+          "displayTo-day": "28",
+          "displayTo-month": "2",
+          "displayTo-year": "2026"
+        },
+        file: {
+          originalname: "document.pdf",
+          mimetype: "application/pdf",
+          size: 2000,
+          buffer: Buffer.from("test")
+        },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Verify the whitespace-only string was skipped and the valid ID was used
+      expect(storeManualUpload).toHaveBeenCalled();
+      const callArgs = vi.mocked(storeManualUpload).mock.calls[0][0];
+      expect(callArgs.locationId).toBe("1");
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
+    });
+
+    it("should use first element if all array elements are empty (line 38 fallback)", async () => {
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
+      const req = {
+        body: {
+          locationId: ["", ""], // Array with all empty strings (edge case)
+          "court-display": "",
+          listType: "1",
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "12",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "1",
+          "displayFrom-month": "12",
+          "displayFrom-year": "2025",
+          "displayTo-day": "31",
+          "displayTo-month": "12",
+          "displayTo-year": "2025"
+        },
+        file: {
+          originalname: "test.pdf",
+          mimetype: "application/pdf",
+          size: 1000,
+          buffer: Buffer.from("test")
+        },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Verify fallback to first element (body.locationId[0])
+      expect(storeManualUpload).toHaveBeenCalled();
+      const callArgs = vi.mocked(storeManualUpload).mock.calls[0][0];
+      expect(callArgs.locationId).toBe("");
+    });
+
+    it("should handle locationId array with multiple valid values and return first valid (line 38)", async () => {
+      const session = {
+        save: vi.fn((cb) => cb())
+      };
+
+      const req = {
+        body: {
+          locationId: ["1", "2"], // Array with multiple valid IDs (should use first)
+          "court-display": "Test Court",
+          listType: "1",
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "12",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "1",
+          "displayFrom-month": "12",
+          "displayFrom-year": "2025",
+          "displayTo-day": "31",
+          "displayTo-month": "12",
+          "displayTo-year": "2025"
+        },
+        file: {
+          originalname: "test.pdf",
+          mimetype: "application/pdf",
+          size: 1000,
+          buffer: Buffer.from("test")
+        },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Verify first valid value is used
+      expect(storeManualUpload).toHaveBeenCalled();
+      const callArgs = vi.mocked(storeManualUpload).mock.calls[0][0];
+      expect(callArgs.locationId).toBe("1");
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
+    });
+  });
 });
