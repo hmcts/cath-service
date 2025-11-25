@@ -25,13 +25,27 @@ import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/con
 import compression from "compression";
 import config from "config";
 import cookieParser from "cookie-parser";
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import express from "express";
+import type { MulterError } from "multer";
 import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
+
+// Type for file upload error stored on request
+interface FileUploadError {
+  code: string;
+  field: string;
+  message: string;
+  originalError: MulterError | Error;
+}
+
+// Extend Express Request to include fileUploadError
+interface RequestWithFileUpload extends Request {
+  fileUploadError?: FileUploadError;
+}
 
 export async function createApp(): Promise<Express> {
   await configurePropertiesVolume(config, { chartPath });
@@ -56,23 +70,25 @@ export async function createApp(): Promise<Express> {
   const upload = createFileUpload();
 
   // Helper function to handle multer errors consistently
-  const handleMulterError = (err: any, req: any, fieldName: string) => {
+  const handleMulterError = (err: MulterError | Error | undefined, req: RequestWithFileUpload, fieldName: string) => {
     if (!err) return;
 
     // Store the error for the controller to handle
     req.fileUploadError = {
-      code: err.code,
+      code: (err as MulterError).code || "UNKNOWN_ERROR",
       field: fieldName,
       message: err.message,
       originalError: err
     };
 
     // Log unexpected multer errors for debugging
-    if (!["LIMIT_FILE_SIZE", "LIMIT_FILE_COUNT", "LIMIT_FIELD_SIZE", "LIMIT_UNEXPECTED_FILE"].includes(err.code)) {
+    const knownCodes = ["LIMIT_FILE_SIZE", "LIMIT_FILE_COUNT", "LIMIT_FIELD_SIZE", "LIMIT_UNEXPECTED_FILE"];
+    const errorCode = (err as MulterError).code;
+    if (errorCode && !knownCodes.includes(errorCode)) {
       console.error(`Unexpected file upload error on ${fieldName}:`, {
-        code: err.code,
+        code: errorCode,
         message: err.message,
-        field: err.field,
+        field: (err as MulterError).field,
         stack: err.stack
       });
     }
@@ -81,13 +97,13 @@ export async function createApp(): Promise<Express> {
   // File upload middleware registration
   app.post("/create-media-account", (req, res, next) => {
     upload.single("idProof")(req, res, (err) => {
-      handleMulterError(err, req, "idProof");
+      handleMulterError(err, req as RequestWithFileUpload, "idProof");
       next();
     });
   });
   app.post("/manual-upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
-      handleMulterError(err, req, "file");
+      handleMulterError(err, req as RequestWithFileUpload, "file");
       next();
     });
   });
