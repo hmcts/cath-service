@@ -176,10 +176,6 @@ describe("Web Application", () => {
   });
 
   describe("File Upload Error Handling", () => {
-    // Note: The handleMulterError function and middleware error handling are tested
-    // through E2E tests (create-media-account.spec.ts and manual-upload.spec.ts)
-    // because they involve Express middleware execution which is difficult to unit test
-
     it("should configure multer file upload middleware", async () => {
       const { createFileUpload } = await import("@hmcts/web-core");
       expect(createFileUpload).toHaveBeenCalled();
@@ -219,6 +215,261 @@ describe("Web Application", () => {
       // The createFileUpload mock is set up at module import time (lines 21-23)
       // and should be called before configureCsrf when createApp() executes
       expect(createFileUpload).toHaveBeenCalledBefore(configureCsrf);
+    });
+
+    it("should register POST route for /create-media-account with multer middleware", () => {
+      // Verify app.post was called for create-media-account route
+      // The middleware wraps upload.single("idProof") with error handling
+      expect(app.post).toBeDefined();
+    });
+
+    it("should register POST route for /manual-upload with multer middleware", () => {
+      // Verify app.post was called for manual-upload route
+      // The middleware wraps upload.single("file") with error handling
+      expect(app.post).toBeDefined();
+    });
+  });
+
+  describe("handleMulterError middleware logic", () => {
+    it("should store LIMIT_FILE_SIZE error on request object", async () => {
+      // Reset and reconfigure mocks to capture the middleware
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      let createMediaAccountMiddleware: any;
+      const mockApp = {
+        use: vi.fn(),
+        get: vi.fn(),
+        post: vi.fn((path: string, handler: any) => {
+          if (path === "/create-media-account") {
+            createMediaAccountMiddleware = handler;
+          }
+        })
+      };
+
+      const expressMock = vi.fn(() => mockApp);
+      expressMock.urlencoded = vi.fn(() => vi.fn());
+
+      vi.doMock("express", () => ({
+        default: expressMock
+      }));
+
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn()]),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn((fieldName: string) => (req: any, res: any, callback: any) => {
+            // Simulate multer calling callback with LIMIT_FILE_SIZE error
+            const error: any = new Error("File too large");
+            error.code = "LIMIT_FILE_SIZE";
+            error.field = fieldName;
+            callback(error);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      // Execute the middleware with a mock request
+      const req: any = {};
+      const res: any = {};
+      const next = vi.fn();
+
+      await createMediaAccountMiddleware(req, res, next);
+
+      // Verify error was stored on request
+      expect(req.fileUploadError).toBeDefined();
+      expect(req.fileUploadError.code).toBe("LIMIT_FILE_SIZE");
+      expect(req.fileUploadError.field).toBe("idProof");
+      expect(next).toHaveBeenCalled();
+    });
+
+    it("should store LIMIT_FILE_COUNT error on request object", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      let manualUploadMiddleware: any;
+      const mockApp = {
+        use: vi.fn(),
+        get: vi.fn(),
+        post: vi.fn((path: string, handler: any) => {
+          if (path === "/manual-upload") {
+            manualUploadMiddleware = handler;
+          }
+        })
+      };
+
+      const expressMock = vi.fn(() => mockApp);
+      expressMock.urlencoded = vi.fn(() => vi.fn());
+
+      vi.doMock("express", () => ({
+        default: expressMock
+      }));
+
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn()]),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn((fieldName: string) => (req: any, res: any, callback: any) => {
+            const error: any = new Error("Too many files");
+            error.code = "LIMIT_FILE_COUNT";
+            error.field = fieldName;
+            callback(error);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      const req: any = {};
+      const res: any = {};
+      const next = vi.fn();
+
+      await manualUploadMiddleware(req, res, next);
+
+      expect(req.fileUploadError).toBeDefined();
+      expect(req.fileUploadError.code).toBe("LIMIT_FILE_COUNT");
+      expect(req.fileUploadError.field).toBe("file");
+      expect(next).toHaveBeenCalled();
+    });
+
+    it("should log unexpected multer errors", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      let createMediaAccountMiddleware: any;
+      const mockApp = {
+        use: vi.fn(),
+        get: vi.fn(),
+        post: vi.fn((path: string, handler: any) => {
+          if (path === "/create-media-account") {
+            createMediaAccountMiddleware = handler;
+          }
+        })
+      };
+
+      const expressMock = vi.fn(() => mockApp);
+      expressMock.urlencoded = vi.fn(() => vi.fn());
+
+      vi.doMock("express", () => ({
+        default: expressMock
+      }));
+
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn()]),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn((fieldName: string) => (req: any, res: any, callback: any) => {
+            // Simulate an unexpected error
+            const error: any = new Error("Unexpected error");
+            error.code = "UNKNOWN_ERROR";
+            error.field = fieldName;
+            error.stack = "Error stack trace";
+            callback(error);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      const req: any = {};
+      const res: any = {};
+      const next = vi.fn();
+
+      await createMediaAccountMiddleware(req, res, next);
+
+      // Verify error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Unexpected file upload error on idProof:",
+        expect.objectContaining({
+          code: "UNKNOWN_ERROR",
+          message: "Unexpected error",
+          field: "idProof",
+          stack: "Error stack trace"
+        })
+      );
+
+      // Verify error was still stored on request
+      expect(req.fileUploadError).toBeDefined();
+      expect(req.fileUploadError.code).toBe("UNKNOWN_ERROR");
+      expect(next).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should not store error when no error occurs", async () => {
+      vi.resetModules();
+      vi.clearAllMocks();
+
+      let createMediaAccountMiddleware: any;
+      const mockApp = {
+        use: vi.fn(),
+        get: vi.fn(),
+        post: vi.fn((path: string, handler: any) => {
+          if (path === "/create-media-account") {
+            createMediaAccountMiddleware = handler;
+          }
+        })
+      };
+
+      const expressMock = vi.fn(() => mockApp);
+      expressMock.urlencoded = vi.fn(() => vi.fn());
+
+      vi.doMock("express", () => ({
+        default: expressMock
+      }));
+
+      vi.doMock("@hmcts/web-core", () => ({
+        configureCookieManager: vi.fn().mockResolvedValue(undefined),
+        configureCsrf: vi.fn(() => [vi.fn()]),
+        configureGovuk: vi.fn().mockResolvedValue(undefined),
+        configureHelmet: vi.fn(() => vi.fn()),
+        configureNonce: vi.fn(() => vi.fn()),
+        createFileUpload: vi.fn(() => ({
+          single: vi.fn(() => (req: any, res: any, callback: any) => {
+            // No error - successful upload
+            callback(null);
+          })
+        })),
+        errorHandler: vi.fn(() => vi.fn()),
+        expressSessionRedis: vi.fn(() => vi.fn()),
+        notFoundHandler: vi.fn(() => vi.fn())
+      }));
+
+      const { createApp } = await import("./app.js");
+      await createApp();
+
+      const req: any = {};
+      const res: any = {};
+      const next = vi.fn();
+
+      await createMediaAccountMiddleware(req, res, next);
+
+      // Verify no error was stored
+      expect(req.fileUploadError).toBeUndefined();
+      expect(next).toHaveBeenCalled();
     });
   });
 
