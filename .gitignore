@@ -53,3 +53,4 @@ lcov.info
 .claude/claude.env
 .claude/analytics
 
+/storage/temp

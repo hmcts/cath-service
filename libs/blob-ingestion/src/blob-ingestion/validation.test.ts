@@ -28,7 +28,7 @@ describe("validateBlobRequest", () => {
   const validRequest: BlobIngestionRequest = {
     court_id: "123",
     provenance: "XHIBIT",
-    publication_date: "2025-01-25",
+    content_date: "2025-01-25",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
     language: "ENGLISH",
@@ -68,26 +68,26 @@ describe("validateBlobRequest", () => {
     expect(result.isValid).toBe(false);
     expect(result.errors).toContainEqual({
       field: "provenance",
-      message: "Invalid provenance. Allowed values: XHIBIT, LIBRA, SJP, MANUAL_UPLOAD"
+      message: "Invalid provenance. Allowed values: XHIBIT, MANUAL_UPLOAD, SNL, COMMON_PLATFORM"
     });
   });
 
-  it("should reject request with missing publication_date", async () => {
-    const request = { ...validRequest, publication_date: "" };
+  it("should reject request with missing content_date", async () => {
+    const request = { ...validRequest, content_date: "" };
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContainEqual({ field: "publication_date", message: "publication_date is required" });
+    expect(result.errors).toContainEqual({ field: "content_date", message: "content_date is required" });
   });
 
-  it("should reject request with invalid publication_date format", async () => {
-    const request = { ...validRequest, publication_date: "invalid-date" };
+  it("should reject request with invalid content_date format", async () => {
+    const request = { ...validRequest, content_date: "invalid-date" };
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toContainEqual({
-      field: "publication_date",
-      message: "publication_date must be a valid ISO 8601 date"
+      field: "content_date",
+      message: "content_date must be a valid ISO 8601 date"
     });
   });
 

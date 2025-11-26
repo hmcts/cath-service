@@ -4,7 +4,7 @@ import { Language, Sensitivity } from "@hmcts/publication";
 import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./model.js";
 
 const MAX_BLOB_SIZE = 10 * 1024 * 1024; // 10MB default
-const ALLOWED_PROVENANCES = ["XHIBIT", "LIBRA", "SJP", "MANUAL_UPLOAD"];
+const ALLOWED_PROVENANCES = ["XHIBIT", "MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM"];
 
 export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
   const errors: ValidationError[] = [];
@@ -31,12 +31,12 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     });
   }
 
-  if (!request.publication_date) {
-    errors.push({ field: "publication_date", message: "publication_date is required" });
-  } else if (!isValidISODate(request.publication_date)) {
+  if (!request.content_date) {
+    errors.push({ field: "content_date", message: "content_date is required" });
+  } else if (!isValidISODate(request.content_date)) {
     errors.push({
-      field: "publication_date",
-      message: "publication_date must be a valid ISO 8601 date"
+      field: "content_date",
+      message: "content_date must be a valid ISO 8601 date"
     });
   }
 

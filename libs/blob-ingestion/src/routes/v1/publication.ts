@@ -21,8 +21,8 @@ export const POST = [
         return res.status(500).json(result);
       }
 
-      // Success response
-      return res.status(200).json(result);
+      // Success response - 201 Created since we created an artefact
+      return res.status(201).json(result);
     } catch (error) {
       console.error("Unexpected error in blob ingestion endpoint:", error);
       return res.status(500).json({

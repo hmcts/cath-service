@@ -1,13 +1,13 @@
 export enum Provenance {
   MANUAL_UPLOAD = "MANUAL_UPLOAD",
   XHIBIT = "XHIBIT",
-  LIBRA = "LIBRA",
-  SJP = "SJP"
+  SNL = "SNL",
+  COMMON_PLATFORM = "COMMON_PLATFORM"
 }
 
 export const PROVENANCE_LABELS: Record<string, string> = {
   [Provenance.MANUAL_UPLOAD]: "Manual Upload",
   [Provenance.XHIBIT]: "XHIBIT",
-  [Provenance.LIBRA]: "LIBRA",
-  [Provenance.SJP]: "SJP"
+  [Provenance.SNL]: "SNL",
+  [Provenance.COMMON_PLATFORM]: "Common Platform"
 };

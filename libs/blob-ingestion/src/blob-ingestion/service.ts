@@ -1,14 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { createArtefact, Provenance } from "@hmcts/publication";
+import { saveUploadedFile } from "./file-storage.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
 import { createIngestionLog } from "./queries.js";
 import { validateBlobRequest } from "./validation.js";
 
 const PROVENANCE_MAP: Record<string, string> = {
   XHIBIT: Provenance.XHIBIT,
-  LIBRA: Provenance.LIBRA,
-  SJP: Provenance.SJP,
-  MANUAL_UPLOAD: Provenance.MANUAL_UPLOAD
+  MANUAL_UPLOAD: Provenance.MANUAL_UPLOAD,
+  SNL: Provenance.SNL,
+  COMMON_PLATFORM: Provenance.COMMON_PLATFORM
 };
 
 export async function processBlobIngestion(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobIngestionResponse> {
@@ -33,7 +34,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     };
   }
 
-  const artefactId = randomUUID();
+  const newArtefactId = randomUUID();
   const noMatch = !validation.locationExists;
 
   // List type ID should always be present after successful validation
@@ -42,12 +43,12 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
   }
 
   try {
-    // Create artefact in database
-    await createArtefact({
-      artefactId,
+    // Create artefact in database (returns actual artefact ID - either new or existing)
+    const artefactId = await createArtefact({
+      artefactId: newArtefactId,
       locationId: request.court_id,
       listTypeId: validation.listTypeId,
-      contentDate: new Date(request.publication_date),
+      contentDate: new Date(request.content_date),
       sensitivity: request.sensitivity,
       language: request.language,
       displayFrom: new Date(request.display_from),
@@ -56,6 +57,10 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
       noMatch
     });
+
+    // Save JSON to temp storage for list display pages
+    const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
+    await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
 
     // Log successful ingestion
     await createIngestionLog({

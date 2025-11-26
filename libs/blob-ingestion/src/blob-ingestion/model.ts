@@ -3,11 +3,12 @@
  *
  * @property list_type - The list type name (e.g., "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", "CROWN_DAILY_LIST")
  *                       The API accepts the list type name and maps it internally to the corresponding ID
+ * @property content_date - The content date in ISO 8601 date format (YYYY-MM-DD) - REQUIRED
  */
 export interface BlobIngestionRequest {
   court_id: string;
   provenance: string;
-  publication_date: string;
+  content_date: string;
   list_type: string;
   sensitivity: string;
   language: string;

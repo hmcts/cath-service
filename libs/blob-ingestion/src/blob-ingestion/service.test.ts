@@ -21,10 +21,15 @@ vi.mock("./validation.js", () => ({
   validateBlobRequest: vi.fn()
 }));
 
+vi.mock("./file-storage.js", () => ({
+  saveUploadedFile: vi.fn()
+}));
+
 describe("processBlobIngestion", async () => {
   const { createArtefact } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("./validation.js");
+  const { saveUploadedFile } = await import("./file-storage.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -33,7 +38,7 @@ describe("processBlobIngestion", async () => {
   const validRequest: BlobIngestionRequest = {
     court_id: "123",
     provenance: "XHIBIT",
-    publication_date: "2025-01-25",
+    content_date: "2025-01-25",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
     language: "ENGLISH",
@@ -59,6 +64,11 @@ describe("processBlobIngestion", async () => {
     expect(result.no_match).toBe(false);
     expect(result.message).toBe("Blob ingested and published successfully");
     expect(createArtefact).toHaveBeenCalled();
+    expect(saveUploadedFile).toHaveBeenCalledWith(
+      "test-artefact-id",
+      "upload.json",
+      expect.any(Buffer)
+    );
     expect(createIngestionLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "SUCCESS",
@@ -87,6 +97,11 @@ describe("processBlobIngestion", async () => {
       expect.objectContaining({
         noMatch: true
       })
+    );
+    expect(saveUploadedFile).toHaveBeenCalledWith(
+      "test-artefact-id",
+      "upload.json",
+      expect.any(Buffer)
     );
   });
 
