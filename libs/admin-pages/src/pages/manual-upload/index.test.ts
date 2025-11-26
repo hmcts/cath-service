@@ -867,7 +867,7 @@ describe("manual-upload page", () => {
     });
   });
 
-  describe("transformDateFields - locationId array handling (line 38)", () => {
+  describe("transformDateFields - locationId array handling", () => {
     beforeEach(() => {
       vi.clearAllMocks();
       // Mock validateForm to return empty errors (validation passes)
@@ -920,7 +920,7 @@ describe("manual-upload page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
     });
 
-    it("should handle locationId as an array and find first non-empty value (line 38)", async () => {
+    it("should use first non-empty value from locationId array", async () => {
       const session = {
         save: vi.fn((cb) => cb())
       };
@@ -966,7 +966,7 @@ describe("manual-upload page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
     });
 
-    it("should handle locationId as an array with whitespace and find trimmed non-empty value (line 38)", async () => {
+    it("should skip whitespace-only values when finding first non-empty locationId", async () => {
       const session = {
         save: vi.fn((cb) => cb())
       };
@@ -1012,7 +1012,7 @@ describe("manual-upload page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-summary?uploadId=test-upload-id-123");
     });
 
-    it("should use first element if all array elements are empty (line 38 fallback)", async () => {
+    it("should fall back to first element when all locationId array entries are empty", async () => {
       const session = {
         save: vi.fn((cb) => cb())
       };
@@ -1056,7 +1056,7 @@ describe("manual-upload page", () => {
       expect(callArgs.locationId).toBe("");
     });
 
-    it("should handle locationId array with multiple valid values and return first valid (line 38)", async () => {
+    it("should use first valid value when locationId array contains multiple valid entries", async () => {
       const session = {
         save: vi.fn((cb) => cb())
       };
