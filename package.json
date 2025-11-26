@@ -26,6 +26,7 @@
     "start:web": "NODE_ENV=production NODE_OPTIONS='--conditions=production' yarn workspace @hmcts/web run start",
     "dev": "yarn dev:up && concurrently -n \"api,web\" \"yarn:dev:api\" \"yarn:dev:web\"",
     "dev:nowatch": "yarn dev:up && concurrently -n \"api,web\" \"yarn:dev:api\" \"yarn:dev:web:nowatch\"",
+    "dev:ci": "concurrently -n \"api,web\" \"yarn:dev:api\" \"yarn:dev:web:nowatch\"",
     "dev:api": "yarn workspace @hmcts/api run dev",
     "dev:web": "yarn workspace @hmcts/web run dev",
     "dev:web:nowatch": "yarn workspace @hmcts/web run dev:nowatch",
@@ -61,7 +62,8 @@
   "packageManager": "yarn@4.12.0",
   "resolutions": {
     "vite": "7.2.4",
-    "glob": "13.0.0"
+    "glob": "13.0.0",
+    "body-parser": "2.2.1"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "3.0.7",

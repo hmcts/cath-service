@@ -23,7 +23,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   // Fetch location
-  const location = getLocationById(locationId);
+  const location = await getLocationById(locationId);
   if (!location) {
     return res.redirect("/400");
   }
@@ -43,7 +43,7 @@ export const GET = async (req: Request, res: Response) => {
   });
 
   // Map list types and format dates
-  const publicationsWithDetails = artefacts.map((artefact) => {
+  const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {
     const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
     const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
 
@@ -64,7 +64,7 @@ export const GET = async (req: Request, res: Response) => {
 
   // Deduplicate: keep only the latest publication for each unique combination of list type, content date, and language
   const seen = new Set<string>();
-  const uniquePublications = publicationsWithDetails.filter((pub) => {
+  const uniquePublications = publicationsWithDetails.filter((pub: (typeof publicationsWithDetails)[number]) => {
     const key = `${pub.listTypeId}-${pub.contentDate.toISOString()}-${pub.language}`;
     if (seen.has(key)) {
       return false;
@@ -74,7 +74,7 @@ export const GET = async (req: Request, res: Response) => {
   });
 
   // Sort by list name, then by content date descending, then by language
-  uniquePublications.sort((a, b) => {
+  uniquePublications.sort((a: (typeof uniquePublications)[number], b: (typeof uniquePublications)[number]) => {
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);

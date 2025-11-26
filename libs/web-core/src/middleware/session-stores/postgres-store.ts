@@ -85,10 +85,7 @@ export class PostgresStore extends Store {
   }
 
   private getExpireDate(session: SessionData): Date {
-    let ttl = this.ttl;
-    if (session.cookie?.maxAge) {
-      ttl = Math.floor(session.cookie.maxAge / 1000);
-    }
+    const ttl = session.cookie?.maxAge ? Math.floor(session.cookie.maxAge / 1000) : this.ttl;
     return new Date(Date.now() + ttl * 1000);
   }
 
