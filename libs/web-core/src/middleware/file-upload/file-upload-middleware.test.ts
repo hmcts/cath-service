@@ -26,7 +26,12 @@ describe("createFileUpload", () => {
 
       expect(mockMulter).toHaveBeenCalledWith({
         storage: { type: "memory" },
-        limits: { fileSize: 2 * 1024 * 1024 }
+        limits: {
+          fileSize: 2 * 1024 * 1024,
+          fields: 10,
+          fieldSize: 1024 * 1024,
+          parts: 20
+        }
       });
     });
   });
@@ -40,7 +45,12 @@ describe("createFileUpload", () => {
 
       expect(mockMulter).toHaveBeenCalledWith({
         storage: mockMemoryStorage(),
-        limits: { fileSize: customMaxSize }
+        limits: {
+          fileSize: customMaxSize,
+          fields: 10,
+          fieldSize: 1024 * 1024,
+          parts: 20
+        }
       });
     });
   });
