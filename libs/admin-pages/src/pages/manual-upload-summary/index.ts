@@ -25,7 +25,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const locale = req.query.lng === "cy" ? "cy" : "en";
-  const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
+  const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
 
   // Find list type by ID
@@ -132,7 +132,7 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     const locale = req.query.lng === "cy" ? "cy" : "en";
-    const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
+    const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
     const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
 
     // Find list type by ID

@@ -1,11 +1,13 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import "@hmcts/web-core"; // Import for Express type augmentation
 import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
+import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
@@ -34,19 +36,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
 
-// Type for file upload error stored on request
-interface FileUploadError {
-  code: string;
-  field: string;
-  message: string;
-  originalError: MulterError | Error;
-}
-
-// Extend Express Request to include fileUploadError
-interface RequestWithFileUpload extends Request {
-  fileUploadError?: FileUploadError;
-}
-
 export async function createApp(): Promise<Express> {
   await configurePropertiesVolume(config, { chartPath });
 
@@ -70,16 +59,11 @@ export async function createApp(): Promise<Express> {
   const upload = createFileUpload();
 
   // Helper function to handle multer errors consistently
-  const handleMulterError = (err: MulterError | Error | undefined, req: RequestWithFileUpload, fieldName: string) => {
+  const handleMulterError = (err: MulterError | Error | undefined, req: Request, fieldName: string) => {
     if (!err) return;
 
     // Store the error for the controller to handle
-    req.fileUploadError = {
-      code: (err as MulterError).code || "UNKNOWN_ERROR",
-      field: fieldName,
-      message: err.message,
-      originalError: err
-    };
+    req.fileUploadError = err as MulterError;
 
     // Log unexpected multer errors for debugging
     const knownCodes = ["LIMIT_FILE_SIZE", "LIMIT_FILE_COUNT", "LIMIT_FIELD_SIZE", "LIMIT_UNEXPECTED_FILE"];
@@ -97,13 +81,13 @@ export async function createApp(): Promise<Express> {
   // File upload middleware registration
   app.post("/create-media-account", (req, res, next) => {
     upload.single("idProof")(req, res, (err) => {
-      handleMulterError(err, req as RequestWithFileUpload, "idProof");
+      handleMulterError(err, req, "idProof");
       next();
     });
   });
   app.post("/manual-upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
-      handleMulterError(err, req as RequestWithFileUpload, "file");
+      handleMulterError(err, req, "file");
       next();
     });
   });
@@ -153,14 +137,26 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
 
+  // Register API routes for location autocomplete
+  app.use(await createSimpleRouter(locationApiRoutes));
+
   // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
-  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
+
+  // Register reference data upload with file upload middleware
+  app.post("/reference-data-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      handleMulterError(err, req, "file");
+      next();
+    });
+  });
+  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
+
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());

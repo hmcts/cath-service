@@ -136,7 +136,7 @@ test.describe("Remove Publication Flow", () => {
     // Use the autocomplete widget to select a location
     const courtInput = page.getByRole('combobox', { name: /search by court or tribunal name/i });
     await courtInput.waitFor({ state: 'visible', timeout: 10000 });
-    await courtInput.fill('Oxford Combined Court Centre');
+    await courtInput.fill('Test Court Alpha');
     await page.waitForTimeout(500); // Wait for autocomplete suggestions
 
     // Select the first suggestion

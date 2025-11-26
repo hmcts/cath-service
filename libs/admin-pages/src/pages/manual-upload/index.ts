@@ -1,4 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/web-core"; // Import for Express type augmentation
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
@@ -86,13 +87,14 @@ const getHandler = async (req: Request, res: Response) => {
 
   // Resolve location name from ID or use stored name
   const locationId = formData.locationId ? Number.parseInt(formData.locationId, 10) : null;
-  const locationName = (locationId && !Number.isNaN(locationId) && getLocationById(locationId)?.name) || formData.locationName || "";
+  const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
+  const locationName = location?.name || formData.locationName || "";
 
   res.render("manual-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
-    locations: getAllLocations(locale),
+    locations: await getAllLocations(locale),
     listTypes: selectOption(LIST_TYPES, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
@@ -108,7 +110,7 @@ const postHandler = async (req: Request, res: Response) => {
   const formData = transformDateFields(req.body);
 
   // Check for multer errors (e.g., file too large)
-  const fileUploadError = (req as any).fileUploadError;
+  const fileUploadError = req.fileUploadError;
   let errors = await validateForm(formData, req.file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error
