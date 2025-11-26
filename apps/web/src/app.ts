@@ -160,14 +160,6 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
-
-  // Register reference data upload with file upload middleware
-  app.post("/reference-data-upload", (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      handleMulterError(err, req, "file");
-      next();
-    });
-  });
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
 
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
