@@ -899,6 +899,8 @@ __metadata:
 "@hmcts/location@workspace:*, @hmcts/location@workspace:libs/location":
   version: 0.0.0-use.local
   resolution: "@hmcts/location@workspace:libs/location"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
   peerDependencies:
     "@prisma/client": "*"
   languageName: unknown
