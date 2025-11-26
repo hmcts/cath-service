@@ -965,8 +965,8 @@ __metadata:
     "@hmcts/web-core": "workspace:*"
     "@types/express": "npm:5.0.5"
     "@types/express-session": "npm:1.18.2"
-    "@types/papaparse": "npm:5.3.15"
-    papaparse: "npm:5.4.1"
+    "@types/papaparse": "npm:5.5.0"
+    papaparse: "npm:5.5.3"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
@@ -2590,12 +2590,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/papaparse@npm:5.3.15":
-  version: 5.3.15
-  resolution: "@types/papaparse@npm:5.3.15"
+"@types/papaparse@npm:5.5.0":
+  version: 5.5.0
+  resolution: "@types/papaparse@npm:5.5.0"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/9333e980b9ed4102f80b1791b6dfefb23fb4d27252b2b6ee6084b2cd847cbe802cfb838d46b4f6b4cb035f9225e0323034c956ee21bbcbcb4cbdb663302d5eeb
+  checksum: 10c0/df2db19b602c6d9a049085737fcd3be49e4db528704a25bf4e9a08378053951f7069738b8a3fcb8b1c760ccbc41125f1e358b21db905d6f7e8bcf4062b29df49
   languageName: node
   linkType: hard
 
@@ -5564,10 +5564,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"papaparse@npm:5.4.1":
-  version: 5.4.1
-  resolution: "papaparse@npm:5.4.1"
-  checksum: 10c0/201f37c4813453fed5bfb4c01816696b099d2db9ff1e8fb610acc4771fdde91d2a22b6094721edb0fedb21ca3c46f04263f68be4beb3e35b8c72278f0cedc7b7
+"papaparse@npm:5.5.3":
+  version: 5.5.3
+  resolution: "papaparse@npm:5.5.3"
+  checksum: 10c0/623aae6a35703308fd5a39d616fb3837231ebc70697346355ea508154d3f24df75b6554b736afc1924192205518a5db14e75f5e1cf35d154326050a37cdd9447
   languageName: node
   linkType: hard
 
