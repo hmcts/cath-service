@@ -34,7 +34,7 @@
               <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
                 <input type="hidden" name="_csrf" value="{{ csrfToken }}">
                 <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
-                <button type="submit" class="govuk-link" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; text-decoration: underline; font-size: inherit; font-family: inherit; line-height: inherit; color: #1d70b8;" aria-label="Remove subscription for {{ subscription.locationName }}">
+                <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.locationName }}">
                   {{ removeLink }}
                 </button>
               </form>
