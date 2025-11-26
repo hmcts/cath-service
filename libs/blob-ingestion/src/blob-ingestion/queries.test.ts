@@ -37,7 +37,7 @@ describe("queries", async () => {
         courtId: log.courtId,
         status: log.status,
         errorMessage: null,
-        artefactId: log.artefactId
+        artefactId: log.artefactId ?? null
       });
 
       await createIngestionLog(log);
@@ -71,7 +71,7 @@ describe("queries", async () => {
         sourceSystem: log.sourceSystem,
         courtId: log.courtId,
         status: log.status,
-        errorMessage: log.errorMessage,
+        errorMessage: log.errorMessage ?? null,
         artefactId: null
       });
 

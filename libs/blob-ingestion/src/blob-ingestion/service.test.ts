@@ -64,11 +64,7 @@ describe("processBlobIngestion", async () => {
     expect(result.no_match).toBe(false);
     expect(result.message).toBe("Blob ingested and published successfully");
     expect(createArtefact).toHaveBeenCalled();
-    expect(saveUploadedFile).toHaveBeenCalledWith(
-      "test-artefact-id",
-      "upload.json",
-      expect.any(Buffer)
-    );
+    expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
     expect(createIngestionLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "SUCCESS",
@@ -98,11 +94,7 @@ describe("processBlobIngestion", async () => {
         noMatch: true
       })
     );
-    expect(saveUploadedFile).toHaveBeenCalledWith(
-      "test-artefact-id",
-      "upload.json",
-      expect.any(Buffer)
-    );
+    expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
   });
 
   it("should return validation errors when request is invalid", async () => {

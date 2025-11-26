@@ -92,8 +92,8 @@ async function validateToken(token: string): Promise<any> {
 
     // Get signing key from Azure AD
     client.getSigningKey(kid, (err, key) => {
-      if (err) {
-        return reject(new Error(`Failed to fetch signing key: ${err.message}`));
+      if (err || !key) {
+        return reject(new Error(`Failed to fetch signing key: ${err?.message || "Key not found"}`));
       }
 
       const signingKey = key.getPublicKey();

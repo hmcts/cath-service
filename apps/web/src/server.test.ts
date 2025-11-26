@@ -13,14 +13,11 @@ afterEach(() => {
 
 // Mock fs to prevent HTTPS certificate loading
 vi.mock("node:fs", async () => {
-  const actual = await vi.importActual("node:fs");
+  const actual = await vi.importActual<typeof import("node:fs")>("node:fs");
   return {
     ...actual,
-    default: {
-      ...actual.default,
-      existsSync: vi.fn(() => false), // No certs exist, force HTTP mode
-      readFileSync: vi.fn()
-    }
+    existsSync: vi.fn(() => false), // No certs exist, force HTTP mode
+    readFileSync: vi.fn()
   };
 });
 
