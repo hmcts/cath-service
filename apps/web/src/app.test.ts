@@ -52,16 +52,26 @@ vi.mock("@hmcts/auth", () => ({
   cftCallbackHandler: vi.fn()
 }));
 
+const TEST_CFT_IDAM_URL = "http://test-idam";
+
 describe("Web Application", () => {
   let app: Express;
+  let originalCftIdamUrl: string | undefined;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    originalCftIdamUrl = process.env.CFT_IDAM_URL;
+    process.env.CFT_IDAM_URL = TEST_CFT_IDAM_URL;
     const { createApp } = await import("./app.js");
     app = await createApp();
   });
 
   afterEach(() => {
+    if (originalCftIdamUrl === undefined) {
+      delete process.env.CFT_IDAM_URL;
+    } else {
+      process.env.CFT_IDAM_URL = originalCftIdamUrl;
+    }
     vi.resetModules();
   });
 
@@ -698,10 +708,10 @@ describe("Web Application", () => {
     it("should pass CFT IDAM URL to helmet configuration", async () => {
       const { configureHelmet } = await import("@hmcts/web-core");
 
-      // Verify configureHelmet was called with cftIdamUrl option (lines 47-51)
+      // Verify configureHelmet was called with cftIdamUrl option
       expect(configureHelmet).toHaveBeenCalledWith(
         expect.objectContaining({
-          cftIdamUrl: process.env.CFT_IDAM_URL
+          cftIdamUrl: TEST_CFT_IDAM_URL
         })
       );
     });
