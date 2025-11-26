@@ -45,6 +45,7 @@
     </div>
 
     <form method="post" enctype="multipart/form-data" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}" />
 
       <div class="reference-data-upload__file-upload-container">
         {% set fileError = (errors | selectattr("href", "equalto", "#file") | first) if errors else undefined %}

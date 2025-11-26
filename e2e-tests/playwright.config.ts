@@ -43,7 +43,6 @@ export default defineConfig({
       NODE_ENV: 'development',
       ENABLE_SSO: 'true',
       ENABLE_CFT_IDAM: 'true',
-      CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net',
     },
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
