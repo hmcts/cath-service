@@ -44,6 +44,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.3.7",
     "@biomejs/cli-linux-arm64": "^2.3.6",
+    "@types/jsonwebtoken": "9.0.7",
     "@types/node": "24.10.1",
     "@types/passport-azure-ad": "4.3.6",
     "@types/supertest": "6.0.3",
@@ -66,6 +67,8 @@
     "@microsoft/microsoft-graph-client": "3.0.7",
     "@types/passport": "1.0.17",
     "accessible-autocomplete": "^3.0.1",
+    "jsonwebtoken": "9.0.2",
+    "jwks-rsa": "3.1.0",
     "passport": "0.7.0",
     "passport-azure-ad": "4.3.5"
   }

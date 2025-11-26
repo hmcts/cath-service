@@ -21,21 +21,51 @@ model Artefact {
   isFlatFile        Boolean  @map("is_flat_file")
   provenance        String
   supersededCount   Int      @default(0) @map("superseded_count")
+  noMatch           Boolean  @default(false) @map("no_match")
 
   @@map("artefact")
 }
 
 model User {
-  userId             String    @id @default(uuid()) @map("user_id") @db.Uuid
-  email              String    @db.VarChar(255)
-  firstName          String?   @map("first_name") @db.VarChar(255)
-  surname            String?   @db.VarChar(255)
-  userProvenance     String    @map("user_provenance") @db.VarChar(20)
-  userProvenanceId   String    @unique @map("user_provenance_id") @db.VarChar(255)
-  role               String    @db.VarChar(20)
-  createdDate        DateTime  @default(now()) @map("created_date")
-  lastSignedInDate   DateTime? @map("last_signed_in_date")
+  userId             String         @id @default(uuid()) @map("user_id") @db.Uuid
+  email              String         @db.VarChar(255)
+  firstName          String?        @map("first_name") @db.VarChar(255)
+  surname            String?        @db.VarChar(255)
+  userProvenance     String         @map("user_provenance") @db.VarChar(20)
+  userProvenanceId   String         @unique @map("user_provenance_id") @db.VarChar(255)
+  role               String         @db.VarChar(20)
+  createdDate        DateTime       @default(now()) @map("created_date")
+  lastSignedInDate   DateTime?      @map("last_signed_in_date")
+  subscription       Subscription[]
 
   @@map("user")
+}
+
+model Subscription {
+  subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  locationId     String   @map("location_id")
+  dateAdded      DateTime @default(now()) @map("date_added")
+  user           User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([userId, locationId])
+  @@index([locationId], map: "idx_subscription_location")
+  @@index([userId], map: "idx_subscription_user")
+  @@map("subscription")
+}
+
+model IngestionLog {
+  id            String   @id @map("id") @db.Uuid
+  timestamp     DateTime @default(now()) @map("timestamp")
+  sourceSystem  String   @map("source_system")
+  courtId       String   @map("court_id")
+  status        String   @map("status")
+  errorMessage  String?  @map("error_message")
+  artefactId    String?  @map("artefact_id") @db.Uuid
+
+  @@index([timestamp])
+  @@index([status])
+  @@index([sourceSystem])
+  @@map("ingestion_log")
 }
 

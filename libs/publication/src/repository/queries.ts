@@ -22,6 +22,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
         displayTo: data.displayTo,
         isFlatFile: data.isFlatFile,
         provenance: data.provenance,
+        noMatch: data.noMatch,
         lastReceivedDate: new Date(),
         supersededCount: {
           increment: 1
@@ -43,7 +44,8 @@ export async function createArtefact(data: Artefact): Promise<string> {
       displayFrom: data.displayFrom,
       displayTo: data.displayTo,
       isFlatFile: data.isFlatFile,
-      provenance: data.provenance
+      provenance: data.provenance,
+      noMatch: data.noMatch
     }
   });
   return artefact.artefactId;
@@ -69,7 +71,8 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
     displayFrom: artefact.displayFrom,
     displayTo: artefact.displayTo,
     isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance
+    provenance: artefact.provenance,
+    noMatch: artefact.noMatch
   }));
 }
 
@@ -92,7 +95,8 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
     displayFrom: artefact.displayFrom,
     displayTo: artefact.displayTo,
     isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance
+    provenance: artefact.provenance,
+    noMatch: artefact.noMatch
   }));
 }
 

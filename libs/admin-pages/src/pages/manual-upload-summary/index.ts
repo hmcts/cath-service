@@ -100,7 +100,8 @@ const postHandler = async (req: Request, res: Response) => {
       displayFrom,
       displayTo,
       isFlatFile,
-      provenance: Provenance.MANUAL_UPLOAD
+      provenance: Provenance.MANUAL_UPLOAD,
+      noMatch: false
     });
 
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
