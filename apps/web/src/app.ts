@@ -91,6 +91,12 @@ export async function createApp(): Promise<Express> {
       next();
     });
   });
+  app.post("/reference-data-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      handleMulterError(err, req, "file");
+      next();
+    });
+  });
 
   app.use(configureCsrf());
 

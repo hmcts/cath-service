@@ -1,9 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {
@@ -40,7 +44,7 @@ async function completeUploadFlow(page: Page, csvContent: string | Buffer) {
 }
 
 // Load test CSV fixture
-const fixturesPath = path.join(process.cwd(), "fixtures");
+const fixturesPath = path.join(__dirname, "../fixtures");
 const testCsvPath = path.join(fixturesPath, "test-reference-data.csv");
 const validCsvContent = fs.readFileSync(testCsvPath, "utf-8");
 
