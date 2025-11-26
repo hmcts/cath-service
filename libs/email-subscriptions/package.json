@@ -22,6 +22,11 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
   },
+  "dependencies": {
+    "@hmcts/auth": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*"
+  },
   "peerDependencies": {
     "express": "^5.1.0"
   }

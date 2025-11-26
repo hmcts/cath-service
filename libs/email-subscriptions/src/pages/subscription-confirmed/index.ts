@@ -14,12 +14,14 @@ const getHandler = async (req: Request, res: Response) => {
 
   const confirmedLocationIds = req.session.emailSubscriptions.confirmedLocations || [];
 
-  const confirmedLocations = confirmedLocationIds
-    .map((id: string) => {
-      const location = getLocationById(Number.parseInt(id, 10));
-      return location ? (locale === "cy" ? location.welshName : location.name) : null;
-    })
-    .filter(Boolean);
+  const confirmedLocations = (
+    await Promise.all(
+      confirmedLocationIds.map(async (id: string) => {
+        const location = await getLocationById(Number.parseInt(id, 10));
+        return location ? (locale === "cy" ? location.welshName : location.name) : null;
+      })
+    )
+  ).filter(Boolean);
 
   delete req.session.emailSubscriptions.confirmationComplete;
   delete req.session.emailSubscriptions.confirmedLocations;

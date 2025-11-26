@@ -28,17 +28,19 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const pendingLocations = pendingLocationIds
-    .map((id: string) => {
-      const location = getLocationById(Number.parseInt(id, 10));
-      return location
-        ? {
-            locationId: id,
-            name: locale === "cy" ? location.welshName : location.name
-          }
-        : null;
-    })
-    .filter(Boolean);
+  const pendingLocations = (
+    await Promise.all(
+      pendingLocationIds.map(async (id: string) => {
+        const location = await getLocationById(Number.parseInt(id, 10));
+        return location
+          ? {
+              locationId: id,
+              name: locale === "cy" ? location.welshName : location.name
+            }
+          : null;
+      })
+    )
+  ).filter(Boolean);
 
   if (!res.locals.navigation) {
     res.locals.navigation = {};
@@ -107,17 +109,19 @@ const postHandler = async (req: Request, res: Response) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-      const pendingLocations = pendingLocationIds
-        .map((id: string) => {
-          const location = getLocationById(Number.parseInt(id, 10));
-          return location
-            ? {
-                locationId: id,
-                name: locale === "cy" ? location.welshName : location.name
-              }
-            : null;
-        })
-        .filter(Boolean);
+      const pendingLocations = (
+        await Promise.all(
+          pendingLocationIds.map(async (id: string) => {
+            const location = await getLocationById(Number.parseInt(id, 10));
+            return location
+              ? {
+                  locationId: id,
+                  name: locale === "cy" ? location.welshName : location.name
+                }
+              : null;
+          })
+        )
+      ).filter(Boolean);
 
       if (!res.locals.navigation) {
         res.locals.navigation = {};

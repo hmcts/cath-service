@@ -21,7 +21,7 @@ const getHandler = async (req: Request, res: Response) => {
     const subscriptionsWithDetails = await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          const location = getLocationById(Number.parseInt(sub.locationId, 10));
+          const location = await getLocationById(Number.parseInt(sub.locationId, 10));
           return {
             ...sub,
             locationName: location ? (locale === "cy" ? location.welshName : location.name) : sub.locationId

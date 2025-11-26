@@ -46,17 +46,17 @@ const getHandler = async (req: Request, res: Response) => {
       ? [Number(subJurisdictionParam)]
       : [];
 
-  const allJurisdictions = getAllJurisdictions();
-  const allRegions = getAllRegions();
-  const allSubJurisdictions = getAllSubJurisdictions();
+  const allJurisdictions = await getAllJurisdictions();
+  const allRegions = await getAllRegions();
+  const allSubJurisdictions = await getAllSubJurisdictions();
 
   // If jurisdictions are selected but no sub-jurisdictions, include all sub-jurisdictions from selected jurisdictions
   const effectiveSubJurisdictions = [...selectedSubJurisdictions];
   if (selectedJurisdictions.length > 0 && selectedSubJurisdictions.length === 0) {
-    selectedJurisdictions.forEach((jurisdictionId) => {
-      const subJuris = getSubJurisdictionsForJurisdiction(jurisdictionId);
+    for (const jurisdictionId of selectedJurisdictions) {
+      const subJuris = await getSubJurisdictionsForJurisdiction(jurisdictionId);
       effectiveSubJurisdictions.push(...subJuris);
-    });
+    }
   }
 
   if (!res.locals.navigation) {
@@ -65,19 +65,19 @@ const getHandler = async (req: Request, res: Response) => {
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
   // Recalculate grouped locations with effective filters
-  const filteredGroupedLocations: Record<string, Location[]> = getLocationsGroupedByLetter(locale, {
+  const filteredGroupedLocations: Record<string, Location[]> = await getLocationsGroupedByLetter(locale, {
     regions: selectedRegions.length > 0 ? selectedRegions : undefined,
     subJurisdictions: effectiveSubJurisdictions.length > 0 ? effectiveSubJurisdictions : undefined
   });
 
   // Build jurisdiction items
-  const jurisdictionItems = buildJurisdictionItems(selectedJurisdictions, locale, content.subJurisdictionLabels);
+  const jurisdictionItems = await buildJurisdictionItems(selectedJurisdictions, locale, content.subJurisdictionLabels);
 
   // Build region items
-  const regionItems = buildRegionItems(selectedRegions, locale);
+  const regionItems = await buildRegionItems(selectedRegions, locale);
 
   // Build sub-jurisdiction items grouped by jurisdiction
-  const subJurisdictionItemsByJurisdiction = buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions, locale);
+  const subJurisdictionItemsByJurisdiction = await buildSubJurisdictionItemsByJurisdiction(selectedSubJurisdictions, locale);
 
   // Build display name maps
   const jurisdictionMap: Record<number, string> = {};

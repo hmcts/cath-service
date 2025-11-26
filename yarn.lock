@@ -889,6 +889,10 @@ __metadata:
 "@hmcts/email-subscriptions@workspace:libs/email-subscriptions":
   version: 0.0.0-use.local
   resolution: "@hmcts/email-subscriptions@workspace:libs/email-subscriptions"
+  dependencies:
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown
