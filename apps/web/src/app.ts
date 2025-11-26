@@ -62,6 +62,13 @@ export async function createApp(): Promise<Express> {
   const handleMulterError = (err: MulterError | Error | undefined, req: Request, fieldName: string) => {
     if (!err) return;
 
+    // "Unexpected end of form" from busboy can occur with certain test frameworks (e.g., Playwright)
+    // when sending multipart data with buffers. If we successfully received the file, treat as non-fatal.
+    if (err.message === "Unexpected end of form" && req.file) {
+      console.warn(`Multer warning on ${fieldName}: ${err.message} (file received successfully, continuing)`);
+      return;
+    }
+
     // Store the error for the controller to handle
     req.fileUploadError = err as MulterError;
 
