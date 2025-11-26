@@ -36,7 +36,8 @@ function parseDateInput(body: any, prefix: string) {
 
 function transformDateFields(body: any): ManualUploadFormData {
   // Handle locationId which may be an array if both hidden and visible inputs are submitted before JS initializes
-  const locationId = Array.isArray(body.locationId) ? body.locationId.find((id: string) => id && id.trim() !== "") || body.locationId[0] : body.locationId;
+  // Find first non-empty value, or return empty string if all are empty (validation will catch it)
+  const locationId = Array.isArray(body.locationId) ? body.locationId.find((id: string) => id && id.trim() !== "") || "" : body.locationId;
 
   return {
     locationId,
