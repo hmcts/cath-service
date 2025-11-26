@@ -1,0 +1,116 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    {% if hasErrors %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div role="alert">
+          <h2 class="govuk-error-summary__title">{{ errorSummaryTitle }}</h2>
+          <div class="govuk-error-summary__body">
+            <p class="govuk-body">{{ errorTitle }}</p>
+            <p class="govuk-body">{{ errorMessage }}</p>
+            <ul class="govuk-list govuk-error-summary__list">
+              {% for error in errors %}
+                <li>
+                  <a href="{{ error.href }}">{{ error.text }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <p class="govuk-body">
+        <a href="/reference-data-upload" class="govuk-link">Go back to upload page</a>
+      </p>
+
+    {% else %}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: fileLabel
+            },
+            value: {
+              text: fileName
+            },
+            actions: {
+              items: [
+                {
+                  href: "/reference-data-upload",
+                  text: changeLink,
+                  visuallyHiddenText: "file"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-l">{{ previewTitle }}</h2>
+
+      <div style="overflow-x: auto;">
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ locationIdHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ locationNameHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ welshLocationNameHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ emailHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ contactNoHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ jurisdictionHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ subJurisdictionHeader }}</th>
+              <th scope="col" class="govuk-table__header">{{ regionHeader }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for row in previewData %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ row.locationId }}</td>
+                <td class="govuk-table__cell">{{ row.locationName }}</td>
+                <td class="govuk-table__cell">{{ row.welshLocationName }}</td>
+                <td class="govuk-table__cell">{{ row.email }}</td>
+                <td class="govuk-table__cell">{{ row.contactNo }}</td>
+                <td class="govuk-table__cell">
+                  <div>{{ row.jurisdictionNames.join(', ') }}</div>
+                  <div class="govuk-hint" style="margin-top: 5px;">{{ row.jurisdictionWelshNames.join(', ') }}</div>
+                </td>
+                <td class="govuk-table__cell">
+                  <div>{{ row.subJurisdictionNames.join(', ') }}</div>
+                  <div class="govuk-hint" style="margin-top: 5px;">{{ row.subJurisdictionWelshNames.join(', ') }}</div>
+                </td>
+                <td class="govuk-table__cell">
+                  <div>{{ row.regionNames.join(', ') }}</div>
+                  <div class="govuk-hint" style="margin-top: 5px;">{{ row.regionWelshNames.join(', ') }}</div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if showPagination %}
+        {{ govukPagination(pagination) }}
+      {% endif %}
+
+      <form method="post" novalidate>
+        {{ govukButton({
+          text: confirmButtonText
+        }) }}
+      </form>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

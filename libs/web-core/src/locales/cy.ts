@@ -1,6 +1,7 @@
 export const cy = {
   govUk: "GOV.UK",
   phase: "beta",
+  back: "Yn ôl",
   navigation: {
     signIn: "Mewngofnodi"
   },
