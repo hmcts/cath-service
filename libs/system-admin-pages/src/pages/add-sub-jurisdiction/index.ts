@@ -74,6 +74,14 @@ export const postHandler = async (req: Request, res: Response) => {
   // Store success flag in session
   req.session.subJurisdictionSuccess = true;
 
+  // Save session before redirect to avoid race conditions
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err: Error | null | undefined) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
   // Redirect to success page
   res.redirect(`/add-sub-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
 };

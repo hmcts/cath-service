@@ -26,7 +26,9 @@ describe("add-sub-jurisdiction page", () => {
     mockRequest = {
       query: {},
       body: {},
-      session: {} as any
+      session: {
+        save: vi.fn((cb) => cb())
+      } as any
     };
 
     mockResponse = {
@@ -88,7 +90,6 @@ describe("add-sub-jurisdiction page", () => {
         name: "Civil Court",
         welshName: "Llys Sifil"
       };
-      mockRequest.session = {} as any;
 
       vi.mocked(validation.validateSubJurisdictionData).mockResolvedValue([]);
 
@@ -96,6 +97,7 @@ describe("add-sub-jurisdiction page", () => {
 
       expect(repository.createSubJurisdiction).toHaveBeenCalledWith(1, "Civil Court", "Llys Sifil");
       expect(mockRequest.session.subJurisdictionSuccess).toBe(true);
+      expect(mockRequest.session.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/add-sub-jurisdiction-success");
     });
 
@@ -111,6 +113,7 @@ describe("add-sub-jurisdiction page", () => {
 
       await POST(mockRequest as Request, mockResponse as Response);
 
+      expect(mockRequest.session.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/add-sub-jurisdiction-success?lng=cy");
     });
 

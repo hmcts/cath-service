@@ -25,7 +25,9 @@ describe("add-region page", () => {
     mockRequest = {
       query: {},
       body: {},
-      session: {} as any
+      session: {
+        save: vi.fn((cb) => cb())
+      } as any
     };
 
     mockResponse = {
@@ -99,6 +101,7 @@ describe("add-region page", () => {
         name: "London",
         welshName: "Llundain"
       });
+      expect(mockRequest.session.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/add-region-success");
     });
 
@@ -110,6 +113,7 @@ describe("add-region page", () => {
 
       await POST(mockRequest as Request, mockResponse as Response);
 
+      expect(mockRequest.session.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/add-region-success?lng=cy");
     });
 

@@ -49,6 +49,14 @@ export const postHandler = async (req: Request, res: Response) => {
       welshName: formData.welshName.trim()
     };
 
+    // Save session before redirect to avoid race conditions
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err: Error | null | undefined) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
     // Redirect to success page
     res.redirect(`/add-region-success${language === "cy" ? "?lng=cy" : ""}`);
   } catch (error) {

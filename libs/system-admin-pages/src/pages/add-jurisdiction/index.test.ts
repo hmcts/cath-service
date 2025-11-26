@@ -73,7 +73,9 @@ describe("add-jurisdiction page", () => {
         name: "Civil",
         welshName: "Sifil"
       };
-      mockRequest.session = {} as any;
+      mockRequest.session = {
+        save: vi.fn((cb) => cb())
+      } as any;
 
       vi.mocked(validation.validateJurisdictionData).mockResolvedValue([]);
 
@@ -84,6 +86,7 @@ describe("add-jurisdiction page", () => {
         name: "Civil",
         welshName: "Sifil"
       });
+      expect(mockRequest.session.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/add-jurisdiction-success");
     });
 
@@ -93,11 +96,15 @@ describe("add-jurisdiction page", () => {
         name: "Civil",
         welshName: "Sifil"
       };
+      mockRequest.session = {
+        save: vi.fn((cb) => cb())
+      } as any;
 
       vi.mocked(validation.validateJurisdictionData).mockResolvedValue([]);
 
       await POST(mockRequest as Request, mockResponse as Response);
 
+      expect(mockRequest.session.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/add-jurisdiction-success?lng=cy");
     });
 
