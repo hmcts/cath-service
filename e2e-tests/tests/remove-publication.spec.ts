@@ -5,11 +5,13 @@ import { loginWithSSO } from "../utils/sso-helpers.js";
 // Helper function to get future dates for testing
 function getFutureDates() {
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day to avoid timezone issues
+
   const hearingDate = new Date(today);
-  hearingDate.setDate(today.getDate() + 7); // 7 days from now
+  hearingDate.setDate(today.getDate() + 10); // 10 days from now
 
   const displayFrom = new Date(today);
-  displayFrom.setDate(today.getDate() + 3); // 3 days from now
+  displayFrom.setDate(today.getDate() + 1); // Tomorrow (must be at least tomorrow, not today)
 
   const displayTo = new Date(today);
   displayTo.setFullYear(today.getFullYear() + 5); // 5 years from now (far future for remove tests)
