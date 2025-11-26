@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import "@hmcts/web-core"; // Import for Express type augmentation
 import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
@@ -7,6 +8,7 @@ import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamily
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as emailSubscriptionsModuleRoot, pageRoutes as emailSubscriptionsRoutes } from "@hmcts/email-subscriptions/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
+import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
@@ -95,24 +97,39 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
 
+  // Register API routes for location autocomplete
+  app.use(await createSimpleRouter(locationApiRoutes));
+
   // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
-  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(emailSubscriptionsRoutes, pageRoutes));
 
-  // Register admin pages with multer middleware for file upload
+  // Register file upload middleware for admin pages
   const upload = createFileUpload();
+
+  // Register reference data upload with file upload middleware
+  app.post("/reference-data-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        req.fileUploadError = err;
+      }
+      next();
+    });
+  });
+  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
+
+  // Register manual upload with file upload middleware
   app.post("/manual-upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
       if (err) {
         // Multer error occurred, but don't throw - let the route handler deal with validation
         // Store the error so the POST handler can check it
-        (req as any).fileUploadError = err;
+        req.fileUploadError = err;
       }
       next();
     });

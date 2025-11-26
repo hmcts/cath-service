@@ -1,0 +1,64 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% macro getError(errors, fieldId) -%}
+  {%- if errors -%}
+    {%- for error in errors -%}
+      {%- if error.href == fieldId -%}{{ error.text }}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+
+      {% set nameErrorText = getError(errors, "#name") %}
+      {{ govukInput({
+        id: "name",
+        name: "name",
+        label: {
+          text: nameLabel
+        },
+        hint: {
+          text: nameHint
+        },
+        value: data.name,
+        errorMessage: { text: nameErrorText } if (nameErrorText and nameErrorText | length > 0) else undefined
+      }) }}
+
+      {% set welshNameErrorText = getError(errors, "#welshName") %}
+      {{ govukInput({
+        id: "welshName",
+        name: "welshName",
+        label: {
+          text: welshNameLabel
+        },
+        hint: {
+          text: welshNameHint
+        },
+        value: data.welshName,
+        errorMessage: { text: welshNameErrorText } if (welshNameErrorText and welshNameErrorText | length > 0) else undefined
+      }) }}
+
+      {{ govukButton({
+        text: saveButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

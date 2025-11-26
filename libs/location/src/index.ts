@@ -18,3 +18,4 @@ export {
   getSubJurisdictionsByJurisdiction
 } from "./repository/queries.js";
 export { getLocationsGroupedByLetter, type Location, searchLocations } from "./repository/service.js";
+export { seedLocationData } from "./seed-data.js";

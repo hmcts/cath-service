@@ -7,6 +7,10 @@
     ".": {
       "production": "./dist/index.js",
       "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
     }
   },
   "scripts": {
@@ -17,5 +21,8 @@
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
+  },
+  "peerDependencies": {
+    "@prisma/client": "*"
   }
 }

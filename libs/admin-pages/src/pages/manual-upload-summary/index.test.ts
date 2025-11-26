@@ -40,9 +40,9 @@ vi.mock("@hmcts/auth", () => ({
 
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn((id: number) => {
-    if (id === 1) return { locationId: 1, name: "Test Crown Court", welshName: "Test Crown Court CY" };
-    if (id === 2) return { locationId: 2, name: "Another Court", welshName: "Another Court CY" };
-    return null;
+    if (id === 1) return Promise.resolve({ locationId: 1, name: "Test Crown Court", welshName: "Test Crown Court CY" });
+    if (id === 2) return Promise.resolve({ locationId: 2, name: "Another Court", welshName: "Another Court CY" });
+    return Promise.resolve(null);
   })
 }));
 

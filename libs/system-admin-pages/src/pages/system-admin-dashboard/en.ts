@@ -1,5 +1,4 @@
 export const en = {
-  back: "Back",
   title: "System Admin Dashboard",
   tiles: [
     {
