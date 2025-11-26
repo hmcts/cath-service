@@ -91,9 +91,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Generate Prisma client
-        run: yarn db:generate
-
       - name: Setup Turbo cache
         uses: actions/cache@v4
         with:

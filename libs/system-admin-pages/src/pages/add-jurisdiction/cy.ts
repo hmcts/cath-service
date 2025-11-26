@@ -1,0 +1,10 @@
+export const cy = {
+  pageTitle: "Ychwanegu Awdurdodaeth",
+  nameLabel: "Enw awdurdodaeth (Saesneg)",
+  nameHint: "Er enghraifft Civil",
+  welshNameLabel: "Enw awdurdodaeth (Cymraeg)",
+  welshNameHint: "Er enghraifft Sifil",
+  saveButtonText: "Cadw",
+  errorSummaryTitle: "Mae yna broblem",
+  databaseError: "Methodd â chreu awdurdodaeth. Rhowch gynnig arall arni."
+};
