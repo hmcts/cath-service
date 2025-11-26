@@ -538,7 +538,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue([]);
+      vi.mocked(validateForm).mockResolvedValue([]);
       vi.mocked(storeManualUpload).mockResolvedValue("test-upload-id-123");
 
       await callHandler(POST, req, res);
@@ -596,7 +596,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue([]);
+      vi.mocked(validateForm).mockResolvedValue([]);
 
       await callHandler(POST, req, res);
 
@@ -647,7 +647,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -688,7 +688,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue([{ text: "File is required", href: "#file" }]);
+      vi.mocked(validateForm).mockResolvedValue([{ text: "File is required", href: "#file" }]);
 
       await callHandler(POST, req, res);
 
@@ -734,7 +734,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -778,7 +778,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -818,7 +818,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -856,7 +856,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -871,7 +871,7 @@ describe("manual-upload page", () => {
     beforeEach(() => {
       vi.clearAllMocks();
       // Mock validateForm to return empty errors (validation passes)
-      vi.mocked(validateForm).mockReturnValue(Promise.resolve([]) as any);
+      vi.mocked(validateForm).mockResolvedValue([]);
     });
 
     it("should handle locationId as a string (normal case)", async () => {
