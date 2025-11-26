@@ -12,15 +12,6 @@ vi.mock("@hmcts/auth", () => ({
   }
 }));
 
-vi.mock("@hmcts/auth", () => ({
-  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
-  USER_ROLES: {
-    SYSTEM_ADMIN: "SYSTEM_ADMIN",
-    INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
-    INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
-  }
-}));
-
 vi.mock("@hmcts/location");
 vi.mock("@hmcts/publication");
 
