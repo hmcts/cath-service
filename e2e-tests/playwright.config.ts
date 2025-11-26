@@ -37,8 +37,14 @@ export default defineConfig({
     // In CI: use dev:ci (skips docker-compose, service containers are used instead)
     // Locally: use dev:nowatch (starts docker-compose and runs migrations)
     command: process.env.CI
-      ? 'NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true yarn dev:ci'
-      : 'NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true yarn dev:nowatch',
+      ? 'yarn dev:ci'
+      : 'yarn dev:nowatch',
+    env: {
+      NODE_ENV: 'development',
+      ENABLE_SSO: 'true',
+      ENABLE_CFT_IDAM: 'true',
+      CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net',
+    },
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
     reuseExistingServer: !process.env.CI,
