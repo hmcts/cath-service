@@ -2,6 +2,37 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
+// Helper function to get future dates for testing
+function getFutureDates() {
+  const today = new Date();
+  const hearingDate = new Date(today);
+  hearingDate.setDate(today.getDate() + 7); // 7 days from now
+
+  const displayFrom = new Date(today);
+  displayFrom.setDate(today.getDate() + 3); // 3 days from now
+
+  const displayTo = new Date(today);
+  displayTo.setFullYear(today.getFullYear() + 5); // 5 years from now (far future for remove tests)
+
+  return {
+    hearing: {
+      day: hearingDate.getDate().toString().padStart(2, '0'),
+      month: (hearingDate.getMonth() + 1).toString().padStart(2, '0'),
+      year: hearingDate.getFullYear().toString()
+    },
+    displayFrom: {
+      day: displayFrom.getDate().toString().padStart(2, '0'),
+      month: (displayFrom.getMonth() + 1).toString().padStart(2, '0'),
+      year: displayFrom.getFullYear().toString()
+    },
+    displayTo: {
+      day: displayTo.getDate().toString().padStart(2, '0'),
+      month: (displayTo.getMonth() + 1).toString().padStart(2, '0'),
+      year: displayTo.getFullYear().toString()
+    }
+  };
+}
+
 test.describe("Remove Publication Flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/admin-dashboard");
@@ -42,18 +73,19 @@ test.describe("Remove Publication Flow", () => {
       buffer: Buffer.from('E2E test content for remove-publication tests')
     });
 
+    const dates = getFutureDates();
     await page.selectOption('select[name="listType"]', '1'); // Civil Daily Cause List
-    await page.fill('input[name="hearingStartDate-day"]', '15');
-    await page.fill('input[name="hearingStartDate-month"]', '06');
-    await page.fill('input[name="hearingStartDate-year"]', '2025');
+    await page.fill('input[name="hearingStartDate-day"]', dates.hearing.day);
+    await page.fill('input[name="hearingStartDate-month"]', dates.hearing.month);
+    await page.fill('input[name="hearingStartDate-year"]', dates.hearing.year);
     await page.selectOption('select[name="sensitivity"]', 'PUBLIC');
     await page.selectOption('select[name="language"]', 'ENGLISH');
-    await page.fill('input[name="displayFrom-day"]', '10');
-    await page.fill('input[name="displayFrom-month"]', '06');
-    await page.fill('input[name="displayFrom-year"]', '2025');
-    await page.fill('input[name="displayTo-day"]', '31');
-    await page.fill('input[name="displayTo-month"]', '12');
-    await page.fill('input[name="displayTo-year"]', '2030');
+    await page.fill('input[name="displayFrom-day"]', dates.displayFrom.day);
+    await page.fill('input[name="displayFrom-month"]', dates.displayFrom.month);
+    await page.fill('input[name="displayFrom-year"]', dates.displayFrom.year);
+    await page.fill('input[name="displayTo-day"]', dates.displayTo.day);
+    await page.fill('input[name="displayTo-month"]', dates.displayTo.month);
+    await page.fill('input[name="displayTo-year"]', dates.displayTo.year);
 
     await page.getByRole('button', { name: /continue/i }).click();
     await page.waitForURL(/manual-upload-summary/);

@@ -20,6 +20,40 @@ async function authenticateSystemAdmin(page: Page) {
   }
 }
 
+// Helper function to get future dates for testing
+function getFutureDates() {
+  const today = new Date();
+  const hearingDate = new Date(today);
+  hearingDate.setDate(today.getDate() + 7); // 7 days from now
+
+  const displayFrom = new Date(today);
+  displayFrom.setDate(today.getDate() + 3); // 3 days from now
+
+  const displayTo = new Date(today);
+  displayTo.setDate(today.getDate() + 13); // 13 days from now
+
+  return {
+    hearing: {
+      day: hearingDate.getDate().toString().padStart(2, '0'),
+      month: (hearingDate.getMonth() + 1).toString().padStart(2, '0'),
+      year: hearingDate.getFullYear().toString(),
+      formatted: hearingDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    },
+    displayFrom: {
+      day: displayFrom.getDate().toString().padStart(2, '0'),
+      month: (displayFrom.getMonth() + 1).toString().padStart(2, '0'),
+      year: displayFrom.getFullYear().toString(),
+      formatted: displayFrom.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    },
+    displayTo: {
+      day: displayTo.getDate().toString().padStart(2, '0'),
+      month: (displayTo.getMonth() + 1).toString().padStart(2, '0'),
+      year: displayTo.getFullYear().toString(),
+      formatted: displayTo.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    }
+  };
+}
+
 // Helper function to navigate to summary page by completing the upload form
 async function navigateToSummaryPage(page: Page) {
   await authenticateSystemAdmin(page);
@@ -29,18 +63,20 @@ async function navigateToSummaryPage(page: Page) {
   await page.waitForSelector('#court-autocomplete-wrapper', { state: 'attached', timeout: 5000 });
   await page.waitForTimeout(500);
 
+  const dates = getFutureDates();
+
   await page.selectOption('select[name="listType"]', "6");
-  await page.fill('input[name="hearingStartDate-day"]', "23");
-  await page.fill('input[name="hearingStartDate-month"]', "10");
-  await page.fill('input[name="hearingStartDate-year"]', "2025");
+  await page.fill('input[name="hearingStartDate-day"]', dates.hearing.day);
+  await page.fill('input[name="hearingStartDate-month"]', dates.hearing.month);
+  await page.fill('input[name="hearingStartDate-year"]', dates.hearing.year);
   await page.selectOption('select[name="sensitivity"]', "PUBLIC");
   await page.selectOption('select[name="language"]', "ENGLISH");
-  await page.fill('input[name="displayFrom-day"]', "20");
-  await page.fill('input[name="displayFrom-month"]', "10");
-  await page.fill('input[name="displayFrom-year"]', "2025");
-  await page.fill('input[name="displayTo-day"]', "30");
-  await page.fill('input[name="displayTo-month"]', "10");
-  await page.fill('input[name="displayTo-year"]', "2025");
+  await page.fill('input[name="displayFrom-day"]', dates.displayFrom.day);
+  await page.fill('input[name="displayFrom-month"]', dates.displayFrom.month);
+  await page.fill('input[name="displayFrom-year"]', dates.displayFrom.year);
+  await page.fill('input[name="displayTo-day"]', dates.displayTo.day);
+  await page.fill('input[name="displayTo-month"]', dates.displayTo.month);
+  await page.fill('input[name="displayTo-year"]', dates.displayTo.year);
 
   const fileInput = page.locator('input[name="file"]');
   await fileInput.setInputFiles({
@@ -83,18 +119,19 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(focusedElement).toBeVisible();
 
       // Step 2: Fill form and submit
+      const dates = getFutureDates();
       await page.selectOption('select[name="listType"]', "6");
-      await page.fill('input[name="hearingStartDate-day"]', "23");
-      await page.fill('input[name="hearingStartDate-month"]', "10");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.fill('input[name="hearingStartDate-day"]', dates.hearing.day);
+      await page.fill('input[name="hearingStartDate-month"]', dates.hearing.month);
+      await page.fill('input[name="hearingStartDate-year"]', dates.hearing.year);
       await page.selectOption('select[name="sensitivity"]', "PUBLIC");
       await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "10");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "30");
-      await page.fill('input[name="displayTo-month"]', "10");
-      await page.fill('input[name="displayTo-year"]', "2025");
+      await page.fill('input[name="displayFrom-day"]', dates.displayFrom.day);
+      await page.fill('input[name="displayFrom-month"]', dates.displayFrom.month);
+      await page.fill('input[name="displayFrom-year"]', dates.displayFrom.year);
+      await page.fill('input[name="displayTo-day"]', dates.displayTo.day);
+      await page.fill('input[name="displayTo-month"]', dates.displayTo.month);
+      await page.fill('input[name="displayTo-year"]', dates.displayTo.year);
 
       await fileInput.setInputFiles({
         name: "test-keyboard.pdf",
@@ -154,18 +191,19 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page).toHaveTitle('Upload - Manual upload - Court and tribunal hearings - GOV.UK');
 
       // Step 2: Fill out the form
+      const dates = getFutureDates();
       await page.selectOption('select[name="listType"]', "6");
-      await page.fill('input[name="hearingStartDate-day"]', "23");
-      await page.fill('input[name="hearingStartDate-month"]', "10");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.fill('input[name="hearingStartDate-day"]', dates.hearing.day);
+      await page.fill('input[name="hearingStartDate-month"]', dates.hearing.month);
+      await page.fill('input[name="hearingStartDate-year"]', dates.hearing.year);
       await page.selectOption('select[name="sensitivity"]', "PUBLIC");
       await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "10");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "30");
-      await page.fill('input[name="displayTo-month"]', "10");
-      await page.fill('input[name="displayTo-year"]', "2025");
+      await page.fill('input[name="displayFrom-day"]', dates.displayFrom.day);
+      await page.fill('input[name="displayFrom-month"]', dates.displayFrom.month);
+      await page.fill('input[name="displayFrom-year"]', dates.displayFrom.year);
+      await page.fill('input[name="displayTo-day"]', dates.displayTo.day);
+      await page.fill('input[name="displayTo-month"]', dates.displayTo.month);
+      await page.fill('input[name="displayTo-year"]', dates.displayTo.year);
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
@@ -183,10 +221,10 @@ test.describe("Manual Upload End-to-End Flow", () => {
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(1)).toContainText("test-hearing-list.pdf");
       await expect(values.nth(2)).toContainText("Crown Daily List");
-      await expect(values.nth(3)).toContainText("23 October 2025");
+      await expect(values.nth(3)).toContainText(dates.hearing.formatted);
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
-      await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
+      await expect(values.nth(6)).toContainText(`${dates.displayFrom.formatted} to ${dates.displayTo.formatted}`);
 
       // Step 5: Confirm upload and navigate to success page
       await page.getByRole("button", { name: "Confirm" }).click();
@@ -481,18 +519,20 @@ test.describe("Manual Upload End-to-End Flow", () => {
         buffer: Buffer.from("test content")
       });
 
+      const dates = getFutureDates();
       await page.selectOption('select[name="listType"]', "1");
-      await page.fill('input[name="hearingStartDate-day"]', "15");
-      await page.fill('input[name="hearingStartDate-month"]', "06");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.fill('input[name="hearingStartDate-day"]', dates.hearing.day);
+      await page.fill('input[name="hearingStartDate-month"]', dates.hearing.month);
+      await page.fill('input[name="hearingStartDate-year"]', dates.hearing.year);
       await page.selectOption('select[name="sensitivity"]', "PUBLIC");
       await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "06");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "10");
-      await page.fill('input[name="displayTo-month"]', "06");
-      await page.fill('input[name="displayTo-year"]', "2025");
+      // Set displayFrom to be AFTER displayTo (intentionally invalid to test validation)
+      await page.fill('input[name="displayFrom-day"]', dates.displayTo.day);
+      await page.fill('input[name="displayFrom-month"]', dates.displayTo.month);
+      await page.fill('input[name="displayFrom-year"]', dates.displayTo.year);
+      await page.fill('input[name="displayTo-day"]', dates.displayFrom.day);
+      await page.fill('input[name="displayTo-month"]', dates.displayFrom.month);
+      await page.fill('input[name="displayTo-year"]', dates.displayFrom.year);
 
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
@@ -508,23 +548,24 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       await page.selectOption('select[name="sensitivity"]', "PRIVATE");
       await page.selectOption('select[name="language"]', "WELSH");
-      await page.fill('input[name="displayFrom-day"]', "10");
-      await page.fill('input[name="displayTo-day"]', "20");
+      // Fix the dates to be in correct order
+      await page.fill('input[name="displayFrom-day"]', dates.displayFrom.day);
+      await page.fill('input[name="displayTo-day"]', dates.displayTo.day);
 
       await continueButton.click();
 
       await expect(page.locator('select[name="listType"]')).toHaveValue("1");
-      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("15");
-      await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue("06");
-      await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue("2025");
+      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue(dates.hearing.day);
+      await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue(dates.hearing.month);
+      await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue(dates.hearing.year);
       await expect(page.locator('select[name="sensitivity"]')).toHaveValue("PRIVATE");
       await expect(page.locator('select[name="language"]')).toHaveValue("WELSH");
-      await expect(page.locator('input[name="displayFrom-day"]')).toHaveValue("10");
-      await expect(page.locator('input[name="displayFrom-month"]')).toHaveValue("06");
-      await expect(page.locator('input[name="displayFrom-year"]')).toHaveValue("2025");
-      await expect(page.locator('input[name="displayTo-day"]')).toHaveValue("20");
-      await expect(page.locator('input[name="displayTo-month"]')).toHaveValue("06");
-      await expect(page.locator('input[name="displayTo-year"]')).toHaveValue("2025");
+      await expect(page.locator('input[name="displayFrom-day"]')).toHaveValue(dates.displayFrom.day);
+      await expect(page.locator('input[name="displayFrom-month"]')).toHaveValue(dates.displayFrom.month);
+      await expect(page.locator('input[name="displayFrom-year"]')).toHaveValue(dates.displayFrom.year);
+      await expect(page.locator('input[name="displayTo-day"]')).toHaveValue(dates.displayTo.day);
+      await expect(page.locator('input[name="displayTo-month"]')).toHaveValue(dates.displayTo.month);
+      await expect(page.locator('input[name="displayTo-year"]')).toHaveValue(dates.displayTo.year);
     });
   });
 
@@ -563,14 +604,15 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(keys.nth(5)).toHaveText("Language");
       await expect(keys.nth(6)).toHaveText("Display file dates");
 
+      const dates = getFutureDates();
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(0)).not.toBeEmpty();
       await expect(values.nth(1)).toContainText("test-document.pdf");
       await expect(values.nth(2)).toContainText("Crown Daily List");
-      await expect(values.nth(3)).toContainText("23 October 2025");
+      await expect(values.nth(3)).toContainText(dates.hearing.formatted);
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
-      await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
+      await expect(values.nth(6)).toContainText(`${dates.displayFrom.formatted} to ${dates.displayTo.formatted}`);
 
       const changeLinks = page.locator(".govuk-summary-list__actions a");
       await expect(changeLinks).toHaveCount(7);
@@ -748,18 +790,19 @@ test.describe("Manual Upload End-to-End Flow", () => {
       const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
       await expect(courtInput).toBeVisible();
 
+      const dates = getFutureDates();
       await page.selectOption('select[name="listType"]', "6");
-      await page.fill('input[name="hearingStartDate-day"]', "23");
-      await page.fill('input[name="hearingStartDate-month"]', "10");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.fill('input[name="hearingStartDate-day"]', dates.hearing.day);
+      await page.fill('input[name="hearingStartDate-month"]', dates.hearing.month);
+      await page.fill('input[name="hearingStartDate-year"]', dates.hearing.year);
       await page.selectOption('select[name="sensitivity"]', "PUBLIC");
       await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "10");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "30");
-      await page.fill('input[name="displayTo-month"]', "10");
-      await page.fill('input[name="displayTo-year"]', "2025");
+      await page.fill('input[name="displayFrom-day"]', dates.displayFrom.day);
+      await page.fill('input[name="displayFrom-month"]', dates.displayFrom.month);
+      await page.fill('input[name="displayFrom-year"]', dates.displayFrom.year);
+      await page.fill('input[name="displayTo-day"]', dates.displayTo.day);
+      await page.fill('input[name="displayTo-month"]', dates.displayTo.month);
+      await page.fill('input[name="displayTo-year"]', dates.displayTo.year);
 
       await fileInput.setInputFiles({
         name: "test-mobile.pdf",
