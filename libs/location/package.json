@@ -22,6 +22,9 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
   },
+  "dependencies": {
+    "@hmcts/postgres": "workspace:*"
+  },
   "peerDependencies": {
     "@prisma/client": "*"
   }
