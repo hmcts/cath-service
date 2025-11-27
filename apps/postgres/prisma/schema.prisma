@@ -36,22 +36,10 @@ model User {
   role               String         @db.VarChar(20)
   createdDate        DateTime       @default(now()) @map("created_date")
   lastSignedInDate   DateTime?      @map("last_signed_in_date")
-  subscriptions      Subscription[]
+
+  subscriptions Subscription[]
 
   @@map("user")
-}
-
-model Subscription {
-  subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
-  userId         String   @map("user_id") @db.Uuid
-  locationId     String   @map("location_id")
-  dateAdded      DateTime @default(now()) @map("date_added")
-  user           User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-
-  @@unique([userId, locationId])
-  @@index([locationId], map: "idx_subscription_location")
-  @@index([userId], map: "idx_subscription_user")
-  @@map("subscription")
 }
 
 model IngestionLog {
