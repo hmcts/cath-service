@@ -8,6 +8,7 @@
     "libs/list-types/*"
   ],
   "scripts": {
+    "postinstall": "yarn db:generate",
     "test": "turbo test",
     "test:force": "turbo test --force",
     "test:coverage": "turbo test -- --coverage",
