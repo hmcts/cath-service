@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
-import { createMediaApplication } from "../../media-application/database.js";
-import type { MulterRequest } from "../../media-application/model.js";
+import type { MulterRequest } from "../../media-application/repository/model.js";
+import { createMediaApplication } from "../../media-application/repository/query.js";
 import { saveIdProofFile } from "../../media-application/storage.js";
+import { validateForm } from "../validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-import { validateForm } from "./validation.js";
 
 function saveSession(session: any): Promise<void> {
   return new Promise((resolve, reject) => {

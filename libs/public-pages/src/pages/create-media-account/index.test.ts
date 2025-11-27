@@ -1,9 +1,9 @@
 import type { Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { MulterRequest } from "../../media-application/model.js";
+import type { MulterRequest } from "../../media-application/repository/model.js";
 import { GET, POST } from "./index.js";
 
-vi.mock("../../media-application/database.js", () => ({
+vi.mock("../../media-application/repository/query.js", () => ({
   createMediaApplication: vi.fn()
 }));
 
@@ -11,13 +11,13 @@ vi.mock("../../media-application/storage.js", () => ({
   saveIdProofFile: vi.fn()
 }));
 
-vi.mock("./validation.js", () => ({
+vi.mock("../validation.js", () => ({
   validateForm: vi.fn()
 }));
 
-const { createMediaApplication } = await import("../../media-application/database.js");
+const { createMediaApplication } = await import("../../media-application/repository/query.js");
 const { saveIdProofFile } = await import("../../media-application/storage.js");
-const { validateForm } = await import("./validation.js");
+const { validateForm } = await import("../validation.js");
 
 describe("create-media-account controller", () => {
   let mockRequest: Partial<MulterRequest>;

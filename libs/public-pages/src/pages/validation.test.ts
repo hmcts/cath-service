@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { en } from "./en.js";
+import { en } from "./create-media-account/en.js";
 import { validateForm } from "./validation.js";
 
 describe("validateForm", () => {

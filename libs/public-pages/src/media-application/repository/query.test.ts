@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMediaApplication } from "./database.js";
 import type { MediaApplicationCreateData } from "./model.js";
+import { createMediaApplication } from "./query.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {

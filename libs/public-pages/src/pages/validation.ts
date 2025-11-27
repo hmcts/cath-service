@@ -1,6 +1,6 @@
-import type { ValidationError } from "../../media-application/model.js";
-import type { cy } from "./cy.js";
-import type { en } from "./en.js";
+import type { ValidationError } from "../media-application/repository/model.js";
+import type { cy } from "./create-media-account/cy.js";
+import type { en } from "./create-media-account/en.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FULL_NAME_REGEX = /^[a-zA-Z\s\-',.]+$/;
