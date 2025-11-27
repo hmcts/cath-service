@@ -1,5 +1,5 @@
 import { prisma } from "@hmcts/postgres";
-import * as Papa from "papaparse";
+import Papa from "papaparse";
 
 export async function generateReferenceDataCsv(): Promise<string> {
   try {

@@ -201,4 +201,97 @@ describe("authNavigationMiddleware", () => {
     expect(res.locals.navigation.signOut).toBe("Sign out");
     expect(res.locals.navigation.verifiedItems).toHaveLength(2);
   });
+
+  it("should add navigation items for VERIFIED users (media users) in English", () => {
+    const middleware = authNavigationMiddleware();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: { role: "VERIFIED" },
+      path: "/account-home"
+    } as Request;
+
+    const res = {
+      locals: {
+        locale: "en"
+      }
+    } as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.navigation).toBeDefined();
+    expect(res.locals.navigation.verifiedItems).toHaveLength(2);
+    expect(res.locals.navigation.verifiedItems[0]).toEqual({
+      text: "Dashboard",
+      href: "/account-home",
+      current: true,
+      attributes: { "data-test": "dashboard-link" }
+    });
+    expect(res.locals.navigation.verifiedItems[1]).toEqual({
+      text: "Email subscriptions",
+      href: "/subscription-management",
+      current: false,
+      attributes: { "data-test": "email-subscriptions-link" }
+    });
+  });
+
+  it("should add navigation items for VERIFIED users (media users) in Welsh", () => {
+    const middleware = authNavigationMiddleware();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: { role: "VERIFIED" },
+      path: "/subscription-management"
+    } as Request;
+
+    const res = {
+      locals: {
+        locale: "cy"
+      }
+    } as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.navigation).toBeDefined();
+    expect(res.locals.navigation.verifiedItems).toHaveLength(2);
+    expect(res.locals.navigation.verifiedItems[0]).toEqual({
+      text: "Dangosfwrdd",
+      href: "/account-home",
+      current: false,
+      attributes: { "data-test": "dashboard-link" }
+    });
+    expect(res.locals.navigation.verifiedItems[1]).toEqual({
+      text: "Tanysgrifiadau e-bost",
+      href: "/subscription-management",
+      current: true,
+      attributes: { "data-test": "email-subscriptions-link" }
+    });
+  });
+
+  it("should default to English for VERIFIED users when locale is not set", () => {
+    const middleware = authNavigationMiddleware();
+
+    const req = {
+      isAuthenticated: () => true,
+      user: { role: "VERIFIED" },
+      path: "/account-home"
+    } as Request;
+
+    const res = {
+      locals: {}
+    } as Response;
+
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.navigation).toBeDefined();
+    expect(res.locals.navigation.verifiedItems).toHaveLength(2);
+    expect(res.locals.navigation.verifiedItems[0].text).toBe("Dashboard");
+    expect(res.locals.navigation.verifiedItems[1].text).toBe("Email subscriptions");
+  });
 });

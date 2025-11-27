@@ -1,7 +1,42 @@
 import { prisma } from "@hmcts/postgres";
 import { locationData } from "./location-data.js";
 
+async function shouldSeed(): Promise<boolean> {
+  // Only seed in local development, not in CI or production
+  if (process.env.NODE_ENV === "production") {
+    console.log("Skipping seed: NODE_ENV is production");
+    return false;
+  }
+
+  if (process.env.CI === "true") {
+    console.log("Skipping seed: Running in CI environment");
+    return false;
+  }
+
+  // Check if tables are empty
+  const regionCount = await prisma.region.count();
+  const jurisdictionCount = await prisma.jurisdiction.count();
+  const locationCount = await prisma.location.count();
+
+  // Only seed if all tables are empty
+  const isEmpty = regionCount === 0 && jurisdictionCount === 0 && locationCount === 0;
+
+  if (!isEmpty) {
+    console.log("Skipping seed: Tables already contain data");
+    return false;
+  }
+
+  return true;
+}
+
 export async function seedLocationData() {
+  console.log("Checking if location data seeding is needed...");
+
+  const needsSeeding = await shouldSeed();
+  if (!needsSeeding) {
+    return;
+  }
+
   console.log("Seeding location reference data...");
 
   // Seed regions

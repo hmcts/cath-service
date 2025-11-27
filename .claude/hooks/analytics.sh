@@ -254,7 +254,7 @@ function validateEventData(eventData) {
 
 class SimpleAnalytics {
   constructor() {
-    const projectDir = process.cwd();
+    const projectDir = path.join(__dirname, "..", "..");
     this.dataDir = path.join(projectDir, ".claude", "analytics");
     this.stateDir = path.join(this.dataDir, "state");
 

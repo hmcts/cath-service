@@ -153,7 +153,7 @@ test.describe("Account Home Page", () => {
     test("should have email subscriptions box as clickable link", async ({ page }) => {
       await page.goto("/account-home");
       const box = page.locator(".verified-tile").nth(2);
-      await expect(box).toHaveAttribute("href", "/");
+      await expect(box).toHaveAttribute("href", "/subscription-management");
     });
 
     test("should display description paragraph", async ({ page }) => {
@@ -164,11 +164,11 @@ test.describe("Account Home Page", () => {
       await expect(description).toHaveText("Get emails about hearings from different courts and tribunals and manage your subscriptions.");
     });
 
-    test("should navigate to home page when email subscriptions box is clicked", async ({ page }) => {
+    test("should navigate to subscription management when email subscriptions box is clicked", async ({ page }) => {
       await page.goto("/account-home");
       const box = page.locator(".verified-tile").nth(2);
       await box.click();
-      await expect(page).toHaveURL("/");
+      await expect(page).toHaveURL("/subscription-management");
     });
   });
 
@@ -401,7 +401,7 @@ test.describe("Account Home Page", () => {
       const boxes = page.locator(".verified-tile");
       await expect(boxes.nth(0)).toHaveAttribute("href", "/search");
       await expect(boxes.nth(1)).toHaveAttribute("href", "/summary-of-publications?locationId=9");
-      await expect(boxes.nth(2)).toHaveAttribute("href", "/");
+      await expect(boxes.nth(2)).toHaveAttribute("href", "/subscription-management");
     });
   });
 
