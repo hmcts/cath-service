@@ -49,6 +49,7 @@ model Location {
 
   locationRegions          LocationRegion[]
   locationSubJurisdictions LocationSubJurisdiction[]
+  subscriptions            Subscription[]
 
   @@map("location")
 }

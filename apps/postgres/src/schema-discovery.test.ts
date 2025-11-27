@@ -12,10 +12,11 @@ describe("Schema Discovery", () => {
       expect(Array.isArray(result)).toBe(true);
     });
 
-    it("should return schema paths", () => {
+    it("should return array with subscriptions and location schemas", () => {
       const result = getPrismaSchemas();
-      expect(result.length).toBeGreaterThanOrEqual(0);
-      expect(result.every((path) => typeof path === "string")).toBe(true);
+      expect(result.length).toBe(2);
+      expect(result[0]).toContain("subscriptions");
+      expect(result[1]).toContain("location");
     });
 
     it("should return a new array on each call", () => {
