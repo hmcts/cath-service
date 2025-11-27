@@ -30,9 +30,10 @@
     "dev:api": "yarn workspace @hmcts/api run dev",
     "dev:web": "yarn workspace @hmcts/web run dev",
     "dev:web:nowatch": "yarn workspace @hmcts/web run dev:nowatch",
-    "dev:up": "docker compose up -d && yarn db:migrate:dev",
+    "dev:up": "docker compose up -d && yarn db:migrate:dev && yarn db:seed",
     "dev:down": "docker compose down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
+    "db:seed": "tsx libs/location/src/seed-data.ts",
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
     "db:generate": "yarn workspace @hmcts/postgres run generate",
     "db:studio": "yarn workspace @hmcts/postgres run studio",
@@ -62,7 +63,8 @@
   "resolutions": {
     "vite": "7.2.4",
     "glob": "13.0.0",
-    "body-parser": "2.2.1"
+    "body-parser": "2.2.1",
+    "node-forge": "1.3.2"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "3.0.7",
