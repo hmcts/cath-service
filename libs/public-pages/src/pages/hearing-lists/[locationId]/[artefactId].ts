@@ -14,23 +14,30 @@ export const GET = async (req: Request, res: Response) => {
       cy,
       isError: true,
       error: t.errorInvalidRequest,
-      title: t.errorTitle
+      title: t.errorTitle,
+      backMessage: t.backMessage,
+      backButton: t.backButton
     });
   }
 
   const result = await getFlatFileForDisplay(artefactId, locationId, locale);
 
   if ("error" in result) {
-    if (result.error === "NOT_FOUND" || result.error === "LOCATION_MISMATCH" || result.error === "EXPIRED") {
-      return res.redirect("/publication-not-found");
-    }
+    let statusCode = 404;
+    let errorMessage = t.errorNotFound;
 
-    let statusCode = 400;
-    let errorMessage = t.errorNotFlatFile;
-
-    if (result.error === "FILE_NOT_FOUND") {
+    if (result.error === "NOT_FOUND" || result.error === "LOCATION_MISMATCH") {
+      statusCode = 404;
+      errorMessage = t.errorNotFound;
+    } else if (result.error === "EXPIRED") {
+      statusCode = 410;
+      errorMessage = t.errorExpired;
+    } else if (result.error === "FILE_NOT_FOUND") {
       statusCode = 404;
       errorMessage = t.errorFileNotFound;
+    } else if (result.error === "NOT_FLAT_FILE") {
+      statusCode = 400;
+      errorMessage = t.errorNotFlatFile;
     }
 
     return res.status(statusCode).render("hearing-lists/[locationId]/[artefactId]", {
@@ -38,11 +45,13 @@ export const GET = async (req: Request, res: Response) => {
       cy,
       isError: true,
       error: errorMessage,
-      title: t.errorTitle
+      title: t.errorTitle,
+      backMessage: t.backMessage,
+      backButton: t.backButton
     });
   }
 
-  const pageTitle = result.artefactId;
+  const pageTitle = `${result.listTypeName} - ${result.courtName}`;
   const downloadUrl = `/api/flat-file/${result.artefactId}/download`;
 
   return res.render("hearing-lists/[locationId]/[artefactId]", {
@@ -54,6 +63,8 @@ export const GET = async (req: Request, res: Response) => {
     listTypeName: result.listTypeName,
     contentDate: result.contentDate,
     downloadUrl,
-    artefactId: result.artefactId
+    artefactId: result.artefactId,
+    pdfNotSupportedMessage: t.pdfNotSupportedMessage,
+    downloadLinkText: t.downloadLinkText
   });
 };
