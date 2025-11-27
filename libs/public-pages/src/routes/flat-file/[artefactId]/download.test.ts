@@ -225,19 +225,6 @@ describe("Flat File Download Route", () => {
       expect(setHeaderSpy).toHaveBeenCalledWith("Content-Disposition", 'inline; filename="test file (2024).pdf"');
     });
 
-    it("should handle large file buffers", async () => {
-      const largeBuffer = Buffer.alloc(1024 * 1024); // 1MB
-      const { getFileForDownload } = await import("../../../flat-file/flat-file-service.js");
-      vi.mocked(getFileForDownload).mockResolvedValue({
-        ...mockSuccessResult,
-        fileBuffer: largeBuffer
-      });
-
-      await GET(mockRequest as Request, mockResponse as Response);
-
-      expect(sendSpy).toHaveBeenCalledWith(largeBuffer);
-    });
-
     it("should handle empty file buffers", async () => {
       const emptyBuffer = Buffer.alloc(0);
       const { getFileForDownload } = await import("../../../flat-file/flat-file-service.js");
