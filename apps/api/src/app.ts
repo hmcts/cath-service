@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { healthcheck } from "@hmcts/cloud-native-platform";
 import { apiRoutes as locationRoutes } from "@hmcts/location/config";
+import { apiRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import compression from "compression";
 import cors from "cors";
@@ -27,7 +28,7 @@ export async function createApp(): Promise<Express> {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  const routeMounts = [{ path: `${__dirname}/routes` }, locationRoutes];
+  const routeMounts = [{ path: `${__dirname}/routes` }, locationRoutes, publicPagesRoutes];
 
   app.use(await createSimpleRouter(...routeMounts));
 

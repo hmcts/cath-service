@@ -8,7 +8,7 @@ import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamily
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
-import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
+import { apiRoutes as publicPagesApiRoutes, moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
@@ -95,8 +95,11 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
 
-  // Register API routes for location autocomplete
+  // Register location autocomplete routes (no prefix - frontend expects /locations)
   app.use(await createSimpleRouter(locationApiRoutes));
+
+  // Register API routes for public pages (flat file download)
+  app.use(await createSimpleRouter({ ...publicPagesApiRoutes, prefix: "/api" }));
 
   // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
