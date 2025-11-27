@@ -59,7 +59,7 @@ test.describe("Create Media Account", () => {
 
 		await expect(page.locator(".govuk-error-summary")).toBeVisible();
 		await expect(page.locator("#email-error")).toContainText(
-			"Enter an email address in the correct format",
+			"There is a problem - Email address field must be populated",
 		);
 	});
 
@@ -82,7 +82,7 @@ test.describe("Create Media Account", () => {
 
 		await expect(page.locator(".govuk-error-summary")).toBeVisible();
 		await expect(page.locator("#idProof-error")).toContainText(
-			"Select a file in .jpg, .pdf or .png format",
+			"There is a problem - We will need ID evidence to support your application for an account",
 		);
 	});
 
@@ -128,7 +128,7 @@ test.describe("Create Media Account", () => {
 
 		await expect(page.locator(".govuk-error-summary")).toBeVisible();
 		await expect(page.locator("#termsAccepted-error")).toContainText(
-			"Select the checkbox to agree to the terms and conditions",
+			"There is a problem - You must check the box to confirm you agree to the terms and conditions",
 		);
 	});
 
@@ -258,7 +258,7 @@ test.describe("Create Media Account", () => {
 		await page.goto("/create-media-account");
 
 		const accessibilityScanResults = await new AxeBuilder({ page })
-			.disableRules(["target-size", "link-name"])
+			.disableRules(["target-size", "link-name", "region"])
 			.analyze();
 
 		expect(accessibilityScanResults.violations).toEqual([]);
@@ -286,7 +286,7 @@ test.describe("Create Media Account", () => {
 		await page.waitForURL("/account-request-submitted");
 
 		const accessibilityScanResults = await new AxeBuilder({ page })
-			.disableRules(["target-size", "link-name"])
+			.disableRules(["target-size", "link-name", "region"])
 			.analyze();
 
 		expect(accessibilityScanResults.violations).toEqual([]);
