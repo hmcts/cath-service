@@ -1,3 +1,4 @@
+import type { MulterError } from "multer";
 import type { ValidationError } from "../media-application/repository/model.js";
 import type { cy } from "./create-media-account/cy.js";
 import type { en } from "./create-media-account/en.js";
@@ -7,13 +8,17 @@ const FULL_NAME_REGEX = /^[a-zA-Z\s\-',.]+$/;
 const ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".pdf", ".png"];
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
+function isMulterError(error: unknown): error is MulterError {
+  return typeof error === "object" && error !== null && "code" in error;
+}
+
 export function validateForm(
   fullName: string | undefined,
   email: string | undefined,
   employer: string | undefined,
   termsAccepted: string | undefined,
   file: Express.Multer.File | undefined,
-  fileUploadError: any | undefined,
+  fileUploadError: MulterError | Error | undefined,
   content: typeof en | typeof cy
 ): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -54,7 +59,7 @@ export function validateForm(
     });
   }
 
-  if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
+  if (fileUploadError && isMulterError(fileUploadError) && fileUploadError.code === "LIMIT_FILE_SIZE") {
     errors.push({
       text: content.errorFileSize,
       href: "#idProof"
