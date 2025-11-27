@@ -170,19 +170,21 @@ describe("civil-and-family-daily-cause-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
-        locationId: 1,
+        locationId: "1",
         contentDate: mockArtefact.contentDate,
         locale: "en"
       });
-      expect(res.render).toHaveBeenCalledWith(
-        "civil-and-family-daily-cause-list",
-        expect.objectContaining({
-          header: expect.any(Object),
-          openJustice: expect.any(Object),
-          listData: expect.any(Array),
-          dataSource: "Manual Upload"
-        })
-      );
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      expect(renderCall[0]).toBe("civil-and-family-daily-cause-list");
+      expect(renderCall[1]).toMatchObject({
+        dataSource: "Manual Upload"
+      });
+      expect(renderCall[1]).toHaveProperty("en");
+      expect(renderCall[1]).toHaveProperty("cy");
+      expect(renderCall[1]).toHaveProperty("header");
+      expect(renderCall[1]).toHaveProperty("openJustice");
+      expect(renderCall[1]).toHaveProperty("listData");
+      expect(renderCall[1]).toHaveProperty("t");
     });
 
     it("should successfully render cause list with Welsh locale", async () => {
@@ -229,7 +231,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
-        locationId: 1,
+        locationId: "1",
         contentDate: mockArtefact.contentDate,
         locale: "cy"
       });
@@ -280,7 +282,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
-        locationId: 1,
+        locationId: "1",
         contentDate: mockArtefact.contentDate,
         locale: "en"
       });
