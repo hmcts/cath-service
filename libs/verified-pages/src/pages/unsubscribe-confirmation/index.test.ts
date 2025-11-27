@@ -1,6 +1,6 @@
+import * as subscriptionService from "@hmcts/subscriptions";
 import type { Request, Response } from "express";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as subscriptionService from "../../repository/service.js";
 import { GET } from "./index.js";
 
 vi.mock("@hmcts/auth", () => ({
@@ -9,7 +9,7 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-vi.mock("../../repository/service.js", () => ({
+vi.mock("@hmcts/subscriptions", () => ({
   removeSubscription: vi.fn()
 }));
 

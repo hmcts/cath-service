@@ -6,7 +6,6 @@ import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCal
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import { moduleRoot as emailSubscriptionsModuleRoot, pageRoutes as emailSubscriptionsRoutes } from "@hmcts/email-subscriptions/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
@@ -65,8 +64,7 @@ export async function createApp(): Promise<Express> {
     civilFamilyCauseListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
-    verifiedPagesModuleRoot,
-    emailSubscriptionsModuleRoot
+    verifiedPagesModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
@@ -107,7 +105,6 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
-  app.use(await createSimpleRouter(emailSubscriptionsRoutes, pageRoutes));
 
   // Register file upload middleware for admin pages
   const upload = createFileUpload();

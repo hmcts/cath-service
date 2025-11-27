@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { findSubscriptionById } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
-import { findSubscriptionById } from "../../repository/queries.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

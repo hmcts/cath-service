@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { removeSubscription } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
-import { removeSubscription } from "../../repository/service.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
