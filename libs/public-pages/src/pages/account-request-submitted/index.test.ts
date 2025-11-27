@@ -26,9 +26,11 @@ describe("account-request-submitted controller", () => {
         "account-request-submitted/index",
         expect.objectContaining({
           locale: "en",
-          banner: expect.any(String),
+          bannerTitle: expect.any(String),
           sectionTitle: expect.any(String),
-          bodyText: expect.any(String)
+          bodyText1: expect.any(String),
+          bodyText2: expect.any(String),
+          bodyText3: expect.any(String)
         })
       );
     });
@@ -42,9 +44,11 @@ describe("account-request-submitted controller", () => {
         "account-request-submitted/index",
         expect.objectContaining({
           locale: "cy",
-          banner: expect.any(String),
+          bannerTitle: expect.any(String),
           sectionTitle: expect.any(String),
-          bodyText: expect.any(String)
+          bodyText1: expect.any(String),
+          bodyText2: expect.any(String),
+          bodyText3: expect.any(String)
         })
       );
     });
@@ -55,8 +59,11 @@ describe("account-request-submitted controller", () => {
       expect(mockResponse.render).toHaveBeenCalledWith(
         "account-request-submitted/index",
         expect.objectContaining({
-          banner: "Details submitted",
-          sectionTitle: "What happens next"
+          bannerTitle: "Details submitted",
+          sectionTitle: "What happens next",
+          bodyText1: "HMCTS will review your details.",
+          bodyText2: "We'll email you if we need more information or to confirm that your account has been created.",
+          bodyText3: "If you do not get an email from us within 5 working days, call our courts and tribunals service centre on 0300 303 0656."
         })
       );
     });
@@ -69,8 +76,11 @@ describe("account-request-submitted controller", () => {
       expect(mockResponse.render).toHaveBeenCalledWith(
         "account-request-submitted/index",
         expect.objectContaining({
-          banner: "Cyflwyno manylion",
-          sectionTitle: "Beth sy'n digwydd nesaf"
+          bannerTitle: "Cyflwyno manylion",
+          sectionTitle: "Beth sy'n digwydd nesaf",
+          bodyText1: "Bydd GLlTEM yn adolygu eich manylion.",
+          bodyText2: "Byddwn yn anfon e-bost atoch os bydd angen mwy o wybodaeth arnom neu i gadarnhau bod eich cyfrif wedi ei greu.",
+          bodyText3: "Os na fyddwch yn cael e-bost gennym o fewn 5 diwrnod gwaith, ffoniwch ein canolfan gwasanaeth llysoedd a thribiwnlysoedd ar 0300 303 0656"
         })
       );
     });
