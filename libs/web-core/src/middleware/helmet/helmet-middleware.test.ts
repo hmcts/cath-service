@@ -97,7 +97,9 @@ describe("helmet-middleware", () => {
               imgSrc: expect.arrayContaining(["'self'", "data:", "https://*.google-analytics.com", "https://*.googletagmanager.com"]),
               fontSrc: ["'self'", "data:"],
               connectSrc: expect.arrayContaining(["'self'", "https://*.google-analytics.com", "https://*.googletagmanager.com"]),
-              frameSrc: ["https://*.googletagmanager.com"]
+              frameSrc: ["'self'", "https://*.googletagmanager.com"],
+              objectSrc: ["'self'"],
+              formAction: ["'self'"]
             })
           }
         });
@@ -140,7 +142,7 @@ describe("helmet-middleware", () => {
         expect(directives?.connectSrc).toContain("https://*.googletagmanager.com");
         expect(directives?.imgSrc).toContain("https://*.google-analytics.com");
         expect(directives?.imgSrc).toContain("https://*.googletagmanager.com");
-        expect(directives?.frameSrc).toEqual(["https://*.googletagmanager.com"]);
+        expect(directives?.frameSrc).toEqual(["'self'", "https://*.googletagmanager.com"]);
       });
 
       it("should exclude GTM sources when disabled", () => {
@@ -154,7 +156,7 @@ describe("helmet-middleware", () => {
         expect(directives?.connectSrc).not.toContain("https://*.googletagmanager.com");
         expect(directives?.imgSrc).not.toContain("https://*.google-analytics.com");
         expect(directives?.imgSrc).not.toContain("https://*.googletagmanager.com");
-        expect(directives?.frameSrc).toBeUndefined();
+        expect(directives?.frameSrc).toEqual(["'self'"]);
       });
     });
 
@@ -238,20 +240,22 @@ describe("helmet-middleware", () => {
         expect(directives?.fontSrc).toEqual(["'self'", "data:"]);
         expect(directives?.imgSrc).toContain("'self'");
         expect(directives?.imgSrc).toContain("data:");
+        expect(directives?.objectSrc).toEqual(["'self'"]);
+        expect(directives?.formAction).toEqual(["'self'"]);
       });
 
-      it("should conditionally include frameSrc", () => {
-        // Without GTM
+      it("should always include frameSrc with 'self' for PDF embedding", () => {
+        // Without GTM - should include 'self' for PDF embedding
         configureHelmet({ enableGoogleTagManager: false });
         let helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        expect(helmetCall?.contentSecurityPolicy?.directives?.frameSrc).toBeUndefined();
+        expect(helmetCall?.contentSecurityPolicy?.directives?.frameSrc).toEqual(["'self'"]);
 
-        // With GTM
+        // With GTM - should include both 'self' and GTM sources
         vi.clearAllMocks();
         vi.mocked(helmet).mockReturnValue("helmet-middleware" as any);
         configureHelmet({ enableGoogleTagManager: true });
         helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        expect(helmetCall?.contentSecurityPolicy?.directives?.frameSrc).toBeDefined();
+        expect(helmetCall?.contentSecurityPolicy?.directives?.frameSrc).toEqual(["'self'", "https://*.googletagmanager.com"]);
       });
     });
 
