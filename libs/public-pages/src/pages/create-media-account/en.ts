@@ -18,10 +18,10 @@ export const en = {
   continueButton: "Continue",
   backToTop: "Back to top",
   errorSummaryTitle: "There is a problem",
-  errorFullNameRequired: "Enter your full name",
-  errorEmailInvalid: "Enter an email address in the correct format, like name@example.com",
-  errorEmployerRequired: "Enter your employer",
-  errorFileRequired: "Select a file in .jpg, .pdf or .png format",
+  errorFullNameRequired: "There is a problem - Full name field must be populated",
+  errorEmailInvalid: "There is a problem - Email address field must be populated",
+  errorEmployerRequired: "There is a problem - Your employers name will be needed to support your application for an account",
+  errorFileRequired: "There is a problem - We will need ID evidence to support your application for an account",
   errorFileSize: "Your file must be smaller than 2MB",
-  errorTermsRequired: "Select the checkbox to agree to the terms and conditions"
+  errorTermsRequired: "There is a problem - You must check the box to confirm you agree to the terms and conditions."
 };

@@ -62,12 +62,12 @@ describe("create-media-account template", () => {
     });
 
     it("should have all error messages", () => {
-      expect(en.errorFullNameRequired).toBe("Enter your full name");
-      expect(en.errorEmailInvalid).toContain("Enter an email address in the correct format");
-      expect(en.errorEmployerRequired).toBe("Enter your employer");
-      expect(en.errorFileRequired).toContain(".jpg, .pdf or .png");
-      expect(en.errorFileSize).toContain("2MB");
-      expect(en.errorTermsRequired).toContain("terms and conditions");
+      expect(en.errorFullNameRequired).toBe("There is a problem - Full name field must be populated");
+      expect(en.errorEmailInvalid).toBe("There is a problem - Email address field must be populated");
+      expect(en.errorEmployerRequired).toBe("There is a problem - Your employers name will be needed to support your application for an account");
+      expect(en.errorFileRequired).toBe("There is a problem - We will need ID evidence to support your application for an account");
+      expect(en.errorFileSize).toBe("Your file must be smaller than 2MB");
+      expect(en.errorTermsRequired).toBe("There is a problem - You must check the box to confirm you agree to the terms and conditions.");
     });
   });
 
@@ -117,11 +117,11 @@ describe("create-media-account template", () => {
 
     it("should have all error messages", () => {
       expect(cy.errorFullNameRequired).toBe("Nodwch eich enw llawn");
-      expect(cy.errorEmailInvalid).toContain("Nodwch gyfeiriad e-bost");
+      expect(cy.errorEmailInvalid).toBe("Nodwch gyfeiriad e-bost yn y fformat cywir, e.e. name@example.com");
       expect(cy.errorEmployerRequired).toBe("Nodwch enw eich cyflogwr");
-      expect(cy.errorFileRequired).toContain(".jpg, .pdf neu .png");
-      expect(cy.errorFileSize).toContain("2MB");
-      expect(cy.errorTermsRequired).toContain("telerau ac amodau");
+      expect(cy.errorFileRequired).toBe("Dewiswch ffeil yn fformat .jpg, .pdf neu .png");
+      expect(cy.errorFileSize).toBe("Rhaid i'ch ffeil fod yn llai na 2MB");
+      expect(cy.errorTermsRequired).toBe("Dewiswch y blwch i gytuno i'r telerau ac amodau");
     });
   });
 
