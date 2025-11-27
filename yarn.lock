@@ -982,6 +982,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
+  dependencies:
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/system-admin-pages@workspace:*, @hmcts/system-admin-pages@workspace:libs/system-admin-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
@@ -1000,6 +1012,8 @@ __metadata:
 "@hmcts/verified-pages@workspace:*, @hmcts/verified-pages@workspace:libs/verified-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
+  dependencies:
+    "@hmcts/subscriptions": "workspace:*"
   peerDependencies:
     express: ^5.1.0
   languageName: unknown

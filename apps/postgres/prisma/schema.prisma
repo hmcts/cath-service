@@ -36,7 +36,7 @@ model User {
   role               String         @db.VarChar(20)
   createdDate        DateTime       @default(now()) @map("created_date")
   lastSignedInDate   DateTime?      @map("last_signed_in_date")
-  subscription       Subscription[]
+  subscriptions      Subscription[]
 
   @@map("user")
 }

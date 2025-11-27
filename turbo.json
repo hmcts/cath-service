@@ -6,6 +6,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**"]
     },
+    "@hmcts/postgres#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "../../node_modules/.prisma/**"]
+    },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
