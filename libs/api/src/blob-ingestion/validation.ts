@@ -94,15 +94,19 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     });
   }
 
-  // Date comparison validation
+  // Date comparison validation - only if both dates are valid
   if (request.display_from && request.display_to) {
     const fromDate = new Date(request.display_from);
     const toDate = new Date(request.display_to);
-    if (toDate < fromDate) {
-      errors.push({
-        field: "display_to",
-        message: "display_to must be after display_from"
-      });
+
+    // Only compare if both dates are valid
+    if (!Number.isNaN(fromDate.getTime()) && !Number.isNaN(toDate.getTime())) {
+      if (toDate < fromDate) {
+        errors.push({
+          field: "display_to",
+          message: "display_to must be after display_from"
+        });
+      }
     }
   }
 

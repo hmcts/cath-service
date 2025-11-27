@@ -42,7 +42,7 @@ export function authenticateApi() {
 
       next();
     } catch (error) {
-      console.error("API authentication error:", error);
+      console.error("API authentication error");
       return res.status(401).json({
         success: false,
         message: "Invalid or expired token"

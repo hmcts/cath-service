@@ -39,7 +39,25 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
 
   // List type ID should always be present after successful validation
   if (!validation.listTypeId) {
-    throw new Error("List type ID not found after validation");
+    console.error("System error: List type ID not found after validation", {
+      courtId: request.court_id,
+      listType: request.list_type,
+      validationResult: validation.isValid
+    });
+
+    await createIngestionLog({
+      id: randomUUID(),
+      timestamp: new Date(),
+      sourceSystem: request.provenance,
+      courtId: request.court_id,
+      status: "SYSTEM_ERROR",
+      errorMessage: "List type ID not found after validation"
+    });
+
+    return {
+      success: false,
+      message: "Internal server error during ingestion"
+    };
   }
 
   try {

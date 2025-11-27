@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Navigate to monorepo root (from libs/blob-ingestion/src/blob-ingestion/)
+// Navigate to monorepo root (from libs/api/src/blob-ingestion/)
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
 const TEMP_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 

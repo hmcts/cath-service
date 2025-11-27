@@ -25,6 +25,9 @@ describe("POST /v1/publication", () => {
     jsonMock = vi.fn();
 
     mockRequest = {
+      headers: {
+        "content-length": "277"
+      },
       body: {
         court_id: "TEST_COURT_ID",
         provenance: "TEST_SOURCE",
@@ -120,7 +123,13 @@ describe("POST /v1/publication", () => {
 
     await handler(mockRequest as Request, mockResponse as Response);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Unexpected error in blob ingestion endpoint:", expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Unexpected error in blob ingestion endpoint:",
+      expect.objectContaining({
+        name: expect.any(String),
+        message: expect.any(String)
+      })
+    );
     expect(statusMock).toHaveBeenCalledWith(500);
     expect(jsonMock).toHaveBeenCalledWith({
       success: false,
@@ -142,7 +151,8 @@ describe("POST /v1/publication", () => {
 
     await handler(mockRequest as Request, mockResponse as Response);
 
-    const expectedSize = JSON.stringify(mockRequest.body).length;
+    // Should use Content-Length header value
+    const expectedSize = 277;
     expect(processBlobIngestion).toHaveBeenCalledWith(mockRequest.body as BlobIngestionRequest, expectedSize);
   });
 
@@ -160,7 +170,7 @@ describe("POST /v1/publication", () => {
 
     await handler(mockRequest as Request, mockResponse as Response);
 
-    expect(statusMock).toHaveBeenCalledWith(500);
+    expect(statusMock).toHaveBeenCalledWith(200);
     expect(jsonMock).toHaveBeenCalledWith({
       success: false,
       no_match: true,
