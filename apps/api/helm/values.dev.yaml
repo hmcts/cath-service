@@ -1,4 +1,5 @@
 # Local Development Helm Values
+# Only connects to staging Key Vault, not production cath vault
 # This file is used for local development only
 # See values.yaml for production configuration
 
