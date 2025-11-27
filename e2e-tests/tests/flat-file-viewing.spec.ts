@@ -68,15 +68,18 @@ startxref
 }
 
 // Helper function to create a flat file artefact in the database
-async function createFlatFileArtefact(options: {
-  artefactId: string;
-  locationId: string;
-  displayFrom?: Date;
-  displayTo?: Date;
-  isFlatFile?: boolean;
-  createFile?: boolean;
-  fileContent?: string;
-}): Promise<string> {
+async function createFlatFileArtefact(
+  options: {
+    artefactId: string;
+    locationId: string;
+    displayFrom?: Date;
+    displayTo?: Date;
+    isFlatFile?: boolean;
+    createFile?: boolean;
+    fileContent?: string;
+  },
+  trackingArray?: string[]
+): Promise<string> {
   const {
     artefactId,
     locationId,
@@ -112,6 +115,11 @@ async function createFlatFileArtefact(options: {
 
     const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
     fs.writeFileSync(filePath, createTestPDFBuffer(fileContent));
+  }
+
+  // Track artefact for cleanup if tracking array provided
+  if (trackingArray) {
+    trackingArray.push(artefactId);
   }
 
   return artefactId;
