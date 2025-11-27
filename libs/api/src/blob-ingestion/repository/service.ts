@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { createArtefact, Provenance } from "@hmcts/publication";
-import { saveUploadedFile } from "./file-storage.js";
+import { saveUploadedFile } from "../file-storage.js";
+import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
 import { createIngestionLog } from "./queries.js";
-import { validateBlobRequest } from "./validation.js";
 
 const PROVENANCE_MAP: Record<string, string> = {
   XHIBIT: Provenance.XHIBIT,

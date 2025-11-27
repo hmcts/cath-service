@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BlobIngestionRequest } from "../../blob-ingestion/model.js";
+import type { BlobIngestionRequest } from "../../blob-ingestion/repository/model.js";
 import { POST } from "./publication.js";
 
-vi.mock("../../blob-ingestion/service.js", () => ({
+vi.mock("../../blob-ingestion/repository/service.js", () => ({
   processBlobIngestion: vi.fn()
 }));
 
@@ -47,7 +47,7 @@ describe("POST /v1/publication", () => {
   });
 
   it("should return 201 and artefact_id when blob ingestion is successful", async () => {
-    const { processBlobIngestion } = await import("../../blob-ingestion/service.js");
+    const { processBlobIngestion } = await import("../../blob-ingestion/repository/service.js");
 
     vi.mocked(processBlobIngestion).mockResolvedValue({
       success: true,
@@ -69,7 +69,7 @@ describe("POST /v1/publication", () => {
   });
 
   it("should return 400 when validation fails", async () => {
-    const { processBlobIngestion } = await import("../../blob-ingestion/service.js");
+    const { processBlobIngestion } = await import("../../blob-ingestion/repository/service.js");
 
     vi.mocked(processBlobIngestion).mockResolvedValue({
       success: false,
@@ -91,7 +91,7 @@ describe("POST /v1/publication", () => {
   });
 
   it("should return 500 when processing fails with generic error", async () => {
-    const { processBlobIngestion } = await import("../../blob-ingestion/service.js");
+    const { processBlobIngestion } = await import("../../blob-ingestion/repository/service.js");
 
     vi.mocked(processBlobIngestion).mockResolvedValue({
       success: false,
@@ -111,7 +111,7 @@ describe("POST /v1/publication", () => {
   });
 
   it("should return 500 when unexpected error occurs", async () => {
-    const { processBlobIngestion } = await import("../../blob-ingestion/service.js");
+    const { processBlobIngestion } = await import("../../blob-ingestion/repository/service.js");
 
     vi.mocked(processBlobIngestion).mockRejectedValue(new Error("Unexpected error"));
 
@@ -129,7 +129,7 @@ describe("POST /v1/publication", () => {
   });
 
   it("should calculate raw body size correctly", async () => {
-    const { processBlobIngestion } = await import("../../blob-ingestion/service.js");
+    const { processBlobIngestion } = await import("../../blob-ingestion/repository/service.js");
 
     vi.mocked(processBlobIngestion).mockResolvedValue({
       success: true,
@@ -147,7 +147,7 @@ describe("POST /v1/publication", () => {
   });
 
   it("should handle no_match scenario", async () => {
-    const { processBlobIngestion } = await import("../../blob-ingestion/service.js");
+    const { processBlobIngestion } = await import("../../blob-ingestion/repository/service.js");
 
     vi.mocked(processBlobIngestion).mockResolvedValue({
       success: false,

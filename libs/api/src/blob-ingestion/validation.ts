@@ -1,7 +1,7 @@
 import { mockListTypes, validateListTypeJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
-import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./model.js";
+import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./repository/model.js";
 
 const MAX_BLOB_SIZE = 10 * 1024 * 1024; // 10MB default
 const ALLOWED_PROVENANCES = ["XHIBIT", "MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM"];

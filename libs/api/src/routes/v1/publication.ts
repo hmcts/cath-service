@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { BlobIngestionRequest } from "../../blob-ingestion/model.js";
-import { processBlobIngestion } from "../../blob-ingestion/service.js";
+import type { BlobIngestionRequest } from "../../blob-ingestion/repository/model.js";
+import { processBlobIngestion } from "../../blob-ingestion/repository/service.js";
 import { authenticateApi } from "../../middleware/oauth-middleware.js";
 
 // OAuth authentication is applied first in the middleware chain

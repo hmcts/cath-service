@@ -54,3 +54,5 @@ lcov.info
 .claude/analytics
 
 /storage/temp
+/e2e-tests/.claude
+/libs/api/.claude

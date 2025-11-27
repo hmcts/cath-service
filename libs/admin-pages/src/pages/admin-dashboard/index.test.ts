@@ -134,7 +134,7 @@ describe("admin dashboard page", () => {
       await handler(req, res);
 
       const renderCall = vi.mocked(res.render).mock.calls[0];
-      const renderData = renderCall[1];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.tiles).toHaveLength(3);
     });
@@ -159,7 +159,7 @@ describe("admin dashboard page", () => {
       await handler(req, res);
 
       const renderCall = vi.mocked(res.render).mock.calls[0];
-      const renderData = renderCall[1];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.tiles).toHaveLength(3);
     });
@@ -184,7 +184,7 @@ describe("admin dashboard page", () => {
       await handler(req, res);
 
       const renderCall = vi.mocked(res.render).mock.calls[0];
-      const renderData = renderCall[1];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.tiles).toHaveLength(4);
       expect(renderData.tiles[3]).toEqual({

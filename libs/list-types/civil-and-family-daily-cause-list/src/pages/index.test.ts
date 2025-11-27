@@ -71,19 +71,19 @@ describe("civil-and-family-daily-cause-list controller", () => {
       req.query = { artefactId: "test-id" };
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "MANUAL_UPLOAD",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
 
@@ -98,25 +98,25 @@ describe("civil-and-family-daily-cause-list controller", () => {
       req.query = { artefactId: "test-id" };
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "MANUAL_UPLOAD",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify({ invalid: "data" }));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: false,
         errors: ["Validation error"]
-      });
+      } as any);
 
       await GET(req as Request, res as Response);
 
@@ -131,19 +131,19 @@ describe("civil-and-family-daily-cause-list controller", () => {
       res.locals = { locale: "en" };
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "MANUAL_UPLOAD",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       const mockJsonData = {
         document: {
           publicationDate: "2025-01-13"
@@ -160,12 +160,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
-      });
+      } as any);
       vi.mocked(renderCauseListData).mockResolvedValue({
-        header: { title: "Test Court", publishedDate: "13 January 2025" },
-        openJustice: { statement: "Test statement" },
-        listData: []
-      });
+        document: { locationName: "Test Court", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
+        venue: { venueName: "Test Court", email: "test@example.com", phone: "123456" },
+        courtLists: []
+      } as any);
 
       await GET(req as Request, res as Response);
 
@@ -190,19 +190,19 @@ describe("civil-and-family-daily-cause-list controller", () => {
       res.locals = { locale: "cy" };
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "MANUAL_UPLOAD",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       const mockJsonData = {
         document: {
           publicationDate: "2025-01-13"
@@ -219,12 +219,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
-      });
+      } as any);
       vi.mocked(renderCauseListData).mockResolvedValue({
-        header: { title: "Llys Prawf", publishedDate: "13 Ionawr 2025" },
-        openJustice: { statement: "Datganiad prawf" },
-        listData: []
-      });
+        document: { locationName: "Llys Prawf", addressLines: [], contentDate: "13 Ionawr 2025", lastUpdated: "13 Ionawr 2025" },
+        venue: { venueName: "Llys Prawf", email: "prawf@example.com", phone: "123456" },
+        courtLists: []
+      } as any);
 
       await GET(req as Request, res as Response);
 
@@ -241,19 +241,19 @@ describe("civil-and-family-daily-cause-list controller", () => {
       res.locals = {};
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "MANUAL_UPLOAD",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       const mockJsonData = {
         document: {
           publicationDate: "2025-01-13"
@@ -270,12 +270,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
-      });
+      } as any);
       vi.mocked(renderCauseListData).mockResolvedValue({
-        header: { title: "Test Court", publishedDate: "13 January 2025" },
-        openJustice: { statement: "Test statement" },
-        listData: []
-      });
+        document: { locationName: "Test Court", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
+        venue: { venueName: "Test Court", email: "test@example.com", phone: "123456" },
+        courtLists: []
+      } as any);
 
       await GET(req as Request, res as Response);
 
@@ -301,19 +301,19 @@ describe("civil-and-family-daily-cause-list controller", () => {
       req.query = { artefactId: "test-id" };
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "MANUAL_UPLOAD",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       const mockJsonData = {
         document: {
           publicationDate: "2025-01-13"
@@ -330,12 +330,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
-      });
+      } as any);
       vi.mocked(renderCauseListData).mockResolvedValue({
-        header: { title: "Test Court", publishedDate: "13 January 2025" },
-        openJustice: { statement: "Test statement" },
-        listData: []
-      });
+        document: { locationName: "Test Court", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
+        venue: { venueName: "Test Court", email: "test@example.com", phone: "123456" },
+        courtLists: []
+      } as any);
 
       await GET(req as Request, res as Response);
 
@@ -351,19 +351,19 @@ describe("civil-and-family-daily-cause-list controller", () => {
       req.query = { artefactId: "test-id" };
       const mockArtefact = {
         artefactId: "test-id",
-        locationId: 1,
+        locationId: "1",
         listTypeId: 8,
         contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
         language: "ENGLISH",
-        listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        provenance: "UNKNOWN_PROVENANCE",
-        sourceArtefactId: null,
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
-        search: {},
-        payload: "{}",
-        isFlatFile: false
-      };
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "UNKNOWN_PROVENANCE",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
       const mockJsonData = {
         document: {
           publicationDate: "2025-01-13"
@@ -380,12 +380,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
-      });
+      } as any);
       vi.mocked(renderCauseListData).mockResolvedValue({
-        header: { title: "Test Court", publishedDate: "13 January 2025" },
-        openJustice: { statement: "Test statement" },
-        listData: []
-      });
+        document: { locationName: "Test Court", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
+        venue: { venueName: "Test Court", email: "test@example.com", phone: "123456" },
+        courtLists: []
+      } as any);
 
       await GET(req as Request, res as Response);
 

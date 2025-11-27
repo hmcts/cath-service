@@ -17,19 +17,19 @@ vi.mock("./queries.js", () => ({
   createIngestionLog: vi.fn()
 }));
 
-vi.mock("./validation.js", () => ({
+vi.mock("../validation.js", () => ({
   validateBlobRequest: vi.fn()
 }));
 
-vi.mock("./file-storage.js", () => ({
+vi.mock("../file-storage.js", () => ({
   saveUploadedFile: vi.fn()
 }));
 
 describe("processBlobIngestion", async () => {
   const { createArtefact } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
-  const { validateBlobRequest } = await import("./validation.js");
-  const { saveUploadedFile } = await import("./file-storage.js");
+  const { validateBlobRequest } = await import("../validation.js");
+  const { saveUploadedFile } = await import("../file-storage.js");
 
   beforeEach(() => {
     vi.clearAllMocks();

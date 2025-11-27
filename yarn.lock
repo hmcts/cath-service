@@ -833,9 +833,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/blob-ingestion@workspace:libs/blob-ingestion":
+"@hmcts/blob-ingestion@workspace:libs/api":
   version: 0.0.0-use.local
-  resolution: "@hmcts/blob-ingestion@workspace:libs/blob-ingestion"
+  resolution: "@hmcts/blob-ingestion@workspace:libs/api"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"

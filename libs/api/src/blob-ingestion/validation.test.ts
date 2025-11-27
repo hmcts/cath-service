@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { BlobIngestionRequest } from "./model.js";
+import type { BlobIngestionRequest } from "./repository/model.js";
 import { validateBlobRequest } from "./validation.js";
 
 vi.mock("@hmcts/location", () => ({
