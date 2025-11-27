@@ -9,7 +9,7 @@ vi.mock("../repository/queries.js");
 describe("Validation Functions", () => {
   describe("validateLocationId", () => {
     it("should return true for valid location ID", async () => {
-      vi.mocked(location.getLocationById).mockReturnValue({
+      vi.mocked(location.getLocationById).mockResolvedValue({
         locationId: 456,
         name: "Test Court",
         welshName: "Llys Prawf",
@@ -23,7 +23,7 @@ describe("Validation Functions", () => {
     });
 
     it("should return false for invalid location ID", async () => {
-      vi.mocked(location.getLocationById).mockReturnValue(undefined);
+      vi.mocked(location.getLocationById).mockResolvedValue(undefined);
 
       const result = await validateLocationId("999");
 
@@ -32,7 +32,7 @@ describe("Validation Functions", () => {
     });
 
     it("should return false for non-numeric location ID", async () => {
-      vi.mocked(location.getLocationById).mockReturnValue(undefined);
+      vi.mocked(location.getLocationById).mockResolvedValue(undefined);
 
       const result = await validateLocationId("invalid");
 
@@ -50,14 +50,14 @@ describe("Validation Functions", () => {
       const result = await validateDuplicateSubscription(userId, locationId);
 
       expect(result).toBe(true);
-      expect(queries.findSubscriptionByUserAndLocation).toHaveBeenCalledWith(userId, locationId);
+      expect(queries.findSubscriptionByUserAndLocation).toHaveBeenCalledWith(userId, 456);
     });
 
     it("should return false if subscription exists", async () => {
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
-        locationId,
+        locationId: 456,
         dateAdded: new Date()
       });
 

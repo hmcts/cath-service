@@ -36,7 +36,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
-        locationId,
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -44,9 +44,9 @@ describe("Subscription Service", () => {
 
       expect(result).toBeDefined();
       expect(result.userId).toBe(userId);
-      expect(result.locationId).toBe(locationId);
+      expect(result.locationId).toBe(456);
       expect(validation.validateLocationId).toHaveBeenCalledWith(locationId);
-      expect(queries.createSubscriptionRecord).toHaveBeenCalledWith(userId, locationId);
+      expect(queries.createSubscriptionRecord).toHaveBeenCalledWith(userId, 456);
     });
 
     it("should throw error if location is invalid", async () => {
@@ -60,7 +60,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.findSubscriptionByUserAndLocation).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
-        locationId,
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -83,7 +83,7 @@ describe("Subscription Service", () => {
         {
           subscriptionId: "sub1",
           userId,
-          locationId: "456",
+          locationId: 456,
           dateAdded: new Date()
         }
       ];
@@ -105,7 +105,7 @@ describe("Subscription Service", () => {
       const subscription = {
         subscriptionId,
         userId,
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       };
 
@@ -128,7 +128,7 @@ describe("Subscription Service", () => {
       const subscription = {
         subscriptionId,
         userId: "differentUser",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       };
 
@@ -149,7 +149,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -171,7 +171,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub123",
         userId,
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -189,8 +189,8 @@ describe("Subscription Service", () => {
 
     it("should replace subscriptions by adding new and removing old", async () => {
       const existingSubscriptions = [
-        { subscriptionId: "sub1", userId, locationId: "456", dateAdded: new Date() },
-        { subscriptionId: "sub2", userId, locationId: "789", dateAdded: new Date() }
+        { subscriptionId: "sub1", userId, locationId: 456, dateAdded: new Date() },
+        { subscriptionId: "sub2", userId, locationId: 789, dateAdded: new Date() }
       ];
       const newLocationIds = ["789", "101"];
 
@@ -200,7 +200,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub3",
         userId,
-        locationId: "101",
+        locationId: 101,
         dateAdded: new Date()
       });
 
@@ -209,7 +209,7 @@ describe("Subscription Service", () => {
       expect(result.added).toBe(1);
       expect(result.removed).toBe(1);
       expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith("sub1");
-      expect(queries.createSubscriptionRecord).toHaveBeenCalledWith(userId, "101");
+      expect(queries.createSubscriptionRecord).toHaveBeenCalledWith(userId, 101);
     });
 
     it("should only add subscriptions when no existing ones", async () => {
@@ -220,7 +220,7 @@ describe("Subscription Service", () => {
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub1",
         userId,
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -233,8 +233,8 @@ describe("Subscription Service", () => {
 
     it("should only remove subscriptions when new list is empty", async () => {
       const existingSubscriptions = [
-        { subscriptionId: "sub1", userId, locationId: "456", dateAdded: new Date() },
-        { subscriptionId: "sub2", userId, locationId: "789", dateAdded: new Date() }
+        { subscriptionId: "sub1", userId, locationId: 456, dateAdded: new Date() },
+        { subscriptionId: "sub2", userId, locationId: 789, dateAdded: new Date() }
       ];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
@@ -252,7 +252,7 @@ describe("Subscription Service", () => {
       const existingSubscriptions = Array.from({ length: 48 }, (_, i) => ({
         subscriptionId: `sub${i}`,
         userId,
-        locationId: `${i}`,
+        locationId: i,
         dateAdded: new Date()
       }));
       // Keep all existing 48 and try to add 3 new ones = 51 total
@@ -275,8 +275,8 @@ describe("Subscription Service", () => {
 
     it("should keep same subscriptions when lists match", async () => {
       const existingSubscriptions = [
-        { subscriptionId: "sub1", userId, locationId: "456", dateAdded: new Date() },
-        { subscriptionId: "sub2", userId, locationId: "789", dateAdded: new Date() }
+        { subscriptionId: "sub1", userId, locationId: 456, dateAdded: new Date() },
+        { subscriptionId: "sub2", userId, locationId: 789, dateAdded: new Date() }
       ];
       const newLocationIds = ["456", "789"];
 

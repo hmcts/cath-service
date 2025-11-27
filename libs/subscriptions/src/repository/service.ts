@@ -16,7 +16,8 @@ export async function createSubscription(userId: string, locationId: string) {
     throw new Error("Invalid location ID");
   }
 
-  const existing = await findSubscriptionByUserAndLocation(userId, locationId);
+  const locationIdNumber = Number.parseInt(locationId, 10);
+  const existing = await findSubscriptionByUserAndLocation(userId, locationIdNumber);
   if (existing) {
     throw new Error("You are already subscribed to this court");
   }
@@ -26,7 +27,7 @@ export async function createSubscription(userId: string, locationId: string) {
     throw new Error(`Maximum ${MAX_SUBSCRIPTIONS} subscriptions allowed`);
   }
 
-  return createSubscriptionRecord(userId, locationId);
+  return createSubscriptionRecord(userId, locationIdNumber);
 }
 
 export async function getSubscriptionsByUserId(userId: string) {
@@ -66,11 +67,12 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
   const existingSubscriptions = await findSubscriptionsByUserId(userId);
   const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId);
 
-  const newLocationIdSet = new Set(newLocationIds);
+  const newLocationIdNumbers = newLocationIds.map((id) => Number.parseInt(id, 10));
+  const newLocationIdSet = new Set(newLocationIdNumbers);
   const existingLocationIdSet = new Set(existingLocationIds);
 
   const toDelete = existingSubscriptions.filter((sub) => !newLocationIdSet.has(sub.locationId));
-  const toAdd = newLocationIds.filter((locId) => !existingLocationIdSet.has(locId));
+  const toAdd = newLocationIdNumbers.filter((locId) => !existingLocationIdSet.has(locId));
 
   if (toAdd.length > 0) {
     const currentCount = existingLocationIds.length - toDelete.length;
@@ -80,7 +82,7 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
   }
 
   // Validate all location IDs before performing any mutations
-  const validationResults = await Promise.all(toAdd.map((locationId) => validateLocationId(locationId)));
+  const validationResults = await Promise.all(toAdd.map((locationId) => validateLocationId(locationId.toString())));
 
   const invalidLocations = toAdd.filter((_, index) => !validationResults[index]);
   if (invalidLocations.length > 0) {

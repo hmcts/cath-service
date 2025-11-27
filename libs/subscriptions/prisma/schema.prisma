@@ -11,10 +11,11 @@ datasource db {
 model Subscription {
   subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
   userId         String   @map("user_id") @db.Uuid
-  locationId     String   @map("location_id")
+  locationId     Int      @map("location_id") @db.Integer
   dateAdded      DateTime @default(now()) @map("date_added")
 
-  user User @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  user     User     @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  location Location @relation(fields: [locationId], references: [locationId])
 
   @@unique([userId, locationId], name: "unique_user_location")
   @@index([userId], name: "idx_subscription_user")

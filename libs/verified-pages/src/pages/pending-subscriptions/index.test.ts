@@ -119,7 +119,7 @@ describe("pending-subscriptions", () => {
     it("should confirm subscriptions when action is confirm", async () => {
       mockReq.body = { action: "confirm" };
       vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([
-        { subscriptionId: "sub1", userId: "user123", locationId: "123", dateAdded: new Date() }
+        { subscriptionId: "sub1", userId: "user123", locationId: 123, dateAdded: new Date() }
       ]);
       vi.mocked(subscriptionService.replaceUserSubscriptions).mockResolvedValue({
         added: 2,
@@ -165,7 +165,7 @@ describe("pending-subscriptions", () => {
       mockReq.session = { emailSubscriptions: { pendingSubscriptions: ["456", "789"] } } as any;
 
       vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([
-        { subscriptionId: "sub1", userId: "user123", locationId: "123", dateAdded: new Date() }
+        { subscriptionId: "sub1", userId: "user123", locationId: 123, dateAdded: new Date() }
       ]);
       vi.mocked(subscriptionService.replaceUserSubscriptions).mockResolvedValue({
         added: 2,

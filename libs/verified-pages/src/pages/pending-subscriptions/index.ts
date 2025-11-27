@@ -100,7 +100,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     try {
       const existingSubscriptions = await getSubscriptionsByUserId(userId);
-      const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId);
+      const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId.toString());
       const allLocationIds = [...new Set([...existingLocationIds, ...pendingLocationIds])];
 
       await replaceUserSubscriptions(userId, allLocationIds);

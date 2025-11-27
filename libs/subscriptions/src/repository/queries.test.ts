@@ -37,13 +37,13 @@ describe("Subscription Queries", () => {
         {
           subscriptionId: "sub1",
           userId,
-          locationId: "456",
+          locationId: 456,
           dateAdded: new Date()
         },
         {
           subscriptionId: "sub2",
           userId,
-          locationId: "789",
+          locationId: 789,
           dateAdded: new Date()
         }
       ];
@@ -77,7 +77,7 @@ describe("Subscription Queries", () => {
   describe("findSubscriptionByUserAndLocation", () => {
     it("should find subscription by user and location", async () => {
       const userId = "user123";
-      const locationId = "456";
+      const locationId = 456;
       const mockSubscription = {
         subscriptionId: "sub1",
         userId,
@@ -102,7 +102,7 @@ describe("Subscription Queries", () => {
 
     it("should return null when subscription not found", async () => {
       const userId = "user123";
-      const locationId = "456";
+      const locationId = 456;
 
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
 
@@ -118,7 +118,7 @@ describe("Subscription Queries", () => {
       const mockSubscription = {
         subscriptionId,
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       };
 
@@ -173,7 +173,7 @@ describe("Subscription Queries", () => {
   describe("createSubscriptionRecord", () => {
     it("should create a new subscription", async () => {
       const userId = "user123";
-      const locationId = "456";
+      const locationId = 456;
       const mockSubscription = {
         subscriptionId: "sub1",
         userId,
@@ -201,7 +201,7 @@ describe("Subscription Queries", () => {
       const mockSubscription = {
         subscriptionId,
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       };
 

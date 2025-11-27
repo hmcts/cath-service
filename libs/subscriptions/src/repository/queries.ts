@@ -11,7 +11,7 @@ export async function findSubscriptionsByUserId(userId: string) {
   });
 }
 
-export async function findSubscriptionByUserAndLocation(userId: string, locationId: string) {
+export async function findSubscriptionByUserAndLocation(userId: string, locationId: number) {
   return prisma.subscription.findUnique({
     where: {
       unique_user_location: {
@@ -30,7 +30,7 @@ export async function countSubscriptionsByUserId(userId: string) {
   });
 }
 
-export async function createSubscriptionRecord(userId: string, locationId: string) {
+export async function createSubscriptionRecord(userId: string, locationId: number) {
   return prisma.subscription.create({
     data: {
       userId,

@@ -21,16 +21,16 @@ const getHandler = async (req: Request, res: Response) => {
     const subscriptionsWithDetails = await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          const location = await getLocationById(Number.parseInt(sub.locationId, 10));
+          const location = await getLocationById(sub.locationId);
           return {
             ...sub,
-            locationName: location ? (locale === "cy" ? location.welshName : location.name) : sub.locationId
+            locationName: location ? (locale === "cy" ? location.welshName : location.name) : sub.locationId.toString()
           };
         } catch (error) {
           console.error(`Failed to lookup location ${sub.locationId} for user ${userId}:`, error);
           return {
             ...sub,
-            locationName: sub.locationId
+            locationName: sub.locationId.toString()
           };
         }
       })
