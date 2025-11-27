@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { replaceUserSubscriptions } from "@hmcts/subscriptions";
+import { getSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -99,7 +99,11 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     try {
-      await replaceUserSubscriptions(userId, pendingLocationIds);
+      const existingSubscriptions = await getSubscriptionsByUserId(userId);
+      const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId);
+      const allLocationIds = [...new Set([...existingLocationIds, ...pendingLocationIds])];
+
+      await replaceUserSubscriptions(userId, allLocationIds);
 
       req.session.emailSubscriptions.confirmationComplete = true;
       req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
