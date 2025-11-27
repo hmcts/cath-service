@@ -149,15 +149,13 @@ test.describe("Create Media Account", () => {
 		await page.check('input[name="termsAccepted"]');
 		await page.getByRole("button", { name: /continue/i }).click();
 
-		await page.waitForURL("/account-request-submitted");
+		await page.waitForURL(/\/account-request-submitted/);
 
 		await expect(page.locator(".govuk-panel__title")).toContainText(
 			"Details submitted",
 		);
-		await expect(page.locator(".govuk-heading-m")).toContainText(
-			"What happens next",
-		);
-		await expect(page.locator(".govuk-body")).toContainText(
+		await expect(page.getByRole("heading", { name: "What happens next" })).toBeVisible();
+		await expect(page.locator("main .govuk-body").first()).toContainText(
 			"HMCTS will review your details",
 		);
 	});
@@ -185,7 +183,7 @@ test.describe("Create Media Account", () => {
 		await page.check('input[name="termsAccepted"]');
 		await page.getByRole("button", { name: /continue/i }).click();
 
-		await page.waitForURL("/account-request-submitted");
+		await page.waitForURL(/\/account-request-submitted/);
 
 		const application = await prisma.mediaApplication.findFirst({
 			where: { email: testEmail.toLowerCase() },
@@ -200,7 +198,7 @@ test.describe("Create Media Account", () => {
 		if (application) {
 			const filePath = path.join(
 				process.cwd(),
-				"storage",
+				"../apps/web/storage",
 				"temp",
 				"files",
 				`${application.id}.pdf`,
@@ -283,7 +281,7 @@ test.describe("Create Media Account", () => {
 		await page.check('input[name="termsAccepted"]');
 		await page.getByRole("button", { name: /continue/i }).click();
 
-		await page.waitForURL("/account-request-submitted");
+		await page.waitForURL(/\/account-request-submitted/);
 
 		const accessibilityScanResults = await new AxeBuilder({ page })
 			.disableRules(["target-size", "link-name", "region"])
