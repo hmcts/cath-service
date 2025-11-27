@@ -2,7 +2,7 @@ import type { ValidationError } from "../media-application/repository/model.js";
 import type { cy } from "./create-media-account/cy.js";
 import type { en } from "./create-media-account/en.js";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const FULL_NAME_REGEX = /^[a-zA-Z\s\-',.]+$/;
 const ALLOWED_FILE_EXTENSIONS = [".jpg", ".jpeg", ".pdf", ".png"];
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
