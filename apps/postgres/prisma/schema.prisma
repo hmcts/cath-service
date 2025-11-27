@@ -39,3 +39,15 @@ model User {
   @@map("user")
 }
 
+model MediaApplication {
+  id          String   @id @default(uuid()) @db.Uuid
+  fullName    String   @map("full_name")
+  email       String
+  employer    String
+  status      String   @default("PENDING")
+  requestDate DateTime @default(now()) @map("request_date")
+  statusDate  DateTime @default(now()) @map("status_date")
+
+  @@map("media_application")
+}
+
