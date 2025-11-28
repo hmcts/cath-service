@@ -2576,16 +2576,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jsonwebtoken@npm:9.0.7":
-  version: 9.0.7
-  resolution: "@types/jsonwebtoken@npm:9.0.7"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/e1cd0e48fcae21b1d4378887a23453bd7212b480a131b11bcda2cdeb0687d03c9646ee5ba592e04cfaf76f7cc80f179950e627cdb3ebc90a5923bce49a35631a
-  languageName: node
-  linkType: hard
-
-"@types/jsonwebtoken@npm:^9.0.2":
+"@types/jsonwebtoken@npm:9.0.10, @types/jsonwebtoken@npm:^9.0.2":
   version: 9.0.10
   resolution: "@types/jsonwebtoken@npm:9.0.10"
   dependencies:
@@ -3417,7 +3408,7 @@ __metadata:
     "@biomejs/biome": "npm:2.3.8"
     "@biomejs/cli-linux-arm64": "npm:^2.3.6"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
-    "@types/jsonwebtoken": "npm:9.0.7"
+    "@types/jsonwebtoken": "npm:9.0.10"
     "@types/node": "npm:24.10.1"
     "@types/passport": "npm:1.0.17"
     "@types/passport-azure-ad": "npm:4.3.6"
