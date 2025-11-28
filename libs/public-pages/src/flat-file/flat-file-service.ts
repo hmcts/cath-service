@@ -1,0 +1,84 @@
+import { getLocationById } from "@hmcts/location";
+import { prisma } from "@hmcts/postgres";
+import { mockListTypes } from "@hmcts/publication";
+import { getContentType, getFileBuffer, getFileName } from "../file-storage/file-retrieval.js";
+
+export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en") {
+  const artefact = await prisma.artefact.findUnique({
+    where: { artefactId }
+  });
+
+  if (!artefact) {
+    return { error: "NOT_FOUND" as const };
+  }
+
+  if (artefact.locationId !== locationId) {
+    return { error: "LOCATION_MISMATCH" as const };
+  }
+
+  if (!artefact.isFlatFile) {
+    return { error: "NOT_FLAT_FILE" as const };
+  }
+
+  const now = new Date();
+  if (now < artefact.displayFrom || now > artefact.displayTo) {
+    return { error: "EXPIRED" as const };
+  }
+
+  const fileBuffer = await getFileBuffer(artefact.artefactId);
+
+  if (!fileBuffer) {
+    return { error: "FILE_NOT_FOUND" as const };
+  }
+
+  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
+  const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+
+  const courtName = locale === "cy" ? location?.welshName || location?.name || "Unknown" : location?.name || "Unknown";
+  const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+
+  return {
+    success: true,
+    artefactId: artefact.artefactId,
+    courtName,
+    listTypeName,
+    contentDate: artefact.contentDate,
+    language: artefact.language
+  };
+}
+
+export async function getFileForDownload(artefactId: string) {
+  const artefact = await prisma.artefact.findUnique({
+    where: { artefactId }
+  });
+
+  if (!artefact) {
+    return { error: "NOT_FOUND" as const };
+  }
+
+  if (!artefact.isFlatFile) {
+    return { error: "NOT_FLAT_FILE" as const };
+  }
+
+  const now = new Date();
+  if (now < artefact.displayFrom || now > artefact.displayTo) {
+    return { error: "EXPIRED" as const };
+  }
+
+  const fileBuffer = await getFileBuffer(artefact.artefactId);
+
+  if (!fileBuffer) {
+    return { error: "FILE_NOT_FOUND" as const };
+  }
+
+  return {
+    success: true,
+    fileBuffer,
+    contentType: getContentType(),
+    fileName: getFileName(artefact.artefactId)
+  };
+}
+
+type FlatFileResult = Awaited<ReturnType<typeof getFlatFileForDisplay>>;
+type DownloadFileResult = Awaited<ReturnType<typeof getFileForDownload>>;
+export type { FlatFileResult, DownloadFileResult };
