@@ -24,6 +24,8 @@
       "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"],
       "@hmcts/list-types-common": ["libs/list-types/common/src"],
       "@hmcts/civil-and-family-daily-cause-list": ["libs/list-types/civil-and-family-daily-cause-list/src"],
+      "@hmcts/blob-ingestion": ["libs/api/src"],
+      "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
       "@hmcts/subscriptions": ["libs/subscriptions/src"]
     },
     "esModuleInterop": true,
