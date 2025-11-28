@@ -12,7 +12,7 @@ import path from "node:path";
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
-const STORAGE_PATH = path.join(process.cwd(), "..", "apps", "web", "storage", "temp", "uploads");
+const STORAGE_PATH = path.join(process.cwd(), "..", "storage", "temp", "uploads");
 
 // Helper function to create a test PDF file
 function createTestPDFBuffer(content: string): Buffer {
