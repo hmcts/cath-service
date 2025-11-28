@@ -1,0 +1,134 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% macro getError(errors, fieldId) -%}
+  {%- if errors -%}
+    {%- for error in errors -%}
+      {%- if error.href == fieldId -%}{{ error.text }}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block page_content %}
+<div id="top"></div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors,
+        attributes: {
+          tabindex: "-1"
+        }
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ title }}</h1>
+
+    <p class="govuk-body">{{ openingText1 }}</p>
+    <p class="govuk-body">{{ openingText2 }}</p>
+    <p class="govuk-body">{{ openingText3 }}</p>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+
+      {% set fullNameErrorText = getError(errors, "#fullName") %}
+      {{ govukInput({
+        id: "fullName",
+        name: "fullName",
+        type: "text",
+        label: {
+          text: fullNameLabel
+        },
+        value: data.fullName if data else "",
+        errorMessage: { text: fullNameErrorText } if (fullNameErrorText and fullNameErrorText | length > 0) else undefined
+      }) }}
+
+      {% set emailErrorText = getError(errors, "#email") %}
+      {{ govukInput({
+        id: "email",
+        name: "email",
+        type: "email",
+        autocomplete: "email",
+        label: {
+          text: emailLabel
+        },
+        hint: {
+          text: emailHint
+        },
+        value: data.email if data else "",
+        errorMessage: { text: emailErrorText } if (emailErrorText and emailErrorText | length > 0) else undefined
+      }) }}
+
+      {% set employerErrorText = getError(errors, "#employer") %}
+      {{ govukInput({
+        id: "employer",
+        name: "employer",
+        type: "text",
+        label: {
+          text: employerLabel
+        },
+        value: data.employer if data else "",
+        errorMessage: { text: employerErrorText } if (employerErrorText and employerErrorText | length > 0) else undefined
+      }) }}
+
+      {% set fileErrorText = getError(errors, "#idProof") %}
+      <div class="govuk-form-group{% if (fileErrorText and fileErrorText | length > 0) %} govuk-form-group--error{% endif %}">
+        <label class="govuk-label" for="idProof">
+          {{ uploadLabel }}
+        </label>
+        <div id="idProof-hint" class="govuk-hint">
+          {{ uploadHint }}
+        </div>
+        {% if (fileErrorText and fileErrorText | length > 0) %}
+          <p id="idProof-error" class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> {{ fileErrorText }}
+          </p>
+        {% endif %}
+        <input class="govuk-file-upload{% if (fileErrorText and fileErrorText | length > 0) %} govuk-file-upload--error{% endif %}"
+               id="idProof"
+               name="idProof"
+               type="file"
+               accept=".jpg,.jpeg,.pdf,.png"
+               aria-describedby="idProof-hint{% if (fileErrorText and fileErrorText | length > 0) %} idProof-error{% endif %}" />
+      </div>
+
+      {% set termsErrorText = getError(errors, "#termsAccepted") %}
+      {{ govukCheckboxes({
+        name: "termsAccepted",
+        fieldset: {
+          legend: {
+            text: "",
+            classes: "govuk-visually-hidden"
+          }
+        },
+        hint: {
+          html: "<p class='govuk-body'>" + termsText + "</p>"
+        },
+        items: [
+          {
+            value: "on",
+            text: termsCheckboxLabel,
+            checked: data.termsAccepted if data else false
+          }
+        ],
+        errorMessage: { text: termsErrorText } if (termsErrorText and termsErrorText | length > 0) else undefined
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+
+    </form>
+
+    <p class="govuk-body">
+      <a href="#top" class="govuk-link">{{ backToTop }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

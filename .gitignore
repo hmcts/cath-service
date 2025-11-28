@@ -10,6 +10,9 @@ database/build
 # Temporary storage
 apps/web/storage/temp/
 
+# macOS
+.DS_Store
+
 # Logs
 *.log
 npm-debug.log*
@@ -54,5 +57,6 @@ lcov.info
 .claude/analytics
 
 /storage/temp
+/apps/postgres/.claude
 /e2e-tests/.claude
 /libs/api/.claude
