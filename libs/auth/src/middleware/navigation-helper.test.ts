@@ -99,7 +99,7 @@ describe("buildNavigationItems", () => {
       expect(items[0].attributes?.["data-test"]).toBe("dashboard-link");
 
       expect(items[1].text).toBe("Email subscriptions");
-      expect(items[1].href).toBe("/");
+      expect(items[1].href).toBe("/subscription-management");
       expect(items[1].current).toBe(false);
       expect(items[1].attributes?.["data-test"]).toBe("email-subscriptions-link");
     });
@@ -113,7 +113,7 @@ describe("buildNavigationItems", () => {
     });
 
     it("should mark the correct item as current based on path", () => {
-      const items = buildVerifiedUserNavigation("/", "en");
+      const items = buildVerifiedUserNavigation("/subscription-management", "en");
 
       expect(items[0].current).toBe(false);
       expect(items[1].current).toBe(true);

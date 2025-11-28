@@ -37,8 +37,8 @@ describe("SSO Rejected page handler", () => {
 
     await GET(req, res);
 
-    const renderCall = res.render.mock.calls[0];
-    const content = renderCall[1] as any;
+    const renderCall = vi.mocked(res.render).mock.calls[0];
+    const content = renderCall?.[1] as any;
 
     expect(content.en.title).toContain("GOV.UK");
     expect(content.en.paragraph1).toContain("Unfortunately");
@@ -54,8 +54,8 @@ describe("SSO Rejected page handler", () => {
 
     await GET(req, res);
 
-    const renderCall = res.render.mock.calls[0];
-    const content = renderCall[1] as any;
+    const renderCall = vi.mocked(res.render).mock.calls[0];
+    const content = renderCall?.[1] as any;
 
     expect(content.cy.title).toContain("GOV.UK");
     expect(content.cy.paragraph1).toContain("Yn anffodus");

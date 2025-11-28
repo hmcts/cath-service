@@ -259,8 +259,8 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(GET, req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.data.hearingStartDate).toBe("23 Month 2025");
     });
@@ -286,8 +286,8 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(GET, req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.data.displayFileDates).toBe("20 Month 2025 to 30 Month 2025");
     });
@@ -313,8 +313,8 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(GET, req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.data.courtName).toBe("Test Crown Court CY");
     });
@@ -340,8 +340,8 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(GET, req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.data.courtName).toBe("999");
     });
@@ -371,8 +371,8 @@ describe("manual-upload-summary page", () => {
 
         await callHandler(GET, req, res);
 
-        const renderCall = res.render.mock.calls[0];
-        const renderData = renderCall[1];
+        const renderCall = vi.mocked(res.render).mock.calls[0];
+        const renderData = renderCall?.[1] as any;
 
         expect(renderData.data.sensitivity).toBe(expectedLabels[i]);
       }
@@ -403,8 +403,8 @@ describe("manual-upload-summary page", () => {
 
         await callHandler(GET, req, res);
 
-        const renderCall = res.render.mock.calls[0];
-        const renderData = renderCall[1];
+        const renderCall = vi.mocked(res.render).mock.calls[0];
+        const renderData = renderCall?.[1] as any;
 
         expect(renderData.data.language).toBe(expectedLabels[i]);
       }
@@ -427,7 +427,7 @@ describe("manual-upload-summary page", () => {
 
     it("should save file, create database record, and redirect to success page", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/storage/test-artefact-id-123/test-hearing-list.pdf");
+      vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
 
       const session = {
@@ -497,7 +497,7 @@ describe("manual-upload-summary page", () => {
 
     it("should render error page when database create fails", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file");
+      vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockRejectedValue(new Error("Database error"));
 
       const session = {

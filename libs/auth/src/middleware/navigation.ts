@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { buildNavigationItems } from "./navigation-helper.js";
+import { buildNavigationItems, buildVerifiedUserNavigation } from "./navigation-helper.js";
 
 /**
  * Middleware to set navigation state based on authentication status
@@ -15,9 +15,16 @@ export function authNavigationMiddleware() {
       res.locals.navigation = {};
     }
 
-    // Add role-based navigation items for authenticated users with SSO role
+    // Add role-based navigation items for authenticated users
     if (req.isAuthenticated() && req.user?.role) {
-      res.locals.navigation.verifiedItems = buildNavigationItems(req.user.role, req.path);
+      // For VERIFIED users (media users), show Dashboard and Email subscriptions
+      if (req.user.role === "VERIFIED") {
+        const locale = res.locals.locale || "en";
+        res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+      } else {
+        // For SSO admin roles, show admin navigation
+        res.locals.navigation.verifiedItems = buildNavigationItems(req.user.role, req.path);
+      }
     } else {
       // Clear navigation items when user is not authenticated or has no role
       res.locals.navigation.verifiedItems = undefined;
