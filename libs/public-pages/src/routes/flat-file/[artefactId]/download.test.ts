@@ -41,7 +41,7 @@ describe("Flat File Download Route", () => {
       expect(statusSpy).toHaveBeenCalledWith(400);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "Invalid request" });
       expect(sendSpy).not.toHaveBeenCalled();
-      expect(setHeaderSpy).not.toHaveBeenCalled();
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should return 400 when artefactId is undefined", async () => {
@@ -51,6 +51,7 @@ describe("Flat File Download Route", () => {
 
       expect(statusSpy).toHaveBeenCalledWith(400);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "Invalid request" });
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should return 400 when artefactId is empty string", async () => {
@@ -60,12 +61,23 @@ describe("Flat File Download Route", () => {
 
       expect(statusSpy).toHaveBeenCalledWith(400);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "Invalid request" });
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+    });
+
+    it("should return 400 when artefactId is not a valid UUID", async () => {
+      mockRequest.params = { artefactId: "not-a-valid-uuid" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(statusSpy).toHaveBeenCalledWith(400);
+      expect(jsonSpy).toHaveBeenCalledWith({ error: "Invalid request" });
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
   });
 
   describe("Error Handling", () => {
     beforeEach(() => {
-      mockRequest.params = { artefactId: "test-artefact-id" };
+      mockRequest.params = { artefactId: "550e8400-e29b-41d4-a716-446655440000" };
     });
 
     it("should return 404 for NOT_FOUND error", async () => {
@@ -77,7 +89,7 @@ describe("Flat File Download Route", () => {
       expect(statusSpy).toHaveBeenCalledWith(404);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "Artefact not found" });
       expect(sendSpy).not.toHaveBeenCalled();
-      expect(setHeaderSpy).not.toHaveBeenCalled();
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should return 410 for EXPIRED error", async () => {
@@ -89,7 +101,7 @@ describe("Flat File Download Route", () => {
       expect(statusSpy).toHaveBeenCalledWith(410);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "File has expired" });
       expect(sendSpy).not.toHaveBeenCalled();
-      expect(setHeaderSpy).not.toHaveBeenCalled();
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should return 400 for NOT_FLAT_FILE error", async () => {
@@ -101,7 +113,7 @@ describe("Flat File Download Route", () => {
       expect(statusSpy).toHaveBeenCalledWith(400);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "Not a flat file" });
       expect(sendSpy).not.toHaveBeenCalled();
-      expect(setHeaderSpy).not.toHaveBeenCalled();
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should return 404 for FILE_NOT_FOUND error", async () => {
@@ -113,7 +125,7 @@ describe("Flat File Download Route", () => {
       expect(statusSpy).toHaveBeenCalledWith(404);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "File not found in storage" });
       expect(sendSpy).not.toHaveBeenCalled();
-      expect(setHeaderSpy).not.toHaveBeenCalled();
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should handle unknown error with default 404 status", async () => {
@@ -125,20 +137,22 @@ describe("Flat File Download Route", () => {
 
       expect(statusSpy).toHaveBeenCalledWith(404);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "File not found" });
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
   });
 
   describe("Successful Download", () => {
     const mockFileBuffer = Buffer.from("test file content");
+    const testUuid = "550e8400-e29b-41d4-a716-446655440000";
     const mockSuccessResult = {
       success: true,
       fileBuffer: mockFileBuffer,
       contentType: "application/pdf",
-      fileName: "test-artefact-id.pdf"
+      fileName: `${testUuid}.pdf`
     };
 
     beforeEach(() => {
-      mockRequest.params = { artefactId: "test-artefact-id" };
+      mockRequest.params = { artefactId: testUuid };
     });
 
     it("should set correct Content-Type header", async () => {
@@ -156,16 +170,16 @@ describe("Flat File Download Route", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(setHeaderSpy).toHaveBeenCalledWith("Content-Disposition", 'inline; filename="test-artefact-id.pdf"');
+      expect(setHeaderSpy).toHaveBeenCalledWith("Content-Disposition", `inline; filename="${testUuid}.pdf"`);
     });
 
-    it("should set Cache-Control header for 1 hour", async () => {
+    it("should set Cache-Control header with no-cache policy", async () => {
       const { getFileForDownload } = await import("../../../flat-file/flat-file-service.js");
       vi.mocked(getFileForDownload).mockResolvedValue(mockSuccessResult);
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "public, max-age=3600");
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should set all three headers in correct order", async () => {
@@ -176,8 +190,8 @@ describe("Flat File Download Route", () => {
 
       expect(setHeaderSpy).toHaveBeenCalledTimes(3);
       expect(setHeaderSpy).toHaveBeenNthCalledWith(1, "Content-Type", "application/pdf");
-      expect(setHeaderSpy).toHaveBeenNthCalledWith(2, "Content-Disposition", 'inline; filename="test-artefact-id.pdf"');
-      expect(setHeaderSpy).toHaveBeenNthCalledWith(3, "Cache-Control", "public, max-age=3600");
+      expect(setHeaderSpy).toHaveBeenNthCalledWith(2, "Content-Disposition", `inline; filename="${testUuid}.pdf"`);
+      expect(setHeaderSpy).toHaveBeenNthCalledWith(3, "Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should send file buffer in response", async () => {
@@ -211,6 +225,7 @@ describe("Flat File Download Route", () => {
 
       expect(setHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/vnd.ms-excel");
       expect(setHeaderSpy).toHaveBeenCalledWith("Content-Disposition", 'inline; filename="test.xls"');
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should handle filenames with special characters", async () => {
@@ -223,6 +238,7 @@ describe("Flat File Download Route", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(setHeaderSpy).toHaveBeenCalledWith("Content-Disposition", 'inline; filename="test file (2024).pdf"');
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should handle empty file buffers", async () => {
@@ -236,22 +252,25 @@ describe("Flat File Download Route", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(sendSpy).toHaveBeenCalledWith(emptyBuffer);
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
   });
 
   describe("Integration with Service", () => {
     it("should pass artefactId to getFileForDownload service", async () => {
-      mockRequest.params = { artefactId: "specific-artefact-123" };
+      const validUuid = "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6";
+      mockRequest.params = { artefactId: validUuid };
       const { getFileForDownload } = await import("../../../flat-file/flat-file-service.js");
       vi.mocked(getFileForDownload).mockResolvedValue({ error: "NOT_FOUND" });
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(getFileForDownload).toHaveBeenCalledWith("specific-artefact-123");
+      expect(getFileForDownload).toHaveBeenCalledWith(validUuid);
     });
 
     it("should call getFileForDownload exactly once", async () => {
-      mockRequest.params = { artefactId: "test-id" };
+      const validUuid = "f1e2d3c4-b5a6-4798-8bc9-0d1e2f3a4b5c";
+      mockRequest.params = { artefactId: validUuid };
       const { getFileForDownload } = await import("../../../flat-file/flat-file-service.js");
       vi.mocked(getFileForDownload).mockResolvedValue({ error: "NOT_FOUND" });
 

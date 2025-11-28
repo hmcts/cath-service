@@ -41,7 +41,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("Invalid request"),
         title: expect.stringContaining("not available"),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -58,7 +59,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("Invalid request"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -85,7 +87,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("annilys"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
   });
@@ -109,7 +112,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("not available or has expired"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -127,7 +131,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("not available or has expired"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -145,7 +150,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("not available or has expired"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -163,7 +169,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("could not load the hearing list file"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -181,7 +188,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("not available as a file"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
 
@@ -200,7 +208,8 @@ describe("Hearing Lists Page Controller", () => {
         error: expect.stringContaining("ar gael"),
         title: expect.any(String),
         backMessage: expect.any(String),
-        backButton: expect.any(String)
+        backButton: expect.any(String),
+        locale: expect.any(String)
       });
     });
   });
@@ -229,6 +238,7 @@ describe("Hearing Lists Page Controller", () => {
       expect(renderSpy).toHaveBeenCalledWith("hearing-lists/[locationId]/[artefactId]", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        locale: expect.any(String),
         isError: false,
         pageTitle: "Crown Daily List - Test Court",
         courtName: "Test Court",
@@ -256,6 +266,7 @@ describe("Hearing Lists Page Controller", () => {
       expect(renderSpy).toHaveBeenCalledWith("hearing-lists/[locationId]/[artefactId]", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        locale: "cy",
         isError: false,
         pageTitle: "Rhestr Ddyddiol y Goron - Llys Prawf",
         courtName: "Llys Prawf",
@@ -278,6 +289,7 @@ describe("Hearing Lists Page Controller", () => {
       expect(renderSpy).toHaveBeenCalledWith("hearing-lists/[locationId]/[artefactId]", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        locale: "en",
         isError: false,
         pageTitle: expect.any(String),
         courtName: expect.any(String),
