@@ -12,6 +12,7 @@ export const GET = async (req: Request, res: Response) => {
     return res.status(400).render("hearing-lists/[locationId]/[artefactId]", {
       en,
       cy,
+      locale,
       isError: true,
       error: t.errorInvalidRequest,
       title: t.errorTitle,
@@ -43,6 +44,7 @@ export const GET = async (req: Request, res: Response) => {
     return res.status(statusCode).render("hearing-lists/[locationId]/[artefactId]", {
       en,
       cy,
+      locale,
       isError: true,
       error: errorMessage,
       title: t.errorTitle,
@@ -57,6 +59,7 @@ export const GET = async (req: Request, res: Response) => {
   return res.render("hearing-lists/[locationId]/[artefactId]", {
     en,
     cy,
+    locale,
     isError: false,
     pageTitle,
     courtName: result.courtName,

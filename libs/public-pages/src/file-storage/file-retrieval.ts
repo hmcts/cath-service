@@ -17,7 +17,12 @@ export async function getFileBuffer(artefactId: string): Promise<Buffer | null> 
     const resolvedPath = path.resolve(filePath);
     const resolvedBase = path.resolve(STORAGE_BASE);
 
-    if (!resolvedPath.startsWith(resolvedBase)) {
+    // Secure containment check to prevent path traversal attacks
+    const normalizedBase = resolvedBase.endsWith(path.sep) ? resolvedBase : resolvedBase + path.sep;
+    const relativePath = path.relative(resolvedBase, resolvedPath);
+
+    // Verify path is within base directory (prevent prefix attacks and directory traversal)
+    if (!resolvedPath.startsWith(normalizedBase) || relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
       return null;
     }
 

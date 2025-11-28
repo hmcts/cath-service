@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc --build && yarn build:nunjucks && yarn build:routes",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "build:routes": "mkdir -p dist/routes && cd src && find routes -name '*.ts' ! -name '*.test.ts' ! -name '*.spec.ts' -type f 2>/dev/null || true",
+    "build:routes": "mkdir -p dist/routes && cd src && find routes -name '*.ts' ! -name '*.test.ts' ! -name '*.spec.ts' -type f -exec sh -c 'mkdir -p ../dist/$(dirname {}) && cp {} ../dist/{}' \\; 2>/dev/null || true",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",

@@ -1,10 +1,17 @@
 import type { Request, Response } from "express";
 import { getFileForDownload } from "../../../flat-file/flat-file-service.js";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidArtefactId(artefactId: string): boolean {
+  return UUID_REGEX.test(artefactId);
+}
+
 export const GET = async (req: Request, res: Response) => {
   const { artefactId } = req.params;
 
-  if (!artefactId) {
+  if (!artefactId || !isValidArtefactId(artefactId)) {
+    res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     return res.status(400).json({ error: "Invalid request" });
   }
 
@@ -33,12 +40,13 @@ export const GET = async (req: Request, res: Response) => {
         break;
     }
 
+    res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     return res.status(statusCode).json({ error: errorMessage });
   }
 
   res.setHeader("Content-Type", result.contentType);
   res.setHeader("Content-Disposition", `inline; filename="${result.fileName}"`);
-  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
 
   return res.send(result.fileBuffer);
 };

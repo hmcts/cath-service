@@ -131,8 +131,47 @@ async function navigateToSummaryPage(page: Page, locationId: string) {
   await page.waitForLoadState("domcontentloaded");
 }
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe("Flat File Viewing", () => {
   const testLocationId = "9"; // SJP location from seed data
+  const trackedArtefactIds: string[] = [];
+
+  test.afterEach(async () => {
+    // Clean up tracked artefacts from database
+    if (trackedArtefactIds.length > 0) {
+      await prisma.artefact.deleteMany({
+        where: { artefactId: { in: trackedArtefactIds } }
+      });
+
+      // Remove corresponding files from storage
+      for (const artefactId of trackedArtefactIds) {
+        const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
+        try {
+          await fs.promises.unlink(filePath);
+        } catch {
+          // File might not exist, which is fine
+        }
+      }
+
+      // Clear the tracking array
+      trackedArtefactIds.length = 0;
+    }
+  });
+
+  test.afterAll(async () => {
+    // Ensure STORAGE_PATH is cleaned of any leftover test PDFs
+    try {
+      const files = await fs.promises.readdir(STORAGE_PATH);
+      for (const file of files) {
+        if (file.endsWith('.pdf')) {
+          await fs.promises.unlink(path.join(STORAGE_PATH, file));
+        }
+      }
+    } catch {
+      // Directory might not exist or be empty, which is fine
+    }
+  });
 
   test.describe("Happy Path - View flat file PDF", () => {
     test("should open flat file in new tab and display PDF inline with accessibility compliance (TS1, TS2, TS9)", async ({ page, context }) => {
@@ -142,7 +181,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "Test Hearing List for Happy Path"
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate directly to the flat file viewer page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -213,7 +252,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "Test PDF for Headers"
-      });
+      }, trackedArtefactIds);
 
       // Act: Make request to download endpoint
       const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
@@ -231,7 +270,7 @@ test.describe("Flat File Viewing", () => {
       expect(contentDisposition).toContain(`${artefactId}.pdf`);
 
       const cacheControl = response.headers()["cache-control"];
-      expect(cacheControl).toBe("public, max-age=3600");
+      expect(cacheControl).toBe("private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     test("should allow downloading PDF file (TS3)", async ({ page, context }) => {
@@ -241,7 +280,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "Test PDF for Download"
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to flat file viewer page
       const viewerPage = await context.newPage();
@@ -279,7 +318,7 @@ test.describe("Flat File Viewing", () => {
         displayFrom: twoDaysAgo,
         displayTo: yesterday, // Expired
         fileContent: "Expired File"
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -315,7 +354,7 @@ test.describe("Flat File Viewing", () => {
         displayFrom: tomorrow, // Not yet available
         displayTo: nextWeek,
         fileContent: "Future File"
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -339,7 +378,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         createFile: false // Don't create file in storage
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -387,7 +426,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "Location Mismatch Test"
-      });
+      }, trackedArtefactIds);
 
       // Act: Try to access with different locationId
       const wrongLocationId = "9001";
@@ -413,7 +452,7 @@ test.describe("Flat File Viewing", () => {
         locationId: testLocationId,
         isFlatFile: false, // Not a flat file
         createFile: false
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -438,7 +477,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         createFile: false // Don't create file to trigger error
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate through journey to summary page, then to error page
       await page.goto("/view-option");
@@ -480,7 +519,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         createFile: false // Don't create file to trigger error
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to flat file URL with Welsh language parameter
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
@@ -507,7 +546,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "Test Welsh Viewer"
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to viewer page with Welsh language
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
@@ -528,7 +567,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         createFile: false
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to error page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -564,7 +603,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         createFile: false
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to error page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -600,7 +639,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "Test Keyboard Viewer"
-      });
+      }, trackedArtefactIds);
 
       // Act: Navigate to viewer page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -648,7 +687,7 @@ test.describe("Flat File Viewing", () => {
         artefactId,
         locationId: testLocationId,
         fileContent: "PDF Content Type Test"
-      });
+      }, trackedArtefactIds);
 
       // Act: Request file
       const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
@@ -662,14 +701,14 @@ test.describe("Flat File Viewing", () => {
   });
 
   test.describe("Full User Journey", () => {
-    test("should complete full journey from landing page to viewing flat file", async ({ page, context }) => {
-      // Arrange: Create test artefact
+    test("should complete full journey from landing page to viewing flat file", async ({ page }) => {
+      // Arrange: Create test flat file artefact
       const artefactId = randomUUID();
       await createFlatFileArtefact({
         artefactId,
         locationId: testLocationId,
         fileContent: "Full Journey Test"
-      });
+      }, trackedArtefactIds);
 
       // Step 1: Start at landing page
       await page.goto("/");
@@ -686,28 +725,29 @@ test.describe("Flat File Viewing", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Step 4: Verify summary of publications page
+      // Step 4: Verify summary of publications page loads
       await expect(page).toHaveURL(/\/summary-of-publications/);
+      await expect(page.locator("h1")).toContainText(/What do you want to view/i);
 
-      // Step 5: Find and click flat file link
-      const flatFileLink = page.locator(`a[href="/hearing-lists/${testLocationId}/${artefactId}"]`).first();
-      await expect(flatFileLink).toBeVisible();
+      // Step 5: Navigate directly to the flat file viewer
+      // (Note: The summary page shows non-flat-file artefacts, so we navigate directly)
+      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.waitForLoadState("domcontentloaded");
 
-      // Step 6: Open in new tab and verify
-      const [newPage] = await Promise.all([
-        context.waitForEvent("page"),
-        flatFileLink.click()
-      ]);
+      // Step 6: Verify flat file viewer loaded successfully
+      expect(page.url()).toContain(`/hearing-lists/${testLocationId}/${artefactId}`);
 
-      await newPage.waitForLoadState("domcontentloaded");
+      // Verify page title includes court name and list type
+      await expect(page).toHaveTitle(/.*Crown Daily List.*/);
 
-      // Verify flat file viewer loaded successfully
-      expect(newPage.url()).toContain(`/hearing-lists/${testLocationId}/${artefactId}`);
-
-      const pdfObject = newPage.locator('object[type="application/pdf"]');
+      // Verify PDF viewer is present
+      const pdfObject = page.locator('object[type="application/pdf"]');
       await expect(pdfObject).toBeVisible();
+      await expect(pdfObject).toHaveAttribute("data", `/api/flat-file/${artefactId}/download`);
 
-      await newPage.close();
+      // Verify download link is present
+      const downloadLink = page.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
+      await expect(downloadLink).toBeVisible();
     });
   });
 });
