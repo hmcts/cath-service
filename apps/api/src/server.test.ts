@@ -1,59 +1,375 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import type { Server } from "node:http";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock process.exit to prevent test runner from exiting
-const mockExit = vi.fn() as any;
+const mockExit = vi.fn();
+const mockConsoleLog = vi.fn();
+const mockConsoleError = vi.fn();
 
-beforeAll(() => {
-  process.exit = mockExit;
+let mockServer: {
+  listen: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+  on: ReturnType<typeof vi.fn>;
+};
+
+let mockCreateApp: ReturnType<typeof vi.fn>;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+
+  // Mock process methods
+  process.exit = mockExit as any;
+  console.log = mockConsoleLog;
+  console.error = mockConsoleError;
+
+  // Setup mock server
+  mockServer = {
+    listen: vi.fn(),
+    close: vi.fn(),
+    on: vi.fn()
+  };
+
+  // Setup mock createApp
+  mockCreateApp = vi.fn();
 });
 
 afterEach(() => {
-  mockExit.mockClear();
+  vi.resetModules();
+  vi.clearAllMocks();
 });
 
-// Mock the app creation to avoid actually starting a server
-vi.mock("./app.js", () => ({
-  createApp: vi.fn(async () => ({
-    listen: vi.fn((_port: number, callback: () => void) => {
-      // Simulate successful server start
-      setTimeout(callback, 0);
-      return {
-        close: vi.fn((cb: () => void) => cb()),
-        on: vi.fn()
-      };
-    })
-  }))
-}));
-
 describe("API Server", () => {
-  it("should define PORT from environment or default", () => {
-    const PORT = process.env.API_PORT || 3001;
-    expect(PORT).toBeDefined();
-    expect(typeof PORT === "string" || typeof PORT === "number").toBe(true);
+  describe("startServer", () => {
+    it("should start server successfully on default port", async () => {
+      delete process.env.API_PORT;
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      expect(mockCreateApp).toHaveBeenCalled();
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining("http://localhost:3001"));
+      expect(mockExit).not.toHaveBeenCalled();
+    });
+
+    it("should start server on custom port from environment", async () => {
+      process.env.API_PORT = "4000";
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((port: number, callback: () => void) => {
+          expect(port).toBe("4000");
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining("http://localhost:4000"));
+    });
+
+    it("should log all health check endpoints on startup", async () => {
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining("API server running"));
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining("/health"));
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining("/health/readiness"));
+      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining("/health/liveness"));
+    });
+
+    it("should exit with code 1 when createApp fails", async () => {
+      const error = new Error("Failed to create app");
+      mockCreateApp.mockRejectedValue(error);
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      expect(mockConsoleError).toHaveBeenCalledWith("Failed to start server:", error);
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it("should register server error handler", async () => {
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      expect(mockServer.on).toHaveBeenCalledWith("error", expect.any(Function));
+    });
+
+    it("should exit with code 1 when server emits error event", async () => {
+      let errorHandler: (error: Error) => void;
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return {
+            ...mockServer,
+            on: vi.fn((event: string, handler: any) => {
+              if (event === "error") {
+                errorHandler = handler;
+              }
+            })
+          };
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      const serverError = new Error("Server error");
+      errorHandler!(serverError);
+
+      expect(mockConsoleError).toHaveBeenCalledWith("Server error:", serverError);
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
   });
 
-  it("should export server startup functionality", async () => {
-    // The server module executes on import, so we just verify it can be imported
-    const serverModule = await import("./server.js");
-    expect(serverModule).toBeDefined();
+  describe("signal handlers", () => {
+    it("should register SIGTERM handler", async () => {
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
 
-    // Verify that process.exit was not called (server started successfully)
-    expect(mockExit).not.toHaveBeenCalled();
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      const listeners = process.listeners("SIGTERM");
+      expect(listeners.length).toBeGreaterThan(0);
+    });
+
+    it("should register SIGINT handler", async () => {
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      const listeners = process.listeners("SIGINT");
+      expect(listeners.length).toBeGreaterThan(0);
+    });
+
+    it("should close server gracefully on SIGTERM", async () => {
+      let sigtermHandler: () => void;
+      const originalOn = process.on.bind(process);
+
+      process.on = vi.fn((event: string, handler: any) => {
+        if (event === "SIGTERM") {
+          sigtermHandler = handler;
+        }
+        return originalOn(event, handler);
+      }) as any;
+
+      mockServer.close.mockImplementation((callback: () => void) => {
+        callback();
+      });
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      sigtermHandler!();
+
+      expect(mockConsoleLog).toHaveBeenCalledWith("SIGTERM signal received: closing HTTP server");
+      expect(mockServer.close).toHaveBeenCalled();
+      expect(mockConsoleLog).toHaveBeenCalledWith("HTTP server closed");
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it("should close server gracefully on SIGINT", async () => {
+      let sigintHandler: () => void;
+      const originalOn = process.on.bind(process);
+
+      process.on = vi.fn((event: string, handler: any) => {
+        if (event === "SIGINT") {
+          sigintHandler = handler;
+        }
+        return originalOn(event, handler);
+      }) as any;
+
+      mockServer.close.mockImplementation((callback: () => void) => {
+        callback();
+      });
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      sigintHandler!();
+
+      expect(mockConsoleLog).toHaveBeenCalledWith("SIGINT signal received: closing HTTP server");
+      expect(mockServer.close).toHaveBeenCalled();
+      expect(mockConsoleLog).toHaveBeenCalledWith("HTTP server closed");
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
   });
 
-  it("should register SIGTERM handler", async () => {
-    // Import the server module to ensure signal handlers are registered
-    await import("./server.js");
+  describe("error handlers", () => {
+    it("should register uncaughtException handler", async () => {
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
 
-    const listeners = process.listeners("SIGTERM");
-    expect(listeners.length).toBeGreaterThan(0);
-  });
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
 
-  it("should register SIGINT handler", async () => {
-    // Import the server module to ensure signal handlers are registered
-    await import("./server.js");
+      await import("./server.js");
 
-    const listeners = process.listeners("SIGINT");
-    expect(listeners.length).toBeGreaterThan(0);
+      const listeners = process.listeners("uncaughtException");
+      expect(listeners.length).toBeGreaterThan(0);
+    });
+
+    it("should register unhandledRejection handler", async () => {
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      const listeners = process.listeners("unhandledRejection");
+      expect(listeners.length).toBeGreaterThan(0);
+    });
+
+    it("should exit with code 1 on uncaughtException", async () => {
+      let uncaughtExceptionHandler: (error: Error) => void;
+      const originalOn = process.on.bind(process);
+
+      process.on = vi.fn((event: string, handler: any) => {
+        if (event === "uncaughtException") {
+          uncaughtExceptionHandler = handler;
+        }
+        return originalOn(event, handler);
+      }) as any;
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      const error = new Error("Uncaught exception");
+      uncaughtExceptionHandler!(error);
+
+      expect(mockConsoleError).toHaveBeenCalledWith("Uncaught exception:", error);
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it("should exit with code 1 on unhandledRejection", async () => {
+      let unhandledRejectionHandler: (reason: any, promise: Promise<any>) => void;
+      const originalOn = process.on.bind(process);
+
+      process.on = vi.fn((event: string, handler: any) => {
+        if (event === "unhandledRejection") {
+          unhandledRejectionHandler = handler;
+        }
+        return originalOn(event, handler);
+      }) as any;
+
+      mockCreateApp.mockResolvedValue({
+        listen: vi.fn((_port: number, callback: () => void) => {
+          callback();
+          return mockServer;
+        })
+      });
+
+      vi.doMock("./app.js", () => ({
+        createApp: mockCreateApp
+      }));
+
+      await import("./server.js");
+
+      const reason = "Promise rejection reason";
+      const promise = Promise.reject(reason);
+      unhandledRejectionHandler!(reason, promise);
+
+      expect(mockConsoleError).toHaveBeenCalledWith("Unhandled rejection at:", promise, "reason:", reason);
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
   });
 });

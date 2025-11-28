@@ -56,7 +56,7 @@ lcov.info
 .claude/claude.env
 .claude/analytics
 
+/storage/temp
 /apps/postgres/.claude
 /e2e-tests/.claude
 /libs/api/.claude
-/storage/temp

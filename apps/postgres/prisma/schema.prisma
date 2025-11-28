@@ -9,18 +9,20 @@ datasource db {
 }
 
 model Artefact {
-  artefactId        String   @id @default(uuid()) @map("artefact_id") @db.Uuid
-  locationId        String   @map("location_id")
-  listTypeId        Int      @map("list_type_id")
-  contentDate       DateTime @map("content_date") @db.Date
+  artefactId        String          @id @default(uuid()) @map("artefact_id") @db.Uuid
+  locationId        String          @map("location_id")
+  listTypeId        Int             @map("list_type_id")
+  contentDate       DateTime        @map("content_date") @db.Date
   sensitivity       String
   language          String
-  displayFrom       DateTime @map("display_from")
-  displayTo         DateTime @map("display_to")
-  lastReceivedDate  DateTime @default(now()) @map("last_received_date")
-  isFlatFile        Boolean  @map("is_flat_file")
+  displayFrom       DateTime        @map("display_from")
+  displayTo         DateTime        @map("display_to")
+  lastReceivedDate  DateTime        @default(now()) @map("last_received_date")
+  isFlatFile        Boolean         @map("is_flat_file")
   provenance        String
-  supersededCount   Int      @default(0) @map("superseded_count")
+  supersededCount   Int             @default(0) @map("superseded_count")
+  noMatch           Boolean         @default(false) @map("no_match")
+  ingestionLogs     IngestionLog[]
 
   @@map("artefact")
 }
@@ -35,7 +37,8 @@ model User {
   role               String         @db.VarChar(20)
   createdDate        DateTime       @default(now()) @map("created_date")
   lastSignedInDate   DateTime?      @map("last_signed_in_date")
-  subscriptions      Subscription[]
+
+  subscriptions Subscription[]
 
   @@map("user")
 }
@@ -50,5 +53,32 @@ model MediaApplication {
   statusDate  DateTime @default(now()) @map("status_date")
 
   @@map("media_application")
+}
+
+model IngestionLog {
+  id            String     @id @default(uuid()) @map("id") @db.Uuid
+  timestamp     DateTime   @default(now()) @map("timestamp")
+  sourceSystem  String     @map("source_system")
+  courtId       String     @map("court_id")
+  status        String     @map("status")
+  errorMessage  String?    @map("error_message")
+  artefactId    String?    @map("artefact_id") @db.Uuid
+  artefact      Artefact?  @relation(fields: [artefactId], references: [artefactId], onDelete: SetNull)
+
+  @@index([timestamp])
+  @@index([status])
+  @@index([sourceSystem])
+  @@map("ingestion_log")
+}
+
+model Subscription {
+  id           String   @id @default(uuid()) @map("id") @db.Uuid
+  locationId   String   @map("location_id")
+  userId       String   @map("user_id") @db.Uuid
+  user         User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  createdDate  DateTime @default(now()) @map("created_date")
+
+  @@unique([locationId, userId])
+  @@map("subscription")
 }
 

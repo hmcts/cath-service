@@ -88,6 +88,11 @@ jobs:
       CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
       CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
 
+      # API Authentication Configuration (for blob ingestion endpoint)
+      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
+      APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6

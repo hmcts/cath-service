@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
@@ -8,7 +9,12 @@ import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const TEMP_UPLOAD_DIR = path.join(process.cwd(), "storage/temp/uploads");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Navigate to monorepo root (from libs/list-types/civil-and-family-daily-cause-list/src/pages/)
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
+const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
