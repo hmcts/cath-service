@@ -71,14 +71,3 @@ model IngestionLog {
   @@map("ingestion_log")
 }
 
-model Subscription {
-  id           String   @id @default(uuid()) @map("id") @db.Uuid
-  locationId   String   @map("location_id")
-  userId       String   @map("user_id") @db.Uuid
-  user         User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  createdDate  DateTime @default(now()) @map("created_date")
-
-  @@unique([locationId, userId])
-  @@map("subscription")
-}
-
