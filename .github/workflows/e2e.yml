@@ -190,9 +190,8 @@ jobs:
         id: e2e-tests
         run: |
           # Capture all output including server logs
-          # Exclude nightly tests in PR runs
           set -o pipefail
-          yarn workspace e2e-tests run test:e2e -- --grep-invert "@nightly" 2>&1 | tee e2e-server-logs.txt
+          yarn workspace e2e-tests run test:e2e 2>&1 | tee e2e-server-logs.txt
 
       # Publish test results to PR checks
       - name: Test Report

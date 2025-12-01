@@ -285,7 +285,7 @@ jobs:
         run: |
           # Capture all output including server logs
           set -o pipefail
-          yarn workspace e2e-tests run test:e2e 2>&1 | tee e2e-server-logs.txt
+          yarn workspace e2e-tests run test:e2e:all 2>&1 | tee e2e-server-logs.txt
 
       - name: Test Report
         id: test-report

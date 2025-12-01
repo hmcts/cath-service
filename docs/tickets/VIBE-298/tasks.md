@@ -13,11 +13,12 @@
 - [x] Set 30-minute timeout for nightly jobs
 - [x] Configure artifact uploads for coverage reports
 
-### Phase 2: Update PR E2E Workflow
+### Phase 2: Update Package Scripts
 
-- [x] Update `.github/workflows/e2e.yml` to exclude nightly tests
-- [x] Add `--grep-invert "@nightly"` to Playwright command
-- [x] Verify existing tests still run in PR workflow
+- [x] Update `e2e-tests/package.json` test:e2e script to add `--grep-invert "@nightly"`
+- [x] Add `test:e2e:all` script to run all tests (including @nightly)
+- [x] Update `.github/workflows/nightly.yml` to use `test:e2e:all`
+- [x] Verify `.github/workflows/e2e.yml` continues to use `test:e2e` (no changes needed)
 
 ### Phase 3: Test Workflows
 
@@ -48,6 +49,6 @@
 
 ### Phase 6: Finalization
 
-- [ ] Create PR with all changes
+- [x] Create PR with all changes
 - [ ] Verify CI passes (PR workflow excludes nightly tests)
 - [ ] Update ticket with completion summary

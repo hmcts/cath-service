@@ -426,8 +426,8 @@ test('user can complete journey @nightly', async ({ page }) => {
 
 **Running Tests:**
 ```bash
-yarn test:e2e                   # Run E2E tests (excludes @nightly in PR workflows)
-yarn test:e2e -- --grep "@nightly"  # Run only nightly tests
+yarn test:e2e                   # Run E2E tests (excludes @nightly)
+yarn test:e2e:all               # Run all E2E tests (including @nightly)
 ```
 
 ## Code Quality Standards

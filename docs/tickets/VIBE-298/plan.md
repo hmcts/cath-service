@@ -30,9 +30,10 @@ Add minimal, focused guidance on E2E testing best practices. Keep updates specif
 
 ```
 .github/workflows/
-├── nightly.yml           # New nightly scheduled pipeline
-├── e2e.yml               # Update to exclude nightly tests
+├── nightly.yml           # New nightly scheduled pipeline (uses test:e2e:all)
+├── e2e.yml               # No changes (uses test:e2e)
 
+e2e-tests/package.json    # Add test:e2e:all script, update test:e2e to exclude nightly
 CLAUDE.md                 # Add focused E2E testing section
 ```
 
@@ -51,18 +52,19 @@ CLAUDE.md                 # Add focused E2E testing section
 **Key Configuration:**
 ```yaml
 # Run all tests including nightly
-npx playwright test
+yarn workspace e2e-tests run test:e2e:all
 ```
 
-### PR E2E Workflow Update (e2e.yml)
+### Package.json Script Updates (e2e-tests/package.json)
 
-**Modification Required:**
-Update existing e2e.yml to exclude nightly tests:
+**Modifications:**
+- Update `test:e2e` to exclude nightly tests: `node run-with-credentials.js --grep-invert "@nightly"`
+- Add `test:e2e:all` to run all tests: `node run-with-credentials.js`
 
-```yaml
-# Exclude nightly tests in PR runs
-npx playwright test --grep-invert "@nightly"
-```
+This ensures:
+- Local development with `yarn test:e2e` excludes nightly tests by default
+- Nightly workflow uses `yarn test:e2e:all` to run everything
+- PR workflow continues to use `yarn test:e2e` (no workflow changes needed)
 
 ### CLAUDE.md Testing Documentation Updates
 
@@ -152,13 +154,14 @@ test('user can complete journey @nightly', async ({ page }) => {
 **Implementation:**
 - Create `.github/workflows/nightly.yml`
 - Configure cron: `'0 2 * * *'`
-- Run all tests including `@nightly` tagged tests
-- Update e2e.yml to exclude `@nightly` tests in PRs
+- Use `test:e2e:all` to run all tests including `@nightly` tagged tests
+- Update `e2e-tests/package.json` scripts to handle nightly test filtering
 
 **Verification:**
-- Nightly pipeline runs at scheduled time
+- Nightly pipeline runs at scheduled time using `test:e2e:all`
 - All tests execute (including nightly-tagged)
-- PR pipeline excludes nightly-tagged tests
+- PR pipeline uses `test:e2e` which excludes nightly-tagged tests
+- Local `yarn test:e2e` excludes nightly tests by default
 - Coverage reports generated
 
 ### 2. Update CLAUDE.md with Test Guidance
@@ -205,11 +208,12 @@ test('user can complete journey @nightly', async ({ page }) => {
 Execute tasks in this exact order:
 
 1. Create nightly.yml workflow
-2. Update e2e.yml to exclude nightly tests
-3. Test both workflows locally/manually
-4. Update CLAUDE.md with focused E2E guidance
-5. Verify documentation accuracy
-6. Create PR
+2. Update e2e-tests/package.json scripts (add test:e2e:all, update test:e2e)
+3. Update nightly.yml to use test:e2e:all
+4. Test workflows locally/manually
+5. Update CLAUDE.md with focused E2E guidance
+6. Verify documentation accuracy
+7. Create PR
 
 ## CLARIFICATIONS NEEDED
 
