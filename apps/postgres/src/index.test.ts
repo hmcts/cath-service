@@ -2,12 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock PrismaClient before importing
 vi.mock("@prisma/client", () => {
-  const mockPrismaClient = vi.fn(function() {
-    return {
-      $connect: vi.fn(),
-      $disconnect: vi.fn()
-    };
-  });
+  const mockPrismaClient = vi.fn(() => ({
+    $connect: vi.fn(),
+    $disconnect: vi.fn()
+  }));
 
   return {
     PrismaClient: mockPrismaClient
