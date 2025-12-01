@@ -10,7 +10,8 @@ let testLocationWelshName: string;
 
 async function createTestLocation(): Promise<void> {
   // Generate unique ID using timestamp and random number to avoid conflicts between parallel tests
-  testLocationId = 90000 + Math.floor(Math.random() * 9000);
+  // Using Date.now() provides millisecond precision and a much larger namespace than the previous 9000 values
+  testLocationId = Date.now() * 1000 + Math.floor(Math.random() * 1000);
   testLocationName = `E2E Test Location ${Date.now()}-${Math.random()}`;
   testLocationWelshName = `Lleoliad Prawf E2E ${Date.now()}-${Math.random()}`;
 
