@@ -1,7 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const TEMP_STORAGE_BASE = path.join(process.cwd(), "storage", "temp", "uploads");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Navigate to monorepo root (from libs/admin-pages/src/manual-upload/)
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
+const TEMP_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 export async function saveUploadedFile(artefactId: string, originalFileName: string, fileBuffer: Buffer): Promise<void> {
   // Extract file extension from original filename

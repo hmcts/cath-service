@@ -26,7 +26,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const locale = req.query.lng === "cy" ? "cy" : "en";
-  const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
+  const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
 
   // Find list type by ID
@@ -100,7 +100,8 @@ const postHandler = async (req: Request, res: Response) => {
       displayFrom,
       displayTo,
       isFlatFile,
-      provenance: Provenance.MANUAL_UPLOAD
+      provenance: Provenance.MANUAL_UPLOAD,
+      noMatch: false
     });
 
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
@@ -133,7 +134,7 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     const locale = req.query.lng === "cy" ? "cy" : "en";
-    const location = getLocationById(Number.parseInt(uploadData.locationId, 10));
+    const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
     const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
 
     // Find list type by ID

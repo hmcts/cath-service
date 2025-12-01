@@ -131,7 +131,7 @@ describe("translationMiddleware", () => {
     const req = { query: {} } as Request;
     const res = {
       locals: { locale: "en" }
-    } as Response;
+    } as unknown as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
@@ -148,7 +148,7 @@ describe("translationMiddleware", () => {
     const req = { query: {} } as Request;
     const res = {
       locals: { locale: "cy" }
-    } as Response;
+    } as unknown as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
@@ -165,7 +165,7 @@ describe("translationMiddleware", () => {
     const req = { query: {} } as Request;
     const res = {
       locals: {}
-    } as Response;
+    } as unknown as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
@@ -177,10 +177,10 @@ describe("translationMiddleware", () => {
 
   it("should preserve existing query parameters when switching language", () => {
     const middleware = translationMiddleware(translations);
-    const req = { query: { locationId: "9", filter: "active" } } as Request;
+    const req = { query: { locationId: "9", filter: "active" } } as unknown as Request;
     const res = {
       locals: { locale: "en" }
-    } as Response;
+    } as unknown as Response;
     const next = vi.fn();
 
     middleware(req, res, next);
@@ -445,8 +445,8 @@ describe("renderInterceptorMiddleware", () => {
 
     middleware(req, res, next);
 
-    // Call the intercepted render with null options
-    res.render("test-view", null);
+    // Call the intercepted render with undefined options
+    res.render("test-view", undefined);
 
     expect(originalRender).toHaveBeenCalledWith(
       "test-view",

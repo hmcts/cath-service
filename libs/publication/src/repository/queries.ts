@@ -22,6 +22,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
         displayTo: data.displayTo,
         isFlatFile: data.isFlatFile,
         provenance: data.provenance,
+        noMatch: data.noMatch,
         lastReceivedDate: new Date(),
         supersededCount: {
           increment: 1
@@ -43,7 +44,8 @@ export async function createArtefact(data: Artefact): Promise<string> {
       displayFrom: data.displayFrom,
       displayTo: data.displayTo,
       isFlatFile: data.isFlatFile,
-      provenance: data.provenance
+      provenance: data.provenance,
+      noMatch: data.noMatch
     }
   });
   return artefact.artefactId;
@@ -59,18 +61,21 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
     }
   });
 
-  return artefacts.map((artefact) => ({
-    artefactId: artefact.artefactId,
-    locationId: artefact.locationId,
-    listTypeId: artefact.listTypeId,
-    contentDate: artefact.contentDate,
-    sensitivity: artefact.sensitivity,
-    language: artefact.language,
-    displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo,
-    isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance
-  }));
+  return artefacts.map(
+    (artefact: (typeof artefacts)[number]): Artefact => ({
+      artefactId: artefact.artefactId,
+      locationId: artefact.locationId,
+      listTypeId: artefact.listTypeId,
+      contentDate: artefact.contentDate,
+      sensitivity: artefact.sensitivity,
+      language: artefact.language,
+      displayFrom: artefact.displayFrom,
+      displayTo: artefact.displayTo,
+      isFlatFile: artefact.isFlatFile,
+      provenance: artefact.provenance,
+      noMatch: artefact.noMatch
+    })
+  );
 }
 
 export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact[]> {
@@ -82,18 +87,21 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
     }
   });
 
-  return artefacts.map((artefact) => ({
-    artefactId: artefact.artefactId,
-    locationId: artefact.locationId,
-    listTypeId: artefact.listTypeId,
-    contentDate: artefact.contentDate,
-    sensitivity: artefact.sensitivity,
-    language: artefact.language,
-    displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo,
-    isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance
-  }));
+  return artefacts.map(
+    (artefact: (typeof artefacts)[number]): Artefact => ({
+      artefactId: artefact.artefactId,
+      locationId: artefact.locationId,
+      listTypeId: artefact.listTypeId,
+      contentDate: artefact.contentDate,
+      sensitivity: artefact.sensitivity,
+      language: artefact.language,
+      displayFrom: artefact.displayFrom,
+      displayTo: artefact.displayTo,
+      isFlatFile: artefact.isFlatFile,
+      provenance: artefact.provenance,
+      noMatch: artefact.noMatch
+    })
+  );
 }
 
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {

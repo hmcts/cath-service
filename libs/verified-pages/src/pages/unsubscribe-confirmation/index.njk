@@ -1,0 +1,27 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block pageTitle %}
+  {{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+<div class="parent-box">
+
+  {{ govukPanel({
+    titleText: panelTitle,
+    html: panelText
+  }) }}
+
+  <p class="govuk-body">
+    {{ continueText }} <a href="/account-home" class="govuk-link">{{ yourAccountLink }}</a> {{ inOrderTo }}
+  </p>
+
+  <ul class="govuk-list govuk-list--bullet">
+    <li><a href="/location-name-search" class="govuk-link">{{ addNewSubscriptionLink }}</a></li>
+    <li><a href="/subscription-management" class="govuk-link">{{ manageSubscriptionsLink }}</a></li>
+    <li><a href="/search" class="govuk-link">{{ findCourtLink }}</a></li>
+  </ul>
+
+</div>
+{% endblock %}

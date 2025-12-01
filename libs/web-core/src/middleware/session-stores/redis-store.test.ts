@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { expressSessionRedis } from "./redis-store.js";
 
+// Use class syntax for Vitest 4 constructor mocks
 vi.mock("connect-redis", () => ({
-  RedisStore: vi.fn().mockImplementation((options) => {
-    return { redisStoreOptions: options };
-  })
+  RedisStore: class MockRedisStore {
+    redisStoreOptions: unknown;
+    constructor(options: unknown) {
+      this.redisStoreOptions = options;
+    }
+  }
 }));
 
 vi.mock("express-session", () => ({
-  default: vi.fn().mockImplementation((options) => {
-    return { sessionOptions: options };
-  })
+  default: (options: unknown) => ({ sessionOptions: options })
 }));
 
 describe("expressSessionRedis", () => {

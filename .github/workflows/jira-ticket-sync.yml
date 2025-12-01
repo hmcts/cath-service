@@ -2,7 +2,7 @@ name: JIRA Ticket Planning Automation
 
 on:
   schedule:
-    - cron: '0 * * * *' # Hourly
+    - cron: '0 9-17 * * 1-5' # every hour, Mon-Fri, 9am-5pm
 
 permissions:
   contents: write
@@ -24,7 +24,7 @@ jobs:
           echo "${{ secrets.MCP_ENV }}" > .claude/.mcp.env
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           package-manager-cache: false
@@ -60,6 +60,7 @@ jobs:
               "permissions": {
                 "allow": [
                   "Bash(git:*)",
+                  "Bash(sed:*)",
                   "Bash(yarn:*)",
                   "Read(**)",
                   "Write(**)",
@@ -83,7 +84,7 @@ jobs:
             Automate JIRA ticket planning for prioritized backlog items.
 
             Task:
-            1. Use jira_search to find all VIBE tickets with status "Ready for Progress"
+            1. Use jira_search to find all VIBE tickets with status "Ready for Progress" and a label "CaTH"
             2. For each ticket, check if a branch feature/VIBE-[num]-[slug] exists
             3. For tickets without branches:
                a. Create the branch with appropriate slug from ticket title then run Run /expressjs-monorepo:qk-start VIBE-[num] to fetch the ticket details
@@ -97,6 +98,7 @@ jobs:
                   - Tasks doc URL
 
             Important:
+            - Do NOT comment on the JIRA or make changes to the branch if the branch already exists
             - Process all tickets sequentially (not in parallel)
             - If a ticket fails, log the error and continue with next ticket
             - Include error handling for JIRA API failures

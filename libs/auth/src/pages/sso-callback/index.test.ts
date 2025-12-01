@@ -10,6 +10,11 @@ vi.mock("passport", () => ({
   }
 }));
 
+// Mock createOrUpdateUser
+vi.mock("@hmcts/account/repository/query", () => ({
+  createOrUpdateUser: vi.fn()
+}));
+
 describe("SSO Return handler", () => {
   const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
 

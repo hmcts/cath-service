@@ -10,7 +10,10 @@
     {% if errors %}
       {{ govukErrorSummary({
         titleText: errorSummaryTitle,
-        errorList: errors
+        errorList: errors,
+        attributes: {
+          tabindex: "-1"
+        }
       }) }}
     {% endif %}
 
