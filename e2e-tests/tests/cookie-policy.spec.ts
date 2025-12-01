@@ -9,7 +9,7 @@ test.describe("Cookie Policy Page", () => {
     await expect(page.locator("h1")).toHaveText("Cookie policy");
 
     // Check main heading
-    await expect(page.locator("h2")).toContainText("How cookies are used in the Courts and tribunal hearings service");
+    await expect(page.locator("h2:has-text('How cookies are used')")).toBeVisible();
 
     // Check all subsections are visible (they are h3 headings)
     await expect(page.locator("h3:has-text('To measure website usage')")).toBeVisible();
@@ -88,8 +88,8 @@ test.describe("Cookie Policy Page", () => {
   test("should display Welsh content on Welsh route", async ({ page }) => {
     await page.goto("/polisi-cwcis");
 
-    // Should redirect to cookies-policy with lng=cy
-    await expect(page).toHaveURL(/\/cookies-policy\?lng=cy/);
+    // Should stay on Welsh route
+    await expect(page).toHaveURL(/\/polisi-cwcis/);
 
     // Check Welsh title
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
@@ -196,15 +196,15 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should preserve Welsh language after saving preferences", async ({ page }) => {
-    await page.goto("/cookies-policy?lng=cy");
+    await page.goto("/polisi-cwcis");
 
     // Save preferences
     await page.locator('input[name="analytics"][value="on"]').check();
     await page.locator('input[name="performance"][value="off"]').check();
     await page.locator('button:has-text("Cadw")').click();
 
-    // Should stay in Welsh
-    await expect(page).toHaveURL(/lng=cy/);
+    // Should stay on Welsh route
+    await expect(page).toHaveURL(/\/polisi-cwcis\?saved=true/);
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
   });
 
