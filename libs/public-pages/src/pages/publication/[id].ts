@@ -1,7 +1,8 @@
 import { prisma } from "@hmcts/postgres";
-import type { Request, Response } from "express";
+import { requirePublicationAccess } from "@hmcts/publication";
+import type { Request, RequestHandler, Response } from "express";
 
-export const GET = async (req: Request, res: Response) => {
+const handler: RequestHandler = async (req: Request, res: Response) => {
   const publicationId = req.params.id;
 
   if (!publicationId) {
@@ -9,7 +10,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   try {
-    // Get artefact from database
+    // Get artefact from database (authorisation already checked by middleware)
     const artefact = await prisma.artefact.findUnique({
       where: { artefactId: publicationId }
     });
@@ -28,3 +29,6 @@ export const GET = async (req: Request, res: Response) => {
     return res.redirect("/500");
   }
 };
+
+// Apply authorisation middleware before the handler
+export const GET = [requirePublicationAccess(), handler];
