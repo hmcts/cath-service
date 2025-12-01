@@ -79,8 +79,8 @@ describe("non-strategic-upload page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "non-strategic-upload/index",
         expect.objectContaining({
-          title: "Upload excel file",
-          pageTitle: "Upload - Upload excel file",
+          title: "Upload Excel file",
+          pageTitle: "Upload - Upload Excel file",
           warningTitle: "Warning",
           continueButton: "Continue",
           hideLanguageToggle: true,

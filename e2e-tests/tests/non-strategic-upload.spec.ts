@@ -41,9 +41,9 @@ async function navigateToSummaryPage(page: Page) {
 
   const fileInput = page.locator('input[name="file"]');
   await fileInput.setInputFiles({
-    name: "test-document.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4\nTest PDF content")
+    name: "test-document.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
   });
 
   await page.getByRole("button", { name: /continue/i }).click();
@@ -91,9 +91,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await page.fill('input[name="displayTo-year"]', "2025");
 
       await fileInput.setInputFiles({
-        name: "test-keyboard.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\nTest keyboard content")
+        name: "test-keyboard.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
       });
 
       await page.getByRole("button", { name: /continue/i }).click();
@@ -141,7 +141,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       // Step 1: Load non-strategic upload form
       await page.goto("/non-strategic-upload?locationId=9001");
       await page.waitForTimeout(1000);
-      await expect(page).toHaveTitle("Upload - Non-strategic upload - Court and tribunal hearings - GOV.UK");
+      await expect(page).toHaveTitle("Upload - Upload Excel file - Court and tribunal hearings - GOV.UK");
 
       // Step 2: Fill out the form
       await page.selectOption('select[name="listType"]', "6");
@@ -159,9 +159,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: "test-hearing-list.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\nTest hearing list content")
+        name: "test-hearing-list.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
       });
 
       // Step 3: Submit form and verify navigation to summary
@@ -171,7 +171,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       // Step 4: Verify summary page displays correct data
       const values = page.locator(".govuk-summary-list__value");
-      await expect(values.nth(1)).toContainText("test-hearing-list.pdf");
+      await expect(values.nth(1)).toContainText("test-hearing-list.xlsx");
       await expect(values.nth(2)).toContainText("Crown Daily List");
       await expect(values.nth(3)).toContainText("23 October 2025");
       await expect(values.nth(4)).toContainText("Public");
@@ -199,9 +199,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
     test("should load the page with all form fields and accessibility compliance", async ({ page }) => {
       await page.goto("/non-strategic-upload");
 
-      await expect(page).toHaveTitle("Upload - Non-strategic upload - Court and tribunal hearings - GOV.UK");
+      await expect(page).toHaveTitle("Upload - Upload Excel file - Court and tribunal hearings - GOV.UK");
 
-      const heading = page.getByRole("heading", { name: /non-strategic upload/i });
+      const heading = page.getByRole("heading", { name: /upload Excel file/i });
       await expect(heading).toBeVisible();
 
       const warningTitle = page.getByText(/warning/i);
@@ -358,18 +358,18 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       let errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      let errorLink = errorSummary.getByRole("link", { name: /please upload a valid file format/i });
+      let errorLink = errorSummary.getByRole("link", { name: /the selected file type is not supported/i });
       await expect(errorLink).toBeVisible();
       await expect(errorLink).toHaveAttribute("href", "#file");
 
       let inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
       await expect(inlineErrorMessage).toBeVisible();
-      await expect(inlineErrorMessage).toContainText(/please upload a valid file format/i);
+      await expect(inlineErrorMessage).toContainText(/the selected file type is not supported/i);
 
       const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
       await fileInput.setInputFiles({
-        name: "large-file.pdf",
-        mimeType: "application/pdf",
+        name: "large-file.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         buffer: largeBuffer
       });
 
@@ -380,13 +380,13 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
-      errorLink = errorSummary.getByRole("link", { name: /file too large/i });
+      errorLink = errorSummary.getByRole("link", { name: /the selected file must be smaller than 2mb/i });
       await expect(errorLink).toBeVisible();
       await expect(errorLink).toHaveAttribute("href", "#file");
 
       inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
       await expect(inlineErrorMessage).toBeVisible();
-      await expect(inlineErrorMessage).toContainText(/file too large, please upload file smaller than 2mb/i);
+      await expect(inlineErrorMessage).toContainText(/the selected file must be smaller than 2mb/i);
     });
 
     test("should show court name input with autocomplete initialized", async ({ page }) => {
@@ -407,9 +407,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: "test.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("test content")
+        name: "test.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
       });
 
       const continueButton = page.getByRole("button", { name: /continue/i });
@@ -460,9 +460,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: "test.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("test content")
+        name: "test.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
       });
 
       await page.selectOption('select[name="listType"]', "1");
@@ -483,12 +483,12 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
-      const errorLink = errorSummary.getByRole("link", { name: /display to date must be after display from date/i });
+      const errorLink = errorSummary.getByRole("link", { name: /'display to' date must be the same as or later than 'display from' date/i });
       await expect(errorLink).toBeVisible();
 
       const inlineError = page.locator("#displayTo-error.govuk-error-message");
       await expect(inlineError).toBeVisible();
-      await expect(inlineError).toContainText(/display to date must be after display from date/i);
+      await expect(inlineError).toContainText(/'display to' date must be the same as or later than 'display from' date/i);
 
       await page.selectOption('select[name="sensitivity"]', "PRIVATE");
       await page.selectOption('select[name="language"]', "WELSH");
@@ -549,7 +549,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(0)).not.toBeEmpty();
-      await expect(values.nth(1)).toContainText("test-document.pdf");
+      await expect(values.nth(1)).toContainText("test-document.xlsx");
       await expect(values.nth(2)).toContainText("Crown Daily List");
       await expect(values.nth(3)).toContainText("23 October 2025");
       await expect(values.nth(4)).toContainText("Public");
@@ -700,9 +700,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
-        name: "second-upload.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\nSecond upload content")
+        name: "second-upload.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
       });
 
       await page.getByRole("button", { name: /continue/i }).click();
@@ -740,9 +740,9 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await page.fill('input[name="displayTo-year"]', "2025");
 
       await fileInput.setInputFiles({
-        name: "test-mobile.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\nTest mobile content")
+        name: "test-mobile.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
       });
 
       await page.getByRole("button", { name: /continue/i }).click();

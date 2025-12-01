@@ -1,10 +1,10 @@
 export const cy = {
-  title: "[Welsh] Upload excel file",
-  pageTitle: "[Welsh] Upload - Upload excel file",
+  title: "[Welsh] Upload Excel file",
+  pageTitle: "[Welsh] Upload - Upload Excel file",
   warningTitle: "[Welsh] Warning",
   warningMessage:
     "[Welsh] Prior to upload you must ensure the file is suitable for publication e.g. redaction of personal data has been done during the production of this file.",
-  fileUploadLabel: "[Welsh] Manually upload a excel file (.xlsx), max size 2MB",
+  fileUploadLabel: "[Welsh] Manually upload an Excel file (.xlsx), max size 2MB",
   courtLabel: "[Welsh] Court name or Tribunal name",
   listTypeLabel: "[Welsh] List type",
   listTypePlaceholder: "[Welsh] Please choose a list type",
