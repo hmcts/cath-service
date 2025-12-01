@@ -15,11 +15,14 @@ const testLocationMap = new Map<string, TestLocationData>();
 
 async function createTestLocation(): Promise<TestLocationData> {
   // Generate truly unique ID using high-entropy approach to avoid collisions in parallel test runs
-  // Combine timestamp with random value, keeping within INT4 range (2^31 - 1 = 2147483647)
-  // Use modulo to create a large but bounded namespace: 90M to ~190M (100M possible values)
-  const timestampPart = Date.now() % 100000000; // 8 digits, cycles every ~3 years
-  const randomPart = Math.floor(Math.random() * 1000000); // 6 digits (0-999999)
-  const testLocationId = 90000000 + (timestampPart + randomPart) % 100000000; // Range: 90000000-189999999
+  // This approach was introduced in commit d00d399 to fix test ID collisions
+  // Combine timestamp with random value, staying within PostgreSQL INTEGER limit (2^31 - 1 = 2,147,483,647)
+  // Using a ~2B namespace provides excellent collision resistance for parallel test execution
+  const timestampPart = Date.now() % 1000000000; // ~1B possible values from timestamp
+  const randomPart = Math.floor(Math.random() * 1000000000); // ~1B random values
+  const combined = timestampPart + randomPart;
+  // Ensure result is positive and under INT4 limit, with base offset to avoid conflicts with seed data
+  const testLocationId = 1000000000 + (combined % 1000000000); // Range: 1000000000-1999999999
   const testLocationName = `E2E Test Location ${Date.now()}-${Math.random()}`;
   const testLocationWelshName = `Lleoliad Prawf E2E ${Date.now()}-${Math.random()}`;
 
