@@ -131,6 +131,17 @@ export async function createApp(): Promise<Express> {
       next();
     });
   });
+
+  // Register non-strategic upload with file upload middleware
+  app.post("/non-strategic-upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        req.fileUploadError = err;
+      }
+      next();
+    });
+  });
+
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());

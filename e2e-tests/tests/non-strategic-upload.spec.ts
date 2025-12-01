@@ -1,0 +1,773 @@
+import AxeBuilder from "@axe-core/playwright";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { loginWithSSO } from "../utils/sso-helpers.js";
+
+// Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
+// 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
+// 2. Crown copyright logo link missing accessible text (WCAG 2.4.4, 4.1.2)
+// These issues affect ALL pages and should be addressed in a separate ticket
+// See: docs/tickets/VIBE-150/accessibility-findings.md
+
+// Helper function to authenticate as System Admin
+async function authenticateSystemAdmin(page: Page) {
+  await page.goto("/system-admin-dashboard");
+
+  if (page.url().includes("login.microsoftonline.com")) {
+    const systemAdminEmail = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!;
+    const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
+    await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
+  }
+}
+
+// Helper function to navigate to summary page by completing the upload form
+async function navigateToSummaryPage(page: Page) {
+  await authenticateSystemAdmin(page);
+  await page.goto("/non-strategic-upload?locationId=9001");
+  await page.waitForTimeout(1000);
+
+  await page.selectOption('select[name="listType"]', "6");
+  await page.fill('input[name="hearingStartDate-day"]', "23");
+  await page.fill('input[name="hearingStartDate-month"]', "10");
+  await page.fill('input[name="hearingStartDate-year"]', "2025");
+  await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+  await page.selectOption('select[name="language"]', "ENGLISH");
+  await page.fill('input[name="displayFrom-day"]', "20");
+  await page.fill('input[name="displayFrom-month"]', "10");
+  await page.fill('input[name="displayFrom-year"]', "2025");
+  await page.fill('input[name="displayTo-day"]', "30");
+  await page.fill('input[name="displayTo-month"]', "10");
+  await page.fill('input[name="displayTo-year"]', "2025");
+
+  const fileInput = page.locator('input[name="file"]');
+  await fileInput.setInputFiles({
+    name: "test-document.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\nTest PDF content")
+  });
+
+  await page.getByRole("button", { name: /continue/i }).click();
+  await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
+}
+
+// Helper function to complete the full non-strategic upload flow and reach success page
+async function completeNonStrategicUploadFlow(page: Page) {
+  await navigateToSummaryPage(page);
+  await page.getByRole("button", { name: "Confirm" }).click();
+  await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+}
+
+test.describe("Non-Strategic Upload End-to-End Flow", () => {
+  test.beforeEach(async ({ page }) => {
+    await authenticateSystemAdmin(page);
+  });
+
+  test.describe("Complete End-to-End Journey", () => {
+    test("should be keyboard accessible throughout entire upload flow", async ({ page }) => {
+      // Step 1: Test keyboard accessibility on form page
+      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.click();
+      await expect(fileInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      const focusedElement = page.locator(":focus");
+      await expect(focusedElement).toBeVisible();
+
+      // Step 2: Fill form and submit
+      await page.selectOption('select[name="listType"]', "6");
+      await page.fill('input[name="hearingStartDate-day"]', "23");
+      await page.fill('input[name="hearingStartDate-month"]', "10");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "10");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "30");
+      await page.fill('input[name="displayTo-month"]', "10");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      await fileInput.setInputFiles({
+        name: "test-keyboard.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nTest keyboard content")
+      });
+
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
+
+      // Step 3: Test keyboard accessibility on summary page
+      const changeLinks = page.locator(".govuk-summary-list__actions a");
+      await expect(changeLinks).toHaveCount(7);
+
+      for (let i = 0; i < 7; i++) {
+        const href = await changeLinks.nth(i).getAttribute("href");
+        expect(href).toMatch(/^\/non-strategic-upload#/);
+      }
+
+      const confirmButton = page.getByRole("button", { name: "Confirm" });
+      await expect(confirmButton).toBeVisible();
+      await expect(confirmButton).toHaveAttribute("type", "submit");
+
+      await confirmButton.focus();
+      await page.keyboard.press("Enter");
+      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+      // Step 4: Test keyboard accessibility on success page
+      const links = page.locator(".govuk-list a");
+      await expect(links).toHaveCount(3);
+
+      for (let i = 0; i < 3; i++) {
+        const href = await links.nth(i).getAttribute("href");
+        expect(href).toBeTruthy();
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const link = links.nth(i);
+        await link.focus();
+        await expect(link).toBeFocused();
+      }
+
+      const uploadLink = page.getByRole("link", { name: "Upload another file" });
+      await uploadLink.focus();
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL("/non-strategic-upload");
+    });
+
+    test("should complete full upload flow from form to success", async ({ page }) => {
+      // Step 1: Load non-strategic upload form
+      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+      await expect(page).toHaveTitle("Upload - Non-strategic upload - Court and tribunal hearings - GOV.UK");
+
+      // Step 2: Fill out the form
+      await page.selectOption('select[name="listType"]', "6");
+      await page.fill('input[name="hearingStartDate-day"]', "23");
+      await page.fill('input[name="hearingStartDate-month"]', "10");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "10");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "30");
+      await page.fill('input[name="displayTo-month"]', "10");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test-hearing-list.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nTest hearing list content")
+      });
+
+      // Step 3: Submit form and verify navigation to summary
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
+      await expect(page.locator("h1")).toHaveText("File upload summary");
+
+      // Step 4: Verify summary page displays correct data
+      const values = page.locator(".govuk-summary-list__value");
+      await expect(values.nth(1)).toContainText("test-hearing-list.pdf");
+      await expect(values.nth(2)).toContainText("Crown Daily List");
+      await expect(values.nth(3)).toContainText("23 October 2025");
+      await expect(values.nth(4)).toContainText("Public");
+      await expect(values.nth(5)).toContainText("English");
+      await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
+
+      // Step 5: Confirm upload and navigate to success page
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+      // Step 6: Verify success page content
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
+      const title = page.locator(".govuk-panel__title");
+      await expect(title).toHaveText("File upload successful");
+      await expect(successPanel).toContainText("Your file has been uploaded");
+
+      // Step 7: Verify next steps are available
+      const uploadLink = page.getByRole("link", { name: "Upload another file" });
+      await expect(uploadLink).toBeVisible();
+    });
+  });
+
+  test.describe("Non-Strategic Upload Form Page", () => {
+    test("should load the page with all form fields and accessibility compliance", async ({ page }) => {
+      await page.goto("/non-strategic-upload");
+
+      await expect(page).toHaveTitle("Upload - Non-strategic upload - Court and tribunal hearings - GOV.UK");
+
+      const heading = page.getByRole("heading", { name: /non-strategic upload/i });
+      await expect(heading).toBeVisible();
+
+      const warningTitle = page.getByText(/warning/i);
+      await expect(warningTitle).toBeVisible();
+
+      const fileUpload = page.locator('input[name="file"]');
+      await expect(fileUpload).toBeVisible();
+
+      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: "visible", timeout: 10000 });
+      await expect(courtInput).toBeVisible();
+
+      const listTypeSelect = page.locator('select[name="listType"]');
+      await expect(listTypeSelect).toBeVisible();
+
+      const hearingDateDay = page.locator('input[name="hearingStartDate-day"]');
+      const hearingDateMonth = page.locator('input[name="hearingStartDate-month"]');
+      const hearingDateYear = page.locator('input[name="hearingStartDate-year"]');
+      await expect(hearingDateDay).toBeVisible();
+      await expect(hearingDateMonth).toBeVisible();
+      await expect(hearingDateYear).toBeVisible();
+
+      const sensitivitySelect = page.locator('select[name="sensitivity"]');
+      await expect(sensitivitySelect).toBeVisible();
+
+      const languageSelect = page.locator('select[name="language"]');
+      await expect(languageSelect).toBeVisible();
+
+      const displayFromDay = page.locator('input[name="displayFrom-day"]');
+      const displayFromMonth = page.locator('input[name="displayFrom-month"]');
+      const displayFromYear = page.locator('input[name="displayFrom-year"]');
+      await expect(displayFromDay).toBeVisible();
+      await expect(displayFromMonth).toBeVisible();
+      await expect(displayFromYear).toBeVisible();
+
+      const displayToDay = page.locator('input[name="displayTo-day"]');
+      const displayToMonth = page.locator('input[name="displayTo-month"]');
+      const displayToYear = page.locator('input[name="displayTo-year"]');
+      await expect(displayToDay).toBeVisible();
+      await expect(displayToMonth).toBeVisible();
+      await expect(displayToYear).toBeVisible();
+
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await expect(continueButton).toBeVisible();
+
+      const languageToggle = page.locator(".language");
+      await expect(languageToggle).not.toBeVisible();
+
+      const accessibilityScanResults = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name"])
+        .analyze();
+
+      if (accessibilityScanResults.violations.length > 0) {
+        console.log("Accessibility violations found:");
+        accessibilityScanResults.violations.forEach((violation) => {
+          console.log(`- ${violation.id}: ${violation.description}`);
+          console.log(`  Impact: ${violation.impact}`);
+          console.log(`  Affected nodes: ${violation.nodes.length}`);
+          violation.nodes.forEach((node) => {
+            console.log(`    ${node.target}`);
+          });
+        });
+      }
+
+      expect(accessibilityScanResults.violations).toEqual([]);
+
+      const fileInset = page.locator(".govuk-inset-text").nth(0);
+      const listTypeInset = page.locator(".govuk-inset-text").nth(1);
+
+      await expect(fileInset).toBeVisible();
+      await expect(listTypeInset).toBeVisible();
+
+      const fileUploadInInset = fileInset.locator('input[name="file"]');
+      await expect(fileUploadInInset).toBeVisible();
+
+      const listTypeInInset = listTypeInset.locator('select[name="listType"]');
+      const hearingDateInInset = listTypeInset.locator('input[name="hearingStartDate-day"]');
+      await expect(listTypeInInset).toBeVisible();
+      await expect(hearingDateInInset).toBeVisible();
+
+      const pageHelpTitle = page.getByText(/page help/i);
+      await expect(pageHelpTitle).toBeVisible();
+
+      const listsHelp = page.getByText(/lists/i).first();
+      const sensitivityHelp = page.getByText(/sensitivity/i).first();
+      const displayFromHelp = page.getByText(/display from/i).first();
+      const displayToHelp = page.getByText(/display to/i).first();
+
+      await expect(listsHelp).toBeVisible();
+      await expect(sensitivityHelp).toBeVisible();
+      await expect(displayFromHelp).toBeVisible();
+      await expect(displayToHelp).toBeVisible();
+    });
+
+    test("should display validation errors for all required fields when form is empty", async ({ page }) => {
+      await page.goto("/non-strategic-upload");
+
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await expect(page).toHaveURL("/non-strategic-upload");
+
+      const errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+
+      const errorSummaryHeading = errorSummary.getByRole("heading", { name: /there is a problem/i });
+      await expect(errorSummaryHeading).toBeVisible();
+
+      const errorLinks = errorSummary.locator(".govuk-error-summary__list a");
+      const errorCount = await errorLinks.count();
+      expect(errorCount).toBeGreaterThan(0);
+
+      const fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+      await expect(fileErrorMessage).toBeVisible();
+
+      const accessibilityScanResults = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name"])
+        .analyze();
+
+      expect(accessibilityScanResults.violations).toEqual([]);
+    });
+
+    test("should display file validation errors for invalid type and large size", async ({ page }) => {
+      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      await page.selectOption('select[name="listType"]', "1");
+      await page.fill('input[name="hearingStartDate-day"]', "15");
+      await page.fill('input[name="hearingStartDate-month"]', "06");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "10");
+      await page.fill('input[name="displayFrom-month"]', "06");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "20");
+      await page.fill('input[name="displayTo-month"]', "06");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test.txt",
+        mimeType: "text/plain",
+        buffer: Buffer.from("test content")
+      });
+
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await expect(page).toHaveURL(/\/non-strategic-upload/);
+
+      let errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+
+      let errorLink = errorSummary.getByRole("link", { name: /please upload a valid file format/i });
+      await expect(errorLink).toBeVisible();
+      await expect(errorLink).toHaveAttribute("href", "#file");
+
+      let inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+      await expect(inlineErrorMessage).toBeVisible();
+      await expect(inlineErrorMessage).toContainText(/please upload a valid file format/i);
+
+      const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
+      await fileInput.setInputFiles({
+        name: "large-file.pdf",
+        mimeType: "application/pdf",
+        buffer: largeBuffer
+      });
+
+      await continueButton.click();
+
+      await expect(page).toHaveURL(/\/non-strategic-upload/);
+
+      errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+
+      errorLink = errorSummary.getByRole("link", { name: /file too large/i });
+      await expect(errorLink).toBeVisible();
+      await expect(errorLink).toHaveAttribute("href", "#file");
+
+      inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+      await expect(inlineErrorMessage).toBeVisible();
+      await expect(inlineErrorMessage).toContainText(/file too large, please upload file smaller than 2mb/i);
+    });
+
+    test("should show court name input with autocomplete initialized", async ({ page }) => {
+      await page.goto("/non-strategic-upload");
+
+      const autocompleteInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await autocompleteInput.waitFor({ state: "visible", timeout: 10000 });
+
+      await expect(autocompleteInput).toBeVisible();
+      await expect(autocompleteInput).toHaveAttribute("role", "combobox");
+    });
+
+    test("should validate court name with empty, short, invalid inputs and preserve values", async ({ page }) => {
+      await page.goto("/non-strategic-upload");
+
+      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await courtInput.waitFor({ state: "visible", timeout: 10000 });
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("test content")
+      });
+
+      const continueButton = page.getByRole("button", { name: /continue/i });
+
+      await continueButton.click();
+
+      let errorSummary = page.locator(".govuk-error-summary");
+      let errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
+      await expect(errorLink).toBeVisible();
+
+      let inlineError = page.locator(".govuk-error-message").filter({ hasText: /court name must be three characters or more/i });
+      await expect(inlineError).toBeVisible();
+
+      await courtInput.fill("AB");
+      await continueButton.click();
+
+      errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+      errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
+      await expect(errorLink).toBeVisible();
+
+      inlineError = page.locator("#court-error.govuk-error-message");
+      await expect(inlineError).toBeVisible();
+      await expect(inlineError).toContainText(/court name must be three characters or more/i);
+
+      await courtInput.fill("Invalid Court Name That Does Not Exist");
+      await continueButton.click();
+
+      errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+      errorLink = errorSummary.getByRole("link", { name: /please enter and select a valid court/i });
+      await expect(errorLink).toBeVisible();
+
+      inlineError = page.locator("#court-error.govuk-error-message");
+      await expect(inlineError).toBeVisible();
+      await expect(inlineError).toContainText(/please enter and select a valid court/i);
+
+      const preservedCourtName = "Invalid Court Name";
+      await courtInput.fill(preservedCourtName);
+      await continueButton.click();
+
+      await expect(courtInput).toHaveValue(preservedCourtName);
+    });
+
+    test("should validate date range and preserve all form data when validation fails", async ({ page }) => {
+      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("test content")
+      });
+
+      await page.selectOption('select[name="listType"]', "1");
+      await page.fill('input[name="hearingStartDate-day"]', "15");
+      await page.fill('input[name="hearingStartDate-month"]', "06");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "06");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "10");
+      await page.fill('input[name="displayTo-month"]', "06");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      const errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+      const errorLink = errorSummary.getByRole("link", { name: /display to date must be after display from date/i });
+      await expect(errorLink).toBeVisible();
+
+      const inlineError = page.locator("#displayTo-error.govuk-error-message");
+      await expect(inlineError).toBeVisible();
+      await expect(inlineError).toContainText(/display to date must be after display from date/i);
+
+      await page.selectOption('select[name="sensitivity"]', "PRIVATE");
+      await page.selectOption('select[name="language"]', "WELSH");
+      await page.fill('input[name="displayFrom-day"]', "10");
+      await page.fill('input[name="displayTo-day"]', "20");
+
+      await continueButton.click();
+
+      await expect(page.locator('select[name="listType"]')).toHaveValue("1");
+      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("15");
+      await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue("06");
+      await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue("2025");
+      await expect(page.locator('select[name="sensitivity"]')).toHaveValue("PRIVATE");
+      await expect(page.locator('select[name="language"]')).toHaveValue("WELSH");
+      await expect(page.locator('input[name="displayFrom-day"]')).toHaveValue("10");
+      await expect(page.locator('input[name="displayFrom-month"]')).toHaveValue("06");
+      await expect(page.locator('input[name="displayFrom-year"]')).toHaveValue("2025");
+      await expect(page.locator('input[name="displayTo-day"]')).toHaveValue("20");
+      await expect(page.locator('input[name="displayTo-month"]')).toHaveValue("06");
+      await expect(page.locator('input[name="displayTo-year"]')).toHaveValue("2025");
+    });
+  });
+
+  test.describe("Non-Strategic Upload Summary Page", () => {
+    test("should display summary page with all elements and correct data", async ({ page }) => {
+      await navigateToSummaryPage(page);
+
+      await expect(page).toHaveURL(/\/non-strategic-upload-summary\?uploadId=/);
+
+      const h1 = page.locator("h1");
+      await expect(h1).toHaveCount(1);
+      await expect(h1).toHaveText("File upload summary");
+
+      const mainHeading = page.getByRole("heading", { name: "File upload summary", level: 1 });
+      await expect(mainHeading).toBeVisible();
+
+      const subHeading = page.getByRole("heading", { name: "Check upload details", level: 2 });
+      await expect(subHeading).toBeVisible();
+      await expect(subHeading).toHaveText("Check upload details");
+
+      const backLink = page.locator(".govuk-back-link");
+      await expect(backLink).toBeVisible();
+
+      const summaryList = page.locator(".govuk-summary-list");
+      await expect(summaryList).toBeVisible();
+
+      const rows = page.locator(".govuk-summary-list__row");
+      await expect(rows).toHaveCount(7);
+
+      const keys = page.locator(".govuk-summary-list__key");
+      await expect(keys.nth(0)).toHaveText("Court name");
+      await expect(keys.nth(1)).toHaveText("File");
+      await expect(keys.nth(2)).toHaveText("List type");
+      await expect(keys.nth(3)).toHaveText("Hearing start date");
+      await expect(keys.nth(4)).toHaveText("Sensitivity");
+      await expect(keys.nth(5)).toHaveText("Language");
+      await expect(keys.nth(6)).toHaveText("Display file dates");
+
+      const values = page.locator(".govuk-summary-list__value");
+      await expect(values.nth(0)).not.toBeEmpty();
+      await expect(values.nth(1)).toContainText("test-document.pdf");
+      await expect(values.nth(2)).toContainText("Crown Daily List");
+      await expect(values.nth(3)).toContainText("23 October 2025");
+      await expect(values.nth(4)).toContainText("Public");
+      await expect(values.nth(5)).toContainText("English");
+      await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
+
+      const changeLinks = page.locator(".govuk-summary-list__actions a");
+      await expect(changeLinks).toHaveCount(7);
+
+      for (let i = 0; i < 7; i++) {
+        await expect(changeLinks.nth(i)).toContainText("Change");
+      }
+
+      await expect(changeLinks.nth(0)).toHaveAttribute("href", "/non-strategic-upload#court");
+      await expect(changeLinks.nth(1)).toHaveAttribute("href", "/non-strategic-upload#file");
+      await expect(changeLinks.nth(2)).toHaveAttribute("href", "/non-strategic-upload#listType");
+      await expect(changeLinks.nth(3)).toHaveAttribute("href", "/non-strategic-upload#hearingStartDate-day");
+      await expect(changeLinks.nth(4)).toHaveAttribute("href", "/non-strategic-upload#sensitivity");
+      await expect(changeLinks.nth(5)).toHaveAttribute("href", "/non-strategic-upload#language");
+      await expect(changeLinks.nth(6)).toHaveAttribute("href", "/non-strategic-upload#displayFrom-day");
+
+      const hiddenTexts = ["Court name", "File", "List type", "Hearing start date", "Sensitivity", "Language", "Display file dates"];
+      for (let i = 0; i < 7; i++) {
+        const visuallyHiddenText = changeLinks.nth(i).locator(".govuk-visually-hidden");
+        await expect(visuallyHiddenText).toHaveText(hiddenTexts[i]);
+      }
+
+      const confirmButton = page.getByRole("button", { name: "Confirm" });
+      await expect(confirmButton).toBeVisible();
+
+      const welshToggle = page.locator('a[href*="lng=cy"]');
+      await expect(welshToggle).not.toBeVisible();
+
+      const form = page.locator("form");
+      await expect(form).toBeVisible();
+      await expect(form).toHaveAttribute("method", "post");
+    });
+
+    test("should meet WCAG 2.2 AA standards on summary page", async ({ page }) => {
+      await navigateToSummaryPage(page);
+
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+
+      expect(accessibilityScanResults.violations).toEqual([]);
+    });
+  });
+
+  test.describe("Non-Strategic Upload Success Page", () => {
+    test("should display success page with all elements and navigation links", async ({ page }) => {
+      await completeNonStrategicUploadFlow(page);
+
+      await expect(page).toHaveURL("/non-strategic-upload-success");
+
+      const backLink = page.locator(".govuk-back-link");
+      await expect(backLink).not.toBeVisible();
+
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
+
+      const title = page.locator(".govuk-panel__title");
+      await expect(title).toHaveText("File upload successful");
+
+      await expect(successPanel).toContainText("Your file has been uploaded");
+
+      const heading = page.getByRole("heading", { name: "What do you want to do next?" });
+      await expect(heading).toBeVisible();
+
+      const uploadLink = page.getByRole("link", { name: "Upload another file" });
+      await expect(uploadLink).toBeVisible();
+      await expect(uploadLink).toHaveAttribute("href", "/non-strategic-upload");
+
+      const removeLink = page.getByRole("link", { name: "Remove file" });
+      await expect(removeLink).toBeVisible();
+      await expect(removeLink).toHaveAttribute("href", "/remove-list-search");
+
+      const homeLink = page.getByRole("link", { name: "Home" });
+      await expect(homeLink).toBeVisible();
+      await expect(homeLink).toHaveAttribute("href", "/admin-dashboard");
+
+      await uploadLink.click();
+      await expect(page).toHaveURL("/non-strategic-upload");
+    });
+
+    test("should redirect to non-strategic-upload if accessed directly without upload session", async ({ page }) => {
+      await page.goto("/non-strategic-upload-success");
+      await expect(page).toHaveURL("/non-strategic-upload");
+    });
+
+    test("should support Welsh language with correct translations", async ({ page }) => {
+      await completeNonStrategicUploadFlow(page);
+
+      const welshToggle = page.locator('a[href*="lng=cy"]');
+      await expect(welshToggle).not.toBeVisible();
+
+      await page.goto("/non-strategic-upload-success?lng=cy");
+
+      const title = page.locator(".govuk-panel__title");
+      await expect(title).toHaveText("Wedi llwyddo i uwchlwytho ffeiliau");
+
+      const heading = page.getByRole("heading", { name: "Beth yr ydych eisiau ei wneud nesaf?" });
+      await expect(heading).toBeVisible();
+
+      const uploadLink = page.getByRole("link", { name: "uwchlwytho ffeil arall" });
+      await expect(uploadLink).toBeVisible();
+
+      const removeLink = page.getByRole("link", { name: "Dileu ffeil" });
+      await expect(removeLink).toBeVisible();
+
+      const homeLink = page.getByRole("link", { name: "Tudalen hafan" });
+      await expect(homeLink).toBeVisible();
+    });
+
+    test("should meet WCAG 2.2 AA standards on success page", async ({ page }) => {
+      await completeNonStrategicUploadFlow(page);
+
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+
+      expect(accessibilityScanResults.violations).toEqual([]);
+    });
+
+    test("should not allow access after refreshing the page", async ({ page }) => {
+      await completeNonStrategicUploadFlow(page);
+
+      await page.reload();
+
+      await expect(page).toHaveURL("/non-strategic-upload");
+    });
+
+    test("should allow multiple sequential uploads", async ({ page }) => {
+      await completeNonStrategicUploadFlow(page);
+      await expect(page).toHaveURL("/non-strategic-upload-success");
+
+      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      await page.selectOption('select[name="listType"]', "7");
+      await page.fill('input[name="hearingStartDate-day"]', "25");
+      await page.fill('input[name="hearingStartDate-month"]', "11");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PRIVATE");
+      await page.selectOption('select[name="language"]', "WELSH");
+      await page.fill('input[name="displayFrom-day"]', "24");
+      await page.fill('input[name="displayFrom-month"]', "11");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "26");
+      await page.fill('input[name="displayTo-month"]', "11");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "second-upload.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nSecond upload content")
+      });
+
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/);
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/non-strategic-upload-success");
+
+      await expect(page).toHaveURL("/non-strategic-upload-success");
+    });
+  });
+
+  test.describe("Responsive Design Across All Pages", () => {
+    test("should display correctly on mobile viewport throughout entire flow", async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
+
+      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      const fileInput = page.locator('input[name="file"]');
+      await expect(fileInput).toBeVisible();
+      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+      await expect(courtInput).toBeVisible();
+
+      await page.selectOption('select[name="listType"]', "6");
+      await page.fill('input[name="hearingStartDate-day"]', "23");
+      await page.fill('input[name="hearingStartDate-month"]', "10");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "10");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "30");
+      await page.fill('input[name="displayTo-month"]', "10");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      await fileInput.setInputFiles({
+        name: "test-mobile.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nTest mobile content")
+      });
+
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
+
+      const h1Summary = page.locator("h1");
+      await expect(h1Summary).toBeVisible();
+
+      const summaryList = page.locator(".govuk-summary-list");
+      await expect(summaryList).toBeVisible();
+
+      const confirmButton = page.getByRole("button", { name: "Confirm" });
+      await expect(confirmButton).toBeVisible();
+
+      await confirmButton.click();
+      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
+
+      const heading = page.getByRole("heading", { name: "What do you want to do next?" });
+      await expect(heading).toBeVisible();
+
+      const links = page.locator(".govuk-list a");
+      await expect(links).toHaveCount(3);
+    });
+  });
+});

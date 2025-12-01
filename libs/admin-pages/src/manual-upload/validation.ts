@@ -1,96 +1,100 @@
 import { mockListTypes, validateListTypeJson } from "@hmcts/list-types-common";
 import { type DateInput, parseDate } from "@hmcts/web-core";
-import type { en } from "../pages/manual-upload/en.js";
-import type { ManualUploadFormData, ValidationError } from "./model.js";
+import type { en as manualUploadEn } from "../pages/manual-upload/en.js";
+import type { en as nonStrategicUploadEn } from "../pages/non-strategic-upload/en.js";
+import type { UploadFormData, ValidationError } from "./model.js";
 
 export type { ValidationError };
 
-export async function validateForm(body: ManualUploadFormData, file: Express.Multer.File | undefined, t: typeof en): Promise<ValidationError[]> {
+type ErrorMessages = typeof manualUploadEn.errorMessages | typeof nonStrategicUploadEn.errorMessages;
+
+async function validateUploadForm(
+  body: UploadFormData,
+  file: Express.Multer.File | undefined,
+  errorMessages: ErrorMessages,
+  allowedExtensions: RegExp,
+  validateJson: boolean
+): Promise<ValidationError[]> {
   const errors: ValidationError[] = [];
 
   // File validation
   if (!file) {
-    errors.push({ text: t.errorMessages.fileRequired, href: "#file" });
+    errors.push({ text: errorMessages.fileRequired, href: "#file" });
   } else {
     if (file.size > 2 * 1024 * 1024) {
-      errors.push({ text: t.errorMessages.fileSize, href: "#file" });
+      errors.push({ text: errorMessages.fileSize, href: "#file" });
     }
-    const allowedExtensions = /\.(csv|doc|docx|htm|html|json|pdf)$/i;
     if (!allowedExtensions.test(file.originalname)) {
-      errors.push({ text: t.errorMessages.fileType, href: "#file" });
+      errors.push({ text: errorMessages.fileType, href: "#file" });
     }
 
-    // Validate JSON files against their schema
-    const isJsonFile = /\.json$/i.test(file.originalname);
+    // Validate JSON files against their schema (only for manual upload)
+    if (validateJson) {
+      const isJsonFile = /\.json$/i.test(file.originalname);
+      if (isJsonFile && body.listType) {
+        try {
+          const fileContent = file.buffer.toString("utf-8");
+          const jsonData = JSON.parse(fileContent);
 
-    if (isJsonFile && body.listType) {
-      try {
-        const fileContent = file.buffer.toString("utf-8");
-        const jsonData = JSON.parse(fileContent);
+          const validationResult = await validateListTypeJson(body.listType, jsonData, mockListTypes);
 
-        // Dynamically validate based on list type
-        const validationResult = await validateListTypeJson(body.listType, jsonData, mockListTypes);
-
-        if (!validationResult.isValid) {
-          const firstError = validationResult.errors[0] as { message?: string } | undefined;
+          if (!validationResult.isValid) {
+            const firstError = validationResult.errors[0] as { message?: string } | undefined;
+            errors.push({
+              text: `Invalid JSON file format. ${firstError?.message || "Please check the JSON structure."}`,
+              href: "#file"
+            });
+          }
+        } catch {
           errors.push({
-            text: `Invalid JSON file format. ${firstError?.message || "Please check the JSON structure."}`,
+            text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
             href: "#file"
           });
         }
-      } catch {
-        errors.push({
-          text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
-          href: "#file"
-        });
       }
     }
   }
 
   // Required field validation
-  // Check if locationId exists and is a valid number (autocomplete submits numeric IDs)
   if (!body.locationId || body.locationId.trim() === "") {
-    // Check if user entered text that's 3+ characters (invalid selection)
     if (body.locationName && body.locationName.trim().length >= 3) {
-      errors.push({ text: t.errorMessages.courtRequired, href: "#court" });
+      errors.push({ text: errorMessages.courtRequired, href: "#court" });
     } else {
-      // Empty or less than 3 characters
-      errors.push({ text: t.errorMessages.courtTooShort, href: "#court" });
+      errors.push({ text: errorMessages.courtTooShort, href: "#court" });
     }
   } else if (Number.isNaN(Number(body.locationId))) {
-    // locationId exists but is not a valid number (invalid selection)
-    errors.push({ text: t.errorMessages.courtRequired, href: "#court" });
+    errors.push({ text: errorMessages.courtRequired, href: "#court" });
   }
 
   if (!body.listType || body.listType === "") {
-    errors.push({ text: t.errorMessages.listTypeRequired, href: "#listType" });
+    errors.push({ text: errorMessages.listTypeRequired, href: "#listType" });
   }
 
   // Date validation
   const hearingStartDateError = validateDate(
     body.hearingStartDate,
     "hearingStartDate",
-    t.errorMessages.hearingStartDateRequired,
-    t.errorMessages.hearingStartDateInvalid
+    errorMessages.hearingStartDateRequired,
+    errorMessages.hearingStartDateInvalid
   );
   if (hearingStartDateError) {
     errors.push(hearingStartDateError);
   }
 
   if (!body.sensitivity || body.sensitivity === "") {
-    errors.push({ text: t.errorMessages.sensitivityRequired, href: "#sensitivity" });
+    errors.push({ text: errorMessages.sensitivityRequired, href: "#sensitivity" });
   }
 
   if (!body.language || body.language === "") {
-    errors.push({ text: t.errorMessages.languageRequired, href: "#language" });
+    errors.push({ text: errorMessages.languageRequired, href: "#language" });
   }
 
-  const displayFromError = validateDate(body.displayFrom, "displayFrom", t.errorMessages.displayFromRequired, t.errorMessages.displayFromInvalid);
+  const displayFromError = validateDate(body.displayFrom, "displayFrom", errorMessages.displayFromRequired, errorMessages.displayFromInvalid);
   if (displayFromError) {
     errors.push(displayFromError);
   }
 
-  const displayToError = validateDate(body.displayTo, "displayTo", t.errorMessages.displayToRequired, t.errorMessages.displayToInvalid);
+  const displayToError = validateDate(body.displayTo, "displayTo", errorMessages.displayToRequired, errorMessages.displayToInvalid);
   if (displayToError) {
     errors.push(displayToError);
   }
@@ -101,11 +105,27 @@ export async function validateForm(body: ManualUploadFormData, file: Express.Mul
     const toDate = parseDate(body.displayTo);
 
     if (fromDate && toDate && toDate < fromDate) {
-      errors.push({ text: t.errorMessages.displayToBeforeFrom, href: "#displayTo" });
+      errors.push({ text: errorMessages.displayToBeforeFrom, href: "#displayTo" });
     }
   }
 
   return errors;
+}
+
+export async function validateManualUploadForm(
+  body: UploadFormData,
+  file: Express.Multer.File | undefined,
+  t: typeof manualUploadEn
+): Promise<ValidationError[]> {
+  return validateUploadForm(body, file, t.errorMessages, /\.(csv|doc|docx|htm|html|json|pdf)$/i, true);
+}
+
+export async function validateNonStrategicUploadForm(
+  body: UploadFormData,
+  file: Express.Multer.File | undefined,
+  t: typeof nonStrategicUploadEn
+): Promise<ValidationError[]> {
+  return validateUploadForm(body, file, t.errorMessages, /\.xlsx$/i, false);
 }
 
 export function validateDate(dateInput: DateInput | undefined, fieldName: string, requiredMessage: string, invalidMessage: string): ValidationError | null {
