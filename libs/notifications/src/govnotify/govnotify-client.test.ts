@@ -1,19 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Set environment variables BEFORE any imports
+process.env.GOVNOTIFY_API_KEY = "test-api-key";
+process.env.GOVNOTIFY_TEMPLATE_ID = "test-template-id";
+process.env.CATH_SERVICE_URL = "https://www.court-tribunal-hearings.service.gov.uk";
+
 const mockSendEmail = vi.fn();
 
 vi.mock("notifications-node-client", () => ({
-  NotifyClient: vi.fn().mockImplementation(() => ({
-    sendEmail: mockSendEmail
-  }))
+  NotifyClient: vi.fn(function NotifyClient() {
+    return {
+      sendEmail: mockSendEmail
+    };
+  })
 }));
 
 describe("govnotify-client", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.GOVNOTIFY_API_KEY = "test-api-key";
-    process.env.GOVNOTIFY_TEMPLATE_ID = "test-template-id";
-    process.env.CATH_SERVICE_URL = "https://www.court-tribunal-hearings.service.gov.uk";
 
     mockSendEmail.mockResolvedValue({
       data: {
