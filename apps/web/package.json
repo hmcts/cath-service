@@ -23,6 +23,7 @@
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
+    "@hmcts/location": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
@@ -56,7 +57,7 @@
     "nodemon": "3.1.11",
     "sass": "1.94.2",
     "supertest": "7.1.4",
-    "vite": "7.2.4",
+    "vite": "7.2.6",
     "vite-plugin-static-copy": "3.1.4"
   }
 }

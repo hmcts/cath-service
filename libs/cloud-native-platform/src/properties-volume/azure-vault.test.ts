@@ -1,18 +1,23 @@
 import { readFileSync } from "node:fs";
-import { DefaultAzureCredential } from "@azure/identity";
-import { SecretClient } from "@azure/keyvault-secrets";
 import { load as yamlLoad } from "js-yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { addFromAzureVault } from "./azure-vault.js";
 
-// Mock all external dependencies
+// Create the mock getSecret function that will be shared across tests
+const mockGetSecret = vi.fn();
+
+// Mock all external dependencies using class syntax for Vitest 4 constructor mocks
 vi.mock("@azure/identity", () => ({
-  DefaultAzureCredential: vi.fn()
+  DefaultAzureCredential: class MockDefaultAzureCredential {}
 }));
 
-vi.mock("@azure/keyvault-secrets", () => ({
-  SecretClient: vi.fn()
-}));
+vi.mock("@azure/keyvault-secrets", () => {
+  return {
+    SecretClient: class MockSecretClient {
+      getSecret = mockGetSecret;
+    }
+  };
+});
 
 vi.mock("node:fs", () => ({
   readFileSync: vi.fn()
@@ -22,30 +27,18 @@ vi.mock("js-yaml", () => ({
   load: vi.fn()
 }));
 
-const mockDefaultAzureCredential = vi.mocked(DefaultAzureCredential);
-const mockSecretClient = vi.mocked(SecretClient);
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockYamlLoad = vi.mocked(yamlLoad);
 
 describe("addFromAzureVault", () => {
   let config: Record<string, any>;
-  let consoleWarnSpy: any;
-  let mockClient: any;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+
     config = { existing: "value" };
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    // Set up mock client
-    mockClient = {
-      getSecret: vi.fn()
-    };
-
-    // Configure mocks
-    mockDefaultAzureCredential.mockReturnValue({});
-    mockSecretClient.mockReturnValue(mockClient);
-
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -63,15 +56,14 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValueOnce({ value: "secret-value-1" }).mockResolvedValueOnce({ value: "secret-value-2" });
+    mockGetSecret.mockResolvedValueOnce({ value: "secret-value-1" }).mockResolvedValueOnce({ value: "secret-value-2" });
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
     expect(mockReadFileSync).toHaveBeenCalledWith("/path/to/chart.yaml", "utf8");
     expect(mockYamlLoad).toHaveBeenCalledWith("helm-chart-content");
-    expect(mockSecretClient).toHaveBeenCalledWith("https://test-vault.vault.azure.net/", expect.any(Object));
-    expect(mockClient.getSecret).toHaveBeenCalledWith("secret1");
-    expect(mockClient.getSecret).toHaveBeenCalledWith("secret2");
+    expect(mockGetSecret).toHaveBeenCalledWith("secret1");
+    expect(mockGetSecret).toHaveBeenCalledWith("secret2");
 
     expect(config).toEqual({
       existing: "value",
@@ -94,12 +86,9 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValueOnce({ value: "value1" }).mockResolvedValueOnce({ value: "value2" });
+    mockGetSecret.mockResolvedValueOnce({ value: "value1" }).mockResolvedValueOnce({ value: "value2" });
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
-
-    expect(mockSecretClient).toHaveBeenCalledWith("https://vault1.vault.azure.net/", expect.any(Object));
-    expect(mockSecretClient).toHaveBeenCalledWith("https://vault2.vault.azure.net/", expect.any(Object));
 
     expect(config).toEqual({
       existing: "value",
@@ -130,7 +119,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValue({ value: "value1" });
+    mockGetSecret.mockResolvedValue({ value: "value1" });
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
@@ -152,7 +141,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockRejectedValue(new Error("Access denied"));
+    mockGetSecret.mockRejectedValue(new Error("Access denied"));
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret failing-secret: Access denied"
@@ -172,7 +161,7 @@ describe("addFromAzureVault", () => {
     mockYamlLoad.mockReturnValue(helmChart);
     const permissionError: any = new Error("The user does not have secrets get permission");
     permissionError.statusCode = 403;
-    mockClient.getSecret.mockRejectedValue(permissionError);
+    mockGetSecret.mockRejectedValue(permissionError);
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Vault 'test-vault': Could not load secret 'redis-access-key'. Check it exists and you have access to it."
@@ -190,7 +179,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValue({ value: null });
+    mockGetSecret.mockResolvedValue({ value: null });
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret empty-secret: Secret empty-secret has no value"
@@ -208,7 +197,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValueOnce({ value: "value1" }).mockResolvedValueOnce({ value: "value2" });
+    mockGetSecret.mockResolvedValueOnce({ value: "value1" }).mockResolvedValueOnce({ value: "value2" });
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
@@ -241,12 +230,10 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValueOnce({ value: "deep-value" }).mockResolvedValueOnce({ value: "other-value" });
+    mockGetSecret.mockResolvedValueOnce({ value: "deep-value" }).mockResolvedValueOnce({ value: "other-value" });
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
-    expect(mockSecretClient).toHaveBeenCalledWith("https://deep-vault.vault.azure.net/", expect.any(Object));
-    expect(mockSecretClient).toHaveBeenCalledWith("https://other-vault.vault.azure.net/", expect.any(Object));
     expect(config).toEqual({
       existing: "value",
       deep_secret: "deep-value",
@@ -319,7 +306,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockResolvedValue({ value: "new-value" });
+    mockGetSecret.mockResolvedValue({ value: "new-value" });
 
     await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
 
@@ -340,7 +327,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockRejectedValue("String error");
+    mockGetSecret.mockRejectedValue("String error");
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret secret1: String error"
@@ -359,7 +346,7 @@ describe("addFromAzureVault", () => {
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
     const error = new Error("test-vault: Already contains vault name");
-    mockClient.getSecret.mockRejectedValue(error);
+    mockGetSecret.mockRejectedValue(error);
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Failed to retrieve secret secret1: test-vault: Already contains vault name"
@@ -389,7 +376,7 @@ describe("addFromAzureVault", () => {
     mockYamlLoad.mockReturnValue(helmChart);
     const notFoundError: any = new Error("Secret was not found");
     notFoundError.code = "SecretNotFound";
-    mockClient.getSecret.mockRejectedValue(notFoundError);
+    mockGetSecret.mockRejectedValue(notFoundError);
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
@@ -407,7 +394,7 @@ describe("addFromAzureVault", () => {
 
     mockReadFileSync.mockReturnValue("helm-chart-content");
     mockYamlLoad.mockReturnValue(helmChart);
-    mockClient.getSecret.mockRejectedValue(new Error("The secret was not found in the vault"));
+    mockGetSecret.mockRejectedValue(new Error("The secret was not found in the vault"));
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
       "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"

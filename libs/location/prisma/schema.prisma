@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Region {
+  regionId  Int    @id @map("region_id")
+  name      String @unique
+  welshName String @unique @map("welsh_name")
+
+  locationRegions LocationRegion[]
+
+  @@map("region")
+}
+
+model Jurisdiction {
+  jurisdictionId  Int    @id @map("jurisdiction_id")
+  name            String @unique
+  welshName       String @unique @map("welsh_name")
+
+  subJurisdictions SubJurisdiction[]
+
+  @@map("jurisdiction")
+}
+
+model SubJurisdiction {
+  subJurisdictionId Int    @id @map("sub_jurisdiction_id")
+  name              String @unique
+  welshName         String @unique @map("welsh_name")
+  jurisdictionId    Int    @map("jurisdiction_id")
+
+  jurisdiction             Jurisdiction              @relation(fields: [jurisdictionId], references: [jurisdictionId])
+  locationSubJurisdictions LocationSubJurisdiction[]
+
+  @@map("sub_jurisdiction")
+}
+
+model Location {
+  locationId  Int     @id @map("location_id")
+  name        String  @unique
+  welshName   String  @unique @map("welsh_name")
+  email       String?
+  contactNo   String? @map("contact_no")
+
+  locationRegions          LocationRegion[]
+  locationSubJurisdictions LocationSubJurisdiction[]
+  subscriptions            Subscription[]
+
+  @@map("location")
+}
+
+model LocationRegion {
+  locationId Int @map("location_id")
+  regionId   Int @map("region_id")
+
+  location Location @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+  region   Region   @relation(fields: [regionId], references: [regionId])
+
+  @@id([locationId, regionId])
+  @@map("location_region")
+}
+
+model LocationSubJurisdiction {
+  locationId        Int @map("location_id")
+  subJurisdictionId Int @map("sub_jurisdiction_id")
+
+  location        Location        @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+  subJurisdiction SubJurisdiction @relation(fields: [subJurisdictionId], references: [subJurisdictionId])
+
+  @@id([locationId, subJurisdictionId])
+  @@map("location_sub_jurisdiction")
+}

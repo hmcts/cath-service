@@ -46,7 +46,7 @@ describe("configurePropertiesVolume", () => {
 
   it("should add properties from default mount point", async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReaddirSync.mockReturnValue(["secret1", "secret2"]);
+    mockReaddirSync.mockReturnValue(["secret1", "secret2"] as any);
     mockReadFileSync.mockReturnValueOnce("value1").mockReturnValueOnce("value2  ");
 
     await setupPropertiesVolume(config);
@@ -62,7 +62,7 @@ describe("configurePropertiesVolume", () => {
 
   it("should add properties from custom mount point", async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReaddirSync.mockReturnValue(["custom-secret"]);
+    mockReaddirSync.mockReturnValue(["custom-secret"] as any);
     mockReadFileSync.mockReturnValue("custom-value");
 
     await setupPropertiesVolume(config, { mountPoint: "/custom/path" });
@@ -93,7 +93,7 @@ describe("configurePropertiesVolume", () => {
 
   it("should handle file read errors when failOnError is false", async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReaddirSync.mockReturnValue(["secret1", "bad-secret"]);
+    mockReaddirSync.mockReturnValue(["secret1", "bad-secret"] as any);
     mockReadFileSync.mockReturnValueOnce("value1").mockImplementationOnce(() => {
       throw new Error("Permission denied");
     });
@@ -109,7 +109,7 @@ describe("configurePropertiesVolume", () => {
 
   it("should throw error when file read fails and failOnError is true", async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReaddirSync.mockReturnValue(["bad-secret"]);
+    mockReaddirSync.mockReturnValue(["bad-secret"] as any);
     mockReadFileSync.mockImplementation(() => {
       throw new Error("Permission denied");
     });
@@ -119,7 +119,7 @@ describe("configurePropertiesVolume", () => {
 
   it("should merge properties with existing config", async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReaddirSync.mockReturnValue(["existing"]);
+    mockReaddirSync.mockReturnValue(["existing"] as any);
     mockReadFileSync.mockReturnValue("new-value");
 
     await setupPropertiesVolume(config);
@@ -131,7 +131,7 @@ describe("configurePropertiesVolume", () => {
 
   it("should trim whitespace from file contents", async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReaddirSync.mockReturnValue(["secret"]);
+    mockReaddirSync.mockReturnValue(["secret"] as any);
     mockReadFileSync.mockReturnValue("  value with spaces  \n");
 
     await setupPropertiesVolume(config);
@@ -190,7 +190,7 @@ describe("configurePropertiesVolume", () => {
 
       mockExistsSync.mockReturnValue(true);
       mockFs.existsSync.mockReturnValue(true);
-      mockReaddirSync.mockReturnValue(["secret"]);
+      mockReaddirSync.mockReturnValue(["secret"] as any);
       mockReadFileSync.mockReturnValue("value");
 
       await setupPropertiesVolume(config, { chartPath: "/path/to/chart.yaml" });
@@ -211,7 +211,7 @@ describe("configurePropertiesVolume", () => {
 
       mockExistsSync.mockReturnValueOnce(false).mockReturnValueOnce(true);
       mockFs.existsSync.mockReturnValueOnce(false).mockReturnValueOnce(true);
-      mockReaddirSync.mockReturnValue(["secret"]);
+      mockReaddirSync.mockReturnValue(["secret"] as any);
       mockReadFileSync.mockReturnValue("value");
 
       await setupPropertiesVolume(config, { chartPath: "/nonexistent/chart.yaml" });
@@ -306,7 +306,7 @@ describe("configurePropertiesVolume", () => {
       };
 
       mockExistsSync.mockReturnValue(true);
-      mockReaddirSync.mockReturnValue(["nested.key1", "top"]);
+      mockReaddirSync.mockReturnValue(["nested.key1", "top"] as any);
       mockReadFileSync.mockReturnValueOnce("new").mockReturnValueOnce("level");
 
       await setupPropertiesVolume(config);
@@ -324,7 +324,7 @@ describe("configurePropertiesVolume", () => {
 
     it("should handle empty mount point directory", async () => {
       mockExistsSync.mockReturnValue(true);
-      mockReaddirSync.mockReturnValue([]);
+      mockReaddirSync.mockReturnValue([] as any);
 
       await setupPropertiesVolume(config);
 
@@ -333,7 +333,7 @@ describe("configurePropertiesVolume", () => {
 
     it("should handle files with empty content", async () => {
       mockExistsSync.mockReturnValue(true);
-      mockReaddirSync.mockReturnValue(["empty", "normal"]);
+      mockReaddirSync.mockReturnValue(["empty", "normal"] as any);
       mockReadFileSync.mockReturnValueOnce("").mockReturnValueOnce("value");
 
       await setupPropertiesVolume(config);

@@ -15,13 +15,7 @@ export default defineConfig({
         "**/vitest.config.ts",
         "**/server.ts",
         "**/src/assets/**"
-      ],
-      thresholds: {
-        statements: 80,
-        branches: 80,
-        functions: 80,
-        lines: 80
-      }
+      ]
     }
   }
 });

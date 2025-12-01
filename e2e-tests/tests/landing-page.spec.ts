@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+const _BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
 test.describe("Landing Page", () => {
   test.describe("Content Display", () => {
@@ -39,7 +39,7 @@ test.describe("Landing Page", () => {
       await page.goto("/");
       const paragraph = page.getByText("Legal and media professionals can");
       await expect(paragraph).toBeVisible();
-      const signInLink = paragraph.locator('..').locator('a[href="/sign-in"]');
+      const signInLink = paragraph.locator("..").locator('a[href="/sign-in"]');
       await expect(signInLink).toBeVisible();
       await expect(signInLink).toHaveText("sign in");
     });
@@ -144,7 +144,7 @@ test.describe("Landing Page", () => {
       // Verify Welsh sign-in link
       const signInParagraph = page.getByText("Gall gweithwyr proffesiynol ym maes y gyfraith a'r cyfryngau");
       await expect(signInParagraph).toBeVisible();
-      const signInLink = signInParagraph.locator('..').locator('a[href="/sign-in"]');
+      const signInLink = signInParagraph.locator("..").locator('a[href="/sign-in"]');
       await expect(signInLink).toHaveText("mewngofnodi");
 
       // Verify English language toggle in inset text
@@ -206,9 +206,7 @@ test.describe("Landing Page", () => {
   test.describe("Accessibility", () => {
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
       await page.goto("/");
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 

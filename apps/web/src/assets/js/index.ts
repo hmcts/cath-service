@@ -8,13 +8,17 @@ initAll();
 
 // Initialize custom components
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    initSearchAutocomplete();
+  document.addEventListener("DOMContentLoaded", async () => {
+    await initSearchAutocomplete().catch((error) => {
+      console.error("Error initializing search autocomplete:", error);
+    });
     initFilterPanel();
     initBackToTop();
   });
 } else {
-  initSearchAutocomplete();
+  void initSearchAutocomplete().catch((error) => {
+    console.error("Error initializing search autocomplete:", error);
+  });
   initFilterPanel();
   initBackToTop();
 }

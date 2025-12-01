@@ -6,6 +6,10 @@
     ".": {
       "production": "./dist/roles.js",
       "default": "./src/roles.ts"
+    },
+    "./repository/query": {
+      "production": "./dist/repository/query.js",
+      "default": "./src/repository/query.ts"
     }
   },
   "types": "./dist/roles.d.ts",

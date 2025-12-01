@@ -89,8 +89,8 @@ export function buildVerifiedUserNavigation(currentPath: string, locale: string 
     },
     {
       text: t.emailSubscriptions,
-      href: "/",
-      current: currentPath === "/",
+      href: "/subscription-management",
+      current: currentPath === "/subscription-management",
       attributes: {
         "data-test": "email-subscriptions-link"
       }

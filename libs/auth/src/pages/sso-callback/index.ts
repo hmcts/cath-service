@@ -1,4 +1,6 @@
 import { USER_ROLES } from "@hmcts/account";
+import { createOrUpdateUser } from "@hmcts/account/repository/query";
+import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import passport from "passport";
 import { isSsoConfigured } from "../../config/sso-config.js";
@@ -29,6 +31,23 @@ export const GET = [
     // Check if user has a valid role
     if (!req.user.role) {
       return res.redirect("/sso-rejected");
+    }
+
+    // Create or update user record in database
+    try {
+      await createOrUpdateUser({
+        email: req.user.email,
+        userProvenance: "SSO",
+        userProvenanceId: req.user.id,
+        role: req.user.role as "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN"
+      });
+    } catch (error) {
+      trackException(error as Error, {
+        area: "SSO callback",
+        userEmail: req.user?.email,
+        userId: req.user?.id
+      });
+      return res.redirect("/login?error=db_error");
     }
 
     // Determine default redirect based on user role
