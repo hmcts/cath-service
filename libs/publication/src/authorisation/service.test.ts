@@ -16,7 +16,7 @@ const createArtefact = (sensitivity: Sensitivity): Artefact => ({
   displayFrom: new Date(),
   displayTo: new Date(),
   isFlatFile: false,
-  provenance: "CFT",
+  provenance: "CFT_IDAM",
   noMatch: false
 });
 
@@ -47,7 +47,7 @@ describe("canAccessPublication", () => {
     });
 
     it("should allow authenticated users", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublication(user, publicArtefact, undefined)).toBe(true);
     });
 
@@ -75,17 +75,17 @@ describe("canAccessPublication", () => {
     });
 
     it("should allow B2C verified users", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(true);
     });
 
     it("should allow CFT_IDAM verified users", () => {
-      const user = createUser("VERIFIED", "CFT");
+      const user = createUser("VERIFIED", "CFT_IDAM");
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(true);
     });
 
     it("should allow CRIME_IDAM verified users", () => {
-      const user = createUser("VERIFIED", "CRIME");
+      const user = createUser("VERIFIED", "CRIME_IDAM");
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(true);
     });
 
@@ -114,60 +114,60 @@ describe("canAccessPublication", () => {
     const classifiedArtefact = createArtefact(Sensitivity.CLASSIFIED);
 
     it("should deny unauthenticated users", () => {
-      const listType = createListType("CFT");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(undefined, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny when list type is not found", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, undefined)).toBe(false);
     });
 
     it("should allow system admin regardless of provenance", () => {
       const user = createUser("SYSTEM_ADMIN", "SSO");
-      const listType = createListType("CFT");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should allow verified user with matching provenance", () => {
-      const user = createUser("VERIFIED", "CFT");
-      const listType = createListType("CFT");
+      const user = createUser("VERIFIED", "CFT_IDAM");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should deny verified user with non-matching provenance", () => {
-      const user = createUser("VERIFIED", "B2C");
-      const listType = createListType("CFT");
+      const user = createUser("VERIFIED", "B2C_IDAM");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny local admin (they can only see PUBLIC on public pages)", () => {
       const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
-      const listType = createListType("CFT");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny CTSC admin (they can only see PUBLIC on public pages)", () => {
       const user = createUser("INTERNAL_ADMIN_CTSC", "SSO");
-      const listType = createListType("CFT");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny public users", () => {
       const user = createUser("PUBLIC", "PUBLIC");
-      const listType = createListType("CFT");
+      const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should handle B2C_IDAM with CRIME_IDAM list type", () => {
-      const user = createUser("VERIFIED", "B2C");
-      const listType = createListType("CRIME");
+      const user = createUser("VERIFIED", "B2C_IDAM");
+      const listType = createListType("CRIME_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should handle CRIME_IDAM with CRIME_IDAM list type", () => {
-      const user = createUser("VERIFIED", "CRIME");
-      const listType = createListType("CRIME");
+      const user = createUser("VERIFIED", "CRIME_IDAM");
+      const listType = createListType("CRIME_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
   });
@@ -175,8 +175,8 @@ describe("canAccessPublication", () => {
   describe("Missing sensitivity", () => {
     it("should default to CLASSIFIED (fail closed)", () => {
       const artefact = { ...createArtefact(Sensitivity.PUBLIC), sensitivity: "" };
-      const user = createUser("VERIFIED", "B2C");
-      const listType = createListType("CFT");
+      const user = createUser("VERIFIED", "B2C_IDAM");
+      const listType = createListType("CFT_IDAM");
 
       // Should deny access without provenance match since it defaults to CLASSIFIED
       expect(canAccessPublication(user, artefact, listType)).toBe(false);
@@ -184,8 +184,8 @@ describe("canAccessPublication", () => {
 
     it("should allow access when provenance matches after defaulting to CLASSIFIED", () => {
       const artefact = { ...createArtefact(Sensitivity.PUBLIC), sensitivity: "" };
-      const user = createUser("VERIFIED", "CFT");
-      const listType = createListType("CFT");
+      const user = createUser("VERIFIED", "CFT_IDAM");
+      const listType = createListType("CFT_IDAM");
 
       // Should allow access with provenance match since it defaults to CLASSIFIED
       expect(canAccessPublication(user, artefact, listType)).toBe(true);
@@ -231,7 +231,7 @@ describe("canAccessPublicationData", () => {
     });
 
     it("should allow verified users", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublicationData(user, privateArtefact, undefined)).toBe(true);
     });
 
@@ -242,7 +242,7 @@ describe("canAccessPublicationData", () => {
 
   describe("CLASSIFIED publications", () => {
     const classifiedArtefact = createArtefact(Sensitivity.CLASSIFIED);
-    const listType = createListType("CFT");
+    const listType = createListType("CFT_IDAM");
 
     it("should deny local admin (metadata only)", () => {
       const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
@@ -260,12 +260,12 @@ describe("canAccessPublicationData", () => {
     });
 
     it("should allow verified user with matching provenance", () => {
-      const user = createUser("VERIFIED", "CFT");
+      const user = createUser("VERIFIED", "CFT_IDAM");
       expect(canAccessPublicationData(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should deny verified user with non-matching provenance", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublicationData(user, classifiedArtefact, listType)).toBe(false);
     });
   });
@@ -280,7 +280,7 @@ describe("canAccessPublicationMetadata", () => {
     });
 
     it("should allow all authenticated users", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublicationMetadata(user, publicArtefact)).toBe(true);
     });
   });
@@ -308,7 +308,7 @@ describe("canAccessPublicationMetadata", () => {
     });
 
     it("should allow verified users", () => {
-      const user = createUser("VERIFIED", "B2C");
+      const user = createUser("VERIFIED", "B2C_IDAM");
       expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(true);
     });
   });
@@ -336,7 +336,7 @@ describe("canAccessPublicationMetadata", () => {
     });
 
     it("should allow verified users", () => {
-      const user = createUser("VERIFIED", "CFT");
+      const user = createUser("VERIFIED", "CFT_IDAM");
       expect(canAccessPublicationMetadata(user, classifiedArtefact)).toBe(true);
     });
   });
@@ -347,7 +347,7 @@ describe("filterAccessiblePublications", () => {
   const privateArtefact = { ...createArtefact(Sensitivity.PRIVATE), artefactId: "private-id" };
   const classifiedArtefact = { ...createArtefact(Sensitivity.CLASSIFIED), artefactId: "classified-id" };
 
-  const listTypes = [createListType("CFT"), { ...createListType("CRIME"), id: 2 }];
+  const listTypes = [createListType("CFT_IDAM"), { ...createListType("CRIME_IDAM"), id: 2 }];
 
   const artefacts = [
     publicArtefact,
@@ -363,7 +363,7 @@ describe("filterAccessiblePublications", () => {
   });
 
   it("should return PUBLIC and PRIVATE for verified users", () => {
-    const user = createUser("VERIFIED", "B2C");
+    const user = createUser("VERIFIED", "B2C_IDAM");
     const filtered = filterAccessiblePublications(user, artefacts, listTypes);
 
     // Should get PUBLIC and PRIVATE, but not CLASSIFIED (provenance mismatch)
@@ -372,7 +372,7 @@ describe("filterAccessiblePublications", () => {
   });
 
   it("should return PUBLIC, PRIVATE, and matching CLASSIFIED for verified users", () => {
-    const user = createUser("VERIFIED", "CFT");
+    const user = createUser("VERIFIED", "CFT_IDAM");
     const filtered = filterAccessiblePublications(user, artefacts, listTypes);
 
     // Should get PUBLIC, PRIVATE, and one CLASSIFIED (CFT_IDAM)
@@ -401,13 +401,13 @@ describe("filterAccessiblePublications", () => {
   });
 
   it("should handle empty artefacts array", () => {
-    const user = createUser("VERIFIED", "B2C");
+    const user = createUser("VERIFIED", "B2C_IDAM");
     const filtered = filterAccessiblePublications(user, [], listTypes);
     expect(filtered).toHaveLength(0);
   });
 
   it("should handle missing list type", () => {
-    const user = createUser("VERIFIED", "CFT");
+    const user = createUser("VERIFIED", "CFT_IDAM");
     const artefactsWithUnknownType = [{ ...classifiedArtefact, listTypeId: 999 }];
     const filtered = filterAccessiblePublications(user, artefactsWithUnknownType, listTypes);
 

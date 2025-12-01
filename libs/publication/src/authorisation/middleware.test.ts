@@ -21,7 +21,7 @@ vi.mock("@hmcts/list-types-common", () => ({
       englishFriendlyName: "Test List",
       welshFriendlyName: "Rhestr Prawf",
       jsonSchema: {},
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       urlPath: "/test"
     }
   ]
@@ -86,7 +86,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -114,7 +114,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -143,7 +143,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -179,7 +179,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -190,7 +190,7 @@ describe("requirePublicationAccess", () => {
       email: "user@example.com",
       displayName: "Test User",
       role: "VERIFIED",
-      provenance: "CFT"
+      provenance: "CFT_IDAM"
     };
 
     const req = createMockRequest({ id: "test-id" }, user) as Request;
@@ -215,7 +215,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -226,7 +226,7 @@ describe("requirePublicationAccess", () => {
       email: "user@example.com",
       displayName: "Test User",
       role: "VERIFIED",
-      provenance: "B2C"
+      provenance: "B2C_IDAM"
     };
 
     const req = createMockRequest({ id: "test-id" }, user) as Request;
@@ -286,7 +286,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -314,7 +314,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -360,7 +360,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -404,7 +404,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -440,7 +440,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT",
+      provenance: "CFT_IDAM",
       noMatch: false
     };
 
@@ -451,7 +451,7 @@ describe("requirePublicationDataAccess", () => {
       email: "user@example.com",
       displayName: "Verified User",
       role: "VERIFIED",
-      provenance: "B2C"
+      provenance: "B2C_IDAM"
     };
 
     const req = createMockRequest({ id: "test-id" }, user) as Request;

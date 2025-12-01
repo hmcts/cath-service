@@ -4,7 +4,7 @@ import type { Artefact } from "../repository/model.js";
 import { Sensitivity } from "../sensitivity.js";
 
 const METADATA_ONLY_ROLES = ["INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"] as const;
-const VERIFIED_USER_PROVENANCES = ["B2C", "CFT", "CRIME"] as const;
+const VERIFIED_USER_PROVENANCES = ["B2C_IDAM", "CFT_IDAM", "CRIME_IDAM"] as const;
 
 /**
  * Determines if a user can access a publication based on sensitivity level and user role/provenance
