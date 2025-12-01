@@ -1,0 +1,39 @@
+{
+  "name": "@hmcts/blob-ingestion",
+  "version": "1.0.0",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*",
+    "@hmcts/publication": "workspace:*"
+  },
+  "peerDependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

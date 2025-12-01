@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { saveUploadedFile } from "./file-storage.js";
 
@@ -7,7 +8,11 @@ const TEST_ARTEFACT_ID = "test-artefact-123";
 const TEST_FILE_NAME = "test-hearing-list.csv";
 const TEST_FILE_EXTENSION = ".csv";
 const TEST_FILE_CONTENT = Buffer.from("Test,File,Content\n1,2,3");
-const TEST_STORAGE_BASE = path.join(process.cwd(), "storage", "temp", "uploads");
+// Match the same path calculation as the implementation (from libs/admin-pages/src/manual-upload/)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
+const TEST_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const TEST_FILE_PATH = path.join(TEST_STORAGE_BASE, `${TEST_ARTEFACT_ID}${TEST_FILE_EXTENSION}`);
 
 describe("file-storage", () => {

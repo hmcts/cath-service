@@ -108,7 +108,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.scriptSrc).toContain("ws://localhost:5173");
         expect(directives?.connectSrc).toContain("ws://localhost:5173");
@@ -120,7 +120,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.scriptSrc).not.toContain("ws://localhost:5173");
         expect(directives?.connectSrc).not.toContain("ws://localhost:5173");
@@ -133,7 +133,7 @@ describe("helmet-middleware", () => {
         configureHelmet({ enableGoogleTagManager: true });
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.scriptSrc).toContain("https://*.googletagmanager.com");
         expect(directives?.connectSrc).toContain("https://*.google-analytics.com");
@@ -147,7 +147,7 @@ describe("helmet-middleware", () => {
         configureHelmet({ enableGoogleTagManager: false });
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.scriptSrc).not.toContain("https://*.googletagmanager.com");
         expect(directives?.connectSrc).not.toContain("https://*.google-analytics.com");
@@ -163,7 +163,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const scriptSrc = helmetCall?.contentSecurityPolicy?.directives?.scriptSrc;
+        const scriptSrc = (helmetCall?.contentSecurityPolicy as any)?.directives?.scriptSrc;
 
         const nonceFunction = scriptSrc?.find((src: any) => typeof src === "function");
         expect(nonceFunction).toBeDefined();
@@ -180,7 +180,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const scriptSrc = helmetCall?.contentSecurityPolicy?.directives?.scriptSrc;
+        const scriptSrc = (helmetCall?.contentSecurityPolicy as any)?.directives?.scriptSrc;
         const nonceFunction = scriptSrc?.find((src: any) => typeof src === "function");
 
         const mockReq = {} as Request;
@@ -197,7 +197,7 @@ describe("helmet-middleware", () => {
         configureHelmet({ isDevelopment: true });
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.scriptSrc).toContain("ws://localhost:5173");
         expect(directives?.connectSrc).toContain("ws://localhost:5173");
@@ -208,7 +208,7 @@ describe("helmet-middleware", () => {
         configureHelmet({ isDevelopment: false });
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.scriptSrc).not.toContain("ws://localhost:5173");
         expect(directives?.connectSrc).not.toContain("ws://localhost:5173");
@@ -219,7 +219,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         // Should default to development (not production)
         expect(directives?.scriptSrc).toContain("ws://localhost:5173");
@@ -231,7 +231,7 @@ describe("helmet-middleware", () => {
         configureHelmet({ enableGoogleTagManager: false, isDevelopment: false });
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.defaultSrc).toEqual(["'self'"]);
         expect(directives?.styleSrc).toEqual(["'self'", "'unsafe-inline'"]);
@@ -244,14 +244,14 @@ describe("helmet-middleware", () => {
         // Without GTM
         configureHelmet({ enableGoogleTagManager: false });
         let helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        expect(helmetCall?.contentSecurityPolicy?.directives?.frameSrc).toBeUndefined();
+        expect((helmetCall?.contentSecurityPolicy as any)?.directives?.frameSrc).toBeUndefined();
 
         // With GTM
         vi.clearAllMocks();
         vi.mocked(helmet).mockReturnValue("helmet-middleware" as any);
         configureHelmet({ enableGoogleTagManager: true });
         helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        expect(helmetCall?.contentSecurityPolicy?.directives?.frameSrc).toBeDefined();
+        expect((helmetCall?.contentSecurityPolicy as any)?.directives?.frameSrc).toBeDefined();
       });
     });
 
@@ -260,7 +260,7 @@ describe("helmet-middleware", () => {
         configureHelmet({ cftIdamUrl: "https://idam.example.com" });
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.formAction).toContain("https://idam.example.com");
       });
@@ -269,7 +269,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.formAction).not.toContain("https://idam.example.com");
       });
@@ -278,7 +278,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         expect(directives?.formAction).toContain("'self'");
       });
@@ -288,7 +288,7 @@ describe("helmet-middleware", () => {
         configureHelmet();
 
         const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = helmetCall?.contentSecurityPolicy?.directives;
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
 
         // localhost URLs are not needed as 'self' directive covers them
         expect(directives?.formAction).toContain("'self'");

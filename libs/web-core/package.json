@@ -36,6 +36,9 @@
     },
     "./src/assets/css/back-to-top.scss": {
       "default": "./src/assets/css/back-to-top.scss"
+    },
+    "./src/assets/css/button-as-link.scss": {
+      "default": "./src/assets/css/button-as-link.scss"
     }
   },
   "scripts": {
