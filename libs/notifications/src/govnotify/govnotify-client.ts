@@ -1,4 +1,3 @@
-/// <reference path="../notifications-node-client.d.ts" />
 import { NotifyClient } from "notifications-node-client";
 import { getApiKey, getTemplateId, type TemplateParameters } from "./template-config.js";
 
@@ -17,22 +16,9 @@ export interface SendEmailResult {
 }
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
-  return retryWithBackoff(() => sendEmailInternal(params), NOTIFICATION_RETRY_ATTEMPTS);
-}
-
-async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResult> {
   try {
-    const notifyClient = new NotifyClient(getApiKey());
-    const templateId = getTemplateId();
-
-    const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
-      personalisation: params.templateParameters
-    });
-
-    return {
-      success: true,
-      notificationId: response.data.id
-    };
+    const result = await retryWithBackoff(() => sendEmailInternal(params), NOTIFICATION_RETRY_ATTEMPTS);
+    return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
@@ -40,6 +26,20 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       error: errorMessage
     };
   }
+}
+
+async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResult> {
+  const notifyClient = new NotifyClient(getApiKey());
+  const templateId = getTemplateId();
+
+  const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
+    personalisation: params.templateParameters
+  });
+
+  return {
+    success: true,
+    notificationId: response.body.id
+  };
 }
 
 async function retryWithBackoff<T>(fn: () => Promise<T>, retries: number, delay = NOTIFICATION_RETRY_DELAY_MS): Promise<T> {

@@ -6,6 +6,7 @@ import {
   deleteSubscriptionRecord,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
+  findSubscriptionsByLocationId,
   findSubscriptionsByUserId
 } from "./queries.js";
 
@@ -69,6 +70,50 @@ describe("Subscription Queries", () => {
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
 
       const result = await findSubscriptionsByUserId(userId);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("findSubscriptionsByLocationId", () => {
+    it("should find all subscriptions for a location", async () => {
+      const locationId = 456;
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId: "user123",
+          locationId,
+          dateAdded: new Date()
+        },
+        {
+          subscriptionId: "sub2",
+          userId: "user456",
+          locationId,
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await findSubscriptionsByLocationId(locationId);
+
+      expect(result).toEqual(mockSubscriptions);
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          locationId
+        },
+        orderBy: {
+          dateAdded: "desc"
+        }
+      });
+    });
+
+    it("should return empty array when no subscriptions found", async () => {
+      const locationId = 456;
+
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await findSubscriptionsByLocationId(locationId);
 
       expect(result).toEqual([]);
     });

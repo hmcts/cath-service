@@ -5,21 +5,31 @@ declare module "notifications-node-client" {
       templateId: string,
       emailAddress: string,
       options?: {
-        personalisation?: Record<string, string>;
-        reference?: string;
+        personalisation?: Record<string, any>;
+        reference?: string | null;
         emailReplyToId?: string;
+        oneClickUnsubscribeURL?: string;
       }
     ): Promise<{
-      data: {
+      body: {
         id: string;
-        reference?: string;
+        reference: string | null;
         uri: string;
         template: {
           id: string;
           version: number;
           uri: string;
         };
+        content: {
+          subject: string | null;
+          body: string;
+          from_email: string;
+        };
       };
     }>;
   }
+
+  export default {
+    NotifyClient
+  };
 }

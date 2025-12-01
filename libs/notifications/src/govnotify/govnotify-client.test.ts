@@ -20,7 +20,7 @@ describe("govnotify-client", () => {
     vi.clearAllMocks();
 
     mockSendEmail.mockResolvedValue({
-      data: {
+      body: {
         id: "notification-123"
       }
     });
@@ -74,18 +74,37 @@ describe("govnotify-client", () => {
     expect(result.notificationId).toBeUndefined();
   });
 
-  it("should retry on failure", async () => {
+  it("should retry on failure and succeed", async () => {
     const { sendEmail } = await import("./govnotify-client.js");
 
-    // Fail twice, succeed on third attempt
-    mockSendEmail
-      .mockRejectedValueOnce(new Error("First failure"))
-      .mockRejectedValueOnce(new Error("Second failure"))
-      .mockResolvedValueOnce({
-        data: {
-          id: "notification-456"
-        }
-      });
+    // Fail once, succeed on retry (with default NOTIFICATION_RETRY_ATTEMPTS=1)
+    mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
+      body: {
+        id: "notification-456"
+      }
+    });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        user_name: "Test User",
+        hearing_list_name: "Daily Cause List",
+        publication_date: "1 December 2024",
+        location_name: "Test Court",
+        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.notificationId).toBe("notification-456");
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
+  });
+
+  it("should fail after exhausting all retries", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    // Fail consistently (more failures than retry attempts)
+    mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockRejectedValueOnce(new Error("Second failure"));
 
     const result = await sendEmail({
       emailAddress: "user@example.com",
@@ -99,6 +118,66 @@ describe("govnotify-client", () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe("Second failure");
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
+  });
+
+  it("should handle non-Error exceptions", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    mockSendEmail.mockRejectedValue("String error");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        user_name: "Test User",
+        hearing_list_name: "Daily Cause List",
+        publication_date: "1 December 2024",
+        location_name: "Test Court",
+        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("String error");
+    expect(result.notificationId).toBeUndefined();
+  });
+
+  it("should implement exponential backoff in retry logic", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    // Mock setTimeout to track delay values
+    const originalSetTimeout = global.setTimeout;
+    const delays: number[] = [];
+    vi.spyOn(global, "setTimeout").mockImplementation((callback: any, delay?: number) => {
+      if (delay !== undefined) {
+        delays.push(delay);
+      }
+      return originalSetTimeout(callback, 0) as any;
+    });
+
+    // Fail once, succeed on retry
+    mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
+      body: {
+        id: "notification-789"
+      }
+    });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        user_name: "Test User",
+        hearing_list_name: "Daily Cause List",
+        publication_date: "1 December 2024",
+        location_name: "Test Court",
+        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(true);
+    expect(delays.length).toBeGreaterThan(0);
+    expect(delays[0]).toBe(1000); // Default NOTIFICATION_RETRY_DELAY_MS
+
+    vi.restoreAllMocks();
   });
 });
