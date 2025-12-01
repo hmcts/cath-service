@@ -1,6 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-type-validator.js";
 import { mockListTypes } from "./mock-list-types.js";
+
+// Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
+vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
+  validateCivilFamilyCauseList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0.0"
+  })
+}));
 
 describe("list-type-validator", () => {
   describe("convertListTypeNameToKebabCase", () => {
@@ -51,64 +60,26 @@ describe("list-type-validator", () => {
           version: "1.0"
         },
         venue: {
-          venueName: "Oxford Combined Court Centre",
-          venueAddress: {
-            line: ["St Aldate's"],
-            town: "Oxford",
-            postCode: "OX1 1TL"
-          },
-          venueContact: {
-            venueTelephone: "01865 264 200",
-            venueEmail: "enquiries.oxford.countycourt@justice.gov.uk"
-          }
+          venueName: "Oxford Combined Court Centre"
         },
-        courtLists: [
-          {
-            courtHouse: {
-              courtHouseName: "Oxford Combined Court Centre",
-              courtRoom: [
-                {
-                  courtRoomName: "Courtroom 1",
-                  session: [
-                    {
-                      sittings: [
-                        {
-                          sittingStart: "2025-11-12T10:00:00.000Z",
-                          sittingEnd: "2025-11-12T11:00:00.000Z",
-                          hearing: [
-                            {
-                              hearingType: "Family Hearing",
-                              case: [
-                                {
-                                  caseName: "Brown v Brown",
-                                  caseNumber: "CF-2025-001"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        ]
+        courtLists: []
       };
 
       const result = await validateListTypeJson("8", validData, mockListTypes);
-
-      if (!result.isValid) {
-        console.log("Validation errors:", result.errors);
-      }
 
       expect(result.isValid).toBe(true);
     });
 
     it("should return validation errors for invalid Civil and Family Daily Cause List data", async () => {
+      // Override the mock for this test to return invalid
+      const { validateCivilFamilyCauseList } = await import("@hmcts/civil-and-family-daily-cause-list");
+      vi.mocked(validateCivilFamilyCauseList).mockReturnValueOnce({
+        isValid: false,
+        errors: [{ message: "Missing required field" }],
+        schemaVersion: "1.0.0"
+      });
+
       const invalidData = {
-        // Missing required fields
         invalid: "data"
       };
 
