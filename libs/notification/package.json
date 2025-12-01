@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/notifications-node-client.d.ts dist/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
