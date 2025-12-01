@@ -46,6 +46,20 @@ async function createTestLocation(): Promise<void> {
     update: {
       name: testLocationName,
       welshName: testLocationWelshName,
+      email: "test.location@test.hmcts.net",
+      contactNo: "01234567890",
+      locationSubJurisdictions: {
+        deleteMany: {},
+        create: {
+          subJurisdictionId: subJurisdiction.subJurisdictionId,
+        },
+      },
+      locationRegions: {
+        deleteMany: {},
+        create: {
+          regionId: region.regionId,
+        },
+      },
     },
   });
 }
