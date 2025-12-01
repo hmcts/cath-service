@@ -1,0 +1,35 @@
+{
+  "name": "@hmcts/notification",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*",
+    "@hmcts/subscriptions": "workspace:*",
+    "notifications-node-client": "8.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.1",
+    "typescript": "5.7.2",
+    "vitest": "3.2.4"
+  }
+}

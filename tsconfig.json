@@ -3,6 +3,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "@hmcts/api": ["apps/api/src"],
       "@hmcts/crons": ["apps/crons/src"],
@@ -26,7 +27,9 @@
       "@hmcts/civil-and-family-daily-cause-list": ["libs/list-types/civil-and-family-daily-cause-list/src"],
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
-      "@hmcts/subscriptions": ["libs/subscriptions/src"]
+      "@hmcts/subscriptions": ["libs/subscriptions/src"],
+      "@hmcts/notification": ["libs/notification/src"],
+      "@hmcts/notification/config": ["libs/notification/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { sendPublicationNotifications } from "@hmcts/notification";
 import { createArtefact, Provenance } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
@@ -89,6 +90,32 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       status: "SUCCESS",
       artefactId
     });
+
+    // Trigger email notifications for subscribers (only if location exists)
+    if (!noMatch) {
+      try {
+        const notificationResult = await sendPublicationNotifications({
+          publicationId: artefactId,
+          locationId: request.court_id,
+          hearingListName: request.list_type,
+          publicationDate: new Date(request.content_date).toISOString()
+        });
+
+        console.log("[Blob Ingestion] Notification process completed", {
+          artefactId,
+          locationId: request.court_id,
+          notificationResult,
+          timestamp: new Date().toISOString()
+        });
+      } catch (notificationError) {
+        console.error("[Blob Ingestion] Failed to send notifications", {
+          artefactId,
+          locationId: request.court_id,
+          error: notificationError instanceof Error ? notificationError.message : "Unknown error",
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
 
     return {
       success: true,

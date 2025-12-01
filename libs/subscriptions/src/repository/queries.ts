@@ -11,6 +11,17 @@ export async function findSubscriptionsByUserId(userId: string) {
   });
 }
 
+export async function findSubscriptionsByLocationId(locationId: number) {
+  return prisma.subscription.findMany({
+    where: {
+      locationId
+    },
+    orderBy: {
+      dateAdded: "desc"
+    }
+  });
+}
+
 export async function findSubscriptionByUserAndLocation(userId: string, locationId: number) {
   return prisma.subscription.findUnique({
     where: {
