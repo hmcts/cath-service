@@ -110,23 +110,32 @@ const postHandler = async (req: Request, res: Response) => {
 
     // Trigger email notifications for subscribers
     try {
-      // Get list type name from ID for notification
-      const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-      const listTypeName = listType?.name || `LIST_TYPE_${listTypeId}`;
+      // Get location name
+      const location = await getLocationById(Number(uploadData.locationId));
+      if (!location) {
+        console.warn("[Manual Upload] Location not found for notifications", {
+          locationId: uploadData.locationId
+        });
+      } else {
+        // Get list type details for notification
+        const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+        const listTypeFriendlyName = listType?.englishFriendlyName || `LIST_TYPE_${listTypeId}`;
 
-      const notificationResult = await sendPublicationNotifications({
-        publicationId: artefactId,
-        locationId: uploadData.locationId,
-        hearingListName: listTypeName,
-        publicationDate: contentDate.toISOString()
-      });
+        const notificationResult = await sendPublicationNotifications({
+          publicationId: artefactId,
+          locationId: uploadData.locationId,
+          locationName: location.name,
+          hearingListName: listTypeFriendlyName,
+          publicationDate: contentDate
+        });
 
-      console.log("[Manual Upload] Notification process completed", {
-        artefactId,
-        locationId: uploadData.locationId,
-        notificationResult,
-        timestamp: new Date().toISOString()
-      });
+        console.log("[Manual Upload] Notification process completed", {
+          artefactId,
+          locationId: uploadData.locationId,
+          notificationResult,
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (notificationError) {
       // Log error but don't fail the upload
       console.error("[Manual Upload] Failed to send notifications", {
