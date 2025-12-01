@@ -1,5 +1,5 @@
--- DropForeignKey
-ALTER TABLE "ingestion_log" DROP CONSTRAINT "fk_blob_artefact";
+-- DropForeignKey (only if exists)
+ALTER TABLE "ingestion_log" DROP CONSTRAINT IF EXISTS "fk_blob_artefact";
 
 -- AlterTable
 ALTER TABLE "ingestion_log" ALTER COLUMN "id" DROP DEFAULT;
