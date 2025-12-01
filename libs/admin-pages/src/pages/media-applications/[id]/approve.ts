@@ -73,8 +73,7 @@ const postHandler = async (req: Request, res: Response) => {
       return res.redirect(`/media-applications/${id}`);
     }
 
-    const reviewerEmail = req.user?.email || "unknown";
-    await approveApplication(id, reviewerEmail);
+    await approveApplication(id);
 
     // Send approval email notification
     try {

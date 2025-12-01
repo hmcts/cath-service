@@ -51,8 +51,6 @@ model MediaApplication {
   proofOfIdPath    String?   @map("proof_of_id_path") @db.VarChar(500)
   status           String    @default("PENDING") @db.VarChar(20)
   appliedDate      DateTime  @default(now()) @map("applied_date")
-  reviewedDate     DateTime? @map("reviewed_date")
-  reviewedBy       String?   @map("reviewed_by") @db.VarChar(255)
 
   @@map("media_application")
 }

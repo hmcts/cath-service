@@ -137,8 +137,6 @@ test.describe("Media Application Approval Workflow", () => {
       });
 
       expect(updatedApplication?.status).toBe("APPROVED");
-      expect(updatedApplication?.reviewedDate).not.toBeNull();
-      expect(updatedApplication?.reviewedBy).not.toBeNull();
     });
 
     test("should not show approved application in pending list", async ({ page }) => {

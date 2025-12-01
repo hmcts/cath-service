@@ -14,8 +14,6 @@ export interface MediaApplicationDetails {
   proofOfIdPath: string | null;
   status: ApplicationStatus;
   appliedDate: Date;
-  reviewedDate: Date | null;
-  reviewedBy: string | null;
 }
 
 export interface PendingApplicationSummary {

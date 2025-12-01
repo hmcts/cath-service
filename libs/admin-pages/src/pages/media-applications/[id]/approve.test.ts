@@ -237,37 +237,13 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(approveApplication).toHaveBeenCalledWith("app-123", "admin@example.com");
+      expect(approveApplication).toHaveBeenCalledWith("app-123");
       expect(sendMediaApprovalEmail).toHaveBeenCalledWith({
         name: "John Smith",
         email: "john@bbc.co.uk",
         employer: "BBC"
       });
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
-    });
-
-    it("should use 'unknown' as reviewer email when user email not available", async () => {
-      const mockApplication = {
-        id: "app-123",
-        name: "John Smith",
-        employer: "BBC",
-        email: "john@bbc.co.uk",
-        phoneNumber: "07700900123",
-        proofOfIdPath: "/uploads/proof-app-123.pdf",
-        status: "PENDING" as const,
-        createdAt: new Date("2024-01-01")
-      };
-
-      vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      vi.mocked(approveApplication).mockResolvedValue();
-      vi.mocked(sendMediaApprovalEmail).mockResolvedValue();
-      mockRequest.body = { confirm: "yes" };
-      mockRequest.user = undefined;
-
-      const handler = POST[1];
-      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
-
-      expect(approveApplication).toHaveBeenCalledWith("app-123", "unknown");
     });
 
     it("should still approve even if email notification fails", async () => {
@@ -290,7 +266,7 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(approveApplication).toHaveBeenCalledWith("app-123", "admin@example.com");
+      expect(approveApplication).toHaveBeenCalledWith("app-123");
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
     });
 

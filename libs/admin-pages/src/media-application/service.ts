@@ -3,7 +3,7 @@ import path from "node:path";
 import { APPLICATION_STATUS } from "./model.js";
 import { getApplicationById, updateApplicationStatus } from "./queries.js";
 
-export async function approveApplication(id: string, reviewedBy: string): Promise<void> {
+export async function approveApplication(id: string): Promise<void> {
   const application = await getApplicationById(id);
 
   if (!application) {
@@ -14,7 +14,7 @@ export async function approveApplication(id: string, reviewedBy: string): Promis
     throw new Error("Application has already been reviewed");
   }
 
-  await updateApplicationStatus(id, APPLICATION_STATUS.APPROVED, reviewedBy);
+  await updateApplicationStatus(id, APPLICATION_STATUS.APPROVED);
 
   if (application.proofOfIdPath) {
     await deleteProofOfIdFile(application.proofOfIdPath);

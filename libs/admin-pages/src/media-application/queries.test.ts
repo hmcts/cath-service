@@ -55,9 +55,7 @@ describe("media-application queries", () => {
         employer: "BBC",
         proofOfIdPath: "/path/to/file.pdf",
         status: APPLICATION_STATUS.PENDING,
-        appliedDate: new Date("2024-01-01"),
-        reviewedDate: null,
-        reviewedBy: null
+        appliedDate: new Date("2024-01-01")
       };
 
       vi.mocked(prisma.mediaApplication.findUnique).mockResolvedValue(mockApplication);
@@ -73,9 +71,7 @@ describe("media-application queries", () => {
           employer: true,
           proofOfIdPath: true,
           status: true,
-          appliedDate: true,
-          reviewedDate: true,
-          reviewedBy: true
+          appliedDate: true
         }
       });
       expect(result).toEqual(mockApplication);
@@ -91,7 +87,7 @@ describe("media-application queries", () => {
   });
 
   describe("updateApplicationStatus", () => {
-    it("should update application status and reviewed metadata", async () => {
+    it("should update application status", async () => {
       const mockUpdated = {
         id: "1",
         name: "John Doe",
@@ -99,21 +95,17 @@ describe("media-application queries", () => {
         employer: "BBC",
         proofOfIdPath: "/path/to/file.pdf",
         status: APPLICATION_STATUS.APPROVED,
-        appliedDate: new Date("2024-01-01"),
-        reviewedDate: new Date("2024-01-02"),
-        reviewedBy: "admin@example.com"
+        appliedDate: new Date("2024-01-01")
       };
 
       vi.mocked(prisma.mediaApplication.update).mockResolvedValue(mockUpdated);
 
-      const result = await updateApplicationStatus("1", APPLICATION_STATUS.APPROVED, "admin@example.com");
+      const result = await updateApplicationStatus("1", APPLICATION_STATUS.APPROVED);
 
       expect(prisma.mediaApplication.update).toHaveBeenCalledWith({
         where: { id: "1" },
         data: {
-          status: APPLICATION_STATUS.APPROVED,
-          reviewedDate: expect.any(Date),
-          reviewedBy: "admin@example.com"
+          status: APPLICATION_STATUS.APPROVED
         },
         select: {
           id: true,
@@ -122,9 +114,7 @@ describe("media-application queries", () => {
           employer: true,
           proofOfIdPath: true,
           status: true,
-          appliedDate: true,
-          reviewedDate: true,
-          reviewedBy: true
+          appliedDate: true
         }
       });
       expect(result).toEqual(mockUpdated);
