@@ -53,7 +53,7 @@ vi.mock("@hmcts/location", () => ({
 }));
 
 vi.mock("../../manual-upload/validation.js", () => ({
-  validateForm: vi.fn(() => [])
+  validateManualUploadForm: vi.fn(() => [])
 }));
 
 vi.mock("../../manual-upload/storage.js", () => ({
@@ -61,7 +61,7 @@ vi.mock("../../manual-upload/storage.js", () => ({
 }));
 
 import { storeManualUpload } from "../../manual-upload/storage.js";
-import { validateForm } from "../../manual-upload/validation.js";
+import { validateManualUploadForm } from "../../manual-upload/validation.js";
 
 describe("manual-upload page", () => {
   beforeEach(() => {
@@ -540,12 +540,12 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockResolvedValue([]);
+      vi.mocked(validateManualUploadForm).mockResolvedValue([]);
       vi.mocked(storeManualUpload).mockResolvedValue("test-upload-id-123");
 
       await callHandler(POST, req, res);
 
-      expect(validateForm).toHaveBeenCalled();
+      expect(validateManualUploadForm).toHaveBeenCalled();
       expect(storeManualUpload).toHaveBeenCalledWith(
         expect.objectContaining({
           file: mockFile.buffer,
@@ -598,7 +598,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockResolvedValue([]);
+      vi.mocked(validateManualUploadForm).mockResolvedValue([]);
 
       await callHandler(POST, req, res);
 
@@ -649,11 +649,11 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateManualUploadForm).mockReturnValue(mockErrors);
 
       await callHandler(POST, req, res);
 
-      expect(validateForm).toHaveBeenCalled();
+      expect(validateManualUploadForm).toHaveBeenCalled();
       expect(req.session.manualUploadErrors).toEqual(mockErrors);
       expect(session.save).toHaveBeenCalled();
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload");
@@ -690,7 +690,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue([{ text: "File is required", href: "#file" }]);
+      vi.mocked(validateManualUploadForm).mockReturnValue([{ text: "File is required", href: "#file" }]);
 
       await callHandler(POST, req, res);
 
@@ -736,7 +736,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateManualUploadForm).mockReturnValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -780,7 +780,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateManualUploadForm).mockReturnValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -820,7 +820,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateManualUploadForm).mockReturnValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -858,7 +858,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateManualUploadForm).mockReturnValue(mockErrors);
 
       await callHandler(POST, req, res);
 
