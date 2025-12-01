@@ -88,7 +88,7 @@ describe("configureCookieManager", () => {
       });
 
       const middleware = useSpy.mock.calls[0][0] as any;
-      req.cookies = { cookie_policy: "%7B%22analytics%22%3Atrue%7D" };
+      req.cookies = { cookie_policy: '{"analytics":true}' };
 
       middleware(req, res, next);
 
