@@ -220,63 +220,69 @@ test.describe("Email Subscriptions", () => {
 
   test.describe("Unsubscribe Journey", () => {
     test("should complete unsubscribe flow with validation and accessibility checks", async ({ page }) => {
+      // First create a subscription to unsubscribe from
+      await page.goto("/account-home");
+      const emailSubsTile = page.locator(".verified-tile").nth(2);
+      await emailSubsTile.click();
+      await page.getByRole("button", { name: /add email subscription/i }).click();
+      await page.waitForLoadState("networkidle");
+      const testLocationCheckbox = page.locator(`#location-${testLocationId}`);
+      await testLocationCheckbox.check();
+      await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
+      await page.getByRole("button", { name: /confirm/i }).click();
+      await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
+      await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+
       await page.goto("/subscription-management");
 
+      // Step 1: Navigate to delete subscription page
       const deleteLinks = page.getByRole("button", { name: /remove/i });
-      const count = await deleteLinks.count();
+      await deleteLinks.first().click();
+      await expect(page).toHaveURL(/\/delete-subscription/);
 
-      if (count > 0) {
-        // Step 1: Navigate to delete subscription page
-        await deleteLinks.first().click();
-        await expect(page).toHaveURL(/\/delete-subscription/);
+      // Verify delete subscription page elements
+      const yesRadio = page.getByRole("radio", { name: /yes/i });
+      const noRadio = page.getByRole("radio", { name: /no/i });
+      await expect(yesRadio).toBeVisible();
+      await expect(noRadio).toBeVisible();
 
-        // Verify delete subscription page elements
-        const yesRadio = page.getByRole("radio", { name: /yes/i });
-        const noRadio = page.getByRole("radio", { name: /no/i });
-        await expect(yesRadio).toBeVisible();
-        await expect(noRadio).toBeVisible();
+      // Step 2: Test validation - continue without selecting should show error
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+      const errorMessage = page.getByText(/select yes if you want to remove this subscription/i);
+      await expect(errorMessage).toBeVisible();
 
-        // Step 2: Test validation - continue without selecting should show error
-        const continueButton = page.getByRole("button", { name: /continue/i });
-        await continueButton.click();
-        const errorMessage = page.getByText(/select yes if you want to remove this subscription/i);
-        await expect(errorMessage).toBeVisible();
+      // Step 3: Test "No" option - should return to subscription management
+      await noRadio.check();
+      await continueButton.click();
+      await expect(page).toHaveURL("/subscription-management");
 
-        // Step 3: Test "No" option - should return to subscription management
-        await noRadio.check();
-        await continueButton.click();
-        await expect(page).toHaveURL("/subscription-management");
+      // Step 4: Complete full unsubscribe flow - select "Yes" option
+      const deleteLinksAgain = page.getByRole("button", { name: /remove/i });
+      await deleteLinksAgain.first().click();
+      await expect(page).toHaveURL(/\/delete-subscription/);
 
-        // Step 4: Complete full unsubscribe flow - select "Yes" option
-        const deleteLinksAgain = page.getByRole("button", { name: /remove/i });
+      await page.getByRole("radio", { name: /yes/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
 
-        if ((await deleteLinksAgain.count()) > 0) {
-          await deleteLinksAgain.first().click();
-          await expect(page).toHaveURL(/\/delete-subscription/);
+      // Step 5: Verify unsubscribe confirmation page
+      await expect(page).toHaveURL("/unsubscribe-confirmation");
 
-          await page.getByRole("radio", { name: /yes/i }).check();
-          await page.getByRole("button", { name: /continue/i }).click();
+      const panel = page.locator(".govuk-panel--confirmation");
+      await expect(panel).toBeVisible();
 
-          // Step 5: Verify unsubscribe confirmation page
-          await expect(page).toHaveURL("/unsubscribe-confirmation");
+      const manageLink = page.getByRole("link", { name: /manage.*subscriptions/i });
+      await expect(manageLink).toBeVisible();
 
-          const panel = page.locator(".govuk-panel--confirmation");
-          await expect(panel).toBeVisible();
+      // Check accessibility on confirmation page
+      const accessibilityScanResults = await new AxeBuilder({ page })
+        .disableRules(["region"])
+        .analyze();
+      expect(accessibilityScanResults.violations).toEqual([]);
 
-          const manageLink = page.getByRole("link", { name: /manage.*subscriptions/i });
-          await expect(manageLink).toBeVisible();
-
-          // Check accessibility on confirmation page
-          const accessibilityScanResults = await new AxeBuilder({ page })
-            .disableRules(["region"])
-            .analyze();
-          expect(accessibilityScanResults.violations).toEqual([]);
-
-          // Navigate back to subscription management
-          await manageLink.click();
-          await expect(page).toHaveURL("/subscription-management");
-        }
-      }
+      // Navigate back to subscription management
+      await manageLink.click();
+      await expect(page).toHaveURL("/subscription-management");
     });
   });
 
