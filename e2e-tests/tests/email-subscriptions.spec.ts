@@ -266,9 +266,12 @@ test.describe("Email Subscriptions", () => {
 
       await page.goto("/subscription-management");
 
-      // Step 1: Navigate to delete subscription page
-      const deleteLinks = page.getByRole("button", { name: /remove/i });
-      await deleteLinks.first().click();
+      // Step 1: Navigate to delete subscription page for the specific test location
+      // Use aria-label to target the remove button for this specific subscription
+      const removeButtonForTestLocation = page.getByRole("button", {
+        name: `Remove subscription for ${locationData.name}`
+      });
+      await removeButtonForTestLocation.click();
       await expect(page).toHaveURL(/\/delete-subscription/);
 
       // Verify delete subscription page elements
@@ -288,9 +291,11 @@ test.describe("Email Subscriptions", () => {
       await continueButton.click();
       await expect(page).toHaveURL("/subscription-management");
 
-      // Step 4: Complete full unsubscribe flow - select "Yes" option
-      const deleteLinksAgain = page.getByRole("button", { name: /remove/i });
-      await deleteLinksAgain.first().click();
+      // Step 4: Complete full unsubscribe flow - select "Yes" option for the specific test location
+      const removeButtonAgain = page.getByRole("button", {
+        name: `Remove subscription for ${locationData.name}`
+      });
+      await removeButtonAgain.click();
       await expect(page).toHaveURL(/\/delete-subscription/);
 
       await page.getByRole("radio", { name: /yes/i }).check();
