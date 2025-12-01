@@ -15,6 +15,16 @@
     {% elif applications.length === 0 %}
       <p class="govuk-body">{{ noApplications }}</p>
     {% else %}
+      {% set rows = [] %}
+      {% for app in applications %}
+        {% set rows = (rows.push([
+          { text: app.name },
+          { text: app.employer },
+          { text: app.appliedDate | date('DD MMM YYYY') },
+          { html: '<a href="/media-applications/' + app.id + '" class="govuk-link">' + viewLink + '</a>' }
+        ]), rows) %}
+      {% endfor %}
+
       {{ govukTable({
         head: [
           { text: tableHeaders.name },
@@ -22,14 +32,7 @@
           { text: tableHeaders.dateApplied },
           { text: "" }
         ],
-        rows: applications | map(function(app) {
-          return [
-            { text: app.name },
-            { text: app.employer },
-            { text: app.appliedDate | date('DD/MM/YYYY') },
-            { html: '<a href="/media-applications/' + app.id + '" class="govuk-link">' + viewLink + '</a>' }
-          ]
-        })
+        rows: rows
       }) }}
     {% endif %}
   </div>

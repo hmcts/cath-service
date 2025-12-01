@@ -1,4 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { sendMediaApprovalEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../../media-application/model.js";
@@ -74,6 +75,18 @@ const postHandler = async (req: Request, res: Response) => {
 
     const reviewerEmail = req.user?.email || "unknown";
     await approveApplication(id, reviewerEmail);
+
+    // Send approval email notification
+    try {
+      await sendMediaApprovalEmail({
+        name: application.name,
+        email: application.email,
+        employer: application.employer
+      });
+    } catch (error) {
+      console.error("❌ Failed to send approval email:", error);
+      // Don't fail the approval if email fails
+    }
 
     res.redirect(`/media-applications/${id}/approved`);
   } catch (_error) {

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { MulterRequest } from "../../media-application/repository/model.js";
-import { createMediaApplication } from "../../media-application/repository/query.js";
+import { createMediaApplication, updateProofOfIdPath } from "../../media-application/repository/query.js";
 import { saveIdProofFile } from "../../media-application/storage.js";
 import { validateForm } from "../validation.js";
 import { cy } from "./cy.js";
@@ -40,19 +40,19 @@ export const POST = async (req: MulterRequest, res: Response) => {
   const locale = (req.query.lng as string) || "en";
   const content = locale === "cy" ? cy : en;
 
-  const fullName = req.body.fullName as string | undefined;
+  const name = req.body.fullName as string | undefined;
   const email = req.body.email as string | undefined;
   const employer = req.body.employer as string | undefined;
   const termsAccepted = req.body.termsAccepted as string | undefined;
   const file = req.file;
   const fileUploadError = req.fileUploadError;
 
-  const errors = validateForm(fullName, email, employer, termsAccepted, file, fileUploadError, content);
+  const errors = validateForm(name, email, employer, termsAccepted, file, fileUploadError, content);
 
   if (errors.length > 0) {
     req.session.mediaApplicationErrors = errors;
     req.session.mediaApplicationForm = {
-      fullName: fullName || "",
+      name: name || "",
       email: email || "",
       employer: employer || "",
       termsAccepted: termsAccepted === "on"
@@ -63,13 +63,14 @@ export const POST = async (req: MulterRequest, res: Response) => {
 
   try {
     const applicationId = await createMediaApplication({
-      fullName: fullName!.trim(),
+      name: name!.trim(),
       email: email!.trim(),
       employer: employer!.trim()
     });
 
     if (file) {
-      await saveIdProofFile(applicationId, file.originalname, file.buffer);
+      const filePath = await saveIdProofFile(applicationId, file.originalname, file.buffer);
+      await updateProofOfIdPath(applicationId, filePath);
     }
 
     req.session.mediaApplicationSubmitted = true;

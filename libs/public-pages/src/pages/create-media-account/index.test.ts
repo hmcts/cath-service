@@ -4,7 +4,8 @@ import type { MulterRequest } from "../../media-application/repository/model.js"
 import { GET, POST } from "./index.js";
 
 vi.mock("../../media-application/repository/query.js", () => ({
-  createMediaApplication: vi.fn()
+  createMediaApplication: vi.fn(),
+  updateProofOfIdPath: vi.fn()
 }));
 
 vi.mock("../../media-application/storage.js", () => ({
@@ -15,7 +16,7 @@ vi.mock("../validation.js", () => ({
   validateForm: vi.fn()
 }));
 
-const { createMediaApplication } = await import("../../media-application/repository/query.js");
+const { createMediaApplication, updateProofOfIdPath } = await import("../../media-application/repository/query.js");
 const { saveIdProofFile } = await import("../../media-application/storage.js");
 const { validateForm } = await import("../validation.js");
 
@@ -91,7 +92,7 @@ describe("create-media-account controller", () => {
 
     it("should display form data from session when wasSubmitted is true", async () => {
       const mockFormData = {
-        fullName: "John Smith",
+        name: "John Smith",
         email: "john@example.com",
         employer: "BBC News",
         termsAccepted: true
@@ -110,7 +111,7 @@ describe("create-media-account controller", () => {
     });
 
     it("should clear form data when wasSubmitted is false", async () => {
-      mockSession.mediaApplicationForm = { fullName: "Test" };
+      mockSession.mediaApplicationForm = { name: "Test" };
       mockSession.mediaApplicationSubmitted = false;
 
       await GET(mockRequest as any, mockResponse as Response);
@@ -169,7 +170,7 @@ describe("create-media-account controller", () => {
 
       expect(mockSession.mediaApplicationErrors).toEqual(mockErrors);
       expect(mockSession.mediaApplicationForm).toEqual({
-        fullName: "John Smith",
+        name: "John Smith",
         email: "john@example.com",
         employer: "BBC News",
         termsAccepted: true
@@ -191,20 +192,23 @@ describe("create-media-account controller", () => {
     it("should create media application and save file on success", async () => {
       vi.mocked(validateForm).mockReturnValue([]);
       vi.mocked(createMediaApplication).mockResolvedValue("test-uuid-123");
+      vi.mocked(saveIdProofFile).mockResolvedValue("/path/to/storage/test-uuid-123.jpg");
 
       await POST(mockRequest as MulterRequest, mockResponse as Response);
 
       expect(createMediaApplication).toHaveBeenCalledWith({
-        fullName: "John Smith",
+        name: "John Smith",
         email: "john@example.com",
         employer: "BBC News"
       });
       expect(saveIdProofFile).toHaveBeenCalledWith("test-uuid-123", "passport.jpg", mockFile.buffer);
+      expect(updateProofOfIdPath).toHaveBeenCalledWith("test-uuid-123", "/path/to/storage/test-uuid-123.jpg");
     });
 
     it("should redirect to confirmation page on success", async () => {
       vi.mocked(validateForm).mockReturnValue([]);
       vi.mocked(createMediaApplication).mockResolvedValue("test-uuid-123");
+      vi.mocked(saveIdProofFile).mockResolvedValue("/path/to/storage/test-uuid-123.jpg");
 
       await POST(mockRequest as MulterRequest, mockResponse as Response);
 
@@ -219,6 +223,7 @@ describe("create-media-account controller", () => {
       mockRequest.query = { lng: "cy" };
       vi.mocked(validateForm).mockReturnValue([]);
       vi.mocked(createMediaApplication).mockResolvedValue("test-uuid-123");
+      vi.mocked(saveIdProofFile).mockResolvedValue("/path/to/storage/test-uuid-123.jpg");
 
       await POST(mockRequest as MulterRequest, mockResponse as Response);
 
@@ -244,11 +249,12 @@ describe("create-media-account controller", () => {
       };
       vi.mocked(validateForm).mockReturnValue([]);
       vi.mocked(createMediaApplication).mockResolvedValue("test-uuid-123");
+      vi.mocked(saveIdProofFile).mockResolvedValue("/path/to/storage/test-uuid-123.jpg");
 
       await POST(mockRequest as MulterRequest, mockResponse as Response);
 
       expect(createMediaApplication).toHaveBeenCalledWith({
-        fullName: "John Smith",
+        name: "John Smith",
         email: "john@example.com",
         employer: "BBC News"
       });
@@ -258,6 +264,7 @@ describe("create-media-account controller", () => {
       mockRequest.file = undefined;
       vi.mocked(validateForm).mockReturnValue([]);
       vi.mocked(createMediaApplication).mockResolvedValue("test-uuid-123");
+      vi.mocked(saveIdProofFile).mockResolvedValue("/path/to/storage/test-uuid-123.jpg");
 
       await POST(mockRequest as MulterRequest, mockResponse as Response);
 

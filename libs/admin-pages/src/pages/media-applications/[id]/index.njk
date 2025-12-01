@@ -4,7 +4,7 @@
 
 {% block page_content %}
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
+  <div class="govuk-grid-column-full">
     <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
     {% if error %}
@@ -48,19 +48,21 @@
         ]
       }) }}
 
-      <form action="/media-applications/{{ application.id }}/approve" method="get" style="display: inline; margin-right: 1rem;">
-        {{ govukButton({
-          text: approveButton,
-          classes: "govuk-button--primary"
-        }) }}
-      </form>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+        <form action="/media-applications/{{ application.id }}/approve" method="get">
+          {{ govukButton({
+            text: approveButton,
+            classes: "govuk-button--primary"
+          }) }}
+        </form>
 
-      <form action="/media-applications/{{ application.id }}/reject" method="get" style="display: inline;">
-        {{ govukButton({
-          text: rejectButton,
-          classes: "govuk-button--warning"
-        }) }}
-      </form>
+        <form action="/media-applications/{{ application.id }}/reject" method="get">
+          {{ govukButton({
+            text: rejectButton,
+            classes: "govuk-button--warning"
+          }) }}
+        </form>
+      </div>
     {% endif %}
   </div>
 </div>
