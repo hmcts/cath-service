@@ -70,7 +70,8 @@ describe("non-strategic-upload-success page", () => {
           hideLanguageToggle: true
         })
       );
-      expect(req.session.nonStrategicUploadConfirmed).toBeUndefined();
+      expect(req.session.nonStrategicUploadConfirmed).toBe(true);
+      expect(req.session.nonStrategicSuccessPageViewed).toBe(true);
     });
 
     it("should render success page with Welsh content", async () => {
@@ -93,13 +94,13 @@ describe("non-strategic-upload-success page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "non-strategic-upload-success/index",
         expect.objectContaining({
-          pageTitle: "[Welsh] Non-strategic upload - File upload successful - Court and tribunal hearings - GOV.UK",
-          title: "[Welsh] File upload successful",
-          uploadedMessage: "[Welsh] Your file has been uploaded",
-          nextStepsHeading: "[Welsh] What do you want to do next?",
-          uploadAnotherLink: "[Welsh] Upload another file",
-          removeFileLink: "[Welsh] Remove file",
-          homeLink: "[Welsh] Home",
+          pageTitle: "Uwchlwytho â llaw - Wedi llwyddo i uwchlwytho ffeiliau - Gwrandawiadau llys a thribiwnlys - GOV.UK",
+          title: "Wedi llwyddo i uwchlwytho ffeiliau",
+          uploadedMessage: "Mae eich ffeil wedi'i huwchlwytho",
+          nextStepsHeading: "Beth yr ydych eisiau ei wneud nesaf?",
+          uploadAnotherLink: "uwchlwytho ffeil arall",
+          removeFileLink: "Dileu ffeil",
+          homeLink: "Tudalen hafan",
           hideLanguageToggle: true
         })
       );
@@ -140,9 +141,11 @@ describe("non-strategic-upload-success page", () => {
       expect(res.render).not.toHaveBeenCalled();
     });
 
-    it("should clear nonStrategicUploadConfirmed flag after rendering", async () => {
+    it("should clear flags and redirect on second view", async () => {
       const session = {
-        nonStrategicUploadConfirmed: true
+        nonStrategicUploadConfirmed: true,
+        nonStrategicSuccessPageViewed: true,
+        nonStrategicViewedLanguage: "en" as "en" | "cy"
       };
 
       const req = {
@@ -157,10 +160,13 @@ describe("non-strategic-upload-success page", () => {
 
       await callHandler(GET, req, res);
 
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
       expect(req.session.nonStrategicUploadConfirmed).toBeUndefined();
+      expect(req.session.nonStrategicSuccessPageViewed).toBeUndefined();
+      expect(req.session.nonStrategicViewedLanguage).toBeUndefined();
     });
 
-    it("should clear successPageViewed flag after rendering", async () => {
+    it("should clear flags and redirect when page already viewed without language change", async () => {
       const session = {
         nonStrategicUploadConfirmed: true,
         nonStrategicSuccessPageViewed: true
@@ -178,6 +184,8 @@ describe("non-strategic-upload-success page", () => {
 
       await callHandler(GET, req, res);
 
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
+      expect(req.session.nonStrategicUploadConfirmed).toBeUndefined();
       expect(req.session.nonStrategicSuccessPageViewed).toBeUndefined();
     });
 
