@@ -639,12 +639,18 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
     });
 
     test("should support Welsh language with correct translations", async ({ page }) => {
-      await completeNonStrategicUploadFlow(page);
+      // Navigate to summary page first
+      await navigateToSummaryPage(page);
+
+      // Confirm upload and navigate directly to Welsh success page
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+      // Navigate to Welsh version
+      await page.goto("/non-strategic-upload-success?lng=cy");
 
       const welshToggle = page.locator('a[href*="lng=cy"]');
       await expect(welshToggle).not.toBeVisible();
-
-      await page.goto("/non-strategic-upload-success?lng=cy");
 
       const title = page.locator(".govuk-panel__title");
       await expect(title).toHaveText("Wedi llwyddo i uwchlwytho ffeiliau");

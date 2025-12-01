@@ -42,5 +42,6 @@ declare module "express-session" {
     nonStrategicUploadSubmitted?: boolean;
     nonStrategicUploadConfirmed?: boolean;
     nonStrategicSuccessPageViewed?: boolean;
+    nonStrategicViewedLanguage?: "en" | "cy";
   }
 }

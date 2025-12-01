@@ -14,9 +14,20 @@ const getHandler = async (req: Request, res: Response) => {
     return res.redirect("/non-strategic-upload");
   }
 
-  // Clear confirmation flag after successful display
-  delete req.session.nonStrategicUploadConfirmed;
-  delete req.session.nonStrategicSuccessPageViewed;
+  const hasLangParam = req.query.lng !== undefined;
+  const previousLang = req.session.nonStrategicViewedLanguage;
+
+  // If page has been viewed and this is not a first-time language change, redirect
+  if (req.session.nonStrategicSuccessPageViewed && (!hasLangParam || previousLang === locale)) {
+    delete req.session.nonStrategicUploadConfirmed;
+    delete req.session.nonStrategicSuccessPageViewed;
+    delete req.session.nonStrategicViewedLanguage;
+    return res.redirect("/non-strategic-upload");
+  }
+
+  // Track which language was viewed and mark page as viewed
+  req.session.nonStrategicViewedLanguage = locale;
+  req.session.nonStrategicSuccessPageViewed = true;
 
   res.render("non-strategic-upload-success/index", {
     ...t,

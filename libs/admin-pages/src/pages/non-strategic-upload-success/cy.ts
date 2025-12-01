@@ -1,9 +1,9 @@
 export const cy = {
-  pageTitle: "[Welsh] Non-strategic upload - File upload successful - Court and tribunal hearings - GOV.UK",
-  title: "[Welsh] File upload successful",
-  uploadedMessage: "[Welsh] Your file has been uploaded",
-  nextStepsHeading: "[Welsh] What do you want to do next?",
-  uploadAnotherLink: "[Welsh] Upload another file",
-  removeFileLink: "[Welsh] Remove file",
-  homeLink: "[Welsh] Home"
+  pageTitle: "Uwchlwytho â llaw - Wedi llwyddo i uwchlwytho ffeiliau - Gwrandawiadau llys a thribiwnlys - GOV.UK",
+  title: "Wedi llwyddo i uwchlwytho ffeiliau",
+  uploadedMessage: "Mae eich ffeil wedi'i huwchlwytho",
+  nextStepsHeading: "Beth yr ydych eisiau ei wneud nesaf?",
+  uploadAnotherLink: "uwchlwytho ffeil arall",
+  removeFileLink: "Dileu ffeil",
+  homeLink: "Tudalen hafan"
 };
