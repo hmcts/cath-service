@@ -135,7 +135,7 @@
 
     <!-- Change cookie settings form -->
     <h2 class="govuk-heading-m">{{ changeSettings.heading }}</h2>
-    <form method="POST" action="/cookies-policy" novalidate>
+    <form method="POST" action="/cookies-policy" novalidate data-no-cookie-manager>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
 
       {{ govukRadios({
