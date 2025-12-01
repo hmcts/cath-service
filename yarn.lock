@@ -1104,17 +1104,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/notification@workspace:libs/notification":
+"@hmcts/notifications@workspace:libs/notifications":
   version: 0.0.0-use.local
-  resolution: "@hmcts/notification@workspace:libs/notification"
+  resolution: "@hmcts/notifications@workspace:libs/notifications"
   dependencies:
-    "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
-    "@hmcts/subscriptions": "workspace:*"
-    "@types/node": "npm:22.10.1"
     notifications-node-client: "npm:8.2.1"
-    typescript: "npm:5.7.2"
-    vitest: "npm:3.2.4"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2834,15 +2831,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~7.10.0"
   checksum: 10c0/439a3c7edf88a298e0c92e46f670234070b892589c3b06e82cc86c47a7e1cf220f4a4b4736ec6ac7e4b9e1c40d7b6d443a1e22f99dd17f13f9dd15de3b32011b
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:22.10.1":
-  version: 22.10.1
-  resolution: "@types/node@npm:22.10.1"
-  dependencies:
-    undici-types: "npm:~6.20.0"
-  checksum: 10c0/0fbb6d29fa35d807f0223a4db709c598ac08d66820240a2cd6a8a69b8f0bc921d65b339d850a666b43b4e779f967e6ed6cf6f0fca3575e08241e6b900364c234
   languageName: node
   linkType: hard
 
@@ -7304,16 +7292,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.7.2":
-  version: 5.7.2
-  resolution: "typescript@npm:5.7.2"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/a873118b5201b2ef332127ef5c63fb9d9c155e6fdbe211cbd9d8e65877283797cca76546bad742eea36ed7efbe3424a30376818f79c7318512064e8625d61622
-  languageName: node
-  linkType: hard
-
 "typescript@npm:5.9.3":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
@@ -7321,16 +7299,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/6bd7552ce39f97e711db5aa048f6f9995b53f1c52f7d8667c1abdc1700c68a76a308f579cd309ce6b53646deb4e9a1be7c813a93baaf0a28ccd536a30270e1c5
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@npm%3A5.7.2#optional!builtin<compat/typescript>":
-  version: 5.7.2
-  resolution: "typescript@patch:typescript@npm%3A5.7.2#optional!builtin<compat/typescript>::version=5.7.2&hash=5786d5"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/f3b8082c9d1d1629a215245c9087df56cb784f9fb6f27b5d55577a20e68afe2a889c040aacff6d27e35be165ecf9dca66e694c42eb9a50b3b2c451b36b5675cb
   languageName: node
   linkType: hard
 
@@ -7357,13 +7325,6 @@ __metadata:
   version: 2.0.5
   resolution: "undefsafe@npm:2.0.5"
   checksum: 10c0/96c0466a5fbf395917974a921d5d4eee67bca4b30d3a31ce7e621e0228c479cf893e783a109af6e14329b52fe2f0cb4108665fad2b87b0018c0df6ac771261d5
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.20.0":
-  version: 6.20.0
-  resolution: "undici-types@npm:6.20.0"
-  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
   languageName: node
   linkType: hard
 

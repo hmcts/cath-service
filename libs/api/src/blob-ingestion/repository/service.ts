@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { sendPublicationNotifications } from "@hmcts/notification";
-import { createArtefact, Provenance } from "@hmcts/publication";
+import { getLocationById } from "@hmcts/location";
+import { sendPublicationNotifications } from "@hmcts/notifications";
+import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -91,30 +92,15 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       artefactId
     });
 
-    // Trigger email notifications for subscribers (only if location exists)
+    // Trigger notification for subscribed users (fire-and-forget pattern)
     if (!noMatch) {
-      try {
-        const notificationResult = await sendPublicationNotifications({
-          publicationId: artefactId,
-          locationId: request.court_id,
-          hearingListName: request.list_type,
-          publicationDate: new Date(request.content_date).toISOString()
-        });
-
-        console.log("[Blob Ingestion] Notification process completed", {
+      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.display_from)).catch((error) => {
+        console.error("Failed to trigger publication notifications:", {
           artefactId,
-          locationId: request.court_id,
-          notificationResult,
-          timestamp: new Date().toISOString()
+          courtId: request.court_id,
+          error: error instanceof Error ? error.message : String(error)
         });
-      } catch (notificationError) {
-        console.error("[Blob Ingestion] Failed to send notifications", {
-          artefactId,
-          locationId: request.court_id,
-          error: notificationError instanceof Error ? notificationError.message : "Unknown error",
-          timestamp: new Date().toISOString()
-        });
-      }
+      });
     }
 
     return {
@@ -138,5 +124,46 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       success: false,
       message: "Internal server error during ingestion"
     };
+  }
+}
+
+async function triggerPublicationNotifications(publicationId: string, courtId: string, listTypeId: number, publicationDate: Date): Promise<void> {
+  const locationIdNum = Number.parseInt(courtId, 10);
+  if (Number.isNaN(locationIdNum)) {
+    console.error("Invalid location ID for notifications:", courtId);
+    return;
+  }
+
+  const location = await getLocationById(locationIdNum);
+  if (!location) {
+    console.error("Location not found for notifications:", courtId);
+    return;
+  }
+
+  const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+  if (!listType) {
+    console.error("List type not found for notifications:", listTypeId);
+    return;
+  }
+
+  const result = await sendPublicationNotifications({
+    publicationId,
+    locationId: String(locationIdNum),
+    locationName: location.name,
+    hearingListName: listType.englishFriendlyName,
+    publicationDate
+  });
+
+  console.log("Publication notifications sent:", {
+    publicationId,
+    totalSubscriptions: result.totalSubscriptions,
+    sent: result.sent,
+    failed: result.failed,
+    skipped: result.skipped,
+    duplicates: result.duplicates
+  });
+
+  if (result.errors.length > 0) {
+    console.error("Notification errors:", result.errors);
   }
 }
