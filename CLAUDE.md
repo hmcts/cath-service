@@ -364,6 +364,72 @@ describe('UserService', () => {
 });
 ```
 
+### E2E Testing with Playwright
+
+**Test Organization:**
+- Location: `e2e-tests/`
+- Naming: `*.spec.ts`
+- Tag nightly-only tests with `@nightly` in test title
+
+**Test Patterns (Sequential in Each Test):**
+1. Test content and functionality
+2. Test Welsh translation (same journey)
+3. Test accessibility inline (not separate)
+4. Test keyboard navigation
+5. Test responsive behavior
+
+**Example Pattern:**
+```typescript
+test('user can complete journey @nightly', async ({ page }) => {
+  // 1. Test main journey
+  await page.goto('/start');
+  await page.getByRole('button', { name: 'Start now' }).click();
+
+  // 2. Test Welsh
+  await page.getByRole('link', { name: 'Cymraeg' }).click();
+  expect(await page.getByRole('heading', { level: 1 })).toContainText('Dechrau nawr');
+
+  // 3. Test accessibility inline
+  const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+  expect(accessibilityScanResults.violations).toEqual([]);
+
+  // 4. Test keyboard navigation
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+
+  // 5. Continue journey...
+});
+```
+
+**Correct Selectors (Priority Order):**
+1. `getByRole()` - Preferred for accessibility
+2. `getByLabel()` - For form inputs
+3. `getByText()` - For specific text
+4. `getByTestId()` - Last resort only
+
+**DO NOT Test:**
+- Font sizes
+- Background colors
+- Margins/padding
+- Any visual styling
+- UI design aspects
+
+**Test Data Management:**
+- Use global-setup.ts for reference data seeding
+- Use test-specific data creation in tests
+- Clean up test data in global-teardown.ts
+
+**Coverage Expectations:**
+- Business logic: >80%
+- E2E tests: Cover critical user journeys
+- Accessibility: Test inline with journeys (not separately)
+
+**Running Tests:**
+```bash
+yarn test:e2e                   # Run E2E tests (excludes @nightly in PR workflows)
+yarn test:e2e -- --grep "@nightly"  # Run only nightly tests
+```
+
 ## Code Quality Standards
 
 - **TypeScript**: Strict mode enabled, no `any` without justification
