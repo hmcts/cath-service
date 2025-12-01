@@ -49,14 +49,14 @@ test.describe("Media Application Approval Workflow", () => {
 		test("should display media applications tile on admin dashboard", async ({ page }) => {
 			const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
 			await expect(mediaApplicationsTile).toBeVisible();
-			await expect(mediaApplicationsTile).toContainText("Manage Media Account Requests");
+			await expect(mediaApplicationsTile).toContainText("Select application to assess");
 		});
 
 		test("should navigate to media applications list", async ({ page }) => {
 			await page.click('a[href="/media-applications"]');
 			await page.waitForURL("/media-applications");
 
-			await expect(page.locator("h1")).toContainText("Media account requests");
+			await expect(page.locator("h1")).toContainText("Select application to assess");
 		});
 
 		test("should display pending applications in table", async ({ page }) => {
@@ -81,7 +81,7 @@ test.describe("Media Application Approval Workflow", () => {
 			await page.waitForURL(new RegExp(`/media-applications/${applicationId}`));
 
 			// Verify details are displayed
-			await expect(page.locator("h1")).toContainText("Media account request");
+			await expect(page.locator("h1")).toContainText("Applicant's details");
 			await expect(page.getByText("Test Media User")).toBeVisible();
 			await expect(page.getByText("test-media@example.com")).toBeVisible();
 			await expect(page.getByText("Test News Corp")).toBeVisible();
@@ -115,7 +115,7 @@ test.describe("Media Application Approval Workflow", () => {
 			await page.getByRole("button", { name: /continue/i }).click();
 
 			await page.waitForURL(new RegExp(`/media-applications/${applicationId}$`));
-			await expect(page.locator("h1")).toContainText("Media account request");
+			await expect(page.locator("h1")).toContainText("Applicant's details");
 		});
 
 		test("should complete approval workflow", async ({ page }) => {
@@ -187,7 +187,7 @@ test.describe("Media Application Approval Workflow", () => {
 			await page.goto("/media-applications");
 
 			// Should be redirected or shown error
-			await expect(page.locator("h1")).not.toContainText("Media account requests");
+			await expect(page.locator("h1")).not.toContainText("Select application to assess");
 		});
 	});
 
@@ -274,20 +274,20 @@ test.describe("Media Application Approval Workflow", () => {
 		test("should display Welsh content on applications list", async ({ page }) => {
 			await page.goto("/media-applications?lng=cy");
 
-			await expect(page.locator("h1")).toContainText("Ceisiadau am gyfrif cyfryngau");
+			await expect(page.locator("h1")).toContainText("Dewiswch gais i'w asesu");
 		});
 
 		test("should display Welsh content on application details", async ({ page }) => {
 			await page.goto(`/media-applications/${applicationId}?lng=cy`);
 
-			await expect(page.locator("h1")).toContainText("Cais am gyfrif cyfryngau");
+			await expect(page.locator("h1")).toContainText("Manylion yr ymgeisydd");
 		});
 
 		test("should display Welsh content on approval confirmation", async ({ page }) => {
 			await page.goto(`/media-applications/${applicationId}/approve?lng=cy`);
 
 			await expect(page.locator("h1")).toContainText(
-				"A ydych yn siur eich bod am gymeradwyo'r cais hwn?",
+				"A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
 			);
 		});
 	});
