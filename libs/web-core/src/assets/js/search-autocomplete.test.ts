@@ -10,7 +10,17 @@ const mockLocations = [
 
 // Mock fetch API
 global.fetch = vi.fn((url: string | URL | Request, _init?: RequestInit) => {
-  const urlObj = new URL(typeof url === "string" ? url : url.toString(), "http://localhost");
+  let urlString: string;
+  if (typeof url === "string") {
+    urlString = url;
+  } else if (url instanceof Request) {
+    urlString = url.url;
+  } else if (typeof url === "object" && "url" in url) {
+    urlString = url.url;
+  } else {
+    urlString = url.toString();
+  }
+  const urlObj = new URL(urlString, "http://localhost");
   const query = urlObj.searchParams.get("q");
   const language = urlObj.searchParams.get("language") || "en";
 

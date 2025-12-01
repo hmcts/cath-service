@@ -5,26 +5,22 @@ declare module "notifications-node-client" {
     sendEmail(
       templateId: string,
       emailAddress: string,
-      options?: {
-        personalisation?: Record<string, string>;
-        reference?: string;
-        emailReplyToId?: string;
-      }
+      personalisation?: Record<string, string>,
+      reference?: string,
+      emailReplyToId?: string
     ): Promise<{
-      data: {
+      id: string;
+      reference?: string;
+      uri: string;
+      template: {
         id: string;
-        reference?: string;
+        version: number;
         uri: string;
-        template: {
-          id: string;
-          version: number;
-          uri: string;
-        };
-        content: {
-          subject: string;
-          body: string;
-          from_email: string;
-        };
+      };
+      content: {
+        subject: string;
+        body: string;
+        from_email: string;
       };
     }>;
   }

@@ -54,13 +54,11 @@ describe("GOV Notify Service", () => {
       expect(mockSendEmail).toHaveBeenCalledWith(
         "test-template-id",
         "john@example.com",
-        expect.objectContaining({
-          personalisation: {
-            "Full name": "John Smith",
-            Employer: "BBC"
-          },
-          reference: expect.stringContaining("media-approval-")
-        })
+        {
+          "Full name": "John Smith",
+          Employer: "BBC"
+        },
+        expect.stringContaining("media-approval-")
       );
     });
 
