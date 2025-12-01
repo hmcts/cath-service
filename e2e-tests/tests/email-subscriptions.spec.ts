@@ -10,8 +10,7 @@ let testLocationWelshName: string;
 
 async function createTestLocation(): Promise<void> {
   // Generate unique ID using timestamp and random number to avoid conflicts between parallel tests
-  // Using Date.now() provides millisecond precision and a much larger namespace than the previous 9000 values
-  testLocationId = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  testLocationId = 90000 + Math.floor(Math.random() * 9000);
   testLocationName = `E2E Test Location ${Date.now()}-${Math.random()}`;
   testLocationWelshName = `Lleoliad Prawf E2E ${Date.now()}-${Math.random()}`;
 
@@ -121,8 +120,8 @@ test.describe("Email Subscriptions", () => {
       // Start from account home
       await page.goto("/account-home");
 
-      // Step 1: Navigate to subscription management
-      const emailSubsTile = page.getByRole("link", { name: /email subscriptions/i }).last();
+      // Step 1: Navigate to subscription management (3rd tile on account home)
+      const emailSubsTile = page.locator(".verified-tile").nth(2);
       await emailSubsTile.click();
       await expect(page).toHaveURL("/subscription-management");
 
