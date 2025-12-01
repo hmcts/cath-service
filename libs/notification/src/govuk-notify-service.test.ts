@@ -6,10 +6,13 @@ process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL = "test-template-id";
 
 // Mock the NotifyClient
 const mockSendEmail = vi.fn();
+
+class MockNotifyClient {
+  sendEmail = mockSendEmail;
+}
+
 vi.mock("notifications-node-client", () => ({
-  NotifyClient: vi.fn().mockImplementation(() => ({
-    sendEmail: mockSendEmail
-  }))
+  NotifyClient: MockNotifyClient
 }));
 
 // Import after mocking
