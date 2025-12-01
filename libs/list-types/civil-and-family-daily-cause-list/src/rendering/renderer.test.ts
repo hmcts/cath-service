@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderCauseListData } from "./renderer.js";
 
 describe("renderCauseListData", () => {
-  it("should render cause list data with correct header information", () => {
+  it("should render cause list data with correct header information", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z",
@@ -25,7 +25,7 @@ describe("renderCauseListData", () => {
       courtLists: []
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -37,7 +37,7 @@ describe("renderCauseListData", () => {
     expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
   });
 
-  it("should render open justice information", () => {
+  it("should render open justice information", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -56,7 +56,7 @@ describe("renderCauseListData", () => {
       courtLists: []
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -67,7 +67,7 @@ describe("renderCauseListData", () => {
     expect(result.openJustice.phone).toBe("01865 264 200");
   });
 
-  it("should render courtroom sittings correctly", () => {
+  it("should render courtroom sittings correctly", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -124,7 +124,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -147,7 +147,7 @@ describe("renderCauseListData", () => {
     expect(caseItem.caseNumber).toBe("CF-2025-001");
   });
 
-  it("should handle multiple cases in a sitting", () => {
+  it("should handle multiple cases in a sitting", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -208,7 +208,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -220,7 +220,7 @@ describe("renderCauseListData", () => {
     expect(cases[1].caseName).toBe("Smith v Smith");
   });
 
-  it("should handle reporting restrictions", () => {
+  it("should handle reporting restrictions", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -273,7 +273,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -283,7 +283,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).formattedReportingRestriction).toBe("Section 39 Children and Young Persons Act 1933");
   });
 
-  it("should format time correctly for afternoon", () => {
+  it("should format time correctly for afternoon", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T14:30:00.000Z"
@@ -330,7 +330,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -340,7 +340,7 @@ describe("renderCauseListData", () => {
     expect((sitting as any).time).toBe("2:30pm");
   });
 
-  it("should handle sitting without end time", () => {
+  it("should handle sitting without end time", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -386,7 +386,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -397,7 +397,7 @@ describe("renderCauseListData", () => {
     expect((sitting as any).durationAsMinutes).toBe(0);
   });
 
-  it("should format judiciaries with presiding judge first", () => {
+  it("should format judiciaries with presiding judge first", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -453,7 +453,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -463,7 +463,7 @@ describe("renderCauseListData", () => {
     expect((session as any).formattedJudiciaries).toBe("Judge A, Judge B");
   });
 
-  it("should handle session hearing channel", () => {
+  it("should handle session hearing channel", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -511,7 +511,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -521,7 +521,7 @@ describe("renderCauseListData", () => {
     expect((sitting as any).caseHearingChannel).toBe("VIDEO HEARING");
   });
 
-  it("should handle Welsh locale", () => {
+  it("should handle Welsh locale", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -536,7 +536,7 @@ describe("renderCauseListData", () => {
       courtLists: []
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "cy"
@@ -545,7 +545,7 @@ describe("renderCauseListData", () => {
     expect(result.header.contentDate).toContain("Ionawr");
   });
 
-  it("should handle sitting channel override", () => {
+  it("should handle sitting channel override", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -594,7 +594,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -604,7 +604,7 @@ describe("renderCauseListData", () => {
     expect((sitting as any).caseHearingChannel).toBe("IN PERSON");
   });
 
-  it("should process parties with applicant", () => {
+  it("should process parties with applicant", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -662,7 +662,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -672,7 +672,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).applicant).toBe("Mr John Paul Smith");
   });
 
-  it("should process parties with respondent representative", () => {
+  it("should process parties with respondent representative", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -727,7 +727,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -737,7 +737,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).respondentRepresentative).toBe("Legal LLP");
   });
 
-  it("should process parties with applicant representative", () => {
+  it("should process parties with applicant representative", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -793,7 +793,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -803,7 +803,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).applicantRepresentative).toBe("Jane Doe");
   });
 
-  it("should handle multiple parties in same role", () => {
+  it("should handle multiple parties in same role", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -866,7 +866,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -876,7 +876,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).respondent).toBe("John Smith, Jane Doe");
   });
 
-  it("should handle party with alternative role format", () => {
+  it("should handle party with alternative role format", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -931,7 +931,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -941,7 +941,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).applicant).toBe("Test Corp");
   });
 
-  it("should handle party with empty details", () => {
+  it("should handle party with empty details", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -994,7 +994,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -1004,7 +1004,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).applicant).toBe("");
   });
 
-  it("should handle multiple reporting restrictions", () => {
+  it("should handle multiple reporting restrictions", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -1052,7 +1052,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -1062,7 +1062,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).formattedReportingRestriction).toBe("Section 39, Section 45");
   });
 
-  it("should handle empty reporting restrictions", () => {
+  it("should handle empty reporting restrictions", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -1110,7 +1110,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"
@@ -1120,7 +1120,7 @@ describe("renderCauseListData", () => {
     expect((caseItem as any).formattedReportingRestriction).toBe("");
   });
 
-  it("should handle party with unknown role", () => {
+  it("should handle party with unknown role", async () => {
     const inputData = {
       document: {
         publicationDate: "2025-11-12T09:00:00.000Z"
@@ -1176,7 +1176,7 @@ describe("renderCauseListData", () => {
       ]
     };
 
-    const result = renderCauseListData(inputData, {
+    const result = await renderCauseListData(inputData, {
       locationId: "240",
       contentDate: new Date("2025-01-01"),
       locale: "en"

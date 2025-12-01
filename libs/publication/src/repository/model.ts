@@ -9,4 +9,5 @@ export interface Artefact {
   displayTo: Date;
   isFlatFile: boolean;
   provenance: string;
+  noMatch: boolean;
 }

@@ -133,8 +133,8 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.tiles).toHaveLength(3);
     });
@@ -158,8 +158,8 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.tiles).toHaveLength(3);
     });
@@ -183,8 +183,8 @@ describe("admin dashboard page", () => {
       const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
       await handler(req, res);
 
-      const renderCall = res.render.mock.calls[0];
-      const renderData = renderCall[1];
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
 
       expect(renderData.tiles).toHaveLength(4);
       expect(renderData.tiles[3]).toEqual({

@@ -15,7 +15,7 @@ export const GET = async (req: Request, res: Response) => {
   let preselectedLocation: { id: number; name: string; welshName: string } | undefined;
 
   if (locationId) {
-    const location = getLocationById(locationId);
+    const location = await getLocationById(locationId);
     if (location) {
       preselectedLocation = {
         id: location.locationId,
@@ -56,7 +56,7 @@ export const POST = async (req: Request, res: Response) => {
 
   const locationIdNum = Number.parseInt(selectedLocationId, 10);
 
-  if (Number.isNaN(locationIdNum) || !getLocationById(locationIdNum)) {
+  if (Number.isNaN(locationIdNum) || !(await getLocationById(locationIdNum))) {
     const errors: SearchError[] = [
       {
         text: t.errorMessage,

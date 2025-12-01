@@ -1,3 +1,4 @@
+import * as accountQuery from "@hmcts/account/repository/query";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as tokenClient from "../../cft-idam/token-client.js";
@@ -8,9 +9,7 @@ import { GET } from "./index.js";
 vi.mock("../../cft-idam/token-client.js");
 vi.mock("../../config/cft-idam-config.js");
 vi.mock("../../role-service/index.js");
-vi.mock("@hmcts/account/repository/query", () => ({
-  createOrUpdateUser: vi.fn()
-}));
+vi.mock("@hmcts/account/repository/query");
 
 describe("CFT Login Return Handler", () => {
   let mockReq: Partial<Request>;
@@ -42,6 +41,18 @@ describe("CFT Login Return Handler", () => {
       redirectUri: "https://localhost:8080/cft-login/return",
       authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
+    });
+
+    vi.mocked(accountQuery.createOrUpdateUser).mockResolvedValue({
+      userId: "user-123",
+      email: "test@example.com",
+      firstName: "Test",
+      surname: "User",
+      userProvenance: "CFT_IDAM",
+      userProvenanceId: "cft-id-123",
+      role: "VERIFIED",
+      createdDate: new Date(),
+      lastSignedInDate: null
     });
   });
 

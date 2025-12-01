@@ -47,10 +47,11 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
-    });
+      supersededCount: 0,
+      noMatch: false
+    } as any);
 
-    const result = await createArtefact(artefactData);
+    const result = await createArtefact(artefactData as any);
 
     expect(result).toBe(artefactData.artefactId);
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
@@ -106,8 +107,9 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date("2025-10-19"),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
-    });
+      supersededCount: 0,
+      noMatch: false
+    } as any);
 
     vi.mocked(prisma.artefact.update).mockResolvedValue({
       artefactId: existingArtefactId,
@@ -121,10 +123,11 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 1
-    });
+      supersededCount: 1,
+      noMatch: false
+    } as any);
 
-    const result = await createArtefact(artefactData);
+    const result = await createArtefact(artefactData as any);
 
     expect(result).toBe(existingArtefactId);
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
@@ -180,10 +183,11 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
-    });
+      supersededCount: 0,
+      noMatch: false
+    } as any);
 
-    await createArtefact(artefactData);
+    await createArtefact(artefactData as any);
 
     expect(prisma.artefact.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -219,10 +223,11 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
-    });
+      supersededCount: 0,
+      noMatch: false
+    } as any);
 
-    await createArtefact(artefactData);
+    await createArtefact(artefactData as any);
 
     expect(prisma.artefact.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -281,10 +286,13 @@ describe("createArtefact", () => {
         displayFrom: artefactData.displayFrom,
         displayTo: artefactData.displayTo,
         lastReceivedDate: new Date(),
-        isFlatFile: true
-      });
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any);
 
-      await createArtefact(artefactData);
+      await createArtefact(artefactData as any);
 
       expect(prisma.artefact.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -325,10 +333,11 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
-    });
+      supersededCount: 0,
+      noMatch: false
+    } as any);
 
-    await createArtefact(artefactData);
+    await createArtefact(artefactData as any);
 
     expect(prisma.artefact.create).toHaveBeenCalledWith({
       data: {
@@ -363,7 +372,11 @@ describe("getArtefactsByLocation", () => {
         language: "ENGLISH",
         displayFrom: new Date("2025-10-20"),
         displayTo: new Date("2025-10-30"),
-        lastReceivedDate: new Date()
+        lastReceivedDate: new Date(),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
       },
       {
         artefactId: "550e8400-e29b-41d4-a716-446655440001",
@@ -374,9 +387,13 @@ describe("getArtefactsByLocation", () => {
         language: "WELSH",
         displayFrom: new Date("2025-10-22"),
         displayTo: new Date("2025-10-28"),
-        lastReceivedDate: new Date()
+        lastReceivedDate: new Date(),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
       }
-    ];
+    ] as any;
 
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
 
@@ -416,9 +433,13 @@ describe("getArtefactsByIds", () => {
         language: "ENGLISH",
         displayFrom: new Date("2025-10-20"),
         displayTo: new Date("2025-10-30"),
-        lastReceivedDate: new Date()
+        lastReceivedDate: new Date(),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
       }
-    ];
+    ] as any;
 
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
 
@@ -446,7 +467,11 @@ describe("getArtefactsByIds", () => {
         language: "ENGLISH",
         displayFrom: new Date("2025-10-20"),
         displayTo: new Date("2025-10-30"),
-        lastReceivedDate: new Date()
+        lastReceivedDate: new Date(),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
       },
       {
         artefactId: "550e8400-e29b-41d4-a716-446655440001",
@@ -457,9 +482,13 @@ describe("getArtefactsByIds", () => {
         language: "WELSH",
         displayFrom: new Date("2025-10-22"),
         displayTo: new Date("2025-10-28"),
-        lastReceivedDate: new Date()
+        lastReceivedDate: new Date(),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
       }
-    ];
+    ] as any;
 
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
 

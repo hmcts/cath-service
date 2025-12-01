@@ -1,9 +1,48 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Mock the queries module to prevent Prisma initialization
+vi.mock("../repository/queries.js", () => ({
+  getAllJurisdictions: vi.fn(() =>
+    Promise.resolve([
+      { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
+      { jurisdictionId: 2, name: "Criminal", welshName: "Troseddol" },
+      { jurisdictionId: 3, name: "Family", welshName: "Teulu" },
+      { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" },
+      { jurisdictionId: 5, name: "Magistrates", welshName: "Ynadon" },
+      { jurisdictionId: 6, name: "Single Justice", welshName: "Ynad Unigol" }
+    ])
+  ),
+  getAllRegions: vi.fn(() =>
+    Promise.resolve([
+      { regionId: 1, name: "London", welshName: "Llundain" },
+      { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
+      { regionId: 3, name: "South East", welshName: "De-ddwyrain Lloegr" },
+      { regionId: 4, name: "North West", welshName: "Gogledd-orllewin Lloegr" },
+      { regionId: 5, name: "Wales", welshName: "Cymru" },
+      { regionId: 6, name: "National", welshName: "Cenedlaethol" }
+    ])
+  ),
+  getAllSubJurisdictions: vi.fn(() =>
+    Promise.resolve([
+      { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
+      { subJurisdictionId: 2, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 2 },
+      { subJurisdictionId: 3, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 5 },
+      { subJurisdictionId: 4, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 3 },
+      { subJurisdictionId: 5, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
+      { subJurisdictionId: 6, name: "Immigration Tribunal", welshName: "Tribiwnlys Mewnfudo", jurisdictionId: 4 },
+      { subJurisdictionId: 7, name: "Social Security Tribunal", welshName: "Tribiwnlys Nawdd Cymdeithasol", jurisdictionId: 4 },
+      { subJurisdictionId: 8, name: "Tax Tribunal", welshName: "Tribiwnlys Treth", jurisdictionId: 4 },
+      { subJurisdictionId: 9, name: "Mental Health Tribunal", welshName: "Tribiwnlys Iechyd Meddwl", jurisdictionId: 4 },
+      { subJurisdictionId: 10, name: "Single Justice Procedure", welshName: "Gweithdrefn Ynad Unigol", jurisdictionId: 6 }
+    ])
+  )
+}));
+
 import { buildJurisdictionItems, buildRegionItems, buildSubJurisdictionItemsByJurisdiction, getSubJurisdictionsForJurisdiction } from "./service.js";
 
 describe("buildJurisdictionItems", () => {
-  it("should return all jurisdictions as items", () => {
-    const items = buildJurisdictionItems([], "en");
+  it("should return all jurisdictions as items", async () => {
+    const items = await buildJurisdictionItems([], "en");
 
     expect(items.length).toBeGreaterThan(0);
     expect(items.every((item) => typeof item.value === "string")).toBe(true);
@@ -12,8 +51,8 @@ describe("buildJurisdictionItems", () => {
     expect(items.every((item) => typeof item.jurisdictionId === "number")).toBe(true);
   });
 
-  it("should mark selected jurisdictions as checked", () => {
-    const items = buildJurisdictionItems([1, 2], "en");
+  it("should mark selected jurisdictions as checked", async () => {
+    const items = await buildJurisdictionItems([1, 2], "en");
 
     const checkedItems = items.filter((item) => item.checked);
     const uncheckedItems = items.filter((item) => !item.checked);
@@ -23,56 +62,56 @@ describe("buildJurisdictionItems", () => {
     expect(uncheckedItems.every((item) => ![1, 2].includes(item.jurisdictionId))).toBe(true);
   });
 
-  it("should use English names when locale is en", () => {
-    const items = buildJurisdictionItems([], "en");
+  it("should use English names when locale is en", async () => {
+    const items = await buildJurisdictionItems([], "en");
 
     // Check that text doesn't contain Welsh-specific characters patterns
     expect(items.some((item) => item.text.length > 0)).toBe(true);
   });
 
-  it("should use Welsh names when locale is cy", () => {
-    const items = buildJurisdictionItems([], "cy");
+  it("should use Welsh names when locale is cy", async () => {
+    const items = await buildJurisdictionItems([], "cy");
 
     // Check that we get items with text
     expect(items.some((item) => item.text.length > 0)).toBe(true);
   });
 
-  it("should sort items alphabetically by text", () => {
-    const items = buildJurisdictionItems([], "en");
+  it("should sort items alphabetically by text", async () => {
+    const items = await buildJurisdictionItems([], "en");
 
     for (let i = 0; i < items.length - 1; i++) {
       expect(items[i].text.localeCompare(items[i + 1].text)).toBeLessThanOrEqual(0);
     }
   });
 
-  it("should include data-jurisdiction attribute for each item", () => {
-    const items = buildJurisdictionItems([], "en");
+  it("should include data-jurisdiction attribute for each item", async () => {
+    const items = await buildJurisdictionItems([], "en");
 
     expect(items.every((item) => item.attributes["data-jurisdiction"] === item.value)).toBe(true);
     expect(items.every((item) => item.attributes["data-jurisdiction"] === item.jurisdictionId.toString())).toBe(true);
   });
 
-  it("should handle empty selected jurisdictions array", () => {
-    const items = buildJurisdictionItems([], "en");
+  it("should handle empty selected jurisdictions array", async () => {
+    const items = await buildJurisdictionItems([], "en");
 
     expect(items.every((item) => item.checked === false)).toBe(true);
   });
 
-  it("should handle single selected jurisdiction", () => {
-    const items = buildJurisdictionItems([1], "en");
+  it("should handle single selected jurisdiction", async () => {
+    const items = await buildJurisdictionItems([1], "en");
 
     const checkedItems = items.filter((item) => item.checked);
     expect(checkedItems.length).toBe(1);
     expect(checkedItems[0].jurisdictionId).toBe(1);
   });
 
-  it("should include subJurisdictionLabel when provided", () => {
+  it("should include subJurisdictionLabel when provided", async () => {
     const subJurisdictionLabels = {
       1: "Select court type",
       2: "Select tribunal type"
     };
 
-    const items = buildJurisdictionItems([1], "en", subJurisdictionLabels);
+    const items = await buildJurisdictionItems([1], "en", subJurisdictionLabels);
 
     const itemWithLabel = items.find((item) => item.jurisdictionId === 1);
     expect(itemWithLabel?.subJurisdictionLabel).toBe("Select court type");
@@ -81,29 +120,29 @@ describe("buildJurisdictionItems", () => {
     expect(itemWithoutLabel?.subJurisdictionLabel).toBeUndefined();
   });
 
-  it("should handle subJurisdictionLabels being undefined", () => {
-    const items = buildJurisdictionItems([1], "en", undefined);
+  it("should handle subJurisdictionLabels being undefined", async () => {
+    const items = await buildJurisdictionItems([1], "en", undefined);
 
     expect(items.every((item) => item.subJurisdictionLabel === undefined)).toBe(true);
   });
 
-  it("should sort Welsh items correctly", () => {
-    const items = buildJurisdictionItems([], "cy");
+  it("should sort Welsh items correctly", async () => {
+    const items = await buildJurisdictionItems([], "cy");
 
     for (let i = 0; i < items.length - 1; i++) {
       expect(items[i].text.localeCompare(items[i + 1].text)).toBeLessThanOrEqual(0);
     }
   });
 
-  it("should convert jurisdictionId to string for value", () => {
-    const items = buildJurisdictionItems([], "en");
+  it("should convert jurisdictionId to string for value", async () => {
+    const items = await buildJurisdictionItems([], "en");
 
     expect(items.every((item) => typeof item.value === "string")).toBe(true);
     expect(items.every((item) => Number.parseInt(item.value, 10) === item.jurisdictionId)).toBe(true);
   });
 
-  it("should handle multiple selected jurisdictions", () => {
-    const items = buildJurisdictionItems([1, 2, 3], "en");
+  it("should handle multiple selected jurisdictions", async () => {
+    const items = await buildJurisdictionItems([1, 2, 3], "en");
 
     const checkedItems = items.filter((item) => item.checked);
     expect(checkedItems.length).toBe(3);
@@ -112,8 +151,8 @@ describe("buildJurisdictionItems", () => {
 });
 
 describe("buildRegionItems", () => {
-  it("should return all regions as items", () => {
-    const items = buildRegionItems([], "en");
+  it("should return all regions as items", async () => {
+    const items = await buildRegionItems([], "en");
 
     expect(items.length).toBeGreaterThan(0);
     expect(items.every((item) => typeof item.value === "string")).toBe(true);
@@ -121,8 +160,8 @@ describe("buildRegionItems", () => {
     expect(items.every((item) => typeof item.checked === "boolean")).toBe(true);
   });
 
-  it("should mark selected regions as checked", () => {
-    const items = buildRegionItems([1, 2], "en");
+  it("should mark selected regions as checked", async () => {
+    const items = await buildRegionItems([1, 2], "en");
 
     const checkedItems = items.filter((item) => item.checked);
     const uncheckedItems = items.filter((item) => !item.checked);
@@ -131,49 +170,49 @@ describe("buildRegionItems", () => {
     expect(uncheckedItems.length).toBeGreaterThan(0);
   });
 
-  it("should use English names when locale is en", () => {
-    const items = buildRegionItems([], "en");
+  it("should use English names when locale is en", async () => {
+    const items = await buildRegionItems([], "en");
 
     expect(items.some((item) => item.text.length > 0)).toBe(true);
   });
 
-  it("should use Welsh names when locale is cy", () => {
-    const items = buildRegionItems([], "cy");
+  it("should use Welsh names when locale is cy", async () => {
+    const items = await buildRegionItems([], "cy");
 
     expect(items.some((item) => item.text.length > 0)).toBe(true);
   });
 
-  it("should sort items alphabetically by text", () => {
-    const items = buildRegionItems([], "en");
+  it("should sort items alphabetically by text", async () => {
+    const items = await buildRegionItems([], "en");
 
     for (let i = 0; i < items.length - 1; i++) {
       expect(items[i].text.localeCompare(items[i + 1].text)).toBeLessThanOrEqual(0);
     }
   });
 
-  it("should handle empty selected regions array", () => {
-    const items = buildRegionItems([], "en");
+  it("should handle empty selected regions array", async () => {
+    const items = await buildRegionItems([], "en");
 
     expect(items.every((item) => item.checked === false)).toBe(true);
   });
 
-  it("should handle single selected region", () => {
-    const items = buildRegionItems([1], "en");
+  it("should handle single selected region", async () => {
+    const items = await buildRegionItems([1], "en");
 
     const checkedItems = items.filter((item) => item.checked);
     expect(checkedItems.length).toBe(1);
   });
 
-  it("should sort Welsh items correctly", () => {
-    const items = buildRegionItems([], "cy");
+  it("should sort Welsh items correctly", async () => {
+    const items = await buildRegionItems([], "cy");
 
     for (let i = 0; i < items.length - 1; i++) {
       expect(items[i].text.localeCompare(items[i + 1].text)).toBeLessThanOrEqual(0);
     }
   });
 
-  it("should handle multiple selected regions", () => {
-    const items = buildRegionItems([1, 2, 3], "en");
+  it("should handle multiple selected regions", async () => {
+    const items = await buildRegionItems([1, 2, 3], "en");
 
     const checkedItems = items.filter((item) => item.checked);
     expect(checkedItems.length).toBe(3);
@@ -181,15 +220,15 @@ describe("buildRegionItems", () => {
 });
 
 describe("buildSubJurisdictionItemsByJurisdiction", () => {
-  it("should return sub-jurisdictions grouped by jurisdiction", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "en");
+  it("should return sub-jurisdictions grouped by jurisdiction", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "en");
 
     expect(typeof result).toBe("object");
     expect(Object.keys(result).length).toBeGreaterThan(0);
   });
 
-  it("should return arrays of items for each jurisdiction", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "en");
+  it("should return arrays of items for each jurisdiction", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "en");
 
     for (const jurisdictionId in result) {
       expect(Array.isArray(result[jurisdictionId])).toBe(true);
@@ -199,8 +238,8 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     }
   });
 
-  it("should mark selected sub-jurisdictions as checked", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([1, 2], "en");
+  it("should mark selected sub-jurisdictions as checked", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([1, 2], "en");
 
     let totalChecked = 0;
     for (const jurisdictionId in result) {
@@ -211,8 +250,8 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     expect(totalChecked).toBe(2);
   });
 
-  it("should use English names when locale is en", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "en");
+  it("should use English names when locale is en", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "en");
 
     for (const jurisdictionId in result) {
       if (result[jurisdictionId].length > 0) {
@@ -221,8 +260,8 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     }
   });
 
-  it("should use Welsh names when locale is cy", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "cy");
+  it("should use Welsh names when locale is cy", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "cy");
 
     for (const jurisdictionId in result) {
       if (result[jurisdictionId].length > 0) {
@@ -231,8 +270,8 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     }
   });
 
-  it("should sort items alphabetically by text within each jurisdiction", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "en");
+  it("should sort items alphabetically by text within each jurisdiction", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "en");
 
     for (const jurisdictionId in result) {
       const items = result[jurisdictionId];
@@ -242,16 +281,16 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     }
   });
 
-  it("should handle empty selected sub-jurisdictions array", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "en");
+  it("should handle empty selected sub-jurisdictions array", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "en");
 
     for (const jurisdictionId in result) {
       expect(result[jurisdictionId].every((item) => item.checked === false)).toBe(true);
     }
   });
 
-  it("should handle single selected sub-jurisdiction", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([1], "en");
+  it("should handle single selected sub-jurisdiction", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([1], "en");
 
     let totalChecked = 0;
     for (const jurisdictionId in result) {
@@ -262,8 +301,8 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     expect(totalChecked).toBe(1);
   });
 
-  it("should handle multiple selected sub-jurisdictions", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([1, 2, 3], "en");
+  it("should handle multiple selected sub-jurisdictions", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([1, 2, 3], "en");
 
     let totalChecked = 0;
     for (const jurisdictionId in result) {
@@ -274,43 +313,43 @@ describe("buildSubJurisdictionItemsByJurisdiction", () => {
     expect(totalChecked).toBe(3);
   });
 
-  it("should include all jurisdictions in the result", () => {
-    const result = buildSubJurisdictionItemsByJurisdiction([], "en");
+  it("should include all jurisdictions in the result", async () => {
+    const result = await buildSubJurisdictionItemsByJurisdiction([], "en");
 
     expect(Object.keys(result).length).toBeGreaterThan(0);
   });
 });
 
 describe("getSubJurisdictionsForJurisdiction", () => {
-  it("should return sub-jurisdiction IDs for a given jurisdiction", () => {
-    const result = getSubJurisdictionsForJurisdiction(1);
+  it("should return sub-jurisdiction IDs for a given jurisdiction", async () => {
+    const result = await getSubJurisdictionsForJurisdiction(1);
 
     expect(Array.isArray(result)).toBe(true);
     expect(result.every((id) => typeof id === "number")).toBe(true);
   });
 
-  it("should only return sub-jurisdictions that belong to the specified jurisdiction", () => {
+  it("should only return sub-jurisdictions that belong to the specified jurisdiction", async () => {
     const jurisdictionId = 1;
-    const result = getSubJurisdictionsForJurisdiction(jurisdictionId);
+    const result = await getSubJurisdictionsForJurisdiction(jurisdictionId);
 
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it("should return an empty array for jurisdiction with no sub-jurisdictions", () => {
-    const result = getSubJurisdictionsForJurisdiction(999);
+  it("should return an empty array for jurisdiction with no sub-jurisdictions", async () => {
+    const result = await getSubJurisdictionsForJurisdiction(999);
 
     expect(result).toEqual([]);
   });
 
-  it("should return different results for different jurisdictions", () => {
-    const result1 = getSubJurisdictionsForJurisdiction(1);
-    const result2 = getSubJurisdictionsForJurisdiction(2);
+  it("should return different results for different jurisdictions", async () => {
+    const result1 = await getSubJurisdictionsForJurisdiction(1);
+    const result2 = await getSubJurisdictionsForJurisdiction(2);
 
     expect(result1).not.toEqual(result2);
   });
 
-  it("should return array of sub-jurisdiction IDs only", () => {
-    const result = getSubJurisdictionsForJurisdiction(1);
+  it("should return array of sub-jurisdiction IDs only", async () => {
+    const result = await getSubJurisdictionsForJurisdiction(1);
 
     result.forEach((id) => {
       expect(typeof id).toBe("number");
