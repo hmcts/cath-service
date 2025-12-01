@@ -20,6 +20,9 @@ const SECRET_MAPPINGS = {
   'cft-valid-test-account-password': 'CFT_VALID_TEST_ACCOUNT_PASSWORD',
   'cft-invalid-test-account': 'CFT_INVALID_TEST_ACCOUNT',
   'cft-invalid-test-account-password': 'CFT_INVALID_TEST_ACCOUNT_PASSWORD',
+  'app-tenant-id': 'AZURE_TENANT_ID',
+  'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
+  'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
 };
 
 async function loadCredentialsFromAzure() {
