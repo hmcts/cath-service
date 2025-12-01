@@ -5,7 +5,7 @@ import cy from "./cy.js";
 import en from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const lang = req.query.lng === "cy" ? cy : en;
+  const lang = req.query.lng === "cy" ? cy : en; 
 
   try {
     const applications = await getPendingApplications();
