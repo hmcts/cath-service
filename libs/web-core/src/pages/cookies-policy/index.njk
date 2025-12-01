@@ -1,0 +1,206 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block head %}
+  {{ super() }}
+  <link rel="alternate" hreflang="en" href="/cookies-policy">
+  <link rel="alternate" hreflang="cy" href="/cookies-policy?lng=cy">
+{% endblock %}
+
+{% block backLink %}{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if saved %}
+      {{ govukNotificationBanner({
+        type: "success",
+        titleText: successBanner,
+        html: "<p class='govuk-notification-banner__heading'>" + successMessage + "</p>"
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <!-- Introduction section -->
+    <p class="govuk-body">{{ intro.paragraph1 }}</p>
+    <p class="govuk-body">{{ intro.paragraph2 }}</p>
+    <ul class="govuk-list govuk-list--bullet">
+      {% for item in intro.list %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <p class="govuk-body">
+      {{ intro.manageCookiesText }}<a href="{{ intro.manageCookiesUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ intro.manageCookiesLink }}</a>.
+    </p>
+
+    <!-- Main heading -->
+    <h2 class="govuk-heading-m">{{ mainHeading }}</h2>
+
+    <!-- Google Analytics section -->
+    <h3 class="govuk-heading-s">{{ sections.analytics.heading }}</h3>
+    <p class="govuk-body">{{ sections.analytics.description }}</p>
+    <p class="govuk-body">{{ sections.analytics.storageInfo }}</p>
+    <ul class="govuk-list govuk-list--bullet">
+      {% for item in sections.analytics.storageList %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <p class="govuk-body">
+      {{ sections.analytics.disclaimer | replace(sections.analytics.privacyPolicyLink, "<a href='" + sections.analytics.privacyPolicyUrl + "' class='govuk-link' target='_blank' rel='noopener noreferrer'>" + sections.analytics.privacyPolicyLink + "</a>") | safe }}
+    </p>
+    <p class="govuk-body">
+      {{ sections.analytics.optOutText | replace(sections.analytics.optOutLink, "<a href='" + sections.analytics.optOutUrl + "' class='govuk-link' target='_blank' rel='noopener noreferrer'>" + sections.analytics.optOutLink + "</a>") | safe }}
+    </p>
+    <p class="govuk-body">{{ sections.analytics.tableHeading }}</p>
+    {{ govukTable({
+      head: [
+        { text: tableHeaders.name },
+        { text: tableHeaders.purpose },
+        { text: tableHeaders.expiry }
+      ],
+      rows: sections.analytics.cookies
+    }) }}
+
+    <!-- Intro message section -->
+    <h3 class="govuk-heading-s">{{ sections.introMessage.heading }}</h3>
+    <p class="govuk-body">{{ sections.introMessage.description }}</p>
+    {{ govukTable({
+      head: [
+        { text: tableHeaders.name },
+        { text: tableHeaders.purpose },
+        { text: tableHeaders.expiry }
+      ],
+      rows: sections.introMessage.cookies
+    }) }}
+
+    <!-- Session section -->
+    <h3 class="govuk-heading-s">{{ sections.session.heading }}</h3>
+    <p class="govuk-body">{{ sections.session.description }}</p>
+    {{ govukTable({
+      head: [
+        { text: tableHeaders.name },
+        { text: tableHeaders.purpose },
+        { text: tableHeaders.expiry }
+      ],
+      rows: sections.session.cookies
+    }) }}
+
+    <!-- Authentication section -->
+    <h3 class="govuk-heading-s">{{ sections.authentication.heading }}</h3>
+    <p class="govuk-body">{{ sections.authentication.description }}</p>
+    {{ govukTable({
+      head: [
+        { text: tableHeaders.name },
+        { text: tableHeaders.purpose },
+        { text: tableHeaders.expiry }
+      ],
+      rows: sections.authentication.cookies
+    }) }}
+
+    <!-- Security section -->
+    <h3 class="govuk-heading-s">{{ sections.security.heading }}</h3>
+    <p class="govuk-body">{{ sections.security.description }}</p>
+    {{ govukTable({
+      head: [
+        { text: tableHeaders.name },
+        { text: tableHeaders.purpose },
+        { text: tableHeaders.expiry }
+      ],
+      rows: sections.security.cookies
+    }) }}
+
+    <!-- Performance monitoring section -->
+    <h3 class="govuk-heading-s">{{ sections.performance.heading }}</h3>
+    <p class="govuk-body">{{ sections.performance.description }}</p>
+    <ul class="govuk-list govuk-list--bullet">
+      {% for item in sections.performance.storageList %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <p class="govuk-body">{{ sections.performance.disclaimer }}</p>
+    {{ govukTable({
+      head: [
+        { text: tableHeaders.name },
+        { text: tableHeaders.purpose },
+        { text: tableHeaders.expiry }
+      ],
+      rows: sections.performance.cookies
+    }) }}
+
+    <!-- Change cookie settings form -->
+    <h2 class="govuk-heading-m">{{ changeSettings.heading }}</h2>
+    <form method="POST" action="/cookies-policy" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      {{ govukRadios({
+        name: "analytics",
+        fieldset: {
+          legend: {
+            text: changeSettings.analyticsLegend,
+            classes: "govuk-fieldset__legend--s"
+          }
+        },
+        items: [
+          {
+            value: "on",
+            text: changeSettings.useAnalytics,
+            checked: cookiePreferences.analytics === true
+          },
+          {
+            value: "off",
+            text: changeSettings.doNotUseAnalytics,
+            checked: cookiePreferences.analytics !== true
+          }
+        ]
+      }) }}
+
+      {{ govukRadios({
+        name: "performance",
+        fieldset: {
+          legend: {
+            text: changeSettings.performanceLegend,
+            classes: "govuk-fieldset__legend--s"
+          }
+        },
+        items: [
+          {
+            value: "on",
+            text: changeSettings.usePerformance,
+            checked: cookiePreferences.performance === true
+          },
+          {
+            value: "off",
+            text: changeSettings.doNotUsePerformance,
+            checked: cookiePreferences.performance !== true
+          }
+        ]
+      }) }}
+
+      {{ govukButton({
+        text: changeSettings.saveButton,
+        classes: "govuk-button"
+      }) }}
+    </form>
+
+    <!-- Contact details -->
+    {{ govukDetails({
+      summaryText: contact.heading,
+      html: "<strong>" + contact.telephone + "</strong><br>" + contact.phone + "<br>" + contact.hours
+    }) }}
+
+    <!-- Back to top -->
+    <p class="govuk-body">
+      <a href="#" class="govuk-link back-to-top-link" style="text-decoration: none;" aria-label="{{ backToTop.ariaLabel }}">
+        <span aria-hidden="true">↑</span> {{ backToTop.text }}
+      </a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
