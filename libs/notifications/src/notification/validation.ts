@@ -1,4 +1,7 @@
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Safe email regex - uses specific character sets to avoid ReDoS
+// Allows alphanumeric, dots, underscores, percent, plus, and hyphens in local part
+// Allows alphanumeric, dots, and hyphens in domain part
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export function isValidEmail(email: string): boolean {
   if (!email || typeof email !== "string") {

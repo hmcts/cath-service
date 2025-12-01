@@ -190,4 +190,144 @@ describe("notification-service", () => {
       })
     ).rejects.toThrow("Invalid publication event");
   });
+
+  it("should throw error for invalid location ID", async () => {
+    await expect(
+      sendPublicationNotifications({
+        publicationId: "pub-1",
+        locationId: "invalid-id",
+        locationName: "Test Court",
+        hearingListName: "Daily Cause List",
+        publicationDate: new Date("2024-12-01")
+      })
+    ).rejects.toThrow("Invalid location ID");
+  });
+
+  it("should skip users with no email address", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        locationId: 1,
+        user: {
+          email: null,
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findExistingNotification, createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(findExistingNotification).mockResolvedValue(null);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      status: "Skipped",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(updateNotificationStatus).toHaveBeenCalledWith("notif-1", "Skipped", undefined, "No email address");
+  });
+
+  it("should handle email sending failure", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        locationId: 1,
+        user: {
+          email: "user1@example.com",
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findExistingNotification, createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(findExistingNotification).mockResolvedValue(null);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      status: "Pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: false,
+      error: "API Error"
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(result.errors).toContain("User user-1: API Error");
+    expect(updateNotificationStatus).toHaveBeenCalledWith("notif-1", "Failed", undefined, "API Error");
+  });
+
+  it("should handle exceptions during notification processing", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        locationId: 1,
+        user: {
+          email: "user1@example.com",
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findExistingNotification } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(findExistingNotification).mockRejectedValue(new Error("Database connection error"));
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(result.errors).toContain("User user-1: Database connection error");
+  });
 });

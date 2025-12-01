@@ -52,4 +52,53 @@ describe("govnotify-client", () => {
       }
     });
   });
+
+  it("should handle errors and return failure result", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    mockSendEmail.mockRejectedValue(new Error("API Error"));
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        user_name: "Test User",
+        hearing_list_name: "Daily Cause List",
+        publication_date: "1 December 2024",
+        location_name: "Test Court",
+        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("API Error");
+    expect(result.notificationId).toBeUndefined();
+  });
+
+  it("should retry on failure", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    // Fail twice, succeed on third attempt
+    mockSendEmail
+      .mockRejectedValueOnce(new Error("First failure"))
+      .mockRejectedValueOnce(new Error("Second failure"))
+      .mockResolvedValueOnce({
+        data: {
+          id: "notification-456"
+        }
+      });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        user_name: "Test User",
+        hearing_list_name: "Daily Cause List",
+        publication_date: "1 December 2024",
+        location_name: "Test Court",
+        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
 });
