@@ -3,16 +3,21 @@ import AxeBuilder from "@axe-core/playwright";
 import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 import { prisma } from "@hmcts/postgres";
 
-// Store test location ID per test
-let testLocationId: number;
-let testLocationName: string;
-let testLocationWelshName: string;
+// Store test location data per test to avoid parallel test conflicts
+interface TestLocationData {
+  locationId: number;
+  name: string;
+  welshName: string;
+}
 
-async function createTestLocation(): Promise<void> {
+// Map to store test-specific location data, keyed by test ID
+const testLocationMap = new Map<string, TestLocationData>();
+
+async function createTestLocation(): Promise<TestLocationData> {
   // Generate unique ID using timestamp and random number to avoid conflicts between parallel tests
-  testLocationId = 90000 + Math.floor(Math.random() * 9000);
-  testLocationName = `E2E Test Location ${Date.now()}-${Math.random()}`;
-  testLocationWelshName = `Lleoliad Prawf E2E ${Date.now()}-${Math.random()}`;
+  const testLocationId = 90000 + Math.floor(Math.random() * 9000);
+  const testLocationName = `E2E Test Location ${Date.now()}-${Math.random()}`;
+  const testLocationWelshName = `Lleoliad Prawf E2E ${Date.now()}-${Math.random()}`;
 
   // Get the first sub-jurisdiction and region to link to
   const subJurisdiction = await prisma.subJurisdiction.findFirst();
@@ -61,20 +66,26 @@ async function createTestLocation(): Promise<void> {
       },
     },
   });
+
+  return {
+    locationId: testLocationId,
+    name: testLocationName,
+    welshName: testLocationWelshName,
+  };
 }
 
-async function deleteTestLocation(): Promise<void> {
+async function deleteTestLocation(locationData: TestLocationData): Promise<void> {
   try {
-    if (!testLocationId) return;
+    if (!locationData.locationId) return;
 
     // Delete subscriptions first (if any)
     await prisma.subscription.deleteMany({
-      where: { locationId: testLocationId },
+      where: { locationId: locationData.locationId },
     });
 
     // Delete location (cascade will handle relationships)
     await prisma.location.delete({
-      where: { locationId: testLocationId },
+      where: { locationId: locationData.locationId },
     });
   } catch (error) {
     // Ignore if location doesn't exist
@@ -84,9 +95,10 @@ async function deleteTestLocation(): Promise<void> {
 
 test.describe("Email Subscriptions", () => {
   // Create test location and authenticate before each test
-  test.beforeEach(async ({ page }) => {
-    // Create test location
-    await createTestLocation();
+  test.beforeEach(async ({ page }, testInfo) => {
+    // Create test location and store in map
+    const locationData = await createTestLocation();
+    testLocationMap.set(testInfo.testId, locationData);
 
     // Navigate to sign-in page
     await page.goto("/sign-in");
@@ -111,12 +123,20 @@ test.describe("Email Subscriptions", () => {
   });
 
   // Clean up test location after each test
-  test.afterEach(async () => {
-    await deleteTestLocation();
+  test.afterEach(async ({}, testInfo) => {
+    const locationData = testLocationMap.get(testInfo.testId);
+    if (locationData) {
+      await deleteTestLocation(locationData);
+      testLocationMap.delete(testInfo.testId);
+    }
   });
 
   test.describe("Subscription Journey", () => {
-    test("should complete subscription flow with accessibility checks and navigation", async ({ page }) => {
+    test("should complete subscription flow with accessibility checks and navigation", async ({ page }, testInfo) => {
+      // Get test-specific location data
+      const locationData = testLocationMap.get(testInfo.testId);
+      if (!locationData) throw new Error("Test location data not found");
+
       // Start from account home
       await page.goto("/account-home");
 
@@ -169,7 +189,7 @@ test.describe("Email Subscriptions", () => {
       const postForm = page.locator("form[method='post']");
 
       // Find checkbox for our specific test location by its ID
-      const testLocationCheckbox = page.locator(`#location-${testLocationId}`);
+      const testLocationCheckbox = page.locator(`#location-${locationData.locationId}`);
       await testLocationCheckbox.waitFor({ state: "visible" });
       await testLocationCheckbox.check();
       await expect(testLocationCheckbox).toBeChecked();
@@ -219,14 +239,18 @@ test.describe("Email Subscriptions", () => {
   });
 
   test.describe("Unsubscribe Journey", () => {
-    test("should complete unsubscribe flow with validation and accessibility checks", async ({ page }) => {
+    test("should complete unsubscribe flow with validation and accessibility checks", async ({ page }, testInfo) => {
+      // Get test-specific location data
+      const locationData = testLocationMap.get(testInfo.testId);
+      if (!locationData) throw new Error("Test location data not found");
+
       // First create a subscription to unsubscribe from
       await page.goto("/account-home");
       const emailSubsTile = page.locator(".verified-tile").nth(2);
       await emailSubsTile.click();
       await page.getByRole("button", { name: /add email subscription/i }).click();
       await page.waitForLoadState("networkidle");
-      const testLocationCheckbox = page.locator(`#location-${testLocationId}`);
+      const testLocationCheckbox = page.locator(`#location-${locationData.locationId}`);
       await testLocationCheckbox.check();
       await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
       await page.getByRole("button", { name: /confirm/i }).click();
