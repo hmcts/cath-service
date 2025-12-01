@@ -1,0 +1,193 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { sendPublicationNotifications } from "./notification-service.js";
+
+vi.mock("../govnotify/govnotify-client.js", () => ({
+  sendEmail: vi.fn().mockResolvedValue({
+    success: true,
+    notificationId: "notif-123"
+  })
+}));
+
+vi.mock("./subscription-queries.js", () => ({
+  findActiveSubscriptionsByLocation: vi.fn()
+}));
+
+vi.mock("./notification-queries.js", () => ({
+  findExistingNotification: vi.fn(),
+  createNotificationAuditLog: vi.fn(),
+  updateNotificationStatus: vi.fn()
+}));
+
+describe("notification-service", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should send notifications to all subscribed users", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        locationId: 1,
+        user: {
+          email: "user1@example.com",
+          firstName: "John",
+          surname: "Doe"
+        }
+      },
+      {
+        subscriptionId: "sub-2",
+        userId: "user-2",
+        locationId: 1,
+        user: {
+          email: "user2@example.com",
+          firstName: "Jane",
+          surname: "Smith"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findExistingNotification, createNotificationAuditLog } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(findExistingNotification).mockResolvedValue(null);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      status: "Pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(2);
+    expect(result.sent).toBe(2);
+    expect(result.failed).toBe(0);
+    expect(result.skipped).toBe(0);
+    expect(result.duplicates).toBe(0);
+  });
+
+  it("should handle duplicate notifications", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        locationId: 1,
+        user: {
+          email: "user1@example.com",
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findExistingNotification } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(findExistingNotification).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      status: "Sent",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: new Date()
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.duplicates).toBe(1);
+    expect(result.sent).toBe(0);
+  });
+
+  it("should skip users with invalid email", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        locationId: 1,
+        user: {
+          email: "invalid-email",
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findExistingNotification, createNotificationAuditLog } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(findExistingNotification).mockResolvedValue(null);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      status: "Skipped",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(0);
+  });
+
+  it("should return empty result when no subscriptions exist", async () => {
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(0);
+    expect(result.sent).toBe(0);
+  });
+
+  it("should throw error for invalid publication event", async () => {
+    await expect(
+      sendPublicationNotifications({
+        publicationId: "",
+        locationId: "",
+        locationName: "",
+        hearingListName: "",
+        publicationDate: null as unknown as Date
+      })
+    ).rejects.toThrow("Invalid publication event");
+  });
+});
