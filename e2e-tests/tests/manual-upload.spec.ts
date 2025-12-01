@@ -2,6 +2,14 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
+import {
+  cleanupTestNotifications,
+  cleanupTestSubscriptions,
+  cleanupTestUsers,
+  createTestSubscription,
+  createTestUser,
+  getNotificationsByPublicationId
+} from "../utils/notification-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -768,6 +776,114 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       const links = page.locator(".govuk-list a");
       await expect(links).toHaveCount(3);
+    });
+  });
+
+  test.describe("Manual Upload - Notification E2E Tests", () => {
+    const testData: {
+      userIds: string[];
+      subscriptionIds: string[];
+    } = {
+      userIds: [],
+      subscriptionIds: []
+    };
+
+    test.beforeEach(async ({ page }) => {
+      await authenticateSystemAdmin(page);
+    });
+
+    test.afterEach(async () => {
+      await cleanupTestSubscriptions(testData.subscriptionIds);
+      await cleanupTestUsers(testData.userIds);
+
+      testData.userIds = [];
+      testData.subscriptionIds = [];
+    });
+
+    test("should send notification after manual upload confirmation", async ({ page }) => {
+      const testUser = await createTestUser("manual.upload.test@example.com");
+      testData.userIds.push(testUser.userId);
+
+      const subscription = await createTestSubscription(testUser.userId, 9001);
+      testData.subscriptionIds.push(subscription.subscriptionId);
+
+      await page.goto("/manual-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      await page.selectOption('select[name="listType"]', "6");
+      await page.fill('input[name="hearingStartDate-day"]', "23");
+      await page.fill('input[name="hearingStartDate-month"]', "10");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "10");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "30");
+      await page.fill('input[name="displayTo-month"]', "10");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test-notification.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nTest content")
+      });
+
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/manual-upload-summary\?uploadId=/);
+
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/manual-upload-success", { timeout: 10000 });
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
+    });
+
+    test("should send notifications to multiple subscribers for manual upload", async ({ page }) => {
+      const user1 = await createTestUser("manual.user1@example.com");
+      const user2 = await createTestUser("manual.user2@example.com");
+      testData.userIds.push(user1.userId, user2.userId);
+
+      const sub1 = await createTestSubscription(user1.userId, 9001);
+      const sub2 = await createTestSubscription(user2.userId, 9001);
+      testData.subscriptionIds.push(sub1.subscriptionId, sub2.subscriptionId);
+
+      await page.goto("/manual-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      await page.selectOption('select[name="listType"]', "6");
+      await page.fill('input[name="hearingStartDate-day"]', "23");
+      await page.fill('input[name="hearingStartDate-month"]', "10");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "10");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "30");
+      await page.fill('input[name="displayTo-month"]', "10");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test-multi-subscribers.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nMulti-subscriber test")
+      });
+
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/manual-upload-summary\?uploadId=/);
+
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/manual-upload-success", { timeout: 10000 });
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
     });
   });
 });

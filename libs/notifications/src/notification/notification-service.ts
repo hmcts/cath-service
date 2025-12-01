@@ -148,7 +148,7 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     });
 
     if (emailResult.success) {
-      await updateNotificationStatus(notification.notificationId, "Sent", new Date());
+      await updateNotificationStatus(notification.notificationId, "Sent", new Date(), undefined, emailResult.notificationId);
       return {
         status: "sent"
       };

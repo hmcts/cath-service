@@ -12,6 +12,7 @@ export interface NotificationAuditLog {
   subscriptionId: string;
   userId: string;
   publicationId: string;
+  govNotifyId: string | null;
   status: string;
   errorMessage: string | null;
   createdAt: Date;
@@ -31,13 +32,20 @@ export async function createNotificationAuditLog(data: CreateNotificationData): 
   return notification;
 }
 
-export async function updateNotificationStatus(notificationId: string, status: string, sentAt?: Date, errorMessage?: string): Promise<void> {
+export async function updateNotificationStatus(
+  notificationId: string,
+  status: string,
+  sentAt?: Date,
+  errorMessage?: string,
+  govNotifyId?: string
+): Promise<void> {
   await prisma.notificationAuditLog.update({
     where: { notificationId },
     data: {
       status,
       sentAt,
-      errorMessage
+      errorMessage,
+      govNotifyId
     }
   });
 }
@@ -53,4 +61,16 @@ export async function findExistingNotification(userId: string, publicationId: st
   });
 
   return notification;
+}
+
+export async function getNotificationByGovNotifyId(govNotifyId: string): Promise<NotificationAuditLog | null> {
+  return await prisma.notificationAuditLog.findFirst({
+    where: { govNotifyId }
+  });
+}
+
+export async function getNotificationsByPublicationId(publicationId: string): Promise<NotificationAuditLog[]> {
+  return await prisma.notificationAuditLog.findMany({
+    where: { publicationId }
+  });
 }

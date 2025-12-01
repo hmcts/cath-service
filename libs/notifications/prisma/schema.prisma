@@ -13,6 +13,7 @@ model NotificationAuditLog {
   subscriptionId String    @map("subscription_id") @db.Uuid
   userId         String    @map("user_id") @db.Uuid
   publicationId  String    @map("publication_id") @db.Uuid
+  govNotifyId    String?   @map("gov_notify_id")
   status         String    @default("Pending")
   errorMessage   String?   @map("error_message")
   createdAt      DateTime  @default(now()) @map("created_at")
@@ -23,5 +24,6 @@ model NotificationAuditLog {
   @@unique([userId, publicationId])
   @@index([publicationId])
   @@index([status])
+  @@index([govNotifyId])
   @@map("notification_audit_log")
 }
