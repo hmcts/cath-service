@@ -229,7 +229,7 @@ test.describe("Cookie Policy Page", () => {
 
     // Check manage cookies link
     const manageCookiesLink = page.locator('a:has-text("how to manage cookies")');
-    await expect(manageCookiesLink).toHaveAttribute("href", "https://ico.org.uk/for-the-public/online/cookies/");
+    await expect(manageCookiesLink).toHaveAttribute("href", "https://www.aboutcookies.org/");
     await expect(manageCookiesLink).toHaveAttribute("target", "_blank");
 
     // Check Google Privacy Policy link
