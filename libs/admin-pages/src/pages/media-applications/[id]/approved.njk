@@ -1,0 +1,49 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+      <p><a href="/media-applications" class="govuk-link">{{ returnLink }}</a></p>
+    {% elif application %}
+      {{ govukPanel({
+        titleText: pageTitle,
+        classes: "govuk-panel--confirmation"
+      }) }}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: tableHeaders.name },
+            value: { text: application.name }
+          },
+          {
+            key: { text: tableHeaders.email },
+            value: { text: application.email }
+          },
+          {
+            key: { text: tableHeaders.employer },
+            value: { text: application.employer }
+          },
+          {
+            key: { text: tableHeaders.dateApplied },
+            value: { text: application.appliedDate | date('DD/MM/YYYY') }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">{{ whatHappensNextHeading }}</h2>
+      <p class="govuk-body">{{ whatHappensNextText }}</p>
+
+      <p><a href="/media-applications" class="govuk-link">{{ returnLink }}</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

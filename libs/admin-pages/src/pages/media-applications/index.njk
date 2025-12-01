@@ -1,0 +1,37 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+    {% elif applications.length === 0 %}
+      <p class="govuk-body">{{ noApplications }}</p>
+    {% else %}
+      {{ govukTable({
+        head: [
+          { text: tableHeaders.name },
+          { text: tableHeaders.employer },
+          { text: tableHeaders.dateApplied },
+          { text: "" }
+        ],
+        rows: applications | map(function(app) {
+          return [
+            { text: app.name },
+            { text: app.employer },
+            { text: app.appliedDate | date('DD/MM/YYYY') },
+            { html: '<a href="/media-applications/' + app.id + '" class="govuk-link">' + viewLink + '</a>' }
+          ]
+        })
+      }) }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
