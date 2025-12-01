@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 
 test.describe("400 Error Page", () => {
-  test("should display 400 error page with correct content", async ({ page }) => {
+  test("should display 400 error page with correct content @nightly", async ({ page }) => {
     await page.goto("/400");
 
     // Check page heading
@@ -24,7 +24,7 @@ test.describe("400 Error Page", () => {
     await expect(contactLink).toContainText(/contact us/i);
   });
 
-  test("should meet WCAG 2.2 AA accessibility standards", async ({ page }) => {
+  test("should meet WCAG 2.2 AA accessibility standards @nightly", async ({ page }) => {
     await page.goto("/400");
 
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -47,7 +47,7 @@ test.describe("400 Error Page", () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test("should redirect from summary-of-publications without locationId", async ({ page }) => {
+  test("should redirect from summary-of-publications without locationId @nightly", async ({ page }) => {
     await page.goto("/summary-of-publications");
 
     // Should automatically redirect to 400 page

@@ -47,7 +47,7 @@ test.describe("Account Home Page", () => {
       await expect(sectionBoxes).toHaveCount(3);
     });
 
-    test("should display account sections container with flex layout", async ({ page }) => {
+    test("should display account sections container with flex layout @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const container = page.locator(".verified-tiles-container");
       await expect(container).toBeVisible();
@@ -91,7 +91,7 @@ test.describe("Account Home Page", () => {
       await expect(page).toHaveURL("/search");
     });
 
-    test("should have blue heading without underline", async ({ page }) => {
+    test("should have blue heading without underline @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
       const heading = section.locator("h2");
@@ -173,7 +173,7 @@ test.describe("Account Home Page", () => {
   });
 
   test.describe("Section Box Styling", () => {
-    test("should have correct background color on section boxes", async ({ page }) => {
+    test("should have correct background color on section boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
@@ -185,7 +185,7 @@ test.describe("Account Home Page", () => {
       expect(bgColor).toBe("rgb(243, 242, 241)");
     });
 
-    test("should have border on section boxes", async ({ page }) => {
+    test("should have border on section boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
@@ -197,7 +197,7 @@ test.describe("Account Home Page", () => {
       expect(border).toContain("solid");
     });
 
-    test("should have equal flex sizing on all boxes", async ({ page }) => {
+    test("should have equal flex sizing on all boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const sections = page.locator(".verified-tile");
 
@@ -212,7 +212,7 @@ test.describe("Account Home Page", () => {
       }
     });
 
-    test("should have pointer cursor on section boxes", async ({ page }) => {
+    test("should have pointer cursor on section boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
@@ -223,7 +223,7 @@ test.describe("Account Home Page", () => {
       expect(cursor).toBe("pointer");
     });
 
-    test("should have box shadow on hover", async ({ page }) => {
+    test("should have box shadow on hover @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const section = page.locator(".verified-tile").first();
 
@@ -237,7 +237,7 @@ test.describe("Account Home Page", () => {
       expect(boxShadow).not.toBe("none");
     });
 
-    test("should have all boxes with same height", async ({ page }) => {
+    test("should have all boxes with same height @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.goto("/account-home");
       const sections = page.locator(".verified-tile");
@@ -256,7 +256,7 @@ test.describe("Account Home Page", () => {
   });
 
   test.describe("Heading and Description Styling", () => {
-    test("should style section headings as bold", async ({ page }) => {
+    test("should style section headings as bold @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const heading = page.locator(".verified-tile-heading").first();
 
@@ -268,7 +268,7 @@ test.describe("Account Home Page", () => {
       expect(Number.parseInt(fontWeight)).toBeGreaterThanOrEqual(700);
     });
 
-    test("should have blue color on section headings", async ({ page }) => {
+    test("should have blue color on section headings @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const heading = page.locator(".verified-tile-heading").first();
 
@@ -280,7 +280,7 @@ test.describe("Account Home Page", () => {
       expect(color).toBe("rgb(29, 112, 184)");
     });
 
-    test("should not have underline on section headings", async ({ page }) => {
+    test("should not have underline on section headings @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const heading = page.locator(".verified-tile-heading").first();
 
@@ -291,7 +291,7 @@ test.describe("Account Home Page", () => {
       expect(textDecoration).toContain("none");
     });
 
-    test("should display description text in black", async ({ page }) => {
+    test("should display description text in black @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const description = page.locator(".verified-tile-description").first();
 
@@ -303,7 +303,7 @@ test.describe("Account Home Page", () => {
       expect(color).toBe("rgb(11, 12, 12)");
     });
 
-    test("should have no text decoration on boxes", async ({ page }) => {
+    test("should have no text decoration on boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
       const box = page.locator(".verified-tile").first();
 
@@ -316,7 +316,7 @@ test.describe("Account Home Page", () => {
   });
 
   test.describe("Responsive Layout", () => {
-    test("should display sections in row on desktop", async ({ page }) => {
+    test("should display sections in row on desktop @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.goto("/account-home");
 
@@ -328,7 +328,7 @@ test.describe("Account Home Page", () => {
       expect(flexDirection).toBe("row");
     });
 
-    test("should have gap between sections", async ({ page }) => {
+    test("should have gap between sections @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       const container = page.locator(".verified-tiles-container");
@@ -340,7 +340,7 @@ test.describe("Account Home Page", () => {
       expect(parseFloat(gap)).toBeGreaterThan(20);
     });
 
-    test("should display all three boxes side by side on desktop", async ({ page }) => {
+    test("should display all three boxes side by side on desktop @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.goto("/account-home");
 
@@ -359,7 +359,7 @@ test.describe("Account Home Page", () => {
   });
 
   test.describe("Welsh Language Support", () => {
-    test("should display Welsh content when Welsh locale is selected", async ({ page }) => {
+    test("should display Welsh content when Welsh locale is selected @nightly", async ({ page }) => {
       await page.goto("/account-home?lng=cy");
 
       const heading = page.locator("h1");
@@ -375,7 +375,7 @@ test.describe("Account Home Page", () => {
       await expect(emailHeading).toHaveText("Tanysgrifiadau e-bost");
     });
 
-    test("should display Welsh descriptions", async ({ page }) => {
+    test("should display Welsh descriptions @nightly", async ({ page }) => {
       await page.goto("/account-home?lng=cy");
 
       const courtHearingsDesc = page.locator(".verified-tile-description").first();
@@ -388,14 +388,14 @@ test.describe("Account Home Page", () => {
       await expect(emailDesc).toHaveText("Cael e-byst am wrandawiadau o wahanol lysoedd a thribiwnlysoedd a rheoli eich tanysgrifiadau.");
     });
 
-    test("should maintain same layout in Welsh", async ({ page }) => {
+    test("should maintain same layout in Welsh @nightly", async ({ page }) => {
       await page.goto("/account-home?lng=cy");
 
       const sectionBoxes = page.locator(".verified-tile");
       await expect(sectionBoxes).toHaveCount(3);
     });
 
-    test("should have same hrefs in Welsh", async ({ page }) => {
+    test("should have same hrefs in Welsh @nightly", async ({ page }) => {
       await page.goto("/account-home?lng=cy");
 
       const boxes = page.locator(".verified-tile");
@@ -416,7 +416,7 @@ test.describe("Account Home Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should have proper heading hierarchy", async ({ page }) => {
+    test("should have proper heading hierarchy @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       // Check h1 exists
@@ -428,7 +428,7 @@ test.describe("Account Home Page", () => {
       await expect(contentH2s).toHaveCount(3);
     });
 
-    test("should have descriptive content in clickable boxes", async ({ page }) => {
+    test("should have descriptive content in clickable boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       const boxes = page.locator(".verified-tile");
@@ -444,7 +444,7 @@ test.describe("Account Home Page", () => {
       }
     });
 
-    test("should have proper color contrast on headings", async ({ page }) => {
+    test("should have proper color contrast on headings @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       const heading = page.locator(".verified-tile-heading").first();
@@ -456,7 +456,7 @@ test.describe("Account Home Page", () => {
       expect(color).toBe("rgb(29, 112, 184)");
     });
 
-    test("should have semantic HTML structure with links", async ({ page }) => {
+    test("should have semantic HTML structure with links @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       const sections = page.locator(".verified-tile");
@@ -478,7 +478,7 @@ test.describe("Account Home Page", () => {
       }
     });
 
-    test("should be keyboard accessible", async ({ page }) => {
+    test("should be keyboard accessible @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       const firstBox = page.locator(".verified-tile").first();
@@ -499,7 +499,7 @@ test.describe("Account Home Page", () => {
       await expect(firstBox).toBeFocused();
     });
 
-    test("should have focus indicator on boxes", async ({ page }) => {
+    test("should have focus indicator on boxes @nightly", async ({ page }) => {
       await page.goto("/account-home");
 
       const box = page.locator(".verified-tile").first();

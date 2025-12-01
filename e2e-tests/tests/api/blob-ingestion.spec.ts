@@ -19,7 +19,7 @@ const validPayload = {
 };
 
 test.describe("POST /v1/publication - Blob Ingestion API", () => {
-  test("should return 401 when Authorization header is missing", async ({ request }) => {
+  test("should return 401 when Authorization header is missing @nightly", async ({ request }) => {
     const response = await request.post(ENDPOINT, {
       data: validPayload
     });
@@ -30,7 +30,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(body.message).toContain("Authorization");
   });
 
-  test("should return 401 when Authorization header has invalid format", async ({ request }) => {
+  test("should return 401 when Authorization header has invalid format @nightly", async ({ request }) => {
     const response = await request.post(ENDPOINT, {
       data: validPayload,
       headers: {
@@ -43,7 +43,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(body.success).toBe(false);
   });
 
-  test("should return 401 with invalid Bearer token", async ({ request }) => {
+  test("should return 401 with invalid Bearer token @nightly", async ({ request }) => {
     const response = await request.post(ENDPOINT, {
       data: validPayload,
       headers: {
@@ -57,7 +57,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(body.message).toContain("Invalid or expired token");
   });
 
-  test("should return 400 when required field is missing - court_id", async ({ request }) => {
+  test("should return 400 when required field is missing - court_id @nightly", async ({ request }) => {
     const invalidPayload = { ...validPayload };
     delete (invalidPayload as any).court_id;
 
@@ -73,7 +73,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when provenance is invalid", async ({ request }) => {
+  test("should return 400 when provenance is invalid @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       provenance: "INVALID_PROVENANCE"
@@ -89,7 +89,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when content_date is not in ISO format", async ({ request }) => {
+  test("should return 400 when content_date is not in ISO format @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       content_date: "15-01-2024" // Invalid format
@@ -105,7 +105,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when list_type is invalid", async ({ request }) => {
+  test("should return 400 when list_type is invalid @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       list_type: "INVALID_LIST_TYPE"
@@ -121,7 +121,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when sensitivity is invalid", async ({ request }) => {
+  test("should return 400 when sensitivity is invalid @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       sensitivity: "INVALID_SENSITIVITY"
@@ -137,7 +137,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when language is invalid", async ({ request }) => {
+  test("should return 400 when language is invalid @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       language: "INVALID_LANGUAGE"
@@ -153,7 +153,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when display_from is not in ISO datetime format", async ({ request }) => {
+  test("should return 400 when display_from is not in ISO datetime format @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       display_from: "2024-01-15" // Missing time component
@@ -169,7 +169,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when display_to is before display_from", async ({ request }) => {
+  test("should return 400 when display_to is before display_from @nightly", async ({ request }) => {
     const invalidPayload = {
       ...validPayload,
       display_from: "2024-01-16T00:00:00Z",
@@ -186,7 +186,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should return 400 when hearing_list is missing", async ({ request }) => {
+  test("should return 400 when hearing_list is missing @nightly", async ({ request }) => {
     const invalidPayload = { ...validPayload };
     delete (invalidPayload as any).hearing_list;
 
@@ -200,7 +200,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("should handle payload size validation", async ({ request }) => {
+  test("should handle payload size validation @nightly", async ({ request }) => {
     // Create a large payload (over 10MB)
     const largePayload = {
       ...validPayload,
@@ -223,7 +223,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     expect([400, 401, 413, 500]).toContain(response.status());
   });
 
-  test("should verify endpoint accepts POST only", async ({ request }) => {
+  test("should verify endpoint accepts POST only @nightly", async ({ request }) => {
     const response = await request.get(ENDPOINT);
 
     // Should return 404 or 405 (Method Not Allowed)
@@ -232,7 +232,7 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
 });
 
 test.describe("POST /v1/publication - Authentication Headers", () => {
-  test("should reject requests with empty Bearer token", async ({ request }) => {
+  test("should reject requests with empty Bearer token @nightly", async ({ request }) => {
     const response = await request.post(ENDPOINT, {
       data: validPayload,
       headers: {
@@ -243,7 +243,7 @@ test.describe("POST /v1/publication - Authentication Headers", () => {
     expect(response.status()).toBe(401);
   });
 
-  test("should reject requests with malformed JWT token", async ({ request }) => {
+  test("should reject requests with malformed JWT token @nightly", async ({ request }) => {
     const response = await request.post(ENDPOINT, {
       data: validPayload,
       headers: {
@@ -256,7 +256,7 @@ test.describe("POST /v1/publication - Authentication Headers", () => {
 });
 
 test.describe("POST /v1/publication - Content Type Validation", () => {
-  test("should accept application/json content type", async ({ request }) => {
+  test("should accept application/json content type @nightly", async ({ request }) => {
     const response = await request.post(ENDPOINT, {
       data: validPayload,
       headers: {
