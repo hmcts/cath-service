@@ -9,8 +9,8 @@ const mockLocations = [
 ];
 
 // Mock fetch API
-global.fetch = vi.fn((url: string) => {
-  const urlObj = new URL(url, "http://localhost");
+global.fetch = vi.fn((url: string | URL | Request, _init?: RequestInit) => {
+  const urlObj = new URL(typeof url === "string" ? url : url.toString(), "http://localhost");
   const query = urlObj.searchParams.get("q");
   const language = urlObj.searchParams.get("language") || "en";
 
@@ -31,7 +31,7 @@ global.fetch = vi.fn((url: string) => {
   } as Response);
 });
 
-const mockAccessibleAutocomplete = vi.fn((config: { element: HTMLElement; id: string }) => {
+const mockAccessibleAutocomplete = vi.fn((config: { element: HTMLElement; id: string; source?: any }) => {
   // Simulate what accessible-autocomplete does: create an input element
   const input = document.createElement("input");
   input.id = config.id;

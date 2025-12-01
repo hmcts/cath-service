@@ -34,5 +34,6 @@
     "strict": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": false
-  }
+  },
+  "exclude": ["vitest.config.ts"]
 }

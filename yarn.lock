@@ -963,6 +963,7 @@ __metadata:
   dependencies:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/notification": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
@@ -1104,7 +1105,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/notification@workspace:libs/notification":
+"@hmcts/notification@workspace:*, @hmcts/notification@workspace:libs/notification":
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:

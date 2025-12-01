@@ -1,4 +1,3 @@
-import type { Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockExit = vi.fn();
@@ -43,7 +42,7 @@ describe("API Server", () => {
       delete process.env.API_PORT;
 
       mockCreateApp.mockResolvedValue({
-        listen: vi.fn((port: number, callback: () => void) => {
+        listen: vi.fn((_port: number, callback: () => void) => {
           callback();
           return mockServer;
         })
