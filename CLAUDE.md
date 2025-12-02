@@ -366,17 +366,64 @@ describe('UserService', () => {
 
 ### E2E Testing with Playwright
 
+**CRITICAL: Minimize Test Count**
+
+**Create the minimum number of tests.** Each test should represent a complete end-to-end user journey. Do NOT create separate tests for individual validations, accessibility checks, or Welsh translations. Instead, include all validations, accessibility checks, and Welsh translations within the journey test itself.
+
+**Key Principle:** One test per user journey, not one test per validation or feature.
+
+✅ **Good - Minimum tests, each covering complete journey:**
+```typescript
+// One test for the subscription journey - includes validations, Welsh, accessibility
+test('user can subscribe to updates @nightly', async ({ page }) => {
+  await page.goto('/subscribe');
+
+  // Test validation along the journey
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Enter your email')).toBeVisible();
+
+  // Test Welsh translation along the journey
+  await page.getByRole('link', { name: 'Cymraeg' }).click();
+  await expect(page.getByText('Rhowch eich e-bost')).toBeVisible();
+
+  // Test accessibility along the journey
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+
+  // Complete the journey
+  await page.getByLabel('Email').fill('test@example.com');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Subscription confirmed')).toBeVisible();
+});
+
+// Separate test only for a DIFFERENT user journey (e.g., unsubscribe)
+test('user can unsubscribe @nightly', async ({ page }) => {
+  await page.goto('/unsubscribe');
+  // ... complete unsubscribe journey with validations, Welsh, accessibility
+});
+```
+
+❌ **Bad - Too many separate tests:**
+```typescript
+test('shows validation error for email', async ({ page }) => { /* ... */ });
+test('shows validation error for name', async ({ page }) => { /* ... */ });
+test('Welsh translation works on subscribe page', async ({ page }) => { /* ... */ });
+test('accessibility passes on subscribe page', async ({ page }) => { /* ... */ });
+test('user completes subscription', async ({ page }) => { /* ... */ });
+```
+
 **Test Organization:**
 - Location: `e2e-tests/`
 - Naming: `*.spec.ts`
 - Tag nightly-only tests with `@nightly` in test title
 
-**Test Patterns (Sequential in Each Test):**
-1. Test content and functionality
-2. Test Welsh translation (same journey)
-3. Test accessibility inline (not separate)
-4. Test keyboard navigation
-5. Test responsive behavior
+**What to Include in Each Journey Test:**
+1. Complete user journey from start to finish
+2. All relevant validation checks encountered in the journey
+3. Welsh translation checks at key points
+4. Accessibility checks at key points
+5. Keyboard navigation where relevant
+6. Successful completion of the journey
 
 **Example Pattern:**
 ```typescript
@@ -420,7 +467,6 @@ test('user can complete journey @nightly', async ({ page }) => {
 - Clean up test data in global-teardown.ts
 
 **Coverage Expectations:**
-- Business logic: >80%
 - E2E tests: Cover critical user journeys
 - Accessibility: Test inline with journeys (not separately)
 
