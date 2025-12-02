@@ -86,6 +86,14 @@ export async function cleanupTestNotifications(publicationIds: string[]) {
 export async function cleanupTestSubscriptions(subscriptionIds: string[]) {
   if (subscriptionIds.length === 0) return;
 
+  // Delete notifications first to avoid foreign key constraint violation
+  await (prisma as any).notificationAuditLog.deleteMany({
+    where: {
+      subscriptionId: { in: subscriptionIds }
+    }
+  });
+
+  // Then delete subscriptions
   await (prisma as any).subscription.deleteMany({
     where: {
       subscriptionId: { in: subscriptionIds }

@@ -82,9 +82,16 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     const result = await response.json();
     testData.publicationIds.push(result.artefact_id);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Wait longer for async notification processing to complete
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const notifications = await getNotificationsByPublicationId(result.artefact_id);
+
+    // Verify notification was created
+    expect(notifications.length).toBeGreaterThan(0);
+    expect(notifications[0]).toBeDefined();
+    expect(notifications[0].govNotifyId).toBeDefined();
+
     const govNotifyEmail = await getGovNotifyEmail(notifications[0].govNotifyId);
 
     expect(govNotifyEmail.email_address).toBe(process.env.CFT_VALID_TEST_ACCOUNT!);
