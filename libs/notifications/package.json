@@ -26,6 +26,6 @@
     "notifications-node-client": "8.2.1"
   },
   "peerDependencies": {
-    "express": "^5.1.0"
+    "express": "^5.2.0"
   }
 }

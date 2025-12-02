@@ -4,6 +4,12 @@ import { getApiKey, getTemplateId, type TemplateParameters } from "./template-co
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
 const NOTIFICATION_RETRY_DELAY_MS = Number.parseInt(process.env.NOTIFICATION_RETRY_DELAY_MS || "1000", 10);
 
+interface EmailResponse {
+  data?: { id: string };
+  body?: { id: string };
+  id?: string;
+}
+
 export interface SendEmailParams {
   emailAddress: string;
   templateParameters: TemplateParameters;
@@ -39,9 +45,9 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       templateParameters: params.templateParameters
     });
 
-    const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
+    const response = (await notifyClient.sendEmail(templateId, params.emailAddress, {
       personalisation: params.templateParameters
-    });
+    })) as EmailResponse;
 
     console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
     console.log("[govnotify-client] Response.data:", response?.data);

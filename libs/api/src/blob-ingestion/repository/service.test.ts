@@ -383,7 +383,8 @@ describe("processBlobIngestion", async () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to trigger publication notifications:", {
       artefactId: "test-artefact-id",
       courtId: "123",
-      error: "Notification service down"
+      error: "Notification service down",
+      stack: expect.any(String)
     });
 
     consoleErrorSpy.mockRestore();

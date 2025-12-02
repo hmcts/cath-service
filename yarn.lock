@@ -973,7 +973,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -992,7 +992,7 @@ __metadata:
     compression: "npm:1.8.1"
     config: "npm:4.1.1"
     cors: "npm:2.8.5"
-    express: "npm:5.1.0"
+    express: "npm:5.2.0"
     nodemon: "npm:3.1.11"
     supertest: "npm:^7.1.4"
   languageName: unknown
@@ -1009,7 +1009,7 @@ __metadata:
     "@types/passport": "npm:1.0.17"
     passport-azure-ad: "npm:4.3.5"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
     express-session: ^1.18.2
     passport: ^0.7.0
   languageName: unknown
@@ -1027,7 +1027,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1045,7 +1045,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:3.2.4"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1061,7 +1061,7 @@ __metadata:
     js-yaml: "npm:^4.1.0"
   peerDependencies:
     config: ^3.3.12 || ^4.0.0
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1111,7 +1111,7 @@ __metadata:
     "@hmcts/postgres": "workspace:*"
     notifications-node-client: "npm:8.2.1"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1134,7 +1134,7 @@ __metadata:
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1164,7 +1164,7 @@ __metadata:
   dependencies:
     "@types/express": "npm:5.0.5"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1176,7 +1176,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1191,7 +1191,7 @@ __metadata:
     "@types/papaparse": "npm:5.5.0"
     papaparse: "npm:5.5.3"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1201,7 +1201,7 @@ __metadata:
   dependencies:
     "@hmcts/subscriptions": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1222,7 +1222,7 @@ __metadata:
   peerDependencies:
     "@hmcts/cookie-manager": ^1.1.0
     connect-redis: ^9.0.0
-    express: ^5.1.0
+    express: ^5.2.0
     express-session: ^1.18.2
     govuk-frontend: ^5.2.0
     helmet: ^8.0.0
@@ -1273,7 +1273,7 @@ __metadata:
     connect-redis: "npm:9.0.0"
     cookie-parser: "npm:1.4.7"
     dotenv: "npm:17.2.3"
-    express: "npm:5.1.0"
+    express: "npm:5.2.0"
     express-session: "npm:1.18.2"
     glob: "npm:13.0.0"
     govuk-frontend: "npm:5.13.0"
@@ -4476,17 +4476,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:5.1.0":
-  version: 5.1.0
-  resolution: "express@npm:5.1.0"
+"express@npm:5.2.0":
+  version: 5.2.0
+  resolution: "express@npm:5.2.0"
   dependencies:
     accepts: "npm:^2.0.0"
-    body-parser: "npm:^2.2.0"
+    body-parser: "npm:^2.2.1"
     content-disposition: "npm:^1.0.0"
     content-type: "npm:^1.0.5"
     cookie: "npm:^0.7.1"
     cookie-signature: "npm:^1.2.1"
     debug: "npm:^4.4.0"
+    depd: "npm:^2.0.0"
     encodeurl: "npm:^2.0.0"
     escape-html: "npm:^1.0.3"
     etag: "npm:^1.8.1"
@@ -4507,7 +4508,7 @@ __metadata:
     statuses: "npm:^2.0.1"
     type-is: "npm:^2.0.1"
     vary: "npm:^1.1.2"
-  checksum: 10c0/80ce7c53c5f56887d759b94c3f2283e2e51066c98d4b72a4cc1338e832b77f1e54f30d0239cc10815a0f849bdb753e6a284d2fa48d4ab56faf9c501f55d751d6
+  checksum: 10c0/be184dbd5eadffd899811bcd91b22df96d968b29e31076e8bbafcaa5c25dafd0012b8daece4135b876e4576407e4ca811c089ead2bb45f9e08df812ba0966a82
   languageName: node
   linkType: hard
 
