@@ -134,7 +134,7 @@ export * from "./my-feature/service.js";
     "lint:fix": "biome check --write ."
   },
   "peerDependencies": {
-    "express": "^5.1.0"
+    "express": "^5.2.0"
   }
 }
 ```
@@ -368,7 +368,7 @@ describe('UserService', () => {
 
 - **TypeScript**: Strict mode enabled, no `any` without justification
 - **ES Modules**: Use `"type": "module"` in all package.json files
-- **Express**: Version 5.x only (`"express": "5.1.0"`)
+- **Express**: Version 5.x only (`"express": "5.2.0"`)
 - **Imports**: Use workspace aliases (`@hmcts/*`)
   - **IMPORTANT**: Always add `.js` extension to relative imports (e.g., `import { foo } from "./bar.js"`)
   - This is required for ESM with Node.js "nodenext" module resolution
@@ -378,7 +378,7 @@ describe('UserService', () => {
     - Error: "Relative import paths need explicit file extensions in ECMAScript imports"
 - **Linting**: Fix all Biome warnings before commit
 - **No CommonJS**: Use `import`/`export`, never `require()`/`module.exports`
-- **Pinned dependencies**: Specific versions only (`"express": "5.1.0"`) - except peer dependencies
+- **Pinned dependencies**: Specific versions only (`"express": "5.2.0"`) - except peer dependencies
 
 ## Security Requirements
 
