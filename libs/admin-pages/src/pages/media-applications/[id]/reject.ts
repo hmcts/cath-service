@@ -21,14 +21,21 @@ const getHandler = async (req: Request, res: Response) => {
       });
     }
 
+    // Get rejection reasons from session
+    const sessionReasons = req.session?.rejectionReasons || {};
+    const selectedReasons = sessionReasons.selectedReasons || [];
+    const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
     res.render("media-applications/[id]/reject", {
       pageTitle: lang.pageTitle,
       subheading: lang.subheading,
+      reasonsHeading: lang.reasonsHeading,
       tableHeaders: lang.tableHeaders,
       radioLegend: lang.radioLegend,
       radioOptions: lang.radioOptions,
       continueButton: lang.continueButton,
       application,
+      reasonsList,
       hideLanguageToggle: true
     });
   } catch (_error) {
@@ -56,14 +63,21 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     if (!confirm) {
+      // Get rejection reasons from session for re-rendering
+      const sessionReasons = req.session?.rejectionReasons || {};
+      const selectedReasons = sessionReasons.selectedReasons || [];
+      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
       return res.render("media-applications/[id]/reject", {
         pageTitle: lang.pageTitle,
         subheading: lang.subheading,
+        reasonsHeading: lang.reasonsHeading,
         tableHeaders: lang.tableHeaders,
         radioLegend: lang.radioLegend,
         radioOptions: lang.radioOptions,
         continueButton: lang.continueButton,
         application,
+        reasonsList,
         errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
         hideLanguageToggle: true
       });

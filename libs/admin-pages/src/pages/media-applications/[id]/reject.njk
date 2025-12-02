@@ -47,6 +47,15 @@
         ]
       }) }}
 
+      {% if reasonsList and reasonsList.length > 0 %}
+        <h2 class="govuk-heading-m">{{ reasonsHeading }}</h2>
+        <ul class="govuk-list govuk-list--bullet">
+          {% for reason in reasonsList %}
+            <li>{{ reason }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
       <form method="post" novalidate>
         {{ govukRadios({
           name: "confirm",
