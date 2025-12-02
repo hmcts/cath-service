@@ -801,7 +801,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
     });
 
     test("should send notification after manual upload confirmation", async ({ page }) => {
-      const testUser = await createTestUser("manual.upload.test@example.com");
+      const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
       testData.userIds.push(testUser.userId);
 
       const subscription = await createTestSubscription(testUser.userId, 9001);
@@ -843,8 +843,8 @@ test.describe("Manual Upload End-to-End Flow", () => {
     });
 
     test("should send notifications to multiple subscribers for manual upload", async ({ page }) => {
-      const user1 = await createTestUser("manual.user1@example.com");
-      const user2 = await createTestUser("manual.user2@example.com");
+      const user1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
+      const user2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
       testData.userIds.push(user1.userId, user2.userId);
 
       const sub1 = await createTestSubscription(user1.userId, 9001);

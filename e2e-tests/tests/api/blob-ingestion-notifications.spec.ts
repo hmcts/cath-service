@@ -67,7 +67,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
   test("should verify GOV.UK Notify email content", async ({ request }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
-    const testUser = await createTestUser("govnotify.test@example.com");
+    const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser.userId);
 
     const subscription = await createTestSubscription(testUser.userId, 1);
@@ -87,7 +87,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     const notifications = await getNotificationsByPublicationId(result.artefact_id);
     const govNotifyEmail = await getGovNotifyEmail(notifications[0].govNotifyId);
 
-    expect(govNotifyEmail.email_address).toBe("govnotify.test@example.com");
+    expect(govNotifyEmail.email_address).toBe(process.env.CFT_VALID_TEST_ACCOUNT!);
     expect(govNotifyEmail.body).toContain("Test User");
     expect(govNotifyEmail.body).toContain("Civil And Family Daily Cause List");
     expect(govNotifyEmail.status).toMatch(/delivered|sending|pending/);
