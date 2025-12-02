@@ -52,15 +52,13 @@ describe("GOV Notify Service", () => {
 
       await sendMediaApprovalEmail(testData);
 
-      expect(mockSendEmail).toHaveBeenCalledWith(
-        "test-template-id-approval",
-        "john@example.com",
-        {
-          "Full name": "John Smith",
-          Employer: "BBC"
+      expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-approval", "john@example.com", {
+        personalisation: {
+          name: "John Smith",
+          employer: "BBC"
         },
-        expect.stringContaining("media-approval-")
-      );
+        reference: expect.stringContaining("media-approval-")
+      });
     });
 
     it("should rethrow API errors", async () => {
@@ -71,7 +69,7 @@ describe("GOV Notify Service", () => {
             errors: [
               {
                 error: "BadRequestError",
-                message: "Missing personalisation: Full name"
+                message: "Missing personalisation: name"
               }
             ],
             status_code: 400
@@ -128,22 +126,22 @@ describe("GOV Notify Service", () => {
       });
 
       const testData = {
-        name: "John Smith",
+        fullName: "John Smith",
         email: "john@example.com",
-        employer: "BBC"
+        rejectReasons: "The applicant is not an accredited member of the media.\nID provided has expired or is not a Press ID.",
+        linkToService: "https://example.com"
       };
 
       await sendMediaRejectionEmail(testData);
 
-      expect(mockSendEmail).toHaveBeenCalledWith(
-        "test-template-id-rejection",
-        "john@example.com",
-        {
-          "Full name": "John Smith",
-          Employer: "BBC"
+      expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-rejection", "john@example.com", {
+        personalisation: {
+          "full-name": "John Smith",
+          "reject-reasons": "The applicant is not an accredited member of the media.\nID provided has expired or is not a Press ID.",
+          "link-to-service": "https://example.com"
         },
-        expect.stringContaining("media-rejection-")
-      );
+        reference: expect.stringContaining("media-rejection-")
+      });
     });
 
     it("should rethrow API errors", async () => {
@@ -154,7 +152,7 @@ describe("GOV Notify Service", () => {
             errors: [
               {
                 error: "BadRequestError",
-                message: "Missing personalisation: Full name"
+                message: "Missing personalisation: full-name"
               }
             ],
             status_code: 400
@@ -166,9 +164,10 @@ describe("GOV Notify Service", () => {
       mockSendEmail.mockRejectedValue(apiError);
 
       const testData = {
-        name: "John Smith",
+        fullName: "John Smith",
         email: "john@example.com",
-        employer: "BBC"
+        rejectReasons: "The applicant is not an accredited member of the media.",
+        linkToService: "https://example.com"
       };
 
       await expect(sendMediaRejectionEmail(testData)).rejects.toMatchObject({
@@ -181,9 +180,10 @@ describe("GOV Notify Service", () => {
       mockSendEmail.mockRejectedValue(networkError);
 
       const testData = {
-        name: "John Smith",
+        fullName: "John Smith",
         email: "john@example.com",
-        employer: "BBC"
+        rejectReasons: "The applicant is not an accredited member of the media.",
+        linkToService: "https://example.com"
       };
 
       await expect(sendMediaRejectionEmail(testData)).rejects.toThrow("Network timeout");

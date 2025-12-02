@@ -37,7 +37,12 @@ describe("media-application reject page", () => {
       params: { id: "app-123" },
       query: {},
       body: {},
-      user: { email: "admin@example.com" }
+      user: { email: "admin@example.com" },
+      session: {
+        rejectionReasons: {
+          selectedReasons: ["notAccredited", "invalidId"]
+        }
+      } as any
     };
 
     renderSpy = vi.fn();
@@ -72,6 +77,7 @@ describe("media-application reject page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
         pageTitle: "Are you sure you want to reject this application?",
         subheading: "Applicant's details",
+        reasonsHeading: "Rejection reasons",
         tableHeaders: {
           name: "Name",
           email: "Email",
@@ -85,6 +91,7 @@ describe("media-application reject page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
+        reasonsList: ["The applicant is not an accredited member of the media.", "ID provided has expired or is not a Press ID."],
         hideLanguageToggle: true
       });
     });
@@ -111,6 +118,7 @@ describe("media-application reject page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
         pageTitle: "A ydych yn siŵr eich bod am wrthod y cais hwn?",
         subheading: "Manylion yr ymgeisydd",
+        reasonsHeading: "Rhesymau dros wrthod",
         tableHeaders: {
           name: "Enw",
           email: "E-bost",
@@ -124,6 +132,7 @@ describe("media-application reject page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
+        reasonsList: ["Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.", "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg."],
         hideLanguageToggle: true
       });
     });
@@ -177,6 +186,7 @@ describe("media-application reject page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
         pageTitle: "Are you sure you want to reject this application?",
         subheading: "Applicant's details",
+        reasonsHeading: "Rejection reasons",
         tableHeaders: {
           name: "Name",
           email: "Email",
@@ -190,6 +200,7 @@ describe("media-application reject page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
+        reasonsList: ["The applicant is not an accredited member of the media.", "ID provided has expired or is not a Press ID."],
         errors: [{ text: "Select yes or no before continuing.", href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -217,6 +228,7 @@ describe("media-application reject page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
         pageTitle: "A ydych yn siŵr eich bod am wrthod y cais hwn?",
         subheading: "Manylion yr ymgeisydd",
+        reasonsHeading: "Rhesymau dros wrthod",
         tableHeaders: {
           name: "Enw",
           email: "E-bost",
@@ -230,6 +242,7 @@ describe("media-application reject page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
+        reasonsList: ["Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.", "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg."],
         errors: [{ text: "Dewiswch ie neu na cyn parhau.", href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -279,9 +292,10 @@ describe("media-application reject page", () => {
 
       expect(rejectApplication).toHaveBeenCalledWith("app-123");
       expect(sendMediaRejectionEmail).toHaveBeenCalledWith({
-        name: "John Smith",
+        fullName: "John Smith",
         email: "john@bbc.co.uk",
-        employer: "BBC"
+        rejectReasons: "The applicant is not an accredited member of the media.\nID provided has expired or is not a Press ID.",
+        linkToService: expect.any(String)
       });
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/rejected");
     });

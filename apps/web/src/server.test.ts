@@ -25,7 +25,7 @@ vi.mock("node:fs", async () => {
 vi.mock("./app.js", () => ({
   createApp: vi.fn(async () => {
     // Express app is actually a function, so we need to mock it as such
-    const mockApp = vi.fn((req: any, res: any) => {
+    const mockApp = vi.fn((_req: any, _res: any) => {
       // Mock request handler
     }) as any;
 

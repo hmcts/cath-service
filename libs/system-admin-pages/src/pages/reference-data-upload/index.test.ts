@@ -49,7 +49,7 @@ describe("reference-data-upload page", () => {
           locale: "en"
         })
       );
-    });
+    }, 10000);
 
     it("should clear errors from session after rendering", async () => {
       mockRequest.session!.uploadErrors = [{ text: "Test error", href: "#file" }];

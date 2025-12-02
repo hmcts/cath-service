@@ -90,10 +90,17 @@ const postHandler = async (req: Request, res: Response) => {
     await rejectApplication(id);
 
     try {
+      const sessionReasons = req.session?.rejectionReasons || {};
+      const selectedReasons = sessionReasons.selectedReasons || [];
+      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+      const rejectReasons = reasonsList.join("\n");
+      const linkToService = process.env.BASE_URL || "https://localhost:8080";
+
       await sendMediaRejectionEmail({
-        name: application.name,
+        fullName: application.name,
         email: application.email,
-        employer: application.employer
+        rejectReasons,
+        linkToService
       });
     } catch (error) {
       console.error("❌ Failed to send rejection email:", error);

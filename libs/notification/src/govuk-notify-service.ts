@@ -10,6 +10,13 @@ interface MediaApplicationEmailData {
   employer: string;
 }
 
+interface MediaApplicationRejectionEmailData {
+  fullName: string;
+  email: string;
+  rejectReasons: string;
+  linkToService: string;
+}
+
 export async function sendMediaApprovalEmail(data: MediaApplicationEmailData): Promise<void> {
   if (!GOVUK_NOTIFY_API_KEY) {
     throw new Error("GOV Notify API key not configured");
@@ -23,14 +30,14 @@ export async function sendMediaApprovalEmail(data: MediaApplicationEmailData): P
 
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_APPROVAL, data.email, {
     personalisation: {
-      "Full name": data.name,
-      Employer: data.employer
+      name: data.name,
+      employer: data.employer
     },
     reference: `media-approval-${Date.now()}`
   });
 }
 
-export async function sendMediaRejectionEmail(data: MediaApplicationEmailData): Promise<void> {
+export async function sendMediaRejectionEmail(data: MediaApplicationRejectionEmailData): Promise<void> {
   if (!GOVUK_NOTIFY_API_KEY) {
     throw new Error("GOV Notify API key not configured");
   }
@@ -43,8 +50,9 @@ export async function sendMediaRejectionEmail(data: MediaApplicationEmailData): 
 
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_REJECTION, data.email, {
     personalisation: {
-      "Full name": data.name,
-      Employer: data.employer
+      "full-name": data.fullName,
+      "reject-reasons": data.rejectReasons,
+      "link-to-service": data.linkToService
     },
     reference: `media-rejection-${Date.now()}`
   });
