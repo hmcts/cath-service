@@ -317,7 +317,6 @@ describe("processBlobIngestion", async () => {
       sent: 5,
       failed: 0,
       skipped: 0,
-      duplicates: 0,
       errors: []
     });
 
@@ -487,7 +486,6 @@ describe("processBlobIngestion", async () => {
       sent: 3,
       failed: 2,
       skipped: 0,
-      duplicates: 0,
       errors: [
         { email: "user1@example.com", error: "Invalid email" },
         { email: "user2@example.com", error: "Service unavailable" }
@@ -504,8 +502,7 @@ describe("processBlobIngestion", async () => {
       totalSubscriptions: 5,
       sent: 3,
       failed: 2,
-      skipped: 0,
-      duplicates: 0
+      skipped: 0
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith("Notification errors:", [

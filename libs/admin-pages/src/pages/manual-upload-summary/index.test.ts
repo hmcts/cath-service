@@ -572,7 +572,6 @@ describe("manual-upload-summary page", () => {
         sent: 5,
         failed: 0,
         skipped: 0,
-        duplicates: 0,
         errors: []
       });
 
@@ -683,7 +682,6 @@ describe("manual-upload-summary page", () => {
         sent: 0,
         failed: 0,
         skipped: 0,
-        duplicates: 0,
         errors: []
       });
 
@@ -751,7 +749,6 @@ describe("manual-upload-summary page", () => {
         sent: 0,
         failed: 0,
         skipped: 0,
-        duplicates: 0,
         errors: []
       });
 
@@ -787,7 +784,6 @@ describe("manual-upload-summary page", () => {
         sent: 0,
         failed: 0,
         skipped: 0,
-        duplicates: 0,
         errors: []
       });
 
@@ -828,7 +824,6 @@ describe("manual-upload-summary page", () => {
         sent: 0,
         failed: 0,
         skipped: 0,
-        duplicates: 0,
         errors: []
       });
 

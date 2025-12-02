@@ -171,8 +171,7 @@ async function triggerPublicationNotifications(publicationId: string, courtId: s
     totalSubscriptions: result.totalSubscriptions,
     sent: result.sent,
     failed: result.failed,
-    skipped: result.skipped,
-    duplicates: result.duplicates
+    skipped: result.skipped
   });
 
   if (result.errors.length > 0) {
