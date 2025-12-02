@@ -8,7 +8,11 @@ import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamily
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
-import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
+import {
+  fileUploadRoutes as publicPagesFileUploadRoutes,
+  moduleRoot as publicPagesModuleRoot,
+  pageRoutes as publicPagesRoutes
+} from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import {
   fileUploadRoutes as systemAdminFileUploadRoutes,
@@ -108,9 +112,10 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
 
-  // Register file upload middleware for create media account
-  app.post("/create-media-account", createFileUploadMiddleware("idProof"));
-
+  // Register file upload middleware for public pages
+  for (const route of publicPagesFileUploadRoutes) {
+    app.post(route, createFileUploadMiddleware("idProof"));
+  }
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 

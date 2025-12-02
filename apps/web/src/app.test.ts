@@ -77,6 +77,7 @@ vi.mock("@hmcts/location/config", () => ({
 }));
 
 vi.mock("@hmcts/public-pages/config", () => ({
+  fileUploadRoutes: ["/create-media-account"],
   moduleRoot: "/mock/public-pages",
   pageRoutes: { path: "/mock/public-pages/pages" }
 }));
