@@ -1,9 +1,28 @@
-import type { EmailResponse } from "notifications-node-client";
 import { NotifyClient } from "notifications-node-client";
 import { getApiKey, getTemplateId, type TemplateParameters } from "./template-config.js";
 
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
 const NOTIFICATION_RETRY_DELAY_MS = Number.parseInt(process.env.NOTIFICATION_RETRY_DELAY_MS || "1000", 10);
+
+interface NotificationBody {
+  id: string;
+  reference: string | null;
+  uri: string;
+  template: {
+    id: string;
+    version: number;
+    uri: string;
+  };
+  content: {
+    subject: string | null;
+    body: string;
+    from_email: string;
+  };
+}
+
+interface EmailResponse {
+  body: NotificationBody;
+}
 
 export interface SendEmailParams {
   emailAddress: string;
