@@ -52,6 +52,51 @@ vi.mock("@hmcts/auth", () => ({
   cftCallbackHandler: vi.fn()
 }));
 
+vi.mock("@hmcts/admin-pages/config", () => ({
+  fileUploadRoutes: ["/manual-upload", "/non-strategic-upload"],
+  moduleRoot: "/mock/admin-pages",
+  pageRoutes: { path: "/mock/admin-pages/pages" }
+}));
+
+vi.mock("@hmcts/auth/config", () => ({
+  moduleRoot: "/mock/auth",
+  pageRoutes: { path: "/mock/auth/pages" }
+}));
+
+vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/civil-family",
+  pageRoutes: { path: "/mock/civil-family/pages" }
+}));
+
+vi.mock("@hmcts/list-types-common/config", () => ({
+  moduleRoot: "/mock/list-types-common"
+}));
+
+vi.mock("@hmcts/location/config", () => ({
+  apiRoutes: { path: "/mock/location/routes" }
+}));
+
+vi.mock("@hmcts/public-pages/config", () => ({
+  moduleRoot: "/mock/public-pages",
+  pageRoutes: { path: "/mock/public-pages/pages" }
+}));
+
+vi.mock("@hmcts/system-admin-pages/config", () => ({
+  fileUploadRoutes: ["/reference-data-upload"],
+  moduleRoot: "/mock/system-admin",
+  pageRoutes: { path: "/mock/system-admin/pages" }
+}));
+
+vi.mock("@hmcts/verified-pages/config", () => ({
+  moduleRoot: "/mock/verified-pages",
+  pageRoutes: { path: "/mock/verified-pages/pages" }
+}));
+
+vi.mock("@hmcts/web-core/config", () => ({
+  pageRoutes: { path: "/mock/web-core/pages" },
+  moduleRoot: "/mock/web-core"
+}));
+
 describe("Web Application", () => {
   let app: Express;
 
