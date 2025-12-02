@@ -94,12 +94,24 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
 
     // Trigger notification for subscribed users (fire-and-forget pattern)
     if (!noMatch) {
-      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.display_from)).catch((error) => {
+      console.log("[blob-ingestion] Triggering notifications for publication:", {
+        artefactId,
+        courtId: request.court_id,
+        listTypeId: validation.listTypeId
+      });
+
+      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date)).catch((error) => {
         console.error("Failed to trigger publication notifications:", {
           artefactId,
           courtId: request.court_id,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
         });
+      });
+    } else {
+      console.log("[blob-ingestion] Skipping notifications (no_match=true):", {
+        artefactId,
+        courtId: request.court_id
       });
     }
 
