@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 
 test.describe("400 Error Page", () => {
-  test("should display 400 error page with correct content @nightly", async ({ page }) => {
+  test("should display 400 error page with correct content", async ({ page }) => {
     await page.goto("/400");
 
     // Check page heading
@@ -22,11 +22,8 @@ test.describe("400 Error Page", () => {
     const contactLink = page.locator('a[href="/contact-us"]');
     await expect(contactLink).toBeVisible();
     await expect(contactLink).toContainText(/contact us/i);
-  });
 
-  test("should meet WCAG 2.2 AA accessibility standards @nightly", async ({ page }) => {
-    await page.goto("/400");
-
+    // Check WCAG 2.2 AA accessibility compliance
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .disableRules(["target-size", "link-name"])
