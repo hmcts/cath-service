@@ -21,12 +21,13 @@ export async function sendMediaApprovalEmail(data: MediaApplicationEmailData): P
 
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
-  const personalisation = {
-    "Full name": data.name,
-    Employer: data.employer
-  };
-
-  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_APPROVAL, data.email, personalisation, `media-approval-${Date.now()}`);
+  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_APPROVAL, data.email, {
+    personalisation: {
+      "Full name": data.name,
+      Employer: data.employer
+    },
+    reference: `media-approval-${Date.now()}`
+  });
 }
 
 export async function sendMediaRejectionEmail(data: MediaApplicationEmailData): Promise<void> {
@@ -40,10 +41,11 @@ export async function sendMediaRejectionEmail(data: MediaApplicationEmailData): 
 
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
-  const personalisation = {
-    "Full name": data.name,
-    Employer: data.employer
-  };
-
-  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_REJECTION, data.email, personalisation, `media-rejection-${Date.now()}`);
+  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_REJECTION, data.email, {
+    personalisation: {
+      "Full name": data.name,
+      Employer: data.employer
+    },
+    reference: `media-rejection-${Date.now()}`
+  });
 }
