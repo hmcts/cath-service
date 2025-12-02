@@ -14,7 +14,7 @@ const API_BASE_URL = "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
 const validPayload = {
-  court_id: "1",
+  court_id: "9001",
   provenance: "XHIBIT",
   content_date: "2024-12-01",
   list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
@@ -70,7 +70,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser.userId);
 
-    const subscription = await createTestSubscription(testUser.userId, 1);
+    const subscription = await createTestSubscription(testUser.userId, 9001);
     testData.subscriptionIds.push(subscription.subscriptionId);
 
     const token = await getApiAuthToken();
@@ -97,7 +97,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     const userWithoutEmail = await createTestUser("");
     testData.userIds.push(userWithoutEmail.userId);
 
-    const subscription = await createTestSubscription(userWithoutEmail.userId, 1);
+    const subscription = await createTestSubscription(userWithoutEmail.userId, 9001);
     testData.subscriptionIds.push(subscription.subscriptionId);
 
     const token = await getApiAuthToken();
@@ -146,7 +146,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     const userWithInvalidEmail = await createTestUser("invalid@@domain");
     testData.userIds.push(userWithInvalidEmail.userId);
 
-    const subscription = await createTestSubscription(userWithInvalidEmail.userId, 1);
+    const subscription = await createTestSubscription(userWithInvalidEmail.userId, 9001);
     testData.subscriptionIds.push(subscription.subscriptionId);
 
     const token = await getApiAuthToken();
