@@ -32,14 +32,46 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
   const notifyClient = new NotifyClient(getApiKey());
   const templateId = getTemplateId();
 
-  const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
-    personalisation: params.templateParameters
-  });
+  try {
+    console.log("[govnotify-client] Sending email:", {
+      templateId,
+      emailAddress: params.emailAddress,
+      templateParameters: params.templateParameters
+    });
 
-  return {
-    success: true,
-    notificationId: response.body.id
-  };
+    const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
+      personalisation: params.templateParameters
+    });
+
+    console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
+    console.log("[govnotify-client] Response.data:", response?.data);
+    console.log("[govnotify-client] Response.body:", response?.body);
+
+    // The notifications-node-client v8.x returns response.data
+    const notificationId = response?.data?.id || response?.body?.id || response?.id;
+
+    if (!notificationId) {
+      console.error("[govnotify-client] Could not find notification ID. Available keys:", Object.keys(response || {}));
+      throw new Error(`Unable to extract notification ID from response`);
+    }
+
+    console.log("[govnotify-client] Successfully sent email with notification ID:", notificationId);
+
+    return {
+      success: true,
+      notificationId
+    };
+  } catch (error: any) {
+    console.error("[govnotify-client] Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+
+    const errorDetails = error.response?.data?.errors || error.message || String(error);
+    const detailedError = typeof errorDetails === "object" ? JSON.stringify(errorDetails) : errorDetails;
+    throw new Error(`GOV.UK Notify error: ${detailedError}`);
+  }
 }
 
 async function retryWithBackoff<T>(fn: () => Promise<T>, retries: number, delay = NOTIFICATION_RETRY_DELAY_MS): Promise<T> {

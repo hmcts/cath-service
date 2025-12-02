@@ -36,15 +36,6 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     publicationIds: []
   };
 
-  test.beforeAll(async () => {
-    // Skip all tests in this suite if no valid API token is available
-    // API authentication requires proper Azure AD OAuth tokens which are complex to generate in tests
-    // These tests can be enabled when a valid TEST_API_TOKEN environment variable is provided
-    test.skip(!process.env.TEST_API_TOKEN || process.env.TEST_API_TOKEN === "test-token",
-      "Skipping blob ingestion notification tests: Requires valid Azure AD OAuth token in TEST_API_TOKEN. " +
-      "Use manual upload notification tests instead, which use SSO authentication.");
-  });
-
   test.afterEach(async () => {
     await cleanupTestNotifications(testData.publicationIds);
     await cleanupTestSubscriptions(testData.subscriptionIds);
@@ -68,16 +59,19 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    expect(response.status()).toBe(201);
     const result = await response.json();
+    console.log("API Response:", { status: response.status(), result });
+
+    expect(response.status()).toBe(201);
     expect(result.success).toBe(true);
 
     const publicationId = result.artefact_id;
     testData.publicationIds.push(publicationId);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const notifications = await getNotificationsByPublicationId(publicationId);
+    console.log("Notifications found:", notifications);
     expect(notifications).toHaveLength(1);
     expect(notifications[0].status).toBe("Sent");
     expect(notifications[0].govNotifyId).toBeTruthy();
@@ -85,7 +79,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
   });
 
   test("should verify GOV.UK Notify email content", async ({ request }) => {
-    test.skip(!process.env.GOVNOTIFY_API_KEY, "Skipping: GOVNOTIFY_API_KEY not set");
+    test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
     const testUser = await createTestUser("govnotify.test@example.com");
     testData.userIds.push(testUser.userId);

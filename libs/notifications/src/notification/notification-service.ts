@@ -1,6 +1,6 @@
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import { buildTemplateParameters } from "../govnotify/template-config.js";
-import { createNotificationAuditLog, findExistingNotification, updateNotificationStatus } from "./notification-queries.js";
+import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
 import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
@@ -9,12 +9,11 @@ export interface NotificationResult {
   sent: number;
   failed: number;
   skipped: number;
-  duplicates: number;
   errors: string[];
 }
 
 interface UserNotificationResult {
-  status: "sent" | "failed" | "skipped" | "duplicate";
+  status: "sent" | "failed" | "skipped";
   error?: string;
 }
 
@@ -37,7 +36,6 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
       sent: 0,
       failed: 0,
       skipped: 0,
-      duplicates: 0,
       errors: []
     };
   }
@@ -49,7 +47,6 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
     sent: 0,
     failed: 0,
     skipped: 0,
-    duplicates: 0,
     errors: []
   };
 
@@ -72,9 +69,6 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
             result.errors.push(userResult.error);
           }
           break;
-        case "duplicate":
-          result.duplicates++;
-          break;
       }
     } else {
       result.failed++;
@@ -87,14 +81,6 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
 
 async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent): Promise<UserNotificationResult> {
   try {
-    const existingNotification = await findExistingNotification(subscription.userId, event.publicationId);
-
-    if (existingNotification) {
-      return {
-        status: "duplicate"
-      };
-    }
-
     if (!subscription.user.email) {
       const notification = await createNotificationAuditLog({
         subscriptionId: subscription.subscriptionId,

@@ -65,7 +65,7 @@ The following credentials are automatically fetched from Azure Key Vault (`pip-b
 To enable email content verification tests, set:
 
 ```bash
-export GOVNOTIFY_API_KEY=your-govnotify-api-key
+export GOVUK_NOTIFY_API_KEY=your-govuk-notify-api-key
 ```
 
 Without this, the email content verification test will be skipped.

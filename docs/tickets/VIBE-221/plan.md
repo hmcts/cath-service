@@ -135,9 +135,9 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, retries: number): Promi
 ```
 
 **Required environment variables:**
-- `GOVNOTIFY_API_KEY`
-- `GOVNOTIFY_TEMPLATE_ID`
-- `GOVNOTIFY_BASE_URL` (optional, defaults to production)
+- `GOVUK_NOTIFY_API_KEY`
+- `GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION`
+- `GOVUK_NOTIFY_BASE_URL` (optional, defaults to production)
 - `CATH_SERVICE_URL` (for manage subscriptions link)
 
 #### 5. Validation (`validation.ts`)
@@ -414,9 +414,9 @@ await sendPublicationNotifications({
 ### Environment Variables
 ```bash
 # Gov.Notify Configuration
-GOVNOTIFY_API_KEY=your-api-key-here
-GOVNOTIFY_TEMPLATE_ID=your-template-id-here
-GOVNOTIFY_BASE_URL=https://api.notifications.service.gov.uk  # Optional
+GOVUK_NOTIFY_API_KEY=your-api-key-here
+GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION=your-template-id-here
+GOVUK_NOTIFY_BASE_URL=https://api.notifications.service.gov.uk  # Optional
 
 # CaTH Service URL
 CATH_SERVICE_URL=https://www.court-tribunal-hearings.service.gov.uk
@@ -426,7 +426,7 @@ NOTIFICATION_RETRY_ATTEMPTS=1
 NOTIFICATION_RETRY_DELAY_MS=1000
 
 # Timeout Configuration (optional, defaults)
-GOVNOTIFY_TIMEOUT_MS=10000
+GOVUK_NOTIFY_TIMEOUT_MS=10000
 ```
 
 ### Gov.Notify Template Setup

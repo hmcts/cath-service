@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables BEFORE any imports
-process.env.GOVNOTIFY_API_KEY = "test-api-key";
-process.env.GOVNOTIFY_TEMPLATE_ID = "test-template-id";
+process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";
+process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "test-template-id";
 process.env.CATH_SERVICE_URL = "https://www.court-tribunal-hearings.service.gov.uk";
 
 const mockSendEmail = vi.fn();
@@ -20,7 +20,7 @@ describe("govnotify-client", () => {
     vi.clearAllMocks();
 
     mockSendEmail.mockResolvedValue({
-      body: {
+      data: {
         id: "notification-123"
       }
     });
@@ -32,11 +32,11 @@ describe("govnotify-client", () => {
     const result = await sendEmail({
       emailAddress: "user@example.com",
       templateParameters: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
 
@@ -44,11 +44,11 @@ describe("govnotify-client", () => {
     expect(result.notificationId).toBe("notification-123");
     expect(mockSendEmail).toHaveBeenCalledWith("test-template-id", "user@example.com", {
       personalisation: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
   });
@@ -61,16 +61,16 @@ describe("govnotify-client", () => {
     const result = await sendEmail({
       emailAddress: "user@example.com",
       templateParameters: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("API Error");
+    expect(result.error).toBe("GOV.UK Notify error: API Error");
     expect(result.notificationId).toBeUndefined();
   });
 
@@ -79,7 +79,7 @@ describe("govnotify-client", () => {
 
     // Fail once, succeed on retry (with default NOTIFICATION_RETRY_ATTEMPTS=1)
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
-      body: {
+      data: {
         id: "notification-456"
       }
     });
@@ -87,11 +87,11 @@ describe("govnotify-client", () => {
     const result = await sendEmail({
       emailAddress: "user@example.com",
       templateParameters: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
 
@@ -109,16 +109,16 @@ describe("govnotify-client", () => {
     const result = await sendEmail({
       emailAddress: "user@example.com",
       templateParameters: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Second failure");
+    expect(result.error).toBe("GOV.UK Notify error: Second failure");
     expect(mockSendEmail).toHaveBeenCalledTimes(2);
   });
 
@@ -130,16 +130,16 @@ describe("govnotify-client", () => {
     const result = await sendEmail({
       emailAddress: "user@example.com",
       templateParameters: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("String error");
+    expect(result.error).toBe("GOV.UK Notify error: String error");
     expect(result.notificationId).toBeUndefined();
   });
 
@@ -158,7 +158,7 @@ describe("govnotify-client", () => {
 
     // Fail once, succeed on retry
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
-      body: {
+      data: {
         id: "notification-789"
       }
     });
@@ -166,11 +166,11 @@ describe("govnotify-client", () => {
     const result = await sendEmail({
       emailAddress: "user@example.com",
       templateParameters: {
-        user_name: "Test User",
-        hearing_list_name: "Daily Cause List",
-        publication_date: "1 December 2024",
-        location_name: "Test Court",
-        manage_link: "https://www.court-tribunal-hearings.service.gov.uk"
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
 

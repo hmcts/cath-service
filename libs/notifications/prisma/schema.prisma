@@ -21,7 +21,6 @@ model NotificationAuditLog {
 
   subscription Subscription @relation(fields: [subscriptionId], references: [subscriptionId])
 
-  @@unique([userId, publicationId])
   @@index([publicationId])
   @@index([status])
   @@index([govNotifyId])

@@ -13,7 +13,6 @@ vi.mock("./subscription-queries.js", () => ({
 }));
 
 vi.mock("./notification-queries.js", () => ({
-  findExistingNotification: vi.fn(),
   createNotificationAuditLog: vi.fn(),
   updateNotificationStatus: vi.fn()
 }));
@@ -48,10 +47,9 @@ describe("notification-service", () => {
     ];
 
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { findExistingNotification, createNotificationAuditLog } = await import("./notification-queries.js");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(findExistingNotification).mockResolvedValue(null);
     vi.mocked(createNotificationAuditLog).mockResolvedValue({
       notificationId: "notif-1",
       subscriptionId: "sub-1",
@@ -75,49 +73,6 @@ describe("notification-service", () => {
     expect(result.sent).toBe(2);
     expect(result.failed).toBe(0);
     expect(result.skipped).toBe(0);
-    expect(result.duplicates).toBe(0);
-  });
-
-  it("should handle duplicate notifications", async () => {
-    const mockSubscriptions = [
-      {
-        subscriptionId: "sub-1",
-        userId: "user-1",
-        locationId: 1,
-        user: {
-          email: "user1@example.com",
-          firstName: "John",
-          surname: "Doe"
-        }
-      }
-    ];
-
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { findExistingNotification } = await import("./notification-queries.js");
-
-    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(findExistingNotification).mockResolvedValue({
-      notificationId: "notif-1",
-      subscriptionId: "sub-1",
-      userId: "user-1",
-      publicationId: "pub-1",
-      status: "Sent",
-      errorMessage: null,
-      createdAt: new Date(),
-      sentAt: new Date()
-    });
-
-    const result = await sendPublicationNotifications({
-      publicationId: "pub-1",
-      locationId: "1",
-      locationName: "Test Court",
-      hearingListName: "Daily Cause List",
-      publicationDate: new Date("2024-12-01")
-    });
-
-    expect(result.totalSubscriptions).toBe(1);
-    expect(result.duplicates).toBe(1);
-    expect(result.sent).toBe(0);
   });
 
   it("should skip users with invalid email", async () => {
@@ -135,10 +90,9 @@ describe("notification-service", () => {
     ];
 
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { findExistingNotification, createNotificationAuditLog } = await import("./notification-queries.js");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(findExistingNotification).mockResolvedValue(null);
     vi.mocked(createNotificationAuditLog).mockResolvedValue({
       notificationId: "notif-1",
       subscriptionId: "sub-1",
@@ -218,10 +172,9 @@ describe("notification-service", () => {
     ];
 
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { findExistingNotification, createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
+    const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(findExistingNotification).mockResolvedValue(null);
     vi.mocked(createNotificationAuditLog).mockResolvedValue({
       notificationId: "notif-1",
       subscriptionId: "sub-1",
@@ -262,11 +215,10 @@ describe("notification-service", () => {
     ];
 
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { findExistingNotification, createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
+    const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(findExistingNotification).mockResolvedValue(null);
     vi.mocked(createNotificationAuditLog).mockResolvedValue({
       notificationId: "notif-1",
       subscriptionId: "sub-1",
@@ -312,10 +264,10 @@ describe("notification-service", () => {
     ];
 
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { findExistingNotification } = await import("./notification-queries.js");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(findExistingNotification).mockRejectedValue(new Error("Database connection error"));
+    vi.mocked(createNotificationAuditLog).mockRejectedValue(new Error("Database connection error"));
 
     const result = await sendPublicationNotifications({
       publicationId: "pub-1",

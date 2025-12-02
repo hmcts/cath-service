@@ -25,7 +25,9 @@ export async function createTestUser(email: string, firstName = "Test", surname 
       email,
       firstName,
       surname,
-      roles: ["VERIFIED"]
+      role: "VERIFIED",
+      userProvenance: "CFT_IDAM",
+      userProvenanceId: `cft-test-${userId}`
     }
   });
 
@@ -39,8 +41,7 @@ export async function createTestSubscription(userId: string, locationId: number)
     data: {
       subscriptionId,
       userId,
-      locationId,
-      createdAt: new Date()
+      locationId
     }
   });
 
@@ -62,9 +63,9 @@ export async function getNotificationsByPublicationId(publicationId: string) {
 }
 
 export async function getGovNotifyEmail(notificationId: string) {
-  const apiKey = process.env.GOVNOTIFY_API_KEY;
+  const apiKey = process.env.GOVUK_NOTIFY_API_KEY;
   if (!apiKey) {
-    throw new Error("GOVNOTIFY_API_KEY not set");
+    throw new Error("GOVUK_NOTIFY_API_KEY not set");
   }
 
   const notifyClient = new NotifyClient(apiKey);
@@ -72,11 +73,12 @@ export async function getGovNotifyEmail(notificationId: string) {
 }
 
 export async function cleanupTestNotifications(publicationIds: string[]) {
-  if (publicationIds.length === 0) return;
+  const validIds = publicationIds.filter((id) => id !== undefined && id !== null);
+  if (validIds.length === 0) return;
 
   await (prisma as any).notificationAuditLog.deleteMany({
     where: {
-      publicationId: { in: publicationIds }
+      publicationId: { in: validIds }
     }
   });
 }

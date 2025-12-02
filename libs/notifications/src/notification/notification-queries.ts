@@ -50,19 +50,6 @@ export async function updateNotificationStatus(
   });
 }
 
-export async function findExistingNotification(userId: string, publicationId: string): Promise<NotificationAuditLog | null> {
-  const notification = await prisma.notificationAuditLog.findUnique({
-    where: {
-      userId_publicationId: {
-        userId,
-        publicationId
-      }
-    }
-  });
-
-  return notification;
-}
-
 export async function getNotificationByGovNotifyId(govNotifyId: string): Promise<NotificationAuditLog | null> {
   return await prisma.notificationAuditLog.findFirst({
     where: { govNotifyId }
