@@ -249,7 +249,7 @@ export const POST = async (req: Request, res: Response) => {
 
 ```html
 <!-- libs/[my-module]/src/pages/[page-name].njk -->
-{% extends "layouts/default.njk" %}
+{% extends "layouts/base-templates.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}

@@ -9,6 +9,7 @@ export default defineConfig({
     passWithNoTests: true,
     setupFiles: [path.join(__dirname, "vitest.setup.ts")],
     coverage: {
+      provider: "v8",
       reporter: ["lcov", "text"],
       reportsDirectory: "coverage",
     },
