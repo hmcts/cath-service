@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "@hmcts/web-core"; // Import for Express type augmentation
-import { moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
+import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
@@ -10,14 +10,18 @@ import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-commo
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
+import {
+  fileUploadRoutes as systemAdminFileUploadRoutes,
+  moduleRoot as systemAdminModuleRoot,
+  pageRoutes as systemAdminPageRoutes
+} from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
   configureGovuk,
   configureHelmet,
   configureNonce,
-  createFileUpload,
+  createFileUploadMiddleware,
   errorHandler,
   expressSessionRedis,
   notFoundHandler
@@ -106,42 +110,17 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
-  // Register file upload middleware for admin pages
-  const upload = createFileUpload();
-
-  // Register reference data upload with file upload middleware
-  app.post("/reference-data-upload", (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      if (err) {
-        req.fileUploadError = err;
-      }
-      next();
-    });
-  });
+  // Register file upload middleware for system admin pages
+  const fileUploadMiddleware = createFileUploadMiddleware();
+  for (const route of systemAdminFileUploadRoutes) {
+    app.post(route, fileUploadMiddleware);
+  }
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
 
-  // Register manual upload with file upload middleware
-  app.post("/manual-upload", (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      if (err) {
-        // Multer error occurred, but don't throw - let the route handler deal with validation
-        // Store the error so the POST handler can check it
-        req.fileUploadError = err;
-      }
-      next();
-    });
-  });
-
-  // Register non-strategic upload with file upload middleware
-  app.post("/non-strategic-upload", (req, res, next) => {
-    upload.single("file")(req, res, (err) => {
-      if (err) {
-        req.fileUploadError = err;
-      }
-      next();
-    });
-  });
-
+  // Register file upload middleware for admin pages
+  for (const route of adminFileUploadRoutes) {
+    app.post(route, fileUploadMiddleware);
+  }
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
   app.use(notFoundHandler());
