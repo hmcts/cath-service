@@ -6,14 +6,15 @@ import {
   createTestSubscription,
   createTestUser,
   getGovNotifyEmail,
-  getNotificationsByPublicationId
+  getNotificationsByPublicationId,
+  waitForNotifications
 } from "../../utils/notification-helpers.js";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 
 const API_BASE_URL = "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
-const validPayload = {
+const VALID_PAYLOAD = {
   court_id: "9001",
   provenance: "XHIBIT",
   content_date: "2024-12-01",
@@ -75,17 +76,15 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
 
     const token = await getApiAuthToken();
     const response = await request.post(ENDPOINT, {
-      data: validPayload,
+      data: VALID_PAYLOAD,
       headers: { Authorization: `Bearer ${token}` }
     });
 
     const result = await response.json();
     testData.publicationIds.push(result.artefact_id);
 
-    // Wait longer for async notification processing to complete
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    const notifications = await getNotificationsByPublicationId(result.artefact_id);
+    // Wait for async notification processing with retry logic
+    const notifications = await waitForNotifications(result.artefact_id);
 
     // Verify notification was created
     expect(notifications.length).toBeGreaterThan(0);
@@ -109,7 +108,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
 
     const token = await getApiAuthToken();
     const response = await request.post(ENDPOINT, {
-      data: validPayload,
+      data: VALID_PAYLOAD,
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -117,12 +116,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     testData.publicationIds.push(result.artefact_id);
 
     // Wait for async notification processing (with retry logic)
-    let notifications = [];
-    for (let i = 0; i < 10; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      notifications = await getNotificationsByPublicationId(result.artefact_id);
-      if (notifications.length > 0) break;
-    }
+    const notifications = await waitForNotifications(result.artefact_id);
 
     // Filter to only this test's subscription
     const myNotifications = notifications.filter((n) => n.subscriptionId === subscription.subscriptionId);
@@ -135,7 +129,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
   test("should not send notifications when no subscriptions exist", async ({ request }) => {
     const token = await getApiAuthToken();
     const response = await request.post(ENDPOINT, {
-      data: { ...validPayload, court_id: "999" },
+      data: { ...VALID_PAYLOAD, court_id: "999" },
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -158,7 +152,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
 
     const token = await getApiAuthToken();
     const response = await request.post(ENDPOINT, {
-      data: validPayload,
+      data: VALID_PAYLOAD,
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -166,12 +160,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     testData.publicationIds.push(result.artefact_id);
 
     // Wait for async notification processing (with retry logic)
-    let notifications = [];
-    for (let i = 0; i < 10; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      notifications = await getNotificationsByPublicationId(result.artefact_id);
-      if (notifications.length > 0) break;
-    }
+    const notifications = await waitForNotifications(result.artefact_id);
 
     // Filter to only this test's subscription
     const myNotifications = notifications.filter((n) => n.subscriptionId === subscription.subscriptionId);

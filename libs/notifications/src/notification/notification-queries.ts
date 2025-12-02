@@ -5,6 +5,7 @@ export interface CreateNotificationData {
   userId: string;
   publicationId: string;
   status?: string;
+  errorMessage?: string;
 }
 
 export interface NotificationAuditLog {
@@ -25,7 +26,8 @@ export async function createNotificationAuditLog(data: CreateNotificationData): 
       subscriptionId: data.subscriptionId,
       userId: data.userId,
       publicationId: data.publicationId,
-      status: data.status || "Pending"
+      status: data.status || "Pending",
+      errorMessage: data.errorMessage
     }
   });
 

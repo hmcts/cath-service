@@ -8,7 +8,8 @@ import {
   cleanupTestUsers,
   createTestSubscription,
   createTestUser,
-  getNotificationsByPublicationId
+  getNotificationsByPublicationId,
+  getNotificationsBySubscriptionId
 } from "../utils/notification-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
@@ -783,9 +784,11 @@ test.describe("Manual Upload End-to-End Flow", () => {
     const testData: {
       userIds: string[];
       subscriptionIds: string[];
+      publicationIds: string[];
     } = {
       userIds: [],
-      subscriptionIds: []
+      subscriptionIds: [],
+      publicationIds: []
     };
 
     test.beforeEach(async ({ page }) => {
@@ -793,11 +796,13 @@ test.describe("Manual Upload End-to-End Flow", () => {
     });
 
     test.afterEach(async () => {
+      await cleanupTestNotifications(testData.publicationIds);
       await cleanupTestSubscriptions(testData.subscriptionIds);
       await cleanupTestUsers(testData.userIds);
 
       testData.userIds = [];
       testData.subscriptionIds = [];
+      testData.publicationIds = [];
     });
 
     test("should send notification after manual upload confirmation", async ({ page }) => {
@@ -840,6 +845,18 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       const successPanel = page.locator(".govuk-panel");
       await expect(successPanel).toBeVisible();
+
+      // Verify notifications were created
+      const myNotifications = await getNotificationsBySubscriptionId(subscription.subscriptionId);
+
+      expect(myNotifications.length).toBeGreaterThan(0);
+      expect(myNotifications[0].status).toBe("Sent");
+      expect(myNotifications[0].govNotifyId).toBeDefined();
+
+      // Track publication ID for cleanup
+      if (myNotifications.length > 0) {
+        testData.publicationIds.push(myNotifications[0].publicationId);
+      }
     });
 
     test("should send notifications to multiple subscribers for manual upload", async ({ page }) => {
@@ -884,6 +901,26 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       const successPanel = page.locator(".govuk-panel");
       await expect(successPanel).toBeVisible();
+
+      // Verify notifications were created for both subscribers
+      const notifications1 = await getNotificationsBySubscriptionId(sub1.subscriptionId);
+      const notifications2 = await getNotificationsBySubscriptionId(sub2.subscriptionId);
+
+      expect(notifications1.length).toBeGreaterThan(0);
+      expect(notifications1[0].status).toBe("Sent");
+      expect(notifications1[0].govNotifyId).toBeDefined();
+
+      expect(notifications2.length).toBeGreaterThan(0);
+      expect(notifications2[0].status).toBe("Sent");
+      expect(notifications2[0].govNotifyId).toBeDefined();
+
+      // Both notifications should be for the same publication
+      expect(notifications1[0].publicationId).toBe(notifications2[0].publicationId);
+
+      // Track publication ID for cleanup
+      if (notifications1.length > 0) {
+        testData.publicationIds.push(notifications1[0].publicationId);
+      }
     });
   });
 });

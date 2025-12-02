@@ -27,6 +27,24 @@ declare module "notifications-node-client" {
         };
       };
     }>;
+    getNotificationById(
+      notificationId: string
+    ): Promise<{
+      id: string;
+      status: string;
+      type: string;
+      email_address?: string;
+      phone_number?: string;
+      body: string;
+      created_at: string;
+      sent_at?: string;
+      template: {
+        id: string;
+        version: number;
+        uri: string;
+      };
+      [key: string]: any;
+    }>;
   }
 
   export default {

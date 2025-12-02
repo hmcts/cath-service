@@ -62,6 +62,27 @@ export async function getNotificationsByPublicationId(publicationId: string) {
   });
 }
 
+export async function waitForNotifications(
+  publicationId: string,
+  maxRetries = 10,
+  delayMs = 1000
+): Promise<any[]> {
+  let notifications = [];
+  for (let i = 0; i < maxRetries; i++) {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    notifications = await getNotificationsByPublicationId(publicationId);
+    if (notifications.length > 0) break;
+  }
+  return notifications;
+}
+
+export async function getNotificationsBySubscriptionId(subscriptionId: string) {
+  return await (prisma as any).notificationAuditLog.findMany({
+    where: { subscriptionId },
+    orderBy: { createdAt: "desc" }
+  });
+}
+
 export async function getGovNotifyEmail(notificationId: string) {
   const apiKey = process.env.GOVUK_NOTIFY_API_KEY;
   if (!apiKey) {
