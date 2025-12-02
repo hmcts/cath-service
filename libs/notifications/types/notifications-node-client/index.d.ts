@@ -16,9 +16,24 @@ declare module "notifications-node-client" {
   }
 
   export interface EmailResponse {
-    data?: NotificationBody;
-    body?: NotificationBody;
-    id?: string;
+    body: NotificationBody;
+  }
+
+  export interface NotificationResponse {
+    id: string;
+    status: string;
+    type: string;
+    email_address?: string;
+    phone_number?: string;
+    body: string;
+    created_at: string;
+    sent_at?: string;
+    template: {
+      id: string;
+      version: number;
+      uri: string;
+    };
+    [key: string]: any;
   }
 
   export interface EmailOptions {
@@ -30,6 +45,6 @@ declare module "notifications-node-client" {
   export class NotifyClient {
     constructor(apiKey: string);
     sendEmail(templateId: string, emailAddress: string, options?: EmailOptions): Promise<EmailResponse>;
-    getNotificationById(notificationId: string): Promise<EmailResponse>;
+    getNotificationById(notificationId: string): Promise<NotificationResponse>;
   }
 }

@@ -505,10 +505,10 @@ describe("processBlobIngestion", async () => {
       skipped: 0
     });
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Notification errors:", [
-      { email: "user1@example.com", error: "Invalid email" },
-      { email: "user2@example.com", error: "Service unavailable" }
-    ]);
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Notification errors:", {
+      count: 2,
+      errors: ['{"email":"[REDACTED_EMAIL]","error":"Invalid email"}', '{"email":"[REDACTED_EMAIL]","error":"Service unavailable"}']
+    });
 
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();

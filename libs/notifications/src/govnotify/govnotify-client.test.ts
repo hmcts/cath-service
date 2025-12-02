@@ -20,8 +20,20 @@ describe("govnotify-client", () => {
     vi.clearAllMocks();
 
     mockSendEmail.mockResolvedValue({
-      data: {
-        id: "notification-123"
+      body: {
+        id: "notification-123",
+        reference: null,
+        uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-123",
+        template: {
+          id: "test-template-id",
+          version: 1,
+          uri: "https://api.notifications.service.gov.uk/v2/templates/test-template-id"
+        },
+        content: {
+          subject: "Test Subject",
+          body: "Test Body",
+          from_email: "noreply@notifications.service.gov.uk"
+        }
       }
     });
   });
@@ -79,8 +91,20 @@ describe("govnotify-client", () => {
 
     // Fail once, succeed on retry (with default NOTIFICATION_RETRY_ATTEMPTS=1)
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
-      data: {
-        id: "notification-456"
+      body: {
+        id: "notification-456",
+        reference: null,
+        uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-456",
+        template: {
+          id: "test-template-id",
+          version: 1,
+          uri: "https://api.notifications.service.gov.uk/v2/templates/test-template-id"
+        },
+        content: {
+          subject: "Test Subject",
+          body: "Test Body",
+          from_email: "noreply@notifications.service.gov.uk"
+        }
       }
     });
 
@@ -158,8 +182,20 @@ describe("govnotify-client", () => {
 
     // Fail once, succeed on retry
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
-      data: {
-        id: "notification-789"
+      body: {
+        id: "notification-789",
+        reference: null,
+        uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-789",
+        template: {
+          id: "test-template-id",
+          version: 1,
+          uri: "https://api.notifications.service.gov.uk/v2/templates/test-template-id"
+        },
+        content: {
+          subject: "Test Subject",
+          body: "Test Body",
+          from_email: "noreply@notifications.service.gov.uk"
+        }
       }
     });
 

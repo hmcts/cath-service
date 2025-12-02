@@ -37,11 +37,12 @@ export async function createTestUser(email: string, firstName = "Test", surname 
 export async function createTestSubscription(userId: string, locationId: number): Promise<TestSubscription> {
   const subscriptionId = randomUUID();
 
-  await (prisma as any).subscription.create({
+  await prisma.subscription.create({
     data: {
       subscriptionId,
       userId,
-      locationId
+      locationId,
+      dateAdded: new Date()
     }
   });
 

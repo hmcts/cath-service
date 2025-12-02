@@ -176,7 +176,10 @@ async function triggerPublicationNotifications(publicationId: string, courtId: s
 
   if (result.errors.length > 0) {
     // Sanitize errors to redact email addresses (PII)
-    const sanitizedErrors = result.errors.map((error) => error.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]"));
+    const sanitizedErrors = result.errors.map((error) => {
+      const errorStr = typeof error === "string" ? error : JSON.stringify(error);
+      return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
+    });
     console.error("Notification errors:", { count: result.errors.length, errors: sanitizedErrors });
   }
 }

@@ -1,14 +1,9 @@
+import type { EmailResponse } from "notifications-node-client";
 import { NotifyClient } from "notifications-node-client";
 import { getApiKey, getTemplateId, type TemplateParameters } from "./template-config.js";
 
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
 const NOTIFICATION_RETRY_DELAY_MS = Number.parseInt(process.env.NOTIFICATION_RETRY_DELAY_MS || "1000", 10);
-
-interface EmailResponse {
-  data?: { id: string };
-  body?: { id: string };
-  id?: string;
-}
 
 export interface SendEmailParams {
   emailAddress: string;
@@ -45,16 +40,15 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       templateParameters: params.templateParameters
     });
 
-    const response = (await notifyClient.sendEmail(templateId, params.emailAddress, {
+    const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
       personalisation: params.templateParameters
-    })) as EmailResponse;
+    });
 
     console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
-    console.log("[govnotify-client] Response.data:", response?.data);
     console.log("[govnotify-client] Response.body:", response?.body);
 
-    // The notifications-node-client v8.x returns response.data
-    const notificationId = response?.data?.id || response?.body?.id || response?.id;
+    // The notifications-node-client v8.x returns response.body
+    const notificationId = response?.body?.id;
 
     if (!notificationId) {
       console.error("[govnotify-client] Could not find notification ID. Available keys:", Object.keys(response || {}));

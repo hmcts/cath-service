@@ -266,7 +266,7 @@ describe("authenticateApi", () => {
     // Mock config
     vi.mocked(config.default.get).mockImplementation((key: string) => {
       if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_CLIENT_ID") return "test-client-id";
+      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
       return undefined;
     });
 
@@ -294,7 +294,7 @@ describe("authenticateApi", () => {
     // Mock config
     vi.mocked(config.default.get).mockImplementation((key: string) => {
       if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_CLIENT_ID") return "test-client-id";
+      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
       return undefined;
     });
 
@@ -326,7 +326,7 @@ describe("authenticateApi", () => {
     // Mock config
     vi.mocked(config.default.get).mockImplementation((key: string) => {
       if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_CLIENT_ID") return "test-client-id";
+      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
       return undefined;
     });
 
@@ -367,7 +367,7 @@ describe("authenticateApi", () => {
     // Mock config
     vi.mocked(config.default.get).mockImplementation((key: string) => {
       if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_CLIENT_ID") return "test-client-id";
+      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
       return undefined;
     });
 
@@ -415,7 +415,7 @@ describe("authenticateApi", () => {
     // Mock config
     vi.mocked(config.default.get).mockImplementation((key: string) => {
       if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_CLIENT_ID") return "test-client-id";
+      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
       return undefined;
     });
 
