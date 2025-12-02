@@ -366,7 +366,7 @@ describe('UserService', () => {
 
 ### E2E Testing with Playwright
 
-**CRITICAL: Minimize Test Count**
+#### CRITICAL: Minimize Test Count
 
 **Create the minimum number of tests.** Each test should represent a complete end-to-end user journey. Do NOT create separate tests for individual validations, accessibility checks, or Welsh translations. Instead, include all validations, accessibility checks, and Welsh translations within the journey test itself.
 
@@ -412,12 +412,13 @@ test('accessibility passes on subscribe page', async ({ page }) => { /* ... */ }
 test('user completes subscription', async ({ page }) => { /* ... */ });
 ```
 
-**Test Organization:**
+#### Test Organization
+
 - Location: `e2e-tests/`
 - Naming: `*.spec.ts`
 - Tag nightly-only tests with `@nightly` in test title
 
-**What to Include in Each Journey Test:**
+#### What to Include in Each Journey Test
 1. Complete user journey from start to finish
 2. All relevant validation checks encountered in the journey
 3. Welsh translation checks at key points
@@ -425,7 +426,8 @@ test('user completes subscription', async ({ page }) => { /* ... */ });
 5. Keyboard navigation where relevant
 6. Successful completion of the journey
 
-**Example Pattern:**
+#### Example Pattern
+
 ```typescript
 test('user can complete journey @nightly', async ({ page }) => {
   // 1. Test main journey
@@ -448,29 +450,34 @@ test('user can complete journey @nightly', async ({ page }) => {
 });
 ```
 
-**Correct Selectors (Priority Order):**
+#### Correct Selectors (Priority Order)
+
 1. `getByRole()` - Preferred for accessibility
 2. `getByLabel()` - For form inputs
 3. `getByText()` - For specific text
 4. `getByTestId()` - Last resort only
 
-**DO NOT Test:**
+#### DO NOT Test
+
 - Font sizes
 - Background colors
 - Margins/padding
 - Any visual styling
 - UI design aspects
 
-**Test Data Management:**
+#### Test Data Management
+
 - Use global-setup.ts for reference data seeding
 - Use test-specific data creation in tests
 - Clean up test data in global-teardown.ts
 
-**Coverage Expectations:**
+#### Coverage Expectations
+
 - E2E tests: Cover critical user journeys
 - Accessibility: Test inline with journeys (not separately)
 
-**Running Tests:**
+#### Running Tests
+
 ```bash
 yarn test:e2e                   # Run E2E tests (excludes @nightly)
 yarn test:e2e:all               # Run all E2E tests (including @nightly)
