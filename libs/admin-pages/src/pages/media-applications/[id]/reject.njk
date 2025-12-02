@@ -1,0 +1,79 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+      <p><a href="/media-applications" class="govuk-link">Back to applications list</a></p>
+    {% elif application %}
+      {% if errors %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: errors
+        }) }}
+      {% endif %}
+
+      <h2 class="govuk-heading-m">{{ subheading }}</h2>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: tableHeaders.name },
+            value: { text: application.name }
+          },
+          {
+            key: { text: tableHeaders.email },
+            value: { text: application.email }
+          },
+          {
+            key: { text: tableHeaders.employer },
+            value: { text: application.employer }
+          },
+          {
+            key: { text: tableHeaders.dateApplied },
+            value: { text: application.appliedDate | date('DD/MM/YYYY') }
+          }
+        ]
+      }) }}
+
+      <form method="post" novalidate>
+        {{ govukRadios({
+          name: "confirm",
+          fieldset: {
+            legend: {
+              text: radioLegend,
+              classes: "govuk-visually-hidden"
+            }
+          },
+          errorMessage: errors[0] if errors else undefined,
+          items: [
+            {
+              value: "yes",
+              text: radioOptions.yes
+            },
+            {
+              value: "no",
+              text: radioOptions.no
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: continueButton
+        }) }}
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

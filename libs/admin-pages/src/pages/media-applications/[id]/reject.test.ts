@@ -7,7 +7,7 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 vi.mock("@hmcts/notification", () => ({
-  sendMediaApprovalEmail: vi.fn()
+  sendMediaRejectionEmail: vi.fn()
 }));
 
 vi.mock("../../../media-application/queries.js", () => ({
@@ -15,15 +15,15 @@ vi.mock("../../../media-application/queries.js", () => ({
 }));
 
 vi.mock("../../../media-application/service.js", () => ({
-  approveApplication: vi.fn()
+  rejectApplication: vi.fn()
 }));
 
 const { getApplicationById } = await import("../../../media-application/queries.js");
-const { approveApplication } = await import("../../../media-application/service.js");
-const { sendMediaApprovalEmail } = await import("@hmcts/notification");
-const { GET, POST } = await import("./approve.js");
+const { rejectApplication } = await import("../../../media-application/service.js");
+const { sendMediaRejectionEmail } = await import("@hmcts/notification");
+const { GET, POST } = await import("./reject.js");
 
-describe("media-application approve page", () => {
+describe("media-application reject page", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let renderSpy: ReturnType<typeof vi.fn>;
@@ -51,7 +51,7 @@ describe("media-application approve page", () => {
   });
 
   describe("GET handler", () => {
-    it("should render approve confirmation page in English", async () => {
+    it("should render reject confirmation page in English", async () => {
       const mockApplication = {
         id: "app-123",
         name: "John Smith",
@@ -69,8 +69,8 @@ describe("media-application approve page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       expect(getApplicationById).toHaveBeenCalledWith("app-123");
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
         subheading: "Applicant's details",
         tableHeaders: {
           name: "Name",
@@ -78,7 +78,7 @@ describe("media-application approve page", () => {
           employer: "Employer",
           dateApplied: "Date applied"
         },
-        radioLegend: "Confirm approval",
+        radioLegend: "Confirm rejection",
         radioOptions: {
           yes: "Yes",
           no: "No"
@@ -108,8 +108,8 @@ describe("media-application approve page", () => {
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "A ydych yn siŵr eich bod am wrthod y cais hwn?",
         subheading: "Manylion yr ymgeisydd",
         tableHeaders: {
           name: "Enw",
@@ -117,7 +117,7 @@ describe("media-application approve page", () => {
           employer: "Cyflogwr",
           dateApplied: "Dyddiad gwneud cais"
         },
-        radioLegend: "Cadarnhau cymeradwyaeth",
+        radioLegend: "Cadarnhau gwrthod",
         radioOptions: {
           yes: "Ie",
           no: "Na"
@@ -146,8 +146,8 @@ describe("media-application approve page", () => {
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
         error: "Unable to load applicant details. Please try again later.",
         application: null,
         hideLanguageToggle: true
@@ -174,8 +174,8 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
         subheading: "Applicant's details",
         tableHeaders: {
           name: "Name",
@@ -183,7 +183,7 @@ describe("media-application approve page", () => {
           employer: "Employer",
           dateApplied: "Date applied"
         },
-        radioLegend: "Confirm approval",
+        radioLegend: "Confirm rejection",
         radioOptions: {
           yes: "Yes",
           no: "No"
@@ -214,8 +214,8 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "A ydych yn siŵr eich bod am wrthod y cais hwn?",
         subheading: "Manylion yr ymgeisydd",
         tableHeaders: {
           name: "Enw",
@@ -223,7 +223,7 @@ describe("media-application approve page", () => {
           employer: "Cyflogwr",
           dateApplied: "Dyddiad gwneud cais"
         },
-        radioLegend: "Cadarnhau cymeradwyaeth",
+        radioLegend: "Cadarnhau gwrthod",
         radioOptions: {
           yes: "Ie",
           no: "Na"
@@ -254,10 +254,10 @@ describe("media-application approve page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123");
-      expect(approveApplication).not.toHaveBeenCalled();
+      expect(rejectApplication).not.toHaveBeenCalled();
     });
 
-    it("should approve application and redirect when 'yes' is selected", async () => {
+    it("should reject application and redirect when 'yes' is selected", async () => {
       const mockApplication = {
         id: "app-123",
         name: "John Smith",
@@ -270,23 +270,23 @@ describe("media-application approve page", () => {
       };
 
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      vi.mocked(approveApplication).mockResolvedValue();
-      vi.mocked(sendMediaApprovalEmail).mockResolvedValue();
+      vi.mocked(rejectApplication).mockResolvedValue();
+      vi.mocked(sendMediaRejectionEmail).mockResolvedValue();
       mockRequest.body = { confirm: "yes" };
 
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(approveApplication).toHaveBeenCalledWith("app-123");
-      expect(sendMediaApprovalEmail).toHaveBeenCalledWith({
+      expect(rejectApplication).toHaveBeenCalledWith("app-123");
+      expect(sendMediaRejectionEmail).toHaveBeenCalledWith({
         name: "John Smith",
         email: "john@bbc.co.uk",
         employer: "BBC"
       });
-      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
+      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/rejected");
     });
 
-    it("should still approve even if email notification fails", async () => {
+    it("should still reject even if email notification fails", async () => {
       const mockApplication = {
         id: "app-123",
         name: "John Smith",
@@ -299,15 +299,15 @@ describe("media-application approve page", () => {
       };
 
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      vi.mocked(approveApplication).mockResolvedValue();
-      vi.mocked(sendMediaApprovalEmail).mockRejectedValue(new Error("Email service error"));
+      vi.mocked(rejectApplication).mockResolvedValue();
+      vi.mocked(sendMediaRejectionEmail).mockRejectedValue(new Error("Email service error"));
       mockRequest.body = { confirm: "yes" };
 
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(approveApplication).toHaveBeenCalledWith("app-123");
-      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
+      expect(rejectApplication).toHaveBeenCalledWith("app-123");
+      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/rejected");
     });
 
     it("should return 404 when application not found", async () => {
@@ -330,8 +330,8 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
         error: "Unable to load applicant details. Please try again later.",
         application: null,
         hideLanguageToggle: true

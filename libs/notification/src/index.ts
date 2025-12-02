@@ -1,1 +1,1 @@
-export { sendMediaApprovalEmail } from "./govuk-notify-service.js";
+export { sendMediaApprovalEmail, sendMediaRejectionEmail } from "./govuk-notify-service.js";

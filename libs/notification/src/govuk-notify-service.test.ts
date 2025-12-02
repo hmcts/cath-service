@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables before importing the module
 process.env.GOVUK_NOTIFY_API_KEY = "test-api-key-12345";
-process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL = "test-template-id";
+process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL = "test-template-id-approval";
+process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION = "test-template-id-rejection";
 
 // Mock the NotifyClient
 const mockSendEmail = vi.fn();
@@ -16,7 +17,7 @@ vi.mock("notifications-node-client", () => ({
 }));
 
 // Import after mocking
-const { sendMediaApprovalEmail } = await import("./govuk-notify-service.js");
+const { sendMediaApprovalEmail, sendMediaRejectionEmail } = await import("./govuk-notify-service.js");
 
 describe("GOV Notify Service", () => {
   beforeEach(() => {
@@ -52,7 +53,7 @@ describe("GOV Notify Service", () => {
       await sendMediaApprovalEmail(testData);
 
       expect(mockSendEmail).toHaveBeenCalledWith(
-        "test-template-id",
+        "test-template-id-approval",
         "john@example.com",
         {
           "Full name": "John Smith",
@@ -103,6 +104,89 @@ describe("GOV Notify Service", () => {
       };
 
       await expect(sendMediaApprovalEmail(testData)).rejects.toThrow("Network timeout");
+    });
+  });
+
+  describe("sendMediaRejectionEmail", () => {
+    it("should send email with correct parameters", async () => {
+      mockSendEmail.mockResolvedValue({
+        data: {
+          id: "test-notification-id",
+          reference: "media-rejection-123",
+          uri: "https://api.notifications.service.gov.uk/v2/notifications/test-notification-id",
+          template: {
+            id: "test-template-id-rejection",
+            version: 1,
+            uri: "https://api.notifications.service.gov.uk/v2/template/test-template-id-rejection"
+          },
+          content: {
+            subject: "Media Account Application Decision",
+            body: "Your application has been unsuccessful",
+            from_email: "noreply@notifications.service.gov.uk"
+          }
+        }
+      });
+
+      const testData = {
+        name: "John Smith",
+        email: "john@example.com",
+        employer: "BBC"
+      };
+
+      await sendMediaRejectionEmail(testData);
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        "test-template-id-rejection",
+        "john@example.com",
+        {
+          "Full name": "John Smith",
+          Employer: "BBC"
+        },
+        expect.stringContaining("media-rejection-")
+      );
+    });
+
+    it("should rethrow API errors", async () => {
+      const apiError = {
+        response: {
+          status: 400,
+          data: {
+            errors: [
+              {
+                error: "BadRequestError",
+                message: "Missing personalisation: Full name"
+              }
+            ],
+            status_code: 400
+          }
+        },
+        message: "Bad Request"
+      };
+
+      mockSendEmail.mockRejectedValue(apiError);
+
+      const testData = {
+        name: "John Smith",
+        email: "john@example.com",
+        employer: "BBC"
+      };
+
+      await expect(sendMediaRejectionEmail(testData)).rejects.toMatchObject({
+        message: "Bad Request"
+      });
+    });
+
+    it("should handle network errors", async () => {
+      const networkError = new Error("Network timeout");
+      mockSendEmail.mockRejectedValue(networkError);
+
+      const testData = {
+        name: "John Smith",
+        email: "john@example.com",
+        employer: "BBC"
+      };
+
+      await expect(sendMediaRejectionEmail(testData)).rejects.toThrow("Network timeout");
     });
   });
 });
