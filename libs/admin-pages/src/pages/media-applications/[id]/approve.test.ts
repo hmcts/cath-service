@@ -234,13 +234,18 @@ describe("media-application approve page", () => {
 
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
         pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
-        subheading: "Manylion yr ymgeisydd",
+        subheading: "Manylion Yr Ymgeisydd",
         tableHeaders: {
           name: "Enw",
           email: "E-bost",
           employer: "Cyflogwr",
-          dateApplied: "Dyddiad gwneud cais"
+          dateApplied: "Dyddiad gwneud cais",
+          proofOfId: "Prawf o ID"
         },
+        proofOfIdFilename: undefined,
+        proofOfIdText: "(yn agor mewn ffenestr newydd)",
+        viewProofOfId: "Gweld",
+        fileNotAvailable: "Ffeil ar gael ddim",
         radioLegend: "Cadarnhau cymeradwyaeth",
         radioOptions: {
           yes: "Ie",
@@ -248,7 +253,7 @@ describe("media-application approve page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
-        errors: [{ text: "Dewiswch ie neu na cyn parhau.", href: "#confirm" }],
+        errors: [{ text: "Rhaid dewis opsiwn", href: "#confirm" }],
         hideLanguageToggle: true
       });
     });

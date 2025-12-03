@@ -63,11 +63,14 @@ describe("media-application rejected page", () => {
           employer: "Employer",
           dateApplied: "Date applied"
         },
+        reasonsHeading: "Rejection Reasons",
+        viewLinkText: "View",
         whatHappensNextHeading: "What happens next",
         whatHappensNextText:
-          "The applicant will be notified that their application was unsuccessful. They may contact CTSC if they have any questions about this decision.",
+          "The applicant {applicantEmail} will now be emailed to notify them why their application cannot be progressed and invited to reapply once the issue(s) are rectified.",
         returnLink: "Return to applications list",
         application: mockApplication,
+        reasonsList: [],
         hideLanguageToggle: true
       });
     });
@@ -99,11 +102,14 @@ describe("media-application rejected page", () => {
           employer: "Cyflogwr",
           dateApplied: "Dyddiad gwneud cais"
         },
+        reasonsHeading: "Rhesymau Dros Wrthod",
+        viewLinkText: "Gweld",
         whatHappensNextHeading: "Beth sy'n digwydd nesaf",
         whatHappensNextText:
-          "Bydd yr ymgeisydd yn cael gwybod bod ei gais wedi bod yn aflwyddiannus. Gallant gysylltu â CTSC os oes ganddynt unrhyw gwestiynau am y penderfyniad hwn.",
+          "Bydd yr ymgeisydd {applicantEmail} nawr yn cael e-bost i'w hysbysu pam na ellir bwrw ymlaen â'i gais a'i wahodd i ail-wneud cais unwaith y bydd y mater/materion wedi'u cywiro.",
         returnLink: "Dychwelyd i'r rhestr ceisiadau",
         application: mockApplication,
+        reasonsList: [],
         hideLanguageToggle: true
       });
     });
