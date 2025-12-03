@@ -6,12 +6,16 @@ export default {
     name: "Enw",
     email: "E-bost",
     employer: "Cyflogwr",
-    dateApplied: "Dyddiad gwneud cais"
+    dateApplied: "Dyddiad gwneud cais",
+    proofOfId: "Prawf o ID"
   },
   reasons: {
-    notAccredited: "Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.",
-    invalidId: "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.",
-    detailsMismatch: "Nid yw'r manylion a ddarparwyd yn cyd-fynd."
+    notAccredited: [
+      "Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.",
+      "Gallwch fewngofnodi gyda chyfrif MyHMCTS presennol. Neu gallwch gofrestru eich sefydliad yn https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (yn agor mewn ffenestr newydd)"
+    ],
+    invalidId: ["Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.", "Darparwch ID Gwasg dilys."],
+    detailsMismatch: ["Nid yw'r manylion a ddarparwyd yn cyd-fynd.", "Nid yw'r enw, cyfeiriad e-bost ac ID y Wasg yn cyd-fynd â'i gilydd."]
   },
   radioLegend: "Cadarnhau gwrthod",
   radioOptions: {

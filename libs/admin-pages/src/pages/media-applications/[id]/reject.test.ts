@@ -82,7 +82,8 @@ describe("media-application reject page", () => {
           name: "Name",
           email: "Email",
           employer: "Employer",
-          dateApplied: "Date applied"
+          dateApplied: "Date applied",
+          proofOfId: "Proof of ID"
         },
         radioLegend: "Confirm rejection",
         radioOptions: {
@@ -91,7 +92,13 @@ describe("media-application reject page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
-        reasonsList: ["The applicant is not an accredited member of the media.", "ID provided has expired or is not a Press ID."],
+        reasonsList: [
+          "The applicant is not an accredited member of the media.",
+          "You can sign in with an existing MyHMCTS account. Or you can register your organisation at https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (opens in a new window)",
+          "ID provided has expired or is not a Press ID.",
+          "Please provide a valid Press ID."
+        ],
+        proofOfIdFileName: "proof-app-123.pdf",
         hideLanguageToggle: true
       });
     });
@@ -123,7 +130,8 @@ describe("media-application reject page", () => {
           name: "Enw",
           email: "E-bost",
           employer: "Cyflogwr",
-          dateApplied: "Dyddiad gwneud cais"
+          dateApplied: "Dyddiad gwneud cais",
+          proofOfId: "Prawf o ID"
         },
         radioLegend: "Cadarnhau gwrthod",
         radioOptions: {
@@ -132,7 +140,13 @@ describe("media-application reject page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
-        reasonsList: ["Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.", "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg."],
+        reasonsList: [
+          "Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.",
+          "Gallwch fewngofnodi gyda chyfrif MyHMCTS presennol. Neu gallwch gofrestru eich sefydliad yn https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (yn agor mewn ffenestr newydd)",
+          "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.",
+          "Darparwch ID Gwasg dilys."
+        ],
+        proofOfIdFileName: "proof-app-123.pdf",
         hideLanguageToggle: true
       });
     });
@@ -191,7 +205,8 @@ describe("media-application reject page", () => {
           name: "Name",
           email: "Email",
           employer: "Employer",
-          dateApplied: "Date applied"
+          dateApplied: "Date applied",
+          proofOfId: "Proof of ID"
         },
         radioLegend: "Confirm rejection",
         radioOptions: {
@@ -200,7 +215,13 @@ describe("media-application reject page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
-        reasonsList: ["The applicant is not an accredited member of the media.", "ID provided has expired or is not a Press ID."],
+        reasonsList: [
+          "The applicant is not an accredited member of the media.",
+          "You can sign in with an existing MyHMCTS account. Or you can register your organisation at https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (opens in a new window)",
+          "ID provided has expired or is not a Press ID.",
+          "Please provide a valid Press ID."
+        ],
+        proofOfIdFileName: "proof-app-123.pdf",
         errors: [{ text: "Select yes or no before continuing.", href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -233,7 +254,8 @@ describe("media-application reject page", () => {
           name: "Enw",
           email: "E-bost",
           employer: "Cyflogwr",
-          dateApplied: "Dyddiad gwneud cais"
+          dateApplied: "Dyddiad gwneud cais",
+          proofOfId: "Prawf o ID"
         },
         radioLegend: "Cadarnhau gwrthod",
         radioOptions: {
@@ -242,7 +264,13 @@ describe("media-application reject page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
-        reasonsList: ["Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.", "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg."],
+        reasonsList: [
+          "Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.",
+          "Gallwch fewngofnodi gyda chyfrif MyHMCTS presennol. Neu gallwch gofrestru eich sefydliad yn https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (yn agor mewn ffenestr newydd)",
+          "Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.",
+          "Darparwch ID Gwasg dilys."
+        ],
+        proofOfIdFileName: "proof-app-123.pdf",
         errors: [{ text: "Dewiswch ie neu na cyn parhau.", href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -294,7 +322,8 @@ describe("media-application reject page", () => {
       expect(sendMediaRejectionEmail).toHaveBeenCalledWith({
         fullName: "John Smith",
         email: "john@bbc.co.uk",
-        rejectReasons: "The applicant is not an accredited member of the media.\nID provided has expired or is not a Press ID.",
+        rejectReasons:
+          "The applicant is not an accredited member of the media.\nYou can sign in with an existing MyHMCTS account. Or you can register your organisation at https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (opens in a new window)\nID provided has expired or is not a Press ID.\nPlease provide a valid Press ID.",
         linkToService: expect.any(String)
       });
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/rejected");

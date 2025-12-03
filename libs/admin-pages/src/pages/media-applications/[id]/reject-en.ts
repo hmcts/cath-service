@@ -6,12 +6,16 @@ export default {
     name: "Name",
     email: "Email",
     employer: "Employer",
-    dateApplied: "Date applied"
+    dateApplied: "Date applied",
+    proofOfId: "Proof of ID"
   },
   reasons: {
-    notAccredited: "The applicant is not an accredited member of the media.",
-    invalidId: "ID provided has expired or is not a Press ID.",
-    detailsMismatch: "Details provided do not match."
+    notAccredited: [
+      "The applicant is not an accredited member of the media.",
+      "You can sign in with an existing MyHMCTS account. Or you can register your organisation at https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (opens in a new window)"
+    ],
+    invalidId: ["ID provided has expired or is not a Press ID.", "Please provide a valid Press ID."],
+    detailsMismatch: ["Details provided do not match.", "The name, email address and Press ID do not match each other."]
   },
   radioLegend: "Confirm rejection",
   radioOptions: {

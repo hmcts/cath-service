@@ -26,8 +26,7 @@
 
       <h2 class="govuk-heading-m">{{ subheading }}</h2>
 
-      {{ govukSummaryList({
-        rows: [
+      {% set summaryRows = [
           {
             key: { text: tableHeaders.name },
             value: { text: application.name }
@@ -44,7 +43,17 @@
             key: { text: tableHeaders.dateApplied },
             value: { text: application.appliedDate | date('DD/MM/YYYY') }
           }
-        ]
+        ] %}
+
+      {% if proofOfIdFileName %}
+        {% set summaryRows = (summaryRows.push({
+          key: { text: tableHeaders.proofOfId },
+          value: { html: '<a href="/media-applications/' + application.id + '/proof-of-id" class="govuk-link" target="_blank">' + proofOfIdFileName + ' (opens in a new window)</a>' }
+        }), summaryRows) %}
+      {% endif %}
+
+      {{ govukSummaryList({
+        rows: summaryRows
       }) }}
 
       {% if reasonsList and reasonsList.length > 0 %}

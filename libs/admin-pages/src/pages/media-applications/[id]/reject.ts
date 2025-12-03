@@ -24,7 +24,10 @@ const getHandler = async (req: Request, res: Response) => {
     // Get rejection reasons from session
     const sessionReasons = req.session?.rejectionReasons || {};
     const selectedReasons = sessionReasons.selectedReasons || [];
-    const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+    const reasonsList = selectedReasons.flatMap((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
+    // Extract filename from proofOfIdPath
+    const proofOfIdFileName = application.proofOfIdPath ? application.proofOfIdPath.split("/").pop() : null;
 
     res.render("media-applications/[id]/reject", {
       pageTitle: lang.pageTitle,
@@ -36,6 +39,7 @@ const getHandler = async (req: Request, res: Response) => {
       continueButton: lang.continueButton,
       application,
       reasonsList,
+      proofOfIdFileName,
       hideLanguageToggle: true
     });
   } catch (_error) {
@@ -66,7 +70,10 @@ const postHandler = async (req: Request, res: Response) => {
       // Get rejection reasons from session for re-rendering
       const sessionReasons = req.session?.rejectionReasons || {};
       const selectedReasons = sessionReasons.selectedReasons || [];
-      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+      const reasonsList = selectedReasons.flatMap((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
+      // Extract filename from proofOfIdPath
+      const proofOfIdFileName = application.proofOfIdPath ? application.proofOfIdPath.split("/").pop() : null;
 
       return res.render("media-applications/[id]/reject", {
         pageTitle: lang.pageTitle,
@@ -78,6 +85,7 @@ const postHandler = async (req: Request, res: Response) => {
         continueButton: lang.continueButton,
         application,
         reasonsList,
+        proofOfIdFileName,
         errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -92,7 +100,7 @@ const postHandler = async (req: Request, res: Response) => {
     try {
       const sessionReasons = req.session?.rejectionReasons || {};
       const selectedReasons = sessionReasons.selectedReasons || [];
-      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+      const reasonsList = selectedReasons.flatMap((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
       const rejectReasons = reasonsList.join("\n");
       const linkToService = process.env.BASE_URL || "https://localhost:8080";
 
