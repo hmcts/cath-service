@@ -1,0 +1,152 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+      <p><a href="/media-applications" class="govuk-link">Back to applications list</a></p>
+    {% elif application %}
+      {% if errors %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: errors
+        }) }}
+      {% endif %}
+
+      <h2 class="govuk-heading-m">{{ subheading }}</h2>
+
+      {% set reasonsHtml = '' %}
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set reasonsHtml = '<ol class="govuk-list govuk-list--number">' %}
+        {% for reason in reasonsList %}
+          {% if reason[0] %}
+            {% set reasonsHtml = reasonsHtml + '<li>' + reason[0] %}
+            {% if reason[1] %}
+              {% set reasonsHtml = reasonsHtml + '<br>' + reason[1] %}
+            {% endif %}
+            {% set reasonsHtml = reasonsHtml + '</li>' %}
+          {% endif %}
+        {% endfor %}
+        {% set reasonsHtml = reasonsHtml + '</ol>' %}
+      {% endif %}
+
+      {% set summaryRows = [
+          {
+            key: { text: tableHeaders.name },
+            value: { text: application.name }
+          },
+          {
+            key: { text: tableHeaders.email },
+            value: { text: application.email }
+          },
+          {
+            key: { text: tableHeaders.employer },
+            value: { text: application.employer }
+          },
+          {
+            key: { text: tableHeaders.dateApplied },
+            value: { text: application.appliedDate | date('DD MMM YYYY') }
+          }
+        ] %}
+
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set summaryRows = (summaryRows.push({
+          key: { text: reasonsHeading },
+          value: { html: reasonsHtml }
+        }), summaryRows) %}
+      {% endif %}
+
+      {% if application.proofOfIdOriginalName %}
+        {% set summaryRows = (summaryRows.push({
+          key: { text: tableHeaders.proofOfId },
+          value: { html: application.proofOfIdOriginalName },
+          actions: {
+            items: [
+              {
+                href: '/media-applications/' + application.id + '/proof-of-id',
+                text: viewLinkText,
+                visuallyHiddenText: 'proof of ID',
+                attributes: {
+                  target: '_blank',
+                  rel: 'noopener noreferrer'
+                }
+              }
+            ]
+          }
+        }), summaryRows) %}
+      {% endif %}
+
+      {{ govukSummaryList({
+        rows: summaryRows
+      }) }}
+
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set emailPreviewHtml %}
+          <p><i>{{ emailPreview.introText }}</i></p>
+          <p>{{ emailPreview.dear }} {{ application.name }}</p>
+          <p>{{ emailPreview.rejectionMessage }}</p>
+          <p>{{ emailPreview.reasonsHeading }}</p>
+          <ol>
+            {% for reason in reasonsList %}
+              <li>
+                {{ reason[0] | safe }}
+                {% if reason[1] %}
+                  <br>{{ reason[1] | safe }}
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ol>
+          <p>{{ emailPreview.accessMessage }}</p>
+          <p><a href="/create-media-account">{{ emailPreview.serviceLinkText }}</a></p>
+          <p><b>{{ emailPreview.from }}</b><br>{{ emailPreview.signature }}</p>
+        {% endset %}
+
+        {{ govukDetails({
+          summaryText: emailPreview.summaryText,
+          html: emailPreviewHtml
+        }) }}
+      {% endif %}
+
+      <form method="post" novalidate>
+        {{ govukRadios({
+          name: "confirm",
+          classes: "govuk-radios--inline",
+          fieldset: {
+            legend: {
+              text: radioLegend,
+              classes: "govuk-visually-hidden"
+            }
+          },
+          errorMessage: errors[0] if errors else undefined,
+          items: [
+            {
+              value: "yes",
+              text: radioOptions.yes
+            },
+            {
+              value: "no",
+              text: radioOptions.no
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: continueButton
+        }) }}
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

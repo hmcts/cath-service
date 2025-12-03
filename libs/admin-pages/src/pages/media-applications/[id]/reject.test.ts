@@ -7,7 +7,7 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 vi.mock("@hmcts/notification", () => ({
-  sendMediaApprovalEmail: vi.fn()
+  sendMediaRejectionEmail: vi.fn()
 }));
 
 vi.mock("../../../media-application/queries.js", () => ({
@@ -15,15 +15,15 @@ vi.mock("../../../media-application/queries.js", () => ({
 }));
 
 vi.mock("../../../media-application/service.js", () => ({
-  approveApplication: vi.fn()
+  rejectApplication: vi.fn()
 }));
 
 const { getApplicationById } = await import("../../../media-application/queries.js");
-const { approveApplication } = await import("../../../media-application/service.js");
-const { sendMediaApprovalEmail } = await import("@hmcts/notification");
-const { GET, POST } = await import("./approve.js");
+const { rejectApplication } = await import("../../../media-application/service.js");
+const { sendMediaRejectionEmail } = await import("@hmcts/notification");
+const { GET, POST } = await import("./reject.js");
 
-describe("media-application approve page", () => {
+describe("media-application reject page", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let renderSpy: ReturnType<typeof vi.fn>;
@@ -37,7 +37,12 @@ describe("media-application approve page", () => {
       params: { id: "app-123" },
       query: {},
       body: {},
-      user: { email: "admin@example.com" }
+      user: { email: "admin@example.com" },
+      session: {
+        rejectionReasons: {
+          selectedReasons: ["notAccredited", "invalidId"]
+        }
+      } as any
     };
 
     renderSpy = vi.fn();
@@ -51,7 +56,7 @@ describe("media-application approve page", () => {
   });
 
   describe("GET handler", () => {
-    it("should render approve confirmation page in English", async () => {
+    it("should render reject confirmation page in English", async () => {
       const mockApplication = {
         id: "app-123",
         name: "John Smith",
@@ -59,7 +64,6 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
-        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -70,9 +74,10 @@ describe("media-application approve page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       expect(getApplicationById).toHaveBeenCalledWith("app-123");
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
-        subheading: "Applicant's Details",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
+        subheading: "Applicant's details",
+        reasonsHeading: "Rejection Reasons",
         tableHeaders: {
           name: "Name",
           email: "Email",
@@ -80,17 +85,24 @@ describe("media-application approve page", () => {
           dateApplied: "Date applied",
           proofOfId: "Proof of ID"
         },
-        proofOfIdText: "(opens in a new window)",
-        viewProofOfId: "View",
-        fileNotAvailable: "File not available",
-        radioLegend: "Confirm approval",
+        viewLinkText: "View",
+        radioLegend: "Confirm rejection",
         radioOptions: {
           yes: "Yes",
           no: "No"
         },
         continueButton: "Continue",
+        emailPreview: expect.objectContaining({
+          summaryText: "Preview email to applicant"
+        }),
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
+        reasonsList: [
+          [
+            "<strong>The applicant is not an accredited member of the media.</strong>",
+            'You can sign in with an existing MyHMCTS account. Or you can register your organisation at <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link" target="_blank" rel="noopener noreferrer">https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals</a> (opens in a new window)'
+          ],
+          ["<strong>ID provided has expired or is not a Press ID.</strong>", "Please provide a valid Press ID."]
+        ],
         hideLanguageToggle: true
       });
     });
@@ -105,7 +117,6 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
-        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -115,9 +126,10 @@ describe("media-application approve page", () => {
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
-        subheading: "Manylion Yr Ymgeisydd",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "A ydych yn siŵr eich bod am wrthod y cais hwn?",
+        subheading: "Manylion yr ymgeisydd",
+        reasonsHeading: "Rhesymau Dros Wrthod",
         tableHeaders: {
           name: "Enw",
           email: "E-bost",
@@ -125,17 +137,24 @@ describe("media-application approve page", () => {
           dateApplied: "Dyddiad gwneud cais",
           proofOfId: "Prawf o ID"
         },
-        proofOfIdText: "(yn agor mewn ffenestr newydd)",
-        viewProofOfId: "Gweld",
-        fileNotAvailable: "Ffeil ar gael ddim",
-        radioLegend: "Cadarnhau cymeradwyaeth",
+        viewLinkText: "Gweld",
+        radioLegend: "Cadarnhau gwrthod",
         radioOptions: {
           yes: "Ie",
           no: "Na"
         },
         continueButton: "Parhau",
+        emailPreview: expect.objectContaining({
+          summaryText: "Rhagolwg o'r e-bost i'r ymgeisydd"
+        }),
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
+        reasonsList: [
+          [
+            "<strong>Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.</strong>",
+            'Gallwch fewngofnodi gyda chyfrif MyHMCTS presennol. Neu gallwch gofrestru eich sefydliad yn <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link" target="_blank" rel="noopener noreferrer">https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals</a> (yn agor mewn ffenestr newydd)'
+          ],
+          ["<strong>Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.</strong>", "Darparwch ID Gwasg dilys."]
+        ],
         hideLanguageToggle: true
       });
     });
@@ -158,8 +177,8 @@ describe("media-application approve page", () => {
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
         error: "Unable to load applicant details. Please try again later.",
         application: null,
         hideLanguageToggle: true
@@ -176,7 +195,6 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
-        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -187,9 +205,10 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
-        subheading: "Applicant's Details",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
+        subheading: "Applicant's details",
+        reasonsHeading: "Rejection Reasons",
         tableHeaders: {
           name: "Name",
           email: "Email",
@@ -197,17 +216,24 @@ describe("media-application approve page", () => {
           dateApplied: "Date applied",
           proofOfId: "Proof of ID"
         },
-        proofOfIdText: "(opens in a new window)",
-        viewProofOfId: "View",
-        fileNotAvailable: "File not available",
-        radioLegend: "Confirm approval",
+        viewLinkText: "View",
+        radioLegend: "Confirm rejection",
         radioOptions: {
           yes: "Yes",
           no: "No"
         },
         continueButton: "Continue",
+        emailPreview: expect.objectContaining({
+          summaryText: "Preview email to applicant"
+        }),
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
+        reasonsList: [
+          [
+            "<strong>The applicant is not an accredited member of the media.</strong>",
+            'You can sign in with an existing MyHMCTS account. Or you can register your organisation at <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link" target="_blank" rel="noopener noreferrer">https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals</a> (opens in a new window)'
+          ],
+          ["<strong>ID provided has expired or is not a Press ID.</strong>", "Please provide a valid Press ID."]
+        ],
         errors: [{ text: "An option must be selected", href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -232,9 +258,10 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
-        subheading: "Manylion Yr Ymgeisydd",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "A ydych yn siŵr eich bod am wrthod y cais hwn?",
+        subheading: "Manylion yr ymgeisydd",
+        reasonsHeading: "Rhesymau Dros Wrthod",
         tableHeaders: {
           name: "Enw",
           email: "E-bost",
@@ -242,17 +269,24 @@ describe("media-application approve page", () => {
           dateApplied: "Dyddiad gwneud cais",
           proofOfId: "Prawf o ID"
         },
-        proofOfIdFilename: undefined,
-        proofOfIdText: "(yn agor mewn ffenestr newydd)",
-        viewProofOfId: "Gweld",
-        fileNotAvailable: "Ffeil ar gael ddim",
-        radioLegend: "Cadarnhau cymeradwyaeth",
+        viewLinkText: "Gweld",
+        radioLegend: "Cadarnhau gwrthod",
         radioOptions: {
           yes: "Ie",
           no: "Na"
         },
         continueButton: "Parhau",
+        emailPreview: expect.objectContaining({
+          summaryText: "Rhagolwg o'r e-bost i'r ymgeisydd"
+        }),
         application: mockApplication,
+        reasonsList: [
+          [
+            "<strong>Nid yw'r ymgeisydd yn aelod achrededig o'r cyfryngau.</strong>",
+            'Gallwch fewngofnodi gyda chyfrif MyHMCTS presennol. Neu gallwch gofrestru eich sefydliad yn <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link" target="_blank" rel="noopener noreferrer">https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals</a> (yn agor mewn ffenestr newydd)'
+          ],
+          ["<strong>Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.</strong>", "Darparwch ID Gwasg dilys."]
+        ],
         errors: [{ text: "Rhaid dewis opsiwn", href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -266,7 +300,6 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
-        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -278,10 +311,10 @@ describe("media-application approve page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123");
-      expect(approveApplication).not.toHaveBeenCalled();
+      expect(rejectApplication).not.toHaveBeenCalled();
     });
 
-    it("should approve application and redirect when 'yes' is selected", async () => {
+    it("should reject application and redirect when 'yes' is selected", async () => {
       const mockApplication = {
         id: "app-123",
         name: "John Smith",
@@ -289,29 +322,30 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
-        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
 
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      vi.mocked(approveApplication).mockResolvedValue();
-      vi.mocked(sendMediaApprovalEmail).mockResolvedValue();
+      vi.mocked(rejectApplication).mockResolvedValue();
+      vi.mocked(sendMediaRejectionEmail).mockResolvedValue();
       mockRequest.body = { confirm: "yes" };
 
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(approveApplication).toHaveBeenCalledWith("app-123");
-      expect(sendMediaApprovalEmail).toHaveBeenCalledWith({
-        name: "John Smith",
+      expect(rejectApplication).toHaveBeenCalledWith("app-123");
+      expect(sendMediaRejectionEmail).toHaveBeenCalledWith({
+        fullName: "John Smith",
         email: "john@bbc.co.uk",
-        employer: "BBC"
+        rejectReasons:
+          "1. The applicant is not an accredited member of the media.\n^You can sign in with an existing MyHMCTS account. Or you can register your organisation at https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals (opens in a new window)\n2. ID provided has expired or is not a Press ID.\n^Please provide a valid Press ID.",
+        linkToService: expect.any(String)
       });
-      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
+      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/rejected");
     });
 
-    it("should still approve even if email notification fails", async () => {
+    it("should still reject even if email notification fails", async () => {
       const mockApplication = {
         id: "app-123",
         name: "John Smith",
@@ -319,21 +353,20 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
-        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
 
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      vi.mocked(approveApplication).mockResolvedValue();
-      vi.mocked(sendMediaApprovalEmail).mockRejectedValue(new Error("Email service error"));
+      vi.mocked(rejectApplication).mockResolvedValue();
+      vi.mocked(sendMediaRejectionEmail).mockRejectedValue(new Error("Email service error"));
       mockRequest.body = { confirm: "yes" };
 
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(approveApplication).toHaveBeenCalledWith("app-123");
-      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
+      expect(rejectApplication).toHaveBeenCalledWith("app-123");
+      expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/rejected");
     });
 
     it("should return 404 when application not found", async () => {
@@ -356,8 +389,8 @@ describe("media-application approve page", () => {
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
-        pageTitle: "Are you sure you want to approve this application?",
+      expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
+        pageTitle: "Are you sure you want to reject this application?",
         error: "Unable to load applicant details. Please try again later.",
         application: null,
         hideLanguageToggle: true
