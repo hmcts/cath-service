@@ -202,5 +202,29 @@ describe("Cookie Policy Page", () => {
       expect(cookieHelpers.setCookiePolicy).toHaveBeenCalledWith(mockResponse, {});
       expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
     });
+
+    it("should preserve Welsh language in redirect", async () => {
+      mockResponse.locals = {
+        ...mockResponse.locals,
+        locale: "cy"
+      };
+      mockRequest.body = { analytics: "on" };
+
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?lng=cy&saved=true");
+    });
+
+    it("should not add lng parameter for English", async () => {
+      mockResponse.locals = {
+        ...mockResponse.locals,
+        locale: "en"
+      };
+      mockRequest.body = { analytics: "on" };
+
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+    });
   });
 });

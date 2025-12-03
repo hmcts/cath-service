@@ -76,13 +76,13 @@ test.describe("Page Structure - VIBE-149", () => {
       // AC8: All 8 footer links present
       // Note: The footer has 8 links
       const footerLinksOpenInSameTab = [
-        { text: 'Help', href: 'https://www.gov.uk/help' },
-        { text: 'Privacy policy', href: 'https://www.gov.uk/help/privacy-notice' },
-        { text: 'Accessibility statement', href: '/accessibility-statement' },
-        { text: 'Contact us', href: 'https://www.gov.uk/contact' },
-        { text: 'Terms and conditions', href: 'https://www.gov.uk/help/terms-conditions' },
-        { text: 'Welsh', href: 'https://www.gov.uk/cymraeg' },
-        { text: 'Government Digital Service', href: 'https://www.gov.uk/government/organisations/government-digital-service' }
+        { text: "Help", href: "https://www.gov.uk/help" },
+        { text: "Privacy policy", href: "https://www.gov.uk/help/privacy-notice" },
+        { text: "Accessibility statement", href: "/accessibility-statement" },
+        { text: "Contact us", href: "https://www.gov.uk/contact" },
+        { text: "Terms and conditions", href: "https://www.gov.uk/help/terms-conditions" },
+        { text: "Welsh", href: "https://www.gov.uk/cymraeg" },
+        { text: "Government Digital Service", href: "https://www.gov.uk/government/organisations/government-digital-service" }
       ];
 
       // Verify we have 8 footer meta links
@@ -102,8 +102,8 @@ test.describe("Page Structure - VIBE-149", () => {
       // Verify Cookies link opens in new tab
       const cookiesLink = page.locator('.govuk-footer__link[href="/cookies-policy"]').first();
       await expect(cookiesLink).toBeVisible({ timeout: 5000 });
-      await expect(cookiesLink).toHaveAttribute('target', '_blank');
-      await expect(cookiesLink).toHaveAttribute('rel', 'noopener noreferrer');
+      await expect(cookiesLink).toHaveAttribute("target", "_blank");
+      await expect(cookiesLink).toHaveAttribute("rel", "noopener noreferrer");
     });
 
     test("should display Crown copyright link", async ({ page }) => {
@@ -163,7 +163,7 @@ test.describe("Page Structure - VIBE-149", () => {
 
       // Verify footer links are in Welsh
       const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-preferences"]');
-      await expect(cookiesLink).toContainText("Cwcis");
+      await expect(cookiesLink).toHaveText("Cwcis");
 
       // Click language toggle to switch back to English
       await englishToggle.click();
