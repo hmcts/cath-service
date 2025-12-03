@@ -20,7 +20,7 @@ describe("govnotify-client", () => {
     vi.clearAllMocks();
 
     mockSendEmail.mockResolvedValue({
-      body: {
+      data: {
         id: "notification-123",
         reference: null,
         uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-123",
@@ -91,7 +91,7 @@ describe("govnotify-client", () => {
 
     // Fail once, succeed on retry (with default NOTIFICATION_RETRY_ATTEMPTS=1)
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
-      body: {
+      data: {
         id: "notification-456",
         reference: null,
         uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-456",
@@ -182,7 +182,7 @@ describe("govnotify-client", () => {
 
     // Fail once, succeed on retry
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
-      body: {
+      data: {
         id: "notification-789",
         reference: null,
         uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-789",

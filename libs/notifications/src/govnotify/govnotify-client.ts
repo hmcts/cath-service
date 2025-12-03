@@ -4,7 +4,7 @@ import { getApiKey, getTemplateId, type TemplateParameters } from "./template-co
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
 const NOTIFICATION_RETRY_DELAY_MS = Number.parseInt(process.env.NOTIFICATION_RETRY_DELAY_MS || "1000", 10);
 
-interface NotificationBody {
+interface NotificationData {
   id: string;
   reference: string | null;
   uri: string;
@@ -21,7 +21,12 @@ interface NotificationBody {
 }
 
 interface EmailResponse {
-  body: NotificationBody;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  config: Record<string, any>;
+  request: any;
+  data: NotificationData;
 }
 
 export interface SendEmailParams {
@@ -64,10 +69,10 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
     });
 
     console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
-    console.log("[govnotify-client] Response.body:", response?.body);
+    console.log("[govnotify-client] Response.data:", response?.data);
 
-    // The notifications-node-client v8.x returns response.body
-    const notificationId = response?.body?.id;
+    // The notifications-node-client v8.x returns response.data (Axios response structure)
+    const notificationId = response?.data?.id;
 
     if (!notificationId) {
       console.error("[govnotify-client] Could not find notification ID. Available keys:", Object.keys(response || {}));
