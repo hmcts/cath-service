@@ -30,23 +30,23 @@ test.describe("Cookie Policy Page", () => {
     await page.goto("/cookies-policy");
 
     // Check analytics cookies (_ga, _gat, _gid)
-    await expect(page.locator("td:has-text('_ga')")).toBeVisible();
-    await expect(page.locator("td:has-text('_gat')")).toBeVisible();
-    await expect(page.locator("td:has-text('_gid')")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "_ga", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "_gat", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "_gid", exact: true })).toBeVisible();
 
     // Check session cookies
-    await expect(page.locator("td:has-text('connect.sid')")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "connect.sid", exact: true })).toBeVisible();
 
     // Check performance monitoring cookies
-    await expect(page.locator("td:has-text('dtCookie')")).toBeVisible();
-    await expect(page.locator("td:has-text('rxVisitor')")).toBeVisible();
-    await expect(page.locator("td:has-text('rxvt')")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "dtCookie", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "rxVisitor", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "rxvt", exact: true })).toBeVisible();
 
     // Check authentication cookies
-    await expect(page.locator("td:has-text('__auth-token')")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "__auth-token", exact: true })).toBeVisible();
 
     // Check security cookies
-    await expect(page.locator("td:has-text('__state')")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "__state", exact: true })).toBeVisible();
   });
 
   test("should save cookie preferences from policy page", async ({ page }) => {
@@ -172,7 +172,10 @@ test.describe("Cookie Policy Page", () => {
     await page.goto("/cookies-policy");
 
     // Check fieldset and legend structure
-    const analyticsFieldset = page.locator('fieldset').filter({ has: page.locator('input[name="analytics"]') }).first();
+    const analyticsFieldset = page
+      .locator("fieldset")
+      .filter({ has: page.locator('input[name="analytics"]') })
+      .first();
     await expect(analyticsFieldset).toBeVisible();
 
     // Check radio buttons have proper structure
@@ -212,7 +215,7 @@ test.describe("Cookie Policy Page", () => {
     await page.goto("/cookies-policy");
 
     // Back link should not be visible (page opens in new tab)
-    const backLink = page.locator('a.govuk-back-link');
+    const backLink = page.locator("a.govuk-back-link");
     await expect(backLink).not.toBeVisible();
   });
 
@@ -220,7 +223,7 @@ test.describe("Cookie Policy Page", () => {
     await page.goto("/cookies-policy");
 
     // Content should use full width column
-    const mainColumn = page.locator('.govuk-grid-column-full');
+    const mainColumn = page.locator(".govuk-grid-column-full");
     await expect(mainColumn).toBeVisible();
   });
 
@@ -260,10 +263,7 @@ test.describe("Cookie Policy Page - Footer Integration", () => {
     await page.goto("/");
 
     // Click footer link and wait for new page
-    const [newPage] = await Promise.all([
-      context.waitForEvent("page"),
-      page.locator('footer a:has-text("Cookies")').click()
-    ]);
+    const [newPage] = await Promise.all([context.waitForEvent("page"), page.locator('footer a:has-text("Cookies")').click()]);
 
     // Verify new page URL
     await expect(newPage).toHaveURL(/\/cookies-policy/);
@@ -275,9 +275,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   test("should not have accessibility violations", async ({ page }) => {
     await page.goto("/cookies-policy");
 
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -345,9 +343,12 @@ test.describe("Cookie Policy Page - Accessibility", () => {
     await page.goto("/cookies-policy");
 
     // Check analytics radio group has fieldset and legend
-    const analyticsFieldset = page.locator('fieldset').filter({
-      has: page.locator('input[name="analytics"]')
-    }).first();
+    const analyticsFieldset = page
+      .locator("fieldset")
+      .filter({
+        has: page.locator('input[name="analytics"]')
+      })
+      .first();
 
     await expect(analyticsFieldset).toBeVisible();
 
@@ -356,9 +357,12 @@ test.describe("Cookie Policy Page - Accessibility", () => {
     await expect(analyticsLegend).toContainText("Allow cookies that measure website use");
 
     // Check performance radio group has fieldset and legend
-    const performanceFieldset = page.locator('fieldset').filter({
-      has: page.locator('input[name="performance"]')
-    }).first();
+    const performanceFieldset = page
+      .locator("fieldset")
+      .filter({
+        has: page.locator('input[name="performance"]')
+      })
+      .first();
 
     await expect(performanceFieldset).toBeVisible();
 
@@ -370,9 +374,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   test("should maintain accessibility in Welsh language", async ({ page }) => {
     await page.goto("/cookies-policy?lng=cy");
 
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
