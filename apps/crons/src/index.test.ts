@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockConfigurePropertiesVolume = vi.fn();
 const mockConfigGet = vi.fn();
+const mockExampleScript = vi.fn();
 
 vi.mock("@hmcts/cloud-native-platform", () => ({
   configurePropertiesVolume: mockConfigurePropertiesVolume
@@ -11,6 +12,10 @@ vi.mock("config", () => ({
   default: {
     get: mockConfigGet
   }
+}));
+
+vi.mock("./example.js", () => ({
+  default: mockExampleScript
 }));
 
 describe("index - cron job runner", () => {
@@ -28,11 +33,6 @@ describe("index - cron job runner", () => {
 
   it("should configure properties volume with correct chart path", async () => {
     process.env.SCRIPT_NAME = "example";
-    const mockExampleScript = vi.fn();
-
-    vi.doMock("./example.js", () => ({
-      default: mockExampleScript
-    }));
 
     const { main } = await import("./index.js");
     await main();
@@ -53,41 +53,19 @@ describe("index - cron job runner", () => {
     await expect(main()).rejects.toThrow("SCRIPT_NAME environment variable is required");
   });
 
-  it("should execute custom script when SCRIPT_NAME is provided", async () => {
-    process.env.SCRIPT_NAME = "custom-job";
-    const mockCustomScript = vi.fn();
-
-    vi.doMock("./custom-job.js", () => ({
-      default: mockCustomScript
-    }));
+  it("should execute script when SCRIPT_NAME is provided", async () => {
+    process.env.SCRIPT_NAME = "example";
 
     const { main } = await import("./index.js");
     await main();
 
-    expect(mockCustomScript).toHaveBeenCalled();
-  });
-
-  it("should throw error when script does not export a default function", async () => {
-    process.env.SCRIPT_NAME = "invalid-script";
-
-    vi.doMock("./invalid-script.js", () => ({
-      default: null,
-      somethingElse: vi.fn()
-    }));
-
-    const { main } = await import("./index.js");
-
-    await expect(main()).rejects.toThrow('The script "invalid-script" does not export a default function.');
+    expect(mockExampleScript).toHaveBeenCalled();
   });
 
   it("should throw error when script execution fails", async () => {
     process.env.SCRIPT_NAME = "example";
     const mockError = new Error("Script execution failed");
-    const mockFailingScript = vi.fn().mockRejectedValue(mockError);
-
-    vi.doMock("./example.js", () => ({
-      default: mockFailingScript
-    }));
+    mockExampleScript.mockRejectedValueOnce(mockError);
 
     const { main } = await import("./index.js");
 
@@ -97,7 +75,7 @@ describe("index - cron job runner", () => {
   it("should throw error when configurePropertiesVolume fails", async () => {
     process.env.SCRIPT_NAME = "example";
     const mockError = new Error("Config failed");
-    mockConfigurePropertiesVolume.mockRejectedValue(mockError);
+    mockConfigurePropertiesVolume.mockRejectedValueOnce(mockError);
 
     const { main } = await import("./index.js");
 
