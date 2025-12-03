@@ -51,15 +51,13 @@ describe("GOV Notify Service", () => {
 
       await sendMediaApprovalEmail(testData);
 
-      expect(mockSendEmail).toHaveBeenCalledWith(
-        "test-template-id",
-        "john@example.com",
-        {
-          "Full name": "John Smith",
+      expect(mockSendEmail).toHaveBeenCalledWith("test-template-id", "john@example.com", {
+        personalisation: {
+          "full name": "John Smith",
           Employer: "BBC"
         },
-        expect.stringContaining("media-approval-")
-      );
+        reference: expect.stringContaining("media-approval-")
+      });
     });
 
     it("should rethrow API errors", async () => {
@@ -70,7 +68,7 @@ describe("GOV Notify Service", () => {
             errors: [
               {
                 error: "BadRequestError",
-                message: "Missing personalisation: Full name"
+                message: "Missing personalisation: full name"
               }
             ],
             status_code: 400

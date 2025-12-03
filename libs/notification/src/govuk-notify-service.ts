@@ -21,9 +21,12 @@ export async function sendMediaApprovalEmail(data: MediaApplicationEmailData): P
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
   const personalisation = {
-    "Full name": data.name,
+    "full name": data.name,
     Employer: data.employer
   };
 
-  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_APPROVAL, data.email, personalisation, `media-approval-${Date.now()}`);
+  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_APPROVAL, data.email, {
+    personalisation,
+    reference: `media-approval-${Date.now()}`
+  });
 }
