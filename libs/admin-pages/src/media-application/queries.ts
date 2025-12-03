@@ -30,22 +30,18 @@ export async function getApplicationById(id: string): Promise<MediaApplicationDe
       employer: true,
       proofOfIdPath: true,
       status: true,
-      appliedDate: true,
-      reviewedDate: true,
-      reviewedBy: true
+      appliedDate: true
     }
   });
 
   return application as MediaApplicationDetails | null;
 }
 
-export async function updateApplicationStatus(id: string, status: string, reviewedBy: string): Promise<MediaApplicationDetails> {
+export async function updateApplicationStatus(id: string, status: string): Promise<MediaApplicationDetails> {
   const application = await prisma.mediaApplication.update({
     where: { id },
     data: {
-      status,
-      reviewedDate: new Date(),
-      reviewedBy
+      status
     },
     select: {
       id: true,
@@ -54,9 +50,7 @@ export async function updateApplicationStatus(id: string, status: string, review
       employer: true,
       proofOfIdPath: true,
       status: true,
-      appliedDate: true,
-      reviewedDate: true,
-      reviewedBy: true
+      appliedDate: true
     }
   });
 

@@ -21,24 +21,20 @@ describe("media-application service", () => {
         employer: "BBC",
         proofOfIdPath: "/tmp/file.pdf",
         status: APPLICATION_STATUS.PENDING,
-        appliedDate: new Date(),
-        reviewedDate: null,
-        reviewedBy: null
+        appliedDate: new Date()
       };
 
       vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
       vi.mocked(queries.updateApplicationStatus).mockResolvedValue({
         ...mockApplication,
-        status: APPLICATION_STATUS.APPROVED,
-        reviewedDate: new Date(),
-        reviewedBy: "admin@example.com"
+        status: APPLICATION_STATUS.APPROVED
       });
       vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
-      await approveApplication("1", "admin@example.com");
+      await approveApplication("1");
 
       expect(queries.getApplicationById).toHaveBeenCalledWith("1");
-      expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.APPROVED, "admin@example.com");
+      expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.APPROVED);
       expect(fs.unlink).toHaveBeenCalledWith("/tmp/file.pdf");
     });
 
@@ -50,20 +46,16 @@ describe("media-application service", () => {
         employer: "BBC",
         proofOfIdPath: null,
         status: APPLICATION_STATUS.PENDING,
-        appliedDate: new Date(),
-        reviewedDate: null,
-        reviewedBy: null
+        appliedDate: new Date()
       };
 
       vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
       vi.mocked(queries.updateApplicationStatus).mockResolvedValue({
         ...mockApplication,
-        status: APPLICATION_STATUS.APPROVED,
-        reviewedDate: new Date(),
-        reviewedBy: "admin@example.com"
+        status: APPLICATION_STATUS.APPROVED
       });
 
-      await approveApplication("1", "admin@example.com");
+      await approveApplication("1");
 
       expect(queries.updateApplicationStatus).toHaveBeenCalled();
       expect(fs.unlink).not.toHaveBeenCalled();
@@ -72,7 +64,7 @@ describe("media-application service", () => {
     it("should throw error when application not found", async () => {
       vi.mocked(queries.getApplicationById).mockResolvedValue(null);
 
-      await expect(approveApplication("non-existent", "admin@example.com")).rejects.toThrow("Application not found");
+      await expect(approveApplication("non-existent")).rejects.toThrow("Application not found");
     });
 
     it("should throw error when application already reviewed", async () => {
@@ -83,14 +75,12 @@ describe("media-application service", () => {
         employer: "BBC",
         proofOfIdPath: "/tmp/file.pdf",
         status: APPLICATION_STATUS.APPROVED,
-        appliedDate: new Date(),
-        reviewedDate: new Date(),
-        reviewedBy: "admin@example.com"
+        appliedDate: new Date()
       };
 
       vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
 
-      await expect(approveApplication("1", "admin@example.com")).rejects.toThrow("Application has already been reviewed");
+      await expect(approveApplication("1")).rejects.toThrow("Application has already been reviewed");
     });
   });
 
