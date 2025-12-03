@@ -7,6 +7,15 @@ const METADATA_ONLY_ROLES = ["INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"] as c
 const VERIFIED_USER_PROVENANCES = ["B2C_IDAM", "CFT_IDAM", "CRIME_IDAM"] as const;
 
 /**
+ * Checks if a user has a verified provenance
+ * @param user - User profile (may be undefined for unauthenticated users)
+ * @returns true if user has a verified provenance, false otherwise
+ */
+function isVerifiedUser(user: UserProfile | undefined): boolean {
+  return !!user?.provenance && VERIFIED_USER_PROVENANCES.includes(user.provenance as (typeof VERIFIED_USER_PROVENANCES)[number]);
+}
+
+/**
  * Determines if a user can access a publication based on sensitivity level and user role/provenance
  * @param user - User profile (may be undefined for unauthenticated users)
  * @param artefact - Publication artefact
@@ -33,22 +42,14 @@ export function canAccessPublication(user: UserProfile | undefined, artefact: Ar
 
   // PRIVATE publications require verified user
   if (sensitivity === Sensitivity.PRIVATE) {
-    return user.provenance !== undefined && VERIFIED_USER_PROVENANCES.includes(user.provenance as (typeof VERIFIED_USER_PROVENANCES)[number]);
+    return isVerifiedUser(user);
   }
 
   // CLASSIFIED publications require provenance matching
   if (sensitivity === Sensitivity.CLASSIFIED) {
-    if (!user.provenance || !VERIFIED_USER_PROVENANCES.includes(user.provenance as (typeof VERIFIED_USER_PROVENANCES)[number])) {
-      return false;
-    }
-
-    // If list type not found, fail closed
-    if (!listType) {
-      return false;
-    }
-
-    // Check if user provenance matches list type provenance
-    return user.provenance === listType.provenance;
+    if (!isVerifiedUser(user)) return false;
+    if (!listType) return false; // Fail closed if list type not found
+    return user!.provenance === listType.provenance;
   }
 
   // Default: deny access
