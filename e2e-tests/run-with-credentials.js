@@ -3,6 +3,15 @@
 import { spawn } from 'node:child_process';
 import { DefaultAzureCredential } from '@azure/identity';
 import { SecretClient } from '@azure/keyvault-secrets';
+import { config } from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in the parent directory
+config({ path: path.resolve(__dirname, '../.env') });
 
 const VAULT_NAME = 'pip-bootstrap-stg-kv';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;

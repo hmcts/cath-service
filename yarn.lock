@@ -4051,6 +4051,7 @@ __metadata:
     "@azure/keyvault-secrets": "npm:4.10.0"
     "@hmcts/postgres": "npm:*"
     "@playwright/test": "npm:1.57.0"
+    dotenv: "npm:^17.2.3"
   languageName: unknown
   linkType: soft
 
