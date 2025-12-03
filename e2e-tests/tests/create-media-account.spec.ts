@@ -34,7 +34,7 @@ test.describe("Create Media Account", () => {
 		await expect(page.getByRole("button", { name: /continue/i })).toBeVisible();
 	});
 
-	test("should show error summary when submitting empty form", async ({ page }) => {
+	test("should show error summary when submitting empty form @nightly", async ({ page }) => {
 		await page.goto("/create-media-account");
 
 		await page.getByRole("button", { name: /continue/i }).click();
@@ -48,7 +48,7 @@ test.describe("Create Media Account", () => {
 		await expect(errorLinks).toHaveCount(5);
 	});
 
-	test("should show error for invalid email", async ({ page }) => {
+	test("should show error for invalid email @nightly", async ({ page }) => {
 		await page.goto("/create-media-account");
 
 		await page.fill("#fullName", "John Smith");
@@ -63,7 +63,7 @@ test.describe("Create Media Account", () => {
 		);
 	});
 
-	test("should show error for invalid file type", async ({ page }) => {
+	test("should show error for invalid file type @nightly", async ({ page }) => {
 		await page.goto("/create-media-account");
 
 		await page.fill("#fullName", "John Smith");
@@ -86,7 +86,7 @@ test.describe("Create Media Account", () => {
 		);
 	});
 
-	test("should show error for file larger than 2MB", async ({ page }) => {
+	test("should show error for file larger than 2MB @nightly", async ({ page }) => {
 		await page.goto("/create-media-account");
 
 		await page.fill("#fullName", "John Smith");
@@ -110,7 +110,7 @@ test.describe("Create Media Account", () => {
 		);
 	});
 
-	test("should show error when terms not accepted", async ({ page }) => {
+	test("should show error when terms not accepted @nightly", async ({ page }) => {
 		await page.goto("/create-media-account");
 
 		await page.fill("#fullName", "John Smith");
@@ -160,7 +160,7 @@ test.describe("Create Media Account", () => {
 		);
 	});
 
-	test("should verify database record created after successful submission", async ({
+	test("should verify database record created after successful submission @nightly", async ({
 		page,
 	}) => {
 		const { prisma } = await import("@hmcts/postgres");
@@ -217,7 +217,7 @@ test.describe("Create Media Account", () => {
 		}
 	});
 
-	test("should clear form values on browser refresh", async ({ page }) => {
+	test("should clear form values on browser refresh @nightly", async ({ page }) => {
 		await page.goto("/create-media-account");
 
 		await page.fill("#fullName", "John Smith");
@@ -234,7 +234,7 @@ test.describe("Create Media Account", () => {
 		await expect(page.locator("#employer")).toHaveValue("");
 	});
 
-	test("should support Welsh language", async ({ page }) => {
+	test("should support Welsh language @nightly", async ({ page }) => {
 		await page.goto("/create-media-account?lng=cy");
 
 		await expect(page.getByRole("heading", { level: 1 })).toContainText(
