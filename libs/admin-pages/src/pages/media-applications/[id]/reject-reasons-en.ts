@@ -9,7 +9,7 @@ export default {
   },
   continueButton: "Continue",
   errorMessages: {
-    selectAtLeast: "Select at least one reason for rejecting this application",
+    selectAtLeast: "An option must be selected",
     notFound: "Application not found.",
     loadFailed: "Unable to load applicant details. Please try again later."
   }

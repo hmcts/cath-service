@@ -24,22 +24,20 @@ const getHandler = async (req: Request, res: Response) => {
     // Get rejection reasons from session
     const sessionReasons = req.session?.rejectionReasons || {};
     const selectedReasons = sessionReasons.selectedReasons || [];
-    const reasonsList = selectedReasons.flatMap((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
-
-    // Extract filename from proofOfIdPath
-    const proofOfIdFileName = application.proofOfIdPath ? application.proofOfIdPath.split("/").pop() : null;
+    const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
 
     res.render("media-applications/[id]/reject", {
       pageTitle: lang.pageTitle,
       subheading: lang.subheading,
       reasonsHeading: lang.reasonsHeading,
       tableHeaders: lang.tableHeaders,
+      viewLinkText: lang.viewLinkText,
       radioLegend: lang.radioLegend,
       radioOptions: lang.radioOptions,
       continueButton: lang.continueButton,
+      emailPreview: lang.emailPreview,
       application,
       reasonsList,
-      proofOfIdFileName,
       hideLanguageToggle: true
     });
   } catch (_error) {
@@ -70,22 +68,20 @@ const postHandler = async (req: Request, res: Response) => {
       // Get rejection reasons from session for re-rendering
       const sessionReasons = req.session?.rejectionReasons || {};
       const selectedReasons = sessionReasons.selectedReasons || [];
-      const reasonsList = selectedReasons.flatMap((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
-
-      // Extract filename from proofOfIdPath
-      const proofOfIdFileName = application.proofOfIdPath ? application.proofOfIdPath.split("/").pop() : null;
+      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
 
       return res.render("media-applications/[id]/reject", {
         pageTitle: lang.pageTitle,
         subheading: lang.subheading,
         reasonsHeading: lang.reasonsHeading,
         tableHeaders: lang.tableHeaders,
+        viewLinkText: lang.viewLinkText,
         radioLegend: lang.radioLegend,
         radioOptions: lang.radioOptions,
         continueButton: lang.continueButton,
+        emailPreview: lang.emailPreview,
         application,
         reasonsList,
-        proofOfIdFileName,
         errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
         hideLanguageToggle: true
       });
@@ -100,8 +96,15 @@ const postHandler = async (req: Request, res: Response) => {
     try {
       const sessionReasons = req.session?.rejectionReasons || {};
       const selectedReasons = sessionReasons.selectedReasons || [];
-      const reasonsList = selectedReasons.flatMap((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
-      const rejectReasons = reasonsList.join("\n");
+      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+      // Strip HTML tags for email and format for GOV.UK Notify numbered list
+      const rejectReasons = reasonsList
+        .map((r: string[], index: number) => {
+          const reason = r[0].replace(/<[^>]*>/g, "");
+          const explanation = r[1].replace(/<[^>]*>/g, "");
+          return `${index + 1}. ${reason}\n^${explanation}`;
+        })
+        .join("\n");
       const linkToService = process.env.BASE_URL || "https://localhost:8080";
 
       await sendMediaRejectionEmail({

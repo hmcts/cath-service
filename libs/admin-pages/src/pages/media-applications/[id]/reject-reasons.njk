@@ -6,25 +6,24 @@
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
-    <a href="/media-applications/{{ id }}" class="govuk-back-link">Back</a>
-
-    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
-
     {% if error %}
       <div class="govuk-error-summary" data-module="govuk-error-summary">
         <div class="govuk-error-summary__body">
           <p>{{ error }}</p>
         </div>
       </div>
-    {% else %}
-      {% if errors %}
-        {{ govukErrorSummary({
-          titleText: "There is a problem",
-          errorList: errors
-        }) }}
-      {% endif %}
+    {% endif %}
 
-      <p class="govuk-body">{{ selectAllText }}</p>
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if not error %}
 
       <form method="post" novalidate>
         {{ govukCheckboxes({
@@ -34,6 +33,9 @@
               text: checkboxLegend,
               classes: "govuk-visually-hidden"
             }
+          },
+          hint: {
+            text: selectAllText
           },
           errorMessage: { text: errors[0].text } if errors else undefined,
           items: [

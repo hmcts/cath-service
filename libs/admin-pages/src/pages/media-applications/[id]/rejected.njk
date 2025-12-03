@@ -18,8 +18,22 @@
         classes: "govuk-panel--confirmation"
       }) }}
 
-      {{ govukSummaryList({
-        rows: [
+      {% set reasonsHtml = '' %}
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set reasonsHtml = '<ol class="govuk-list govuk-list--number">' %}
+        {% for reason in reasonsList %}
+          {% if reason[0] %}
+            {% set reasonsHtml = reasonsHtml + '<li>' + reason[0] %}
+            {% if reason[1] %}
+              {% set reasonsHtml = reasonsHtml + '<br>' + reason[1] %}
+            {% endif %}
+            {% set reasonsHtml = reasonsHtml + '</li>' %}
+          {% endif %}
+        {% endfor %}
+        {% set reasonsHtml = reasonsHtml + '</ol>' %}
+      {% endif %}
+
+      {% set summaryRows = [
           {
             key: { text: tableHeaders.name },
             value: { text: application.name }
@@ -34,15 +48,23 @@
           },
           {
             key: { text: tableHeaders.dateApplied },
-            value: { text: application.appliedDate | date('DD/MM/YYYY') }
+            value: { text: application.appliedDate | date('DD MMM YYYY') }
           }
-        ]
+        ] %}
+
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set summaryRows = (summaryRows.push({
+          key: { text: reasonsHeading },
+          value: { html: reasonsHtml }
+        }), summaryRows) %}
+      {% endif %}
+
+      {{ govukSummaryList({
+        rows: summaryRows
       }) }}
 
       <h2 class="govuk-heading-m">{{ whatHappensNextHeading }}</h2>
-      <p class="govuk-body">{{ whatHappensNextText }}</p>
-
-      <p><a href="/media-applications" class="govuk-link">{{ returnLink }}</a></p>
+      <p class="govuk-body">{{ whatHappensNextText | replace('{applicantEmail}', '<a href="mailto:' + application.email + '">' + application.email + '</a>') | safe }}</p>
     {% endif %}
   </div>
 </div>

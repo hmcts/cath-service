@@ -17,13 +17,21 @@ const getHandler = async (req: Request, res: Response) => {
       });
     }
 
+    // Get rejection reasons from session
+    const sessionReasons = req.session?.rejectionReasons || {};
+    const selectedReasons = sessionReasons.selectedReasons || [];
+    const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
     res.render("media-applications/[id]/rejected", {
       pageTitle: lang.pageTitle,
       tableHeaders: lang.tableHeaders,
+      reasonsHeading: lang.reasonsHeading,
+      viewLinkText: lang.viewLinkText,
       whatHappensNextHeading: lang.whatHappensNextHeading,
       whatHappensNextText: lang.whatHappensNextText,
       returnLink: lang.returnLink,
       application,
+      reasonsList,
       hideLanguageToggle: true
     });
   } catch (_error) {

@@ -9,7 +9,7 @@ export default {
   },
   continueButton: "Parhau",
   errorMessages: {
-    selectAtLeast: "Dewiswch o leiaf un rheswm dros wrthod y cais hwn",
+    selectAtLeast: "Rhaid dewis opsiwn",
     notFound: "Ni chanfuwyd y cais.",
     loadFailed: "Methu llwytho manylion yr ymgeisydd. Rhowch gynnig arall arni yn nes ymlaen."
   }
