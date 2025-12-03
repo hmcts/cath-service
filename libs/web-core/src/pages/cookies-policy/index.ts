@@ -29,5 +29,7 @@ export const POST = async (req: Request, res: Response) => {
   setCookiePolicy(res, preferences);
   setCookieBannerSeen(res);
 
-  res.redirect("/cookies-policy?saved=true");
+  const lng = req.query.lng;
+  const redirectUrl = lng ? `/cookies-policy?lng=${lng}&saved=true` : "/cookies-policy?saved=true";
+  res.redirect(redirectUrl);
 };

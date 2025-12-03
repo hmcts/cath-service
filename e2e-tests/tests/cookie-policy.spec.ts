@@ -86,10 +86,10 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should display Welsh content on Welsh route", async ({ page }) => {
-    await page.goto("/polisi-cwcis");
+    await page.goto("/cookies-policy?lng=cy");
 
     // Should stay on Welsh route
-    await expect(page).toHaveURL(/\/polisi-cwcis/);
+    await expect(page).toHaveURL(/\/cookies-policy\?lng=cy/);
 
     // Check Welsh title
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
@@ -199,7 +199,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should preserve Welsh language after saving preferences", async ({ page }) => {
-    await page.goto("/polisi-cwcis");
+    await page.goto("/cookies-policy?lng=cy");
 
     // Save preferences
     await page.locator('input[name="analytics"][value="on"]').check();
@@ -207,7 +207,7 @@ test.describe("Cookie Policy Page", () => {
     await page.locator('button:has-text("Cadw")').click();
 
     // Should stay on Welsh route
-    await expect(page).toHaveURL(/\/polisi-cwcis\?saved=true/);
+    await expect(page).toHaveURL(/\/cookies-policy\?lng=cy&saved=true/);
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
   });
 
