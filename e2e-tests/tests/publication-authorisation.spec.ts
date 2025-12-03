@@ -10,7 +10,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   test.describe("Unauthenticated users (PUBLIC access only)", () => {
     test("should only see PUBLIC publications", async ({ page }) => {
       // Navigate to summary of publications page without authentication
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
 
       // Wait for page to load
       await page.waitForSelector("h1.govuk-heading-l");
@@ -20,7 +20,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const count = await publicationLinks.count();
 
       // Verify that publications are visible (PUBLIC ones should be available)
-      // Note: This assumes locationId=3 has at least some PUBLIC publications
+      // Note: This assumes locationId=9 has at least some PUBLIC publications
       // If no PUBLIC publications exist, count would be 0, which is correct behavior
       expect(count).toBeGreaterThanOrEqual(0);
 
@@ -34,7 +34,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
     test("should not see CLASSIFIED Civil and Family publications", async ({ page }) => {
       // Navigate to a location that has CLASSIFIED Civil and Family publications
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
 
       await page.waitForSelector("h1.govuk-heading-l");
 
@@ -88,7 +88,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary of publications with CFT publications
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
 
       await page.waitForSelector("h1.govuk-heading-l");
 
@@ -126,7 +126,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Look for Civil and Family Daily Cause List publication
@@ -166,7 +166,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary of publications
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Get all publications
@@ -196,7 +196,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Get initial count
@@ -213,7 +213,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
       // Navigate away and back
       await page.goto("/");
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Count should still be the same
@@ -239,7 +239,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary page and get authenticated count
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       const publicationLinksAuth = page.locator('.govuk-list a[href*="artefactId="]');
@@ -249,7 +249,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await logout(page);
 
       // Navigate back to summary page as unauthenticated user
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       const publicationLinksUnauth = page.locator('.govuk-list a[href*="artefactId="]');
@@ -280,7 +280,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to location with CFT CLASSIFIED publications
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Look specifically for CFT list types (Civil and Family)
@@ -314,7 +314,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
@@ -347,7 +347,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   test.describe("Edge cases and error handling", () => {
     test("should handle missing sensitivity level (defaults to CLASSIFIED)", async ({ page }) => {
       // As unauthenticated user, publications without sensitivity should be hidden
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Page should load without errors
@@ -405,7 +405,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await assertAuthenticated(page);
 
       // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=3");
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Page should load with publications
