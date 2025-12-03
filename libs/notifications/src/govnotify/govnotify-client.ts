@@ -20,7 +20,7 @@ interface NotificationData {
   };
 }
 
-interface EmailResponse {
+interface AxiosEmailResponse {
   status: number;
   statusText: string;
   headers: Record<string, string>;
@@ -66,7 +66,7 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
 
     const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
       personalisation: params.templateParameters
-    });
+    }) as unknown as AxiosEmailResponse;
 
     console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
     console.log("[govnotify-client] Response.data:", response?.data);
