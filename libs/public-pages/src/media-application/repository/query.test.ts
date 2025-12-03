@@ -98,11 +98,14 @@ describe("createMediaApplication", () => {
         reviewedBy: null
       });
 
-      await updateProofOfIdPath(mockId, mockPath);
+      await updateProofOfIdPath(mockId, mockPath, "test-file.pdf");
 
       expect(prisma.mediaApplication.update).toHaveBeenCalledWith({
         where: { id: mockId },
-        data: { proofOfIdPath: mockPath }
+        data: {
+          proofOfIdPath: mockPath,
+          proofOfIdOriginalName: "test-file.pdf"
+        }
       });
     });
   });

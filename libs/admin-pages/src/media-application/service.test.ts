@@ -20,6 +20,7 @@ describe("media-application service", () => {
         email: "john@example.com",
         employer: "BBC",
         proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdOriginalName: "test-file.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
       };
@@ -45,6 +46,7 @@ describe("media-application service", () => {
         email: "john@example.com",
         employer: "BBC",
         proofOfIdPath: null,
+        proofOfIdOriginalName: null,
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
       };

@@ -202,7 +202,7 @@ describe("create-media-account controller", () => {
         employer: "BBC News"
       });
       expect(saveIdProofFile).toHaveBeenCalledWith("test-uuid-123", "passport.jpg", mockFile.buffer);
-      expect(updateProofOfIdPath).toHaveBeenCalledWith("test-uuid-123", "/path/to/storage/test-uuid-123.jpg");
+      expect(updateProofOfIdPath).toHaveBeenCalledWith("test-uuid-123", "/path/to/storage/test-uuid-123.jpg", "passport.jpg");
     });
 
     it("should redirect to confirmation page on success", async () => {

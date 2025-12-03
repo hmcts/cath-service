@@ -25,10 +25,14 @@ const getHandler = async (req: Request, res: Response) => {
       pageTitle: lang.pageTitle,
       subheading: lang.subheading,
       tableHeaders: lang.tableHeaders,
+      proofOfIdText: lang.proofOfIdText,
+      viewProofOfId: lang.viewProofOfId,
+      fileNotAvailable: lang.fileNotAvailable,
       radioLegend: lang.radioLegend,
       radioOptions: lang.radioOptions,
       continueButton: lang.continueButton,
       application,
+      proofOfIdFilename: application.proofOfIdOriginalName,
       hideLanguageToggle: true
     });
   } catch (_error) {
@@ -60,10 +64,14 @@ const postHandler = async (req: Request, res: Response) => {
         pageTitle: lang.pageTitle,
         subheading: lang.subheading,
         tableHeaders: lang.tableHeaders,
+        proofOfIdText: lang.proofOfIdText,
+        viewProofOfId: lang.viewProofOfId,
+        fileNotAvailable: lang.fileNotAvailable,
         radioLegend: lang.radioLegend,
         radioOptions: lang.radioOptions,
         continueButton: lang.continueButton,
         application,
+        proofOfIdFilename: application.proofOfIdOriginalName,
         errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
         hideLanguageToggle: true
       });

@@ -29,6 +29,7 @@ export async function getApplicationById(id: string): Promise<MediaApplicationDe
       email: true,
       employer: true,
       proofOfIdPath: true,
+      proofOfIdOriginalName: true,
       status: true,
       appliedDate: true
     }
@@ -49,6 +50,7 @@ export async function updateApplicationStatus(id: string, status: string): Promi
       email: true,
       employer: true,
       proofOfIdPath: true,
+      proofOfIdOriginalName: true,
       status: true,
       appliedDate: true
     }

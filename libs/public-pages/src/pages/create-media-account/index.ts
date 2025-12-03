@@ -70,7 +70,7 @@ export const POST = async (req: MulterRequest, res: Response) => {
 
     if (file) {
       const filePath = await saveIdProofFile(applicationId, file.originalname, file.buffer);
-      await updateProofOfIdPath(applicationId, filePath);
+      await updateProofOfIdPath(applicationId, filePath, file.originalname);
     }
 
     req.session.mediaApplicationSubmitted = true;

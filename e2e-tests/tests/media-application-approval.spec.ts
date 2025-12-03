@@ -103,7 +103,7 @@ test.describe("Media Application Approval Workflow", () => {
       await page.getByRole("button", { name: /continue/i }).click();
 
       await expect(page.locator(".govuk-error-summary")).toBeVisible();
-      await expect(page.locator(".govuk-error-summary")).toContainText("Select yes or no before continuing");
+      await expect(page.locator(".govuk-error-summary")).toContainText("An option must be selected");
     });
 
     test("should return to details page when selecting No", async ({ page }) => {
