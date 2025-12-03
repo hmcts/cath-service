@@ -59,6 +59,7 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -71,13 +72,17 @@ describe("media-application approve page", () => {
       expect(getApplicationById).toHaveBeenCalledWith("app-123");
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
         pageTitle: "Are you sure you want to approve this application?",
-        subheading: "Applicant's details",
+        subheading: "Applicant's Details",
         tableHeaders: {
           name: "Name",
           email: "Email",
           employer: "Employer",
-          dateApplied: "Date applied"
+          dateApplied: "Date applied",
+          proofOfId: "Proof of ID"
         },
+        proofOfIdText: "(opens in a new window)",
+        viewProofOfId: "View",
+        fileNotAvailable: "File not available",
         radioLegend: "Confirm approval",
         radioOptions: {
           yes: "Yes",
@@ -85,6 +90,7 @@ describe("media-application approve page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
+        proofOfIdFilename: "IACListPublishPreviewed.pdf",
         hideLanguageToggle: true
       });
     });
@@ -99,6 +105,7 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -110,13 +117,17 @@ describe("media-application approve page", () => {
 
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
         pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
-        subheading: "Manylion yr ymgeisydd",
+        subheading: "Manylion Yr Ymgeisydd",
         tableHeaders: {
           name: "Enw",
           email: "E-bost",
           employer: "Cyflogwr",
-          dateApplied: "Dyddiad gwneud cais"
+          dateApplied: "Dyddiad gwneud cais",
+          proofOfId: "Prawf o ID"
         },
+        proofOfIdText: "(yn agor mewn ffenestr newydd)",
+        viewProofOfId: "Gweld",
+        fileNotAvailable: "Ffeil ar gael ddim",
         radioLegend: "Cadarnhau cymeradwyaeth",
         radioOptions: {
           yes: "Ie",
@@ -124,6 +135,7 @@ describe("media-application approve page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
+        proofOfIdFilename: "IACListPublishPreviewed.pdf",
         hideLanguageToggle: true
       });
     });
@@ -164,6 +176,7 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -176,13 +189,17 @@ describe("media-application approve page", () => {
 
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
         pageTitle: "Are you sure you want to approve this application?",
-        subheading: "Applicant's details",
+        subheading: "Applicant's Details",
         tableHeaders: {
           name: "Name",
           email: "Email",
           employer: "Employer",
-          dateApplied: "Date applied"
+          dateApplied: "Date applied",
+          proofOfId: "Proof of ID"
         },
+        proofOfIdText: "(opens in a new window)",
+        viewProofOfId: "View",
+        fileNotAvailable: "File not available",
         radioLegend: "Confirm approval",
         radioOptions: {
           yes: "Yes",
@@ -190,7 +207,8 @@ describe("media-application approve page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
-        errors: [{ text: "Select yes or no before continuing.", href: "#confirm" }],
+        proofOfIdFilename: "IACListPublishPreviewed.pdf",
+        errors: [{ text: "An option must be selected", href: "#confirm" }],
         hideLanguageToggle: true
       });
     });
@@ -203,6 +221,7 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -225,6 +244,7 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -254,6 +274,7 @@ describe("media-application approve page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };

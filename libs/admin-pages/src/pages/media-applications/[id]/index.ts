@@ -36,6 +36,7 @@ const getHandler = async (req: Request, res: Response) => {
       rejectButton: lang.rejectButton,
       fileNotAvailable: lang.fileNotAvailable,
       application,
+      proofOfIdFilename: application.proofOfIdOriginalName,
       hideLanguageToggle: true
     });
   } catch (_error) {

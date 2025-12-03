@@ -44,6 +44,7 @@ describe("media-application details page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -69,6 +70,7 @@ describe("media-application details page", () => {
         rejectButton: "Reject application",
         fileNotAvailable: "File not available",
         application: mockApplication,
+        proofOfIdFilename: "IACListPublishPreviewed.pdf",
         hideLanguageToggle: true
       });
     });
@@ -83,6 +85,7 @@ describe("media-application details page", () => {
         email: "john@bbc.co.uk",
         phoneNumber: "07700900123",
         proofOfIdPath: "/uploads/proof-app-123.pdf",
+        proofOfIdOriginalName: "IACListPublishPreviewed.pdf",
         status: "PENDING" as const,
         createdAt: new Date("2024-01-01")
       };
@@ -107,6 +110,7 @@ describe("media-application details page", () => {
         rejectButton: "Gwrthod cais",
         fileNotAvailable: "Ffeil ar gael ddim",
         application: mockApplication,
+        proofOfIdFilename: "IACListPublishPreviewed.pdf",
         hideLanguageToggle: true
       });
     });

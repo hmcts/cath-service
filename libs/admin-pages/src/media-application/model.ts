@@ -12,6 +12,7 @@ export interface MediaApplicationDetails {
   email: string;
   employer: string;
   proofOfIdPath: string | null;
+  proofOfIdOriginalName: string | null;
   status: ApplicationStatus;
   appliedDate: Date;
 }

@@ -1,12 +1,16 @@
 export default {
   pageTitle: "A ydych yn siŵr eich bod am gymeradwyo'r cais hwn?",
-  subheading: "Manylion yr ymgeisydd",
+  subheading: "Manylion Yr Ymgeisydd",
   tableHeaders: {
     name: "Enw",
     email: "E-bost",
     employer: "Cyflogwr",
-    dateApplied: "Dyddiad gwneud cais"
+    dateApplied: "Dyddiad gwneud cais",
+    proofOfId: "Prawf o ID"
   },
+  proofOfIdText: "(yn agor mewn ffenestr newydd)",
+  viewProofOfId: "Gweld",
+  fileNotAvailable: "Ffeil ar gael ddim",
   radioLegend: "Cadarnhau cymeradwyaeth",
   radioOptions: {
     yes: "Ie",
@@ -14,7 +18,7 @@ export default {
   },
   continueButton: "Parhau",
   errorMessages: {
-    selectOption: "Dewiswch ie neu na cyn parhau.",
+    selectOption: "Rhaid dewis opsiwn",
     notFound: "Cais heb ei ddarganfod.",
     loadFailed: "Methu llwytho manylion yr ymgeisydd. Ceisiwch eto'n hwyrach."
   }

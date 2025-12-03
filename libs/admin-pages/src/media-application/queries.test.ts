@@ -54,6 +54,7 @@ describe("media-application queries", () => {
         email: "john@example.com",
         employer: "BBC",
         proofOfIdPath: "/path/to/file.pdf",
+        proofOfIdOriginalName: "test-file.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date("2024-01-01")
       };
@@ -70,6 +71,7 @@ describe("media-application queries", () => {
           email: true,
           employer: true,
           proofOfIdPath: true,
+          proofOfIdOriginalName: true,
           status: true,
           appliedDate: true
         }
@@ -113,6 +115,7 @@ describe("media-application queries", () => {
           email: true,
           employer: true,
           proofOfIdPath: true,
+          proofOfIdOriginalName: true,
           status: true,
           appliedDate: true
         }

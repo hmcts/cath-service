@@ -14,9 +14,12 @@ export async function createMediaApplication(data: MediaApplicationCreateData): 
   return application.id;
 }
 
-export async function updateProofOfIdPath(applicationId: string, filePath: string): Promise<void> {
+export async function updateProofOfIdPath(applicationId: string, filePath: string, originalName: string): Promise<void> {
   await prisma.mediaApplication.update({
     where: { id: applicationId },
-    data: { proofOfIdPath: filePath }
+    data: {
+      proofOfIdPath: filePath,
+      proofOfIdOriginalName: originalName
+    }
   });
 }
