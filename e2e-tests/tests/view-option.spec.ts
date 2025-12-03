@@ -108,7 +108,7 @@ test.describe("View Option Page", () => {
   });
 
   test.describe("given user submits without selecting an option", () => {
-    test("should display validation error message", async ({ page }) => {
+    test("should display validation error message @nightly", async ({ page }) => {
       await page.goto("/view-option");
 
       // Click continue without selecting an option
@@ -144,7 +144,7 @@ test.describe("View Option Page", () => {
   });
 
   test.describe("given user clicks back link", () => {
-    test("should navigate to the previous page in history", async ({ page }) => {
+    test("should navigate to the previous page in history @nightly", async ({ page }) => {
       // Navigate to landing page
       await page.goto("/");
       await page.waitForLoadState("domcontentloaded");
@@ -162,7 +162,7 @@ test.describe("View Option Page", () => {
   });
 
   test.describe("given user toggles language", () => {
-    test("should display Welsh content when language is changed to Welsh", async ({ page }) => {
+    test("should display Welsh content when language is changed to Welsh @nightly", async ({ page }) => {
       await page.goto("/view-option");
 
       // Find and click the Welsh language toggle
@@ -199,7 +199,7 @@ test.describe("View Option Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should switch back to English when language toggle is clicked again", async ({ page }) => {
+    test("should switch back to English when language toggle is clicked again @nightly", async ({ page }) => {
       await page.goto("/view-option?lng=cy");
 
       // Verify we're in Welsh mode
@@ -223,7 +223,7 @@ test.describe("View Option Page", () => {
       await expect(continueButton).toBeVisible();
     });
 
-    test("should preserve language selection after validation error", async ({ page }) => {
+    test("should preserve language selection after validation error @nightly", async ({ page }) => {
       await page.goto("/view-option?lng=cy");
 
       // Click continue without selecting an option (in Welsh)

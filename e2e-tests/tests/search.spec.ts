@@ -90,7 +90,7 @@ test.describe("Search Page", () => {
   });
 
   test.describe("given user submits without selecting a location", () => {
-    test("should display validation error message", async ({ page }) => {
+    test("should display validation error message @nightly", async ({ page }) => {
       await page.goto("/search");
 
       // Click continue without selecting a location
@@ -159,7 +159,7 @@ test.describe("Search Page", () => {
   });
 
   test.describe("given user clicks back link", () => {
-    test("should navigate to the view-option page", async ({ page }) => {
+    test("should navigate to the view-option page @nightly", async ({ page }) => {
       // Navigate to view-option first to establish history
       await page.goto("/view-option");
 
@@ -176,7 +176,7 @@ test.describe("Search Page", () => {
   });
 
   test.describe("given user toggles language", () => {
-    test("should display Welsh content when language is changed to Welsh", async ({ page }) => {
+    test("should display Welsh content when language is changed to Welsh @nightly", async ({ page }) => {
       await page.goto("/search");
 
       // Find and click the Welsh language toggle
@@ -217,7 +217,7 @@ test.describe("Search Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should preserve language selection after validation error", async ({ page }) => {
+    test("should preserve language selection after validation error @nightly", async ({ page }) => {
       await page.goto("/search?lng=cy");
 
       // Click continue without selecting a location (in Welsh)
@@ -260,7 +260,7 @@ test.describe("Search Page", () => {
   });
 
   test.describe("given user searches with no results", () => {
-    test('should display "No results found" message in English', async ({ page }) => {
+    test('should display "No results found" message in English @nightly', async ({ page }) => {
       await page.goto("/search");
 
       // Type a search query that won't match any location
@@ -275,7 +275,7 @@ test.describe("Search Page", () => {
       await expect(noResultsMessage).toBeVisible();
     });
 
-    test('should display "Ni ddaethpwyd o hyd i unrhyw ganlyniad" message in Welsh', async ({ page }) => {
+    test('should display "Ni ddaethpwyd o hyd i unrhyw ganlyniad" message in Welsh @nightly', async ({ page }) => {
       await page.goto("/search?lng=cy");
 
       // Type a search query that won't match any location
@@ -292,7 +292,7 @@ test.describe("Search Page", () => {
   });
 
   test.describe("given user uses keyboard navigation", () => {
-    test("should be navigable using Tab key with visible focus indicators", async ({ page }) => {
+    test("should be navigable using Tab key with visible focus indicators @nightly", async ({ page }) => {
       await page.goto("/search");
 
       // Navigate to the location input by clicking it (simulates real user interaction)
@@ -308,7 +308,7 @@ test.describe("Search Page", () => {
       await expect(continueButton).toBeFocused();
     });
 
-    test("should submit form using Enter key on continue button", async ({ page }) => {
+    test("should submit form using Enter key on continue button @nightly", async ({ page }) => {
       await page.goto("/search");
 
       // Fill in locationId

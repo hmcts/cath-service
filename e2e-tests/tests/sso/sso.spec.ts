@@ -22,7 +22,7 @@ test.describe('SSO Login Flow', () => {
     await expect(page).toHaveURL('/admin-dashboard');
   });
 
-  test('Local Admin can login via SSO and access admin dashboard only', async ({ page }) => {
+  test('Local Admin can login via SSO and access admin dashboard only @nightly', async ({ page }) => {
     await page.goto('/admin-dashboard');
     await expect(page).toHaveURL(/login.microsoftonline.com/);
     await loginWithSSO(
@@ -42,7 +42,7 @@ test.describe('SSO Login Flow', () => {
     await expect(page).toHaveURL('/admin-dashboard');
   });
 
-  test('CTSC Admin can login via SSO and access admin dashboard only', async ({ page }) => {
+  test('CTSC Admin can login via SSO and access admin dashboard only @nightly', async ({ page }) => {
     await page.goto('/admin-dashboard');
     await expect(page).toHaveURL(/login.microsoftonline.com/);
     await loginWithSSO(
@@ -62,7 +62,7 @@ test.describe('SSO Login Flow', () => {
     await expect(page).toHaveURL('/admin-dashboard');
   });
 
-  test('User with no roles can login but is redirected to rejected page', async ({ page }) => {
+  test('User with no roles can login but is redirected to rejected page @nightly', async ({ page }) => {
     await page.goto('/admin-dashboard');
     await expect(page).toHaveURL(/login.microsoftonline.com/);
     await loginWithSSO(
@@ -81,7 +81,7 @@ test.describe('SSO Login Flow', () => {
 });
 
 test.describe('SSO Session Management', () => {
-  test('Session persists across page navigations, reload, and logout clears session', async ({ page }) => {
+  test('Session persists across page navigations, reload, and logout clears session @nightly', async ({ page }) => {
     await page.goto('/system-admin-dashboard');
     await loginWithSSO(
       page,
@@ -106,7 +106,7 @@ test.describe('SSO Session Management', () => {
     await assertNotAuthenticated(page);
   });
 
-  test('Multiple concurrent sessions from same user are handled correctly', async ({ browser }) => {
+  test('Multiple concurrent sessions from same user are handled correctly @nightly', async ({ browser }) => {
     const context1 = await browser.newContext();
     const page1 = await context1.newPage();
     const context2 = await browser.newContext();

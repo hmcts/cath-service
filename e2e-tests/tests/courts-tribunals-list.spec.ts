@@ -110,7 +110,7 @@ test.describe("Courts and Tribunals List Page", () => {
   });
 
   test.describe("given user toggles language", () => {
-    test("should display Welsh content when language is changed to Welsh", async ({ page }) => {
+    test("should display Welsh content when language is changed to Welsh @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Find and click the Welsh language toggle
@@ -147,7 +147,7 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should switch back to English when language toggle is clicked again", async ({ page }) => {
+    test("should switch back to English when language toggle is clicked again @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list?lng=cy");
 
       // Verify we're in Welsh mode
@@ -173,7 +173,7 @@ test.describe("Courts and Tribunals List Page", () => {
   });
 
   test.describe("given user uses keyboard navigation", () => {
-    test("should be navigable using Tab key with visible focus indicators", async ({ page }) => {
+    test("should be navigable using Tab key with visible focus indicators @nightly", async ({ page }) => {
       // Navigate to search first, then to courts-tribunals-list
       await page.goto("/search");
       await page.goto("/courts-tribunals-list");
@@ -186,7 +186,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(page).toHaveURL("/search");
     });
 
-    test("should navigate to summary-of-publications page using Enter key on location link", async ({ page }) => {
+    test("should navigate to summary-of-publications page using Enter key on location link @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Click a location link to verify it's functional
@@ -247,7 +247,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(clearLink).toBeVisible();
     });
 
-    test("should show sub-jurisdiction section when jurisdiction is selected", async ({ page }) => {
+    test("should show sub-jurisdiction section when jurisdiction is selected @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Find and check a jurisdiction checkbox
@@ -259,7 +259,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(subJurisdictionSection).toBeVisible();
     });
 
-    test("should hide sub-jurisdiction section when jurisdiction is unchecked", async ({ page }) => {
+    test("should hide sub-jurisdiction section when jurisdiction is unchecked @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Check then uncheck a jurisdiction
@@ -294,7 +294,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(filterTag.first()).toBeVisible();
     });
 
-    test("should filter locations by jurisdiction", async ({ page }) => {
+    test("should filter locations by jurisdiction @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Select Civil jurisdiction (jurisdictionId = 1)
@@ -312,7 +312,7 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(page.url()).toContain("jurisdiction=1");
     });
 
-    test("should filter locations by sub-jurisdiction", async ({ page }) => {
+    test("should filter locations by sub-jurisdiction @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Select Civil jurisdiction first to reveal sub-jurisdictions
@@ -340,7 +340,7 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(page.url()).toContain("subJurisdiction=");
     });
 
-    test("should remove filter when filter tag close button is clicked", async ({ page }) => {
+    test("should remove filter when filter tag close button is clicked @nightly", async ({ page }) => {
       // Start with a filter already applied
       await page.goto("/courts-tribunals-list?region=1");
 
@@ -359,7 +359,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(filterTag.first()).toBeHidden();
     });
 
-    test("should clear all filters when clear filters link is clicked", async ({ page }) => {
+    test("should clear all filters when clear filters link is clicked @nightly", async ({ page }) => {
       // Start with multiple filters applied
       await page.goto("/courts-tribunals-list?region=1&jurisdiction=1");
 
@@ -371,7 +371,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(page).toHaveURL("/courts-tribunals-list");
     });
 
-    test("should collapse and expand filter sections", async ({ page }) => {
+    test("should collapse and expand filter sections @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Find a collapsible section toggle button
@@ -397,7 +397,7 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(expandedState).toBe("true");
     });
 
-    test("should maintain accessibility with filters applied", async ({ page }) => {
+    test("should maintain accessibility with filters applied @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list?region=1&jurisdiction=1");
 
       // Run accessibility checks with filters
@@ -411,7 +411,7 @@ test.describe("Courts and Tribunals List Page", () => {
   });
 
   test.describe("given user interacts with A-Z navigation", () => {
-    test("should display A-Z navigation links", async ({ page }) => {
+    test("should display A-Z navigation links @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Check A-Z navigation is visible
@@ -423,7 +423,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(letterLinks.first()).toBeVisible();
     });
 
-    test("should jump to letter section when A-Z link is clicked", async ({ page }) => {
+    test("should jump to letter section when A-Z link is clicked @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Find a letter link that should exist (e.g., 'O' for Oxford)
@@ -439,7 +439,7 @@ test.describe("Courts and Tribunals List Page", () => {
       }
     });
 
-    test("should disable letter links when no locations start with that letter", async ({ page }) => {
+    test("should disable letter links when no locations start with that letter @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
       // Find disabled letter spans (letters with no locations)
@@ -452,7 +452,7 @@ test.describe("Courts and Tribunals List Page", () => {
   });
 
   test.describe("given user applies multiple filters", () => {
-    test("should display multiple filter tags when multiple filters are applied", async ({ page }) => {
+    test("should display multiple filter tags when multiple filters are applied @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list?region=1&jurisdiction=1");
 
       // Check that multiple filter tags are visible
@@ -461,7 +461,7 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(tagCount).toBeGreaterThanOrEqual(2);
     });
 
-    test("should update location list to match all applied filters", async ({ page }) => {
+    test("should update location list to match all applied filters @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list?region=1");
 
       // Get initial location count
