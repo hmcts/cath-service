@@ -3,6 +3,15 @@
 import { spawn } from 'node:child_process';
 import { DefaultAzureCredential } from '@azure/identity';
 import { SecretClient } from '@azure/keyvault-secrets';
+import { config } from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in the parent directory
+config({ path: path.resolve(__dirname, '../.env') });
 
 const VAULT_NAME = 'pip-bootstrap-stg-kv';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
@@ -20,6 +29,9 @@ const SECRET_MAPPINGS = {
   'cft-valid-test-account-password': 'CFT_VALID_TEST_ACCOUNT_PASSWORD',
   'cft-invalid-test-account': 'CFT_INVALID_TEST_ACCOUNT',
   'cft-invalid-test-account-password': 'CFT_INVALID_TEST_ACCOUNT_PASSWORD',
+  'app-tenant': 'AZURE_TENANT_ID',
+  'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
+  'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
 };
 
 async function loadCredentialsFromAzure() {

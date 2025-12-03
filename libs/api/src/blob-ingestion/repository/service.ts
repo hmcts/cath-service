@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { createArtefact, Provenance } from "@hmcts/publication";
+import { getLocationById } from "@hmcts/location";
+import { sendPublicationNotifications } from "@hmcts/notifications";
+import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -90,6 +92,29 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       artefactId
     });
 
+    // Trigger notification for subscribed users (fire-and-forget pattern)
+    if (!noMatch) {
+      console.log("[blob-ingestion] Triggering notifications for publication:", {
+        artefactId,
+        courtId: request.court_id,
+        listTypeId: validation.listTypeId
+      });
+
+      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date)).catch((error) => {
+        console.error("Failed to trigger publication notifications:", {
+          artefactId,
+          courtId: request.court_id,
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
+      });
+    } else {
+      console.log("[blob-ingestion] Skipping notifications (no_match=true):", {
+        artefactId,
+        courtId: request.court_id
+      });
+    }
+
     return {
       success: true,
       artefact_id: artefactId,
@@ -111,5 +136,50 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       success: false,
       message: "Internal server error during ingestion"
     };
+  }
+}
+
+async function triggerPublicationNotifications(publicationId: string, courtId: string, listTypeId: number, publicationDate: Date): Promise<void> {
+  const locationIdNum = Number.parseInt(courtId, 10);
+  if (Number.isNaN(locationIdNum)) {
+    console.error("Invalid location ID for notifications:", courtId);
+    return;
+  }
+
+  const location = await getLocationById(locationIdNum);
+  if (!location) {
+    console.error("Location not found for notifications:", courtId);
+    return;
+  }
+
+  const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+  if (!listType) {
+    console.error("List type not found for notifications:", listTypeId);
+    return;
+  }
+
+  const result = await sendPublicationNotifications({
+    publicationId,
+    locationId: String(locationIdNum),
+    locationName: location.name,
+    hearingListName: listType.englishFriendlyName,
+    publicationDate
+  });
+
+  console.log("Publication notifications sent:", {
+    publicationId,
+    totalSubscriptions: result.totalSubscriptions,
+    sent: result.sent,
+    failed: result.failed,
+    skipped: result.skipped
+  });
+
+  if (result.errors.length > 0) {
+    // Sanitize errors to redact email addresses (PII)
+    const sanitizedErrors = result.errors.map((error) => {
+      const errorStr = typeof error === "string" ? error : JSON.stringify(error);
+      return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
+    });
+    console.error("Notification errors:", { count: result.errors.length, errors: sanitizedErrors });
   }
 }

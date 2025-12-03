@@ -19,7 +19,7 @@
     "lint:fix": "biome check --write ."
   },
   "peerDependencies": {
-    "express": "^5.1.0"
+    "express": "^5.2.0"
   },
   "devDependencies": {
     "@types/express": "5.0.5"
