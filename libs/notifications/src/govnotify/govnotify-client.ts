@@ -64,9 +64,9 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       templateParameters: params.templateParameters
     });
 
-    const response = await notifyClient.sendEmail(templateId, params.emailAddress, {
+    const response = (await notifyClient.sendEmail(templateId, params.emailAddress, {
       personalisation: params.templateParameters
-    }) as unknown as AxiosEmailResponse;
+    })) as unknown as AxiosEmailResponse;
 
     console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
     console.log("[govnotify-client] Response.data:", response?.data);
