@@ -100,7 +100,7 @@ test.describe("Page Structure - VIBE-149", () => {
       }
 
       // Verify Cookies link opens in new tab
-      const cookiesLink = page.locator('.govuk-footer__link[href="/cookies-policy"]').first();
+      const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-policy"]').first();
       await expect(cookiesLink).toBeVisible({ timeout: 5000 });
       await expect(cookiesLink).toHaveAttribute("target", "_blank");
       await expect(cookiesLink).toHaveAttribute("rel", "noopener noreferrer");
@@ -162,7 +162,7 @@ test.describe("Page Structure - VIBE-149", () => {
       await expect(signInLink).toHaveText("Mewngofnodi");
 
       // Verify footer links are in Welsh
-      const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-preferences"]');
+      const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-policy"]');
       await expect(cookiesLink).toHaveText("Cwcis");
 
       // Click language toggle to switch back to English

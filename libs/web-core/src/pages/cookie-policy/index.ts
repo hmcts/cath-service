@@ -7,7 +7,7 @@ import { en } from "./en.js";
 export const GET = async (req: Request, res: Response) => {
   const cookiePolicy = parseCookiePolicy(req.cookies?.cookie_policy);
 
-  res.render("cookies-policy/index", {
+  res.render("cookie-policy/index", {
     en,
     cy,
     cookiePreferences: cookiePolicy,
@@ -30,6 +30,6 @@ export const POST = async (req: Request, res: Response) => {
   setCookieBannerSeen(res);
 
   const locale = res.locals.locale;
-  const redirectUrl = locale && locale !== "en" ? `/cookies-policy?lng=${locale}&saved=true` : "/cookies-policy?saved=true";
+  const redirectUrl = locale && locale !== "en" ? `/cookie-policy?lng=${locale}&saved=true` : "/cookie-policy?saved=true";
   res.redirect(redirectUrl);
 };

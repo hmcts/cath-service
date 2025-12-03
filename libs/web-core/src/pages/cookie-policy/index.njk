@@ -7,8 +7,8 @@
 
 {% block head %}
   {{ super() }}
-  <link rel="alternate" hreflang="en" href="/cookies-policy">
-  <link rel="alternate" hreflang="cy" href="/cookies-policy?lng=cy">
+  <link rel="alternate" hreflang="en" href="/cookie-policy">
+  <link rel="alternate" hreflang="cy" href="/cookie-policy?lng=cy">
 {% endblock %}
 
 {% block backLink %}{% endblock %}
@@ -135,7 +135,7 @@
 
     <!-- Change cookie settings form -->
     <h2 class="govuk-heading-m">{{ changeSettings.heading }}</h2>
-    <form method="POST" action="/cookies-policy" novalidate data-no-cookie-manager>
+    <form method="POST" action="/cookie-policy" novalidate data-no-cookie-manager>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
 
       {{ govukRadios({

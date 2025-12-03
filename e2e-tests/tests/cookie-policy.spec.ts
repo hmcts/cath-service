@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 test.describe("Cookie Policy Page", () => {
   test("should display cookie policy page with all sections", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Check page title
     await expect(page.locator("h1")).toHaveText("Cookie policy");
@@ -27,7 +27,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should display cookie tables with correct information", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Check analytics cookies (_ga, _gat, _gid)
     await expect(page.getByRole("cell", { name: "_ga", exact: true })).toBeVisible();
@@ -50,7 +50,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should save cookie preferences from policy page", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Select analytics cookies enabled
     await page.locator('input[name="analytics"][value="on"]').check();
@@ -62,7 +62,7 @@ test.describe("Cookie Policy Page", () => {
     await page.locator('button:has-text("Save")').click();
 
     // Should redirect with saved parameter
-    await expect(page).toHaveURL(/\/cookies-policy\?saved=true/);
+    await expect(page).toHaveURL(/\/cookie-policy\?saved=true/);
 
     // Success banner should be visible
     await expect(page.locator(".govuk-notification-banner--success")).toBeVisible();
@@ -70,7 +70,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should preserve selected preferences after save", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Enable analytics, disable performance
     await page.locator('input[name="analytics"][value="on"]').check();
@@ -78,7 +78,7 @@ test.describe("Cookie Policy Page", () => {
     await page.locator('button:has-text("Save")').click();
 
     // Wait for redirect
-    await page.waitForURL(/\/cookies-policy\?saved=true/);
+    await page.waitForURL(/\/cookie-policy\?saved=true/);
 
     // Check that correct radios are still checked
     await expect(page.locator('input[name="analytics"][value="on"]')).toBeChecked();
@@ -86,10 +86,10 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should display Welsh content on Welsh route", async ({ page }) => {
-    await page.goto("/cookies-policy?lng=cy");
+    await page.goto("/cookie-policy?lng=cy");
 
     // Should stay on Welsh route
-    await expect(page).toHaveURL(/\/cookies-policy\?lng=cy/);
+    await expect(page).toHaveURL(/\/cookie-policy\?lng=cy/);
 
     // Check Welsh title
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
@@ -99,7 +99,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should expand and collapse contact details", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Find the details summary
     const detailsSummary = page.locator('summary:has-text("Contact us for help")');
@@ -122,7 +122,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should scroll to top when back to top link clicked", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Scroll down the page
     await page.evaluate(() => window.scrollTo(0, 1000));
@@ -146,7 +146,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should be keyboard accessible", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Find and focus the first analytics radio
     const analyticsOnRadio = page.locator('input[name="analytics"][value="on"]');
@@ -161,7 +161,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should display form with default preferences", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Check that at least one radio in each group is present
     await expect(page.locator('input[name="analytics"]')).toHaveCount(2);
@@ -169,7 +169,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should have proper ARIA attributes on form controls", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Check fieldset and legend structure
     const analyticsFieldset = page
@@ -184,7 +184,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should display success banner only after save", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Success banner should not be visible initially
     await expect(page.locator(".govuk-notification-banner--success")).not.toBeVisible();
@@ -199,7 +199,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should preserve Welsh language after saving preferences", async ({ page }) => {
-    await page.goto("/cookies-policy?lng=cy");
+    await page.goto("/cookie-policy?lng=cy");
 
     // Save preferences
     await page.locator('input[name="analytics"][value="on"]').check();
@@ -207,12 +207,12 @@ test.describe("Cookie Policy Page", () => {
     await page.locator('button:has-text("Cadw")').click();
 
     // Should stay on Welsh route
-    await expect(page).toHaveURL(/\/cookies-policy\?lng=cy&saved=true/);
+    await expect(page).toHaveURL(/\/cookie-policy\?lng=cy&saved=true/);
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
   });
 
   test("should not display back button", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Back link should not be visible (page opens in new tab)
     const backLink = page.locator("a.govuk-back-link");
@@ -220,7 +220,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should have responsive full-width layout", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Content should use full width column
     const mainColumn = page.locator(".govuk-grid-column-full");
@@ -228,7 +228,7 @@ test.describe("Cookie Policy Page", () => {
   });
 
   test("should have links with correct attributes", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Check manage cookies link
     const manageCookiesLink = page.locator('a:has-text("how to manage cookies")');
@@ -254,7 +254,7 @@ test.describe("Cookie Policy Page - Footer Integration", () => {
     // Check footer link exists (text is "Cookies" not "Cookie policy")
     const footerLink = page.locator('footer a:has-text("Cookies")');
     await expect(footerLink).toBeVisible();
-    await expect(footerLink).toHaveAttribute("href", "/cookies-policy");
+    await expect(footerLink).toHaveAttribute("href", "/cookie-policy");
     await expect(footerLink).toHaveAttribute("target", "_blank");
     await expect(footerLink).toHaveAttribute("rel", "noopener noreferrer");
   });
@@ -266,14 +266,14 @@ test.describe("Cookie Policy Page - Footer Integration", () => {
     const [newPage] = await Promise.all([context.waitForEvent("page"), page.locator('footer a:has-text("Cookies")').click()]);
 
     // Verify new page URL
-    await expect(newPage).toHaveURL(/\/cookies-policy/);
+    await expect(newPage).toHaveURL(/\/cookie-policy/);
     await expect(newPage.locator("h1")).toHaveText("Cookie policy");
   });
 });
 
 test.describe("Cookie Policy Page - Accessibility", () => {
   test("should not have accessibility violations", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
@@ -281,7 +281,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   });
 
   test("should have proper heading hierarchy", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Should have exactly one h1
     const h1Count = await page.locator("h1").count();
@@ -297,7 +297,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   });
 
   test("should have accessible form controls", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // All radio buttons should have associated labels
     const radios = page.locator("input[type='radio']");
@@ -316,7 +316,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   });
 
   test("should have accessible tables", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // All tables should have headers
     const tables = page.locator("table");
@@ -339,7 +339,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   });
 
   test("should have proper fieldset and legend structure", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Check analytics radio group has fieldset and legend
     const analyticsFieldset = page
@@ -371,7 +371,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   });
 
   test("should maintain accessibility in Welsh language", async ({ page }) => {
-    await page.goto("/cookies-policy?lng=cy");
+    await page.goto("/cookie-policy?lng=cy");
 
     const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
@@ -379,7 +379,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
   });
 
   test("should support browser zoom up to 200%", async ({ page }) => {
-    await page.goto("/cookies-policy");
+    await page.goto("/cookie-policy");
 
     // Set viewport to simulate 200% zoom (half the width)
     await page.setViewportSize({ width: 640, height: 480 });

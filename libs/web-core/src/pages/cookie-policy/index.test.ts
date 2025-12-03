@@ -45,7 +45,7 @@ describe("Cookie Policy Page", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("cookies-policy/index", {
+      expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
         cookiePreferences: {},
@@ -62,7 +62,7 @@ describe("Cookie Policy Page", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(cookieHelpers.parseCookiePolicy).toHaveBeenCalledWith("mock_value");
-      expect(mockResponse.render).toHaveBeenCalledWith("cookies-policy/index", {
+      expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
         cookiePreferences: mockPreferences,
@@ -77,7 +77,7 @@ describe("Cookie Policy Page", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("cookies-policy/index", {
+      expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
         cookiePreferences: {},
@@ -92,7 +92,7 @@ describe("Cookie Policy Page", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.render).toHaveBeenCalledWith("cookies-policy/index", {
+      expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
         cookiePreferences: {},
@@ -117,7 +117,7 @@ describe("Cookie Policy Page", () => {
         preferences: false
       });
       expect(cookieHelpers.setCookieBannerSeen).toHaveBeenCalledWith(mockResponse);
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?saved=true");
     });
 
     it("should save cookie preferences when analytics and performance are disabled", async () => {
@@ -134,7 +134,7 @@ describe("Cookie Policy Page", () => {
         preferences: false
       });
       expect(cookieHelpers.setCookieBannerSeen).toHaveBeenCalledWith(mockResponse);
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?saved=true");
     });
 
     it("should save cookie preferences with mixed settings", async () => {
@@ -152,7 +152,7 @@ describe("Cookie Policy Page", () => {
         preferences: true
       });
       expect(cookieHelpers.setCookieBannerSeen).toHaveBeenCalledWith(mockResponse);
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?saved=true");
     });
 
     it("should not include essential cookies in preferences", async () => {
@@ -185,12 +185,12 @@ describe("Cookie Policy Page", () => {
       });
     });
 
-    it("should redirect to cookies-policy page with saved parameter", async () => {
+    it("should redirect to cookie-policy page with saved parameter", async () => {
       mockRequest.body = { analytics: "on" };
 
       await POST(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?saved=true");
     });
 
     it("should handle missing cookie config", async () => {
@@ -200,7 +200,7 @@ describe("Cookie Policy Page", () => {
       await POST(mockRequest as Request, mockResponse as Response);
 
       expect(cookieHelpers.setCookiePolicy).toHaveBeenCalledWith(mockResponse, {});
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?saved=true");
     });
 
     it("should preserve Welsh language in redirect", async () => {
@@ -212,7 +212,7 @@ describe("Cookie Policy Page", () => {
 
       await POST(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?lng=cy&saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?lng=cy&saved=true");
     });
 
     it("should not add lng parameter for English", async () => {
@@ -224,7 +224,7 @@ describe("Cookie Policy Page", () => {
 
       await POST(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookies-policy?saved=true");
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/cookie-policy?saved=true");
     });
   });
 });
