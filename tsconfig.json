@@ -3,7 +3,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "baseUrl": ".",
-    "typeRoots": ["./node_modules/@types", "./types", "./libs/notifications/types"],
+    "typeRoots": ["./node_modules/@types", "./libs/notifications/types"],
     "paths": {
       "@hmcts/api": ["apps/api/src"],
       "@hmcts/crons": ["apps/crons/src"],
