@@ -123,8 +123,9 @@ export function filterAccessiblePublications(user: UserProfile | undefined, arte
 
 /**
  * Filters a list of publications to show in summaries (metadata-level access)
- * This is more permissive than filterAccessiblePublications - it shows all publications
- * that users can see metadata for, even if they can't access the full data
+ * System admins see all publications
+ * CTSC/Local admins see only PUBLIC publications
+ * Other users see publications based on their provenance and verification status
  * @param user - User profile (may be undefined for unauthenticated users)
  * @param artefacts - List of publication artefacts
  * @param listTypes - List of all list types
@@ -133,8 +134,6 @@ export function filterAccessiblePublications(user: UserProfile | undefined, arte
 export function filterPublicationsForSummary(user: UserProfile | undefined, artefacts: Artefact[], listTypes: ListType[]): Artefact[] {
   return artefacts.filter((artefact) => {
     const listType = listTypes.find((lt) => lt.id === artefact.listTypeId);
-    // For summary pages, use metadata-level access
-    // This allows admins to see CLASSIFIED publications in lists even if they can't view the data
     return canAccessPublicationMetadata(user, artefact, listType);
   });
 }
