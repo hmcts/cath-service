@@ -4,11 +4,11 @@ import { validateBlobRequest } from "./validation.js";
 
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn((id: number) => {
-    // Return a location for ID 123, null for others
+    // Return a Promise to match actual function signature
     if (id === 123) {
-      return { id: 123, name: "Test Court" };
+      return Promise.resolve({ id: 123, name: "Test Court" });
     }
-    return null;
+    return Promise.resolve(undefined);
   })
 }));
 
@@ -222,5 +222,36 @@ describe("validateBlobRequest", () => {
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toContainEqual({ field: "court_id", message: "court_id must be a valid number" });
+  });
+
+  it("should await getLocationById and not treat Promise as truthy", async () => {
+    const { getLocationById } = await import("@hmcts/location");
+
+    // Mock non-existent location
+    vi.mocked(getLocationById).mockResolvedValue(undefined);
+
+    const request = { ...validRequest, court_id: "999" };
+    const result = await validateBlobRequest(request, 1000);
+
+    // This test FAILS before the fix because Promise is truthy
+    expect(result.locationExists).toBe(false);
+    expect(getLocationById).toHaveBeenCalledWith(999);
+  });
+
+  it("should correctly identify existing location", async () => {
+    const { getLocationById } = await import("@hmcts/location");
+
+    vi.mocked(getLocationById).mockResolvedValue({
+      locationId: 123,
+      name: "Test Court",
+      welshName: "Llys Prawf",
+      regions: [],
+      subJurisdictions: []
+    });
+
+    const request = { ...validRequest, court_id: "123" };
+    const result = await validateBlobRequest(request, 1000);
+
+    expect(result.locationExists).toBe(true);
   });
 });

@@ -88,7 +88,7 @@ describe("processBlobIngestion", async () => {
 
     expect(result.success).toBe(true);
     expect(result.no_match).toBe(true);
-    expect(result.message).toBe("Blob ingested but location not found in reference data (no_match=true)");
+    expect(result.message).toBe("Blob ingested but location not found in reference data");
     expect(createArtefact).toHaveBeenCalledWith(
       expect.objectContaining({
         noMatch: true
