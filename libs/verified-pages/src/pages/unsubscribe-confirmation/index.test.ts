@@ -56,7 +56,7 @@ describe("unsubscribe-confirmation", () => {
       vi.mocked(subscriptionService.removeSubscription).mockResolvedValue({
         subscriptionId: "sub123",
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 

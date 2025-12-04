@@ -7,6 +7,24 @@
   </div>
 </div>
 
+{% if pendingCount > 0 %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <div class="govuk-notification-banner govuk-notification-banner--important" role="region" aria-labelledby="notification-title">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="notification-title">Important</h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading">
+          {{ notificationText | replace("x", pendingCount) }}
+          <a class="govuk-notification-banner__link" href="/media-applications">{{ notificationLink }}</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-one-half">
     <a href="/manual-upload" class="admin-tile">

@@ -12,6 +12,15 @@ vi.mock("@hmcts/auth", () => ({
   }
 }));
 
+// Mock the Prisma client
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    mediaApplication: {
+      count: vi.fn().mockResolvedValue(0)
+    }
+  }
+}));
+
 describe("admin dashboard page", () => {
   describe("GET", () => {
     it("should render dashboard page with English content", async () => {

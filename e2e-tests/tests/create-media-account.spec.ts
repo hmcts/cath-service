@@ -190,7 +190,7 @@ test.describe("Create Media Account", () => {
 		});
 
 		expect(application).not.toBeNull();
-		expect(application?.fullName).toBe("Database Test User");
+		expect(application?.name).toBe("Database Test User");
 		expect(application?.email).toBe(testEmail.toLowerCase());
 		expect(application?.employer).toBe("Test Organization");
 		expect(application?.status).toBe("PENDING");

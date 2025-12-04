@@ -38,4 +38,20 @@ describe("dateFilter", () => {
     expect(dateFilter("2024-03-05")).toBe("5 March 2024");
     expect(dateFilter("2024-03-05", "short")).toBe("05/03/2024");
   });
+
+  it("should format dates in compact format when specified", () => {
+    const date = new Date("2024-03-15");
+    expect(dateFilter(date, "compact")).toBe("15 Mar 2024");
+  });
+
+  it("should format dates in compact format with leading zero for single digit days", () => {
+    expect(dateFilter("2024-03-05", "compact")).toBe("05 Mar 2024");
+    expect(dateFilter("2025-12-03", "compact")).toBe("03 Dec 2025");
+  });
+
+  it("should format dates in compact format with different months", () => {
+    expect(dateFilter("2024-01-01", "compact")).toBe("01 Jan 2024");
+    expect(dateFilter("2024-02-15", "compact")).toBe("15 Feb 2024");
+    expect(dateFilter("2024-12-25", "compact")).toBe("25 Dec 2024");
+  });
 });

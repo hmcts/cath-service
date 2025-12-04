@@ -44,8 +44,8 @@ describe("subscription-management", () => {
   describe("GET", () => {
     it("should render page with subscriptions", async () => {
       const mockSubscriptions = [
-        { subscriptionId: "sub1", userId: "user123", locationId: "456", dateAdded: new Date() },
-        { subscriptionId: "sub2", userId: "user123", locationId: "789", dateAdded: new Date() }
+        { subscriptionId: "sub1", userId: "user123", locationId: 456, dateAdded: new Date() },
+        { subscriptionId: "sub2", userId: "user123", locationId: 789, dateAdded: new Date() }
       ];
 
       vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue(mockSubscriptions);

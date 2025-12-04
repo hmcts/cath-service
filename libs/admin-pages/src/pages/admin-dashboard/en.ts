@@ -17,5 +17,7 @@ export default {
       heading: "Manage Media Account Requests",
       description: "CTSC assess new media account applications"
     }
-  ]
+  ],
+  notificationText: "There are x outstanding media requests.",
+  notificationLink: "Manage media account requests"
 };

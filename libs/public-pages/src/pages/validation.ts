@@ -13,7 +13,7 @@ function isMulterError(error: unknown): error is MulterError {
 }
 
 export function validateForm(
-  fullName: string | undefined,
+  name: string | undefined,
   email: string | undefined,
   employer: string | undefined,
   termsAccepted: string | undefined,
@@ -23,17 +23,17 @@ export function validateForm(
 ): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  if (!fullName || fullName.trim().length === 0) {
+  if (!name || name.trim().length === 0) {
     errors.push({
       text: content.errorFullNameRequired,
       href: "#fullName"
     });
-  } else if (fullName.trim().length > 100) {
+  } else if (name.trim().length > 100) {
     errors.push({
       text: content.errorFullNameRequired,
       href: "#fullName"
     });
-  } else if (!FULL_NAME_REGEX.test(fullName.trim())) {
+  } else if (!FULL_NAME_REGEX.test(name.trim())) {
     errors.push({
       text: content.errorFullNameRequired,
       href: "#fullName"

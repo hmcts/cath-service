@@ -4,13 +4,22 @@ import type { MediaApplicationCreateData } from "./model.js";
 export async function createMediaApplication(data: MediaApplicationCreateData): Promise<string> {
   const application = await prisma.mediaApplication.create({
     data: {
-      fullName: data.fullName,
+      name: data.name,
       email: data.email.toLowerCase(),
       employer: data.employer,
       status: "PENDING",
-      requestDate: new Date(),
-      statusDate: new Date()
+      appliedDate: new Date()
     }
   });
   return application.id;
+}
+
+export async function updateProofOfIdPath(applicationId: string, filePath: string, originalName: string): Promise<void> {
+  await prisma.mediaApplication.update({
+    where: { id: applicationId },
+    data: {
+      proofOfIdPath: filePath,
+      proofOfIdOriginalName: originalName
+    }
+  });
 }

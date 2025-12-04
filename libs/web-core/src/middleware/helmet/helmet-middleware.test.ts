@@ -170,7 +170,7 @@ describe("helmet-middleware", () => {
 
         // Test the nonce function
         const mockReq = {} as Request;
-        const mockRes = { locals: { cspNonce: "testNonce123" } } as Response;
+        const mockRes = { locals: { cspNonce: "testNonce123" } } as unknown as Response;
         const result = nonceFunction(mockReq, mockRes);
 
         expect(result).toBe("'nonce-testNonce123'");

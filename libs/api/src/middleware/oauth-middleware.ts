@@ -41,7 +41,7 @@ export function authenticateApi() {
       };
 
       next();
-    } catch (error) {
+    } catch (_error) {
       console.error("API authentication error");
       return res.status(401).json({
         success: false,

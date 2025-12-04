@@ -74,6 +74,7 @@
     "accessible-autocomplete": "^3.0.1",
     "jsonwebtoken": "9.0.2",
     "jwks-rsa": "3.2.0",
+    "notifications-node-client": "^8.2.1",
     "passport": "0.7.0",
     "passport-azure-ad": "4.3.5"
   }

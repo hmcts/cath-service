@@ -649,7 +649,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -690,7 +690,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue([{ text: "File is required", href: "#file" }]);
+      vi.mocked(validateForm).mockResolvedValue([{ text: "File is required", href: "#file" }]);
 
       await callHandler(POST, req, res);
 
@@ -736,7 +736,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -780,7 +780,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -820,7 +820,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 
@@ -858,7 +858,7 @@ describe("manual-upload page", () => {
         render: vi.fn()
       } as unknown as Response;
 
-      vi.mocked(validateForm).mockReturnValue(mockErrors);
+      vi.mocked(validateForm).mockResolvedValue(mockErrors);
 
       await callHandler(POST, req, res);
 

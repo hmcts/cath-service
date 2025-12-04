@@ -2,7 +2,7 @@ import type { Request } from "express";
 import "express-session";
 
 export interface MediaApplicationFormData {
-  fullName: string;
+  name: string;
   email: string;
   employer: string;
   termsAccepted: boolean;
@@ -14,7 +14,7 @@ export interface ValidationError {
 }
 
 export interface MediaApplicationCreateData {
-  fullName: string;
+  name: string;
   email: string;
   employer: string;
 }
