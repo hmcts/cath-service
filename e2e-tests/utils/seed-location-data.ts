@@ -158,36 +158,48 @@ async function seedSjpArtefacts(): Promise<void> {
     const testArtefacts = [
       {
         locationId: sjpLocationId,
-        listTypeId: 6, // Crown Daily List
+        listTypeId: 6, // Crown Daily List (CRIME_IDAM)
         contentDate: yesterday,
         sensitivity: "PUBLIC",
         language: "ENGLISH",
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "MANUAL_UPLOAD",
+        provenance: "CRIME_IDAM",
       },
       {
         locationId: sjpLocationId,
-        listTypeId: 7, // Crown Warned List
+        listTypeId: 7, // Crown Firm List (CRIME_IDAM)
         contentDate: today,
         sensitivity: "PUBLIC",
         language: "ENGLISH",
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "MANUAL_UPLOAD",
+        provenance: "CRIME_IDAM",
       },
       {
         locationId: sjpLocationId,
-        listTypeId: 1, // Family Daily Cause List
+        listTypeId: 1, // Civil Daily Cause List (CFT_IDAM)
         contentDate: twoDaysAgo,
         sensitivity: "PRIVATE",
         language: "ENGLISH",
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "MANUAL_UPLOAD",
+        provenance: "CFT_IDAM",
+      },
+      {
+        artefactId: "00000000-0000-0000-0000-000000000001", // Known ID for E2E testing
+        locationId: sjpLocationId,
+        listTypeId: 8, // Civil and Family Daily Cause List (CFT_IDAM) - CLASSIFIED
+        contentDate: yesterday,
+        sensitivity: "CLASSIFIED",
+        language: "ENGLISH",
+        displayFrom: oneWeekAgo,
+        displayTo: oneWeekFromNow,
+        isFlatFile: false,
+        provenance: "CFT_IDAM",
       },
     ];
 

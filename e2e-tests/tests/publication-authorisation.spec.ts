@@ -50,29 +50,21 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(count).toBeGreaterThanOrEqual(0);
     });
 
-    test("should redirect to sign-in when trying to directly access a CLASSIFIED publication", async ({ page }) => {
+    test("should show access denied when trying to directly access a CLASSIFIED publication", async ({ page }) => {
       // Try to directly access a CLASSIFIED publication by URL
-      // This assumes there's a CLASSIFIED publication with a known artefactId
-      await page.goto("/civil-and-family-daily-cause-list?artefactId=test-classified-id");
+      // Uses the known test CLASSIFIED artefact from seed data
+      await page.goto("/civil-and-family-daily-cause-list?artefactId=00000000-0000-0000-0000-000000000001");
 
-      // Should either:
-      // 1. Redirect to sign-in (if middleware catches it)
-      // 2. Show 403 error page
-      // 3. Show 404 if publication doesn't exist
+      // Wait for page to load
+      await page.waitForSelector("h1");
 
-      const currentUrl = page.url();
-      const is403Page = await page
-        .locator("h1")
-        .textContent()
-        .then((text) => text?.includes("Access Denied") || text?.includes("Forbidden"));
-      const isSignInPage = currentUrl.includes("/sign-in");
-      const is404Page = await page
-        .locator("h1")
-        .textContent()
-        .then((text) => text?.includes("not found"));
+      // Should show "Access Denied" error page (403)
+      const heading = await page.locator("h1").textContent();
 
-      // One of these should be true
-      expect(is403Page || isSignInPage || is404Page).toBe(true);
+      // Check for access denied heading (English or Welsh)
+      const isAccessDenied = heading?.includes("Access Denied") || heading?.includes("Mynediad wedi'i Wrthod");
+
+      expect(isAccessDenied).toBe(true);
     });
   });
 
@@ -335,24 +327,21 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
     test("should show appropriate error when accessing restricted publication directly", async ({ page }) => {
       // Try to access a CLASSIFIED publication URL directly without authentication
-      // Using a hypothetical artefactId - this tests the 403 error handling
-      const testUrl = "/civil-and-family-daily-cause-list?artefactId=a4f06ae6-399f-4207-b676-54f35ad908ed";
+      // Uses the known test CLASSIFIED artefact from seed data
+      const testUrl = "/civil-and-family-daily-cause-list?artefactId=00000000-0000-0000-0000-000000000001";
 
       await page.goto(testUrl);
 
       // Wait for page to load
-      await page.waitForLoadState("networkidle");
+      await page.waitForSelector("h1");
 
-      // Should see either 403, 404, or be redirected to sign-in
-      const bodyText = await page.locator("body").textContent();
-      const currentUrl = page.url();
+      // Should show "Access Denied" error page (403)
+      const heading = await page.locator("h1").textContent();
 
-      const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
-      const isNotFound = bodyText?.includes("not found") || bodyText?.includes("heb ddod o hyd");
-      const isSignIn = currentUrl.includes("/sign-in");
+      // Check for access denied heading (English or Welsh)
+      const isAccessDenied = heading?.includes("Access Denied") || heading?.includes("Mynediad wedi'i Wrthod");
 
-      // One of these should be true
-      expect(isAccessDenied || isNotFound || isSignIn).toBe(true);
+      expect(isAccessDenied).toBe(true);
     });
 
     test("should handle invalid locationId gracefully", async ({ page }) => {
