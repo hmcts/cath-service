@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { loginWithCftIdam, assertAuthenticated, logout } from "../utils/cft-idam-helpers.js";
+import { assertAuthenticated, loginWithCftIdam, logout } from "../utils/cft-idam-helpers.js";
+import { assertAuthenticated as assertSsoAuthenticated, loginWithSSO } from "../utils/sso-helpers.js";
 
 /**
  * E2E tests for publication authorisation based on sensitivity levels
@@ -60,9 +61,15 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       // 3. Show 404 if publication doesn't exist
 
       const currentUrl = page.url();
-      const is403Page = await page.locator("h1").textContent().then(text => text?.includes("Access Denied") || text?.includes("Forbidden"));
+      const is403Page = await page
+        .locator("h1")
+        .textContent()
+        .then((text) => text?.includes("Access Denied") || text?.includes("Forbidden"));
       const isSignInPage = currentUrl.includes("/sign-in");
-      const is404Page = await page.locator("h1").textContent().then(text => text?.includes("not found"));
+      const is404Page = await page
+        .locator("h1")
+        .textContent()
+        .then((text) => text?.includes("not found"));
 
       // One of these should be true
       expect(is403Page || isSignInPage || is404Page).toBe(true);
@@ -79,11 +86,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -117,11 +120,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -157,11 +156,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -187,11 +182,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -230,11 +221,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -271,11 +258,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -305,11 +288,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -323,7 +302,6 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       if (count > 0) {
         // Verify we can access CFT publications
         const firstLink = publicationLinks.first();
-        const href = await firstLink.getAttribute("href");
 
         // Click the link
         await firstLink.click();
@@ -396,11 +374,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      await loginWithCftIdam(
-        page,
-        process.env.CFT_VALID_TEST_ACCOUNT!,
-        process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-      );
+      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
       await assertAuthenticated(page);
 
@@ -418,6 +392,261 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
         const linkText = await publicationLinks.nth(i).textContent();
         expect(linkText).toBeTruthy();
         expect(linkText?.trim().length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  test.describe("System Admin users (SYSTEM_ADMIN role) @nightly", () => {
+    test("should have full access to all publications", async ({ page }) => {
+      // Login as System Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // System admin should see all publications including CLASSIFIED
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
+      const count = await publicationLinks.count();
+
+      // Should see all publications (PUBLIC + PRIVATE + CLASSIFIED)
+      expect(count).toBeGreaterThan(0);
+
+      // Verify can access CLASSIFIED publication
+      const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
+      if (await classifiedLink.isVisible()) {
+        await classifiedLink.click();
+        await page.waitForLoadState("networkidle");
+
+        // Should successfully access the publication
+        await expect(page).toHaveURL(/\/civil-and-family-daily-cause-list\?artefactId=/);
+        const bodyText = await page.locator("body").textContent();
+        expect(bodyText).not.toContain("Access Denied");
+      }
+    });
+
+    test("should be able to view actual publication data", async ({ page }) => {
+      // Login as System Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // Click on first publication
+      const firstLink = page.locator('.govuk-list a[href*="artefactId="]').first();
+      await firstLink.click();
+      await page.waitForLoadState("networkidle");
+
+      // Should not see metadata-only restriction message
+      const bodyText = await page.locator("body").textContent();
+      expect(bodyText).not.toContain("You do not have permission to view the data for this publication");
+      expect(bodyText).not.toContain("You can view metadata only");
+    });
+  });
+
+  test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL) @nightly", () => {
+    test("CTSC Admin should see all publications in summary (metadata access)", async ({ page }) => {
+      // Login as CTSC Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // CTSC admin can see all publications in list (metadata access)
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
+      const count = await publicationLinks.count();
+
+      // Should see all publications including PRIVATE and CLASSIFIED
+      expect(count).toBeGreaterThan(0);
+    });
+
+    test("Local Admin should see all publications in summary (metadata access)", async ({ page }) => {
+      // Login as Local Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // Local admin can see all publications in list (metadata access)
+      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
+      const count = await publicationLinks.count();
+
+      // Should see all publications including PRIVATE and CLASSIFIED
+      expect(count).toBeGreaterThan(0);
+    });
+
+    test("CTSC Admin cannot view data for PRIVATE publications", async ({ page }) => {
+      // Login as CTSC Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // Look for PRIVATE publication (Civil Daily Cause List)
+      const privateLink = page.locator('.govuk-list a[href*="civil-daily-cause-list"]').first();
+
+      if (await privateLink.isVisible()) {
+        await privateLink.click();
+        await page.waitForLoadState("networkidle");
+
+        // Should see access denied for data access
+        const bodyText = await page.locator("body").textContent();
+        const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
+        const hasMetadataOnlyMessage =
+          bodyText?.includes("You do not have permission to view the data") ||
+          bodyText?.includes("You can view metadata only") ||
+          bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
+
+        // Should either see 403 or metadata-only message
+        expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
+      }
+    });
+
+    test("Local Admin cannot view data for CLASSIFIED publications", async ({ page }) => {
+      // Login as Local Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // Look for CLASSIFIED publication (Civil and Family Daily Cause List)
+      const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
+
+      if (await classifiedLink.isVisible()) {
+        await classifiedLink.click();
+        await page.waitForLoadState("networkidle");
+
+        // Should see access denied for data access
+        const bodyText = await page.locator("body").textContent();
+        const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
+        const hasMetadataOnlyMessage =
+          bodyText?.includes("You do not have permission to view the data") ||
+          bodyText?.includes("You can view metadata only") ||
+          bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
+
+        // Should either see 403 or metadata-only message
+        expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
+      }
+    });
+
+    test("CTSC Admin can view PUBLIC publication data", async ({ page }) => {
+      // Login as CTSC Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
+      const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
+
+      if (await publicLink.isVisible()) {
+        await publicLink.click();
+        await page.waitForLoadState("networkidle");
+
+        // Should successfully access PUBLIC publication data
+        const bodyText = await page.locator("body").textContent();
+        expect(bodyText).not.toContain("Access Denied");
+        expect(bodyText).not.toContain("You do not have permission to view the data");
+      }
+    });
+
+    test("Local Admin can view PUBLIC publication data", async ({ page }) => {
+      // Login as Local Admin
+      await page.goto("/sign-in");
+
+      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
+      await ssoRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
+
+      await assertSsoAuthenticated(page);
+
+      // Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
+      const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
+
+      if (await publicLink.isVisible()) {
+        await publicLink.click();
+        await page.waitForLoadState("networkidle");
+
+        // Should successfully access PUBLIC publication data
+        const bodyText = await page.locator("body").textContent();
+        expect(bodyText).not.toContain("Access Denied");
+        expect(bodyText).not.toContain("You do not have permission to view the data");
       }
     });
   });
