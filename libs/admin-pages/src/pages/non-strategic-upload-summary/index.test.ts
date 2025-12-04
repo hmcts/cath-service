@@ -70,7 +70,6 @@ vi.mock("@hmcts/publication", async () => {
 
 import { createArtefact } from "@hmcts/publication";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
-import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import { getNonStrategicUpload } from "../../manual-upload/storage.js";
 
 describe("non-strategic-upload-summary page", () => {

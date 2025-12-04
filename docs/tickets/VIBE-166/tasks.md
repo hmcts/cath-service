@@ -119,10 +119,15 @@
 - [x] Write unit tests for JSON validation (valid JSON, missing fields, invalid patterns)
 - [x] Write unit tests for renderer (data transformation, date formatting from dd/MM/yyyy to d MMMM yyyy)
 - [ ] Write unit tests for page controller (success case, missing artefact, invalid JSON)
-- [ ] Create E2E test for full upload flow: upload Excel → verify summary → submit → verify success
-- [ ] Create E2E test for display page: navigate to list → verify headers → verify table → test search
-- [ ] Create E2E test for important information accordion: open accordion → verify content
-- [ ] Run accessibility audit with axe-core on display page
+- [x] Create E2E test for full upload flow: upload Excel → verify summary → submit → verify success
+- [x] Create E2E test for Excel validation on upload page (missing fields, invalid dates, HTML tags)
+- [x] Create E2E test for display page: navigate to list → verify headers → verify table → test search
+- [x] Create E2E test for important information accordion: open accordion → verify content
+- [x] Create E2E test for search functionality with highlighting
+- [x] Create E2E test for data source display (Manual upload)
+- [x] Create E2E test for keyboard navigation throughout flow
+- [x] Create E2E test for Welsh language support
+- [x] Run accessibility audit with axe-core on upload form, error page, and display page
 
 ### 14. Error Handling
 - [x] Add error handling for invalid Excel headers (missing or misnamed columns)
