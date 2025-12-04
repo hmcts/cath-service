@@ -386,15 +386,16 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   });
 
   test.describe("System Admin users (SYSTEM_ADMIN role)", () => {
-    test("should have full access to all publications", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
-
-      // Login as System Admin via SSO
+    test.beforeEach(async ({ page }) => {
+      // Authenticate via system admin dashboard (protected page)
+      await page.goto("/system-admin-dashboard");
       await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
+      await page.waitForURL("/system-admin-dashboard");
+    });
 
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
+    test("should have full access to all publications", async ({ page }) => {
+      // Navigate to summary page (already authenticated)
+      await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
       // System admin should see all publications including CLASSIFIED
@@ -418,14 +419,8 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("should be able to view actual publication data", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
+      // Navigate to summary page (already authenticated)
       await page.goto("/summary-of-publications?locationId=9");
-
-      // Login as System Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
-
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Click on first publication
@@ -441,154 +436,136 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   });
 
   test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL)", () => {
-    test("CTSC Admin should see all publications in summary (metadata access)", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
+    test.describe("CTSC Admin", () => {
+      test.beforeEach(async ({ page }) => {
+        // Authenticate via admin dashboard (protected page)
+        await page.goto("/admin-dashboard");
+        await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
+        await page.waitForURL("/admin-dashboard");
+      });
 
-      // Login as CTSC Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
+      test("should see all publications in summary (metadata access)", async ({ page }) => {
+        // Navigate to summary page (already authenticated)
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
 
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
-      await page.waitForSelector("h1.govuk-heading-l");
+        // CTSC admin can see all publications in list (metadata access)
+        const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
+        const count = await publicationLinks.count();
 
-      // CTSC admin can see all publications in list (metadata access)
-      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
-      const count = await publicationLinks.count();
+        // Should see all publications including PRIVATE and CLASSIFIED
+        expect(count).toBeGreaterThan(0);
+      });
 
-      // Should see all publications including PRIVATE and CLASSIFIED
-      expect(count).toBeGreaterThan(0);
+      test("cannot view data for PRIVATE publications", async ({ page }) => {
+        // Navigate to summary page (already authenticated)
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
+
+        // Look for PRIVATE publication (Civil Daily Cause List)
+        const privateLink = page.locator('.govuk-list a[href*="civil-daily-cause-list"]').first();
+
+        if (await privateLink.isVisible()) {
+          await privateLink.click();
+          await page.waitForLoadState("networkidle");
+
+          // Should see access denied for data access
+          const bodyText = await page.locator("body").textContent();
+          const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
+          const hasMetadataOnlyMessage =
+            bodyText?.includes("You do not have permission to view the data") ||
+            bodyText?.includes("You can view metadata only") ||
+            bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
+
+          // Should either see 403 or metadata-only message
+          expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
+        }
+      });
+
+      test("can view PUBLIC publication data", async ({ page }) => {
+        // Navigate to summary page (already authenticated)
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
+
+        // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
+        const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
+
+        if (await publicLink.isVisible()) {
+          await publicLink.click();
+          await page.waitForLoadState("networkidle");
+
+          // Should successfully access PUBLIC publication data
+          const bodyText = await page.locator("body").textContent();
+          expect(bodyText).not.toContain("Access Denied");
+          expect(bodyText).not.toContain("You do not have permission to view the data");
+        }
+      });
     });
 
-    test("Local Admin should see all publications in summary (metadata access)", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
+    test.describe("Local Admin", () => {
+      test.beforeEach(async ({ page }) => {
+        // Authenticate via admin dashboard (protected page)
+        await page.goto("/admin-dashboard");
+        await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
+        await page.waitForURL("/admin-dashboard");
+      });
 
-      // Login as Local Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
+      test("should see all publications in summary (metadata access)", async ({ page }) => {
+        // Navigate to summary page (already authenticated)
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
 
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
-      await page.waitForSelector("h1.govuk-heading-l");
+        // Local admin can see all publications in list (metadata access)
+        const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
+        const count = await publicationLinks.count();
 
-      // Local admin can see all publications in list (metadata access)
-      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
-      const count = await publicationLinks.count();
+        // Should see all publications including PRIVATE and CLASSIFIED
+        expect(count).toBeGreaterThan(0);
+      });
 
-      // Should see all publications including PRIVATE and CLASSIFIED
-      expect(count).toBeGreaterThan(0);
-    });
+      test("cannot view data for CLASSIFIED publications", async ({ page }) => {
+        // Navigate to summary page (already authenticated)
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
 
-    test("CTSC Admin cannot view data for PRIVATE publications", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
+        // Look for CLASSIFIED publication (Civil and Family Daily Cause List)
+        const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
 
-      // Login as CTSC Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
+        if (await classifiedLink.isVisible()) {
+          await classifiedLink.click();
+          await page.waitForLoadState("networkidle");
 
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
-      await page.waitForSelector("h1.govuk-heading-l");
+          // Should see access denied for data access
+          const bodyText = await page.locator("body").textContent();
+          const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
+          const hasMetadataOnlyMessage =
+            bodyText?.includes("You do not have permission to view the data") ||
+            bodyText?.includes("You can view metadata only") ||
+            bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
 
-      // Look for PRIVATE publication (Civil Daily Cause List)
-      const privateLink = page.locator('.govuk-list a[href*="civil-daily-cause-list"]').first();
+          // Should either see 403 or metadata-only message
+          expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
+        }
+      });
 
-      if (await privateLink.isVisible()) {
-        await privateLink.click();
-        await page.waitForLoadState("networkidle");
+      test("can view PUBLIC publication data", async ({ page }) => {
+        // Navigate to summary page (already authenticated)
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
 
-        // Should see access denied for data access
-        const bodyText = await page.locator("body").textContent();
-        const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
-        const hasMetadataOnlyMessage =
-          bodyText?.includes("You do not have permission to view the data") ||
-          bodyText?.includes("You can view metadata only") ||
-          bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
+        // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
+        const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
 
-        // Should either see 403 or metadata-only message
-        expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
-      }
-    });
+        if (await publicLink.isVisible()) {
+          await publicLink.click();
+          await page.waitForLoadState("networkidle");
 
-    test("Local Admin cannot view data for CLASSIFIED publications", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
-
-      // Login as Local Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
-
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
-      await page.waitForSelector("h1.govuk-heading-l");
-
-      // Look for CLASSIFIED publication (Civil and Family Daily Cause List)
-      const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
-
-      if (await classifiedLink.isVisible()) {
-        await classifiedLink.click();
-        await page.waitForLoadState("networkidle");
-
-        // Should see access denied for data access
-        const bodyText = await page.locator("body").textContent();
-        const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
-        const hasMetadataOnlyMessage =
-          bodyText?.includes("You do not have permission to view the data") ||
-          bodyText?.includes("You can view metadata only") ||
-          bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
-
-        // Should either see 403 or metadata-only message
-        expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
-      }
-    });
-
-    test("CTSC Admin can view PUBLIC publication data", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
-
-      // Login as CTSC Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
-
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
-      await page.waitForSelector("h1.govuk-heading-l");
-
-      // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
-      const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
-
-      if (await publicLink.isVisible()) {
-        await publicLink.click();
-        await page.waitForLoadState("networkidle");
-
-        // Should successfully access PUBLIC publication data
-        const bodyText = await page.locator("body").textContent();
-        expect(bodyText).not.toContain("Access Denied");
-        expect(bodyText).not.toContain("You do not have permission to view the data");
-      }
-    });
-
-    test("Local Admin can view PUBLIC publication data", async ({ page }) => {
-      // Navigate to summary page (triggers SSO redirect)
-      await page.goto("/summary-of-publications?locationId=9");
-
-      // Login as Local Admin via SSO
-      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
-
-      // Wait to return to summary page
-      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
-      await page.waitForSelector("h1.govuk-heading-l");
-
-      // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
-      const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
-
-      if (await publicLink.isVisible()) {
-        await publicLink.click();
-        await page.waitForLoadState("networkidle");
-
-        // Should successfully access PUBLIC publication data
-        const bodyText = await page.locator("body").textContent();
-        expect(bodyText).not.toContain("Access Denied");
-        expect(bodyText).not.toContain("You do not have permission to view the data");
-      }
+          // Should successfully access PUBLIC publication data
+          const bodyText = await page.locator("body").textContent();
+          expect(bodyText).not.toContain("Access Denied");
+          expect(bodyText).not.toContain("You do not have permission to view the data");
+        }
+      });
     });
   });
 });
