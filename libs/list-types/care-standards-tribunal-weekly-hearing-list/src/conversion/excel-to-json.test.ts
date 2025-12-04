@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import "./cst-converter.js"; // Register converter before tests
+import "./cst-config.js"; // Register converter before tests
 import { convertExcelToJson } from "./excel-to-json.js";
 
 function createExcelBuffer(data: unknown[][]): Buffer {
