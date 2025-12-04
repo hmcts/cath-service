@@ -43,7 +43,7 @@ export const GET = async (req: Request, res: Response) => {
   });
 
   // Filter artefacts based on user metadata access rights
-  // This allows admins to see CLASSIFIED publications in the summary even if they can't view the data
+  // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
   const artefacts = filterPublicationsForSummary(req.user, allArtefacts, mockListTypes);
 
   // Map list types and format dates
