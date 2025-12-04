@@ -90,7 +90,7 @@ describe("convertExcelToJson", () => {
 
     const buffer = createExcelBuffer(excelData);
 
-    await expect(convertExcelToJson(buffer)).rejects.toThrow("Excel file must contain at least one hearing");
+    await expect(convertExcelToJson(buffer)).rejects.toThrow("Excel file must contain at least 1 data row");
   });
 
   it("should reject invalid date format (wrong pattern)", async () => {
@@ -178,7 +178,7 @@ describe("convertExcelToJson", () => {
 
     const buffer = createExcelBuffer(excelData);
 
-    await expect(convertExcelToJson(buffer)).rejects.toThrow(/Missing required field 'case name'/);
+    await expect(convertExcelToJson(buffer)).rejects.toThrow(/Missing required field 'Case name'/);
   });
 
   it("should include row number in error messages", async () => {

@@ -107,9 +107,10 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
-    // If this is a Care Standards Tribunal list (listTypeId === 9) and it's an Excel file,
+    // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
-    if (isFlatFile && listTypeId === 9) {
+    const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
+    if (isFlatFile && selectedListType?.isNonStrategic) {
       const { convertExcelToJson } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
 
       const hearingsData = await convertExcelToJson(uploadData.file);
