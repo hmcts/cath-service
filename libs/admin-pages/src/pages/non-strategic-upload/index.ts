@@ -127,19 +127,12 @@ const postHandler = async (req: Request, res: Response) => {
   const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
   const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
 
-  if (selectedListType?.isNonStrategic && isExcelFile) {
+  if (selectedListType?.isNonStrategic && isExcelFile && listTypeId) {
     try {
-      const { convertExcelToJson, validateCareStandardsTribunalList } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
+      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
-      const hearingsData = await convertExcelToJson(req.file!.buffer);
-      const validation = validateCareStandardsTribunalList(hearingsData);
-
-      if (!validation.isValid) {
-        errors = [{ text: validation.errors.join(", "), href: "#file" }];
-        req.session.nonStrategicUploadErrors = errors;
-        req.session.nonStrategicUploadForm = formData;
-        await saveSession(req.session);
-        return res.redirect("/non-strategic-upload");
+      if (hasConverterForListType(listTypeId)) {
+        await convertExcelForListType(listTypeId, req.file!.buffer);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";

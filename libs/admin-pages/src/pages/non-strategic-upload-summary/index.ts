@@ -111,10 +111,12 @@ const postHandler = async (req: Request, res: Response) => {
     // convert it to JSON (validation already done on upload page)
     const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
     if (isFlatFile && selectedListType?.isNonStrategic) {
-      const { convertExcelToJson } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
+      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
-      const hearingsData = await convertExcelToJson(uploadData.file);
-      await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+      if (hasConverterForListType(listTypeId)) {
+        const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
+        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+      }
     }
 
     // Clear session data

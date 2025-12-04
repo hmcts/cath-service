@@ -389,9 +389,9 @@ describe("non-strategic-upload page", () => {
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
 
       // Mock the dynamic import
-      vi.doMock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
-        convertExcelToJson: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
-        validateCareStandardsTribunalList: vi.fn()
+      vi.doMock("@hmcts/list-types-common", () => ({
+        convertExcelForListType: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
+        hasConverterForListType: vi.fn().mockReturnValue(true)
       }));
 
       const mockFile = {
@@ -434,15 +434,15 @@ describe("non-strategic-upload page", () => {
       expect(session.nonStrategicUploadErrors[0].text).toContain("Missing required field");
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
-      vi.doUnmock("@hmcts/care-standards-tribunal-weekly-hearing-list");
+      vi.doUnmock("@hmcts/list-types-common");
     });
 
     it("should validate Excel file for Care Standards Tribunal (listType 9) and accept valid file", async () => {
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
 
       // Mock successful Excel validation
-      vi.doMock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
-        convertExcelToJson: vi.fn().mockResolvedValue([
+      vi.doMock("@hmcts/list-types-common", () => ({
+        convertExcelForListType: vi.fn().mockResolvedValue([
           {
             date: "01/01/2025",
             caseName: "Test Case",
@@ -452,7 +452,7 @@ describe("non-strategic-upload page", () => {
             additionalInformation: "Test Info"
           }
         ]),
-        validateCareStandardsTribunalList: vi.fn().mockReturnValue({ isValid: true, errors: [] })
+        hasConverterForListType: vi.fn().mockReturnValue(true)
       }));
 
       const mockFile = {
@@ -494,7 +494,7 @@ describe("non-strategic-upload page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
       expect(session.nonStrategicUploadSubmitted).toBe(true);
 
-      vi.doUnmock("@hmcts/care-standards-tribunal-weekly-hearing-list");
+      vi.doUnmock("@hmcts/list-types-common");
     });
 
     it("should skip Excel validation for non-CST list types", async () => {
