@@ -472,13 +472,10 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
           // Should see access denied for data access
           const bodyText = await page.locator("body").textContent();
           const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
-          const hasMetadataOnlyMessage =
-            bodyText?.includes("You do not have permission to view the data") ||
-            bodyText?.includes("You can view metadata only") ||
-            bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
+          const hasPermissionMessage = bodyText?.includes("You do not have permission to view") || bodyText?.includes("Nid oes gennych ganiatâd i weld");
 
-          // Should either see 403 or metadata-only message
-          expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
+          // Should see 403 access denied
+          expect(isAccessDenied || hasPermissionMessage).toBe(true);
         }
       });
 
@@ -538,13 +535,10 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
           // Should see access denied for data access
           const bodyText = await page.locator("body").textContent();
           const isAccessDenied = bodyText?.includes("Access Denied") || bodyText?.includes("Mynediad wedi'i Wrthod");
-          const hasMetadataOnlyMessage =
-            bodyText?.includes("You do not have permission to view the data") ||
-            bodyText?.includes("You can view metadata only") ||
-            bodyText?.includes("Nid oes gennych ganiatâd i weld y data");
+          const hasPermissionMessage = bodyText?.includes("You do not have permission to view") || bodyText?.includes("Nid oes gennych ganiatâd i weld");
 
-          // Should either see 403 or metadata-only message
-          expect(isAccessDenied || hasMetadataOnlyMessage).toBe(true);
+          // Should see 403 access denied
+          expect(isAccessDenied || hasPermissionMessage).toBe(true);
         }
       });
 
