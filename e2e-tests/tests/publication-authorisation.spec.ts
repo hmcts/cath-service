@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { assertAuthenticated, loginWithCftIdam, logout } from "../utils/cft-idam-helpers.js";
-import { assertAuthenticated as assertSsoAuthenticated, loginWithSSO } from "../utils/sso-helpers.js";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 /**
  * E2E tests for publication authorisation based on sensitivity levels
@@ -353,7 +353,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
   });
 
-  test.describe("Accessibility compliance for authorized pages", () => {
+  test.describe("Accessibility compliance for authorised pages", () => {
     test("authenticated summary page should be accessible", async ({ page }) => {
       // Login as CFT user
       await page.goto("/sign-in");
@@ -387,20 +387,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
   test.describe("System Admin users (SYSTEM_ADMIN role)", () => {
     test("should have full access to all publications", async ({ page }) => {
-      // Login as System Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as System Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // System admin should see all publications including CLASSIFIED
@@ -424,20 +418,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("should be able to view actual publication data", async ({ page }) => {
-      // Login as System Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as System Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Click on first publication
@@ -454,20 +442,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
   test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL)", () => {
     test("CTSC Admin should see all publications in summary (metadata access)", async ({ page }) => {
-      // Login as CTSC Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as CTSC Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // CTSC admin can see all publications in list (metadata access)
@@ -479,20 +461,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("Local Admin should see all publications in summary (metadata access)", async ({ page }) => {
-      // Login as Local Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as Local Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Local admin can see all publications in list (metadata access)
@@ -504,20 +480,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("CTSC Admin cannot view data for PRIVATE publications", async ({ page }) => {
-      // Login as CTSC Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as CTSC Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Look for PRIVATE publication (Civil Daily Cause List)
@@ -541,20 +511,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("Local Admin cannot view data for CLASSIFIED publications", async ({ page }) => {
-      // Login as Local Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as Local Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Look for CLASSIFIED publication (Civil and Family Daily Cause List)
@@ -578,20 +542,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("CTSC Admin can view PUBLIC publication data", async ({ page }) => {
-      // Login as CTSC Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as CTSC Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
@@ -609,20 +567,14 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
 
     test("Local Admin can view PUBLIC publication data", async ({ page }) => {
-      // Login as Local Admin
-      await page.goto("/sign-in");
+      // Navigate to summary page (triggers SSO redirect)
+      await page.goto("/summary-of-publications?locationId=9");
 
-      const ssoRadio = page.getByRole("radio", { name: /with a justice account/i });
-      await ssoRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
+      // Login as Local Admin via SSO
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
 
-      await assertSsoAuthenticated(page);
-
-      // Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // Wait to return to summary page
+      await page.waitForURL(/\/summary-of-publications\?locationId=9/);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Look for PUBLIC publication (Crown Daily List or Crown Firm List)
