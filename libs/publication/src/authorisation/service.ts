@@ -82,13 +82,15 @@ export function canAccessPublicationData(user: UserProfile | undefined, artefact
 
 /**
  * Determines if a user can access publication metadata
- * All authenticated users can view PUBLIC metadata
- * Admins can view all metadata
+ * System admins can view all metadata
+ * CTSC/Local admins can only view PUBLIC metadata
+ * Other users follow standard publication access rules
  * @param user - User profile (may be undefined for unauthenticated users)
  * @param artefact - Publication artefact
+ * @param listType - List type containing provenance information
  * @returns true if user can access metadata, false otherwise
  */
-export function canAccessPublicationMetadata(user: UserProfile | undefined, artefact: Artefact): boolean {
+export function canAccessPublicationMetadata(user: UserProfile | undefined, artefact: Artefact, listType?: ListType): boolean {
   const sensitivity = artefact.sensitivity || Sensitivity.CLASSIFIED;
 
   // System admins can view all metadata
@@ -96,18 +98,13 @@ export function canAccessPublicationMetadata(user: UserProfile | undefined, arte
     return true;
   }
 
-  // Local and CTSC admins can view all metadata
+  // Local and CTSC admins can only view PUBLIC metadata
   if (user?.role && METADATA_ONLY_ROLES.includes(user.role as (typeof METADATA_ONLY_ROLES)[number])) {
-    return true;
+    return sensitivity === Sensitivity.PUBLIC;
   }
 
-  // PUBLIC metadata is accessible to everyone
-  if (sensitivity === Sensitivity.PUBLIC) {
-    return true;
-  }
-
-  // For PRIVATE and CLASSIFIED, require authentication
-  return !!user;
+  // For all other users, use the standard access check
+  return canAccessPublication(user, artefact, listType);
 }
 
 /**
@@ -121,5 +118,23 @@ export function filterAccessiblePublications(user: UserProfile | undefined, arte
   return artefacts.filter((artefact) => {
     const listType = listTypes.find((lt) => lt.id === artefact.listTypeId);
     return canAccessPublication(user, artefact, listType);
+  });
+}
+
+/**
+ * Filters a list of publications to show in summaries (metadata-level access)
+ * This is more permissive than filterAccessiblePublications - it shows all publications
+ * that users can see metadata for, even if they can't access the full data
+ * @param user - User profile (may be undefined for unauthenticated users)
+ * @param artefacts - List of publication artefacts
+ * @param listTypes - List of all list types
+ * @returns Filtered list of publications for which user can view metadata
+ */
+export function filterPublicationsForSummary(user: UserProfile | undefined, artefacts: Artefact[], listTypes: ListType[]): Artefact[] {
+  return artefacts.filter((artefact) => {
+    const listType = listTypes.find((lt) => lt.id === artefact.listTypeId);
+    // For summary pages, use metadata-level access
+    // This allows admins to see CLASSIFIED publications in lists even if they can't view the data
+    return canAccessPublicationMetadata(user, artefact, listType);
   });
 }

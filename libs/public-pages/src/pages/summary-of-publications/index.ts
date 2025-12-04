@@ -1,6 +1,6 @@
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { filterAccessiblePublications, mockListTypes } from "@hmcts/publication";
+import { filterPublicationsForSummary, mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -42,8 +42,9 @@ export const GET = async (req: Request, res: Response) => {
     orderBy: [{ lastReceivedDate: "desc" }]
   });
 
-  // Filter artefacts based on user access rights
-  const artefacts = filterAccessiblePublications(req.user, allArtefacts, mockListTypes);
+  // Filter artefacts based on user metadata access rights
+  // This allows admins to see CLASSIFIED publications in the summary even if they can't view the data
+  const artefacts = filterPublicationsForSummary(req.user, allArtefacts, mockListTypes);
 
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {

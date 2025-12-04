@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -206,8 +207,12 @@ async function seedSjpArtefacts(): Promise<void> {
     console.log(`Creating ${testArtefacts.length} artefacts...`);
 
     for (const artefact of testArtefacts) {
-      const created = await prisma.artefact.create({
-        data: artefact,
+      const artefactId = artefact.artefactId || crypto.randomUUID();
+
+      const created = await prisma.artefact.upsert({
+        where: { artefactId },
+        create: { ...artefact, artefactId },
+        update: artefact,
       });
       console.log(`  ✓ Created artefact ${created.artefactId}: listType=${artefact.listTypeId}, date=${artefact.contentDate.toISOString().split('T')[0]}`);
     }

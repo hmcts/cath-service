@@ -444,43 +444,22 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
         await page.waitForURL("/admin-dashboard");
       });
 
-      test("should see all publications in summary (metadata access)", async ({ page }) => {
+      test("should only see PUBLIC publications in summary", async ({ page }) => {
         // Navigate to summary page (already authenticated)
         await page.goto("/summary-of-publications?locationId=9");
         await page.waitForSelector("h1.govuk-heading-l");
 
-        // CTSC admin can see all publications in list (metadata access)
+        // CTSC admin should only see PUBLIC publications
         const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
         const count = await publicationLinks.count();
 
-        // Should see all publications including PRIVATE and CLASSIFIED
+        // Should see at least PUBLIC publications
         expect(count).toBeGreaterThan(0);
-      });
 
-      test("cannot view data for PRIVATE/CLASSIFIED publications", async ({ page }) => {
-        // Navigate to summary page (already authenticated)
-        await page.goto("/summary-of-publications?locationId=9");
-        await page.waitForSelector("h1.govuk-heading-l");
-
-        // Look for CLASSIFIED publication (only this type has a page handler with auth checks)
-        const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
-
-        // Skip test if no CLASSIFIED publication exists
-        const linkCount = await page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').count();
-        if (linkCount === 0) {
-          console.log("No CLASSIFIED (civil-and-family-daily-cause-list) publication found - skipping test");
-          return;
-        }
-
-        await classifiedLink.click();
-        await page.waitForLoadState("networkidle");
-
-        // Should see access denied for data access (CTSC Admin cannot view CLASSIFIED data)
-        const heading = await page.locator("h1").textContent();
-        const isAccessDenied = heading?.includes("Access Denied") || heading?.includes("Mynediad wedi'i Wrthod");
-
-        // Should see 403 access denied
-        expect(isAccessDenied).toBe(true);
+        // Should NOT see CLASSIFIED publications (civil-and-family-daily-cause-list)
+        const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
+        const classifiedCount = await classifiedLinks.count();
+        expect(classifiedCount).toBe(0);
       });
 
       test("can view PUBLIC publication data", async ({ page }) => {
@@ -511,43 +490,22 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
         await page.waitForURL("/admin-dashboard");
       });
 
-      test("should see all publications in summary (metadata access)", async ({ page }) => {
+      test("should only see PUBLIC publications in summary", async ({ page }) => {
         // Navigate to summary page (already authenticated)
         await page.goto("/summary-of-publications?locationId=9");
         await page.waitForSelector("h1.govuk-heading-l");
 
-        // Local admin can see all publications in list (metadata access)
+        // Local admin should only see PUBLIC publications
         const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
         const count = await publicationLinks.count();
 
-        // Should see all publications including PRIVATE and CLASSIFIED
+        // Should see at least PUBLIC publications
         expect(count).toBeGreaterThan(0);
-      });
 
-      test("cannot view data for PRIVATE/CLASSIFIED publications", async ({ page }) => {
-        // Navigate to summary page (already authenticated)
-        await page.goto("/summary-of-publications?locationId=9");
-        await page.waitForSelector("h1.govuk-heading-l");
-
-        // Look for CLASSIFIED publication (only this type has a page handler with auth checks)
-        const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
-
-        // Skip test if no CLASSIFIED publication exists
-        const linkCount = await page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').count();
-        if (linkCount === 0) {
-          console.log("No CLASSIFIED (civil-and-family-daily-cause-list) publication found - skipping test");
-          return;
-        }
-
-        await classifiedLink.click();
-        await page.waitForLoadState("networkidle");
-
-        // Should see access denied for data access (Local Admin cannot view CLASSIFIED data)
-        const heading = await page.locator("h1").textContent();
-        const isAccessDenied = heading?.includes("Access Denied") || heading?.includes("Mynediad wedi'i Wrthod");
-
-        // Should see 403 access denied
-        expect(isAccessDenied).toBe(true);
+        // Should NOT see CLASSIFIED publications (civil-and-family-daily-cause-list)
+        const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
+        const classifiedCount = await classifiedLinks.count();
+        expect(classifiedCount).toBe(0);
       });
 
       test("can view PUBLIC publication data", async ({ page }) => {
