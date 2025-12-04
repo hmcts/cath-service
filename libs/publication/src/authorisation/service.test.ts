@@ -3,7 +3,13 @@ import type { ListType } from "@hmcts/list-types-common";
 import { describe, expect, it } from "vitest";
 import type { Artefact } from "../repository/model.js";
 import { Sensitivity } from "../sensitivity.js";
-import { canAccessPublication, canAccessPublicationData, canAccessPublicationMetadata, filterAccessiblePublications } from "./service.js";
+import {
+  canAccessPublication,
+  canAccessPublicationData,
+  canAccessPublicationMetadata,
+  filterAccessiblePublications,
+  filterPublicationsForSummary
+} from "./service.js";
 
 // Test data helpers
 const createArtefact = (sensitivity: Sensitivity): Artefact => ({
@@ -297,14 +303,14 @@ describe("canAccessPublicationMetadata", () => {
       expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(true);
     });
 
-    it("should allow local admin", () => {
+    it("should deny local admin (they can only see PUBLIC metadata)", () => {
       const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
-      expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(true);
+      expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(false);
     });
 
-    it("should allow CTSC admin", () => {
+    it("should deny CTSC admin (they can only see PUBLIC metadata)", () => {
       const user = createUser("INTERNAL_ADMIN_CTSC", "SSO");
-      expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(true);
+      expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(false);
     });
 
     it("should allow verified users", () => {
@@ -315,29 +321,35 @@ describe("canAccessPublicationMetadata", () => {
 
   describe("CLASSIFIED publications", () => {
     const classifiedArtefact = createArtefact(Sensitivity.CLASSIFIED);
+    const listType = createListType("CFT_IDAM");
 
     it("should deny unauthenticated users", () => {
-      expect(canAccessPublicationMetadata(undefined, classifiedArtefact)).toBe(false);
+      expect(canAccessPublicationMetadata(undefined, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should allow system admin", () => {
       const user = createUser("SYSTEM_ADMIN", "SSO");
-      expect(canAccessPublicationMetadata(user, classifiedArtefact)).toBe(true);
+      expect(canAccessPublicationMetadata(user, classifiedArtefact, listType)).toBe(true);
     });
 
-    it("should allow local admin", () => {
+    it("should deny local admin (they can only see PUBLIC metadata)", () => {
       const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
-      expect(canAccessPublicationMetadata(user, classifiedArtefact)).toBe(true);
+      expect(canAccessPublicationMetadata(user, classifiedArtefact, listType)).toBe(false);
     });
 
-    it("should allow CTSC admin", () => {
+    it("should deny CTSC admin (they can only see PUBLIC metadata)", () => {
       const user = createUser("INTERNAL_ADMIN_CTSC", "SSO");
-      expect(canAccessPublicationMetadata(user, classifiedArtefact)).toBe(true);
+      expect(canAccessPublicationMetadata(user, classifiedArtefact, listType)).toBe(false);
     });
 
-    it("should allow verified users", () => {
+    it("should allow verified users with matching provenance", () => {
       const user = createUser("VERIFIED", "CFT_IDAM");
-      expect(canAccessPublicationMetadata(user, classifiedArtefact)).toBe(true);
+      expect(canAccessPublicationMetadata(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should deny verified users with non-matching provenance", () => {
+      const user = createUser("VERIFIED", "B2C_IDAM");
+      expect(canAccessPublicationMetadata(user, classifiedArtefact, listType)).toBe(false);
     });
   });
 });
@@ -410,6 +422,80 @@ describe("filterAccessiblePublications", () => {
     const user = createUser("VERIFIED", "CFT_IDAM");
     const artefactsWithUnknownType = [{ ...classifiedArtefact, listTypeId: 999 }];
     const filtered = filterAccessiblePublications(user, artefactsWithUnknownType, listTypes);
+
+    // Should filter out artefact with unknown list type (fail closed)
+    expect(filtered).toHaveLength(0);
+  });
+});
+
+describe("filterPublicationsForSummary", () => {
+  const publicArtefact = createArtefact(Sensitivity.PUBLIC);
+  const privateArtefact = { ...createArtefact(Sensitivity.PRIVATE), artefactId: "private-id" };
+  const classifiedArtefact = { ...createArtefact(Sensitivity.CLASSIFIED), artefactId: "classified-id" };
+
+  const listTypes = [createListType("CFT_IDAM"), { ...createListType("CRIME_IDAM"), id: 2 }];
+
+  const artefacts = [
+    publicArtefact,
+    privateArtefact,
+    { ...classifiedArtefact, listTypeId: 1 },
+    { ...classifiedArtefact, artefactId: "classified-id-2", listTypeId: 2 }
+  ];
+
+  it("should return only PUBLIC for unauthenticated users", () => {
+    const filtered = filterPublicationsForSummary(undefined, artefacts, listTypes);
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].artefactId).toBe(publicArtefact.artefactId);
+  });
+
+  it("should return PUBLIC and PRIVATE for verified users", () => {
+    const user = createUser("VERIFIED", "B2C_IDAM");
+    const filtered = filterPublicationsForSummary(user, artefacts, listTypes);
+
+    // Should get PUBLIC and PRIVATE, but not CLASSIFIED (provenance mismatch)
+    expect(filtered).toHaveLength(2);
+    expect(filtered.map((a) => a.artefactId).sort()).toEqual([publicArtefact.artefactId, privateArtefact.artefactId].sort());
+  });
+
+  it("should return PUBLIC, PRIVATE, and matching CLASSIFIED for verified users", () => {
+    const user = createUser("VERIFIED", "CFT_IDAM");
+    const filtered = filterPublicationsForSummary(user, artefacts, listTypes);
+
+    // Should get PUBLIC, PRIVATE, and one CLASSIFIED (CFT_IDAM)
+    expect(filtered).toHaveLength(3);
+    expect(filtered.map((a) => a.artefactId).sort()).toEqual([publicArtefact.artefactId, privateArtefact.artefactId, "classified-id"].sort());
+  });
+
+  it("should return all for system admin", () => {
+    const user = createUser("SYSTEM_ADMIN", "SSO");
+    const filtered = filterPublicationsForSummary(user, artefacts, listTypes);
+    expect(filtered).toHaveLength(4);
+  });
+
+  it("should return only PUBLIC for local admin (they can only see PUBLIC metadata)", () => {
+    const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
+    const filtered = filterPublicationsForSummary(user, artefacts, listTypes);
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].artefactId).toBe(publicArtefact.artefactId);
+  });
+
+  it("should return only PUBLIC for CTSC admin (they can only see PUBLIC metadata)", () => {
+    const user = createUser("INTERNAL_ADMIN_CTSC", "SSO");
+    const filtered = filterPublicationsForSummary(user, artefacts, listTypes);
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].artefactId).toBe(publicArtefact.artefactId);
+  });
+
+  it("should handle empty artefacts array", () => {
+    const user = createUser("VERIFIED", "B2C_IDAM");
+    const filtered = filterPublicationsForSummary(user, [], listTypes);
+    expect(filtered).toHaveLength(0);
+  });
+
+  it("should handle missing list type", () => {
+    const user = createUser("VERIFIED", "CFT_IDAM");
+    const artefactsWithUnknownType = [{ ...classifiedArtefact, listTypeId: 999 }];
+    const filtered = filterPublicationsForSummary(user, artefactsWithUnknownType, listTypes);
 
     // Should filter out artefact with unknown list type (fail closed)
     expect(filtered).toHaveLength(0);
