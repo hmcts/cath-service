@@ -122,6 +122,34 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/non-strategic-upload");
   }
 
+  // Validate Excel file for Care Standards Tribunal (listTypeId === 9)
+  const listTypeId = formData.listType ? Number.parseInt(formData.listType, 10) : null;
+  const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
+
+  if (listTypeId === 9 && isExcelFile) {
+    try {
+      const { convertExcelToJson, validateCareStandardsTribunalList } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
+
+      const hearingsData = await convertExcelToJson(req.file!.buffer);
+      const validation = validateCareStandardsTribunalList(hearingsData);
+
+      if (!validation.isValid) {
+        errors = [{ text: validation.errors.join(", "), href: "#file" }];
+        req.session.nonStrategicUploadErrors = errors;
+        req.session.nonStrategicUploadForm = formData;
+        await saveSession(req.session);
+        return res.redirect("/non-strategic-upload");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";
+      errors = [{ text: errorMessage, href: "#file" }];
+      req.session.nonStrategicUploadErrors = errors;
+      req.session.nonStrategicUploadForm = formData;
+      await saveSession(req.session);
+      return res.redirect("/non-strategic-upload");
+    }
+  }
+
   const uploadId = await storeNonStrategicUpload({
     file: req.file!.buffer,
     fileName: req.file!.originalname,

@@ -1,0 +1,162 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .search-highlight {
+      background-color: #ffdd00;
+      color: #0b0c0c;
+      padding: 0;
+      font-weight: inherit;
+    }
+    .back-to-top {
+      margin-top: 40px;
+    }
+  </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.duration }}</p>
+    <p class="govuk-body">{{ header.lastUpdated }}</p>
+
+    <details class="govuk-details govuk-!-margin-top-6" data-module="govuk-details">
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          {{ t.importantInformationTitle }}
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+        <p class="govuk-body">{{ t.importantInformationText }}</p>
+        <p class="govuk-body">
+          <a href="{{ t.importantInformationLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+            {{ t.importantInformationLinkText }}
+          </a>
+        </p>
+      </div>
+    </details>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCasesTitle }}</h2>
+      <label class="govuk-label govuk-visually-hidden" for="case-search-input">
+        {{ t.searchCasesLabel }}
+      </label>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text" aria-label="{{ t.searchCasesLabel }}">
+    </div>
+
+    <div id="hearings-table-container">
+      <table class="govuk-table" id="hearings-table" role="table" aria-label="{{ t.pageTitle }}">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.date }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseName }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingLength }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingType }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.venue }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.additionalInformation }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for hearing in hearings %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ hearing.date }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseName }}</td>
+              <td class="govuk-table__cell">{{ hearing.hearingLength }}</td>
+              <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
+              <td class="govuk-table__cell">{{ hearing.venue }}</td>
+              <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="govuk-body govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
+
+    <div class="back-to-top">
+      <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  <script nonce="{{ cspNonce }}">
+    (function() {
+      const searchInput = document.getElementById('case-search-input');
+      const container = document.getElementById('hearings-table-container');
+
+      if (!searchInput || !container) return;
+
+      function removeHighlights() {
+        const marks = container.querySelectorAll('mark.search-highlight');
+        marks.forEach(mark => {
+          const parent = mark.parentNode;
+          parent.replaceChild(document.createTextNode(mark.textContent), mark);
+          parent.normalize();
+        });
+      }
+
+      function highlightText(searchTerm) {
+        removeHighlights();
+
+        if (!searchTerm) {
+          return;
+        }
+
+        const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+
+        function highlightNode(node) {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+            const text = node.textContent;
+            const matches = [];
+            let match;
+
+            regex.lastIndex = 0;
+            while ((match = regex.exec(text)) !== null) {
+              matches.push({ index: match.index, length: match[0].length, text: match[0] });
+            }
+
+            if (matches.length > 0) {
+              const fragment = document.createDocumentFragment();
+              let lastIndex = 0;
+
+              matches.forEach(m => {
+                if (m.index > lastIndex) {
+                  fragment.appendChild(document.createTextNode(text.substring(lastIndex, m.index)));
+                }
+                const mark = document.createElement('mark');
+                mark.className = 'search-highlight';
+                mark.textContent = m.text;
+                fragment.appendChild(mark);
+                lastIndex = m.index + m.length;
+              });
+
+              if (lastIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+              }
+
+              node.parentNode.replaceChild(fragment, node);
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE' && node.nodeName !== 'MARK') {
+            Array.from(node.childNodes).forEach(highlightNode);
+          }
+        }
+
+        highlightNode(container);
+      }
+
+      searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.trim();
+        highlightText(searchTerm);
+      });
+    })();
+  </script>
+{% endblock %}

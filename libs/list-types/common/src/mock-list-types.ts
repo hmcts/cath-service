@@ -71,5 +71,13 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list"
+  },
+  {
+    id: 9,
+    name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
+    welshFriendlyName: "Welsh placeholder",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "care-standards-tribunal-weekly-hearing-list"
   }
 ];

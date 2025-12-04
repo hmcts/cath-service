@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Care Standards Tribunal Weekly Hearing List",
+  "description": "Schema for Care Standards Tribunal Weekly Hearing List from pip-data-management",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["date", "caseName", "hearingLength", "hearingType", "venue", "additionalInformation"],
+    "properties": {
+      "date": {
+        "title": "Date",
+        "type": "string",
+        "pattern": "^\\d{2}/\\d{2}/\\d{4}$",
+        "examples": ["02/01/2025"]
+      },
+      "caseName": {
+        "title": "Case name",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["A Vs B"]
+      },
+      "hearingLength": {
+        "title": "Length of hearing",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["1 hour"]
+      },
+      "hearingType": {
+        "title": "Type of hearing being presented",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["mda"]
+      },
+      "venue": {
+        "title": "Venue name of the hearing",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["This is the venue of the hearing"]
+      },
+      "additionalInformation": {
+        "title": "Additional information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["This is additional information"]
+      }
+    }
+  }
+}

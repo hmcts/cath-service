@@ -326,7 +326,7 @@ describe("non-strategic-upload-summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "non-strategic-upload-summary/index",
         expect.objectContaining({
-          errors: expect.arrayContaining([expect.objectContaining({ text: "We could not process your upload. Please try again." })])
+          errors: expect.arrayContaining([expect.objectContaining({ text: "Database error" })])
         })
       );
     });
