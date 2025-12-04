@@ -396,7 +396,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
   });
 
-  test.describe("System Admin users (SYSTEM_ADMIN role) @nightly", () => {
+  test.describe("System Admin users (SYSTEM_ADMIN role)", () => {
     test("should have full access to all publications", async ({ page }) => {
       // Login as System Admin
       await page.goto("/sign-in");
@@ -463,7 +463,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
   });
 
-  test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL) @nightly", () => {
+  test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL)", () => {
     test("CTSC Admin should see all publications in summary (metadata access)", async ({ page }) => {
       // Login as CTSC Admin
       await page.goto("/sign-in");
