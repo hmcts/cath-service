@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
-import { convertExcelForListType, getConverterForListType, hasConverterForListType } from "./list-type-converters.js";
+import { convertExcelForListType, getConverterForListType, hasConverterForListType } from "./non-strategic-list-registry.js";
+
+// Import CST module to register its converter
+import "@hmcts/care-standards-tribunal-weekly-hearing-list";
 
 function createExcelBuffer(data: unknown[][]): Buffer {
   const worksheet = XLSX.utils.aoa_to_sheet(data);

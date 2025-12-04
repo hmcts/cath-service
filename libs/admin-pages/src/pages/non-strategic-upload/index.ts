@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";

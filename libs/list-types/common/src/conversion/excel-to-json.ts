@@ -59,8 +59,11 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
     throw new Error(`Excel file must contain at least ${minRows} data row${minRows > 1 ? "s" : ""}`);
   }
 
-  const actualHeaders = Object.keys(jsonData[0] || {}).map((h) => h.toLowerCase().trim());
-  validateHeaders(actualHeaders, config.fields);
+  // Only validate headers if we have data (XLSX can't extract headers from empty sheets)
+  if (jsonData.length > 0) {
+    const actualHeaders = Object.keys(jsonData[0] || {}).map((h) => h.toLowerCase().trim());
+    validateHeaders(actualHeaders, config.fields);
+  }
 
   const results: T[] = [];
 

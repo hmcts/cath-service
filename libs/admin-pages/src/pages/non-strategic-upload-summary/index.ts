@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
