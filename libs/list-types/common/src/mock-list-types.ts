@@ -29,7 +29,7 @@ export const mockListTypes: ListType[] = [
     name: "CRIME_DAILY_LIST",
     englishFriendlyName: "Crime Daily List",
     welshFriendlyName: "Crime Daily List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crime-daily-list"
   },
   {
@@ -37,7 +37,7 @@ export const mockListTypes: ListType[] = [
     name: "MAGISTRATES_PUBLIC_LIST",
     englishFriendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "magistrates-public-list"
   },
   {
@@ -45,7 +45,7 @@ export const mockListTypes: ListType[] = [
     name: "CROWN_WARNED_LIST",
     englishFriendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crown-warned-list"
   },
   {
@@ -53,7 +53,7 @@ export const mockListTypes: ListType[] = [
     name: "CROWN_DAILY_LIST",
     englishFriendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crown-daily-list"
   },
   {
@@ -61,7 +61,7 @@ export const mockListTypes: ListType[] = [
     name: "CROWN_FIRM_LIST",
     englishFriendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crown-firm-list"
   },
   {
