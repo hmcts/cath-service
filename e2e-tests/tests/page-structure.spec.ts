@@ -74,31 +74,34 @@ test.describe("Page Structure - VIBE-149", () => {
       await page.goto("/");
 
       // AC8: All 8 footer links present
-      // Note: The footer has 8 links
-      const footerLinks = [
+      // Verify we have 8 footer meta links
+      const footerMetaLinks = page.locator(".govuk-footer__meta .govuk-footer__inline-list-item");
+      await expect(footerMetaLinks).toHaveCount(8);
+
+      // Links that should open in same tab
+      const sameTablLinks = [
         { text: "Help", href: "https://www.gov.uk/help" },
         { text: "Privacy policy", href: "https://www.gov.uk/help/privacy-notice" },
         { text: "Cookies", href: "/cookie-preferences" },
-        { text: "Accessibility statement", href: "/accessibility-statement" },
         { text: "Contact us", href: "https://www.gov.uk/contact" },
         { text: "Terms and conditions", href: "https://www.gov.uk/help/terms-conditions" },
         { text: "Welsh", href: "https://www.gov.uk/cymraeg" },
         { text: "Government Digital Service", href: "https://www.gov.uk/government/organisations/government-digital-service" }
       ];
 
-      // Verify we have 8 footer meta links
-      const footerMetaLinks = page.locator(".govuk-footer__meta .govuk-footer__inline-list-item");
-      await expect(footerMetaLinks).toHaveCount(8);
-
-      // Verify specific important links are present
-      for (const link of footerLinks) {
+      // Verify links that should open in same tab
+      for (const link of sameTablLinks) {
         const footerLink = page.locator(`.govuk-footer__link[href="${link.href}"]`).first();
         await expect(footerLink).toBeVisible({ timeout: 5000 });
-
-        // Verify links open in same tab (no target="_blank")
         const targetAttr = await footerLink.getAttribute("target");
         expect(targetAttr).not.toBe("_blank");
       }
+
+      // Accessibility statement should open in new tab
+      const accessibilityLink = page.locator('.govuk-footer__link[href="/accessibility-statement"]').first();
+      await expect(accessibilityLink).toBeVisible({ timeout: 5000 });
+      await expect(accessibilityLink).toHaveAttribute("target", "_blank");
+      await expect(accessibilityLink).toHaveAttribute("rel", "noopener noreferrer");
     });
 
     test("should display Crown copyright link", async ({ page }) => {

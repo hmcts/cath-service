@@ -1,9 +1,10 @@
 {% extends "layouts/base-template.njk" %}
 
 {% block page_content %}
-  <h1 class="govuk-heading-xl">{{ title }}</h1>
+  <h1 class="govuk-heading-l">{{ title }}</h1>
 
-  <p class="govuk-body">{{ sections.intro.content }}</p>
+  <p class="govuk-body">{{ sections.intro.content }}<a href="{{ sections.intro.serviceUrlFull }}" class="govuk-link">{{ sections.intro.serviceUrl }}</a>.</p>
+  <p class="govuk-body">{{ sections.intro.serviceDescription }}</p>
 
   <p class="govuk-body">{{ sections.intro.commitment }}</p>
   <ul class="govuk-list govuk-list--bullet">
@@ -14,69 +15,74 @@
 
   <p class="govuk-body">{{ sections.intro.simpleLanguage }}</p>
   <p class="govuk-body">
-    <a href="https://mcmw.abilitynet.org.uk/" class="govuk-link">{{ sections.intro.abilityNet }}</a>
+    {% if sections.intro.abilityNetPrefix %}{{ sections.intro.abilityNetPrefix }}{% endif %}<a href="{{ sections.intro.abilityNetUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ sections.intro.abilityNetLink }}</a>{{ sections.intro.abilityNetText }}
   </p>
 
   <h2 class="govuk-heading-l">{{ sections.howAccessible.heading }}</h2>
   <p class="govuk-body">{{ sections.howAccessible.content }}</p>
-  <ul class="govuk-list govuk-list--bullet">
-    {% for issue in sections.howAccessible.issues %}
-      <li>{{ issue }}</li>
-    {% endfor %}
-  </ul>
+  <p class="govuk-body">{{ sections.howAccessible.contingency }}</p>
 
-  <h2 class="govuk-heading-l">{{ sections.feedback.heading }}</h2>
-  <p class="govuk-body">{{ sections.feedback.content }}</p>
-  <p class="govuk-body">
-    {{ sections.feedback.contact.email }}<br>
-    {{ sections.feedback.contact.phone }}<br>
-    {{ sections.feedback.contact.hours }}
-  </p>
+  <h3 class="govuk-heading-m">{{ sections.feedback.heading }}</h3>
+  <p class="govuk-body">{{ sections.feedback.textRelay }}</p>
+  <p class="govuk-body">{{ sections.feedback.audioLoops }}</p>
+  <p class="govuk-body">{{ sections.feedback.contactPrompt }}</p>
+  <p class="govuk-body">{{ sections.feedback.formatRequest }}</p>
+  <h4 class="govuk-heading-s">{{ sections.feedback.contact.name }}</h4>
+  <p class="govuk-body">{{ sections.feedback.contact.phone }}</p>
+  <p class="govuk-body">{{ sections.feedback.contact.hours }}</p>
+  <p class="govuk-body">{{ sections.feedback.contact.email }}</p>
   <p class="govuk-body">{{ sections.feedback.response }}</p>
 
-  <h2 class="govuk-heading-l">{{ sections.reporting.heading }}</h2>
+  <h3 class="govuk-heading-m">{{ sections.reporting.heading }}</h3>
   <p class="govuk-body">{{ sections.reporting.content }}</p>
+  <h4 class="govuk-heading-s">{{ sections.reporting.contact.name }}</h4>
+  <p class="govuk-body">{{ sections.reporting.contact.phone }}</p>
+  <p class="govuk-body">{{ sections.reporting.contact.hours }}</p>
+  <p class="govuk-body">{{ sections.reporting.contact.email }}</p>
+
+  <h3 class="govuk-heading-m">{{ sections.enforcement.heading }}</h3>
   <p class="govuk-body">
-    {{ sections.reporting.contact.email }}<br>
-    {{ sections.reporting.contact.phone }}
+    {{ sections.enforcement.content }}<a href="{{ sections.enforcement.eassUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ sections.enforcement.eassLinkText }}</a>{{ sections.enforcement.contentSuffix }}
   </p>
 
-  <h2 class="govuk-heading-l">{{ sections.enforcement.heading }}</h2>
-  {% for paragraph in sections.enforcement.content %}
-    <p class="govuk-body">{{ paragraph }}</p>
-  {% endfor %}
-
-  <h2 class="govuk-heading-l">{{ sections.technical.heading }}</h2>
+  <h3 class="govuk-heading-m">{{ sections.technical.heading }}</h3>
   <p class="govuk-body">{{ sections.technical.content }}</p>
 
-  <h2 class="govuk-heading-l">{{ sections.compliance.heading }}</h2>
-  <p class="govuk-body">{{ sections.compliance.content }}</p>
+  <h3 class="govuk-heading-m">{{ sections.compliance.heading }}</h3>
+  <p class="govuk-body">
+    {{ sections.compliance.content }}<a href="{{ sections.compliance.wcagUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ sections.compliance.wcagLinkText }}</a>{{ sections.compliance.contentSuffix }}
+  </p>
 
-  <h2 class="govuk-heading-l">{{ sections.nonAccessible.heading }}</h2>
+  <h3 class="govuk-heading-m">{{ sections.nonAccessible.heading }}</h3>
   <p class="govuk-body">{{ sections.nonAccessible.intro }}</p>
 
-  <h3 class="govuk-heading-m">{{ sections.nonAccessible.nonCompliance.heading }}</h3>
+  <h4 class="govuk-heading-s">{{ sections.nonAccessible.nonCompliance.heading }}</h4>
   <ul class="govuk-list govuk-list--bullet">
     {% for issue in sections.nonAccessible.nonCompliance.issues %}
       <li>{{ issue }}</li>
     {% endfor %}
   </ul>
-  <p class="govuk-body">{{ sections.nonAccessible.nonCompliance.fixing }}</p>
 
-  <h3 class="govuk-heading-m">{{ sections.nonAccessible.disproportionateBurden.heading }}</h3>
-  <p class="govuk-body">{{ sections.nonAccessible.disproportionateBurden.content }}</p>
-
-  <h3 class="govuk-heading-m">{{ sections.nonAccessible.outsideScope.heading }}</h3>
-  <h4 class="govuk-heading-s">{{ sections.nonAccessible.outsideScope.pdfs.heading }}</h4>
-  {% for paragraph in sections.nonAccessible.outsideScope.pdfs.content %}
+  <h3 class="govuk-heading-m">{{ sections.testing.heading }}</h3>
+  {% for paragraph in sections.testing.content %}
     <p class="govuk-body">{{ paragraph }}</p>
   {% endfor %}
 
-  <h2 class="govuk-heading-l">{{ sections.testing.heading }}</h2>
-  <p class="govuk-body">{{ sections.testing.content }}</p>
-
-  <h2 class="govuk-heading-l">{{ sections.preparation.heading }}</h2>
+  <h3 class="govuk-heading-m">{{ sections.preparation.heading }}</h3>
   {% for paragraph in sections.preparation.content %}
-    <p class="govuk-body">{{ paragraph }}</p>
+    {% if loop.last %}
+      <p class="govuk-body govuk-!-margin-bottom-0">{{ paragraph }}</p>
+    {% else %}
+      <p class="govuk-body">{{ paragraph }}</p>
+    {% endif %}
   {% endfor %}
+
+  <p class="govuk-body back-to-top-link">
+    <a href="#" class="govuk-link govuk-link--no-underline govuk-!-font-size-19 with-background">
+      <svg focusable="false" class="app-back-to-top__icon" xmlns="http://www.w3.org/2000/svg" width="13" height="17" viewBox="0 0 13 17">
+        <path fill="currentColor" d="M6.5 0 L0 6.5 1.4 8l4-4v12.7h2V4l4.3 4L13 6.4z"></path>
+      </svg>
+      {{ backToTop }}
+    </a>
+  </p>
 {% endblock %}
