@@ -1,4 +1,4 @@
-{% if gtm and gtm.containerId %}
+{% if gtm and gtm.containerId and cookieManager.cookiePreferences.analytics %}
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ gtm.containerId }}"
             height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
