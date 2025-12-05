@@ -50,12 +50,12 @@ export const GET = async (req: Request, res: Response) => {
     if (!canAccessPublicationData(req.user, artefact, listType)) {
       return res.status(403).render("errors/403", {
         en: {
-          title: "Access Denied",
-          message: "You do not have permission to view this publication."
+          title: en.error403Title,
+          message: en.error403Message
         },
         cy: {
-          title: "Mynediad wedi'i Wrthod",
-          message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+          title: cy.error403Title,
+          message: cy.error403Message
         }
       });
     }

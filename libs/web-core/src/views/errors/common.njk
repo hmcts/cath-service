@@ -1,9 +1,9 @@
 {% extends "layouts/base-template.njk" %}
 
-{% set title = errorTitle or "Error" %}
+{% set title = errorTitle or t.defaultTitle %}
 
 {% block page_content %}
-  <h1 class="govuk-heading-l">{{ errorTitle or "Error" }}</h1>
-  <p class="govuk-body">{{ errorMessage or "An error has occurred." }}</p>
-  <p class="govuk-body">If you continue to have problems, <a href="/contact-us" class="govuk-link">contact us</a> if you need to speak to someone about this service.</p>
+  <h1 class="govuk-heading-l">{{ errorTitle or t.defaultHeading }}</h1>
+  <p class="govuk-body">{{ errorMessage or t.defaultMessage }}</p>
+  <p class="govuk-body">{{ t.contactPrefix }} <a href="/contact-us" class="govuk-link">{{ t.contactLink }}</a> {{ t.contactSuffix }}</p>
 {% endblock %}

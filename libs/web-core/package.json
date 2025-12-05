@@ -12,6 +12,10 @@
       "production": "./dist/config.js",
       "default": "./src/config.ts"
     },
+    "./errors": {
+      "production": "./dist/views/errors/index.js",
+      "default": "./src/views/errors/index.ts"
+    },
     "./src/assets/vite-config.js": {
       "production": "./dist/assets/vite-config.js",
       "default": "./src/assets/vite-config.ts"
