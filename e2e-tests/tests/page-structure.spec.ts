@@ -176,7 +176,7 @@ test.describe("Page Structure - VIBE-149", () => {
   });
 
   test.describe("Responsive Design", () => {
-    test("should display correctly on mobile", async ({ page }) => {
+    test("should display correctly on mobile @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/");
 
@@ -193,7 +193,7 @@ test.describe("Page Structure - VIBE-149", () => {
       await expect(footer).toBeVisible();
     });
 
-    test("should display correctly on tablet", async ({ page }) => {
+    test("should display correctly on tablet @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto("/");
 
@@ -205,7 +205,7 @@ test.describe("Page Structure - VIBE-149", () => {
       await expect(signInLink).toBeVisible();
     });
 
-    test("should display correctly on desktop", async ({ page }) => {
+    test("should display correctly on desktop @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/");
 
