@@ -5,8 +5,8 @@ import { Language, mockListTypes } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";
-import { storeManualUpload } from "../../manual-upload/storage.js";
-import { validateManualUploadForm } from "../../manual-upload/validation.js";
+import { storeNonStrategicUpload } from "../../manual-upload/storage.js";
+import { validateNonStrategicUploadForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -62,19 +62,18 @@ const getHandler = async (req: Request, res: Response) => {
   const t = getTranslations(locale);
 
   // Clear upload confirmation flags when starting a new upload
-  delete req.session.uploadConfirmed;
-  delete req.session.successPageViewed;
-  delete req.session.viewedLanguage;
+  delete req.session.nonStrategicUploadConfirmed;
+  delete req.session.nonStrategicSuccessPageViewed;
 
-  const wasSubmitted = req.session.manualUploadSubmitted || false;
-  let formData = req.session.manualUploadForm || {};
-  const errors = req.session.manualUploadErrors || [];
+  const wasSubmitted = req.session.nonStrategicUploadSubmitted || false;
+  let formData = req.session.nonStrategicUploadForm || {};
+  const errors = req.session.nonStrategicUploadErrors || [];
 
-  delete req.session.manualUploadErrors;
+  delete req.session.nonStrategicUploadErrors;
 
   // Clear form data on refresh if not successfully submitted
   if (!wasSubmitted) {
-    delete req.session.manualUploadForm;
+    delete req.session.nonStrategicUploadForm;
   }
 
   // Support pre-filling from query parameter
@@ -87,7 +86,7 @@ const getHandler = async (req: Request, res: Response) => {
   const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
   const locationName = location?.name || formData.locationName || "";
 
-  res.render("manual-upload/index", {
+  res.render("non-strategic-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
@@ -108,7 +107,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Check for multer errors (e.g., file too large)
   const fileUploadError = req.fileUploadError;
-  let errors = await validateManualUploadForm(formData, req.file, t);
+  let errors = await validateNonStrategicUploadForm(formData, req.file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error
   if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {
@@ -117,13 +116,13 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (errors.length > 0) {
-    req.session.manualUploadErrors = errors;
-    req.session.manualUploadForm = formData;
+    req.session.nonStrategicUploadErrors = errors;
+    req.session.nonStrategicUploadForm = formData;
     await saveSession(req.session);
-    return res.redirect("/manual-upload");
+    return res.redirect("/non-strategic-upload");
   }
 
-  const uploadId = await storeManualUpload({
+  const uploadId = await storeNonStrategicUpload({
     file: req.file!.buffer,
     fileName: req.file!.originalname,
     fileType: req.file!.mimetype,
@@ -136,11 +135,11 @@ const postHandler = async (req: Request, res: Response) => {
     displayTo: formData.displayTo!
   });
 
-  req.session.manualUploadForm = formData;
-  req.session.manualUploadSubmitted = true;
+  req.session.nonStrategicUploadForm = formData;
+  req.session.nonStrategicUploadSubmitted = true;
   await saveSession(req.session);
 
-  res.redirect(`/manual-upload-summary?uploadId=${uploadId}`);
+  res.redirect(`/non-strategic-upload-summary?uploadId=${uploadId}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];

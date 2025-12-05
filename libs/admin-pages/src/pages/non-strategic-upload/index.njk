@@ -1,0 +1,275 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
+
+{% block pageTitle %}
+  {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% macro getError(errors, fieldId) -%}
+  {%- if errors -%}
+    {%- for error in errors -%}
+      {%- if error.href == fieldId -%}{{ error.text }}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block page_content %}
+{% if errors %}
+  {{ govukErrorSummary({
+    titleText: errorSummaryTitle,
+    errorList: errors
+  }) }}
+{% endif %}
+
+<div class="manual-upload-warning">
+  <h2 class="govuk-heading-m">{{ warningTitle }}</h2>
+  <div class="manual-upload-warning__content">
+    <span class="govuk-warning-text__icon manual-upload-warning__icon" aria-hidden="true">!</span>
+    <p class="govuk-body manual-upload-warning__text">
+      <strong>{{ warningMessage }}</strong>
+    </p>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-xl">{{ title }}</h1>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+
+      {% set fileErrorText = getError(errors, "#file") %}
+      <div class="govuk-inset-text">
+        <div class="govuk-form-group{% if (fileErrorText and fileErrorText | length > 0) %} govuk-form-group--error{% endif %}">
+          <label class="govuk-label" for="file">
+            {{ fileUploadLabel }}
+          </label>
+          {% if (fileErrorText and fileErrorText | length > 0) %}
+            <p class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {{ fileErrorText }}
+            </p>
+          {% endif %}
+          <input class="govuk-file-upload{% if (fileErrorText and fileErrorText | length > 0) %} govuk-file-upload--error{% endif %}" id="file" name="file" type="file" accept=".xlsx" />
+        </div>
+      </div>
+
+      {% set courtErrorText = getError(errors, "#court") %}
+      {{ govukInput({
+        id: "court",
+        name: "locationId",
+        type: "text",
+        classes: "autocomplete__wrapper",
+        label: {
+          text: courtLabel
+        },
+        value: data.locationName if data else "",
+        errorMessage: { text: courtErrorText } if (courtErrorText and courtErrorText | length > 0) else undefined,
+        attributes: {
+          "data-autocomplete": "true",
+          "data-locale": locale,
+          "data-search-label": courtLabel,
+          "data-location-id": data.locationId if data else ""
+        }
+      }) }}
+
+      {% set listTypeErrorText = getError(errors, "#listType") %}
+      {% set hearingStartDateErrorText = getError(errors, "#hearingStartDate") %}
+      <div class="govuk-inset-text">
+        <div class="govuk-form-group">
+          {{ govukSelect({
+            id: "listType",
+            name: "listType",
+            classes: "govuk-!-width-two-thirds",
+            label: {
+              text: listTypeLabel
+            },
+            items: listTypes,
+            errorMessage: { text: listTypeErrorText } if (listTypeErrorText and listTypeErrorText | length > 0) else undefined
+          }) }}
+
+          {{ govukDateInput({
+            id: "hearingStartDate",
+            namePrefix: "hearingStartDate",
+            fieldset: {
+              legend: {
+                text: hearingStartDateLabel
+              }
+            },
+            hint: {
+              text: hearingStartDateHint
+            },
+            items: [
+              {
+                name: "day",
+                classes: "govuk-input--width-2" + (" govuk-input--error" if (hearingStartDateErrorText and hearingStartDateErrorText | length > 0) else ""),
+                label: dayLabel,
+                value: (data.hearingStartDate and data.hearingStartDate.day) or ""
+              },
+              {
+                name: "month",
+                classes: "govuk-input--width-2" + (" govuk-input--error" if (hearingStartDateErrorText and hearingStartDateErrorText | length > 0) else ""),
+                label: monthLabel,
+                value: (data.hearingStartDate and data.hearingStartDate.month) or ""
+              },
+              {
+                name: "year",
+                classes: "govuk-input--width-4" + (" govuk-input--error" if (hearingStartDateErrorText and hearingStartDateErrorText | length > 0) else ""),
+                label: yearLabel,
+                value: (data.hearingStartDate and data.hearingStartDate.year) or ""
+              }
+            ],
+            errorMessage: { text: hearingStartDateErrorText } if (hearingStartDateErrorText and hearingStartDateErrorText | length > 0) else undefined
+          }) }}
+        </div>
+      </div>
+
+      {% set sensitivityErrorText = getError(errors, "#sensitivity") %}
+      {{ govukSelect({
+        id: "sensitivity",
+        name: "sensitivity",
+        classes: "govuk-!-width-two-thirds",
+        label: {
+          text: sensitivityLabel
+        },
+        items: sensitivityOptions,
+        errorMessage: { text: sensitivityErrorText } if (sensitivityErrorText and sensitivityErrorText | length > 0) else undefined
+      }) }}
+
+      {% set languageErrorText = getError(errors, "#language") %}
+      {{ govukSelect({
+        id: "language",
+        name: "language",
+        classes: "govuk-!-width-two-thirds",
+        label: {
+          text: languageLabel
+        },
+        items: languageOptions,
+        errorMessage: { text: languageErrorText } if (languageErrorText and languageErrorText | length > 0) else undefined
+      }) }}
+
+      {% set displayFromErrorText = getError(errors, "#displayFrom") %}
+      {{ govukDateInput({
+        id: "displayFrom",
+        namePrefix: "displayFrom",
+        fieldset: {
+          legend: {
+            text: displayFromLabel
+          }
+        },
+        hint: {
+          text: displayFromHint
+        },
+        items: [
+          {
+            name: "day",
+            classes: "govuk-input--width-2" + (" govuk-input--error" if (displayFromErrorText and displayFromErrorText | length > 0) else ""),
+            label: dayLabel,
+            value: (data.displayFrom and data.displayFrom.day) or ""
+          },
+          {
+            name: "month",
+            classes: "govuk-input--width-2" + (" govuk-input--error" if (displayFromErrorText and displayFromErrorText | length > 0) else ""),
+            label: monthLabel,
+            value: (data.displayFrom and data.displayFrom.month) or ""
+          },
+          {
+            name: "year",
+            classes: "govuk-input--width-4" + (" govuk-input--error" if (displayFromErrorText and displayFromErrorText | length > 0) else ""),
+            label: yearLabel,
+            value: (data.displayFrom and data.displayFrom.year) or ""
+          }
+        ],
+        errorMessage: { text: displayFromErrorText } if (displayFromErrorText and displayFromErrorText | length > 0) else undefined
+      }) }}
+
+      {% set displayToErrorText = getError(errors, "#displayTo") %}
+      {{ govukDateInput({
+        id: "displayTo",
+        namePrefix: "displayTo",
+        fieldset: {
+          legend: {
+            text: displayToLabel
+          }
+        },
+        hint: {
+          text: displayToHint
+        },
+        items: [
+          {
+            name: "day",
+            classes: "govuk-input--width-2" + (" govuk-input--error" if (displayToErrorText and displayToErrorText | length > 0) else ""),
+            label: dayLabel,
+            value: (data.displayTo and data.displayTo.day) or ""
+          },
+          {
+            name: "month",
+            classes: "govuk-input--width-2" + (" govuk-input--error" if (displayToErrorText and displayToErrorText | length > 0) else ""),
+            label: monthLabel,
+            value: (data.displayTo and data.displayTo.month) or ""
+          },
+          {
+            name: "year",
+            classes: "govuk-input--width-4" + (" govuk-input--error" if (displayToErrorText and displayToErrorText | length > 0) else ""),
+            label: yearLabel,
+            value: (data.displayTo and data.displayTo.year) or ""
+          }
+        ],
+        errorMessage: { text: displayToErrorText } if (displayToErrorText and displayToErrorText | length > 0) else undefined
+      }) }}
+
+      {{ govukButton({
+        text: continueButton,
+        classes: "govuk-!-margin-top-6"
+      }) }}
+
+    </form>
+
+  </div>
+
+  <div class="govuk-grid-column-one-third">
+    <aside class="app-related-items">
+      <h2 class="govuk-heading-l">{{ pageHelpTitle }}</h2>
+
+      <h3 class="govuk-heading-s">{{ pageHelpLists }}</h3>
+      <p class="govuk-body">{{ pageHelpListsText }}</p>
+
+      <h3 class="govuk-heading-s">{{ pageHelpSensitivity }}</h3>
+      <p class="govuk-body">{{ pageHelpSensitivityText }}</p>
+
+      <p class="govuk-body">
+        <strong>{{ pageHelpSensitivityPublic }}</strong><br>
+        {{ pageHelpSensitivityPublicText }}
+      </p>
+
+      <p class="govuk-body">
+        <strong>{{ pageHelpSensitivityPrivate }}</strong><br>
+        {{ pageHelpSensitivityPrivateText }}
+      </p>
+
+      <p class="govuk-body">
+        <strong>{{ pageHelpSensitivityClassified }}</strong><br>
+        {{ pageHelpSensitivityClassifiedText }}
+      </p>
+
+      <h3 class="govuk-heading-s">{{ pageHelpDisplayFrom }}</h3>
+      <p class="govuk-body">{{ pageHelpDisplayFromText }}</p>
+
+      <h3 class="govuk-heading-s">{{ pageHelpDisplayTo }}</h3>
+      <p class="govuk-body">{{ pageHelpDisplayToText }}</p>
+    </aside>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ backToTop }}</a>
+  </div>
+</div>
+{% endblock %}
