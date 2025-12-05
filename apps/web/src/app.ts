@@ -4,6 +4,10 @@ import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
+import {
+  moduleRoot as careStandardsTribunalModuleRoot,
+  pageRoutes as careStandardsTribunalRoutes
+} from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
@@ -69,6 +73,7 @@ export async function createApp(): Promise<Express> {
     adminModuleRoot,
     authModuleRoot,
     listTypesCommonModuleRoot,
+    careStandardsTribunalModuleRoot,
     civilFamilyCauseListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
@@ -106,8 +111,9 @@ export async function createApp(): Promise<Express> {
   // Register API routes for location autocomplete
   app.use(await createSimpleRouter(locationApiRoutes));
 
-  // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
+  // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
+  app.use(await createSimpleRouter(careStandardsTribunalRoutes));
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));

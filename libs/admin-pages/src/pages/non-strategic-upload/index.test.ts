@@ -384,5 +384,203 @@ describe("non-strategic-upload page", () => {
 
       expect(session.nonStrategicUploadSubmitted).toBe(true);
     });
+
+    it("should validate Excel file for Care Standards Tribunal (listType 9) and reject invalid file", async () => {
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+
+      // Mock the dynamic import
+      vi.doMock("@hmcts/list-types-common", () => ({
+        convertExcelForListType: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
+        hasConverterForListType: vi.fn().mockReturnValue(true)
+      }));
+
+      const mockFile = {
+        buffer: Buffer.from("invalid excel content"),
+        originalname: "test.xlsx",
+        mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        size: 1024
+      } as Express.Multer.File;
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        body: {
+          locationId: "123",
+          listType: "9", // Care Standards Tribunal
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "06",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "10",
+          "displayFrom-month": "06",
+          "displayFrom-year": "2025",
+          "displayTo-day": "20",
+          "displayTo-month": "06",
+          "displayTo-year": "2025"
+        },
+        file: mockFile,
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(session.nonStrategicUploadErrors).toBeDefined();
+      expect(session.nonStrategicUploadErrors[0].text).toContain("Missing required field");
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
+
+      vi.doUnmock("@hmcts/list-types-common");
+    });
+
+    it("should validate Excel file for Care Standards Tribunal (listType 9) and accept valid file", async () => {
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+
+      // Mock successful Excel validation
+      vi.doMock("@hmcts/list-types-common", () => ({
+        convertExcelForListType: vi.fn().mockResolvedValue([
+          {
+            date: "01/01/2025",
+            caseName: "Test Case",
+            hearingLength: "1 hour",
+            hearingType: "Hearing",
+            venue: "Test Venue",
+            additionalInformation: "Test Info"
+          }
+        ]),
+        hasConverterForListType: vi.fn().mockReturnValue(true)
+      }));
+
+      const mockFile = {
+        buffer: Buffer.from("valid excel content"),
+        originalname: "test.xlsx",
+        mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        size: 1024
+      } as Express.Multer.File;
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        body: {
+          locationId: "123",
+          listType: "9", // Care Standards Tribunal
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "06",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "10",
+          "displayFrom-month": "06",
+          "displayFrom-year": "2025",
+          "displayTo-day": "20",
+          "displayTo-month": "06",
+          "displayTo-year": "2025"
+        },
+        file: mockFile,
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
+      expect(session.nonStrategicUploadSubmitted).toBe(true);
+
+      vi.doUnmock("@hmcts/list-types-common");
+    });
+
+    it("should skip Excel validation for non-CST list types", async () => {
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+
+      const mockFile = {
+        buffer: Buffer.from("test file content"),
+        originalname: "test.xlsx",
+        mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        size: 1024
+      } as Express.Multer.File;
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        body: {
+          locationId: "123",
+          listType: "1", // Not Care Standards Tribunal
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "06",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "10",
+          "displayFrom-month": "06",
+          "displayFrom-year": "2025",
+          "displayTo-day": "20",
+          "displayTo-month": "06",
+          "displayTo-year": "2025"
+        },
+        file: mockFile,
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Should proceed to summary without Excel validation
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
+    });
+
+    it("should skip Excel validation for JSON files", async () => {
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+
+      const mockFile = {
+        buffer: Buffer.from('{"test": "data"}'),
+        originalname: "test.json",
+        mimetype: "application/json",
+        size: 1024
+      } as Express.Multer.File;
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        body: {
+          locationId: "123",
+          listType: "9", // CST but JSON file
+          "hearingStartDate-day": "15",
+          "hearingStartDate-month": "06",
+          "hearingStartDate-year": "2025",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          "displayFrom-day": "10",
+          "displayFrom-month": "06",
+          "displayFrom-year": "2025",
+          "displayTo-day": "20",
+          "displayTo-month": "06",
+          "displayTo-year": "2025"
+        },
+        file: mockFile,
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Should proceed to summary without Excel validation
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
+    });
   });
 });

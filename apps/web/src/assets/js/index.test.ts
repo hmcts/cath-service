@@ -23,6 +23,10 @@ vi.mock("@hmcts/web-core/src/assets/js/search-autocomplete.js", () => ({
   initSearchAutocomplete: vi.fn(() => Promise.resolve())
 }));
 
+vi.mock("@hmcts/web-core/src/assets/js/search-highlight.js", () => ({
+  initSearchHighlight: vi.fn()
+}));
+
 vi.mock("govuk-frontend", () => ({
   initAll: vi.fn()
 }));

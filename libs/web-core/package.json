@@ -28,8 +28,15 @@
       "production": "./dist/assets/js/back-to-top.js",
       "default": "./src/assets/js/back-to-top.ts"
     },
+    "./src/assets/js/search-highlight.js": {
+      "production": "./dist/assets/js/search-highlight.js",
+      "default": "./src/assets/js/search-highlight.ts"
+    },
     "./src/assets/css/search-autocomplete.scss": {
       "default": "./src/assets/css/search-autocomplete.scss"
+    },
+    "./src/assets/css/search-highlight.scss": {
+      "default": "./src/assets/css/search-highlight.scss"
     },
     "./src/assets/css/filter-panel.scss": {
       "default": "./src/assets/css/filter-panel.scss"
