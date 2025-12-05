@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
-import { en } from "../../views/errors/en.js";
 import { cy } from "../../views/errors/cy.js";
+import { en } from "../../views/errors/en.js";
 
 /**
  * 404 Not Found handler

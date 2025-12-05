@@ -2,7 +2,7 @@ import type { UserProfile } from "@hmcts/auth";
 import type { ListType } from "@hmcts/list-types-common";
 import { mockListTypes } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres";
-import { en as errorEn, cy as errorCy } from "@hmcts/web-core/errors";
+import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { Artefact } from "../repository/model.js";
 import { canAccessPublication, canAccessPublicationData } from "./service.js";
@@ -54,7 +54,10 @@ function createPublicationAccessMiddleware(checkAccess: AccessCheck, useCustom40
               title: errorCy.error403.title,
               message: errorCy.error403.dataAccessDeniedMessage
             },
-            t: locale === "cy" ? { ...errorCy.error403, defaultMessage: errorCy.error403.dataAccessDeniedMessage } : { ...errorEn.error403, defaultMessage: errorEn.error403.dataAccessDeniedMessage },
+            t:
+              locale === "cy"
+                ? { ...errorCy.error403, defaultMessage: errorCy.error403.dataAccessDeniedMessage }
+                : { ...errorEn.error403, defaultMessage: errorEn.error403.dataAccessDeniedMessage },
             title: locale === "cy" ? errorCy.error403.title : errorEn.error403.title,
             message: locale === "cy" ? errorCy.error403.dataAccessDeniedMessage : errorEn.error403.dataAccessDeniedMessage
           });
