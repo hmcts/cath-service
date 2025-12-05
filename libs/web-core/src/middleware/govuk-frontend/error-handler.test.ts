@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { errorHandler, notFoundHandler } from "./error-handler.js";
-import { en } from "../../views/errors/en.js";
 import { cy } from "../../views/errors/cy.js";
+import { en } from "../../views/errors/en.js";
+import { errorHandler, notFoundHandler } from "./error-handler.js";
 
 describe("Error Handler Middleware", () => {
   describe("notFoundHandler", () => {
@@ -138,13 +138,16 @@ describe("Error Handler Middleware", () => {
       middleware(error, req as Request, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.render).toHaveBeenCalledWith("errors/500", expect.objectContaining({
-        en: en.error500,
-        cy: cy.error500,
-        t: en.error500,
-        error: error.message,
-        stack: error.stack
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "errors/500",
+        expect.objectContaining({
+          en: en.error500,
+          cy: cy.error500,
+          t: en.error500,
+          error: error.message,
+          stack: error.stack
+        })
+      );
     });
 
     it("should log error message if stack is not available", () => {
