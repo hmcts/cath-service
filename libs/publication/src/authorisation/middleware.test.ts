@@ -1,5 +1,6 @@
 import type { UserProfile } from "@hmcts/auth";
 import { prisma } from "@hmcts/postgres";
+import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sensitivity } from "../sensitivity.js";
@@ -35,7 +36,10 @@ const createMockRequest = (params: Record<string, string>, user?: UserProfile): 
 const createMockResponse = (): Partial<Response> => {
   const res: Partial<Response> = {
     status: vi.fn().mockReturnThis(),
-    render: vi.fn().mockReturnThis()
+    render: vi.fn().mockReturnThis(),
+    locals: {
+      locale: "en"
+    }
   };
   return res;
 };
@@ -56,7 +60,11 @@ describe("requirePublicationAccess", () => {
     await middleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.render).toHaveBeenCalledWith("errors/400");
+    expect(res.render).toHaveBeenCalledWith("errors/400", {
+      en: errorEn.error400,
+      cy: errorCy.error400,
+      t: errorEn.error400
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -71,7 +79,11 @@ describe("requirePublicationAccess", () => {
     await middleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.render).toHaveBeenCalledWith("errors/404");
+    expect(res.render).toHaveBeenCalledWith("errors/404", {
+      en: errorEn.error404,
+      cy: errorCy.error404,
+      t: errorEn.error404
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -128,7 +140,11 @@ describe("requirePublicationAccess", () => {
     await middleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.render).toHaveBeenCalledWith("errors/403");
+    expect(res.render).toHaveBeenCalledWith("errors/403", {
+      en: errorEn.error403,
+      cy: errorCy.error403,
+      t: errorEn.error403
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -237,7 +253,11 @@ describe("requirePublicationAccess", () => {
     await middleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.render).toHaveBeenCalledWith("errors/403");
+    expect(res.render).toHaveBeenCalledWith("errors/403", {
+      en: errorEn.error403,
+      cy: errorCy.error403,
+      t: errorEn.error403
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -252,7 +272,11 @@ describe("requirePublicationAccess", () => {
     await middleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.render).toHaveBeenCalledWith("errors/500");
+    expect(res.render).toHaveBeenCalledWith("errors/500", {
+      en: errorEn.error500,
+      cy: errorCy.error500,
+      t: errorEn.error500
+    });
     expect(next).not.toHaveBeenCalled();
   });
 });
@@ -271,7 +295,11 @@ describe("requirePublicationDataAccess", () => {
     await middleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.render).toHaveBeenCalledWith("errors/400");
+    expect(res.render).toHaveBeenCalledWith("errors/400", {
+      en: errorEn.error400,
+      cy: errorCy.error400,
+      t: errorEn.error400
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -338,13 +366,19 @@ describe("requirePublicationDataAccess", () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.render).toHaveBeenCalledWith("errors/403", {
       en: {
-        title: "Access Denied",
-        message: "You do not have permission to view the data for this publication. You can view metadata only."
+        title: errorEn.error403.title,
+        message: errorEn.error403.dataAccessDeniedMessage
       },
       cy: {
-        title: "Mynediad wedi'i Wrthod",
-        message: "Nid oes gennych ganiatâd i weld y data ar gyfer y cyhoeddiad hwn. Gallwch weld metadata yn unig."
-      }
+        title: errorCy.error403.title,
+        message: errorCy.error403.dataAccessDeniedMessage
+      },
+      t: {
+        ...errorEn.error403,
+        defaultMessage: errorEn.error403.dataAccessDeniedMessage
+      },
+      title: errorEn.error403.title,
+      message: errorEn.error403.dataAccessDeniedMessage
     });
     expect(next).not.toHaveBeenCalled();
   });
@@ -385,9 +419,14 @@ describe("requirePublicationDataAccess", () => {
     expect(res.render).toHaveBeenCalledWith(
       "errors/403",
       expect.objectContaining({
-        en: expect.objectContaining({
-          title: "Access Denied"
-        })
+        en: {
+          title: errorEn.error403.title,
+          message: errorEn.error403.dataAccessDeniedMessage
+        },
+        cy: {
+          title: errorCy.error403.title,
+          message: errorCy.error403.dataAccessDeniedMessage
+        }
       })
     );
     expect(next).not.toHaveBeenCalled();
