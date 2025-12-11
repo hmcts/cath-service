@@ -38,9 +38,7 @@ describe("bulk-unsubscribe", () => {
   });
 
   describe("GET", () => {
-    it("should render page with all subscriptions when view=all", async () => {
-      mockReq.query = { view: "all" };
-
+    it("should render page with both case and court subscriptions", async () => {
       const mockCaseSubscriptions = [
         {
           subscriptionId: "case-1",
@@ -70,7 +68,6 @@ describe("bulk-unsubscribe", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "bulk-unsubscribe/index",
         expect.objectContaining({
-          view: "all",
           caseSubscriptions: mockCaseSubscriptions,
           courtSubscriptions: mockCourtSubscriptions,
           hasCaseSubscriptions: true,
@@ -83,21 +80,8 @@ describe("bulk-unsubscribe", () => {
       );
     });
 
-    it("should render page with only case subscriptions when view=case", async () => {
-      mockReq.query = { view: "case" };
-
-      const mockCaseSubscriptions = [
-        {
-          subscriptionId: "case-1",
-          type: "case" as const,
-          caseName: "Test Case",
-          partyName: "John Doe",
-          referenceNumber: "REF123",
-          dateAdded: new Date()
-        }
-      ];
-
-      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue(mockCaseSubscriptions);
+    it("should render empty state when no subscriptions exist", async () => {
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
       vi.mocked(subscriptionService.getCourtSubscriptionsByUserId).mockResolvedValue([]);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -105,68 +89,10 @@ describe("bulk-unsubscribe", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "bulk-unsubscribe/index",
         expect.objectContaining({
-          view: "case",
-          caseSubscriptions: mockCaseSubscriptions,
-          courtSubscriptions: [],
-          hasCaseSubscriptions: true,
-          hasCourtSubscriptions: false
-        })
-      );
-    });
-
-    it("should render page with only court subscriptions when view=court", async () => {
-      mockReq.query = { view: "court" };
-
-      const mockCourtSubscriptions = [
-        {
-          subscriptionId: "court-1",
-          type: "court" as const,
-          courtOrTribunalName: "Birmingham Crown Court",
-          locationId: 1,
-          dateAdded: new Date()
-        }
-      ];
-
-      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
-      vi.mocked(subscriptionService.getCourtSubscriptionsByUserId).mockResolvedValue(mockCourtSubscriptions);
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "bulk-unsubscribe/index",
-        expect.objectContaining({
-          view: "court",
           caseSubscriptions: [],
-          courtSubscriptions: mockCourtSubscriptions,
+          courtSubscriptions: [],
           hasCaseSubscriptions: false,
-          hasCourtSubscriptions: true
-        })
-      );
-    });
-
-    it("should default to view=all when no view parameter provided", async () => {
-      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
-      vi.mocked(subscriptionService.getCourtSubscriptionsByUserId).mockResolvedValue([]);
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "bulk-unsubscribe/index",
-        expect.objectContaining({
-          view: "all"
-        })
-      );
-    });
-
-    it("should show empty state when no subscriptions exist", async () => {
-      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
-      vi.mocked(subscriptionService.getCourtSubscriptionsByUserId).mockResolvedValue([]);
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "bulk-unsubscribe/index",
-        expect.objectContaining({
+          hasCourtSubscriptions: false,
           showEmptyState: true,
           allSubscriptionsCount: 0,
           caseSubscriptionsCount: 0,
@@ -222,38 +148,32 @@ describe("bulk-unsubscribe", () => {
   describe("POST", () => {
     it("should redirect to confirmation page with selected subscriptions", async () => {
       mockReq.body = {
-        subscriptions: ["sub-1", "sub-2"],
-        view: "all"
+        subscriptions: ["sub-1", "sub-2"]
       };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session.bulkUnsubscribe).toEqual({
-        selectedIds: ["sub-1", "sub-2"],
-        view: "all"
+        selectedIds: ["sub-1", "sub-2"]
       });
       expect(mockRes.redirect).toHaveBeenCalledWith("/confirm-bulk-unsubscribe");
     });
 
     it("should handle single subscription selection", async () => {
       mockReq.body = {
-        subscriptions: "sub-1",
-        view: "case"
+        subscriptions: "sub-1"
       };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session.bulkUnsubscribe).toEqual({
-        selectedIds: ["sub-1"],
-        view: "case"
+        selectedIds: ["sub-1"]
       });
       expect(mockRes.redirect).toHaveBeenCalledWith("/confirm-bulk-unsubscribe");
     });
 
     it("should show validation error when no subscriptions selected", async () => {
-      mockReq.body = {
-        view: "all"
-      };
+      mockReq.body = {};
       mockRes.locals = { locale: "en" };
 
       vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);

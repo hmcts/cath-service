@@ -6,7 +6,6 @@ import { en } from "./en.js";
 
 interface BulkUnsubscribeSession {
   selectedIds?: string[];
-  view?: string;
 }
 
 declare module "express-session" {
@@ -24,20 +23,10 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const userId = req.user.id;
-  const view = (req.query.view as string) || "all";
 
   try {
-    let caseSubscriptions: any[] = [];
-    let courtSubscriptions: any[] = [];
-
-    if (view === "all") {
-      caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
-      courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
-    } else if (view === "case") {
-      caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
-    } else if (view === "court") {
-      courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
-    }
+    const caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
+    const courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
@@ -46,21 +35,17 @@ const getHandler = async (req: Request, res: Response) => {
 
     const previouslySelected = req.session.bulkUnsubscribe?.selectedIds || [];
 
-    const allCaseSubscriptions = view === "all" || view === "case" ? caseSubscriptions : await getCaseSubscriptionsByUserId(userId, locale);
-    const allCourtSubscriptions = view === "all" || view === "court" ? courtSubscriptions : await getCourtSubscriptionsByUserId(userId, locale);
-
     res.render("bulk-unsubscribe/index", {
       ...t,
-      view,
       caseSubscriptions,
       courtSubscriptions,
       previouslySelected,
       hasCaseSubscriptions: caseSubscriptions.length > 0,
       hasCourtSubscriptions: courtSubscriptions.length > 0,
       showEmptyState: caseSubscriptions.length === 0 && courtSubscriptions.length === 0,
-      caseSubscriptionsCount: allCaseSubscriptions.length,
-      courtSubscriptionsCount: allCourtSubscriptions.length,
-      allSubscriptionsCount: allCaseSubscriptions.length + allCourtSubscriptions.length,
+      caseSubscriptionsCount: caseSubscriptions.length,
+      courtSubscriptionsCount: courtSubscriptions.length,
+      allSubscriptionsCount: caseSubscriptions.length + courtSubscriptions.length,
       csrfToken: (req as any).csrfToken?.() || ""
     });
   } catch (error) {
@@ -73,7 +58,6 @@ const getHandler = async (req: Request, res: Response) => {
 
     res.render("bulk-unsubscribe/index", {
       ...t,
-      view: "all",
       caseSubscriptions: [],
       courtSubscriptions: [],
       previouslySelected: [],
@@ -99,42 +83,28 @@ const postHandler = async (req: Request, res: Response) => {
   const selectedIds = Array.isArray(req.body.subscriptions) ? req.body.subscriptions : req.body.subscriptions ? [req.body.subscriptions] : [];
 
   if (selectedIds.length === 0) {
-    const view = req.body.view || "all";
     const userId = req.user.id;
 
     try {
-      let caseSubscriptions: any[] = [];
-      let courtSubscriptions: any[] = [];
-
-      if (view === "all") {
-        caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
-        courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
-      } else if (view === "case") {
-        caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
-      } else if (view === "court") {
-        courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
-      }
+      const caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
+      const courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
 
       if (!res.locals.navigation) {
         res.locals.navigation = {};
       }
       res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-      const allCaseSubscriptions = view === "all" || view === "case" ? caseSubscriptions : await getCaseSubscriptionsByUserId(userId, locale);
-      const allCourtSubscriptions = view === "all" || view === "court" ? courtSubscriptions : await getCourtSubscriptionsByUserId(userId, locale);
-
       return res.render("bulk-unsubscribe/index", {
         ...t,
-        view,
         caseSubscriptions,
         courtSubscriptions,
         previouslySelected: [],
         hasCaseSubscriptions: caseSubscriptions.length > 0,
         hasCourtSubscriptions: courtSubscriptions.length > 0,
         showEmptyState: caseSubscriptions.length === 0 && courtSubscriptions.length === 0,
-        caseSubscriptionsCount: allCaseSubscriptions.length,
-        courtSubscriptionsCount: allCourtSubscriptions.length,
-        allSubscriptionsCount: allCaseSubscriptions.length + allCourtSubscriptions.length,
+        caseSubscriptionsCount: caseSubscriptions.length,
+        courtSubscriptionsCount: courtSubscriptions.length,
+        allSubscriptionsCount: caseSubscriptions.length + courtSubscriptions.length,
         errors: [
           {
             text: t.errorNoSelectionMessage,
@@ -153,7 +123,6 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.bulkUnsubscribe = {};
   }
   req.session.bulkUnsubscribe.selectedIds = selectedIds;
-  req.session.bulkUnsubscribe.view = req.body.view || "all";
 
   res.redirect("/confirm-bulk-unsubscribe");
 };

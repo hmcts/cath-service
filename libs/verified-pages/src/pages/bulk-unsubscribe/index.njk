@@ -20,131 +20,243 @@
 
   <h1 class="govuk-heading-l">{{ bulkUnsubscribeHeading }}</h1>
 
-  {# Tabs navigation #}
-  <ul class="govuk-tabs__list" role="tablist">
-    <li class="govuk-tabs__list-item{% if view == 'all' %} govuk-tabs__list-item--selected{% endif %}" role="presentation">
-      <a class="govuk-tabs__tab" href="/bulk-unsubscribe?view=all" role="tab" aria-selected="{% if view == 'all' %}true{% else %}false{% endif %}">
-        {{ tabAllSubscriptions }} ({{ allSubscriptionsCount }})
-      </a>
-    </li>
-    <li class="govuk-tabs__list-item{% if view == 'case' %} govuk-tabs__list-item--selected{% endif %}" role="presentation">
-      <a class="govuk-tabs__tab" href="/bulk-unsubscribe?view=case" role="tab" aria-selected="{% if view == 'case' %}true{% else %}false{% endif %}">
-        {{ tabSubscriptionsByCase }} ({{ caseSubscriptionsCount }})
-      </a>
-    </li>
-    <li class="govuk-tabs__list-item{% if view == 'court' %} govuk-tabs__list-item--selected{% endif %}" role="presentation">
-      <a class="govuk-tabs__tab" href="/bulk-unsubscribe?view=court" role="tab" aria-selected="{% if view == 'court' %}true{% else %}false{% endif %}">
-        {{ tabSubscriptionsByCourt }} ({{ courtSubscriptionsCount }})
-      </a>
-    </li>
-  </ul>
-
   {% if showEmptyState %}
     <p class="govuk-body govuk-!-margin-top-6">{{ emptyStateMessage }}</p>
   {% else %}
     <form method="post" action="/bulk-unsubscribe" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-      <input type="hidden" name="view" value="{{ view }}">
 
-      {% if hasCaseSubscriptions %}
-        <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ tabSubscriptionsByCase }}</h2>
-        <table class="govuk-table" id="case-subscriptions-table">
-          <thead class="govuk-table__head">
-            <tr class="govuk-table__row">
-              <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
-              <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
-              <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
-              <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
-                <div class="govuk-checkboxes__item govuk-checkboxes--small">
-                  <input
-                    class="govuk-checkboxes__input select-all-checkbox"
-                    id="select-all-case"
-                    type="checkbox"
-                    data-table="case-subscriptions-table"
-                    aria-label="Select all case subscriptions">
-                  <label class="govuk-label govuk-checkboxes__label" for="select-all-case">
-                    <span class="govuk-visually-hidden">Select all</span>
-                  </label>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody class="govuk-table__body">
-            {% for subscription in caseSubscriptions %}
-              <tr class="govuk-table__row">
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-                <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
-                  <div class="govuk-checkboxes__item govuk-checkboxes--small">
-                    <input
-                      class="govuk-checkboxes__input row-checkbox"
-                      id="case-{{ subscription.subscriptionId }}"
-                      name="subscriptions"
-                      type="checkbox"
-                      value="{{ subscription.subscriptionId }}"
-                      {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
-                    <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
-                      <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
-                    </label>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% endif %}
-
-      {% if hasCourtSubscriptions %}
+      {% set allTabHtml %}
         {% if hasCaseSubscriptions %}
-          <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ tabSubscriptionsByCourt }}</h2>
-        {% endif %}
-        <table class="govuk-table" id="court-subscriptions-table">
-          <thead class="govuk-table__head">
-            <tr class="govuk-table__row">
-              <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
-              <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
-                <div class="govuk-checkboxes__item govuk-checkboxes--small">
-                  <input
-                    class="govuk-checkboxes__input select-all-checkbox"
-                    id="select-all-court"
-                    type="checkbox"
-                    data-table="court-subscriptions-table"
-                    aria-label="Select all court subscriptions">
-                  <label class="govuk-label govuk-checkboxes__label" for="select-all-court">
-                    <span class="govuk-visually-hidden">Select all</span>
-                  </label>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody class="govuk-table__body">
-            {% for subscription in courtSubscriptions %}
+          <h2 class="govuk-heading-m">{{ tabSubscriptionsByCase }}</h2>
+          <table class="govuk-table" id="case-subscriptions-table">
+            <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.courtOrTribunalName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-                <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
-                      class="govuk-checkboxes__input row-checkbox"
-                      id="court-{{ subscription.subscriptionId }}"
-                      name="subscriptions"
+                      class="govuk-checkboxes__input select-all-checkbox"
+                      id="select-all-case"
                       type="checkbox"
-                      value="{{ subscription.subscriptionId }}"
-                      {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
-                    <label class="govuk-label govuk-checkboxes__label" for="court-{{ subscription.subscriptionId }}">
-                      <span class="govuk-visually-hidden">Select {{ subscription.courtOrTribunalName }}</span>
+                      data-table="case-subscriptions-table"
+                      aria-label="Select all case subscriptions">
+                    <label class="govuk-label govuk-checkboxes__label" for="select-all-case">
+                      <span class="govuk-visually-hidden">Select all</span>
                     </label>
                   </div>
-                </td>
+                </th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% endif %}
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for subscription in caseSubscriptions %}
+                <tr class="govuk-table__row">
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                    <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                      <input
+                        class="govuk-checkboxes__input row-checkbox"
+                        id="case-{{ subscription.subscriptionId }}"
+                        name="subscriptions"
+                        type="checkbox"
+                        value="{{ subscription.subscriptionId }}"
+                        {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
+                      <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
+                        <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+
+        {% if hasCourtSubscriptions %}
+          {% if hasCaseSubscriptions %}
+            <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ tabSubscriptionsByCourt }}</h2>
+          {% endif %}
+          <table class="govuk-table" id="court-subscriptions-table">
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                  <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                    <input
+                      class="govuk-checkboxes__input select-all-checkbox"
+                      id="select-all-court"
+                      type="checkbox"
+                      data-table="court-subscriptions-table"
+                      aria-label="Select all court subscriptions">
+                    <label class="govuk-label govuk-checkboxes__label" for="select-all-court">
+                      <span class="govuk-visually-hidden">Select all</span>
+                    </label>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for subscription in courtSubscriptions %}
+                <tr class="govuk-table__row">
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.courtOrTribunalName }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                    <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                      <input
+                        class="govuk-checkboxes__input row-checkbox"
+                        id="court-{{ subscription.subscriptionId }}"
+                        name="subscriptions"
+                        type="checkbox"
+                        value="{{ subscription.subscriptionId }}"
+                        {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
+                      <label class="govuk-label govuk-checkboxes__label" for="court-{{ subscription.subscriptionId }}">
+                        <span class="govuk-visually-hidden">Select {{ subscription.courtOrTribunalName }}</span>
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      {% endset %}
+
+      {% set caseTabHtml %}
+        {% if hasCaseSubscriptions %}
+          <table class="govuk-table" id="case-subscriptions-table">
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                  <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                    <input
+                      class="govuk-checkboxes__input select-all-checkbox"
+                      id="select-all-case"
+                      type="checkbox"
+                      data-table="case-subscriptions-table"
+                      aria-label="Select all case subscriptions">
+                    <label class="govuk-label govuk-checkboxes__label" for="select-all-case">
+                      <span class="govuk-visually-hidden">Select all</span>
+                    </label>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for subscription in caseSubscriptions %}
+                <tr class="govuk-table__row">
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                    <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                      <input
+                        class="govuk-checkboxes__input row-checkbox"
+                        id="case-{{ subscription.subscriptionId }}"
+                        name="subscriptions"
+                        type="checkbox"
+                        value="{{ subscription.subscriptionId }}"
+                        {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
+                      <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
+                        <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="govuk-body">{{ emptyStateMessage }}</p>
+        {% endif %}
+      {% endset %}
+
+      {% set courtTabHtml %}
+        {% if hasCourtSubscriptions %}
+          <table class="govuk-table" id="court-subscriptions-table">
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
+                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                  <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                    <input
+                      class="govuk-checkboxes__input select-all-checkbox"
+                      id="select-all-court"
+                      type="checkbox"
+                      data-table="court-subscriptions-table"
+                      aria-label="Select all court subscriptions">
+                    <label class="govuk-label govuk-checkboxes__label" for="select-all-court">
+                      <span class="govuk-visually-hidden">Select all</span>
+                    </label>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+              {% for subscription in courtSubscriptions %}
+                <tr class="govuk-table__row">
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.courtOrTribunalName }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                    <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                      <input
+                        class="govuk-checkboxes__input row-checkbox"
+                        id="court-{{ subscription.subscriptionId }}"
+                        name="subscriptions"
+                        type="checkbox"
+                        value="{{ subscription.subscriptionId }}"
+                        {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
+                      <label class="govuk-label govuk-checkboxes__label" for="court-{{ subscription.subscriptionId }}">
+                        <span class="govuk-visually-hidden">Select {{ subscription.courtOrTribunalName }}</span>
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="govuk-body">{{ emptyStateMessage }}</p>
+        {% endif %}
+      {% endset %}
+
+      {{ govukTabs({
+        items: [
+          {
+            label: tabAllSubscriptions + " (" + allSubscriptionsCount + ")",
+            id: "all-subscriptions",
+            panel: {
+              html: allTabHtml
+            }
+          },
+          {
+            label: tabSubscriptionsByCase + " (" + caseSubscriptionsCount + ")",
+            id: "case-subscriptions",
+            panel: {
+              html: caseTabHtml
+            }
+          },
+          {
+            label: tabSubscriptionsByCourt + " (" + courtSubscriptionsCount + ")",
+            id: "court-subscriptions",
+            panel: {
+              html: courtTabHtml
+            }
+          }
+        ]
+      }) }}
 
       <div class="govuk-button-group govuk-!-margin-top-6">
         {{ govukButton({
