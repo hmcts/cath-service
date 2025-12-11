@@ -2,14 +2,29 @@ import { prisma } from "@hmcts/postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as validation from "../validation/validation.js";
 import * as queries from "./queries.js";
-import { createMultipleSubscriptions, createSubscription, getSubscriptionsByUserId, removeSubscription, replaceUserSubscriptions } from "./service.js";
+import {
+  createMultipleSubscriptions,
+  createSubscription,
+  deleteSubscriptionsByIds,
+  getAllSubscriptionsByUserId,
+  getCaseSubscriptionsByUserId,
+  getCourtSubscriptionsByUserId,
+  getSubscriptionDetailsForConfirmation,
+  getSubscriptionsByUserId,
+  removeSubscription,
+  replaceUserSubscriptions,
+  validateSubscriptionOwnership
+} from "./service.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     subscription: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
       update: vi.fn()
-    }
+    },
+    $transaction: vi.fn()
   }
 }));
 
@@ -288,6 +303,362 @@ describe("Subscription Service", () => {
       expect(result.removed).toBe(0);
       expect(queries.deleteSubscriptionRecord).not.toHaveBeenCalled();
       expect(queries.createSubscriptionRecord).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getAllSubscriptionsByUserId", () => {
+    const mockUserId = "user-123";
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: mockUserId,
+        locationId: 1,
+        dateAdded: new Date("2024-01-01"),
+        location: {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court"
+        }
+      },
+      {
+        subscriptionId: "sub-2",
+        userId: mockUserId,
+        locationId: 2,
+        dateAdded: new Date("2024-01-02"),
+        location: {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null
+        }
+      }
+    ];
+
+    it("should return all subscriptions with location details in English", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await getAllSubscriptionsByUserId(mockUserId, "en");
+
+      expect(result).toEqual([
+        {
+          subscriptionId: "sub-1",
+          type: "court",
+          courtOrTribunalName: "Birmingham Crown Court",
+          locationId: 1,
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub-2",
+          type: "court",
+          courtOrTribunalName: "Manchester Crown Court",
+          locationId: 2,
+          dateAdded: new Date("2024-01-02")
+        }
+      ]);
+
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: { userId: mockUserId },
+        orderBy: { dateAdded: "desc" },
+        include: { location: true }
+      });
+    });
+
+    it("should return subscriptions with Welsh names when locale is cy", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await getAllSubscriptionsByUserId(mockUserId, "cy");
+
+      expect(result[0].courtOrTribunalName).toBe("Welsh Birmingham Crown Court");
+      expect(result[1].courtOrTribunalName).toBe("Manchester Crown Court");
+    });
+
+    it("should return empty array when user has no subscriptions", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await getAllSubscriptionsByUserId(mockUserId);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getCaseSubscriptionsByUserId", () => {
+    it("should return empty array as case subscriptions are not yet implemented", async () => {
+      const result = await getCaseSubscriptionsByUserId("user-123");
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getCourtSubscriptionsByUserId", () => {
+    const mockUserId = "user-123";
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: mockUserId,
+        locationId: 1,
+        dateAdded: new Date("2024-01-01"),
+        location: {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court"
+        }
+      },
+      {
+        subscriptionId: "sub-2",
+        userId: mockUserId,
+        locationId: 2,
+        dateAdded: new Date("2024-01-02"),
+        location: {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null
+        }
+      }
+    ];
+
+    it("should return court subscriptions with location details", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await getCourtSubscriptionsByUserId(mockUserId, "en");
+
+      expect(result).toEqual([
+        {
+          subscriptionId: "sub-1",
+          type: "court",
+          courtOrTribunalName: "Birmingham Crown Court",
+          locationId: 1,
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub-2",
+          type: "court",
+          courtOrTribunalName: "Manchester Crown Court",
+          locationId: 2,
+          dateAdded: new Date("2024-01-02")
+        }
+      ]);
+    });
+
+    it("should use Welsh names when locale is cy", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await getCourtSubscriptionsByUserId(mockUserId, "cy");
+
+      expect(result[0].courtOrTribunalName).toBe("Welsh Birmingham Crown Court");
+    });
+  });
+
+  describe("validateSubscriptionOwnership", () => {
+    const mockUserId = "user-123";
+
+    it("should return true when user owns all subscriptions", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId },
+        { subscriptionId: "sub-2", userId: mockUserId }
+      ]);
+
+      const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
+
+      expect(result).toBe(true);
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: { subscriptionId: { in: ["sub-1", "sub-2"] } },
+        select: { subscriptionId: true, userId: true }
+      });
+    });
+
+    it("should return false when user does not own all subscriptions", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId },
+        { subscriptionId: "sub-2", userId: "different-user" }
+      ]);
+
+      const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
+
+      expect(result).toBe(false);
+    });
+
+    it("should return false when some subscriptions do not exist", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+
+      const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
+
+      expect(result).toBe(false);
+    });
+
+    it("should return false when subscription array is empty", async () => {
+      const result = await validateSubscriptionOwnership([], mockUserId);
+
+      expect(result).toBe(false);
+      expect(prisma.subscription.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getSubscriptionDetailsForConfirmation", () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-123",
+        locationId: 1,
+        dateAdded: new Date("2024-01-01"),
+        location: {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court"
+        }
+      },
+      {
+        subscriptionId: "sub-2",
+        userId: "user-123",
+        locationId: 2,
+        dateAdded: new Date("2024-01-02"),
+        location: {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null
+        }
+      }
+    ];
+
+    it("should return subscription details with location information", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-2"], "en");
+
+      expect(result).toEqual([
+        {
+          subscriptionId: "sub-1",
+          type: "court",
+          courtOrTribunalName: "Birmingham Crown Court",
+          locationId: 1,
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub-2",
+          type: "court",
+          courtOrTribunalName: "Manchester Crown Court",
+          locationId: 2,
+          dateAdded: new Date("2024-01-02")
+        }
+      ]);
+    });
+
+    it("should return empty array when no subscription IDs provided", async () => {
+      const result = await getSubscriptionDetailsForConfirmation([]);
+
+      expect(result).toEqual([]);
+      expect(prisma.subscription.findMany).not.toHaveBeenCalled();
+    });
+
+    it("should use Welsh names when locale is cy", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await getSubscriptionDetailsForConfirmation(["sub-1"], "cy");
+
+      expect(result[0].courtOrTribunalName).toBe("Welsh Birmingham Crown Court");
+    });
+  });
+
+  describe("deleteSubscriptionsByIds", () => {
+    const mockUserId = "user-123";
+
+    it("should delete subscriptions in a transaction when user owns them", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId },
+        { subscriptionId: "sub-2", userId: mockUserId }
+      ]);
+
+      const mockDeleteResult = { count: 2 };
+      const mockTransaction = vi.fn(async (callback) => {
+        const tx = {
+          subscription: {
+            deleteMany: vi.fn().mockResolvedValue(mockDeleteResult)
+          }
+        };
+        return callback(tx);
+      });
+
+      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+
+      const result = await deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId);
+
+      expect(result).toBe(2);
+      expect(prisma.$transaction).toHaveBeenCalled();
+    });
+
+    it("should throw error when no subscriptions provided", async () => {
+      await expect(deleteSubscriptionsByIds([], mockUserId)).rejects.toThrow("No subscriptions provided for deletion");
+    });
+
+    it("should throw error when user does not own all subscriptions", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: "different-user" }]);
+
+      await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
+    });
+
+    it("should throw error when some subscriptions do not exist", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+
+      await expect(deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
+    });
+
+    it("should handle transaction rollback on database error", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+
+      const mockTransaction = vi.fn(async () => {
+        throw new Error("Database connection failed");
+      });
+
+      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+
+      await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Database connection failed");
+    });
+
+    it("should delete correct subscriptions with proper where clause", async () => {
+      const subscriptionIds = ["sub-1", "sub-2", "sub-3"];
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId },
+        { subscriptionId: "sub-2", userId: mockUserId },
+        { subscriptionId: "sub-3", userId: mockUserId }
+      ]);
+
+      const mockDeleteMany = vi.fn().mockResolvedValue({ count: 3 });
+      const mockTransaction = vi.fn(async (callback) => {
+        const tx = {
+          subscription: {
+            deleteMany: mockDeleteMany
+          }
+        };
+        return callback(tx);
+      });
+
+      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+
+      await deleteSubscriptionsByIds(subscriptionIds, mockUserId);
+
+      expect(mockDeleteMany).toHaveBeenCalledWith({
+        where: {
+          subscriptionId: { in: subscriptionIds },
+          userId: mockUserId
+        }
+      });
+    });
+
+    it("should return 0 when no subscriptions match deletion criteria", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+
+      const mockTransaction = vi.fn(async (callback) => {
+        const tx = {
+          subscription: {
+            deleteMany: vi.fn().mockResolvedValue({ count: 0 })
+          }
+        };
+        return callback(tx);
+      });
+
+      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+
+      const result = await deleteSubscriptionsByIds(["sub-1"], mockUserId);
+
+      expect(result).toBe(0);
     });
   });
 });

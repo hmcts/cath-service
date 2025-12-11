@@ -100,3 +100,102 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
     removed: toDelete.length
   };
 }
+
+function mapSubscriptionToDto(
+  sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
+  locale: string
+) {
+  return {
+    subscriptionId: sub.subscriptionId,
+    type: "court" as const,
+    courtOrTribunalName: locale === "cy" && sub.location.welshName ? sub.location.welshName : sub.location.name,
+    locationId: sub.locationId,
+    dateAdded: sub.dateAdded
+  };
+}
+
+export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
+  const subscriptions = await prisma.subscription.findMany({
+    where: { userId },
+    orderBy: { dateAdded: "desc" },
+    include: {
+      location: true
+    }
+  });
+
+  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
+}
+
+export async function getCaseSubscriptionsByUserId(_userId: string, _locale = "en") {
+  // Case subscriptions not yet implemented (VIBE-300)
+  // When implemented, this will query a case_subscription table
+  return [];
+}
+
+export async function getCourtSubscriptionsByUserId(userId: string, locale = "en") {
+  return getAllSubscriptionsByUserId(userId, locale);
+}
+
+export async function validateSubscriptionOwnership(subscriptionIds: string[], userId: string): Promise<boolean> {
+  if (subscriptionIds.length === 0) {
+    return false;
+  }
+
+  const subscriptions = await prisma.subscription.findMany({
+    where: {
+      subscriptionId: { in: subscriptionIds }
+    },
+    select: {
+      subscriptionId: true,
+      userId: true
+    }
+  });
+
+  if (subscriptions.length !== subscriptionIds.length) {
+    return false;
+  }
+
+  return subscriptions.every((sub) => sub.userId === userId);
+}
+
+export async function getSubscriptionDetailsForConfirmation(subscriptionIds: string[], locale = "en") {
+  if (subscriptionIds.length === 0) {
+    return [];
+  }
+
+  const subscriptions = await prisma.subscription.findMany({
+    where: {
+      subscriptionId: { in: subscriptionIds }
+    },
+    orderBy: { dateAdded: "desc" },
+    include: {
+      location: true
+    }
+  });
+
+  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
+}
+
+export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {
+  if (subscriptionIds.length === 0) {
+    throw new Error("No subscriptions provided for deletion");
+  }
+
+  const isValid = await validateSubscriptionOwnership(subscriptionIds, userId);
+  if (!isValid) {
+    throw new Error("Unauthorized: User does not own all selected subscriptions");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const deleteResult = await tx.subscription.deleteMany({
+      where: {
+        subscriptionId: { in: subscriptionIds },
+        userId
+      }
+    });
+
+    console.log(`Bulk unsubscribe: User ${userId} deleted ${deleteResult.count} subscriptions`);
+
+    return deleteResult.count;
+  });
+}
