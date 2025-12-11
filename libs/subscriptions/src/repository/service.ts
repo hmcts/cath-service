@@ -130,7 +130,7 @@ export async function getAllSubscriptionsByUserId(userId: string, locale = "en")
   return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
 }
 
-export async function getCaseSubscriptionsByUserId(_userId: string, _locale = "en") {
+export async function getCaseSubscriptionsByUserId(userId: string, locale = "en") {
   // Case subscriptions not yet implemented (VIBE-300)
   // When implemented, this will query a case_subscription table
   return [];
