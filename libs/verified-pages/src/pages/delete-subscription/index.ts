@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { findSubscriptionById } from "@hmcts/subscriptions";
+import { getSubscriptionById } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -32,7 +32,7 @@ const getHandler = async (req: Request, res: Response) => {
   const userId = req.user.id;
 
   try {
-    const subscription = await findSubscriptionById(subscriptionId);
+    const subscription = await getSubscriptionById(subscriptionId);
 
     if (!subscription) {
       return res.redirect("/subscription-management");
@@ -83,7 +83,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Verify user owns the subscription
   try {
-    const sub = await findSubscriptionById(subscriptionId);
+    const sub = await getSubscriptionById(subscriptionId);
     if (!sub || sub.userId !== userId) {
       return res.redirect("/subscription-management");
     }

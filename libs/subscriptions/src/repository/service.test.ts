@@ -1,4 +1,3 @@
-import { prisma } from "@hmcts/postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as validation from "../validation/validation.js";
 import * as queries from "./queries.js";
@@ -10,23 +9,10 @@ import {
   getCaseSubscriptionsByUserId,
   getCourtSubscriptionsByUserId,
   getSubscriptionDetailsForConfirmation,
-  getSubscriptionsByUserId,
   removeSubscription,
   replaceUserSubscriptions,
   validateSubscriptionOwnership
 } from "./service.js";
-
-vi.mock("@hmcts/postgres", () => ({
-  prisma: {
-    subscription: {
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      deleteMany: vi.fn(),
-      update: vi.fn()
-    },
-    $transaction: vi.fn()
-  }
-}));
 
 vi.mock("./queries.js");
 vi.mock("../validation/validation.js");
@@ -91,27 +77,6 @@ describe("Subscription Service", () => {
     });
   });
 
-  describe("getSubscriptionsByUserId", () => {
-    it("should return user subscriptions", async () => {
-      const userId = "user123";
-      const subscriptions = [
-        {
-          subscriptionId: "sub1",
-          userId,
-          locationId: 456,
-          dateAdded: new Date()
-        }
-      ];
-
-      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(subscriptions);
-
-      const result = await getSubscriptionsByUserId(userId);
-
-      expect(result).toEqual(subscriptions);
-      expect(queries.findSubscriptionsByUserId).toHaveBeenCalledWith(userId);
-    });
-  });
-
   describe("removeSubscription", () => {
     const subscriptionId = "sub123";
     const userId = "user123";
@@ -124,7 +89,7 @@ describe("Subscription Service", () => {
         dateAdded: new Date()
       };
 
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(subscription);
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
       vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(subscription);
 
       const result = await removeSubscription(subscriptionId, userId);
@@ -134,7 +99,7 @@ describe("Subscription Service", () => {
     });
 
     it("should throw error if subscription not found", async () => {
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue(null);
 
       await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Subscription not found");
     });
@@ -147,7 +112,7 @@ describe("Subscription Service", () => {
         dateAdded: new Date()
       };
 
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(subscription);
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
 
       await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Unauthorized");
     });
@@ -334,7 +299,7 @@ describe("Subscription Service", () => {
     ];
 
     it("should return all subscriptions with location details in English", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
 
       const result = await getAllSubscriptionsByUserId(mockUserId, "en");
 
@@ -355,15 +320,11 @@ describe("Subscription Service", () => {
         }
       ]);
 
-      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-        where: { userId: mockUserId },
-        orderBy: { dateAdded: "desc" },
-        include: { location: true }
-      });
+      expect(queries.findSubscriptionsWithLocationByUserId).toHaveBeenCalledWith(mockUserId);
     });
 
     it("should return subscriptions with Welsh names when locale is cy", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
 
       const result = await getAllSubscriptionsByUserId(mockUserId, "cy");
 
@@ -372,7 +333,7 @@ describe("Subscription Service", () => {
     });
 
     it("should return empty array when user has no subscriptions", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+      vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue([]);
 
       const result = await getAllSubscriptionsByUserId(mockUserId);
 
@@ -416,7 +377,7 @@ describe("Subscription Service", () => {
     ];
 
     it("should return court subscriptions with location details", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
 
       const result = await getCourtSubscriptionsByUserId(mockUserId, "en");
 
@@ -439,7 +400,7 @@ describe("Subscription Service", () => {
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
 
       const result = await getCourtSubscriptionsByUserId(mockUserId, "cy");
 
@@ -451,7 +412,7 @@ describe("Subscription Service", () => {
     const mockUserId = "user-123";
 
     it("should return true when user owns all subscriptions", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
         { subscriptionId: "sub-1", userId: mockUserId },
         { subscriptionId: "sub-2", userId: mockUserId }
       ]);
@@ -459,14 +420,11 @@ describe("Subscription Service", () => {
       const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
 
       expect(result).toBe(true);
-      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-        where: { subscriptionId: { in: ["sub-1", "sub-2"] } },
-        select: { subscriptionId: true, userId: true }
-      });
+      expect(queries.findSubscriptionsByIds).toHaveBeenCalledWith(["sub-1", "sub-2"]);
     });
 
     it("should return false when user does not own all subscriptions", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
         { subscriptionId: "sub-1", userId: mockUserId },
         { subscriptionId: "sub-2", userId: "different-user" }
       ]);
@@ -477,7 +435,7 @@ describe("Subscription Service", () => {
     });
 
     it("should return false when some subscriptions do not exist", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
 
       const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
 
@@ -488,7 +446,7 @@ describe("Subscription Service", () => {
       const result = await validateSubscriptionOwnership([], mockUserId);
 
       expect(result).toBe(false);
-      expect(prisma.subscription.findMany).not.toHaveBeenCalled();
+      expect(queries.findSubscriptionsByIds).not.toHaveBeenCalled();
     });
   });
 
@@ -519,7 +477,7 @@ describe("Subscription Service", () => {
     ];
 
     it("should return subscription details with location information", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
 
       const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-2"], "en");
 
@@ -545,11 +503,11 @@ describe("Subscription Service", () => {
       const result = await getSubscriptionDetailsForConfirmation([]);
 
       expect(result).toEqual([]);
-      expect(prisma.subscription.findMany).not.toHaveBeenCalled();
+      expect(queries.findSubscriptionsWithLocationByIds).not.toHaveBeenCalled();
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
 
       const result = await getSubscriptionDetailsForConfirmation(["sub-1"], "cy");
 
@@ -561,27 +519,17 @@ describe("Subscription Service", () => {
     const mockUserId = "user-123";
 
     it("should delete subscriptions in a transaction when user owns them", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
         { subscriptionId: "sub-1", userId: mockUserId },
         { subscriptionId: "sub-2", userId: mockUserId }
       ]);
 
-      const mockDeleteResult = { count: 2 };
-      const mockTransaction = vi.fn(async (callback) => {
-        const tx = {
-          subscription: {
-            deleteMany: vi.fn().mockResolvedValue(mockDeleteResult)
-          }
-        };
-        return callback(tx);
-      });
-
-      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(2);
 
       const result = await deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId);
 
       expect(result).toBe(2);
-      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(queries.deleteSubscriptionsByIds).toHaveBeenCalledWith(["sub-1", "sub-2"], mockUserId);
     });
 
     it("should throw error when no subscriptions provided", async () => {
@@ -589,72 +537,44 @@ describe("Subscription Service", () => {
     });
 
     it("should throw error when user does not own all subscriptions", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: "different-user" }]);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: "different-user" }]);
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
     });
 
     it("should throw error when some subscriptions do not exist", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
 
       await expect(deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
     });
 
     it("should handle transaction rollback on database error", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
 
-      const mockTransaction = vi.fn(async () => {
-        throw new Error("Database connection failed");
-      });
-
-      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockRejectedValue(new Error("Database connection failed"));
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Database connection failed");
     });
 
     it("should delete correct subscriptions with proper where clause", async () => {
       const subscriptionIds = ["sub-1", "sub-2", "sub-3"];
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
         { subscriptionId: "sub-1", userId: mockUserId },
         { subscriptionId: "sub-2", userId: mockUserId },
         { subscriptionId: "sub-3", userId: mockUserId }
       ]);
 
-      const mockDeleteMany = vi.fn().mockResolvedValue({ count: 3 });
-      const mockTransaction = vi.fn(async (callback) => {
-        const tx = {
-          subscription: {
-            deleteMany: mockDeleteMany
-          }
-        };
-        return callback(tx);
-      });
-
-      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(3);
 
       await deleteSubscriptionsByIds(subscriptionIds, mockUserId);
 
-      expect(mockDeleteMany).toHaveBeenCalledWith({
-        where: {
-          subscriptionId: { in: subscriptionIds },
-          userId: mockUserId
-        }
-      });
+      expect(queries.deleteSubscriptionsByIds).toHaveBeenCalledWith(subscriptionIds, mockUserId);
     });
 
     it("should return 0 when no subscriptions match deletion criteria", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
 
-      const mockTransaction = vi.fn(async (callback) => {
-        const tx = {
-          subscription: {
-            deleteMany: vi.fn().mockResolvedValue({ count: 0 })
-          }
-        };
-        return callback(tx);
-      });
-
-      vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(0);
 
       const result = await deleteSubscriptionsByIds(["sub-1"], mockUserId);
 

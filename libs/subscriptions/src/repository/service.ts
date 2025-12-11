@@ -1,11 +1,15 @@
-import { prisma } from "@hmcts/postgres";
 import { validateLocationId } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
   createSubscriptionRecord,
   deleteSubscriptionRecord,
+  deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
+  findSubscriptionById,
   findSubscriptionByUserAndLocation,
-  findSubscriptionsByUserId
+  findSubscriptionsByIds,
+  findSubscriptionsByUserId,
+  findSubscriptionsWithLocationByIds,
+  findSubscriptionsWithLocationByUserId
 } from "./queries.js";
 
 const MAX_SUBSCRIPTIONS = 50;
@@ -30,14 +34,12 @@ export async function createSubscription(userId: string, locationId: string) {
   return createSubscriptionRecord(userId, locationIdNumber);
 }
 
-export async function getSubscriptionsByUserId(userId: string) {
-  return findSubscriptionsByUserId(userId);
+export async function getSubscriptionById(subscriptionId: string) {
+  return findSubscriptionById(subscriptionId);
 }
 
 export async function removeSubscription(subscriptionId: string, userId: string) {
-  const subscription = await prisma.subscription.findUnique({
-    where: { subscriptionId }
-  });
+  const subscription = await findSubscriptionById(subscriptionId);
 
   if (!subscription) {
     throw new Error("Subscription not found");
@@ -115,14 +117,7 @@ function mapSubscriptionToDto(
 }
 
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
-  const subscriptions = await prisma.subscription.findMany({
-    where: { userId },
-    orderBy: { dateAdded: "desc" },
-    include: {
-      location: true
-    }
-  });
-
+  const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
   return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
 }
 
@@ -141,15 +136,7 @@ export async function validateSubscriptionOwnership(subscriptionIds: string[], u
     return false;
   }
 
-  const subscriptions = await prisma.subscription.findMany({
-    where: {
-      subscriptionId: { in: subscriptionIds }
-    },
-    select: {
-      subscriptionId: true,
-      userId: true
-    }
-  });
+  const subscriptions = await findSubscriptionsByIds(subscriptionIds);
 
   if (subscriptions.length !== subscriptionIds.length) {
     return false;
@@ -163,16 +150,7 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
     return [];
   }
 
-  const subscriptions = await prisma.subscription.findMany({
-    where: {
-      subscriptionId: { in: subscriptionIds }
-    },
-    orderBy: { dateAdded: "desc" },
-    include: {
-      location: true
-    }
-  });
-
+  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds);
   return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
 }
 
@@ -186,16 +164,9 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
     throw new Error("Unauthorized: User does not own all selected subscriptions");
   }
 
-  return prisma.$transaction(async (tx) => {
-    const deleteResult = await tx.subscription.deleteMany({
-      where: {
-        subscriptionId: { in: subscriptionIds },
-        userId
-      }
-    });
+  const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
 
-    console.log(`Bulk unsubscribe: User ${userId} deleted ${deleteResult.count} subscriptions`);
+  console.log(`Bulk unsubscribe: User ${userId} deleted ${count} subscriptions`);
 
-    return deleteResult.count;
-  });
+  return count;
 }
