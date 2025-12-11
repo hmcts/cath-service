@@ -21,8 +21,8 @@ const getHandler = async (req: Request, res: Response) => {
   try {
     const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, locale);
 
-    const caseSubscriptions: typeof subscriptions = [];
-    const courtSubscriptions = subscriptions;
+    const caseSubscriptions = subscriptions.filter((sub) => sub.type === "case");
+    const courtSubscriptions = subscriptions.filter((sub) => sub.type === "court");
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
@@ -59,8 +59,8 @@ const postHandler = async (req: Request, res: Response) => {
     try {
       const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, locale);
 
-      const caseSubscriptions: typeof subscriptions = [];
-      const courtSubscriptions = subscriptions;
+      const caseSubscriptions = subscriptions.filter((sub) => sub.type === "case");
+      const courtSubscriptions = subscriptions.filter((sub) => sub.type === "court");
 
       if (!res.locals.navigation) {
         res.locals.navigation = {};
@@ -95,6 +95,10 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (confirm === "yes") {
+    if (selectedIds.length === 0) {
+      return res.redirect("/bulk-unsubscribe");
+    }
+
     try {
       await deleteSubscriptionsByIds(selectedIds, userId);
 

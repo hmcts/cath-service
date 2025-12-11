@@ -106,14 +106,22 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 function mapSubscriptionToDto(
   sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
   locale: string
-) {
+): SubscriptionDto {
   return {
     subscriptionId: sub.subscriptionId,
-    type: "court" as const,
+    type: "court",
     courtOrTribunalName: locale === "cy" && sub.location.welshName ? sub.location.welshName : sub.location.name,
     locationId: sub.locationId,
     dateAdded: sub.dateAdded
   };
+}
+
+interface SubscriptionDto {
+  subscriptionId: string;
+  type: "court" | "case";
+  courtOrTribunalName: string;
+  locationId: number;
+  dateAdded: Date;
 }
 
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
@@ -165,8 +173,6 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
   }
 
   const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
-
-  console.log(`Bulk unsubscribe: User ${userId} deleted ${count} subscriptions`);
 
   return count;
 }

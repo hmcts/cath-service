@@ -42,7 +42,7 @@ describe("confirm-bulk-unsubscribe", () => {
   });
 
   describe("GET", () => {
-    it("should render confirmation page with subscription details", async () => {
+    it("should render confirmation page with court subscriptions only", async () => {
       const mockSubscriptions = [
         {
           subscriptionId: "sub-1",
@@ -72,6 +72,39 @@ describe("confirm-bulk-unsubscribe", () => {
           caseSubscriptions: [],
           hasCourtSubscriptions: true,
           hasCaseSubscriptions: false
+        })
+      );
+    });
+
+    it("should render confirmation page with mixed case and court subscriptions", async () => {
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub-1",
+          type: "case" as const,
+          courtOrTribunalName: "Case ABC123",
+          locationId: 1,
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub-2",
+          type: "court" as const,
+          courtOrTribunalName: "Manchester Crown Court",
+          locationId: 2,
+          dateAdded: new Date("2024-01-02")
+        }
+      ];
+
+      vi.mocked(subscriptionService.getSubscriptionDetailsForConfirmation).mockResolvedValue(mockSubscriptions);
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "confirm-bulk-unsubscribe/index",
+        expect.objectContaining({
+          courtSubscriptions: [mockSubscriptions[1]],
+          caseSubscriptions: [mockSubscriptions[0]],
+          hasCourtSubscriptions: true,
+          hasCaseSubscriptions: true
         })
       );
     });
@@ -151,32 +184,67 @@ describe("confirm-bulk-unsubscribe", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "confirm-bulk-unsubscribe/index",
         expect.objectContaining({
-          errors: expect.any(Array)
+          errors: expect.any(Array),
+          courtSubscriptions: expect.any(Array),
+          caseSubscriptions: expect.any(Array)
         })
       );
     });
 
-    it("should redirect to bulk-unsubscribe when no subscriptions in session", async () => {
-      mockReq.session = {} as any;
-      mockReq.body = { confirm: "yes" };
-      vi.mocked(subscriptionService.deleteSubscriptionsByIds).mockRejectedValue(new Error("No subscriptions provided for deletion"));
+    it("should filter case and court subscriptions correctly when confirm not provided", async () => {
+      mockReq.body = {};
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub-1",
+          type: "case" as const,
+          courtOrTribunalName: "Case XYZ789",
+          locationId: 1,
+          dateAdded: new Date()
+        },
+        {
+          subscriptionId: "sub-2",
+          type: "court" as const,
+          courtOrTribunalName: "Leeds Crown Court",
+          locationId: 2,
+          dateAdded: new Date()
+        }
+      ];
+      vi.mocked(subscriptionService.getSubscriptionDetailsForConfirmation).mockResolvedValue(mockSubscriptions);
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "confirm-bulk-unsubscribe/index",
+        expect.objectContaining({
+          caseSubscriptions: [mockSubscriptions[0]],
+          courtSubscriptions: [mockSubscriptions[1]],
+          hasCaseSubscriptions: true,
+          hasCourtSubscriptions: true
+        })
+      );
+    });
+
+    it("should redirect to bulk-unsubscribe when no subscriptions in session without calling deleteSubscriptionsByIds", async () => {
+      mockReq.session = {} as any;
+      mockReq.body = { confirm: "yes" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.deleteSubscriptionsByIds).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/bulk-unsubscribe");
     });
 
-    it("should redirect to bulk-unsubscribe when selectedIds is empty", async () => {
+    it("should redirect to bulk-unsubscribe when selectedIds is empty without calling deleteSubscriptionsByIds", async () => {
       mockReq.session = {
         bulkUnsubscribe: {
           selectedIds: []
         }
       } as any;
       mockReq.body = { confirm: "yes" };
-      vi.mocked(subscriptionService.deleteSubscriptionsByIds).mockRejectedValue(new Error("No subscriptions provided for deletion"));
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.deleteSubscriptionsByIds).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/bulk-unsubscribe");
     });
 
