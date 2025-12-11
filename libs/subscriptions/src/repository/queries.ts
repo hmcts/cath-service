@@ -39,16 +39,17 @@ export async function createSubscriptionRecord(userId: string, locationId: numbe
   });
 }
 
-export async function findSubscriptionById(subscriptionId: string) {
-  return prisma.subscription.findUnique({
-    where: { subscriptionId }
+export async function findSubscriptionById(subscriptionId: string, userId: string) {
+  return prisma.subscription.findFirst({
+    where: { subscriptionId, userId }
   });
 }
 
-export async function deleteSubscriptionRecord(subscriptionId: string) {
-  return prisma.subscription.delete({
-    where: { subscriptionId }
+export async function deleteSubscriptionRecord(subscriptionId: string, userId: string) {
+  const result = await prisma.subscription.deleteMany({
+    where: { subscriptionId, userId }
   });
+  return result.count;
 }
 
 export async function findSubscriptionsWithLocationByUserId(userId: string) {
@@ -61,10 +62,11 @@ export async function findSubscriptionsWithLocationByUserId(userId: string) {
   });
 }
 
-export async function findSubscriptionsByIds(subscriptionIds: string[]) {
+export async function findSubscriptionsByIds(subscriptionIds: string[], userId: string) {
   return prisma.subscription.findMany({
     where: {
-      subscriptionId: { in: subscriptionIds }
+      subscriptionId: { in: subscriptionIds },
+      userId
     },
     select: {
       subscriptionId: true,
@@ -73,10 +75,11 @@ export async function findSubscriptionsByIds(subscriptionIds: string[]) {
   });
 }
 
-export async function findSubscriptionsWithLocationByIds(subscriptionIds: string[]) {
+export async function findSubscriptionsWithLocationByIds(subscriptionIds: string[], userId: string) {
   return prisma.subscription.findMany({
     where: {
-      subscriptionId: { in: subscriptionIds }
+      subscriptionId: { in: subscriptionIds },
+      userId
     },
     orderBy: { dateAdded: "desc" },
     include: {

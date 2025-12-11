@@ -32,13 +32,9 @@ const getHandler = async (req: Request, res: Response) => {
   const userId = req.user.id;
 
   try {
-    const subscription = await getSubscriptionById(subscriptionId);
+    const subscription = await getSubscriptionById(subscriptionId, userId);
 
     if (!subscription) {
-      return res.redirect("/subscription-management");
-    }
-
-    if (subscription.userId !== userId) {
       return res.redirect("/subscription-management");
     }
 
@@ -83,8 +79,8 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Verify user owns the subscription
   try {
-    const sub = await getSubscriptionById(subscriptionId);
-    if (!sub || sub.userId !== userId) {
+    const sub = await getSubscriptionById(subscriptionId, userId);
+    if (!sub) {
       return res.redirect("/subscription-management");
     }
   } catch (error) {

@@ -6,7 +6,6 @@ import {
   deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
-  findSubscriptionsByIds,
   findSubscriptionsByUserId,
   findSubscriptionsWithLocationByIds,
   findSubscriptionsWithLocationByUserId
@@ -34,22 +33,24 @@ export async function createSubscription(userId: string, locationId: string) {
   return createSubscriptionRecord(userId, locationIdNumber);
 }
 
-export async function getSubscriptionById(subscriptionId: string) {
-  return findSubscriptionById(subscriptionId);
+export async function getSubscriptionById(subscriptionId: string, userId: string) {
+  return findSubscriptionById(subscriptionId, userId);
 }
 
 export async function removeSubscription(subscriptionId: string, userId: string) {
-  const subscription = await findSubscriptionById(subscriptionId);
+  const subscription = await findSubscriptionById(subscriptionId, userId);
 
   if (!subscription) {
     throw new Error("Subscription not found");
   }
 
-  if (subscription.userId !== userId) {
-    throw new Error("Unauthorized");
+  const count = await deleteSubscriptionRecord(subscriptionId, userId);
+
+  if (count === 0) {
+    throw new Error("Subscription not found");
   }
 
-  return deleteSubscriptionRecord(subscriptionId);
+  return count;
 }
 
 export async function createMultipleSubscriptions(userId: string, locationIds: string[]) {
@@ -93,7 +94,7 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 
   // Perform deletions and creations after validation passes
   await Promise.all([
-    ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId)),
+    ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId, userId)),
     ...toAdd.map((locationId) => createSubscriptionRecord(userId, locationId))
   ]);
 
@@ -139,26 +140,12 @@ export async function getCourtSubscriptionsByUserId(userId: string, locale = "en
   return getAllSubscriptionsByUserId(userId, locale);
 }
 
-export async function validateSubscriptionOwnership(subscriptionIds: string[], userId: string): Promise<boolean> {
-  if (subscriptionIds.length === 0) {
-    return false;
-  }
-
-  const subscriptions = await findSubscriptionsByIds(subscriptionIds);
-
-  if (subscriptions.length !== subscriptionIds.length) {
-    return false;
-  }
-
-  return subscriptions.every((sub) => sub.userId === userId);
-}
-
-export async function getSubscriptionDetailsForConfirmation(subscriptionIds: string[], locale = "en") {
+export async function getSubscriptionDetailsForConfirmation(subscriptionIds: string[], userId: string, locale = "en") {
   if (subscriptionIds.length === 0) {
     return [];
   }
 
-  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds);
+  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
   return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
 }
 
@@ -167,12 +154,11 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
     throw new Error("No subscriptions provided for deletion");
   }
 
-  const isValid = await validateSubscriptionOwnership(subscriptionIds, userId);
-  if (!isValid) {
+  const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
+
+  if (count !== subscriptionIds.length) {
     throw new Error("Unauthorized: User does not own all selected subscriptions");
   }
-
-  const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
 
   return count;
 }

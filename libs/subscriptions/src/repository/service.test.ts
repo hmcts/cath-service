@@ -10,8 +10,7 @@ import {
   getCourtSubscriptionsByUserId,
   getSubscriptionDetailsForConfirmation,
   removeSubscription,
-  replaceUserSubscriptions,
-  validateSubscriptionOwnership
+  replaceUserSubscriptions
 } from "./service.js";
 
 vi.mock("./queries.js");
@@ -90,31 +89,36 @@ describe("Subscription Service", () => {
       };
 
       vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
-      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(subscription);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
 
       const result = await removeSubscription(subscriptionId, userId);
 
-      expect(result).toBeDefined();
-      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith(subscriptionId);
+      expect(result).toBe(1);
+      expect(queries.findSubscriptionById).toHaveBeenCalledWith(subscriptionId, userId);
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith(subscriptionId, userId);
     });
 
-    it("should throw error if subscription not found", async () => {
+    it("should throw error if subscription not found during lookup", async () => {
       vi.mocked(queries.findSubscriptionById).mockResolvedValue(null);
 
       await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Subscription not found");
+      expect(queries.findSubscriptionById).toHaveBeenCalledWith(subscriptionId, userId);
+      expect(queries.deleteSubscriptionRecord).not.toHaveBeenCalled();
     });
 
-    it("should throw error if user is not the owner", async () => {
+    it("should throw error if delete returns 0 count", async () => {
       const subscription = {
         subscriptionId,
-        userId: "differentUser",
+        userId,
         locationId: 456,
         dateAdded: new Date()
       };
 
       vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(0);
 
-      await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Unauthorized");
+      await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Subscription not found");
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith(subscriptionId, userId);
     });
   });
 
@@ -176,7 +180,7 @@ describe("Subscription Service", () => {
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
       vi.mocked(validation.validateLocationId).mockResolvedValue(true);
-      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(existingSubscriptions[0]);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub3",
         userId,
@@ -188,7 +192,7 @@ describe("Subscription Service", () => {
 
       expect(result.added).toBe(1);
       expect(result.removed).toBe(1);
-      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith("sub1");
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith("sub1", userId);
       expect(queries.createSubscriptionRecord).toHaveBeenCalledWith(userId, 101);
     });
 
@@ -218,13 +222,15 @@ describe("Subscription Service", () => {
       ];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
-      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(existingSubscriptions[0]);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
 
       const result = await replaceUserSubscriptions(userId, []);
 
       expect(result.added).toBe(0);
       expect(result.removed).toBe(2);
       expect(queries.deleteSubscriptionRecord).toHaveBeenCalledTimes(2);
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith("sub1", userId);
+      expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith("sub2", userId);
       expect(queries.createSubscriptionRecord).not.toHaveBeenCalled();
     });
 
@@ -408,48 +414,6 @@ describe("Subscription Service", () => {
     });
   });
 
-  describe("validateSubscriptionOwnership", () => {
-    const mockUserId = "user-123";
-
-    it("should return true when user owns all subscriptions", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
-        { subscriptionId: "sub-1", userId: mockUserId },
-        { subscriptionId: "sub-2", userId: mockUserId }
-      ]);
-
-      const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
-
-      expect(result).toBe(true);
-      expect(queries.findSubscriptionsByIds).toHaveBeenCalledWith(["sub-1", "sub-2"]);
-    });
-
-    it("should return false when user does not own all subscriptions", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
-        { subscriptionId: "sub-1", userId: mockUserId },
-        { subscriptionId: "sub-2", userId: "different-user" }
-      ]);
-
-      const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
-
-      expect(result).toBe(false);
-    });
-
-    it("should return false when some subscriptions do not exist", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
-
-      const result = await validateSubscriptionOwnership(["sub-1", "sub-2"], mockUserId);
-
-      expect(result).toBe(false);
-    });
-
-    it("should return false when subscription array is empty", async () => {
-      const result = await validateSubscriptionOwnership([], mockUserId);
-
-      expect(result).toBe(false);
-      expect(queries.findSubscriptionsByIds).not.toHaveBeenCalled();
-    });
-  });
-
   describe("getSubscriptionDetailsForConfirmation", () => {
     const mockSubscriptions = [
       {
@@ -479,7 +443,7 @@ describe("Subscription Service", () => {
     it("should return subscription details with location information", async () => {
       vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
 
-      const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-2"], "en");
+      const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-2"], "user-123", "en");
 
       expect(result).toEqual([
         {
@@ -500,7 +464,7 @@ describe("Subscription Service", () => {
     });
 
     it("should return empty array when no subscription IDs provided", async () => {
-      const result = await getSubscriptionDetailsForConfirmation([]);
+      const result = await getSubscriptionDetailsForConfirmation([], "user-123");
 
       expect(result).toEqual([]);
       expect(queries.findSubscriptionsWithLocationByIds).not.toHaveBeenCalled();
@@ -509,7 +473,7 @@ describe("Subscription Service", () => {
     it("should use Welsh names when locale is cy", async () => {
       vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
 
-      const result = await getSubscriptionDetailsForConfirmation(["sub-1"], "cy");
+      const result = await getSubscriptionDetailsForConfirmation(["sub-1"], "user-123", "cy");
 
       expect(result[0].courtOrTribunalName).toBe("Welsh Birmingham Crown Court");
     });
@@ -519,11 +483,6 @@ describe("Subscription Service", () => {
     const mockUserId = "user-123";
 
     it("should delete subscriptions in a transaction when user owns them", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
-        { subscriptionId: "sub-1", userId: mockUserId },
-        { subscriptionId: "sub-2", userId: mockUserId }
-      ]);
-
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(2);
 
       const result = await deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId);
@@ -536,21 +495,14 @@ describe("Subscription Service", () => {
       await expect(deleteSubscriptionsByIds([], mockUserId)).rejects.toThrow("No subscriptions provided for deletion");
     });
 
-    it("should throw error when user does not own all subscriptions", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: "different-user" }]);
-
-      await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
-    });
-
-    it("should throw error when some subscriptions do not exist", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
+    it("should throw error when count does not match (some subscriptions do not exist or user does not own them)", async () => {
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(1);
 
       await expect(deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
+      expect(queries.deleteSubscriptionsByIds).toHaveBeenCalledWith(["sub-1", "sub-2"], mockUserId);
     });
 
     it("should handle transaction rollback on database error", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
-
       vi.mocked(queries.deleteSubscriptionsByIds).mockRejectedValue(new Error("Database connection failed"));
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Database connection failed");
@@ -558,12 +510,6 @@ describe("Subscription Service", () => {
 
     it("should delete correct subscriptions with proper where clause", async () => {
       const subscriptionIds = ["sub-1", "sub-2", "sub-3"];
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
-        { subscriptionId: "sub-1", userId: mockUserId },
-        { subscriptionId: "sub-2", userId: mockUserId },
-        { subscriptionId: "sub-3", userId: mockUserId }
-      ]);
-
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(3);
 
       await deleteSubscriptionsByIds(subscriptionIds, mockUserId);
@@ -571,14 +517,10 @@ describe("Subscription Service", () => {
       expect(queries.deleteSubscriptionsByIds).toHaveBeenCalledWith(subscriptionIds, mockUserId);
     });
 
-    it("should return 0 when no subscriptions match deletion criteria", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([{ subscriptionId: "sub-1", userId: mockUserId }]);
-
+    it("should throw error when no subscriptions match deletion criteria", async () => {
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(0);
 
-      const result = await deleteSubscriptionsByIds(["sub-1"], mockUserId);
-
-      expect(result).toBe(0);
+      await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
     });
   });
 });

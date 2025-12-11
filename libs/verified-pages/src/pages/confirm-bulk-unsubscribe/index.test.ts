@@ -11,7 +11,6 @@ vi.mock("@hmcts/auth", () => ({
 
 vi.mock("@hmcts/subscriptions", () => ({
   getSubscriptionDetailsForConfirmation: vi.fn(),
-  validateSubscriptionOwnership: vi.fn(),
   deleteSubscriptionsByIds: vi.fn()
 }));
 
@@ -64,7 +63,7 @@ describe("confirm-bulk-unsubscribe", () => {
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(subscriptionService.getSubscriptionDetailsForConfirmation).toHaveBeenCalledWith(["sub-1", "sub-2"], "en");
+      expect(subscriptionService.getSubscriptionDetailsForConfirmation).toHaveBeenCalledWith(["sub-1", "sub-2"], "user123", "en");
       expect(mockRes.render).toHaveBeenCalledWith(
         "confirm-bulk-unsubscribe/index",
         expect.objectContaining({

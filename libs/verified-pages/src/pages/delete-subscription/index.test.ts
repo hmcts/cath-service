@@ -53,26 +53,13 @@ describe("delete-subscription", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
-    it("should redirect if subscription not found", async () => {
+    it("should redirect if subscription not found or user does not own it", async () => {
       mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000" };
       vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue(null);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
-    });
-
-    it("should redirect if user does not own the subscription", async () => {
-      mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000" };
-      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
-        subscriptionId: "550e8400-e29b-41d4-a716-446655440000",
-        userId: "different-user",
-        locationId: "456",
-        dateAdded: new Date()
-      });
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000", "user123");
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
@@ -87,6 +74,7 @@ describe("delete-subscription", () => {
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000", "user123");
       expect(mockRes.render).toHaveBeenCalledWith(
         "delete-subscription/index",
         expect.objectContaining({
@@ -119,6 +107,7 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(validSubscriptionId, "user123");
       expect(mockRes.redirect).toHaveBeenCalledWith(`/delete-subscription?subscriptionId=${validSubscriptionId}`);
     });
 
@@ -134,6 +123,7 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(validSubscriptionId, "user123");
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
@@ -150,6 +140,7 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(validSubscriptionId, "user123");
       expect(mockReq.session.emailSubscriptions?.subscriptionToRemove).toBe(validSubscriptionId);
       expect(mockRes.redirect).toHaveBeenCalledWith("/unsubscribe-confirmation");
     });

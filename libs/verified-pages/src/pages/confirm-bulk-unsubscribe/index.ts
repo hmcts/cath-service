@@ -13,13 +13,14 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const selectedIds = req.session.bulkUnsubscribe?.selectedIds || [];
+  const userId = req.user.id;
 
   if (selectedIds.length === 0) {
     return res.redirect("/bulk-unsubscribe");
   }
 
   try {
-    const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, locale);
+    const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, userId, locale);
 
     const caseSubscriptions = subscriptions.filter((sub) => sub.type === "case");
     const courtSubscriptions = subscriptions.filter((sub) => sub.type === "court");
@@ -57,7 +58,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (!confirm) {
     try {
-      const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, locale);
+      const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, userId, locale);
 
       const caseSubscriptions = subscriptions.filter((sub) => sub.type === "case");
       const courtSubscriptions = subscriptions.filter((sub) => sub.type === "court");
