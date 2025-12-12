@@ -1,0 +1,115 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-xl">{{ confirmTitle }}</h1>
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: error
+          }
+        ]
+      }) }}
+    {% else %}
+
+      {{ govukTable({
+        rows: [
+          [
+            {
+              text: metadataLocationName
+            },
+            {
+              text: metadata.locationName
+            }
+          ],
+          [
+            {
+              text: metadataPublicationType
+            },
+            {
+              text: metadata.publicationType
+            }
+          ],
+          [
+            {
+              text: metadataListType
+            },
+            {
+              text: metadata.listType
+            }
+          ],
+          [
+            {
+              text: metadataProvenance
+            },
+            {
+              text: metadata.provenance
+            }
+          ],
+          [
+            {
+              text: metadataLanguage
+            },
+            {
+              text: metadata.language
+            }
+          ],
+          [
+            {
+              text: metadataSensitivity
+            },
+            {
+              text: metadata.sensitivity
+            }
+          ],
+          [
+            {
+              text: metadataContentDate
+            },
+            {
+              text: formatDateTime(metadata.contentDate)
+            }
+          ],
+          [
+            {
+              text: metadataDisplayFrom
+            },
+            {
+              text: formatDateTime(metadata.displayFrom)
+            }
+          ],
+          [
+            {
+              text: metadataDisplayTo
+            },
+            {
+              text: formatDateTime(metadata.displayTo)
+            }
+          ]
+        ]
+      }) }}
+
+      <form method="post" novalidate>
+        {{ govukButton({
+          text: confirmButton,
+          classes: "govuk-button"
+        }) }}
+      </form>
+
+      <p class="govuk-body">
+        <a href="/blob-explorer" class="govuk-link">{{ confirmCancelLink }}</a>
+      </p>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
