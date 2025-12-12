@@ -1,0 +1,136 @@
+// MOJ Filter Layout Styles
+.moj-filter-layout {
+  display: block;
+  font-size: 0; // Remove whitespace between inline-block elements
+}
+
+.moj-filter-layout__filter {
+  width: 100%;
+}
+
+.layout-width-two-filters {
+  display: inline-block;
+  width: calc(30% - 30px);
+  vertical-align: top;
+  font-size: 1rem; // Reset font size
+  margin-right: 30px;
+  box-sizing: border-box;
+
+  &[hidden] {
+    display: none !important;
+  }
+}
+
+.layout-width-four-fifths {
+  display: inline-block;
+  width: 100%;
+  vertical-align: top;
+  font-size: 1rem; // Reset font size
+  box-sizing: border-box;
+
+  &.with-filters {
+    width: 70%;
+  }
+}
+
+.moj-filter {
+  background: #f3f2f1;
+  padding: 20px;
+}
+
+.moj-filter__header {
+  margin-bottom: 20px;
+}
+
+.moj-filter__header-title {
+  margin: 0;
+}
+
+.moj-filter__content {
+  // No specific styling needed
+}
+
+.moj-filter__selected {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #b1b4b6;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+}
+
+.moj-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.moj-filter-tag-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.moj-filter-tag-label {
+  margin: 0;
+}
+
+.moj-filter-tag {
+  background-color: #ffffff;
+  border: 1px solid #b1b4b6;
+  padding: 5px 10px;
+  display: inline-block;
+}
+
+.moj-filter-tag__text {
+  // Inherits font styling from parent
+}
+
+.moj-filter__options {
+  // No specific styling needed
+}
+
+.moj-button-menu {
+  margin-bottom: 20px;
+}
+
+.filter-colour {
+  color: #1d70b8;
+  text-decoration: none;
+  margin-left: 5px;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.filter-colour.rotated {
+  transform: rotate(90deg);
+}
+
+.back-to-top-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+// Responsive layout
+@media (max-width: 768px) {
+  .layout-width-two-filters,
+  .layout-width-four-fifths {
+    display: block;
+    width: 100%;
+    padding-right: 0;
+  }
+
+  .layout-width-two-filters {
+    margin-bottom: 20px;
+  }
+}

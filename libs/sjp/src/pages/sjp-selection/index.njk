@@ -1,0 +1,41 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    {% if publicLists.length > 0 %}
+      <h2 class="govuk-heading-m">{{ publicListPrefix if locale === "en" else cy.publicListPrefix }}Lists</h2>
+      <ul class="govuk-list">
+        {% for list in publicLists %}
+          <li>
+            <a href="/sjp-public-list?artefactId={{ list.artefactId }}" class="govuk-link">
+              {{ publicListPrefix if locale === "en" else cy.publicListPrefix }}{{ list.contentDate | date }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if pressLists.length > 0 %}
+      <h2 class="govuk-heading-m">{{ pressListPrefix if locale === "en" else cy.pressListPrefix }}Lists</h2>
+      <ul class="govuk-list">
+        {% for list in pressLists %}
+          <li>
+            <a href="/sjp-press-list?artefactId={{ list.artefactId }}" class="govuk-link">
+              {{ pressListPrefix if locale === "en" else cy.pressListPrefix }}{{ list.contentDate | date }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <p class="govuk-body">
+      <a href="javascript:history.back()" class="govuk-link">{{ back }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

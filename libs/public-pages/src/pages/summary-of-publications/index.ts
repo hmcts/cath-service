@@ -1,6 +1,7 @@
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
 import { mockListTypes } from "@hmcts/publication";
+import { getLatestSjpLists } from "@hmcts/sjp";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -73,8 +74,28 @@ export const GET = async (req: Request, res: Response) => {
     return true;
   });
 
+  // Fetch SJP lists for this location
+  const sjpLists = await getLatestSjpLists();
+  const sjpListsForLocation = sjpLists.filter((list) => list.locationId === locationId && list.listType === "public");
+
+  // Add SJP lists to publications
+  const sjpPublications = sjpListsForLocation.map((sjpList) => ({
+    id: sjpList.artefactId,
+    listTypeName: "Single Justice Procedure",
+    listTypeId: 1,
+    contentDate: sjpList.contentDate,
+    language: "ENGLISH",
+    formattedDate: formatDateAndLocale(sjpList.contentDate.toISOString(), locale),
+    languageLabel: t.languageEnglish,
+    urlPath: "sjp-public-list",
+    isSjp: true
+  }));
+
+  // Combine regular publications with SJP publications
+  const allPublications = [...uniquePublications, ...sjpPublications];
+
   // Sort by list name, then by content date descending, then by language
-  uniquePublications.sort((a: (typeof uniquePublications)[number], b: (typeof uniquePublications)[number]) => {
+  allPublications.sort((a: (typeof allPublications)[number], b: (typeof allPublications)[number]) => {
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);
@@ -93,6 +114,6 @@ export const GET = async (req: Request, res: Response) => {
     cy,
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
-    publications: uniquePublications
+    publications: allPublications
   });
 };

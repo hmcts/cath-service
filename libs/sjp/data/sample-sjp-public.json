@@ -1,0 +1,177 @@
+{
+  "document": {
+    "documentName": "Single Justice Procedure Public List",
+    "publicationDate": "2025-01-20T09:00:00Z",
+    "version": "1.0"
+  },
+  "courtLists": [
+    {
+      "courtHouse": {
+        "courtHouseName": "Bristol Magistrates' Court",
+        "courtHouseAddress": {
+          "line": ["Nelson Street"],
+          "town": "Bristol",
+          "county": "Avon",
+          "postCode": "BS1 2JA"
+        },
+        "courtRoom": [
+          {
+            "courtRoomName": "Room 1",
+            "session": [
+              {
+                "sittings": [
+                  {
+                    "sittingStart": "2025-01-20T09:00:00Z",
+                    "sittingEnd": "2025-01-20T17:00:00Z",
+                    "hearing": [
+                      {
+                        "case": [
+                          {
+                            "caseUrn": "ABC123456789"
+                          }
+                        ],
+                        "party": [
+                          {
+                            "partyRole": "ACCUSED",
+                            "individualDetails": {
+                              "forename": "John",
+                              "surname": "Smith"
+                            }
+                          },
+                          {
+                            "partyRole": "PROSECUTOR",
+                            "organisationDetails": {
+                              "name": "TV Licensing"
+                            }
+                          }
+                        ],
+                        "offence": [
+                          {
+                            "offenceTitle": "Use a television set without a licence",
+                            "offenceSection": "Section 363 of the Communications Act 2003"
+                          }
+                        ]
+                      },
+                      {
+                        "case": [
+                          {
+                            "caseUrn": "DEF987654321"
+                          }
+                        ],
+                        "party": [
+                          {
+                            "partyRole": "ACCUSED",
+                            "individualDetails": {
+                              "forename": "Jane",
+                              "surname": "Doe"
+                            }
+                          },
+                          {
+                            "partyRole": "PROSECUTOR",
+                            "organisationDetails": {
+                              "name": "Thames Valley Police"
+                            }
+                          }
+                        ],
+                        "offence": [
+                          {
+                            "offenceTitle": "Exceed the speed limit on a restricted road",
+                            "offenceSection": "Section 89(1) of the Road Traffic Regulation Act 1984"
+                          }
+                        ]
+                      },
+                      {
+                        "case": [
+                          {
+                            "caseUrn": "GHI456789123"
+                          }
+                        ],
+                        "party": [
+                          {
+                            "partyRole": "ACCUSED",
+                            "individualDetails": {
+                              "forename": "Robert",
+                              "surname": "Johnson"
+                            }
+                          },
+                          {
+                            "partyRole": "PROSECUTOR",
+                            "organisationDetails": {
+                              "name": "Avon and Somerset Police"
+                            }
+                          }
+                        ],
+                        "offence": [
+                          {
+                            "offenceTitle": "Fail to comply with red traffic light",
+                            "offenceSection": "Section 36(1) of the Road Traffic Act 1988"
+                          }
+                        ]
+                      },
+                      {
+                        "case": [
+                          {
+                            "caseUrn": "JKL789456123"
+                          }
+                        ],
+                        "party": [
+                          {
+                            "partyRole": "ACCUSED",
+                            "individualDetails": {
+                              "forename": "Sarah",
+                              "surname": "Williams"
+                            }
+                          },
+                          {
+                            "partyRole": "PROSECUTOR",
+                            "organisationDetails": {
+                              "name": "TV Licensing"
+                            }
+                          }
+                        ],
+                        "offence": [
+                          {
+                            "offenceTitle": "Use a television set without a licence",
+                            "offenceSection": "Section 363 of the Communications Act 2003"
+                          }
+                        ]
+                      },
+                      {
+                        "case": [
+                          {
+                            "caseUrn": "MNO321654987"
+                          }
+                        ],
+                        "party": [
+                          {
+                            "partyRole": "ACCUSED",
+                            "individualDetails": {
+                              "forename": "Michael",
+                              "surname": "Brown"
+                            }
+                          },
+                          {
+                            "partyRole": "PROSECUTOR",
+                            "organisationDetails": {
+                              "name": "Manchester City Council"
+                            }
+                          }
+                        ],
+                        "offence": [
+                          {
+                            "offenceTitle": "Use a hand-held mobile telephone whilst driving a motor vehicle",
+                            "offenceSection": "Regulation 110 of the Road Vehicles (Construction and Use) Regulations 1986"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
