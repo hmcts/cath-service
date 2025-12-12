@@ -66,6 +66,7 @@
                         name="subscriptions"
                         type="checkbox"
                         value="{{ subscription.subscriptionId }}"
+                        aria-label="Select {{ subscription.caseName }}"
                         {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
                       <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
                         <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
@@ -115,6 +116,7 @@
                         name="subscriptions"
                         type="checkbox"
                         value="{{ subscription.subscriptionId }}"
+                        aria-label="Select {{ subscription.courtOrTribunalName }}"
                         {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
                       <label class="govuk-label govuk-checkboxes__label" for="court-{{ subscription.subscriptionId }}">
                         <span class="govuk-visually-hidden">Select {{ subscription.courtOrTribunalName }}</span>
@@ -167,6 +169,7 @@
                         name="subscriptions"
                         type="checkbox"
                         value="{{ subscription.subscriptionId }}"
+                        aria-label="Select {{ subscription.caseName }}"
                         {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
                       <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
                         <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
@@ -217,6 +220,7 @@
                         name="subscriptions"
                         type="checkbox"
                         value="{{ subscription.subscriptionId }}"
+                        aria-label="Select {{ subscription.courtOrTribunalName }}"
                         {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
                       <label class="govuk-label govuk-checkboxes__label" for="court-{{ subscription.subscriptionId }}">
                         <span class="govuk-visually-hidden">Select {{ subscription.courtOrTribunalName }}</span>

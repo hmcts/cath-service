@@ -62,19 +62,6 @@ export async function findSubscriptionsWithLocationByUserId(userId: string) {
   });
 }
 
-export async function findSubscriptionsByIds(subscriptionIds: string[], userId: string) {
-  return prisma.subscription.findMany({
-    where: {
-      subscriptionId: { in: subscriptionIds },
-      userId
-    },
-    select: {
-      subscriptionId: true,
-      userId: true
-    }
-  });
-}
-
 export async function findSubscriptionsWithLocationByIds(subscriptionIds: string[], userId: string) {
   return prisma.subscription.findMany({
     where: {

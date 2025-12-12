@@ -7,7 +7,6 @@ import {
   deleteSubscriptionsByIds,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
-  findSubscriptionsByIds,
   findSubscriptionsByUserId,
   findSubscriptionsWithLocationByIds,
   findSubscriptionsWithLocationByUserId
@@ -277,35 +276,6 @@ describe("Subscription Queries", () => {
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
 
       const result = await findSubscriptionsWithLocationByUserId(userId);
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe("findSubscriptionsByIds", () => {
-    it("should find subscriptions by multiple IDs", async () => {
-      const userId = "user123";
-      const subscriptionIds = ["sub-1", "sub-2"];
-      const mockSubscriptions = [
-        { subscriptionId: "sub-1", userId: "user123" },
-        { subscriptionId: "sub-2", userId: "user123" }
-      ];
-
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
-
-      const result = await findSubscriptionsByIds(subscriptionIds, userId);
-
-      expect(result).toEqual(mockSubscriptions);
-      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-        where: { subscriptionId: { in: subscriptionIds }, userId },
-        select: { subscriptionId: true, userId: true }
-      });
-    });
-
-    it("should return empty array when no subscriptions found", async () => {
-      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
-
-      const result = await findSubscriptionsByIds(["sub-1"], "user123");
 
       expect(result).toEqual([]);
     });
