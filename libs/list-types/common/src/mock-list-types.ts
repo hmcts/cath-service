@@ -71,5 +71,21 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list"
+  },
+  {
+    id: 9,
+    name: "SJP_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
+    provenance: "CFT_IDAM",
+    urlPath: "sjp-press-list"
+  },
+  {
+    id: 10,
+    name: "SJP_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
+    provenance: "CFT_IDAM",
+    urlPath: "sjp-public-list"
   }
 ];
