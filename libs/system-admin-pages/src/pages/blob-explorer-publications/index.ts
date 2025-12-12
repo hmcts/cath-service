@@ -18,6 +18,17 @@ function formatDateTime(isoString: string): string {
   });
 }
 
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const locale = (req.query.lng === "cy" ? "cy" : "en") as "en" | "cy";
   const t = getTranslations(locale);
@@ -34,11 +45,13 @@ const getHandler = async (req: Request, res: Response) => {
       publications.map(async (pub) => {
         const type = await getArtefactType(pub.artefactId);
         const path = type === "flat-file" ? "flat-file" : "json-file";
-        const link = `/blob-explorer-${path}?artefactId=${pub.artefactId}`;
+        const encodedArtefactId = encodeURIComponent(pub.artefactId);
+        const link = `/blob-explorer-${path}?artefactId=${encodedArtefactId}`;
+        const escapedArtefactId = escapeHtml(pub.artefactId);
 
         return [
           {
-            html: `<a href="${link}" class="govuk-link">${pub.artefactId}</a>`
+            html: `<a href="${link}" class="govuk-link">${escapedArtefactId}</a>`
           },
           {
             text: pub.listType

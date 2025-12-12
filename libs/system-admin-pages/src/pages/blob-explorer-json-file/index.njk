@@ -12,7 +12,7 @@
 
     {% if error %}
       {{ govukErrorSummary({
-        titleText: "There is a problem",
+        titleText: errorSummaryTitle,
         errorList: [
           {
             text: error

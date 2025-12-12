@@ -9,6 +9,7 @@ interface TestPublicationData {
   artefactId: string;
   locationId: number;
   locationName: string;
+  userId: string;
 }
 
 const testPublicationMap = new Map<string, TestPublicationData>();
@@ -84,12 +85,31 @@ async function createTestPublication(): Promise<TestPublicationData> {
     artefactId,
     locationId: location.locationId,
     locationName: location.name,
+    userId: testUser.userId,
   };
 }
 
 async function deleteTestPublication(publicationData: TestPublicationData): Promise<void> {
   try {
     if (!publicationData.artefactId) return;
+
+    // Delete subscription first (foreign key constraint)
+    try {
+      await prisma.subscription.deleteMany({
+        where: { userId: publicationData.userId },
+      });
+    } catch (error) {
+      console.log("Subscription cleanup error:", error);
+    }
+
+    // Delete test user
+    try {
+      await prisma.user.delete({
+        where: { userId: publicationData.userId },
+      });
+    } catch (error) {
+      console.log("User cleanup error:", error);
+    }
 
     // Delete artefact
     await prisma.artefact.delete({
@@ -126,13 +146,13 @@ test.describe("Blob Explorer", () => {
       await expect(page.getByRole("heading", { name: /System Admin Dashboard/i })).toBeVisible();
 
       // Find and click Blob Explorer tile
-      const blobExplorerTile = page.locator('a.admin-tile[href="/blob-explorer"]');
+      const blobExplorerTile = page.locator('a.admin-tile[href="/blob-explorer-locations"]');
       await expect(blobExplorerTile).toBeVisible();
       await expect(blobExplorerTile).toContainText("Blob Explorer");
       await blobExplorerTile.click();
 
       // STEP 2: Verify Blob Explorer Locations page
-      await expect(page).toHaveURL("/blob-explorer");
+      await expect(page).toHaveURL("/blob-explorer-locations");
       await expect(page.getByRole("heading", { name: /Blob Explorer Locations/i, level: 1 })).toBeVisible();
 
       // Test Welsh translation on locations page
@@ -157,12 +177,12 @@ test.describe("Blob Explorer", () => {
       await expect(locationTable).toBeVisible();
 
       // Find row with our test location and click it
-      const locationLink = page.locator(`a[href*="/blob-explorer/publications?locationId=${publicationData.locationId}"]`).first();
+      const locationLink = page.locator(`a[href*="/blob-explorer-publications?locationId=${publicationData.locationId}"]`).first();
       await expect(locationLink).toBeVisible();
       await locationLink.click();
 
       // STEP 4: Verify Publications page
-      await expect(page).toHaveURL(new RegExp(`/blob-explorer/publications.*locationId=${publicationData.locationId}`));
+      await expect(page).toHaveURL(new RegExp(`/blob-explorer-publications.*locationId=${publicationData.locationId}`));
       await expect(page.getByRole("heading", { name: /Blob Explorer Publications/i })).toBeVisible();
 
       // Test Welsh on publications page
@@ -182,12 +202,12 @@ test.describe("Blob Explorer", () => {
       const publicationsTable = page.locator("table.govuk-table");
       await expect(publicationsTable).toBeVisible();
 
-      const artefactLink = page.locator(`a[href*="/blob-explorer/json-file?artefactId=${publicationData.artefactId}"]`).first();
+      const artefactLink = page.locator(`a[href*="/blob-explorer-json-file?artefactId=${publicationData.artefactId}"]`).first();
       await expect(artefactLink).toBeVisible();
       await artefactLink.click();
 
       // STEP 6: Verify JSON File page with metadata
-      await expect(page).toHaveURL(new RegExp(`/blob-explorer/json-file.*artefactId=${publicationData.artefactId}`));
+      await expect(page).toHaveURL(new RegExp(`/blob-explorer-json-file.*artefactId=${publicationData.artefactId}`));
       await expect(page.getByRole("heading", { name: /Blob Explorer – JSON file/i })).toBeVisible();
 
       // Verify metadata table is visible
@@ -231,7 +251,7 @@ test.describe("Blob Explorer", () => {
       await resubmitButton.click();
 
       // STEP 10: Verify confirmation page
-      await expect(page).toHaveURL(new RegExp(`/blob-explorer/confirm-resubmission.*artefactId=${publicationData.artefactId}`));
+      await expect(page).toHaveURL(new RegExp(`/blob-explorer-confirm-resubmission.*artefactId=${publicationData.artefactId}`));
       await expect(page.getByRole("heading", { name: /Confirm subscription re-submission/i })).toBeVisible();
 
       // Verify summary table
@@ -267,7 +287,7 @@ test.describe("Blob Explorer", () => {
       await confirmButton.click();
 
       // STEP 12: Verify success page
-      await expect(page).toHaveURL("/blob-explorer/resubmission-success");
+      await expect(page).toHaveURL("/blob-explorer-resubmission-success");
       await expect(page.getByRole("heading", { name: /Submission re-submitted/i })).toBeVisible();
 
       // Verify success panel/banner
@@ -289,14 +309,14 @@ test.describe("Blob Explorer", () => {
 
       // STEP 13: Test POST/Redirect/GET pattern - browser back should not re-submit
       await page.goBack();
-      await expect(page).toHaveURL("/blob-explorer/resubmission-success");
+      await expect(page).toHaveURL("/blob-explorer-resubmission-success");
       // Should still be on success page, not trigger another submission
 
       // STEP 14: Navigate back to locations
       const locationsLink = page.getByRole("link", { name: /Blob explorer – Locations/i });
       await expect(locationsLink).toBeVisible();
       await locationsLink.click();
-      await expect(page).toHaveURL("/blob-explorer");
+      await expect(page).toHaveURL("/blob-explorer-locations");
 
     } finally {
       // Cleanup test publication

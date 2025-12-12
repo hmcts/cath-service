@@ -189,5 +189,57 @@ describe("blob-explorer-publications page", () => {
         })
       );
     });
+
+    it("should escape HTML in artefactId to prevent XSS", async () => {
+      const mockPublications = [
+        {
+          artefactId: '<script>alert("XSS")</script>',
+          listType: "Test List",
+          displayFrom: "2024-01-01T00:00:00Z",
+          displayTo: "2024-01-02T00:00:00Z"
+        }
+      ];
+
+      vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
+      vi.mocked(publication.getArtefactType).mockResolvedValue("json");
+
+      const handler = GET[1];
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0];
+      const tableRows = renderCall[1].tableRows;
+      const htmlContent = tableRows[0][0].html;
+
+      // Verify HTML entities are escaped
+      expect(htmlContent).toContain("&lt;script&gt;");
+      expect(htmlContent).toContain("&lt;/script&gt;");
+      expect(htmlContent).not.toContain("<script>");
+      expect(htmlContent).not.toContain("</script>");
+    });
+
+    it("should URL-encode artefactId in query parameters", async () => {
+      const mockPublications = [
+        {
+          artefactId: "test id with spaces & special=chars",
+          listType: "Test List",
+          displayFrom: "2024-01-01T00:00:00Z",
+          displayTo: "2024-01-02T00:00:00Z"
+        }
+      ];
+
+      vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
+      vi.mocked(publication.getArtefactType).mockResolvedValue("json");
+
+      const handler = GET[1];
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0];
+      const tableRows = renderCall[1].tableRows;
+      const htmlContent = tableRows[0][0].html;
+
+      // Verify URL encoding
+      expect(htmlContent).toContain("artefactId=test%20id%20with%20spaces%20%26%20special%3Dchars");
+      expect(htmlContent).not.toContain("artefactId=test id with spaces & special=chars");
+    });
   });
 });

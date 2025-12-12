@@ -19,6 +19,17 @@ function formatDateTime(isoString: string): string {
   });
 }
 
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const locale = (req.query.lng === "cy" ? "cy" : "en") as "en" | "cy";
   const t = getTranslations(locale);
@@ -44,7 +55,7 @@ const getHandler = async (req: Request, res: Response) => {
     res.render("blob-explorer-json-file/index", {
       ...t,
       metadata,
-      jsonContent: jsonContent ? JSON.stringify(jsonContent, null, 2) : null,
+      jsonContent: jsonContent ? escapeHtml(JSON.stringify(jsonContent, null, 2)) : null,
       renderedTemplateUrl,
       formatDateTime,
       locale

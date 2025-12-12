@@ -5,6 +5,7 @@ export const en = {
   jsonFileAccordionTitle: "View Raw JSON Content",
   jsonFileLinkToTemplate: "Link to rendered template",
   jsonFileError: "We could not load the JSON publication.",
+  errorSummaryTitle: "There is a problem",
   metadataArtefactId: "Artefact ID",
   metadataLocationId: "Location ID",
   metadataLocationName: "Location Name",
