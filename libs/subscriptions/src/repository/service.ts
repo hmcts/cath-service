@@ -13,6 +13,27 @@ import {
 
 const MAX_SUBSCRIPTIONS = 50;
 
+function mapSubscriptionToDto(
+  sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
+  locale: string
+): SubscriptionDto {
+  return {
+    subscriptionId: sub.subscriptionId,
+    type: "court",
+    courtOrTribunalName: locale === "cy" && sub.location.welshName ? sub.location.welshName : sub.location.name,
+    locationId: sub.locationId,
+    dateAdded: sub.dateAdded
+  };
+}
+
+interface SubscriptionDto {
+  subscriptionId: string;
+  type: "court" | "case";
+  courtOrTribunalName: string;
+  locationId: number;
+  dateAdded: Date;
+}
+
 export async function createSubscription(userId: string, locationId: string) {
   const locationValid = await validateLocationId(locationId);
   if (!locationValid) {
@@ -102,27 +123,6 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
     added: toAdd.length,
     removed: toDelete.length
   };
-}
-
-function mapSubscriptionToDto(
-  sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
-  locale: string
-): SubscriptionDto {
-  return {
-    subscriptionId: sub.subscriptionId,
-    type: "court",
-    courtOrTribunalName: locale === "cy" && sub.location.welshName ? sub.location.welshName : sub.location.name,
-    locationId: sub.locationId,
-    dateAdded: sub.dateAdded
-  };
-}
-
-interface SubscriptionDto {
-  subscriptionId: string;
-  type: "court" | "case";
-  courtOrTribunalName: string;
-  locationId: number;
-  dateAdded: Date;
 }
 
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
