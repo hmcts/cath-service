@@ -6,7 +6,8 @@ function syncRowCheckboxes(rowCheckboxes: NodeListOf<HTMLInputElement>, isChecke
 
 function updateSelectAllState(selectAllCheckbox: HTMLInputElement, rowCheckboxes: NodeListOf<HTMLInputElement>) {
   const checkboxArray = Array.from(rowCheckboxes);
-  const allChecked = checkboxArray.every((checkbox) => checkbox.checked);
+  const hasCheckboxes = checkboxArray.length > 0;
+  const allChecked = hasCheckboxes && checkboxArray.every((checkbox) => checkbox.checked);
   const someChecked = checkboxArray.some((checkbox) => checkbox.checked);
 
   selectAllCheckbox.checked = allChecked;
@@ -20,6 +21,7 @@ function setupSelectAllCheckbox(selectAllCheckbox: HTMLInputElement) {
   const rowCheckboxes = document.querySelectorAll<HTMLInputElement>(`#${tableId} .row-checkbox`);
 
   selectAllCheckbox.addEventListener("change", () => {
+    selectAllCheckbox.indeterminate = false;
     syncRowCheckboxes(rowCheckboxes, selectAllCheckbox.checked);
   });
 
@@ -28,6 +30,8 @@ function setupSelectAllCheckbox(selectAllCheckbox: HTMLInputElement) {
       updateSelectAllState(selectAllCheckbox, rowCheckboxes);
     });
   });
+
+  updateSelectAllState(selectAllCheckbox, rowCheckboxes);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
