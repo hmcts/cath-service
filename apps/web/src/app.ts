@@ -10,6 +10,9 @@ import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-commo
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { moduleRoot as sjpModuleRoot, pageRoutes as sjpRoutes } from "@hmcts/sjp/config";
+import { moduleRoot as sjpPressListModuleRoot, pageRoutes as sjpPressListRoutes } from "@hmcts/sjp-press-list/config";
+import { moduleRoot as sjpPublicListModuleRoot, pageRoutes as sjpPublicListRoutes } from "@hmcts/sjp-public-list/config";
 import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
@@ -64,7 +67,10 @@ export async function createApp(): Promise<Express> {
     civilFamilyCauseListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
-    verifiedPagesModuleRoot
+    verifiedPagesModuleRoot,
+    sjpModuleRoot,
+    sjpPressListModuleRoot,
+    sjpPublicListModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
@@ -117,6 +123,9 @@ export async function createApp(): Promise<Express> {
 
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
+  app.use(await createSimpleRouter(sjpRoutes, pageRoutes));
+  app.use(await createSimpleRouter(sjpPressListRoutes, pageRoutes));
+  app.use(await createSimpleRouter(sjpPublicListRoutes, pageRoutes));
 
   // Register file upload middleware for admin pages
   const upload = createFileUpload();
