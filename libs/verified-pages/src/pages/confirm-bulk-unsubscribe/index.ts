@@ -44,6 +44,56 @@ const getHandler = async (req: Request, res: Response) => {
   }
 };
 
+async function renderValidationError(req: Request, res: Response, selectedIds: string[], userId: string, locale: string, t: typeof en) {
+  try {
+    const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, userId, locale);
+    const caseSubscriptions = subscriptions.filter((sub) => sub.type === "case");
+    const courtSubscriptions = subscriptions.filter((sub) => sub.type === "court");
+
+    if (!res.locals.navigation) {
+      res.locals.navigation = {};
+    }
+    res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+    return res.render("confirm-bulk-unsubscribe/index", {
+      ...t,
+      caseSubscriptions,
+      courtSubscriptions,
+      hasCaseSubscriptions: caseSubscriptions.length > 0,
+      hasCourtSubscriptions: courtSubscriptions.length > 0,
+      errors: [
+        {
+          text: t.errorNoRadioMessage,
+          href: t.errorNoRadioHref
+        }
+      ],
+      csrfToken: (req as any).csrfToken?.() || ""
+    });
+  } catch (error) {
+    console.error("Error rendering validation error:", error);
+    return res.redirect("/bulk-unsubscribe");
+  }
+}
+
+async function processUnsubscribe(req: Request, res: Response, selectedIds: string[], userId: string) {
+  if (selectedIds.length === 0) {
+    return res.redirect("/bulk-unsubscribe");
+  }
+
+  try {
+    await deleteSubscriptionsByIds(selectedIds, userId);
+
+    if (req.session.bulkUnsubscribe) {
+      req.session.bulkUnsubscribe = {};
+    }
+
+    return res.redirect("/bulk-unsubscribe-success");
+  } catch (error) {
+    console.error("Error deleting subscriptions:", error);
+    return res.redirect("/bulk-unsubscribe");
+  }
+}
+
 const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
@@ -57,35 +107,7 @@ const postHandler = async (req: Request, res: Response) => {
   const confirm = req.body.confirm;
 
   if (!confirm) {
-    try {
-      const subscriptions = await getSubscriptionDetailsForConfirmation(selectedIds, userId, locale);
-
-      const caseSubscriptions = subscriptions.filter((sub) => sub.type === "case");
-      const courtSubscriptions = subscriptions.filter((sub) => sub.type === "court");
-
-      if (!res.locals.navigation) {
-        res.locals.navigation = {};
-      }
-      res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
-
-      return res.render("confirm-bulk-unsubscribe/index", {
-        ...t,
-        caseSubscriptions,
-        courtSubscriptions,
-        hasCaseSubscriptions: caseSubscriptions.length > 0,
-        hasCourtSubscriptions: courtSubscriptions.length > 0,
-        errors: [
-          {
-            text: t.errorNoRadioMessage,
-            href: t.errorNoRadioHref
-          }
-        ],
-        csrfToken: (req as any).csrfToken?.() || ""
-      });
-    } catch (error) {
-      console.error("Error rendering validation error:", error);
-      return res.redirect("/bulk-unsubscribe");
-    }
+    return renderValidationError(req, res, selectedIds, userId, locale, t);
   }
 
   if (confirm === "no") {
@@ -96,22 +118,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (confirm === "yes") {
-    if (selectedIds.length === 0) {
-      return res.redirect("/bulk-unsubscribe");
-    }
-
-    try {
-      await deleteSubscriptionsByIds(selectedIds, userId);
-
-      if (req.session.bulkUnsubscribe) {
-        req.session.bulkUnsubscribe = {};
-      }
-
-      return res.redirect("/bulk-unsubscribe-success");
-    } catch (error) {
-      console.error("Error deleting subscriptions:", error);
-      return res.redirect("/bulk-unsubscribe");
-    }
+    return processUnsubscribe(req, res, selectedIds, userId);
   }
 
   return res.redirect("/bulk-unsubscribe");

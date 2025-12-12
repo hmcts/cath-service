@@ -80,7 +80,12 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/sign-in");
   }
 
-  const selectedIds = Array.isArray(req.body.subscriptions) ? req.body.subscriptions : req.body.subscriptions ? [req.body.subscriptions] : [];
+  let selectedIds: string[] = [];
+  if (Array.isArray(req.body.subscriptions)) {
+    selectedIds = req.body.subscriptions;
+  } else if (req.body.subscriptions) {
+    selectedIds = [req.body.subscriptions];
+  }
 
   if (selectedIds.length === 0) {
     const userId = req.user.id;

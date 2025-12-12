@@ -1,26 +1,36 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const selectAllCheckboxes = document.querySelectorAll<HTMLInputElement>(".select-all-checkbox");
+function syncRowCheckboxes(rowCheckboxes: NodeListOf<HTMLInputElement>, isChecked: boolean) {
+  rowCheckboxes.forEach((checkbox) => {
+    checkbox.checked = isChecked;
+  });
+}
 
-  selectAllCheckboxes.forEach((selectAllCheckbox) => {
-    const tableId = selectAllCheckbox.dataset.table;
-    if (!tableId) return;
+function updateSelectAllState(selectAllCheckbox: HTMLInputElement, rowCheckboxes: NodeListOf<HTMLInputElement>) {
+  const checkboxArray = Array.from(rowCheckboxes);
+  const allChecked = checkboxArray.every((checkbox) => checkbox.checked);
+  const someChecked = checkboxArray.some((checkbox) => checkbox.checked);
 
-    const rowCheckboxes = document.querySelectorAll<HTMLInputElement>(`#${tableId} .row-checkbox`);
+  selectAllCheckbox.checked = allChecked;
+  selectAllCheckbox.indeterminate = someChecked && !allChecked;
+}
 
-    selectAllCheckbox.addEventListener("change", () => {
-      rowCheckboxes.forEach((checkbox) => {
-        checkbox.checked = selectAllCheckbox.checked;
-      });
-    });
+function setupSelectAllCheckbox(selectAllCheckbox: HTMLInputElement) {
+  const tableId = selectAllCheckbox.dataset.table;
+  if (!tableId) return;
 
-    rowCheckboxes.forEach((rowCheckbox) => {
-      rowCheckbox.addEventListener("change", () => {
-        const allChecked = Array.from(rowCheckboxes).every((checkbox) => checkbox.checked);
-        const someChecked = Array.from(rowCheckboxes).some((checkbox) => checkbox.checked);
+  const rowCheckboxes = document.querySelectorAll<HTMLInputElement>(`#${tableId} .row-checkbox`);
 
-        selectAllCheckbox.checked = allChecked;
-        selectAllCheckbox.indeterminate = someChecked && !allChecked;
-      });
+  selectAllCheckbox.addEventListener("change", () => {
+    syncRowCheckboxes(rowCheckboxes, selectAllCheckbox.checked);
+  });
+
+  rowCheckboxes.forEach((rowCheckbox) => {
+    rowCheckbox.addEventListener("change", () => {
+      updateSelectAllState(selectAllCheckbox, rowCheckboxes);
     });
   });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const selectAllCheckboxes = document.querySelectorAll<HTMLInputElement>(".select-all-checkbox");
+  selectAllCheckboxes.forEach(setupSelectAllCheckbox);
 });
