@@ -10,7 +10,7 @@ import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-commo
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as publicPagesModuleRoot, pageRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import { moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
+import { apiRoutes as systemAdminApiRoutes, moduleRoot as systemAdminModuleRoot, pageRoutes as systemAdminPageRoutes } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
@@ -97,6 +97,9 @@ export async function createApp(): Promise<Express> {
 
   // Register API routes for location autocomplete
   app.use(await createSimpleRouter(locationApiRoutes));
+
+  // Register API routes for system admin (file serving)
+  app.use(await createSimpleRouter(systemAdminApiRoutes));
 
   // Register civil-and-family-daily-cause-list routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
