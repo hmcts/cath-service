@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import * as ExcelJS from "exceljs";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
@@ -8,6 +9,15 @@ import { loginWithSSO } from "../utils/sso-helpers.js";
 // 2. Crown copyright logo link missing accessible text (WCAG 2.4.4, 4.1.2)
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
+
+// Helper function to create a minimal valid Excel file
+async function createMinimalExcelFile(): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Sheet1");
+  worksheet.addRow(["Test", "Data"]);
+  worksheet.addRow(["Value1", "Value2"]);
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
 
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {
@@ -43,7 +53,7 @@ async function navigateToSummaryPage(page: Page) {
   await fileInput.setInputFiles({
     name: "test-document.xlsx",
     mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+    buffer: await createMinimalExcelFile()
   });
 
   await page.getByRole("button", { name: /continue/i }).click();
@@ -93,7 +103,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await fileInput.setInputFiles({
         name: "test-keyboard.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+        buffer: await createMinimalExcelFile()
       });
 
       await page.getByRole("button", { name: /continue/i }).click();
@@ -161,7 +171,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await fileInput.setInputFiles({
         name: "test-hearing-list.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+        buffer: await createMinimalExcelFile()
       });
 
       // Step 3: Submit form and verify navigation to summary
@@ -409,7 +419,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await fileInput.setInputFiles({
         name: "test.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+        buffer: await createMinimalExcelFile()
       });
 
       const continueButton = page.getByRole("button", { name: /continue/i });
@@ -462,7 +472,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await fileInput.setInputFiles({
         name: "test.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+        buffer: await createMinimalExcelFile()
       });
 
       await page.selectOption('select[name="listType"]', "1");
@@ -708,7 +718,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await fileInput.setInputFiles({
         name: "second-upload.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+        buffer: await createMinimalExcelFile()
       });
 
       await page.getByRole("button", { name: /continue/i }).click();
@@ -748,7 +758,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await fileInput.setInputFiles({
         name: "test-mobile.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: Buffer.from("PK\x03\x04") // Mock Excel file header
+        buffer: await createMinimalExcelFile()
       });
 
       await page.getByRole("button", { name: /continue/i }).click();
