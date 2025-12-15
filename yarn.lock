@@ -4354,10 +4354,7 @@ __metadata:
     "@azure/keyvault-secrets": "npm:4.10.0"
     "@hmcts/postgres": "npm:*"
     "@playwright/test": "npm:1.57.0"
-    "@types/node": "npm:24.10.1"
     exceljs: "npm:4.4.0"
-    typescript: "npm:5.9.3"
-    vitest: "npm:4.0.15"
   languageName: unknown
   linkType: soft
 
