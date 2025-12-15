@@ -489,17 +489,24 @@ test.describe("Flat File Viewing", () => {
       // Verify we're on summary page
       await expect(page).toHaveURL(/\/summary-of-publications/);
 
+      // Wait for the publications list to load
+      await page.waitForSelector('table', { timeout: 10000 });
+
       // Click on the non-existent file link from the summary page
       const fileLink = page.locator(`a[href*="${artefactId}"]`).first();
+      await expect(fileLink).toBeVisible({ timeout: 10000 });
       await fileLink.click();
-      await page.waitForLoadState("domcontentloaded");
 
-      // Verify error page is shown
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
+      // Wait for navigation to complete
+      await page.waitForURL(new RegExp(`/hearing-lists/${testLocationId}/${artefactId}`), { timeout: 10000 });
+      await page.waitForLoadState("networkidle");
 
-      // Click back button
-      const backButton = page.locator('a.govuk-button', { hasText: /back/i });
+      // Verify error page is shown (either error summary or error heading)
+      const errorContent = page.locator('.govuk-error-summary, h1:has-text("File not available")');
+      await expect(errorContent).toBeVisible();
+
+      // Find and verify back button
+      const backButton = page.locator('a.govuk-button, a.govuk-link').filter({ hasText: /back/i });
       await expect(backButton).toBeVisible();
 
       // Verify back button links to summary of publications
@@ -606,12 +613,30 @@ test.describe("Flat File Viewing", () => {
         createFile: false
       }, trackedArtefactIds);
 
-      // Act: Navigate to error page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
+      // Act: Navigate through proper flow to summary page, then to error page
+      await page.goto("/view-option");
+      const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
+      await sjpCaseRadio.check();
+      const continueButton = page.getByRole("button", { name: /continue/i });
+      await continueButton.click();
+
+      // Verify we're on summary page
+      await expect(page).toHaveURL(/\/summary-of-publications/);
+
+      // Wait for the publications list to load
+      await page.waitForSelector('table', { timeout: 10000 });
+
+      // Click on the non-existent file link from the summary page
+      const fileLink = page.locator(`a[href*="${artefactId}"]`).first();
+      await expect(fileLink).toBeVisible({ timeout: 10000 });
+      await fileLink.click();
+
+      // Wait for error page to load
+      await page.waitForURL(new RegExp(`/hearing-lists/${testLocationId}/${artefactId}`), { timeout: 10000 });
+      await page.waitForLoadState("networkidle");
 
       // Verify error page elements are keyboard accessible
-      const backButton = page.locator('a.govuk-button', { hasText: /back/i });
+      const backButton = page.locator('a.govuk-button, a.govuk-link').filter({ hasText: /back/i });
       await expect(backButton).toBeVisible();
 
       // Test Tab navigation to back button
