@@ -1,4 +1,3 @@
-// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
 import ExcelJSPkg from "exceljs";
 
 const { Workbook } = ExcelJSPkg;
