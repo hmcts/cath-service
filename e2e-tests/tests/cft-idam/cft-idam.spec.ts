@@ -33,7 +33,7 @@ test.describe('CFT IDAM Login Flow', () => {
     await assertAuthenticated(page);
   });
 
-  test('User with rejected role (citizen) is redirected to cft-rejected page', async ({ page }) => {
+  test('User with rejected role (citizen) is redirected to cft-rejected page @nightly', async ({ page }) => {
     // Note: The "invalid" account is actually valid but has a rejected role (citizen)
     await page.goto('/sign-in');
 
@@ -58,7 +58,7 @@ test.describe('CFT IDAM Login Flow', () => {
     await expect(heading).toBeVisible();
   });
 
-  test('Language and query parameters are preserved through CFT IDAM flow', async ({ page }) => {
+  test('Language and query parameters are preserved through CFT IDAM flow @nightly', async ({ page }) => {
     // Test 1: Language parameter is preserved through CFT IDAM redirect
     await page.goto('/sign-in?lng=cy');
 
@@ -105,7 +105,7 @@ test.describe('CFT IDAM Login Flow', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('Authorization flow handles errors and protected resource access', async ({ page }) => {
+  test('Authorization flow handles errors and protected resource access @nightly', async ({ page }) => {
     // Test 1: Direct access to protected resource redirects to sign-in
     await page.goto('/account-home');
     await expect(page).toHaveURL(/sign-in/);
@@ -157,7 +157,7 @@ test.describe('CFT IDAM Login Flow', () => {
 });
 
 test.describe('CFT IDAM Session Management', () => {
-  test('Complete session lifecycle: login, navigation, reload, and logout', async ({ page }) => {
+  test('Complete session lifecycle: login, navigation, reload, and logout @nightly', async ({ page }) => {
     // Test 1: Accessing protected route without session redirects to sign-in
     await page.goto('/account-home');
     await expect(page).toHaveURL(/sign-in/);
@@ -195,7 +195,7 @@ test.describe('CFT IDAM Session Management', () => {
     await expect(page).toHaveURL('/session-logged-out');
   });
 
-  test('Multiple concurrent sessions from same user are handled correctly', async ({ browser }) => {
+  test('Multiple concurrent sessions from same user are handled correctly @nightly', async ({ browser }) => {
     const context1 = await browser.newContext();
     const page1 = await context1.newPage();
     const context2 = await browser.newContext();
@@ -239,7 +239,7 @@ test.describe('CFT IDAM Session Management', () => {
 });
 
 test.describe('CFT IDAM Rejected Page', () => {
-  test('CFT rejected page displays correct content and is accessible', async ({ page }) => {
+  test('CFT rejected page displays correct content and is accessible @nightly', async ({ page }) => {
     // Enable when CFT_REJECTED_ROLE_ACCOUNT is available
 
     // Navigate to rejected page (normally after authentication)
@@ -270,7 +270,7 @@ test.describe('CFT IDAM Rejected Page', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('CFT rejected page supports keyboard navigation', async ({ page }) => {
+  test('CFT rejected page supports keyboard navigation @nightly', async ({ page }) => {
     await page.goto('/cft-rejected');
 
     // Tab through interactive elements

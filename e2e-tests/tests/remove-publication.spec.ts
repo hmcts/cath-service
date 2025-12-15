@@ -93,7 +93,7 @@ test.describe("Remove Publication Flow", () => {
     await expect(page.locator('button:has-text("Continue")')).toBeVisible();
   });
 
-  test("should show validation error when submitting without location", async ({ page }) => {
+  test("should show validation error when submitting without location @nightly", async ({ page }) => {
     await page.goto("/remove-list-search");
 
     // Handle auth redirect if needed
@@ -202,7 +202,7 @@ test.describe("Remove Publication Flow", () => {
     // await expect(page.locator('a:has-text("Home")')).toBeVisible();
   });
 
-  test("should support Welsh language on find page", async ({ page }) => {
+  test("should support Welsh language on find page @nightly", async ({ page }) => {
     // beforeEach already navigated to admin-dashboard and logged in
     // Now just navigate to the Welsh page - should not trigger another SSO redirect
     await page.goto("/remove-list-search?lng=cy");
@@ -214,7 +214,7 @@ test.describe("Remove Publication Flow", () => {
     await expect(page.locator('button:has-text("Parhau")')).toBeVisible();
   });
 
-  test("should pass accessibility checks on find page", async ({ page }) => {
+  test("should pass accessibility checks on find page @nightly", async ({ page }) => {
     await page.goto("/remove-list-search");
 
     // Handle auth redirect if needed
