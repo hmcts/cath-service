@@ -202,11 +202,15 @@ libs/my-feature/
 │   └── schema.prisma           # Prisma schema file
 └── src/
     ├── routes/                 # API routes (auto-discovered)
-    │   └── my-api.ts          # API route file (if needed)
+    │   └── my-api.ts           # API route file (if needed)
     ├── pages/                  # Page routes (auto-discovered)
-    │   ├── my-page.ts          # Controller with GET/POST exports
-    │   └── my-page.njk         # Nunjucks template
-    ├── locales/                # i18n translations (optional)
+    │   └── my-page/            # /my-page/ page
+    │       ├── cy.ts           # Page Welsh content
+    │       ├── en.ts           # Page English content
+    │       ├── index.ts        # Controller with GET/POST exports
+    │       ├── index.test.ts   # Unit tests for controller
+    │       └── index.njk       # Nunjucks template
+    ├── locales/                # Shared i18n translations (optional)
     │   ├── en.ts               # English translations
     │   └── cy.ts               # Welsh translations
     ├── views/                  # Shared templates (optional)
@@ -225,16 +229,8 @@ libs/my-feature/
 ```typescript
 // libs/[module]/src/pages/[page-name].ts
 import type { Request, Response } from "express";
-
-const en = {
-  title: "My Page Title",
-  description: "Page description"
-};
-
-const cy = {
-  title: "Teitl Fy Nhudalen",
-  description: "Disgrifiad tudalen"
-};
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (_req: Request, res: Response) => {
   res.render("my-page", { en, cy });
@@ -249,7 +245,7 @@ export const POST = async (req: Request, res: Response) => {
 
 ```html
 <!-- libs/[my-module]/src/pages/[page-name].njk -->
-{% extends "layouts/base-templates.njk" %}
+{% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
@@ -297,7 +293,7 @@ export const POST = async (req: Request, res: Response) => {
 - Common error messages
 - Content used by multiple pages
 
-**Page-Specific Content** (goes in controllers):
+**Page-Specific Content** (goes in en.ts and cy.ts files next to controllers):
 - Page titles
 - Section headings
 - Body text
@@ -313,7 +309,6 @@ Every page must support both English and Welsh:
 2. **In Templates**: Use the current language data automatically selected by the i18n middleware
 3. **In Locale Files**: Maintain the same structure between en.ts and cy.ts
 4. **Testing**: Always test pages with `?lng=cy` query parameter to verify Welsh content
-
 
 ### Express Middleware Pattern
 
@@ -492,9 +487,6 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
   - **IMPORTANT**: Always add `.js` extension to relative imports (e.g., `import { foo } from "./bar.js"`)
   - This is required for ESM with Node.js "nodenext" module resolution
   - Applies even when importing TypeScript files (they compile to .js)
-  - **Enforcement**: TypeScript will error on missing `.js` extensions with:
-    - `"module": "nodenext"` and `"moduleResolution": "nodenext"` in tsconfig.json
-    - Error: "Relative import paths need explicit file extensions in ECMAScript imports"
 - **Linting**: Fix all Biome warnings before commit
 - **No CommonJS**: Use `import`/`export`, never `require()`/`module.exports`
 - **Pinned dependencies**: Specific versions only (`"express": "5.1.0"`) - except peer dependencies
