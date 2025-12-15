@@ -16,6 +16,6 @@ export default {
     {
       heading: "Manage Media Account Requests",
       description: "CTSC assess new media account applications"
-    }
+    } 
   ]
 };
