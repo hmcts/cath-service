@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { convertExcelForListType, getConverterForListType, hasConverterForListType } from "./non-strategic-list-registry.js";
 

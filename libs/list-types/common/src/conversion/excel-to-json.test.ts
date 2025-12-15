@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { convertExcelToJson, type ExcelConverterConfig, validateDateFormat, validateNoHtmlTags } from "./excel-to-json.js";
 

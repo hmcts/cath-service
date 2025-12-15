@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { Workbook } from "exceljs";
+import * as ExcelJS from "exceljs";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper function to authenticate as System Admin
@@ -44,7 +44,7 @@ async function createValidCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new Workbook();
+  const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
@@ -76,7 +76,7 @@ async function createInvalidCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new Workbook();
+  const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
@@ -108,7 +108,7 @@ async function createInvalidDateCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new Workbook();
+  const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
@@ -140,7 +140,7 @@ async function createHTMLTagsCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new Workbook();
+  const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [

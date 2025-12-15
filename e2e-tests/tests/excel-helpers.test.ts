@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Workbook } from "exceljs";
+import * as ExcelJS from "exceljs";
 
 // Test the Excel helper functions we created for E2E tests
 describe("Excel Helper Functions", () => {
@@ -31,7 +31,7 @@ describe("Excel Helper Functions", () => {
       }
     ];
 
-    const workbook = new Workbook();
+    const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Hearings");
 
     worksheet.columns = [
@@ -62,7 +62,7 @@ describe("Excel Helper Functions", () => {
       }
     ];
 
-    const workbook = new Workbook();
+    const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Hearings");
 
     worksheet.columns = [
@@ -92,7 +92,7 @@ describe("Excel Helper Functions", () => {
     it("should create an Excel file with correct structure", async () => {
       const buffer = await createValidCSTExcel();
 
-      const workbook = new Workbook();
+      const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer);
 
       expect(workbook.worksheets).toHaveLength(1);
@@ -102,7 +102,7 @@ describe("Excel Helper Functions", () => {
     it("should have correct headers", async () => {
       const buffer = await createValidCSTExcel();
 
-      const workbook = new Workbook();
+      const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer);
 
       const worksheet = workbook.worksheets[0];
@@ -119,7 +119,7 @@ describe("Excel Helper Functions", () => {
     it("should have correct data rows", async () => {
       const buffer = await createValidCSTExcel();
 
-      const workbook = new Workbook();
+      const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer);
 
       const worksheet = workbook.worksheets[0];
@@ -142,7 +142,7 @@ describe("Excel Helper Functions", () => {
       expect(buffer).toBeInstanceOf(Buffer);
       expect(buffer.length).toBeGreaterThan(0);
 
-      const workbook = new Workbook();
+      const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer);
 
       const worksheet = workbook.worksheets[0];
@@ -158,7 +158,7 @@ describe("Excel Helper Functions", () => {
       const buffer = await createValidCSTExcel();
 
       // This mimics what our convertExcelToJson does
-      const workbook = new Workbook();
+      const workbook = new ExcelJS.Workbook();
       // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
       await workbook.xlsx.load(buffer);
 
