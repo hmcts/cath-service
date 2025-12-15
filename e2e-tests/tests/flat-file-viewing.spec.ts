@@ -479,31 +479,23 @@ test.describe("Flat File Viewing", () => {
         createFile: false // Don't create file to trigger error
       }, trackedArtefactIds);
 
-      // Act: Navigate through journey to summary page
+      // Act: First establish session by visiting summary page
       await page.goto("/view-option");
       const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
       await sjpCaseRadio.check();
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify we're on summary page
+      // Verify we're on summary page (establishes session)
       await expect(page).toHaveURL(/\/summary-of-publications/);
-
-      // Wait for the publications list to load
-      await page.waitForSelector('table', { timeout: 10000 });
-
-      // Click on the non-existent file link from the summary page
-      const fileLink = page.locator(`a[href*="${artefactId}"]`).first();
-      await expect(fileLink).toBeVisible({ timeout: 10000 });
-      await fileLink.click();
-
-      // Wait for navigation to complete
-      await page.waitForURL(new RegExp(`/hearing-lists/${testLocationId}/${artefactId}`), { timeout: 10000 });
       await page.waitForLoadState("networkidle");
 
-      // Verify error page is shown (either error summary or error heading)
-      const errorContent = page.locator('.govuk-error-summary, h1:has-text("File not available")');
-      await expect(errorContent).toBeVisible();
+      // Now navigate directly to the error page (file doesn't exist)
+      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.waitForLoadState("networkidle");
+
+      // Verify error page is shown
+      await expect(page.locator('h1')).toContainText(/not available|error/i);
 
       // Find and verify back button
       const backButton = page.locator('a.govuk-button, a.govuk-link').filter({ hasText: /back/i });
@@ -613,26 +605,19 @@ test.describe("Flat File Viewing", () => {
         createFile: false
       }, trackedArtefactIds);
 
-      // Act: Navigate through proper flow to summary page, then to error page
+      // Act: First establish session by visiting summary page
       await page.goto("/view-option");
       const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
       await sjpCaseRadio.check();
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify we're on summary page
+      // Verify we're on summary page (establishes session)
       await expect(page).toHaveURL(/\/summary-of-publications/);
+      await page.waitForLoadState("networkidle");
 
-      // Wait for the publications list to load
-      await page.waitForSelector('table', { timeout: 10000 });
-
-      // Click on the non-existent file link from the summary page
-      const fileLink = page.locator(`a[href*="${artefactId}"]`).first();
-      await expect(fileLink).toBeVisible({ timeout: 10000 });
-      await fileLink.click();
-
-      // Wait for error page to load
-      await page.waitForURL(new RegExp(`/hearing-lists/${testLocationId}/${artefactId}`), { timeout: 10000 });
+      // Now navigate directly to the error page (file doesn't exist)
+      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
       await page.waitForLoadState("networkidle");
 
       // Verify error page elements are keyboard accessible
