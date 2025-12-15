@@ -78,7 +78,7 @@ The web and API applications use explicit imports to register modules, enabling 
 ```bash
 mkdir -p libs/my-feature/src/pages      # Page controllers and templates
 mkdir -p libs/my-feature/src/routes     # API routes (optional)
-mkdir -p libs/my-feature/src/locales    # Translation files (optional)
+mkdir -p libs/my-feature/src/locales    # Shared translation files (optional)
 mkdir -p libs/my-feature/src/views      # Shared templates (optional)
 mkdir -p libs/my-feature/src/assets/css # Module styles (optional)
 mkdir -p libs/my-feature/src/assets/js  # Module scripts (optional)
