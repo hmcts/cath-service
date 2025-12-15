@@ -199,7 +199,7 @@ test.describe("Cookie Management", () => {
       expect(policyValue.preferences).toBe("off");
     });
 
-    test("should reflect current cookie preferences", async ({ page }) => {
+    test("should reflect current cookie preferences @nightly", async ({ page }) => {
       // First set some preferences
       await page.goto("/cookie-preferences");
       await page.locator("#analytics-no").check();
@@ -217,7 +217,7 @@ test.describe("Cookie Management", () => {
       await expect(page.locator("#preferences-no")).not.toBeChecked();
     });
 
-    test("should work with Welsh language", async ({ page }) => {
+    test("should work with Welsh language @nightly", async ({ page }) => {
       // Switch to Welsh
       await page.goto("/cookie-preferences?lng=cy");
 
@@ -246,7 +246,7 @@ test.describe("Cookie Management", () => {
   });
 
   test.describe("Cookie Banner JavaScript Behavior", () => {
-    test("should handle accept button click with JavaScript", async ({ page }) => {
+    test("should handle accept button click with JavaScript @nightly", async ({ page }) => {
       await page.goto("/");
 
       // Wait for JavaScript to load
@@ -267,7 +267,7 @@ test.describe("Cookie Management", () => {
       expect(policyValue).toMatch(/"analytics":(?:true|"on")/);
     });
 
-    test("should handle reject button click with JavaScript", async ({ page }) => {
+    test("should handle reject button click with JavaScript @nightly", async ({ page }) => {
       await page.goto("/");
 
       // Wait for JavaScript to load
@@ -290,7 +290,7 @@ test.describe("Cookie Management", () => {
   });
 
   test.describe("Accessibility", () => {
-    test("cookie banner should be accessible", async ({ page }) => {
+    test("cookie banner should be accessible @nightly", async ({ page }) => {
       await page.goto("/");
 
       // The banner should have proper ARIA attributes
@@ -299,7 +299,7 @@ test.describe("Cookie Management", () => {
       await expect(cookieBanner).toHaveAttribute("aria-label", "Cookies on this service");
     });
 
-    test("cookie preferences page should be accessible", async ({ page }) => {
+    test("cookie preferences page should be accessible @nightly", async ({ page }) => {
       await page.goto("/cookie-preferences");
 
       // Check for proper form structure

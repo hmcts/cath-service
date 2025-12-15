@@ -504,7 +504,7 @@ export async function processBlobIngestion(
       artefact_id: artefactId,
       no_match: noMatch,
       message: noMatch
-        ? "Blob ingested but location not found in reference data (no_match=true)"
+        ? "Blob ingested but location not found in reference data"
         : "Blob ingested and published successfully"
     };
   } catch (error) {
@@ -1411,6 +1411,6 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
   "success": true,
   "artefact_id": "550e8400-e29b-41d4-a716-446655440000",
   "no_match": true,
-  "message": "Blob ingested but location not found in reference data (no_match=true)"
+  "message": "Blob ingested but location not found in reference data"
 }
 ```
