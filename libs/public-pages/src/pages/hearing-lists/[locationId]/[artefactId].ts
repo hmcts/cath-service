@@ -53,8 +53,20 @@ export const GET = async (req: Request, res: Response) => {
     });
   }
 
-  const pageTitle = `${result.listTypeName} - ${result.courtName}`;
   const downloadUrl = `/api/flat-file/${result.artefactId}/download`;
+
+  // Check if file is a PDF - only PDFs can be viewed inline
+  const fileExtension = result.fileExtension || ".pdf";
+  const isPdf = fileExtension.toLowerCase() === ".pdf";
+
+  // For non-PDF files (Word, HTML, CSV), redirect directly to download
+  if (!isPdf) {
+    return res.redirect(downloadUrl);
+  }
+
+  // For PDFs, render inline viewer
+  const pageTitle = `${result.listTypeName} - ${result.courtName}`;
+  const contentType = "application/pdf";
 
   return res.render("hearing-lists/[locationId]/[artefactId]", {
     en,
@@ -67,6 +79,7 @@ export const GET = async (req: Request, res: Response) => {
     contentDate: result.contentDate,
     downloadUrl,
     artefactId: result.artefactId,
+    contentType,
     pdfNotSupportedMessage: t.pdfNotSupportedMessage,
     downloadLinkText: t.downloadLinkText
   });

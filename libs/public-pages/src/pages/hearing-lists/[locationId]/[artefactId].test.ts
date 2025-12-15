@@ -221,11 +221,13 @@ describe("Hearing Lists Page Controller", () => {
       courtName: "Test Court",
       listTypeName: "Crown Daily List",
       contentDate: new Date("2025-01-15"),
-      language: "ENGLISH"
+      language: "ENGLISH",
+      fileExtension: ".pdf"
     };
 
     beforeEach(() => {
       mockRequest.params = { locationId: "9", artefactId: "test-artefact-id" };
+      mockResponse.redirect = vi.fn();
     });
 
     it("should render PDF viewer for successful display with English locale", async () => {
@@ -246,6 +248,7 @@ describe("Hearing Lists Page Controller", () => {
         contentDate: mockSuccessResult.contentDate,
         downloadUrl: "/api/flat-file/test-artefact-id/download",
         artefactId: "test-artefact-id",
+        contentType: "application/pdf",
         pdfNotSupportedMessage: expect.any(String),
         downloadLinkText: expect.any(String)
       });
@@ -274,6 +277,7 @@ describe("Hearing Lists Page Controller", () => {
         contentDate: mockSuccessResult.contentDate,
         downloadUrl: "/api/flat-file/test-artefact-id/download",
         artefactId: "test-artefact-id",
+        contentType: "application/pdf",
         pdfNotSupportedMessage: expect.stringContaining("eich porwr"),
         downloadLinkText: expect.stringContaining("Lawrlwytho")
       });
@@ -297,6 +301,7 @@ describe("Hearing Lists Page Controller", () => {
         contentDate: expect.any(Date),
         downloadUrl: expect.stringContaining("/api/flat-file/"),
         artefactId: expect.any(String),
+        contentType: expect.any(String),
         pdfNotSupportedMessage: expect.stringContaining("browser"),
         downloadLinkText: expect.stringContaining("Download")
       });
@@ -345,6 +350,58 @@ describe("Hearing Lists Page Controller", () => {
           artefactId: mockSuccessResult.artefactId
         })
       );
+    });
+
+    it("should redirect to download for Word documents", async () => {
+      const { getFlatFileForDisplay } = await import("../../../flat-file/flat-file-service.js");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({
+        ...mockSuccessResult,
+        fileExtension: ".docx"
+      });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/api/flat-file/test-artefact-id/download");
+      expect(renderSpy).not.toHaveBeenCalled();
+    });
+
+    it("should redirect to download for HTML files", async () => {
+      const { getFlatFileForDisplay } = await import("../../../flat-file/flat-file-service.js");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({
+        ...mockSuccessResult,
+        fileExtension: ".html"
+      });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/api/flat-file/test-artefact-id/download");
+      expect(renderSpy).not.toHaveBeenCalled();
+    });
+
+    it("should redirect to download for CSV files", async () => {
+      const { getFlatFileForDisplay } = await import("../../../flat-file/flat-file-service.js");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({
+        ...mockSuccessResult,
+        fileExtension: ".csv"
+      });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/api/flat-file/test-artefact-id/download");
+      expect(renderSpy).not.toHaveBeenCalled();
+    });
+
+    it("should handle case-insensitive file extensions", async () => {
+      const { getFlatFileForDisplay } = await import("../../../flat-file/flat-file-service.js");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({
+        ...mockSuccessResult,
+        fileExtension: ".DOCX"
+      });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/api/flat-file/test-artefact-id/download");
+      expect(renderSpy).not.toHaveBeenCalled();
     });
   });
 });

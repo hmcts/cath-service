@@ -1,7 +1,7 @@
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
 import { mockListTypes } from "@hmcts/publication";
-import { getContentType, getFileBuffer, getFileName } from "../file-storage/file-retrieval.js";
+import { getContentType, getFileBuffer, getFileExtension, getFileName } from "../file-storage/file-retrieval.js";
 
 export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en") {
   const artefact = await prisma.artefact.findUnique({
@@ -37,13 +37,17 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
   const courtName = locale === "cy" ? location?.welshName || location?.name || "Unknown" : location?.name || "Unknown";
   const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
 
+  // Get file extension from filesystem
+  const fileExtension = await getFileExtension(artefact.artefactId);
+
   return {
     success: true,
     artefactId: artefact.artefactId,
     courtName,
     listTypeName,
     contentDate: artefact.contentDate,
-    language: artefact.language
+    language: artefact.language,
+    fileExtension
   };
 }
 
@@ -71,11 +75,14 @@ export async function getFileForDownload(artefactId: string) {
     return { error: "FILE_NOT_FOUND" as const };
   }
 
+  // Get file extension from filesystem
+  const fileExtension = await getFileExtension(artefact.artefactId);
+
   return {
     success: true,
     fileBuffer,
-    contentType: getContentType(),
-    fileName: getFileName(artefact.artefactId)
+    contentType: getContentType(fileExtension),
+    fileName: getFileName(artefact.artefactId, fileExtension)
   };
 }
 
