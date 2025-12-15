@@ -13,6 +13,14 @@ import {
 
 const MAX_SUBSCRIPTIONS = 50;
 
+interface SubscriptionDto {
+  subscriptionId: string;
+  type: "court" | "case";
+  courtOrTribunalName: string;
+  locationId: number;
+  dateAdded: Date;
+}
+
 function mapSubscriptionToDto(
   sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
   locale: string
@@ -24,14 +32,6 @@ function mapSubscriptionToDto(
     locationId: sub.locationId,
     dateAdded: sub.dateAdded
   };
-}
-
-interface SubscriptionDto {
-  subscriptionId: string;
-  type: "court" | "case";
-  courtOrTribunalName: string;
-  locationId: number;
-  dateAdded: Date;
 }
 
 export async function createSubscription(userId: string, locationId: string) {
