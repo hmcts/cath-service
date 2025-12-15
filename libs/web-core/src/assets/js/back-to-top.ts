@@ -1,5 +1,6 @@
 export function initBackToTop() {
-  const backToTopLink = document.querySelector(".back-to-top-link");
+  const backToTopContainer = document.querySelector(".back-to-top-link");
+  const backToTopLink = backToTopContainer?.querySelector("a");
 
   if (backToTopLink) {
     backToTopLink.addEventListener("click", (event) => {
