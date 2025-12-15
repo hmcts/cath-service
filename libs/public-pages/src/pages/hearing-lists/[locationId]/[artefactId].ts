@@ -17,7 +17,8 @@ export const GET = async (req: Request, res: Response) => {
       error: t.errorInvalidRequest,
       title: t.errorTitle,
       backMessage: t.backMessage,
-      backButton: t.backButton
+      backButton: t.backButton,
+      locationId
     });
   }
 
@@ -49,7 +50,8 @@ export const GET = async (req: Request, res: Response) => {
       error: errorMessage,
       title: t.errorTitle,
       backMessage: t.backMessage,
-      backButton: t.backButton
+      backButton: t.backButton,
+      locationId
     });
   }
 

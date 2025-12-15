@@ -501,13 +501,13 @@ test.describe("Flat File Viewing", () => {
       const backButton = page.locator('a.govuk-button').filter({ hasText: /^back/i });
       await expect(backButton).toBeVisible();
 
-      // Verify back button links to summary of publications
+      // Verify back button links to summary of publications with locationId parameter
       const backHref = await backButton.getAttribute("href");
-      expect(backHref).toBe("/summary-of-publications");
+      expect(backHref).toMatch(/\/summary-of-publications\?locationId=\d+/);
 
       // Click the back button and verify navigation
       await backButton.click();
-      await expect(page).toHaveURL(/\/summary-of-publications/);
+      await expect(page).toHaveURL(/\/summary-of-publications\?locationId=\d+/);
     });
   });
 
@@ -638,9 +638,9 @@ test.describe("Flat File Viewing", () => {
       await backButton.focus();
       await expect(backButton).toBeFocused();
 
-      // Test Enter key activation - should navigate to summary of publications
+      // Test Enter key activation - should navigate to summary of publications with locationId
       await page.keyboard.press("Enter");
-      await expect(page).toHaveURL(/\/summary-of-publications/);
+      await expect(page).toHaveURL(/\/summary-of-publications\?locationId=/);
     });
 
     test("should support keyboard navigation on viewer page", async ({ page }) => {

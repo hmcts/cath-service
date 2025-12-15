@@ -42,7 +42,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.stringContaining("not available"),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: undefined
       });
     });
 
@@ -60,7 +61,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
 
@@ -70,7 +72,12 @@ describe("Hearing Lists Page Controller", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(statusSpy).toHaveBeenCalledWith(400);
-      expect(renderSpy).toHaveBeenCalled();
+      expect(renderSpy).toHaveBeenCalledWith(
+        "hearing-lists/[locationId]/[artefactId]",
+        expect.objectContaining({
+          locationId: undefined
+        })
+      );
     });
 
     it("should use Welsh error messages when locale is cy", async () => {
@@ -88,7 +95,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: undefined
       });
     });
   });
@@ -113,7 +121,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
 
@@ -132,7 +141,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
 
@@ -151,7 +161,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
 
@@ -170,7 +181,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
 
@@ -189,7 +201,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
 
@@ -209,7 +222,8 @@ describe("Hearing Lists Page Controller", () => {
         title: expect.any(String),
         backMessage: expect.any(String),
         backButton: expect.any(String),
-        locale: expect.any(String)
+        locale: expect.any(String),
+        locationId: "9"
       });
     });
   });
