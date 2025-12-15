@@ -501,12 +501,12 @@ test.describe("Flat File Viewing", () => {
       const backButton = page.locator('a.govuk-button', { hasText: /back/i });
       await expect(backButton).toBeVisible();
 
-      // Verify back button uses javascript:history.back()
+      // Verify back button links to summary of publications
       const backHref = await backButton.getAttribute("href");
-      expect(backHref).toBe("javascript:history.back()");
+      expect(backHref).toBe("/summary-of-publications");
 
-      // Verify it works by going back
-      await page.goBack();
+      // Click the back button and verify navigation
+      await backButton.click();
       await expect(page).toHaveURL(/\/summary-of-publications/);
     });
   });
@@ -627,9 +627,9 @@ test.describe("Flat File Viewing", () => {
       await backButton.focus();
       await expect(backButton).toBeFocused();
 
-      // Note: We cannot test Enter key activation with javascript:history.back()
-      // as it would navigate away from the page. The presence of the href and
-      // focus capability is sufficient for accessibility compliance.
+      // Test Enter key activation - should navigate to summary of publications
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/\/summary-of-publications/);
     });
 
     test("should support keyboard navigation on viewer page", async ({ page }) => {
