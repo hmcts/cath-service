@@ -9,6 +9,59 @@ import { canAccessPublication, canAccessPublicationData } from "./service.js";
 
 type AccessCheck = (user: UserProfile | undefined, artefact: Artefact, listType: ListType | undefined) => boolean;
 
+type ErrorData = { title?: string; message?: string; [key: string]: unknown };
+
+function getLocaleData(locale: string, enData: ErrorData, cyData: ErrorData): ErrorData {
+  return locale === "cy" ? cyData : enData;
+}
+
+function renderError(res: Response, status: number, locale: string): void {
+  const enError = errorEn[`error${status}` as keyof typeof errorEn];
+  const cyError = errorCy[`error${status}` as keyof typeof errorCy];
+
+  res.status(status).render(`errors/${status}`, {
+    en: enError,
+    cy: cyError,
+    t: getLocaleData(locale, enError, cyError)
+  });
+}
+
+function render403WithCustomMessage(res: Response, locale: string): void {
+  const enError = {
+    title: errorEn.error403.title,
+    message: errorEn.error403.dataAccessDeniedMessage
+  };
+  const cyError = {
+    title: errorCy.error403.title,
+    message: errorCy.error403.dataAccessDeniedMessage
+  };
+
+  res.status(403).render("errors/403", {
+    en: enError,
+    cy: cyError,
+    t: {
+      ...(locale === "cy" ? errorCy.error403 : errorEn.error403),
+      defaultMessage: locale === "cy" ? errorCy.error403.dataAccessDeniedMessage : errorEn.error403.dataAccessDeniedMessage
+    },
+    title: locale === "cy" ? cyError.title : enError.title,
+    message: locale === "cy" ? cyError.message : enError.message
+  });
+}
+
+function handleAccessDenied(res: Response, locale: string, useCustomMessage: boolean): void {
+  if (useCustomMessage) {
+    render403WithCustomMessage(res, locale);
+    return;
+  }
+  renderError(res, 403, locale);
+}
+
+async function fetchArtefact(publicationId: string): Promise<Artefact | null> {
+  return prisma.artefact.findUnique({
+    where: { artefactId: publicationId }
+  });
+}
+
 /**
  * Creates middleware to check publication access
  * @param checkAccess - Function to check if user can access the publication
@@ -21,62 +74,26 @@ function createPublicationAccessMiddleware(checkAccess: AccessCheck, useCustom40
     const locale = res.locals.locale || "en";
 
     if (!publicationId) {
-      return res.status(400).render("errors/400", {
-        en: errorEn.error400,
-        cy: errorCy.error400,
-        t: locale === "cy" ? errorCy.error400 : errorEn.error400
-      });
+      return renderError(res, 400, locale);
     }
 
     try {
-      const artefact = await prisma.artefact.findUnique({
-        where: { artefactId: publicationId }
-      });
+      const artefact = await fetchArtefact(publicationId);
 
       if (!artefact) {
-        return res.status(404).render("errors/404", {
-          en: errorEn.error404,
-          cy: errorCy.error404,
-          t: locale === "cy" ? errorCy.error404 : errorEn.error404
-        });
+        return renderError(res, 404, locale);
       }
 
       const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
 
       if (!checkAccess(req.user, artefact, listType)) {
-        if (useCustom403Message) {
-          return res.status(403).render("errors/403", {
-            en: {
-              title: errorEn.error403.title,
-              message: errorEn.error403.dataAccessDeniedMessage
-            },
-            cy: {
-              title: errorCy.error403.title,
-              message: errorCy.error403.dataAccessDeniedMessage
-            },
-            t:
-              locale === "cy"
-                ? { ...errorCy.error403, defaultMessage: errorCy.error403.dataAccessDeniedMessage }
-                : { ...errorEn.error403, defaultMessage: errorEn.error403.dataAccessDeniedMessage },
-            title: locale === "cy" ? errorCy.error403.title : errorEn.error403.title,
-            message: locale === "cy" ? errorCy.error403.dataAccessDeniedMessage : errorEn.error403.dataAccessDeniedMessage
-          });
-        }
-        return res.status(403).render("errors/403", {
-          en: errorEn.error403,
-          cy: errorCy.error403,
-          t: locale === "cy" ? errorCy.error403 : errorEn.error403
-        });
+        return handleAccessDenied(res, locale, useCustom403Message);
       }
 
       next();
     } catch (error) {
       console.error("Error checking publication access:", error);
-      return res.status(500).render("errors/500", {
-        en: errorEn.error500,
-        cy: errorCy.error500,
-        t: locale === "cy" ? errorCy.error500 : errorEn.error500
-      });
+      renderError(res, 500, locale);
     }
   };
 }
