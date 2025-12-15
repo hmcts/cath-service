@@ -479,7 +479,7 @@ test.describe("Flat File Viewing", () => {
         createFile: false // Don't create file to trigger error
       }, trackedArtefactIds);
 
-      // Act: Navigate through journey to summary page, then to error page
+      // Act: Navigate through journey to summary page
       await page.goto("/view-option");
       const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
       await sjpCaseRadio.check();
@@ -489,8 +489,9 @@ test.describe("Flat File Viewing", () => {
       // Verify we're on summary page
       await expect(page).toHaveURL(/\/summary-of-publications/);
 
-      // Click flat file that doesn't exist
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      // Click on the non-existent file link from the summary page
+      const fileLink = page.locator(`a[href*="${artefactId}"]`).first();
+      await fileLink.click();
       await page.waitForLoadState("domcontentloaded");
 
       // Verify error page is shown
