@@ -527,6 +527,7 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
 * **KISS**: Keep It Simple, Stupid - Avoid unnecessary complexity. Write code that is easy to understand and maintain.
 * **Immutable**: Data should be immutable by default. Use const and avoid mutations to ensure predictable state.
 * **Side Effects**: Functions should have no side effects. Avoid modifying external state or relying on mutable data.
+* **DRY**: Don't repeat yourself, factor out code used in multiple places.
 
 ## Communication Style
 
