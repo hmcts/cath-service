@@ -27,7 +27,9 @@
       "@hmcts/care-standards-tribunal-weekly-hearing-list": ["libs/list-types/care-standards-tribunal-weekly-hearing-list/src"],
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
-      "@hmcts/subscriptions": ["libs/subscriptions/src"]
+      "@hmcts/subscriptions": ["libs/subscriptions/src"],
+      "@hmcts/list-type-config": ["libs/list-type-config/src"],
+      "@hmcts/list-type-config/config": ["libs/list-type-config/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -1,0 +1,151 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errorList %}
+      {{ govukErrorSummary({
+        titleText: common.errorSummaryTitle,
+        errorList: errorList
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ configureListType.enterDetails.title }}</h1>
+
+    <form method="post" novalidate>
+
+      {{ govukInput({
+        id: "name",
+        name: "name",
+        label: {
+          text: configureListType.enterDetails.nameLabel
+        },
+        value: data.name,
+        errorMessage: errors.name if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "friendlyName",
+        name: "friendlyName",
+        label: {
+          text: configureListType.enterDetails.friendlyNameLabel
+        },
+        value: data.friendlyName,
+        errorMessage: errors.friendlyName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "welshFriendlyName",
+        name: "welshFriendlyName",
+        label: {
+          text: configureListType.enterDetails.welshFriendlyNameLabel
+        },
+        value: data.welshFriendlyName,
+        errorMessage: errors.welshFriendlyName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "shortenedFriendlyName",
+        name: "shortenedFriendlyName",
+        label: {
+          text: configureListType.enterDetails.shortenedFriendlyNameLabel
+        },
+        value: data.shortenedFriendlyName,
+        errorMessage: errors.shortenedFriendlyName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "url",
+        name: "url",
+        label: {
+          text: configureListType.enterDetails.urlLabel
+        },
+        value: data.url,
+        errorMessage: errors.url if errors else undefined
+      }) }}
+
+      {{ govukSelect({
+        id: "defaultSensitivity",
+        name: "defaultSensitivity",
+        label: {
+          text: configureListType.enterDetails.defaultSensitivityLabel
+        },
+        hint: {
+          text: configureListType.enterDetails.defaultSensitivityHint
+        },
+        items: [
+          { value: "", text: "Select an option", selected: not data.defaultSensitivity },
+          { value: "Public", text: "Public", selected: data.defaultSensitivity == "Public" },
+          { value: "Private", text: "Private", selected: data.defaultSensitivity == "Private" },
+          { value: "Classified", text: "Classified", selected: data.defaultSensitivity == "Classified" }
+        ],
+        errorMessage: errors.defaultSensitivity if errors else undefined
+      }) }}
+
+      {{ govukCheckboxes({
+        name: "allowedProvenance",
+        fieldset: {
+          legend: {
+            text: configureListType.enterDetails.allowedProvenanceLabel
+          }
+        },
+        hint: {
+          text: configureListType.enterDetails.allowedProvenanceHint
+        },
+        items: [
+          {
+            value: "CFT_IDAM",
+            text: "CFT_IDAM",
+            checked: checkedProvenance.CFT_IDAM
+          },
+          {
+            value: "B2C",
+            text: "B2C",
+            checked: checkedProvenance.B2C
+          },
+          {
+            value: "COMMON_PLATFORM",
+            text: "COMMON_PLATFORM",
+            checked: checkedProvenance.COMMON_PLATFORM
+          }
+        ],
+        errorMessage: errors.allowedProvenance if errors else undefined
+      }) }}
+
+      {{ govukRadios({
+        name: "isNonStrategic",
+        fieldset: {
+          legend: {
+            text: configureListType.enterDetails.isNonStrategicLabel
+          }
+        },
+        items: [
+          {
+            value: "true",
+            text: configureListType.enterDetails.yesOption,
+            checked: data.isNonStrategic == true
+          },
+          {
+            value: "false",
+            text: configureListType.enterDetails.noOption,
+            checked: data.isNonStrategic == false
+          }
+        ],
+        errorMessage: errors.isNonStrategic if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: common.continue
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

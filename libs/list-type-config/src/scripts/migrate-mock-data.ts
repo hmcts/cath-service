@@ -1,4 +1,6 @@
-export interface ListType {
+import { prisma } from "@hmcts/postgres";
+
+interface MockListType {
   id: number;
   name: string;
   englishFriendlyName: string;
@@ -8,7 +10,7 @@ export interface ListType {
   isNonStrategic: boolean;
 }
 
-export const mockListTypes: ListType[] = [
+const mockListTypes: MockListType[] = [
   {
     id: 1,
     name: "CIVIL_DAILY_CAUSE_LIST",
@@ -85,9 +87,66 @@ export const mockListTypes: ListType[] = [
     id: 9,
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
-    welshFriendlyName: "Welsh placeholder",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true
   }
 ];
+
+async function migrateMockData() {
+  console.log("Starting migration of mock list types to database...");
+
+  const allSubJurisdictions = await prisma.subJurisdiction.findMany();
+
+  if (allSubJurisdictions.length === 0) {
+    console.error("No sub-jurisdictions found in database. Please ensure sub-jurisdictions are populated first.");
+    return;
+  }
+
+  for (const mockListType of mockListTypes) {
+    const existingListType = await prisma.listType.findUnique({
+      where: { name: mockListType.name }
+    });
+
+    if (existingListType) {
+      console.log(`List type "${mockListType.name}" already exists. Skipping...`);
+      continue;
+    }
+
+    try {
+      await prisma.listType.create({
+        data: {
+          name: mockListType.name,
+          friendlyName: mockListType.englishFriendlyName,
+          welshFriendlyName: mockListType.welshFriendlyName,
+          shortenedFriendlyName: mockListType.englishFriendlyName,
+          url: mockListType.urlPath || "",
+          defaultSensitivity: "Public",
+          allowedProvenance: mockListType.provenance,
+          isNonStrategic: mockListType.isNonStrategic,
+          subJurisdictions: {
+            create: allSubJurisdictions.map((sj) => ({
+              subJurisdictionId: sj.subJurisdictionId
+            }))
+          }
+        }
+      });
+
+      console.log(`✓ Migrated list type: ${mockListType.name}`);
+    } catch (error) {
+      console.error(`✗ Failed to migrate list type "${mockListType.name}":`, error);
+    }
+  }
+
+  console.log("Migration complete!");
+}
+
+migrateMockData()
+  .catch((error) => {
+    console.error("Migration failed:", error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

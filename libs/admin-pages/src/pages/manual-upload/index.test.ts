@@ -52,6 +52,37 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+vi.mock("@hmcts/list-type-config", () => ({
+  findStrategicListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 1,
+        name: "CIVIL_DAILY_CAUSE_LIST",
+        friendlyName: "Civil Daily Cause List",
+        shortenedFriendlyName: "Civil Daily Cause List",
+        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil",
+        isNonStrategic: false
+      },
+      {
+        id: 2,
+        name: "FAMILY_DAILY_CAUSE_LIST",
+        friendlyName: "Family Daily Cause List",
+        shortenedFriendlyName: "Family Daily Cause List",
+        welshFriendlyName: "Rhestr Achosion Dyddiol Teulu",
+        isNonStrategic: false
+      },
+      {
+        id: 6,
+        name: "CROWN_DAILY_LIST",
+        friendlyName: "Crown Daily List",
+        shortenedFriendlyName: "Crown Daily List",
+        welshFriendlyName: "Rhestr Ddyddiol y Goron",
+        isNonStrategic: false
+      }
+    ])
+  )
+}));
+
 vi.mock("../../manual-upload/validation.js", () => ({
   validateManualUploadForm: vi.fn(() => [])
 }));

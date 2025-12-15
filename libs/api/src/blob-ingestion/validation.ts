@@ -1,4 +1,5 @@
-import { mockListTypes, validateListTypeJson } from "@hmcts/list-types-common";
+import { findAllListTypes } from "@hmcts/list-type-config";
+import { validateListTypeJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
 import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./repository/model.js";
@@ -46,12 +47,13 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
 
   // Map list type name to ID for internal validation
   let listTypeId: string | undefined;
+  const listTypes = await findAllListTypes();
   if (request.list_type) {
-    const listType = mockListTypes.find((lt) => lt.name === request.list_type);
+    const listType = listTypes.find((lt) => lt.name === request.list_type);
     if (!listType) {
       errors.push({
         field: "list_type",
-        message: `Invalid list type. Allowed values: ${mockListTypes.map((lt) => lt.name).join(", ")}`
+        message: `Invalid list type. Allowed values: ${listTypes.map((lt) => lt.name).join(", ")}`
       });
     } else {
       listTypeId = listType.id.toString();
@@ -131,7 +133,12 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
   // JSON schema validation for hearing_list
   if (listTypeId && request.hearing_list && errors.length === 0) {
     try {
-      const validationResult = await validateListTypeJson(listTypeId, request.hearing_list, mockListTypes);
+      const listTypesInfo = listTypes.map((lt) => ({
+        id: lt.id,
+        name: lt.name,
+        friendlyName: lt.friendlyName
+      }));
+      const validationResult = await validateListTypeJson(listTypeId, request.hearing_list, listTypesInfo);
 
       if (!validationResult.isValid) {
         for (const error of validationResult.errors) {

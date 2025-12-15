@@ -1,0 +1,41 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errorList %}
+      {{ govukErrorSummary({
+        titleText: t.common.errorSummaryTitle,
+        errorList: errorList
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ t.configureListType.selectSubJurisdictions.title }}</h1>
+    <p class="govuk-body">{{ t.configureListType.selectSubJurisdictions.description }}</p>
+
+    <form method="post" novalidate>
+
+      {{ govukCheckboxes({
+        name: "subJurisdictions",
+        fieldset: {
+          legend: {
+            text: t.configureListType.selectSubJurisdictions.title,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        items: items,
+        errorMessage: errors.subJurisdictions if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: t.common.continue
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

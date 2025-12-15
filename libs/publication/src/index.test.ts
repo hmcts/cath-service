@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Language, mockListTypes, mockPublications, Sensitivity } from "./index.js";
+import { Language, mockPublications, Sensitivity } from "./index.js";
 
 describe("Publication Module Exports", () => {
   it("should export Language enum", () => {
@@ -14,12 +14,6 @@ describe("Publication Module Exports", () => {
     expect(Sensitivity.PUBLIC).toBe("PUBLIC");
     expect(Sensitivity.PRIVATE).toBe("PRIVATE");
     expect(Sensitivity.CLASSIFIED).toBe("CLASSIFIED");
-  });
-
-  it("should export mockListTypes array", () => {
-    expect(mockListTypes).toBeDefined();
-    expect(Array.isArray(mockListTypes)).toBe(true);
-    expect(mockListTypes.length).toBeGreaterThan(0);
   });
 
   it("should export mockPublications array", () => {

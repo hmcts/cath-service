@@ -1,6 +1,6 @@
+import { findAllListTypes } from "@hmcts/list-type-config";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -42,10 +42,14 @@ export const GET = async (req: Request, res: Response) => {
     orderBy: [{ lastReceivedDate: "desc" }]
   });
 
+  // Fetch list types from database and create a map for quick lookup
+  const listTypes = await findAllListTypes();
+  const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+    const listType = listTypeMap.get(artefact.listTypeId);
+    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.friendlyName || "Unknown";
 
     // Get language label based on publication language
     const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
@@ -58,7 +62,7 @@ export const GET = async (req: Request, res: Response) => {
       language: artefact.language,
       formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
       languageLabel,
-      urlPath: listType?.urlPath
+      urlPath: listType?.url
     };
   });
 

@@ -42,6 +42,15 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+vi.mock("@hmcts/list-type-config", () => ({
+  findListTypeById: vi.fn((id: number) => {
+    if (id === 1) return Promise.resolve({ id: 1, friendlyName: "Test List Type", welshFriendlyName: "Test List Type CY" });
+    if (id === 5) return Promise.resolve({ id: 5, friendlyName: "Magistrates Public List", welshFriendlyName: "Rhestr Gyhoeddus Ynadon" });
+    if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
+    return Promise.resolve(null);
+  })
+}));
+
 vi.mock("@hmcts/web-core", async () => {
   const actual = await vi.importActual("@hmcts/web-core");
   return {

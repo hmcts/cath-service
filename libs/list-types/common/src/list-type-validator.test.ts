@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ListTypeInfo } from "./list-type-validator.js";
 import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-type-validator.js";
-import { mockListTypes } from "./mock-list-types.js";
+
+// Test data matching ListTypeInfo interface
+const testListTypes: ListTypeInfo[] = [
+  { id: 1, name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: "Civil Daily Cause List" },
+  { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" }
+];
 
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
@@ -36,7 +42,7 @@ describe("list-type-validator", () => {
 
   describe("validateListTypeJson", () => {
     it("should return error for invalid list type ID", async () => {
-      const result = await validateListTypeJson("999", {}, mockListTypes);
+      const result = await validateListTypeJson("999", {}, testListTypes);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -45,7 +51,7 @@ describe("list-type-validator", () => {
 
     it("should return error for list type without JSON schema", async () => {
       // Using list type ID 1 (CIVIL_DAILY_CAUSE_LIST) which doesn't have a schema package
-      const result = await validateListTypeJson("1", { test: "data" }, mockListTypes);
+      const result = await validateListTypeJson("1", { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -65,7 +71,7 @@ describe("list-type-validator", () => {
         courtLists: []
       };
 
-      const result = await validateListTypeJson("8", validData, mockListTypes);
+      const result = await validateListTypeJson("8", validData, testListTypes);
 
       expect(result.isValid).toBe(true);
     });
@@ -83,14 +89,14 @@ describe("list-type-validator", () => {
         invalid: "data"
       };
 
-      const result = await validateListTypeJson("8", invalidData, mockListTypes);
+      const result = await validateListTypeJson("8", invalidData, testListTypes);
 
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it("should handle non-string list type ID", async () => {
-      const result = await validateListTypeJson("abc", {}, mockListTypes);
+      const result = await validateListTypeJson("abc", {}, testListTypes);
 
       expect(result.isValid).toBe(false);
     });

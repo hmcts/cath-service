@@ -78,7 +78,7 @@ describe("Admin Dashboard GET handler", () => {
     const renderCall = (res.render as ReturnType<typeof vi.fn>).mock.calls[0];
     const content = renderCall[1];
 
-    expect(content.tiles).toHaveLength(8);
+    expect(content.tiles).toHaveLength(9);
     expect(content.tiles[0].title).toBe("Upload Reference Data");
     expect(content.tiles[1].title).toBe("Delete Court");
     expect(content.tiles[2].title).toBe("Manage Third-Party Users");
@@ -87,5 +87,6 @@ describe("Admin Dashboard GET handler", () => {
     expect(content.tiles[5].title).toBe("Bulk Create Media Accounts");
     expect(content.tiles[6].title).toBe("Audit Log Viewer");
     expect(content.tiles[7].title).toBe("Manage Location Metadata");
+    expect(content.tiles[8].title).toBe("Configure List Type");
   });
 });

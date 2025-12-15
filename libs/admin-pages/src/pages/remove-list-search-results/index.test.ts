@@ -1,3 +1,4 @@
+import * as listTypeConfigModule from "@hmcts/list-type-config";
 import * as locationModule from "@hmcts/location";
 import * as publicationModule from "@hmcts/publication";
 import type { Request, Response } from "express";
@@ -14,13 +15,17 @@ vi.mock("@hmcts/auth", () => ({
 
 vi.mock("@hmcts/location");
 vi.mock("@hmcts/publication");
+vi.mock("@hmcts/list-type-config");
 
 const mockGetLocationById = vi.fn();
 const mockGetArtefactsByLocation = vi.fn();
+const mockFindAllListTypes = vi.fn();
 
 vi.mocked(locationModule).getLocationById = mockGetLocationById;
 vi.mocked(publicationModule).getArtefactsByLocation = mockGetArtefactsByLocation;
-vi.mocked(publicationModule).mockListTypes = [{ id: 1, englishFriendlyName: "Test List", welshFriendlyName: "Test List Welsh" }];
+vi.mocked(listTypeConfigModule).findAllListTypes = mockFindAllListTypes;
+
+mockFindAllListTypes.mockResolvedValue([{ id: 1, friendlyName: "Test List", welshFriendlyName: "Test List Welsh" }]);
 
 describe("remove-list-search-results page", () => {
   describe("GET handler", () => {

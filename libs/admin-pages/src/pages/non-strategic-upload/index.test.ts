@@ -48,6 +48,70 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+vi.mock("@hmcts/list-type-config", () => ({
+  findNonStrategicListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 3,
+        name: "SJP_PUBLIC_LIST",
+        friendlyName: "SJP Public List",
+        shortenedFriendlyName: "SJP Public List",
+        welshFriendlyName: "Rhestr Gyhoeddus SJP",
+        isNonStrategic: true
+      },
+      {
+        id: 4,
+        name: "SJP_PRESS_LIST",
+        friendlyName: "SJP Press List (Full List)",
+        shortenedFriendlyName: "SJP Press List",
+        welshFriendlyName: "Rhestr Wasg SJP (Rhestr Lawn)",
+        isNonStrategic: true
+      },
+      {
+        id: 9,
+        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        friendlyName: "Care Standards Tribunal Weekly Hearing List",
+        shortenedFriendlyName: "CST Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
+        isNonStrategic: true
+      }
+    ])
+  ),
+  findListTypeById: vi.fn((id: number) => {
+    if (id === 3)
+      return Promise.resolve({
+        id: 3,
+        name: "SJP_PUBLIC_LIST",
+        friendlyName: "SJP Public List",
+        shortenedFriendlyName: "SJP Public List",
+        welshFriendlyName: "Rhestr Gyhoeddus SJP",
+        isNonStrategic: true,
+        url: "/sjp-public-list"
+      });
+    if (id === 4)
+      return Promise.resolve({
+        id: 4,
+        name: "SJP_PRESS_LIST",
+        friendlyName: "SJP Press List (Full List)",
+        shortenedFriendlyName: "SJP Press List",
+        welshFriendlyName: "Rhestr Wasg SJP (Rhestr Lawn)",
+        isNonStrategic: true,
+        url: "/sjp-press-list"
+      });
+    if (id === 9)
+      return Promise.resolve({
+        id: 9,
+        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        friendlyName: "Care Standards Tribunal Weekly Hearing List",
+        shortenedFriendlyName: "CST Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
+        isNonStrategic: true,
+        url: "/care-standards-tribunal-weekly-hearing-list"
+      });
+    return Promise.resolve(null);
+  })
+}));
+
 vi.mock("../../manual-upload/validation.js", () => ({
   validateNonStrategicUploadForm: vi.fn(() => [])
 }));

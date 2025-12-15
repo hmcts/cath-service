@@ -1,9 +1,13 @@
-import type { ListType } from "./mock-list-types.js";
-
 export interface ValidationResult {
   isValid: boolean;
   errors: unknown[];
   schemaVersion: string;
+}
+
+export interface ListTypeInfo {
+  id: number;
+  name: string;
+  friendlyName: string | null;
 }
 
 /**
@@ -20,10 +24,10 @@ export function convertListTypeNameToKebabCase(name: string): string {
  *
  * @param listTypeId - The ID of the list type (as string)
  * @param jsonData - The parsed JSON data to validate
- * @param listTypes - Array of available list types
+ * @param listTypes - Array of available list types from database
  * @returns ValidationResult with isValid flag and errors array
  */
-export async function validateListTypeJson(listTypeId: string, jsonData: unknown, listTypes: ListType[]): Promise<ValidationResult> {
+export async function validateListTypeJson(listTypeId: string, jsonData: unknown, listTypes: ListTypeInfo[]): Promise<ValidationResult> {
   // Find the list type by ID
   const listTypeIdNum = Number.parseInt(listTypeId, 10);
   const listType = listTypes.find((lt) => lt.id === listTypeIdNum);
@@ -53,7 +57,7 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
         isValid: false,
         errors: [
           {
-            message: `No validation function found for ${listType.englishFriendlyName}. JSON schemas are not available for this list type.`
+            message: `No validation function found for ${listType.friendlyName}. JSON schemas are not available for this list type.`
           }
         ],
         schemaVersion: "unknown"
@@ -74,7 +78,7 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
         isValid: false,
         errors: [
           {
-            message: `No JSON schema available for ${listType.englishFriendlyName}. This list type does not support JSON uploads.`
+            message: `No JSON schema available for ${listType.friendlyName}. This list type does not support JSON uploads.`
           }
         ],
         schemaVersion: "unknown"

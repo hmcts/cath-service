@@ -61,6 +61,21 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
+// Mock the list-type-config module
+vi.mock("@hmcts/list-type-config", () => ({
+  findAllListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 4,
+        name: "MAGISTRATES_PUBLIC_LIST",
+        friendlyName: "Magistrates Public List",
+        welshFriendlyName: "Magistrates Public List",
+        url: "magistrates-public-list"
+      }
+    ])
+  )
+}));
+
 describe("Summary of Publications - GET handler", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
