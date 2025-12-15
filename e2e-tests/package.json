@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "pretest:e2e": "cd .. && yarn db:generate",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/**/*.test.ts",
     "test:e2e": "node run-with-credentials.js --grep-invert \"@nightly\"",
     "test:e2e:all": "node run-with-credentials.js",
     "test:e2e:ui": "node run-with-credentials.js --ui",
@@ -25,6 +27,10 @@
     "@axe-core/playwright": "4.11.0",
     "@azure/identity": "4.13.0",
     "@azure/keyvault-secrets": "4.10.0",
-    "@playwright/test": "1.57.0"
+    "@playwright/test": "1.57.0",
+    "@types/node": "24.10.1",
+    "exceljs": "4.4.0",
+    "typescript": "5.9.3",
+    "vitest": "4.0.15"
   }
 }
