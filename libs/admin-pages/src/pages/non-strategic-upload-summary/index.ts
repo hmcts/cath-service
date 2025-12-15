@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
@@ -107,6 +108,18 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
+    // If this is a non-strategic list and it's an Excel file,
+    // convert it to JSON (validation already done on upload page)
+    const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
+    if (isFlatFile && selectedListType?.isNonStrategic) {
+      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
+
+      if (hasConverterForListType(listTypeId)) {
+        const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
+        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+      }
+    }
+
     // Clear session data
     delete req.session.nonStrategicUploadForm;
     delete req.session.nonStrategicUploadSubmitted;
@@ -142,6 +155,9 @@ const postHandler = async (req: Request, res: Response) => {
     const listType = listTypeId ? mockListTypes.find((lt) => lt.id === listTypeId) : null;
     const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : uploadData.listType;
 
+    // Extract error message from error object
+    const errorMessage = error instanceof Error ? error.message : "We could not process your upload. Please try again.";
+
     return res.render("non-strategic-upload-summary/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
@@ -164,7 +180,7 @@ const postHandler = async (req: Request, res: Response) => {
         language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
         displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
       },
-      errors: [{ text: "We could not process your upload. Please try again.", href: "#" }],
+      errors: [{ text: errorMessage, href: "#" }],
       hideLanguageToggle: true
     });
   }

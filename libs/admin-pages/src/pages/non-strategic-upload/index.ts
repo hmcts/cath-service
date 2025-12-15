@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
@@ -12,7 +13,7 @@ import { en } from "./en.js";
 
 const LIST_TYPES = [
   { value: "", text: "<Please choose a list type>" },
-  ...mockListTypes.map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
+  ...mockListTypes.filter((listType) => listType.isNonStrategic).map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
 ];
 
 const SENSITIVITY_OPTIONS = [
@@ -120,6 +121,28 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.nonStrategicUploadForm = formData;
     await saveSession(req.session);
     return res.redirect("/non-strategic-upload");
+  }
+
+  // Validate Excel file for non-strategic lists that require validation
+  const listTypeId = formData.listType ? Number.parseInt(formData.listType, 10) : null;
+  const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
+  const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
+
+  if (selectedListType?.isNonStrategic && isExcelFile && listTypeId) {
+    try {
+      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
+
+      if (hasConverterForListType(listTypeId)) {
+        await convertExcelForListType(listTypeId, req.file!.buffer);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";
+      errors = [{ text: errorMessage, href: "#file" }];
+      req.session.nonStrategicUploadErrors = errors;
+      req.session.nonStrategicUploadForm = formData;
+      await saveSession(req.session);
+      return res.redirect("/non-strategic-upload");
+    }
   }
 
   const uploadId = await storeNonStrategicUpload({
