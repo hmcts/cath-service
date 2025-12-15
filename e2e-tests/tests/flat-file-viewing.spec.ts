@@ -497,8 +497,8 @@ test.describe("Flat File Viewing", () => {
       // Verify error page is shown
       await expect(page.locator('h1')).toContainText(/not available|error/i);
 
-      // Find and verify back button
-      const backButton = page.locator('a.govuk-button, a.govuk-link').filter({ hasText: /back/i });
+      // Find and verify back button (more specific selector to avoid matching "feedback")
+      const backButton = page.locator('a.govuk-button').filter({ hasText: /^back/i });
       await expect(backButton).toBeVisible();
 
       // Verify back button links to summary of publications
@@ -620,8 +620,8 @@ test.describe("Flat File Viewing", () => {
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
       await page.waitForLoadState("networkidle");
 
-      // Verify error page elements are keyboard accessible
-      const backButton = page.locator('a.govuk-button, a.govuk-link').filter({ hasText: /back/i });
+      // Verify error page elements are keyboard accessible (specific selector to avoid matching "feedback")
+      const backButton = page.locator('a.govuk-button').filter({ hasText: /^back/i });
       await expect(backButton).toBeVisible();
 
       // Test Tab navigation to back button
