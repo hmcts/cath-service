@@ -39,6 +39,8 @@ describe("files route", () => {
 
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'inline; filename="test-artefact.pdf"');
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("X-Content-Type-Options", "nosniff");
     expect(mockResponse.send).toHaveBeenCalledWith(Buffer.from("fake pdf content"));
   });
 
@@ -139,5 +141,35 @@ describe("files route", () => {
 
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
     expect(mockResponse.send).toHaveBeenCalled();
+  });
+
+  it("should serve HTML files with attachment disposition to prevent XSS", async () => {
+    mockRequest.params = { filename: "document.html" };
+
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("<html><body>content</body></html>"));
+
+    const handler = GET[1];
+    await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "text/html");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="document.html"');
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("X-Content-Type-Options", "nosniff");
+    expect(mockResponse.send).toHaveBeenCalledWith(Buffer.from("<html><body>content</body></html>"));
+  });
+
+  it("should set no-cache headers for all file types", async () => {
+    mockRequest.params = { filename: "data.csv" };
+
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("csv,content"));
+
+    const handler = GET[1];
+    await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Pragma", "no-cache");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Expires", "0");
   });
 });

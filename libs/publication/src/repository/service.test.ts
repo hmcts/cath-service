@@ -201,7 +201,7 @@ describe("Publication Service", () => {
 
   describe("getFlatFileUrl", () => {
     it("should return file URL when flat file exists", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.pdf", "other-file.txt"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.pdf", "other-file.txt"] as string[]);
 
       const result = await getFlatFileUrl("test-artefact-id");
 
@@ -210,7 +210,7 @@ describe("Publication Service", () => {
     });
 
     it("should return null when no matching file found", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["other-file.pdf", "another-file.txt"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue(["other-file.pdf", "another-file.txt"] as string[]);
 
       const result = await getFlatFileUrl("test-artefact-id");
 
@@ -226,7 +226,7 @@ describe("Publication Service", () => {
     });
 
     it("should match file with any extension", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.docx", "other-file.pdf"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.docx", "other-file.pdf"] as string[]);
 
       const result = await getFlatFileUrl("test-artefact-id");
 
@@ -234,7 +234,7 @@ describe("Publication Service", () => {
     });
 
     it("should return first matching file when multiple exist", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.pdf", "test-artefact-id.docx"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue(["test-artefact-id.pdf", "test-artefact-id.docx"] as string[]);
 
       const result = await getFlatFileUrl("test-artefact-id");
 
@@ -256,7 +256,7 @@ describe("Publication Service", () => {
     });
 
     it("should reject matched filenames with path traversal", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["../../../malicious.pdf", "test-artefact-id.pdf"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue(["../../../malicious.pdf", "test-artefact-id.pdf"] as string[]);
 
       // Use valid artefactId but readdir returns malicious filename
       const result = await getFlatFileUrl("../../../malicious");
@@ -265,7 +265,7 @@ describe("Publication Service", () => {
     });
 
     it("should reject matched filenames with directory separators", async () => {
-      vi.mocked(fs.readdir).mockResolvedValue(["subdir/malicious.pdf"] as any);
+      vi.mocked(fs.readdir).mockResolvedValue(["subdir/malicious.pdf"] as string[]);
 
       const result = await getFlatFileUrl("test-id");
 

@@ -67,7 +67,7 @@ async function createTestPublication(): Promise<TestPublicationData> {
   // Create a test user and subscription for resubmission test
   const testUser = await prisma.user.create({
     data: {
-      email: "test-subscriber@example.com",
+      email: `test-subscriber+${artefactId}@hmcts.net`,
       userProvenance: "SSO",
       userProvenanceId: `test-${Date.now()}`,
       role: "MEDIA",

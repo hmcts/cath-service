@@ -59,7 +59,7 @@ const postHandler = async (req: Request, res: Response) => {
   // Store artefact ID in session for confirmation page
   req.session.resubmissionArtefactId = artefactId;
 
-  return res.redirect(`/blob-explorer-confirm-resubmission?artefactId=${artefactId}`);
+  return res.redirect(`/blob-explorer-confirm-resubmission?artefactId=${encodeURIComponent(artefactId)}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

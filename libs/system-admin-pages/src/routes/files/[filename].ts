@@ -71,14 +71,26 @@ const getHandler = async (req: Request, res: Response) => {
 
     const contentType = contentTypes[ext] || "application/octet-stream";
 
+    // Set cache-control headers to prevent caching of uploaded artefacts
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
+    // Prevent MIME sniffing
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
     res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+
+    // Force download for HTML files to prevent XSS attacks
+    // For other file types, allow inline viewing
+    const disposition = ext === ".html" ? "attachment" : "inline";
+    res.setHeader("Content-Disposition", `${disposition}; filename="${filename}"`);
 
     // Stream the file
     const fileContent = await fs.readFile(filePath);
     res.send(fileContent);
   } catch (error) {
-    console.error("Error serving file:", error);
+    console.error("Error serving file");
     res.status(404).send("File not found");
   }
 };
