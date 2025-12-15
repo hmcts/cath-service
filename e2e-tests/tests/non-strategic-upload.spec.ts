@@ -13,12 +13,16 @@ const { Workbook } = ExcelJSPkg;
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
-// Helper function to create a minimal valid Excel file
+// Helper function to create a minimal valid Care Standards Tribunal Excel file
 async function createMinimalExcelFile(): Promise<Buffer> {
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet("Sheet1");
-  worksheet.addRow(["Test", "Data"]);
-  worksheet.addRow(["Value1", "Value2"]);
+
+  // CST required headers
+  worksheet.addRow(["Date", "Case name", "Hearing length", "Hearing type", "Venue", "Additional information"]);
+  // CST data row
+  worksheet.addRow(["01/01/2026", "Test Case A vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]);
+
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
@@ -39,7 +43,7 @@ async function navigateToSummaryPage(page: Page) {
   await page.goto("/non-strategic-upload?locationId=9001");
   await page.waitForTimeout(1000);
 
-  await page.selectOption('select[name="listType"]', "6");
+  await page.selectOption('select[name="listType"]', "9");
   await page.fill('input[name="hearingStartDate-day"]', "23");
   await page.fill('input[name="hearingStartDate-month"]', "10");
   await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -90,7 +94,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await expect(focusedElement).toBeVisible();
 
       // Step 2: Fill form and submit
-      await page.selectOption('select[name="listType"]', "6");
+      await page.selectOption('select[name="listType"]', "9");
       await page.fill('input[name="hearingStartDate-day"]', "23");
       await page.fill('input[name="hearingStartDate-month"]', "10");
       await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -157,7 +161,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await expect(page).toHaveTitle("Upload - Upload Excel file - Court and tribunal hearings - GOV.UK");
 
       // Step 2: Fill out the form
-      await page.selectOption('select[name="listType"]', "6");
+      await page.selectOption('select[name="listType"]', "9");
       await page.fill('input[name="hearingStartDate-day"]', "23");
       await page.fill('input[name="hearingStartDate-month"]', "10");
       await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -185,7 +189,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       // Step 4: Verify summary page displays correct data
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(1)).toContainText("test-hearing-list.xlsx");
-      await expect(values.nth(2)).toContainText("Crown Daily List");
+      await expect(values.nth(2)).toContainText("Care Standards Tribunal Weekly Hearing List");
       await expect(values.nth(3)).toContainText("23 October 2025");
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
@@ -343,7 +347,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await page.goto("/non-strategic-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
-      await page.selectOption('select[name="listType"]', "1");
+      await page.selectOption('select[name="listType"]', "9");
       await page.fill('input[name="hearingStartDate-day"]', "15");
       await page.fill('input[name="hearingStartDate-month"]', "06");
       await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -478,7 +482,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
         buffer: await createMinimalExcelFile()
       });
 
-      await page.selectOption('select[name="listType"]', "1");
+      await page.selectOption('select[name="listType"]', "9");
       await page.fill('input[name="hearingStartDate-day"]', "15");
       await page.fill('input[name="hearingStartDate-month"]', "06");
       await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -510,7 +514,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
       await continueButton.click();
 
-      await expect(page.locator('select[name="listType"]')).toHaveValue("1");
+      await expect(page.locator('select[name="listType"]')).toHaveValue("9");
       await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("15");
       await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue("06");
       await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue("2025");
@@ -563,7 +567,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(0)).not.toBeEmpty();
       await expect(values.nth(1)).toContainText("test-document.xlsx");
-      await expect(values.nth(2)).toContainText("Crown Daily List");
+      await expect(values.nth(2)).toContainText("Care Standards Tribunal Weekly Hearing List");
       await expect(values.nth(3)).toContainText("23 October 2025");
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
@@ -704,7 +708,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await page.goto("/non-strategic-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
-      await page.selectOption('select[name="listType"]', "7");
+      await page.selectOption('select[name="listType"]', "9");
       await page.fill('input[name="hearingStartDate-day"]', "25");
       await page.fill('input[name="hearingStartDate-month"]', "11");
       await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -745,7 +749,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
       await expect(courtInput).toBeVisible();
 
-      await page.selectOption('select[name="listType"]', "6");
+      await page.selectOption('select[name="listType"]', "9");
       await page.fill('input[name="hearingStartDate-day"]', "23");
       await page.fill('input[name="hearingStartDate-month"]', "10");
       await page.fill('input[name="hearingStartDate-year"]', "2025");
