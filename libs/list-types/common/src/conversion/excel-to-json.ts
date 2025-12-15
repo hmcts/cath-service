@@ -1,4 +1,7 @@
-import * as ExcelJS from "exceljs";
+// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
+import ExcelJSPkg from "exceljs";
+
+const { Workbook } = ExcelJSPkg;
 
 export interface FieldConfig {
   header: string;
@@ -41,7 +44,7 @@ export function validateDateFormat(pattern: RegExp, format: string) {
 }
 
 export async function convertExcelToJson<T = Record<string, string>>(buffer: Buffer, config: ExcelConverterConfig): Promise<T[]> {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new Workbook();
   // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
   await workbook.xlsx.load(buffer);
 
