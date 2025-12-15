@@ -1,8 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import * as ExcelJS from "exceljs";
+// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
+import ExcelJSPkg from "exceljs";
 import { loginWithSSO } from "../utils/sso-helpers.js";
+
+const { Workbook } = ExcelJSPkg;
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -12,7 +15,7 @@ import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper function to create a minimal valid Excel file
 async function createMinimalExcelFile(): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new Workbook();
   const worksheet = workbook.addWorksheet("Sheet1");
   worksheet.addRow(["Test", "Data"]);
   worksheet.addRow(["Value1", "Value2"]);

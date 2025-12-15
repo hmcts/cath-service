@@ -1,8 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import * as ExcelJS from "exceljs";
+// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
+import ExcelJSPkg from "exceljs";
 import { loginWithSSO } from "../utils/sso-helpers.js";
+
+const { Workbook } = ExcelJSPkg;
 
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {
@@ -44,7 +47,7 @@ async function createValidCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
@@ -76,7 +79,7 @@ async function createInvalidCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
@@ -108,7 +111,7 @@ async function createInvalidDateCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
@@ -140,7 +143,7 @@ async function createHTMLTagsCSTExcel(): Promise<Buffer> {
     }
   ];
 
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new Workbook();
   const worksheet = workbook.addWorksheet("Hearings");
 
   worksheet.columns = [
