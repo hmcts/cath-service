@@ -3,5 +3,3 @@ declare module "express-session" {
     resubmissionArtefactId?: string;
   }
 }
-
-export {};

@@ -12,6 +12,5 @@ export const en = {
   metadataSensitivity: "Sensitivity",
   metadataContentDate: "Content Date",
   metadataDisplayFrom: "Display From",
-  metadataDisplayTo: "Display To",
-  back: "Back"
+  metadataDisplayTo: "Display To"
 };

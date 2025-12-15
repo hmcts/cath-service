@@ -2,22 +2,12 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getArtefactMetadata, getFlatFileUrl } from "@hmcts/publication";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { formatDateTime } from "../../services/formatting.js";
 import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
-
-function formatDateTime(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = (req.query.lng === "cy" ? "cy" : "en") as "en" | "cy";

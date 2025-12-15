@@ -5,6 +5,5 @@ export const cy = {
   publicationsTableHeadingListType: "List type",
   publicationsTableHeadingDisplayFrom: "Display from",
   publicationsTableHeadingDisplayTo: "Display to",
-  publicationsError: "We could not load publications for this location.",
-  back: "Back"
+  publicationsError: "We could not load publications for this location."
 };
