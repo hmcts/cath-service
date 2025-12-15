@@ -29,8 +29,7 @@
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "ajv": "8.17.1",
-    "luxon": "3.7.2",
-    "xlsx": "0.18.5"
+    "luxon": "3.7.2"
   },
   "devDependencies": {
     "@types/luxon": "3.7.1",

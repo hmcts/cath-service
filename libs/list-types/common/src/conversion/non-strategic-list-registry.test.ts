@@ -1,15 +1,19 @@
+import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import * as XLSX from "xlsx";
 import { convertExcelForListType, getConverterForListType, hasConverterForListType } from "./non-strategic-list-registry.js";
 
 // Import CST module to register its converter
 import "@hmcts/care-standards-tribunal-weekly-hearing-list";
 
-function createExcelBuffer(data: unknown[][]): Buffer {
-  const worksheet = XLSX.utils.aoa_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-  return Buffer.from(XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }));
+async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Sheet1");
+
+  for (const row of data) {
+    worksheet.addRow(row);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 describe("list-type-converters", () => {
@@ -44,7 +48,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelForListType(9, buffer);
 
       expect(result).toHaveLength(1);
@@ -65,7 +69,7 @@ describe("list-type-converters", () => {
         ["03/01/2025", "C Vs D", "Half day", "Preliminary hearing", "Care Standards Office", "In person"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelForListType(9, buffer);
 
       expect(result).toHaveLength(2);
@@ -79,7 +83,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelForListType(9, buffer);
 
       expect(result).toHaveLength(1);
@@ -92,7 +96,7 @@ describe("list-type-converters", () => {
         ["  02/01/2025  ", "  A Vs B  ", "  1 hour  ", "  Substantive hearing  ", "  Care Standards Tribunal  ", "  Remote hearing  "]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelForListType(9, buffer);
 
       expect(result[0]).toMatchObject({
@@ -107,7 +111,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "A Vs B"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Excel file must contain columns/);
     });
@@ -118,7 +122,7 @@ describe("list-type-converters", () => {
         // No data rows
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow("Excel file must contain at least 1 data row");
     });
@@ -129,7 +133,7 @@ describe("list-type-converters", () => {
         ["2025-01-02", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Invalid date format.*Expected format: dd\/MM\/yyyy/);
     });
@@ -140,7 +144,7 @@ describe("list-type-converters", () => {
         ["2/1/2025", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Invalid date format/);
     });
@@ -151,7 +155,7 @@ describe("list-type-converters", () => {
         ["32/01/2025", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Date does not exist in calendar/);
     });
@@ -162,7 +166,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "<script>alert('xss')</script>A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
@@ -173,7 +177,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "A Vs B", "1 hour", "<b>Substantive hearing</b>", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
@@ -184,7 +188,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "A Vs B", "1 hour", "Substantive hearing", "<div>Care Standards Tribunal</div>", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
@@ -195,7 +199,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "A Vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "<a href='#'>Remote hearing</a>"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
@@ -206,7 +210,7 @@ describe("list-type-converters", () => {
         ["02/01/2025", "", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Missing required field 'Case name'/);
     });
@@ -218,7 +222,7 @@ describe("list-type-converters", () => {
         ["invalid-date", "C Vs D", "Half day", "Preliminary hearing", "Care Standards Office", "In person"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Error in row 3/);
     });

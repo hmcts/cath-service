@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export interface FieldConfig {
   header: string;
@@ -17,7 +17,7 @@ export interface ExcelConversionResult<T = Record<string, string>> {
   errors: string[];
 }
 
-const HTML_TAG_PATTERN = /<[^>]+>/;
+const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
 export function validateNoHtmlTags(value: string, fieldName: string, rowNumber: number): void {
   if (HTML_TAG_PATTERN.test(value)) {
@@ -41,17 +41,33 @@ export function validateDateFormat(pattern: RegExp, format: string) {
 }
 
 export async function convertExcelToJson<T = Record<string, string>>(buffer: Buffer, config: ExcelConverterConfig): Promise<T[]> {
-  const workbook = XLSX.read(buffer, { type: "buffer" });
-  const firstSheetName = workbook.SheetNames[0];
+  const workbook = new ExcelJS.Workbook();
+  // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
+  await workbook.xlsx.load(buffer);
 
-  if (!firstSheetName) {
+  const worksheet = workbook.worksheets[0];
+  if (!worksheet) {
     throw new Error("Excel file must contain at least one worksheet");
   }
 
-  const worksheet = workbook.Sheets[firstSheetName];
-  const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
-    raw: false,
-    defval: ""
+  const jsonData: Record<string, unknown>[] = [];
+  const headers: string[] = [];
+
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      row.eachCell((cell) => {
+        headers.push(String(cell.value ?? ""));
+      });
+    } else {
+      const rowData: Record<string, unknown> = {};
+      row.eachCell((cell, colNumber) => {
+        const header = headers[colNumber - 1];
+        if (header) {
+          rowData[header] = cell.value ?? "";
+        }
+      });
+      jsonData.push(rowData);
+    }
   });
 
   const minRows = config.minRows ?? 1;
@@ -59,7 +75,6 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
     throw new Error(`Excel file must contain at least ${minRows} data row${minRows > 1 ? "s" : ""}`);
   }
 
-  // Only validate headers if we have data (XLSX can't extract headers from empty sheets)
   if (jsonData.length > 0) {
     const actualHeaders = Object.keys(jsonData[0] || {}).map((h) => h.toLowerCase().trim());
     validateHeaders(actualHeaders, config.fields);
@@ -69,7 +84,7 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
 
   for (let i = 0; i < jsonData.length; i++) {
     const row = jsonData[i];
-    const rowNumber = i + 2; // +2 because Excel is 1-indexed and row 1 is headers
+    const rowNumber = i + 2;
 
     try {
       const result = parseRow(row, rowNumber, config.fields);
