@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 describe("system-admin-dashboard page", () => {
@@ -29,11 +29,14 @@ describe("system-admin-dashboard page", () => {
     const handler = GET[GET.length - 1];
     await handler(req as Request, res as Response, vi.fn());
 
-    expect(res.render).toHaveBeenCalledWith("system-admin-dashboard/index", expect.objectContaining({
-      user: expect.objectContaining({
-        email: "test@example.com"
+    expect(res.render).toHaveBeenCalledWith(
+      "system-admin-dashboard/index",
+      expect.objectContaining({
+        user: expect.objectContaining({
+          email: "test@example.com"
+        })
       })
-    }));
+    );
   });
 
   it("should render dashboard page in Welsh", async () => {
@@ -41,11 +44,14 @@ describe("system-admin-dashboard page", () => {
     const handler = GET[GET.length - 1];
     await handler(req as Request, res as Response, vi.fn());
 
-    expect(res.render).toHaveBeenCalledWith("system-admin-dashboard/index", expect.objectContaining({
-      user: expect.objectContaining({
-        email: "test@example.com"
+    expect(res.render).toHaveBeenCalledWith(
+      "system-admin-dashboard/index",
+      expect.objectContaining({
+        user: expect.objectContaining({
+          email: "test@example.com"
+        })
       })
-    }));
+    );
   });
 
   it("should include user information in the render", async () => {
@@ -59,8 +65,11 @@ describe("system-admin-dashboard page", () => {
     const handler = GET[GET.length - 1];
     await handler(req as Request, res as Response, vi.fn());
 
-    expect(res.render).toHaveBeenCalledWith("system-admin-dashboard/index", expect.objectContaining({
-      user: testUser
-    }));
+    expect(res.render).toHaveBeenCalledWith(
+      "system-admin-dashboard/index",
+      expect.objectContaining({
+        user: testUser
+      })
+    );
   });
 });

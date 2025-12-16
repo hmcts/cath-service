@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler, postHandler } from "./index.js";
 
 // Mock dependencies
@@ -37,9 +37,12 @@ describe("delete-court page", () => {
     it("should render delete-court page in English", async () => {
       await getHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court/index", expect.objectContaining({
-        errors: undefined
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court/index",
+        expect.objectContaining({
+          errors: undefined
+        })
+      );
     });
 
     it("should render delete-court page in Welsh", async () => {
@@ -47,9 +50,12 @@ describe("delete-court page", () => {
 
       await getHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court/index", expect.objectContaining({
-        errors: undefined
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court/index",
+        expect.objectContaining({
+          errors: undefined
+        })
+      );
     });
   });
 
@@ -60,9 +66,12 @@ describe("delete-court page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court/index", expect.objectContaining({
-        errors: expect.arrayContaining([expect.objectContaining({ href: "#court-search" })])
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#court-search" })])
+        })
+      );
     });
 
     it("should show error when locationId is not a number", async () => {
@@ -71,9 +80,12 @@ describe("delete-court page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court/index", expect.objectContaining({
-        errors: expect.arrayContaining([expect.objectContaining({ href: "#court-search" })])
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#court-search" })])
+        })
+      );
     });
 
     it("should show error when location not found", async () => {
@@ -83,9 +95,12 @@ describe("delete-court page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court/index", expect.objectContaining({
-        errors: expect.arrayContaining([expect.objectContaining({ href: "#court-search" })])
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#court-search" })])
+        })
+      );
     });
 
     it("should redirect to confirm page when location is valid", async () => {

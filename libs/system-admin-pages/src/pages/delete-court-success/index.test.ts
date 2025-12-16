@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler } from "./index.js";
 
 describe("delete-court-success page", () => {

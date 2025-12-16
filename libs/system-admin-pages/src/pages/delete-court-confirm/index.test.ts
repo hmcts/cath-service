@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler, postHandler } from "./index.js";
 
 // Mock dependencies
@@ -17,7 +17,7 @@ vi.mock("../../delete-court/validation.js", () => ({
 }));
 
 import { getLocationWithDetails } from "../../delete-court/queries.js";
-import { validateLocationForDeletion, performLocationDeletion } from "../../delete-court/service.js";
+import { performLocationDeletion, validateLocationForDeletion } from "../../delete-court/service.js";
 import { validateRadioSelection } from "../../delete-court/validation.js";
 
 describe("delete-court-confirm page", () => {
@@ -70,13 +70,16 @@ describe("delete-court-confirm page", () => {
 
       await getHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court-confirm/index", expect.objectContaining({
-        locationName: "Test Court",
-        locationType: "Court",
-        jurisdiction: "Civil",
-        region: "South East",
-        errors: undefined
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court-confirm/index",
+        expect.objectContaining({
+          locationName: "Test Court",
+          locationType: "Court",
+          jurisdiction: "Civil",
+          region: "South East",
+          errors: undefined
+        })
+      );
     });
 
     it("should render confirmation page in Welsh", async () => {
@@ -92,11 +95,14 @@ describe("delete-court-confirm page", () => {
 
       await getHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court-confirm/index", expect.objectContaining({
-        locationName: "Llys Prawf",
-        jurisdiction: "Sifil",
-        region: "De Ddwyrain"
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court-confirm/index",
+        expect.objectContaining({
+          locationName: "Llys Prawf",
+          jurisdiction: "Sifil",
+          region: "De Ddwyrain"
+        })
+      );
     });
   });
 
@@ -123,9 +129,12 @@ describe("delete-court-confirm page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court-confirm/index", expect.objectContaining({
-        errors: expect.arrayContaining([expect.objectContaining({ href: "#confirmDelete" })])
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court-confirm/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#confirmDelete" })])
+        })
+      );
     });
 
     it("should redirect to dashboard when user selects no", async () => {
@@ -157,9 +166,12 @@ describe("delete-court-confirm page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court-confirm/index", expect.objectContaining({
-        errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })])
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court-confirm/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })])
+        })
+      );
     });
 
     it("should show error when location has active artefacts", async () => {
@@ -180,9 +192,12 @@ describe("delete-court-confirm page", () => {
 
       await postHandler(req as Request, res as Response);
 
-      expect(res.render).toHaveBeenCalledWith("delete-court-confirm/index", expect.objectContaining({
-        errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })])
-      }));
+      expect(res.render).toHaveBeenCalledWith(
+        "delete-court-confirm/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })])
+        })
+      );
     });
 
     it("should redirect to delete-court when location validation fails and location not found", async () => {
