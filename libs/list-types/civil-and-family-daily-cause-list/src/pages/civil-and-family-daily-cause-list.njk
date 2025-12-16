@@ -16,12 +16,6 @@
     .govuk-table {
       overflow: auto hidden;
     }
-    .search-highlight {
-      background-color: #ffdd00;
-      color: #0b0c0c;
-      padding: 0;
-      font-weight: inherit;
-    }
   </style>
 {% endblock %}
 
@@ -188,79 +182,4 @@
 
   </div>
 </div>
-{% endblock %}
-
-{% block bodyEnd %}
-  {{ super() }}
-  <script nonce="{{ cspNonce }}">
-    (function() {
-      const searchInput = document.getElementById('case-search-input');
-      const container = document.getElementById('court-lists-container');
-
-      if (!searchInput || !container) return;
-
-      function removeHighlights() {
-        const marks = container.querySelectorAll('mark.search-highlight');
-        marks.forEach(mark => {
-          const parent = mark.parentNode;
-          parent.replaceChild(document.createTextNode(mark.textContent), mark);
-          parent.normalize();
-        });
-      }
-
-      function highlightText(searchTerm) {
-        removeHighlights();
-
-        if (!searchTerm) {
-          return;
-        }
-
-        const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-
-        function highlightNode(node) {
-          if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-            const text = node.textContent;
-            const matches = [];
-            let match;
-
-            regex.lastIndex = 0;
-            while ((match = regex.exec(text)) !== null) {
-              matches.push({ index: match.index, length: match[0].length, text: match[0] });
-            }
-
-            if (matches.length > 0) {
-              const fragment = document.createDocumentFragment();
-              let lastIndex = 0;
-
-              matches.forEach(m => {
-                if (m.index > lastIndex) {
-                  fragment.appendChild(document.createTextNode(text.substring(lastIndex, m.index)));
-                }
-                const mark = document.createElement('mark');
-                mark.className = 'search-highlight';
-                mark.textContent = m.text;
-                fragment.appendChild(mark);
-                lastIndex = m.index + m.length;
-              });
-
-              if (lastIndex < text.length) {
-                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
-              }
-
-              node.parentNode.replaceChild(fragment, node);
-            }
-          } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE' && node.nodeName !== 'MARK') {
-            Array.from(node.childNodes).forEach(highlightNode);
-          }
-        }
-
-        highlightNode(container);
-      }
-
-      searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.trim();
-        highlightText(searchTerm);
-      });
-    })();
-  </script>
 {% endblock %}

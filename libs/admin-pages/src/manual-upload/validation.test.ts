@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateDate, validateForm } from "./validation.js";
+import { validateDate, validateManualUploadForm, validateNonStrategicUploadForm } from "./validation.js";
 
 const mockTranslations = {
   title: "Manual upload",
@@ -140,7 +140,7 @@ describe("validateDate", () => {
   });
 });
 
-describe("validateForm", () => {
+describe("validateManualUploadForm", () => {
   const createMockFile = (overrides?: Partial<Express.Multer.File>): Express.Multer.File => ({
     fieldname: "file",
     originalname: "test.pdf",
@@ -167,7 +167,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toHaveLength(0);
     });
   });
@@ -184,7 +184,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, undefined, mockTranslations);
+      const errors = await validateManualUploadForm(body, undefined, mockTranslations);
       expect(errors).toContainEqual({
         text: "File is required",
         href: "#file"
@@ -203,7 +203,7 @@ describe("validateForm", () => {
       };
 
       const file = createMockFile({ originalname: "test.exe" });
-      const errors = await validateForm(body, file, mockTranslations);
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
       expect(errors).toContainEqual({
         text: "Invalid file type",
         href: "#file"
@@ -222,7 +222,7 @@ describe("validateForm", () => {
       };
 
       const file = createMockFile({ size: 3 * 1024 * 1024 }); // 3MB
-      const errors = await validateForm(body, file, mockTranslations);
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
       expect(errors).toContainEqual({
         text: "File too large, please upload file smaller than 2MB",
         href: "#file"
@@ -244,7 +244,7 @@ describe("validateForm", () => {
         };
 
         const file = createMockFile({ originalname: `test.${ext}` });
-        const errors = await validateForm(body, file, mockTranslations);
+        const errors = await validateManualUploadForm(body, file, mockTranslations);
 
         // Should not have file type error
         expect(errors.some((e) => e.text === "Invalid file type")).toBe(false);
@@ -263,7 +263,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Court name too short",
         href: "#court"
@@ -281,7 +281,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Court is required",
         href: "#court"
@@ -298,7 +298,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "List type is required",
         href: "#listType"
@@ -315,7 +315,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Sensitivity is required",
         href: "#sensitivity"
@@ -332,7 +332,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Language is required",
         href: "#language"
@@ -352,7 +352,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Hearing start date is invalid",
         href: "#hearingStartDate"
@@ -370,7 +370,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Display from date is invalid",
         href: "#displayFrom"
@@ -388,7 +388,7 @@ describe("validateForm", () => {
         displayTo: { day: "32", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Display to date is invalid",
         href: "#displayTo"
@@ -406,7 +406,7 @@ describe("validateForm", () => {
         displayTo: { day: "10", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Display to must be after display from",
         href: "#displayTo"
@@ -424,7 +424,7 @@ describe("validateForm", () => {
         displayTo: { day: "15", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors.some((e) => e.text === "Display to must be after display from")).toBe(false);
     });
   });
@@ -441,7 +441,7 @@ describe("validateForm", () => {
         displayTo: { day: "10", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, undefined, mockTranslations);
+      const errors = await validateManualUploadForm(body, undefined, mockTranslations);
 
       expect(errors.length).toBeGreaterThan(5);
       expect(errors.some((e) => e.text === "File is required")).toBe(true);
@@ -465,7 +465,7 @@ describe("validateForm", () => {
       };
 
       const file = createMockFile({ originalname: "test.pdf" });
-      const errors = await validateForm(body, file, mockTranslations);
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
       // Non-JSON files are valid (flat files) - no JSON validation is performed
       expect(errors).toHaveLength(0);
     });
@@ -486,7 +486,7 @@ describe("validateForm", () => {
         originalname: "test.json",
         buffer: Buffer.from(invalidJson)
       });
-      const errors = await validateForm(body, file, mockTranslations);
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors.some((e) => e.text.includes("Invalid JSON file format"))).toBe(true);
     });
@@ -506,7 +506,7 @@ describe("validateForm", () => {
         originalname: "test.json",
         buffer: Buffer.from("{ invalid json")
       });
-      const errors = await validateForm(body, file, mockTranslations);
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
       expect(errors).toContainEqual({
         text: "Invalid JSON file format. Please ensure the file contains valid JSON.",
         href: "#file"
@@ -527,7 +527,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Court is required",
         href: "#court"
@@ -546,7 +546,7 @@ describe("validateForm", () => {
         displayTo: { day: "20", month: "06", year: "2025" }
       };
 
-      const errors = await validateForm(body, createMockFile(), mockTranslations);
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toContainEqual({
         text: "Court name too short",
         href: "#court"
@@ -568,6 +568,187 @@ describe("validateForm", () => {
       expect(result).toEqual({
         text: "Invalid message",
         href: "#testField"
+      });
+    });
+  });
+});
+
+const mockNonStrategicTranslations = {
+  title: "Upload excel file",
+  pageTitle: "Upload - Upload excel file",
+  warningTitle: "Warning",
+  warningMessage: "Prior to upload you must ensure the file is suitable for publication",
+  fileUploadLabel: "Manually upload a excel file (.xlsx), max size 2MB",
+  courtLabel: "Court name",
+  listTypeLabel: "List type",
+  listTypePlaceholder: "Please choose a list type",
+  hearingStartDateLabel: "Hearing start date",
+  hearingStartDateHint: "For example, 16 01 2022",
+  sensitivityLabel: "Sensitivity",
+  languageLabel: "Language",
+  displayFromLabel: "Display file from",
+  displayFromHint: "For example, 27 01 2022",
+  displayToLabel: "Display file to",
+  displayToHint: "For example, 18 02 2022",
+  continueButton: "Continue",
+  errorSummaryTitle: "There is a problem",
+  pageHelpTitle: "Page help",
+  pageHelpLists: "Lists",
+  pageHelpListsText: "You must ensure that you only upload one file",
+  pageHelpSensitivity: "Sensitivity",
+  pageHelpSensitivityText: "You need to indicate which user group your document should be available to",
+  pageHelpSensitivityPublic: "Public",
+  pageHelpSensitivityPublicText: "Publication available to all users",
+  pageHelpSensitivityPrivate: "Private",
+  pageHelpSensitivityPrivateText: "Publication available to verified users",
+  pageHelpSensitivityClassified: "Classified",
+  pageHelpSensitivityClassifiedText: "Publication only available to verified users in eligible groups",
+  pageHelpDisplayFrom: "Display from",
+  pageHelpDisplayFromText: "This will be the date the publication is available from",
+  pageHelpDisplayTo: "Display to",
+  pageHelpDisplayToText: "This will be the last date the publication is available",
+  dayLabel: "Day",
+  monthLabel: "Month",
+  yearLabel: "Year",
+  backToTop: "Back to top",
+  errorMessages: {
+    fileRequired: "Please provide a file",
+    fileType: "The selected file type is not supported",
+    fileSize: "The selected file must be smaller than 2MB",
+    courtRequired: "Please enter and select a valid court",
+    courtTooShort: "Court name must be three characters or more",
+    listTypeRequired: "Please select a list type",
+    sensitivityRequired: "Please select a sensitivity",
+    languageRequired: "Select a language option",
+    hearingStartDateRequired: "Please enter a valid hearing start date",
+    hearingStartDateInvalid: "Please enter a valid hearing start date",
+    displayFromRequired: "Please enter a valid display file from date",
+    displayFromInvalid: "Please enter a valid display file from date",
+    displayToRequired: "Please enter a valid display file to date",
+    displayToInvalid: "Please enter a valid display file to date",
+    displayToBeforeFrom: "'Display to' date must be the same as or later than 'Display from' date"
+  }
+};
+
+describe("validateNonStrategicUploadForm", () => {
+  const createMockFile = (overrides?: Partial<Express.Multer.File>): Express.Multer.File => ({
+    fieldname: "file",
+    originalname: "test.xlsx",
+    encoding: "7bit",
+    mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    size: 1024,
+    buffer: Buffer.from("test"),
+    stream: {} as any,
+    destination: "",
+    filename: "",
+    path: "",
+    ...overrides
+  });
+
+  describe("Complete valid form", () => {
+    it("should return no errors for a valid form", async () => {
+      const body = {
+        locationId: "123",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const errors = await validateNonStrategicUploadForm(body, createMockFile(), mockNonStrategicTranslations);
+      expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe("File validation - xlsx only", () => {
+    it("should accept xlsx file extension", async () => {
+      const body = {
+        locationId: "123",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "test.xlsx" });
+      const errors = await validateNonStrategicUploadForm(body, file, mockNonStrategicTranslations);
+      expect(errors.some((e) => e.text === "The selected file type is not supported")).toBe(false);
+    });
+
+    it("should accept .xlsx with uppercase extension", async () => {
+      const body = {
+        locationId: "123",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "test.XLSX" });
+      const errors = await validateNonStrategicUploadForm(body, file, mockNonStrategicTranslations);
+      expect(errors.some((e) => e.text === "The selected file type is not supported")).toBe(false);
+    });
+
+    it("should reject .xls file (old Excel format)", async () => {
+      const body = {
+        locationId: "123",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "test.xls" });
+      const errors = await validateNonStrategicUploadForm(body, file, mockNonStrategicTranslations);
+      expect(errors).toContainEqual({
+        text: "The selected file type is not supported",
+        href: "#file"
+      });
+    });
+
+    it("should reject .csv file", async () => {
+      const body = {
+        locationId: "123",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "test.csv" });
+      const errors = await validateNonStrategicUploadForm(body, file, mockNonStrategicTranslations);
+      expect(errors).toContainEqual({
+        text: "The selected file type is not supported",
+        href: "#file"
+      });
+    });
+
+    it("should reject .pdf file", async () => {
+      const body = {
+        locationId: "123",
+        listType: "CIVIL_DAILY_CAUSE_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "document.pdf" });
+      const errors = await validateNonStrategicUploadForm(body, file, mockNonStrategicTranslations);
+      expect(errors).toContainEqual({
+        text: "The selected file type is not supported",
+        href: "#file"
       });
     });
   });

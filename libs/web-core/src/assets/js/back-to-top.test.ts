@@ -18,13 +18,15 @@ describe("back-to-top", () => {
   describe("initBackToTop", () => {
     it("should scroll to top when back-to-top link is clicked", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link">Back to top</a>
+        <p class="back-to-top-link">
+          <a href="#">Back to top</a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link") as HTMLAnchorElement;
+      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
       backToTopLink.click();
 
       expect(window.scrollTo).toHaveBeenCalledWith({
@@ -35,13 +37,15 @@ describe("back-to-top", () => {
 
     it("should prevent default link behavior when back-to-top link is clicked", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link">Back to top</a>
+        <p class="back-to-top-link">
+          <a href="#">Back to top</a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link") as HTMLAnchorElement;
+      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
       const event = new MouseEvent("click", {
         bubbles: true,
         cancelable: true
@@ -72,15 +76,17 @@ describe("back-to-top", () => {
 
     it("should handle back-to-top link with nested span element", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link">
-          <span aria-hidden="true">▴ </span>Back to top
-        </a>
+        <p class="back-to-top-link">
+          <a href="#">
+            <span aria-hidden="true">▴ </span>Back to top
+          </a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link") as HTMLAnchorElement;
+      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
       backToTopLink.click();
 
       expect(window.scrollTo).toHaveBeenCalledWith({
@@ -91,14 +97,18 @@ describe("back-to-top", () => {
 
     it("should only attach handler to first back-to-top link if multiple exist", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link">Back to top 1</a>
-        <a href="#" class="back-to-top-link">Back to top 2</a>
+        <p class="back-to-top-link">
+          <a href="#">Back to top 1</a>
+        </p>
+        <p class="back-to-top-link">
+          <a href="#">Back to top 2</a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLinks = document.querySelectorAll(".back-to-top-link") as NodeListOf<HTMLAnchorElement>;
+      const backToTopLinks = document.querySelectorAll(".back-to-top-link a") as NodeListOf<HTMLAnchorElement>;
 
       // Click first link
       backToTopLinks[0].click();
@@ -113,13 +123,15 @@ describe("back-to-top", () => {
 
     it("should handle back-to-top link without text content", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link"></a>
+        <p class="back-to-top-link">
+          <a href="#"></a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link") as HTMLAnchorElement;
+      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
       backToTopLink.click();
 
       expect(window.scrollTo).toHaveBeenCalledWith({
@@ -130,13 +142,15 @@ describe("back-to-top", () => {
 
     it("should call scrollTo with smooth behavior", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link">Back to top</a>
+        <p class="back-to-top-link">
+          <a href="#">Back to top</a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link") as HTMLAnchorElement;
+      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
       backToTopLink.click();
 
       expect(window.scrollTo).toHaveBeenCalledWith(
@@ -148,13 +162,15 @@ describe("back-to-top", () => {
 
     it("should scroll to top position 0", async () => {
       document.body.innerHTML = `
-        <a href="#" class="back-to-top-link">Back to top</a>
+        <p class="back-to-top-link">
+          <a href="#">Back to top</a>
+        </p>
       `;
 
       const { initBackToTop } = await import("./back-to-top.js");
       initBackToTop();
 
-      const backToTopLink = document.querySelector(".back-to-top-link") as HTMLAnchorElement;
+      const backToTopLink = document.querySelector(".back-to-top-link a") as HTMLAnchorElement;
       backToTopLink.click();
 
       expect(window.scrollTo).toHaveBeenCalledWith(
