@@ -21,6 +21,16 @@ export interface ExcelConversionResult<T = Record<string, string>> {
 
 const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
+function formatDateValue(value: unknown): unknown {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const day = String(value.getDate()).padStart(2, "0");
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const year = value.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return value;
+}
+
 export function validateNoHtmlTags(value: string, fieldName: string, rowNumber: number): void {
   if (HTML_TAG_PATTERN.test(value)) {
     throw new Error(`Invalid content in '${fieldName}' in row ${rowNumber}: HTML tags are not allowed`);
@@ -65,7 +75,7 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
       row.eachCell((cell, colNumber) => {
         const header = headers[colNumber - 1];
         if (header) {
-          rowData[header] = cell.value ?? "";
+          rowData[header] = formatDateValue(cell.value) ?? "";
         }
       });
       jsonData.push(rowData);
