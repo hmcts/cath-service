@@ -21,10 +21,12 @@ describe("accessibility-statement page", () => {
         "accessibility-statement/index",
         expect.objectContaining({
           en: expect.objectContaining({
-            title: "Accessibility statement"
+            title: "Accessibility statement",
+            backToTop: "Back to top"
           }),
           cy: expect.objectContaining({
-            title: "Datganiad hygyrchedd"
+            title: "Datganiad hygyrchedd",
+            backToTop: "Yn ôl i frig y dudalen"
           })
         })
       );

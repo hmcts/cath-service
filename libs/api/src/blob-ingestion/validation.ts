@@ -121,7 +121,7 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     if (Number.isNaN(locationId)) {
       errors.push({ field: "court_id", message: "court_id must be a valid number" });
     } else {
-      const location = getLocationById(locationId);
+      const location = await getLocationById(locationId);
       locationExists = !!location;
       // Note: We don't add an error if location doesn't exist
       // This is handled by setting no_match=true

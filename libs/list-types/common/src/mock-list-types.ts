@@ -5,6 +5,7 @@ export interface ListType {
   welshFriendlyName: string;
   provenance: string;
   urlPath?: string;
+  isNonStrategic: boolean;
 }
 
 export const mockListTypes: ListType[] = [
@@ -14,7 +15,8 @@ export const mockListTypes: ListType[] = [
     englishFriendlyName: "Civil Daily Cause List",
     welshFriendlyName: "Civil Daily Cause List",
     provenance: "CFT_IDAM",
-    urlPath: "civil-daily-cause-list"
+    urlPath: "civil-daily-cause-list",
+    isNonStrategic: false
   },
   {
     id: 2,
@@ -22,7 +24,8 @@ export const mockListTypes: ListType[] = [
     englishFriendlyName: "Family Daily Cause List",
     welshFriendlyName: "Family Daily Cause List",
     provenance: "CFT_IDAM",
-    urlPath: "family-daily-cause-list"
+    urlPath: "family-daily-cause-list",
+    isNonStrategic: false
   },
   {
     id: 3,
@@ -30,39 +33,44 @@ export const mockListTypes: ListType[] = [
     englishFriendlyName: "Crime Daily List",
     welshFriendlyName: "Crime Daily List",
     provenance: "CRIME_IDAM",
-    urlPath: "crime-daily-list"
+    urlPath: "crime-daily-list",
+    isNonStrategic: false
   },
   {
     id: 4,
     name: "MAGISTRATES_PUBLIC_LIST",
     englishFriendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",
-    provenance: "CRIME_IDAM",
-    urlPath: "magistrates-public-list"
+    provenance: "CFT_IDAM",
+    urlPath: "magistrates-public-list",
+    isNonStrategic: false
   },
   {
     id: 5,
     name: "CROWN_WARNED_LIST",
     englishFriendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
-    provenance: "CRIME_IDAM",
-    urlPath: "crown-warned-list"
+    provenance: "CFT_IDAM",
+    urlPath: "crown-warned-list",
+    isNonStrategic: false
   },
   {
     id: 6,
     name: "CROWN_DAILY_LIST",
     englishFriendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
-    provenance: "CRIME_IDAM",
-    urlPath: "crown-daily-list"
+    provenance: "CFT_IDAM",
+    urlPath: "crown-daily-cause-list",
+    isNonStrategic: false
   },
   {
     id: 7,
     name: "CROWN_FIRM_LIST",
     englishFriendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
-    provenance: "CRIME_IDAM",
-    urlPath: "crown-firm-list"
+    provenance: "CFT_IDAM",
+    urlPath: "crown-firm-list",
+    isNonStrategic: false
   },
   {
     id: 8,
@@ -70,6 +78,16 @@ export const mockListTypes: ListType[] = [
     englishFriendlyName: "Civil and Family Daily Cause List",
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
     provenance: "CFT_IDAM",
-    urlPath: "civil-and-family-daily-cause-list"
+    urlPath: "civil-and-family-daily-cause-list",
+    isNonStrategic: false
+  },
+  {
+    id: 9,
+    name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
+    welshFriendlyName: "Welsh placeholder",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "care-standards-tribunal-weekly-hearing-list",
+    isNonStrategic: true
   }
 ];

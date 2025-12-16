@@ -4,7 +4,7 @@ import type { DateInput } from "@hmcts/web-core";
 
 const UPLOAD_TTL = 3600; // 1 hour expiry
 
-export interface ManualUploadData {
+export interface UploadData {
   file: Buffer;
   fileName: string;
   fileType: string;
@@ -17,10 +17,10 @@ export interface ManualUploadData {
   displayTo: DateInput;
 }
 
-export async function storeManualUpload(data: ManualUploadData): Promise<string> {
+async function storeUpload(data: UploadData, keyPrefix: string): Promise<string> {
   const redis = await getRedisClient();
   const uploadId = randomUUID();
-  const key = `manual-upload:${uploadId}`;
+  const key = `${keyPrefix}:${uploadId}`;
 
   await redis.setEx(
     key,
@@ -43,9 +43,9 @@ export async function storeManualUpload(data: ManualUploadData): Promise<string>
   return uploadId;
 }
 
-export async function getManualUpload(uploadId: string): Promise<ManualUploadData | null> {
+async function getUpload(uploadId: string, keyPrefix: string): Promise<UploadData | null> {
   const redis = await getRedisClient();
-  const key = `manual-upload:${uploadId}`;
+  const key = `${keyPrefix}:${uploadId}`;
   const data = await redis.get(key);
 
   if (!data) {
@@ -65,4 +65,20 @@ export async function getManualUpload(uploadId: string): Promise<ManualUploadDat
     displayFrom: parsed.displayFrom,
     displayTo: parsed.displayTo
   };
+}
+
+export async function storeManualUpload(data: UploadData): Promise<string> {
+  return storeUpload(data, "manual-upload");
+}
+
+export async function getManualUpload(uploadId: string): Promise<UploadData | null> {
+  return getUpload(uploadId, "manual-upload");
+}
+
+export async function storeNonStrategicUpload(data: UploadData): Promise<string> {
+  return storeUpload(data, "non-strategic-upload");
+}
+
+export async function getNonStrategicUpload(uploadId: string): Promise<UploadData | null> {
+  return getUpload(uploadId, "non-strategic-upload");
 }
