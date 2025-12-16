@@ -1,67 +1,78 @@
 export const en = {
   title: "Accessibility statement",
+  backToTop: "Back to top",
   sections: {
     intro: {
-      content: "This accessibility statement applies to this service.",
-      commitment: "We want as many people as possible to be able to use this website. For example, that means you should be able to:",
+      content: "This accessibility statement applies to content published on ",
+      serviceUrl: "www.court-tribunal-hearings.service.gov.uk",
+      serviceUrlFull: "https://www.court-tribunal-hearings.service.gov.uk",
+      serviceDescription:
+        "The court and tribunal hearings service provides a publishing platform to enable information, such as hearing lists, provided by HM Courts and Tribunals Service (HMCTS) to be shared, displayed and updated as appropriate. It will enable information to be displayed to court users, consistent with jurisdictional procedures and business rules. The service supports HMCTS' commitment to open justice and the provision of transparent and consistent court and tribunal information across jurisdictions.",
+      commitment:
+        "This website is run by HMCTS. We want as many people as possible to be able to use this website, so we have designed it to be accessible. For example, that means you should be able to:",
       features: [
-        "change colours, contrast levels and fonts",
-        "zoom in up to 300% without the text spilling off the screen",
-        "navigate most of the website using just a keyboard",
-        "navigate most of the website using speech recognition software",
+        "change colours, contrast levels and fonts using browser or device settings",
+        "zoom in up to 400% without the text spilling off the screen",
+        "navigate most of the website using a keyboard or speech recognition software",
         "listen to most of the website using a screen reader (including the most recent versions of JAWS, NVDA and VoiceOver)"
       ],
       simpleLanguage: "We've also made the website text as simple as possible to understand.",
-      abilityNet: "AbilityNet has advice on making your device easier to use if you have a disability."
+      abilityNetLink: "AbilityNet (opens in a new window)",
+      abilityNetText: " has advice on making your device easier to use if you have a disability.",
+      abilityNetUrl: "https://mcmw.abilitynet.org.uk/"
     },
     howAccessible: {
       heading: "How accessible this website is",
-      content: "We know some parts of this website are not fully accessible:",
-      issues: [
-        "the text will not reflow in a single column when you change the size of the browser window",
-        "you cannot modify the line height or spacing of text",
-        "most older PDF documents are not fully accessible to screen reader software",
-        "live video streams do not have captions",
-        "some of our online forms are difficult to navigate using just a keyboard",
-        "you cannot skip to the main content when using a screen reader",
-        "there's a limit to how far you can magnify the map on our 'contact us' page"
-      ]
+      content:
+        "Whilst most hearing lists within the service are accessible, some hearing lists are only presented and viewable as a PDF or word document (flat files). These can be difficult for screen reader users to navigate as the content is untagged, untitled and the tables are not marked up to enable screen reader users to navigate and identify the information correctly.",
+      contingency:
+        "The availability of these hearing lists in a flat file only format is under continuous review and in the future may be published as fully accessible lists. As a contingency lists may be published as a flat file should integrations from source systems fail."
     },
     feedback: {
       heading: "Feedback and contact information",
-      content: "If you need information on this website in a different format like accessible PDF, large print, easy read, audio recording or braille:",
+      textRelay: "We provide a text relay service for people who are D/deaf, hearing impaired or have a speech impediment.",
+      audioLoops:
+        "Our courts and tribunals have audio induction loops, or if you contact us before your visit we can arrange a British Sign Language (BSL) interpreter.",
+      contactPrompt: "Find out how to contact us by using the contact details below.",
+      formatRequest: "If you need information on this website in a different format like accessible PDF, large print, easy read or braille, please contact:",
       contact: {
-        email: "Email: enquiries@hmcts.gsi.gov.uk",
-        phone: "Telephone: 0300 303 0642",
-        hours: "Monday to Friday, 9am to 5pm"
+        name: "Courts and Tribunals Service Centre",
+        phone: "Telephone: 0300 303 0656",
+        hours: "Monday to Friday 8am to 5pm",
+        email: "Email: publicationsinformation@justice.gov.uk"
       },
-      response: "We'll consider your request and get back to you in 5 working days."
+      response: "We'll consider your request and get back to you within 10 working days."
     },
     reporting: {
       heading: "Reporting accessibility problems with this website",
       content:
         "We're always looking to improve the accessibility of this website. If you find any problems not listed on this page or think we're not meeting accessibility requirements, contact:",
       contact: {
-        email: "Email: enquiries@hmcts.gsi.gov.uk",
-        phone: "Telephone: 0300 303 0642"
+        name: "Courts and Tribunals Service Centre",
+        phone: "Telephone: 0300 303 0656",
+        hours: "Monday to Friday 8am to 5pm",
+        email: "Email: publicationsinformation@justice.gov.uk"
       }
     },
     enforcement: {
       heading: "Enforcement procedure",
-      content: [
-        "The Equality and Human Rights Commission (EHRC) is responsible for enforcing the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018 (the 'accessibility regulations').",
-        "If you're not happy with how we respond to your complaint, contact the Equality Advisory and Support Service (EASS)."
-      ]
+      content:
+        "The Equality and Human Rights Commission (EHRC) is responsible for enforcing the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018 (the 'accessibility regulations'). If you're not happy with how we respond to your complaint, contact the ",
+      eassLinkText: "Equality Advisory and Support Service (EASS) (opens in a new window)",
+      eassUrl: "https://www.equalityadvisoryservice.com/",
+      contentSuffix: "."
     },
     technical: {
       heading: "Technical information about this website's accessibility",
       content:
-        "HMCTS is committed to making its website accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018."
+        "HMCTS is committed to making its websites accessible, in accordance with the Public Sector Bodies (Websites and Mobile Applications) (No. 2) Accessibility Regulations 2018."
     },
     compliance: {
       heading: "Compliance status",
-      content:
-        "This website is partially compliant with the Web Content Accessibility Guidelines version 2.1 AA standard, due to the non-compliances listed below."
+      content: "This website is partially compliant with the ",
+      wcagLinkText: "Web Content Accessibility Guidelines version 2.2 (opens in a new window)",
+      wcagUrl: "https://www.w3.org/TR/WCAG22/",
+      contentSuffix: " due to the non-compliances listed below."
     },
     nonAccessible: {
       heading: "Non-accessible content",
@@ -69,40 +80,24 @@ export const en = {
       nonCompliance: {
         heading: "Non-compliance with the accessibility regulations",
         issues: [
-          "Some images do not have a text alternative, so people using a screen reader cannot access the information. This fails WCAG 2.1 success criterion 1.1.1 (non-text content).",
-          "Some of our online forms are difficult to navigate using a keyboard. For example, because some form controls are missing a 'label' tag. This fails WCAG 2.1 success criterion 2.4.6 (headings and labels).",
-          "Some of our online forms have fields where the purpose is not identified. This means the information cannot be filled in automatically. This fails WCAG 2.1 success criterion 1.3.5 (identify input purpose).",
-          "Some heading elements are not consistent, or skip heading levels. This fails WCAG 2.1 success criterion 1.3.1 (info and relationships).",
-          "Some of our interactive forms are not compatible with screen readers. This fails WCAG 2.1 success criterion 4.1.2 (name, role value).",
-          "Our forms are not always compatible with browser auto-complete functions. This fails WCAG 2.1 success criterion 1.3.5 (identify input purpose)."
-        ],
-        fixing: "We're working to fix these issues."
-      },
-      disproportionateBurden: {
-        heading: "Disproportionate burden",
-        content: "Not applicable"
-      },
-      outsideScope: {
-        heading: "Content that's not within the scope of the accessibility regulations",
-        pdfs: {
-          heading: "PDFs and other documents",
-          content: [
-            "Many of our older PDFs and Word documents do not meet accessibility standards - for example, they may not be structured so they're accessible to a screen reader. This does not apply to PDFs or other documents published from September 2018.",
-            "Some of our PDFs and Word documents are essential to providing our services. For example, we have PDFs with information on how users can access our services, and forms published as Word documents. By September 2020, we plan to either fix these or replace them with accessible HTML pages."
-          ]
-        }
+          "Some hearing lists presented within the service are presented and viewable only as PDF or word document (flat files). This means that assistive technology users may struggle to review and understand the PDFs. This fails WCAG 2.2 success criterion 1.3.1 (info and relationships).",
+          "Page titles are not specific to the content on the screen and do not have enough information. This could be confusing for screen reader users as they wouldn't be aware of what page they are on when they land on it. This fails WCAG 2.2 success criterion 2.4.2 (page titled). We plan to resolve this issue by the end of April 2025."
+        ]
       }
     },
     testing: {
       heading: "What we're doing to improve accessibility",
-      content: "We're currently working on fixing the accessibility issues listed in this statement."
+      content: [
+        "We have actively engaged with jurisdictions across HMCTS to make sure that source systems produce accessible documents for publishing. We have asked services to review future enhancements when producing documents to make them fully accessible.",
+        "We will also continually run automated accessibility testing as part of our development practices.",
+        "Progress will be reviewed on an ongoing basis, with the continuation of internal and external audits."
+      ]
     },
     preparation: {
       heading: "Preparation of this accessibility statement",
       content: [
-        "This statement was prepared on 23 September 2019. It was last reviewed on 23 September 2024.",
-        "This website was last tested on 1 September 2024. The test was carried out by the Digital Accessibility Centre (DAC).",
-        "We tested all pages of the website."
+        "This statement was prepared on 8 September 2023. It was last reviewed on 6 March 2025.",
+        "This website was last audited by the HMCTS accessibility testing team in the Testing Centre of Excellence on 18 November 2024 across a range of assistive technologies and automated tools."
       ]
     }
   }

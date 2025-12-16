@@ -106,7 +106,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(page.getByRole("link", { name: /home/i })).toBeVisible();
     });
 
-    test("should be keyboard accessible throughout entire flow", async ({ page }) => {
+    test("should be keyboard accessible throughout entire flow @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       // Test file input is accessible
@@ -133,7 +133,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(confirmButton).toBeFocused();
     });
 
-    test("should allow multiple sequential uploads", async ({ page }) => {
+    test("should allow multiple sequential uploads @nightly", async ({ page }) => {
       // First upload
       await completeUploadFlow(page, validCsvContent);
       await expect(page).toHaveURL("/reference-data-upload-confirmation");
@@ -147,12 +147,12 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(page.getByText("second-upload.csv")).toBeVisible();
     });
 
-    test("should redirect to upload page if accessing summary without session", async ({ page }) => {
+    test("should redirect to upload page if accessing summary without session @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload-summary");
       await expect(page).toHaveURL("/reference-data-upload");
     });
 
-    test("should not allow access to confirmation page after refresh", async ({ page }) => {
+    test("should not allow access to confirmation page after refresh @nightly", async ({ page }) => {
       await completeUploadFlow(page, validCsvContent);
       await page.reload();
       // Should redirect away or show appropriate message
@@ -161,7 +161,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
   });
 
   test.describe("File Upload Validation", () => {
-    test("should display error when no file is selected", async ({ page }) => {
+    test("should display error when no file is selected @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await page.getByRole("button", { name: /continue/i }).click();
@@ -175,7 +175,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(errorSummary).toContainText("Select a CSV file to upload");
     });
 
-    test("should display error for invalid file type - .txt", async ({ page }) => {
+    test("should display error for invalid file type - .txt @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       const fileInput = page.locator('input[name="file"]');
@@ -193,7 +193,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(errorSummary).toContainText("Unsupported file type. Please upload a .csv file");
     });
 
-    test("should display error for invalid file type - .xlsx", async ({ page }) => {
+    test("should display error for invalid file type - .xlsx @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       const fileInput = page.locator('input[name="file"]');
@@ -228,7 +228,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(page.locator("h1")).toContainText("Reference data upload summary");
     });
 
-    test("should handle empty CSV file", async ({ page }) => {
+    test("should handle empty CSV file @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       const fileInput = page.locator('input[name="file"]');
@@ -248,7 +248,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
   });
 
   test.describe("CSV Parsing", () => {
-    test("should parse valid CSV and display preview", async ({ page }) => {
+    test("should parse valid CSV and display preview @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await uploadCsvFile(page, validCsvContent);
@@ -271,7 +271,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(firstRow.locator("td").first()).toContainText("9001");
     });
 
-    test("should display error for CSV with missing required columns", async ({ page }) => {
+    test("should display error for CSV with missing required columns @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await uploadCsvFile(page, csvWithMissingColumns);
@@ -283,7 +283,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(errorSummary).toContainText(/missing required column/i);
     });
 
-    test("should display error for invalid location IDs", async ({ page }) => {
+    test("should display error for invalid location IDs @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await uploadCsvFile(page, csvWithInvalidLocationId);
@@ -295,7 +295,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(errorSummary).toBeVisible();
     });
 
-    test("should handle CSV with BOM (Byte Order Mark)", async ({ page }) => {
+    test("should handle CSV with BOM (Byte Order Mark) @nightly", async ({ page }) => {
       const csvWithBOM = `\uFEFF${validCsvContent}`;
 
       await page.goto("/reference-data-upload");
@@ -308,7 +308,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(table.locator("tbody tr").first()).toBeVisible();
     });
 
-    test("should handle CSV with semicolon-separated values in cells", async ({ page }) => {
+    test("should handle CSV with semicolon-separated values in cells @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
@@ -322,7 +322,7 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
       await expect(subJurisdictionCell).toContainText("Crown Court");
     });
 
-    test("should show pagination for large CSV files", async ({ page }) => {
+    test("should show pagination for large CSV files @nightly", async ({ page }) => {
       // Create CSV with 15 rows (should trigger pagination with 10 items per page)
       const largeCsv = `LOCATION_ID,LOCATION_NAME,WELSH_LOCATION_NAME,EMAIL,CONTACT_NO,SUB_JURISDICTION_NAME,REGION_NAME
 ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf ${i},test${i}@test.hmcts.net,0123456789${i},Civil Court,London`).join("\n")}`;
@@ -346,7 +346,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
   });
 
   test.describe("Data Validation", () => {
-    test("should display validation errors on summary page", async ({ page }) => {
+    test("should display validation errors on summary page @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await uploadCsvFile(page, csvWithDuplicateLocationId);
@@ -361,7 +361,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(page.getByRole("link", { name: /go back to upload page/i })).toBeVisible();
     });
 
-    test("should validate duplicate location IDs", async ({ page }) => {
+    test("should validate duplicate location IDs @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await uploadCsvFile(page, csvWithDuplicateLocationId);
@@ -373,7 +373,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(errorSummary).toContainText(/already exists in the database/i);
     });
 
-    test("should allow navigation back to upload page from error state", async ({ page }) => {
+    test("should allow navigation back to upload page from error state @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       await uploadCsvFile(page, csvWithDuplicateLocationId);
@@ -384,7 +384,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(page).toHaveURL("/reference-data-upload");
     });
 
-    test("should preserve error messages across page navigation", async ({ page }) => {
+    test("should preserve error messages across page navigation @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       // Submit without file
@@ -396,7 +396,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(errorSummary).toBeVisible();
     });
 
-    test("should clear errors after successful upload", async ({ page }) => {
+    test("should clear errors after successful upload @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       // First: try without file
@@ -418,7 +418,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(page.locator(".govuk-error-summary")).not.toBeVisible();
     });
 
-    test("should validate that required fields are not empty", async ({ page }) => {
+    test("should validate that required fields are not empty @nightly", async ({ page }) => {
       const csvWithEmptyFields = `LOCATION_ID,LOCATION_NAME,WELSH_LOCATION_NAME,EMAIL,CONTACT_NO,SUB_JURISDICTION_NAME,REGION_NAME
 9001,,Llys Prawf,test@test.hmcts.net,01234567890,Civil Court,London`;
 
@@ -432,7 +432,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
   });
 
   test.describe("Summary Page Features", () => {
-    test("should display file name in summary list", async ({ page }) => {
+    test("should display file name in summary list @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       const fileName = "my-reference-data.csv";
@@ -443,7 +443,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(page.getByText(fileName)).toBeVisible();
     });
 
-    test("should show change link in summary list", async ({ page }) => {
+    test("should show change link in summary list @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
@@ -453,7 +453,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(changeLink).toBeVisible();
     });
 
-    test("should navigate back to upload page when clicking change", async ({ page }) => {
+    test("should navigate back to upload page when clicking change @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
@@ -462,7 +462,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(page).toHaveURL("/reference-data-upload");
     });
 
-    test("should display all table columns", async ({ page }) => {
+    test("should display all table columns @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
@@ -477,7 +477,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       }
     });
 
-    test("should display preview title", async ({ page }) => {
+    test("should display preview title @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
@@ -487,7 +487,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
   });
 
   test.describe("Confirmation Flow", () => {
-    test("should upload data to database on confirmation", async ({ page }) => {
+    test("should upload data to database on confirmation @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
@@ -501,7 +501,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(successPanel).toContainText("File upload successful");
     });
 
-    test("should display success page with navigation links", async ({ page }) => {
+    test("should display success page with navigation links @nightly", async ({ page }) => {
       await completeUploadFlow(page, validCsvContent);
 
       await expect(page).toHaveURL("/reference-data-upload-confirmation");
@@ -516,7 +516,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(homeLink).toHaveAttribute("href", "/system-admin-dashboard");
     });
 
-    test("should clear session data after successful upload", async ({ page }) => {
+    test("should clear session data after successful upload @nightly", async ({ page }) => {
       await completeUploadFlow(page, validCsvContent);
 
       // Try to go back to summary - should redirect to upload
@@ -524,7 +524,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       await expect(page).toHaveURL("/reference-data-upload");
     });
 
-    test("should navigate to upload page from success page", async ({ page }) => {
+    test("should navigate to upload page from success page @nightly", async ({ page }) => {
       await completeUploadFlow(page, validCsvContent);
 
       await page.getByRole("link", { name: /upload another file/i }).click();
@@ -533,7 +533,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
   });
 
   test.describe("Accessibility & Welsh Language", () => {
-    test("should meet WCAG 2.2 AA standards on upload page", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on upload page @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
 
       const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -541,7 +541,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should meet WCAG 2.2 AA standards on summary page", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on summary page @nightly", async ({ page }) => {
       await page.goto("/reference-data-upload");
       await uploadCsvFile(page, validCsvContent);
       await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });

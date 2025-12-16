@@ -1,12 +1,16 @@
+import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import * as XLSX from "xlsx";
 import { convertExcelToJson, type ExcelConverterConfig, validateDateFormat, validateNoHtmlTags } from "./excel-to-json.js";
 
-function createExcelBuffer(data: unknown[][]): Buffer {
-  const worksheet = XLSX.utils.aoa_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-  return Buffer.from(XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }));
+async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Sheet1");
+
+  for (const row of data) {
+    worksheet.addRow(row);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 describe("excel-to-json", () => {
@@ -25,7 +29,7 @@ describe("excel-to-json", () => {
         ["Jane Smith", "25"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelToJson(buffer, config);
 
       expect(result).toHaveLength(2);
@@ -47,7 +51,7 @@ describe("excel-to-json", () => {
         ["Jane Smith", ""]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelToJson(buffer, config);
 
       expect(result).toHaveLength(2);
@@ -73,7 +77,7 @@ describe("excel-to-json", () => {
         ["John", "<script>alert('xss')</script>"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow(/HTML tags are not allowed/);
     });
@@ -91,7 +95,7 @@ describe("excel-to-json", () => {
         ["John Doe", "30"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelToJson(buffer, config);
 
       expect(result).toHaveLength(1);
@@ -111,7 +115,7 @@ describe("excel-to-json", () => {
         ["  John Doe  ", "  London  "]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelToJson(buffer, config);
 
       expect(result[0]).toEqual({ name: "John Doe", city: "London" });
@@ -131,7 +135,7 @@ describe("excel-to-json", () => {
         ["John Doe", "30"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow(/Excel file must contain columns.*Missing: Email/);
     });
@@ -144,7 +148,7 @@ describe("excel-to-json", () => {
 
       const excelData = [["Name"]];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow("Excel file must contain at least 1 data row");
     });
@@ -167,7 +171,7 @@ describe("excel-to-json", () => {
         ["Jane Smith", "25"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow(/Error in row 2:.*Missing required field 'Age'/);
     });
@@ -192,7 +196,7 @@ describe("excel-to-json", () => {
         ["Bob", "<div>Invalid</div>"]
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow(/Error in row 4/);
     });
@@ -205,7 +209,7 @@ describe("excel-to-json", () => {
 
       const excelData = [["Name"], ["John"], ["Jane"]];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
 
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow("Excel file must contain at least 3 data rows");
     });
@@ -221,7 +225,7 @@ describe("excel-to-json", () => {
         // No data rows
       ];
 
-      const buffer = createExcelBuffer(excelData);
+      const buffer = await createExcelBuffer(excelData);
       const result = await convertExcelToJson(buffer, config);
 
       expect(result).toHaveLength(0);

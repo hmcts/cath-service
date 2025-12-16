@@ -1,8 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import * as XLSX from "xlsx";
+// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
+import ExcelJSPkg from "exceljs";
 import { loginWithSSO } from "../utils/sso-helpers.js";
+
+const { Workbook } = ExcelJSPkg;
 
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {
@@ -16,7 +19,7 @@ async function authenticateSystemAdmin(page: Page) {
 }
 
 // Helper function to create a valid CST Excel file
-function createValidCSTExcel(): Buffer {
+async function createValidCSTExcel(): Promise<Buffer> {
   const hearings = [
     {
       Date: "01/01/2026",
@@ -44,15 +47,27 @@ function createValidCSTExcel(): Buffer {
     }
   ];
 
-  const worksheet = XLSX.utils.json_to_sheet(hearings);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Hearings");
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet("Hearings");
 
-  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  worksheet.columns = [
+    { header: "Date", key: "Date" },
+    { header: "Case name", key: "Case name" },
+    { header: "Hearing length", key: "Hearing length" },
+    { header: "Hearing type", key: "Hearing type" },
+    { header: "Venue", key: "Venue" },
+    { header: "Additional information", key: "Additional information" }
+  ];
+
+  for (const hearing of hearings) {
+    worksheet.addRow(hearing);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Helper function to create an invalid CST Excel file (missing required field)
-function createInvalidCSTExcel(): Buffer {
+async function createInvalidCSTExcel(): Promise<Buffer> {
   const hearings = [
     {
       Date: "01/01/2026",
@@ -64,15 +79,27 @@ function createInvalidCSTExcel(): Buffer {
     }
   ];
 
-  const worksheet = XLSX.utils.json_to_sheet(hearings);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Hearings");
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet("Hearings");
 
-  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  worksheet.columns = [
+    { header: "Date", key: "Date" },
+    { header: "Case name", key: "Case name" },
+    { header: "Hearing length", key: "Hearing length" },
+    { header: "Hearing type", key: "Hearing type" },
+    { header: "Venue", key: "Venue" },
+    { header: "Additional information", key: "Additional information" }
+  ];
+
+  for (const hearing of hearings) {
+    worksheet.addRow(hearing);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Helper function to create CST Excel with invalid date format
-function createInvalidDateCSTExcel(): Buffer {
+async function createInvalidDateCSTExcel(): Promise<Buffer> {
   const hearings = [
     {
       Date: "2026-01-01", // Wrong format (should be dd/MM/yyyy)
@@ -84,15 +111,27 @@ function createInvalidDateCSTExcel(): Buffer {
     }
   ];
 
-  const worksheet = XLSX.utils.json_to_sheet(hearings);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Hearings");
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet("Hearings");
 
-  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  worksheet.columns = [
+    { header: "Date", key: "Date" },
+    { header: "Case name", key: "Case name" },
+    { header: "Hearing length", key: "Hearing length" },
+    { header: "Hearing type", key: "Hearing type" },
+    { header: "Venue", key: "Venue" },
+    { header: "Additional information", key: "Additional information" }
+  ];
+
+  for (const hearing of hearings) {
+    worksheet.addRow(hearing);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Helper function to create CST Excel with HTML tags
-function createHTMLTagsCSTExcel(): Buffer {
+async function createHTMLTagsCSTExcel(): Promise<Buffer> {
   const hearings = [
     {
       Date: "01/01/2026",
@@ -104,11 +143,23 @@ function createHTMLTagsCSTExcel(): Buffer {
     }
   ];
 
-  const worksheet = XLSX.utils.json_to_sheet(hearings);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Hearings");
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet("Hearings");
 
-  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  worksheet.columns = [
+    { header: "Date", key: "Date" },
+    { header: "Case name", key: "Case name" },
+    { header: "Hearing length", key: "Hearing length" },
+    { header: "Hearing type", key: "Hearing type" },
+    { header: "Venue", key: "Venue" },
+    { header: "Additional information", key: "Additional information" }
+  ];
+
+  for (const hearing of hearings) {
+    worksheet.addRow(hearing);
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 // Helper function to upload CST Excel file
@@ -148,7 +199,7 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
 
 // Helper function to complete full CST upload flow
 async function completeCSTUploadFlow(page: Page): Promise<string> {
-  const excelBuffer = createValidCSTExcel();
+  const excelBuffer = await createValidCSTExcel();
   await uploadCSTExcel(page, excelBuffer, true);
 
   // Get artefactId from URL for later verification
@@ -175,7 +226,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       await expect(page).toHaveTitle("Upload - Upload Excel file - Court and tribunal hearings - GOV.UK");
 
       // Step 2: Fill form with CST list type
-      const excelBuffer = createValidCSTExcel();
+      const excelBuffer = await createValidCSTExcel();
       await uploadCSTExcel(page, excelBuffer, true);
 
       // Step 3: Verify summary page displays correct data
@@ -216,7 +267,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
   test.describe("Excel Validation on Upload Page", () => {
     test("should show validation error for missing required field on upload page", async ({ page }) => {
-      const excelBuffer = createInvalidCSTExcel();
+      const excelBuffer = await createInvalidCSTExcel();
       await uploadCSTExcel(page, excelBuffer, false);
 
       // Verify we're still on upload page
@@ -235,7 +286,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should show validation error for invalid date format on upload page", async ({ page }) => {
-      const excelBuffer = createInvalidDateCSTExcel();
+      const excelBuffer = await createInvalidDateCSTExcel();
       await uploadCSTExcel(page, excelBuffer, false);
 
       // Verify we're still on upload page
@@ -247,11 +298,11 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
       // Verify error message mentions date format
       const errorText = await errorSummary.textContent();
-      expect(errorText).toContain("Invalid date format") || expect(errorText).toContain("dd/MM/yyyy");
+      expect(errorText && (errorText.includes("Invalid date format") || errorText.includes("dd/MM/yyyy"))).toBeTruthy();
     });
 
     test("should show validation error for HTML tags in fields on upload page", async ({ page }) => {
-      const excelBuffer = createHTMLTagsCSTExcel();
+      const excelBuffer = await createHTMLTagsCSTExcel();
       await uploadCSTExcel(page, excelBuffer, false);
 
       // Verify we're still on upload page
@@ -263,11 +314,11 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
       // Verify error message mentions HTML tags
       const errorText = await errorSummary.textContent();
-      expect(errorText).toContain("HTML tags") || expect(errorText).toContain("Invalid content");
+      expect(errorText && (errorText.includes("HTML tags") || errorText.includes("Invalid content"))).toBeTruthy();
     });
 
     test("should preserve form data when Excel validation fails", async ({ page }) => {
-      const excelBuffer = createInvalidCSTExcel();
+      const excelBuffer = await createInvalidCSTExcel();
       await uploadCSTExcel(page, excelBuffer, false);
 
       // Verify form data is preserved
@@ -284,7 +335,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     test("should display list with correct header information", async ({ page }) => {
       // Note: This test requires the list to be published and accessible
       // You may need to adjust based on your actual implementation
-      const excelBuffer = createValidCSTExcel();
+      const excelBuffer = await createValidCSTExcel();
       await uploadCSTExcel(page, excelBuffer, true);
       await page.getByRole("button", { name: "Confirm" }).click();
       await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
@@ -402,7 +453,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should meet WCAG 2.2 AA standards on error page", async ({ page }) => {
-      const excelBuffer = createInvalidCSTExcel();
+      const excelBuffer = await createInvalidCSTExcel();
       await uploadCSTExcel(page, excelBuffer, false);
 
       const accessibilityScanResults = await new AxeBuilder({ page })

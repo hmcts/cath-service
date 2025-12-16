@@ -117,7 +117,7 @@ test.describe("Landing Page", () => {
   });
 
   test.describe("Welsh Language Support", () => {
-    test("should switch to Welsh and display translated content", async ({ page }) => {
+    test("should switch to Welsh and display translated content @nightly", async ({ page }) => {
       await page.goto("/");
 
       // Click Welsh language toggle
@@ -157,7 +157,7 @@ test.describe("Landing Page", () => {
       await expect(page.locator('a.govuk-button:has-text("Parhau")')).toBeVisible();
     });
 
-    test("should display Welsh FaCT section", async ({ page }) => {
+    test("should display Welsh FaCT section @nightly", async ({ page }) => {
       await page.goto("/?lng=cy");
       const factSection = page.locator("text=Dod o hyd i lys neu dribiwnlys").first();
       await expect(factSection).toBeVisible();
@@ -170,7 +170,7 @@ test.describe("Landing Page", () => {
       await expect(factText).toBeVisible();
     });
 
-    test("should display Welsh Before you start section", async ({ page }) => {
+    test("should display Welsh Before you start section @nightly", async ({ page }) => {
       await page.goto("/?lng=cy");
       const beforeYouStartTitle = page.locator("text=Cyn i chi ddechrau");
       await expect(beforeYouStartTitle).toBeVisible();
@@ -182,7 +182,7 @@ test.describe("Landing Page", () => {
       await expect(contactText).toBeVisible();
     });
 
-    test("should display Welsh Scottish Courts link", async ({ page }) => {
+    test("should display Welsh Scottish Courts link @nightly", async ({ page }) => {
       await page.goto("/?lng=cy");
       const scottishCourtsLink = page.locator('a[href="https://www.scotcourts.gov.uk"]');
       await expect(scottishCourtsLink).toBeVisible();
@@ -192,7 +192,7 @@ test.describe("Landing Page", () => {
       await expect(scottishCourtsText).toBeVisible();
     });
 
-    test("should display Welsh Northern Ireland Courts link", async ({ page }) => {
+    test("should display Welsh Northern Ireland Courts link @nightly", async ({ page }) => {
       await page.goto("/?lng=cy");
       const niCourtsLink = page.locator('a[href="https://www.justice-ni.gov.uk/topics/courts-and-tribunals"]');
       await expect(niCourtsLink).toBeVisible();
@@ -226,7 +226,7 @@ test.describe("Landing Page", () => {
   });
 
   test.describe("Keyboard Navigation", () => {
-    test("should allow keyboard navigation to continue button", async ({ page }) => {
+    test("should allow keyboard navigation to continue button @nightly", async ({ page }) => {
       await page.goto("/");
 
       // Tab through interactive elements until we reach the continue button
@@ -250,7 +250,7 @@ test.describe("Landing Page", () => {
   });
 
   test.describe("Responsive Design", () => {
-    test("should display correctly on mobile viewport (375x667)", async ({ page }) => {
+    test("should display correctly on mobile viewport (375x667) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/");
 
@@ -264,7 +264,7 @@ test.describe("Landing Page", () => {
       await expect(continueButton).toBeVisible();
     });
 
-    test("should display correctly on tablet viewport (768x1024)", async ({ page }) => {
+    test("should display correctly on tablet viewport (768x1024) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto("/");
 
@@ -278,7 +278,7 @@ test.describe("Landing Page", () => {
       await expect(continueButton).toBeVisible();
     });
 
-    test("should display correctly on desktop viewport (1920x1080)", async ({ page }) => {
+    test("should display correctly on desktop viewport (1920x1080) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/");
 
