@@ -6,7 +6,8 @@ vi.mock("@hmcts/postgres", () => ({
   prisma: {
     location: {
       findMany: vi.fn(),
-      findUnique: vi.fn()
+      findUnique: vi.fn(),
+      findFirst: vi.fn()
     },
     jurisdiction: {
       findMany: vi.fn()
@@ -152,7 +153,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Setup default mock implementations
   vi.mocked(prisma.location.findMany).mockResolvedValue(mockLocations as any);
-  vi.mocked(prisma.location.findUnique).mockImplementation((args: any) => {
+  vi.mocked(prisma.location.findFirst).mockImplementation((args: any) => {
     const id = args?.where?.locationId;
     const location = mockLocations.find((loc) => loc.locationId === id);
     return Promise.resolve(location as any);
@@ -327,5 +328,30 @@ describe("getSubJurisdictionsByJurisdiction", () => {
     await getSubJurisdictionsByJurisdiction(1);
 
     expect(mockSubJurisdictions).toEqual(mockSnapshot);
+  });
+});
+
+describe("Soft delete filtering", () => {
+  it("getAllLocations should filter out soft-deleted locations", async () => {
+    await getAllLocations("en");
+    expect(prisma.location.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          deletedAt: null
+        }
+      })
+    );
+  });
+
+  it("getLocationById should filter out soft-deleted locations", async () => {
+    await getLocationById(1);
+    expect(prisma.location.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          locationId: 1,
+          deletedAt: null
+        }
+      })
+    );
   });
 });

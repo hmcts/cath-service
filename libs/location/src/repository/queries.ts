@@ -5,6 +5,9 @@ export type { Location };
 
 export async function getAllLocations(language: "en" | "cy"): Promise<Location[]> {
   const locations = await prisma.location.findMany({
+    where: {
+      deletedAt: null
+    },
     include: {
       locationRegions: {
         include: {
@@ -35,8 +38,11 @@ export async function getAllLocations(language: "en" | "cy"): Promise<Location[]
 }
 
 export async function getLocationById(id: number): Promise<Location | undefined> {
-  const location = await prisma.location.findUnique({
-    where: { locationId: id },
+  const location = await prisma.location.findFirst({
+    where: {
+      locationId: id,
+      deletedAt: null
+    },
     include: {
       locationRegions: {
         include: {

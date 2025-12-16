@@ -1,0 +1,29 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {{ govukPanel({
+      titleText: pageTitle,
+      html: bannerText
+    }) }}
+
+    <h2 class="govuk-heading-m">{{ nextStepsTitle }}</h2>
+
+    <ul class="govuk-list">
+      <li>
+        <a href="/delete-court{% if lng == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ removeAnotherCourtLink }}</a>
+      </li>
+      <li>
+        <a href="/reference-data-upload{% if lng == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ uploadReferenceDataLink }}</a>
+      </li>
+      <li>
+        <a href="/system-admin-dashboard{% if lng == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ homeLink }}</a>
+      </li>
+    </ul>
+
+  </div>
+</div>
+{% endblock %}

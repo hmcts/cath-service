@@ -14,7 +14,8 @@ describe("Admin Dashboard GET handler", () => {
   it("should render the dashboard page with English content", async () => {
     const req = {
       isAuthenticated: () => true,
-      user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" }
+      user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" },
+      query: {}
     } as unknown as Request;
     const res = {
       render: vi.fn(),
@@ -60,7 +61,8 @@ describe("Admin Dashboard GET handler", () => {
   it("should include all 8 tiles", async () => {
     const req = {
       isAuthenticated: () => true,
-      user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" }
+      user: { id: "test-user", email: "test@example.com", displayName: "Test User", role: "SYSTEM_ADMIN" },
+      query: {}
     } as unknown as Request;
     const res = {
       render: vi.fn(),
