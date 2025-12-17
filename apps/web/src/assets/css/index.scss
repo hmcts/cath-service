@@ -8,7 +8,7 @@
 @use "@hmcts/admin-pages/src/assets/css/index.scss" as admin;
 @use "@hmcts/system-admin-pages/src/assets/css/dashboard.scss";
 @use "@hmcts/verified-pages/src/assets/css/index.scss" as verified;
-@use "../../../../../../libs/sjp/src/assets/css/sjp-filters.scss";
+@use "../../../../../libs/sjp/src/assets/css/sjp-filters.scss";
 
 .govuk-service-navigation__navigation-end {
   margin-left: auto !important;
