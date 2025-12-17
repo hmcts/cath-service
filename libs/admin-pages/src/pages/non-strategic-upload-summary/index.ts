@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
-import { findListTypeById } from "@hmcts/list-type-config";
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, Provenance } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";

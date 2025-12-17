@@ -1,7 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { findAllListTypes } from "@hmcts/list-type-config";
 import { getLocationById } from "@hmcts/location";
 import { getArtefactsByLocation } from "@hmcts/publication";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import cy from "./cy.js";

@@ -42,7 +42,7 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
-vi.mock("@hmcts/list-type-config", () => ({
+vi.mock("@hmcts/system-admin-pages", () => ({
   findListTypeById: vi.fn((id: number) => {
     if (id === 1) return Promise.resolve({ id: 1, friendlyName: "Test List Type", welshFriendlyName: "Test List Type CY" });
     if (id === 5) return Promise.resolve({ id: 5, friendlyName: "Magistrates Public List", welshFriendlyName: "Rhestr Gyhoeddus Ynadon" });

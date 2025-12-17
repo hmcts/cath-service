@@ -23,17 +23,17 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../list-type/list-type-queries.js", () => ({
+vi.mock("../../list-type/queries.js", () => ({
   findAllSubJurisdictions: vi.fn()
 }));
 
-vi.mock("../../list-type/list-type-validation.js", () => ({
+vi.mock("../../list-type/validation.js", () => ({
   validateSubJurisdictions: vi.fn()
 }));
 
-const { GET, POST } = await import("./select-sub-jurisdictions.js");
-const { findAllSubJurisdictions } = await import("../../list-type/list-type-queries.js");
-const { validateSubJurisdictions } = await import("../../list-type/list-type-validation.js");
+const { GET, POST } = await import("./index.js");
+const { findAllSubJurisdictions } = await import("../../list-type/queries.js");
+const { validateSubJurisdictions } = await import("../../list-type/validation.js");
 
 describe("select-sub-jurisdictions page", () => {
   const mockSubJurisdictions = [
@@ -61,7 +61,7 @@ describe("select-sub-jurisdictions page", () => {
 
       expect(findAllSubJurisdictions).toHaveBeenCalled();
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/select-sub-jurisdictions",
+        "configure-list-type-select-sub-jurisdictions/index",
         expect.objectContaining({
           items: expect.arrayContaining([
             expect.objectContaining({ value: "1", text: "England", checked: true }),
@@ -79,7 +79,7 @@ describe("select-sub-jurisdictions page", () => {
       await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/select-sub-jurisdictions",
+        "configure-list-type-select-sub-jurisdictions/index",
         expect.objectContaining({
           items: expect.arrayContaining([expect.objectContaining({ text: "Lloegr" }), expect.objectContaining({ text: "Cymru" })])
         })
@@ -92,7 +92,7 @@ describe("select-sub-jurisdictions page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
       expect(res.render).not.toHaveBeenCalled();
     });
 
@@ -109,7 +109,7 @@ describe("select-sub-jurisdictions page", () => {
       await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/select-sub-jurisdictions",
+        "configure-list-type-select-sub-jurisdictions/index",
         expect.objectContaining({
           items: expect.arrayContaining([expect.objectContaining({ checked: true }), expect.objectContaining({ checked: true })])
         })
@@ -124,7 +124,7 @@ describe("select-sub-jurisdictions page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
     });
 
     it("should validate and redirect to preview on success", async () => {
@@ -137,7 +137,7 @@ describe("select-sub-jurisdictions page", () => {
 
       expect(validateSubJurisdictions).toHaveBeenCalledWith([1, 2]);
       expect(session.configureListType.subJurisdictionIds).toEqual([1, 2]);
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/preview");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-preview");
     });
 
     it("should handle single sub-jurisdiction selection", async () => {
@@ -149,7 +149,7 @@ describe("select-sub-jurisdictions page", () => {
       await callHandler(POST, req, res);
 
       expect(session.configureListType.subJurisdictionIds).toEqual([1]);
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/preview");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-preview");
     });
 
     it("should handle validation errors", async () => {
@@ -162,7 +162,7 @@ describe("select-sub-jurisdictions page", () => {
       await callHandler(POST, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/select-sub-jurisdictions",
+        "configure-list-type-select-sub-jurisdictions/index",
         expect.objectContaining({
           errors: expect.objectContaining({
             subJurisdictions: { text: "Select at least one sub-jurisdiction" }
@@ -183,7 +183,7 @@ describe("select-sub-jurisdictions page", () => {
       await callHandler(POST, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/select-sub-jurisdictions",
+        "configure-list-type-select-sub-jurisdictions/index",
         expect.objectContaining({
           items: expect.arrayContaining([expect.objectContaining({ checked: true })])
         })

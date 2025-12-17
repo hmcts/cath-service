@@ -1,10 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import type { Session } from "express-session";
-import { findAllSubJurisdictions } from "../../list-type/list-type-queries.js";
-import { validateSubJurisdictions } from "../../list-type/list-type-validation.js";
-import { cy } from "../../locales/cy.js";
-import { en } from "../../locales/en.js";
+import { findAllSubJurisdictions } from "../../list-type/queries.js";
+import { validateSubJurisdictions } from "../../list-type/validation.js";
+import * as cy from "./cy.js";
+import * as en from "./en.js";
 
 interface ListTypeSession extends Session {
   configureListType?: {
@@ -25,7 +25,7 @@ const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type/enter-details");
+    return res.redirect("/configure-list-type-enter-details");
   }
 
   const language = req.query.lng === "cy" ? "cy" : "en";
@@ -40,7 +40,7 @@ const getHandler = async (req: Request, res: Response) => {
     checked: selectedIds.includes(subJurisdiction.subJurisdictionId)
   }));
 
-  res.render("configure-list-type/select-sub-jurisdictions", {
+  res.render("configure-list-type-select-sub-jurisdictions/index", {
     t: content,
     items
   });
@@ -50,7 +50,7 @@ const postHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type/enter-details");
+    return res.redirect("/configure-list-type-enter-details");
   }
 
   const subJurisdictionIds = Array.isArray(req.body.subJurisdictions)
@@ -73,7 +73,7 @@ const postHandler = async (req: Request, res: Response) => {
       checked: subJurisdictionIds.includes(subJurisdiction.subJurisdictionId)
     }));
 
-    return res.render("configure-list-type/select-sub-jurisdictions", {
+    return res.render("configure-list-type-select-sub-jurisdictions/index", {
       t: content,
       items,
       errors: {
@@ -88,7 +88,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   session.configureListType.subJurisdictionIds = subJurisdictionIds;
 
-  res.redirect("/configure-list-type/preview");
+  res.redirect("/configure-list-type-preview");
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

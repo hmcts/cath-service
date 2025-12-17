@@ -1,7 +1,7 @@
-import { findAllListTypes } from "@hmcts/list-type-config";
 import { validateListTypeJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./repository/model.js";
 
 const MAX_BLOB_SIZE = 10 * 1024 * 1024; // 10MB default

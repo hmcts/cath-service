@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ListTypeDetailsInput, validateListTypeDetails, validateSubJurisdictions } from "./list-type-validation.js";
+import { type ListTypeDetailsInput, validateListTypeDetails, validateSubJurisdictions } from "./validation.js";
 
 describe("validateListTypeDetails", () => {
   it("should return no errors for valid input", () => {

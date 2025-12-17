@@ -44,7 +44,7 @@ export const en = {
     {
       title: "Configure List Type",
       description: "Add and manage list type configurations",
-      href: "/configure-list-type/enter-details"
+      href: "/configure-list-type-enter-details"
     }
   ]
 };

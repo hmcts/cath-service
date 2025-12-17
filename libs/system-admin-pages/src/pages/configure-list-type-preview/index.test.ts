@@ -23,17 +23,17 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../list-type/list-type-queries.js", () => ({
+vi.mock("../../list-type/queries.js", () => ({
   findAllSubJurisdictions: vi.fn()
 }));
 
-vi.mock("../../list-type/list-type-service.js", () => ({
+vi.mock("../../list-type/service.js", () => ({
   saveListType: vi.fn()
 }));
 
-const { GET, POST } = await import("./preview.js");
-const { findAllSubJurisdictions } = await import("../../list-type/list-type-queries.js");
-const { saveListType } = await import("../../list-type/list-type-service.js");
+const { GET, POST } = await import("./index.js");
+const { findAllSubJurisdictions } = await import("../../list-type/queries.js");
+const { saveListType } = await import("../../list-type/service.js");
 
 describe("preview page", () => {
   const mockSubJurisdictions = [
@@ -68,7 +68,7 @@ describe("preview page", () => {
 
       expect(findAllSubJurisdictions).toHaveBeenCalled();
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/preview",
+        "configure-list-type-preview/index",
         expect.objectContaining({
           data: mockSessionData,
           subJurisdictionsText: "England, Wales"
@@ -84,7 +84,7 @@ describe("preview page", () => {
       await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/preview",
+        "configure-list-type-preview/index",
         expect.objectContaining({
           subJurisdictionsText: "Lloegr, Cymru"
         })
@@ -97,7 +97,7 @@ describe("preview page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
       expect(res.render).not.toHaveBeenCalled();
     });
 
@@ -109,7 +109,7 @@ describe("preview page", () => {
       await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/preview",
+        "configure-list-type-preview/index",
         expect.objectContaining({
           subJurisdictionsText: "England"
         })
@@ -124,7 +124,7 @@ describe("preview page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
       expect(saveListType).not.toHaveBeenCalled();
     });
 
@@ -151,7 +151,7 @@ describe("preview page", () => {
         undefined
       );
       expect(session.configureListType).toBeUndefined();
-      expect(res.redirect).toHaveBeenCalledWith(303, "/configure-list-type/success");
+      expect(res.redirect).toHaveBeenCalledWith(303, "/configure-list-type-success");
     });
 
     it("should pass editId when updating existing list type", async () => {
@@ -184,7 +184,7 @@ describe("preview page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith(303, "/configure-list-type/success");
+      expect(res.redirect).toHaveBeenCalledWith(303, "/configure-list-type-success");
     });
 
     it("should handle save errors gracefully", async () => {
@@ -197,7 +197,7 @@ describe("preview page", () => {
       await callHandler(POST, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/preview",
+        "configure-list-type-preview/index",
         expect.objectContaining({
           error: "Database error"
         })
@@ -225,7 +225,7 @@ describe("preview page", () => {
       await callHandler(POST, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/preview",
+        "configure-list-type-preview/index",
         expect.objectContaining({
           error: "Failed to save list type"
         })

@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
-import { findStrategicListTypes } from "@hmcts/list-type-config";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
+import { findStrategicListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";

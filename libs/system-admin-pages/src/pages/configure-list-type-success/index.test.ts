@@ -23,7 +23,7 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-const { GET } = await import("./success.js");
+const { GET } = await import("./index.js");
 
 describe("success page", () => {
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe("success page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/success", expect.objectContaining({ t: expect.any(Object) }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-success/index", expect.objectContaining({ t: expect.any(Object) }));
     });
 
     it("should render page with Welsh content when lng=cy", async () => {
@@ -52,7 +52,7 @@ describe("success page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/success", expect.objectContaining({ t: expect.any(Object) }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-success/index", expect.objectContaining({ t: expect.any(Object) }));
     });
 
     it("should set Cache-Control header to prevent caching", async () => {

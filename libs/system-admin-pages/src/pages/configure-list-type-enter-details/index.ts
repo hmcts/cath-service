@@ -1,10 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import type { Session } from "express-session";
-import { findListTypeById, findListTypeByName } from "../../list-type/list-type-queries.js";
-import { validateListTypeDetails } from "../../list-type/list-type-validation.js";
-import { cy } from "../../locales/cy.js";
-import { en } from "../../locales/en.js";
+import { findListTypeById, findListTypeByName } from "../../list-type/queries.js";
+import { validateListTypeDetails } from "../../list-type/validation.js";
+import * as cy from "./cy.js";
+import * as en from "./en.js";
 
 interface ListTypeFormData {
   name: string;
@@ -56,7 +56,7 @@ const getHandler = async (req: Request, res: Response) => {
     COMMON_PLATFORM: formData.allowedProvenance?.includes("COMMON_PLATFORM") || false
   };
 
-  res.render("configure-list-type/enter-details", {
+  res.render("configure-list-type-enter-details/index", {
     ...content,
     data: formData,
     checkedProvenance,
@@ -112,7 +112,7 @@ const postHandler = async (req: Request, res: Response) => {
       COMMON_PLATFORM: formData.allowedProvenance?.includes("COMMON_PLATFORM") || false
     };
 
-    return res.render("configure-list-type/enter-details", {
+    return res.render("configure-list-type-enter-details/index", {
       ...content,
       data: formData,
       checkedProvenance,
@@ -131,7 +131,7 @@ const postHandler = async (req: Request, res: Response) => {
     editId: session.configureListType?.editId
   };
 
-  res.redirect("/configure-list-type/select-sub-jurisdictions");
+  res.redirect("/configure-list-type-select-sub-jurisdictions");
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

@@ -12,7 +12,7 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
-vi.mock("@hmcts/list-type-config", () => ({
+vi.mock("@hmcts/system-admin-pages", () => ({
   findAllListTypes: vi.fn(() =>
     Promise.resolve([
       {

@@ -1,9 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
-import { findListTypeById, findNonStrategicListTypes } from "@hmcts/list-type-config";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
+import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";

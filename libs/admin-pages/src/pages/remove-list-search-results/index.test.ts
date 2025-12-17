@@ -1,6 +1,6 @@
-import * as listTypeConfigModule from "@hmcts/list-type-config";
 import * as locationModule from "@hmcts/location";
 import * as publicationModule from "@hmcts/publication";
+import * as listTypeConfigModule from "@hmcts/system-admin-pages";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 
@@ -15,7 +15,7 @@ vi.mock("@hmcts/auth", () => ({
 
 vi.mock("@hmcts/location");
 vi.mock("@hmcts/publication");
-vi.mock("@hmcts/list-type-config");
+vi.mock("@hmcts/system-admin-pages");
 
 const mockGetLocationById = vi.fn();
 const mockGetArtefactsByLocation = vi.fn();

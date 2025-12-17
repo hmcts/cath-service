@@ -7,7 +7,7 @@ test("admin can configure list type @nightly", async ({ page }) => {
 
   // Step 2: Click "Configure List Type" tile
   await page.getByRole("link", { name: "Configure List Type" }).click();
-  await expect(page).toHaveURL("/configure-list-type/enter-details");
+  await expect(page).toHaveURL("/configure-list-type-enter-details");
   await expect(page.getByRole("heading", { name: "Enter list type details" })).toBeVisible();
 
   // Step 3: Test validation - try to submit empty form
@@ -39,7 +39,7 @@ test("admin can configure list type @nightly", async ({ page }) => {
 
   // Step 7: Continue to sub-jurisdictions page
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/configure-list-type/select-sub-jurisdictions");
+  await expect(page).toHaveURL("/configure-list-type-select-sub-jurisdictions");
   await expect(page.getByRole("heading", { name: "Select sub-jurisdictions" })).toBeVisible();
 
   // Step 8: Test validation - try to continue without selecting any
@@ -56,7 +56,7 @@ test("admin can configure list type @nightly", async ({ page }) => {
 
   // Step 11: Continue to preview page
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/configure-list-type/preview");
+  await expect(page).toHaveURL("/configure-list-type-preview");
   await expect(page.getByRole("heading", { name: "Check list type details" })).toBeVisible();
 
   // Step 12: Verify all details are displayed
@@ -71,7 +71,7 @@ test("admin can configure list type @nightly", async ({ page }) => {
 
   // Step 14: Confirm and submit
   await page.getByRole("button", { name: "Confirm" }).click();
-  await expect(page).toHaveURL("/configure-list-type/success");
+  await expect(page).toHaveURL("/configure-list-type-success");
   await expect(page.getByRole("heading", { name: "List type saved" })).toBeVisible();
   await expect(page.getByText("List type saved successfully")).toBeVisible();
 
@@ -93,7 +93,7 @@ test("admin can edit existing list type @nightly", async ({ page }) => {
   await page.getByRole("link", { name: "Configure List Type" }).click();
 
   // Step 3: Navigate with edit query parameter (simulating edit flow)
-  await page.goto("/configure-list-type/enter-details?id=1");
+  await page.goto("/configure-list-type-enter-details?id=1");
 
   // Step 4: Verify form is pre-populated
   await expect(page.getByLabel("Name")).toHaveValue("CIVIL_DAILY_CAUSE_LIST");
@@ -105,7 +105,7 @@ test("admin can edit existing list type @nightly", async ({ page }) => {
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Step 7: Verify sub-jurisdictions page
-  await expect(page).toHaveURL(/configure-list-type\/select-sub-jurisdictions/);
+  await expect(page).toHaveURL(/configure-list-type-select-sub-jurisdictions/);
 
   // Step 8: At least one checkbox should already be checked
   const checkedCheckboxes = await page.getByRole("checkbox", { checked: true }).count();
@@ -113,13 +113,13 @@ test("admin can edit existing list type @nightly", async ({ page }) => {
 
   // Step 9: Continue to preview
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL(/configure-list-type\/preview/);
+  await expect(page).toHaveURL(/configure-list-type-preview/);
 
   // Step 10: Verify updated value in preview
   await expect(page.getByText("Updated Civil Daily Cause List")).toBeVisible();
 
   // Step 11: Confirm changes
   await page.getByRole("button", { name: "Confirm" }).click();
-  await expect(page).toHaveURL(/configure-list-type\/success/);
+  await expect(page).toHaveURL(/configure-list-type-success/);
   await expect(page.getByRole("heading", { name: "List type saved" })).toBeVisible();
 });

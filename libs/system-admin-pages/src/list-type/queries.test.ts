@@ -1,3 +1,4 @@
+import { prisma } from "@hmcts/postgres";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createListType,
@@ -8,7 +9,7 @@ import {
   findNonStrategicListTypes,
   findStrategicListTypes,
   updateListType
-} from "./list-type-queries.js";
+} from "./queries.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
@@ -28,8 +29,6 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
-const { prisma: mockPrisma } = await import("@hmcts/postgres");
-
 describe("list-type-queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,11 +40,11 @@ describe("list-type-queries", () => {
         { id: 1, name: "A_LIST", subJurisdictions: [] },
         { id: 2, name: "B_LIST", subJurisdictions: [] }
       ];
-      mockPrisma.listType.findMany.mockResolvedValue(mockListTypes);
+      vi.mocked(prisma.listType.findMany).mockResolvedValue(mockListTypes as any);
 
       const result = await findAllListTypes();
 
-      expect(mockPrisma.listType.findMany).toHaveBeenCalledWith({
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
         orderBy: { name: "asc" },
         include: {
           subJurisdictions: {
@@ -66,11 +65,11 @@ describe("list-type-queries", () => {
         name: "TEST_LIST",
         subJurisdictions: [{ subJurisdiction: { id: 1, name: "England" } }]
       };
-      mockPrisma.listType.findUnique.mockResolvedValue(mockListType);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType as any);
 
       const result = await findListTypeById(1);
 
-      expect(mockPrisma.listType.findUnique).toHaveBeenCalledWith({
+      expect(prisma.listType.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
         include: {
           subJurisdictions: {
@@ -84,7 +83,7 @@ describe("list-type-queries", () => {
     });
 
     it("should return null if list type not found", async () => {
-      mockPrisma.listType.findUnique.mockResolvedValue(null);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
 
       const result = await findListTypeById(999);
 
@@ -95,18 +94,18 @@ describe("list-type-queries", () => {
   describe("findListTypeByName", () => {
     it("should return list type by name", async () => {
       const mockListType = { id: 1, name: "TEST_LIST" };
-      mockPrisma.listType.findUnique.mockResolvedValue(mockListType);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType as any);
 
       const result = await findListTypeByName("TEST_LIST");
 
-      expect(mockPrisma.listType.findUnique).toHaveBeenCalledWith({
+      expect(prisma.listType.findUnique).toHaveBeenCalledWith({
         where: { name: "TEST_LIST" }
       });
       expect(result).toEqual(mockListType);
     });
 
     it("should return null if list type not found", async () => {
-      mockPrisma.listType.findUnique.mockResolvedValue(null);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
 
       const result = await findListTypeByName("NON_EXISTENT");
 
@@ -120,11 +119,11 @@ describe("list-type-queries", () => {
         { id: 1, name: "England" },
         { id: 2, name: "Wales" }
       ];
-      mockPrisma.subJurisdiction.findMany.mockResolvedValue(mockSubJurisdictions);
+      vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue(mockSubJurisdictions as any);
 
       const result = await findAllSubJurisdictions();
 
-      expect(mockPrisma.subJurisdiction.findMany).toHaveBeenCalledWith({
+      expect(prisma.subJurisdiction.findMany).toHaveBeenCalledWith({
         orderBy: { name: "asc" }
       });
       expect(result).toEqual(mockSubJurisdictions);
@@ -146,11 +145,11 @@ describe("list-type-queries", () => {
       };
 
       const mockCreatedListType = { id: 1, ...createData };
-      mockPrisma.listType.create.mockResolvedValue(mockCreatedListType);
+      vi.mocked(prisma.listType.create).mockResolvedValue(mockCreatedListType as any);
 
       const result = await createListType(createData);
 
-      expect(mockPrisma.listType.create).toHaveBeenCalledWith({
+      expect(prisma.listType.create).toHaveBeenCalledWith({
         data: {
           name: "NEW_LIST",
           friendlyName: "New List",
@@ -185,7 +184,7 @@ describe("list-type-queries", () => {
 
       const mockUpdatedListType = { id: 1, ...updateData };
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           listTypeSubJurisdiction: {
             deleteMany: vi.fn().mockResolvedValue({ count: 2 })
@@ -199,7 +198,7 @@ describe("list-type-queries", () => {
 
       const result = await updateListType(1, updateData);
 
-      expect(mockPrisma.$transaction).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
       expect(result).toEqual(mockUpdatedListType);
     });
   });
@@ -210,11 +209,11 @@ describe("list-type-queries", () => {
         { id: 1, name: "NON_STRATEGIC_1", isNonStrategic: true, shortenedFriendlyName: "A" },
         { id: 2, name: "NON_STRATEGIC_2", isNonStrategic: true, shortenedFriendlyName: "B" }
       ];
-      mockPrisma.listType.findMany.mockResolvedValue(mockNonStrategicLists);
+      vi.mocked(prisma.listType.findMany).mockResolvedValue(mockNonStrategicLists as any);
 
       const result = await findNonStrategicListTypes();
 
-      expect(mockPrisma.listType.findMany).toHaveBeenCalledWith({
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
         where: { isNonStrategic: true },
         orderBy: { shortenedFriendlyName: "asc" }
       });
@@ -228,11 +227,11 @@ describe("list-type-queries", () => {
         { id: 1, name: "STRATEGIC_1", isNonStrategic: false, shortenedFriendlyName: "A" },
         { id: 2, name: "STRATEGIC_2", isNonStrategic: false, shortenedFriendlyName: "B" }
       ];
-      mockPrisma.listType.findMany.mockResolvedValue(mockStrategicLists);
+      vi.mocked(prisma.listType.findMany).mockResolvedValue(mockStrategicLists as any);
 
       const result = await findStrategicListTypes();
 
-      expect(mockPrisma.listType.findMany).toHaveBeenCalledWith({
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
         where: { isNonStrategic: false },
         orderBy: { shortenedFriendlyName: "asc" }
       });

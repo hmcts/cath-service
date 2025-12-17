@@ -10,7 +10,6 @@ import {
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import { moduleRoot as listTypeConfigModuleRoot, pageRoutes as listTypeConfigRoutes } from "@hmcts/list-type-config/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import {
@@ -74,7 +73,6 @@ export async function createApp(): Promise<Express> {
     adminModuleRoot,
     authModuleRoot,
     listTypesCommonModuleRoot,
-    listTypeConfigModuleRoot,
     careStandardsTribunalModuleRoot,
     civilFamilyCauseListModuleRoot,
     systemAdminModuleRoot,
@@ -133,7 +131,6 @@ export async function createApp(): Promise<Express> {
     app.post(route, fileUploadMiddleware);
   }
   app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
-  app.use(await createSimpleRouter(listTypeConfigRoutes, pageRoutes));
 
   // Register file upload middleware for admin pages
   for (const route of adminFileUploadRoutes) {

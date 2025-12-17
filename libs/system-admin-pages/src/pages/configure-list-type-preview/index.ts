@@ -1,10 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import type { Session } from "express-session";
-import { findAllSubJurisdictions } from "../../list-type/list-type-queries.js";
-import { saveListType } from "../../list-type/list-type-service.js";
-import { cy } from "../../locales/cy.js";
-import { en } from "../../locales/en.js";
+import { findAllSubJurisdictions } from "../../list-type/queries.js";
+import { saveListType } from "../../list-type/service.js";
+import * as cy from "./cy.js";
+import * as en from "./en.js";
 
 interface ListTypeSession extends Session {
   configureListType?: {
@@ -25,7 +25,7 @@ const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type/enter-details");
+    return res.redirect("/configure-list-type-enter-details");
   }
 
   const language = req.query.lng === "cy" ? "cy" : "en";
@@ -36,7 +36,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 
-  res.render("configure-list-type/preview", {
+  res.render("configure-list-type-preview/index", {
     t: content,
     data: session.configureListType,
     subJurisdictionsText
@@ -47,7 +47,7 @@ const postHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type/enter-details");
+    return res.redirect("/configure-list-type-enter-details");
   }
 
   try {
@@ -68,7 +68,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     delete session.configureListType;
 
-    res.redirect(303, "/configure-list-type/success");
+    res.redirect(303, "/configure-list-type-success");
   } catch (error) {
     const language = req.query.lng === "cy" ? "cy" : "en";
     const content = language === "cy" ? cy : en;
@@ -78,7 +78,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 
-    res.render("configure-list-type/preview", {
+    res.render("configure-list-type-preview/index", {
       t: content,
       data: session.configureListType,
       subJurisdictionsText,

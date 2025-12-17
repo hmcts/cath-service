@@ -36,7 +36,7 @@ test.describe("System Admin Dashboard", () => {
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-viewer" },
         { title: "Manage Location Metadata", href: "/location-metadata" },
-        { title: "Configure List Type", href: "/configure-list-type/enter-details" }
+        { title: "Configure List Type", href: "/configure-list-type-enter-details" }
       ];
 
       for (const { title, href } of tileData) {

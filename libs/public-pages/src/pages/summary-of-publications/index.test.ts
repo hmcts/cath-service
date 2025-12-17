@@ -61,8 +61,8 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
-// Mock the list-type-config module
-vi.mock("@hmcts/list-type-config", () => ({
+// Mock the system-admin-pages module
+vi.mock("@hmcts/system-admin-pages", () => ({
   findAllListTypes: vi.fn(() =>
     Promise.resolve([
       {

@@ -1,6 +1,6 @@
-import { findAllListTypes } from "@hmcts/list-type-config";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";

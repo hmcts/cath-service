@@ -1,4 +1,4 @@
-import { createListType, findListTypeByName, updateListType } from "./list-type-queries.js";
+import { createListType, findListTypeByName, updateListType } from "./queries.js";
 
 export async function saveListType(data: SaveListTypeData, existingId?: number) {
   const existingListType = await findListTypeByName(data.name);

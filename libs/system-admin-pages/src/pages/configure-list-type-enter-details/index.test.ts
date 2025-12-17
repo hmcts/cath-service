@@ -23,18 +23,18 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../list-type/list-type-queries.js", () => ({
+vi.mock("../../list-type/queries.js", () => ({
   findListTypeById: vi.fn(),
   findListTypeByName: vi.fn()
 }));
 
-vi.mock("../../list-type/list-type-validation.js", () => ({
+vi.mock("../../list-type/validation.js", () => ({
   validateListTypeDetails: vi.fn()
 }));
 
-const { GET, POST } = await import("./enter-details.js");
-const { findListTypeById, findListTypeByName } = await import("../../list-type/list-type-queries.js");
-const { validateListTypeDetails } = await import("../../list-type/list-type-validation.js");
+const { GET, POST } = await import("./index.js");
+const { findListTypeById, findListTypeByName } = await import("../../list-type/queries.js");
+const { validateListTypeDetails } = await import("../../list-type/validation.js");
 
 describe("enter-details page", () => {
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe("enter-details page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/enter-details", expect.objectContaining({ isEdit: false }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ isEdit: false }));
     });
 
     it("should render page with Welsh content when lng=cy", async () => {
@@ -76,7 +76,7 @@ describe("enter-details page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/enter-details", expect.objectContaining({ data: sessionData }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ data: sessionData }));
     });
 
     it("should load existing list type when id provided", async () => {
@@ -99,7 +99,7 @@ describe("enter-details page", () => {
       await callHandler(GET, req, res);
 
       expect(findListTypeById).toHaveBeenCalledWith(1);
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/enter-details", expect.objectContaining({ isEdit: true }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ isEdit: true }));
     });
 
     it("should set checked provenance from form data", async () => {
@@ -110,7 +110,7 @@ describe("enter-details page", () => {
       await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "configure-list-type/enter-details",
+        "configure-list-type-enter-details/index",
         expect.objectContaining({
           checkedProvenance: { CFT_IDAM: true, B2C: true, COMMON_PLATFORM: false }
         })
@@ -141,7 +141,7 @@ describe("enter-details page", () => {
       await callHandler(POST, req, res);
 
       expect(validateListTypeDetails).toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/select-sub-jurisdictions");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-select-sub-jurisdictions");
     });
 
     it("should handle validation errors", async () => {
@@ -152,7 +152,7 @@ describe("enter-details page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/enter-details", expect.objectContaining({ errors: expect.any(Object) }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ errors: expect.any(Object) }));
       expect(res.redirect).not.toHaveBeenCalled();
     });
 
@@ -168,7 +168,7 @@ describe("enter-details page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type/enter-details", expect.objectContaining({ errorList: expect.any(Array) }));
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ errorList: expect.any(Array) }));
     });
 
     it("should allow duplicate name when editing same list type", async () => {
@@ -183,7 +183,7 @@ describe("enter-details page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type/select-sub-jurisdictions");
+      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-select-sub-jurisdictions");
     });
 
     it("should handle single provenance value", async () => {
