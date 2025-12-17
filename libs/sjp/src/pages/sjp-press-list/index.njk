@@ -204,7 +204,7 @@
               },
               {
                 key: { text: dobHeader },
-                value: { text: case.dateOfBirth | date if case.dateOfBirth else '' }
+                value: { html: (case.dateOfBirth | date) + (' (' + case.age + ')' if case.age else '') if case.dateOfBirth else '' }
               },
               {
                 key: { text: referenceHeader },
@@ -220,11 +220,20 @@
               }
             ]
           }) }}
-          <p class="govuk-body govuk-!-margin-top-3">
-            <strong>{{ reportingRestrictionHeader }}</strong> - {{ 'True' if case.reportingRestriction else 'False' }}<br>
-            {{ case.offence or '' }}
-          </p>
+          {% for offence in case.offences %}
+            <p class="govuk-body govuk-!-margin-top-3">
+              <strong>{{ reportingRestrictionHeader }}</strong> - {{ offence.reportingRestriction }}<br>
+              {% if offence.offenceWording %}
+                {{ offence.offenceTitle }} - {{ offence.offenceWording }}
+              {% else %}
+                {{ offence.offenceTitle }}
+              {% endif %}
+            </p>
+          {% endfor %}
         </div>
+        {% if not loop.last %}
+          <hr class="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6">
+        {% endif %}
       {% endfor %}
 
       {% else %}

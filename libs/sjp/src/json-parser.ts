@@ -152,23 +152,50 @@ function hasReportingRestriction(offences: SjpOffence[]): boolean {
 }
 
 /**
+ * Extracts all offence details for press lists
+ */
+function extractOffenceDetails(offences: SjpOffence[]): Array<{ offenceTitle: string; offenceWording: string | null; reportingRestriction: boolean }> {
+  return offences.map((offence) => ({
+    offenceTitle: offence.offenceTitle || "",
+    offenceWording: offence.offenceWording || null,
+    reportingRestriction: offence.reportingRestriction || false
+  }));
+}
+
+/**
+ * Calculates age from date of birth
+ */
+function calculateAge(dateOfBirth: Date | null): number | null {
+  if (!dateOfBirth) return null;
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+/**
  * Transforms a hearing from the JSON structure into a case object
  */
 function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
   const accused = findAccused(hearing.party);
   const prosecutor = findProsecutor(hearing.party);
   const caseUrn = hearing.case[0]?.caseUrn || null;
+  const dateOfBirth = parseDateOfBirth(accused?.individualDetails?.dateOfBirth);
 
   return {
     caseId: crypto.randomUUID(), // Generate temporary ID for in-memory operations
     name: formatAccusedName(accused),
     postcode: extractPostcode(accused),
-    offence: extractOffenceTitle(hearing.offence),
     prosecutor,
-    dateOfBirth: parseDateOfBirth(accused?.individualDetails?.dateOfBirth),
+    dateOfBirth,
+    age: calculateAge(dateOfBirth),
     reference: caseUrn,
     address: formatAddress(accused),
-    reportingRestriction: hasReportingRestriction(hearing.offence)
+    offences: extractOffenceDetails(hearing.offence)
   };
 }
 
@@ -231,7 +258,7 @@ export function extractPublicCases(json: SjpJson): SjpCasePublic[] {
     caseId: c.caseId,
     name: c.name,
     postcode: c.postcode,
-    offence: c.offence,
+    offence: c.offences[0]?.offenceTitle || c.offences[0]?.offenceWording || null,
     prosecutor: c.prosecutor
   }));
 }

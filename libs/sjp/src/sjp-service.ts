@@ -24,6 +24,12 @@ export interface SjpListMetadata {
   locationId: number;
 }
 
+export interface SjpOffenceDetails {
+  offenceTitle: string;
+  offenceWording: string | null;
+  reportingRestriction: boolean;
+}
+
 export interface SjpCasePublic {
   caseId: string;
   name: string;
@@ -32,11 +38,12 @@ export interface SjpCasePublic {
   prosecutor: string | null;
 }
 
-export interface SjpCasePress extends SjpCasePublic {
+export interface SjpCasePress extends Omit<SjpCasePublic, "offence"> {
   dateOfBirth: Date | null;
+  age: number | null;
   reference: string | null;
   address: string | null;
-  reportingRestriction: boolean;
+  offences: SjpOffenceDetails[];
 }
 
 export interface SjpSearchFilters {
