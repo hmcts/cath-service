@@ -62,11 +62,20 @@ describe("create-media-account template", () => {
     });
 
     it("should have all error messages", () => {
-      expect(en.errorFullNameRequired).toBe("There is a problem - Full name field must be populated");
-      expect(en.errorEmailInvalid).toBe("There is a problem - Email address field must be populated");
-      expect(en.errorEmployerRequired).toBe("There is a problem - Your employers name will be needed to support your application for an account");
-      expect(en.errorFileRequired).toBe("There is a problem - We will need ID evidence to support your application for an account");
-      expect(en.errorFileSize).toBe("Your file must be smaller than 2MB");
+      expect(en.errorFullNameBlank).toBe("There is a problem - Full name field must be populated");
+      expect(en.errorFullNameWhiteSpace).toBe("There is a problem - Full name field must not start with a space");
+      expect(en.errorFullNameDoubleWhiteSpace).toBe("There is a problem - Full name field must not contain double spaces");
+      expect(en.errorFullNameWithoutWhiteSpace).toBe("There is a problem - Your full name will be needed to support your application for an account");
+      expect(en.errorEmailBlank).toBe("There is a problem - Email address field must be populated");
+      expect(en.errorEmailStartWithWhiteSpace).toBe("There is a problem - Email address field cannot start with a space");
+      expect(en.errorEmailDoubleWhiteSpace).toBe("There is a problem - Email address field cannot contain double spaces");
+      expect(en.errorEmailInvalid).toBe("There is a problem - Enter an email address in the correct format, like name@example.com");
+      expect(en.errorEmployerBlank).toBe("There is a problem - Your employers name will be needed to support your application for an account");
+      expect(en.errorEmployerWhiteSpace).toBe("There is a problem - Employer field cannot start with a space");
+      expect(en.errorEmployerDoubleWhiteSpace).toBe("There is a problem - Employer field cannot contain double spaces");
+      expect(en.errorFileBlank).toBe("There is a problem - We will need ID evidence to support your application for an account");
+      expect(en.errorFileSize).toBe("There is a problem - ID evidence needs to be less than 2Mbs");
+      expect(en.errorFileType).toBe("There is a problem - ID evidence must be a JPG, PDF or PNG");
       expect(en.errorTermsRequired).toBe("There is a problem - You must check the box to confirm you agree to the terms and conditions.");
     });
   });
@@ -116,12 +125,21 @@ describe("create-media-account template", () => {
     });
 
     it("should have all error messages", () => {
-      expect(cy.errorFullNameRequired).toBe("Nodwch eich enw llawn");
-      expect(cy.errorEmailInvalid).toBe("Nodwch gyfeiriad e-bost yn y fformat cywir, e.e. name@example.com");
-      expect(cy.errorEmployerRequired).toBe("Nodwch enw eich cyflogwr");
-      expect(cy.errorFileRequired).toBe("Dewiswch ffeil yn fformat .jpg, .pdf neu .png");
-      expect(cy.errorFileSize).toBe("Rhaid i'ch ffeil fod yn llai na 2MB");
-      expect(cy.errorTermsRequired).toBe("Dewiswch y blwch i gytuno i'r telerau ac amodau");
+      expect(cy.errorFullNameBlank).toBe("Mae yna broblem - Rhaid llenwi'r maes enw llawn");
+      expect(cy.errorFullNameWhiteSpace).toBe("Mae yna broblem - Ni ddylai'r maes enw llawn ddechrau gyda gofod");
+      expect(cy.errorFullNameDoubleWhiteSpace).toBe("Mae yna broblem - Ni ddylai'r maes enw llawn gynnwys gofodau dwbl");
+      expect(cy.errorFullNameWithoutWhiteSpace).toBe("Mae yna broblem - Bydd angen eich enw llawn i gefnogi eich cais am gyfrif");
+      expect(cy.errorEmailBlank).toBe("Mae yna broblem - Rhaid llenwi'r maes cyfeiriad e-bost");
+      expect(cy.errorEmailStartWithWhiteSpace).toBe("Mae yna broblem - Ni all y maes cyfeiriad e-bost ddechrau gyda gofod");
+      expect(cy.errorEmailDoubleWhiteSpace).toBe("Mae yna broblem - Ni all y maes cyfeiriad e-bost gynnwys gofodau dwbl");
+      expect(cy.errorEmailInvalid).toBe("Mae yna broblem - Nodwch gyfeiriad e-bost yn y fformat cywir, fel name@example.com");
+      expect(cy.errorEmployerBlank).toBe("Mae yna broblem - Bydd angen enw eich cyflogwr i gefnogi eich cais am gyfrif");
+      expect(cy.errorEmployerWhiteSpace).toBe("Mae yna broblem - Ni all y maes cyflogwr ddechrau gyda gofod");
+      expect(cy.errorEmployerDoubleWhiteSpace).toBe("Mae yna broblem - Ni all y maes cyflogwr gynnwys gofodau dwbl");
+      expect(cy.errorFileBlank).toBe("Mae yna broblem - Bydd angen tystiolaeth ID i gefnogi eich cais am gyfrif");
+      expect(cy.errorFileSize).toBe("Mae yna broblem - Rhaid i'r dystiolaeth ID fod yn llai na 2Mbs");
+      expect(cy.errorFileType).toBe("Mae yna broblem - Rhaid i'r dystiolaeth ID fod yn JPG, PDF neu PNG");
+      expect(cy.errorTermsRequired).toBe("Mae yna broblem - Rhaid ichi dicio'r blwch i gadarnhau eich bod yn cytuno i'r telerau ac amodau");
     });
   });
 
@@ -147,11 +165,20 @@ describe("create-media-account template", () => {
         "continueButton",
         "backToTop",
         "errorSummaryTitle",
-        "errorFullNameRequired",
+        "errorFullNameBlank",
+        "errorFullNameWhiteSpace",
+        "errorFullNameDoubleWhiteSpace",
+        "errorFullNameWithoutWhiteSpace",
+        "errorEmailBlank",
+        "errorEmailStartWithWhiteSpace",
+        "errorEmailDoubleWhiteSpace",
         "errorEmailInvalid",
-        "errorEmployerRequired",
-        "errorFileRequired",
+        "errorEmployerBlank",
+        "errorEmployerWhiteSpace",
+        "errorEmployerDoubleWhiteSpace",
+        "errorFileBlank",
         "errorFileSize",
+        "errorFileType",
         "errorTermsRequired"
       ];
 
