@@ -32,7 +32,7 @@
     <nav class="govuk-pagination govuk-!-margin-top-4 govuk-!-margin-bottom-4" role="navigation" aria-label="Pagination">
       {% if pagination.hasPrevious %}
         <div class="govuk-pagination__prev">
-          <a class="govuk-link govuk-pagination__link" href="?listId={{ list.artefactId }}&page={{ pagination.currentPage - 1 }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}">
+          <a class="govuk-link govuk-pagination__link" href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage - 1 }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}">
             <span class="govuk-pagination__link-label">{{ previous }}</span>
           </a>
         </div>
@@ -41,7 +41,7 @@
       <ul class="govuk-pagination__list">
         {% for pageNum in pagination.pageNumbers %}
           <li class="govuk-pagination__item {% if pageNum === pagination.currentPage %}govuk-pagination__item--current{% endif %}">
-            <a class="govuk-link govuk-pagination__link" href="?listId={{ list.artefactId }}&page={{ pageNum }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}" aria-label="Page {{ pageNum }}" {% if pageNum === pagination.currentPage %}aria-current="page"{% endif %}>
+            <a class="govuk-link govuk-pagination__link" href="?artefactId={{ list.artefactId }}&page={{ pageNum }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}" aria-label="Page {{ pageNum }}" {% if pageNum === pagination.currentPage %}aria-current="page"{% endif %}>
               {{ pageNum }}
             </a>
           </li>
@@ -50,7 +50,7 @@
 
       {% if pagination.hasNext %}
         <div class="govuk-pagination__next">
-          <a class="govuk-link govuk-pagination__link" href="?listId={{ list.artefactId }}&page={{ pagination.currentPage + 1 }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}">
+          <a class="govuk-link govuk-pagination__link" href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage + 1 }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}">
             <span class="govuk-pagination__link-label">{{ next }}</span>
           </a>
         </div>
@@ -74,7 +74,7 @@
             {% if filters.searchQuery or filters.postcode or filters.prosecutor %}
             <div class="moj-filter__selected">
               <h2 class="govuk-heading-m">{{ selectedFilters }}</h2>
-              <p><a class="govuk-link govuk-link--no-visited-state" href="?listId={{ list.artefactId }}">{{ clearFilters }}</a></p>
+              <p><a class="govuk-link govuk-link--no-visited-state" href="?artefactId={{ list.artefactId }}">{{ clearFilters }}</a></p>
 
               <div class="moj-filter-tags">
                 {% if filters.searchQuery %}
@@ -177,7 +177,7 @@
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
               <th scope="col" class="govuk-table__header">
-                <a href="?listId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=name&sortOrder={% if sortBy === 'name' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
+                <a href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=name&sortOrder={% if sortBy === 'name' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
                   {{ nameHeader }}
                   {% if sortBy === 'name' %}
                     {% if sortOrder === 'asc' %}▲{% else %}▼{% endif %}
@@ -185,7 +185,7 @@
                 </a>
               </th>
               <th scope="col" class="govuk-table__header">
-                <a href="?listId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=postcode&sortOrder={% if sortBy === 'postcode' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
+                <a href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=postcode&sortOrder={% if sortBy === 'postcode' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
                   {{ postcodeHeader }}
                   {% if sortBy === 'postcode' %}
                     {% if sortOrder === 'asc' %}▲{% else %}▼{% endif %}
@@ -193,7 +193,7 @@
                 </a>
               </th>
               <th scope="col" class="govuk-table__header">
-                <a href="?listId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=offence&sortOrder={% if sortBy === 'offence' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
+                <a href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=offence&sortOrder={% if sortBy === 'offence' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
                   {{ offenceHeader }}
                   {% if sortBy === 'offence' %}
                     {% if sortOrder === 'asc' %}▲{% else %}▼{% endif %}
@@ -201,7 +201,7 @@
                 </a>
               </th>
               <th scope="col" class="govuk-table__header">
-                <a href="?listId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=prosecutor&sortOrder={% if sortBy === 'prosecutor' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
+                <a href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=prosecutor&sortOrder={% if sortBy === 'prosecutor' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
                   {{ prosecutorHeader }}
                   {% if sortBy === 'prosecutor' %}
                     {% if sortOrder === 'asc' %}▲{% else %}▼{% endif %}
