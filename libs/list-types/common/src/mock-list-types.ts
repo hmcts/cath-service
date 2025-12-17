@@ -83,15 +83,6 @@ export const mockListTypes: ListType[] = [
   },
   {
     id: 9,
-    name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
-    englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
-    welshFriendlyName: "Welsh placeholder",
-    provenance: "MANUAL_UPLOAD",
-    urlPath: "care-standards-tribunal-weekly-hearing-list",
-    isNonStrategic: true
-  },
-  {
-    id: 10,
     name: "SJP_PRESS_LIST",
     englishFriendlyName: "Single Justice Procedure Press List",
     welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
@@ -100,12 +91,21 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: false
   },
   {
-    id: 11,
+    id: 10,
     name: "SJP_PUBLIC_LIST",
     englishFriendlyName: "Single Justice Procedure Public List",
     welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
     provenance: "CFT_IDAM",
     urlPath: "sjp-public-list",
     isNonStrategic: false
+  },
+  {
+    id: 11,
+    name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
+    welshFriendlyName: "Welsh placeholder",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "care-standards-tribunal-weekly-hearing-list",
+    isNonStrategic: true
   }
 ];
