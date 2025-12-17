@@ -7,10 +7,14 @@ vi.mock("@hmcts/location", () => ({
   getLocationWithDetails: vi.fn()
 }));
 
-vi.mock("../../delete-court/service.js", () => ({
-  validateLocationForDeletion: vi.fn(),
-  performLocationDeletion: vi.fn()
-}));
+vi.mock("../../delete-court/service.js", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    validateLocationForDeletion: vi.fn(),
+    performLocationDeletion: vi.fn()
+  };
+});
 
 vi.mock("../../delete-court/validation.js", () => ({
   validateRadioSelection: vi.fn()

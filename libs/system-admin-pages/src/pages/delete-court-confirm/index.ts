@@ -1,7 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { getLocationWithDetails } from "@hmcts/location";
+import { getLocationWithDetails, type LocationDetails } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
-import { performLocationDeletion, validateLocationForDeletion } from "../../delete-court/service.js";
+import { performLocationDeletion, VALIDATION_ERROR_CODES, type ValidationResult, validateLocationForDeletion } from "../../delete-court/service.js";
 import { validateRadioSelection } from "../../delete-court/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -14,106 +14,134 @@ interface DeleteCourtSession {
   };
 }
 
+type Language = "en" | "cy";
+type Content = typeof en | typeof cy;
+
+function buildRedirectUrl(path: string, language: Language): string {
+  return `${path}${language === "cy" ? "?lng=cy" : ""}`;
+}
+
+function getErrorTextForValidationCode(errorCode: string | undefined, content: Content): string {
+  if (errorCode === VALIDATION_ERROR_CODES.ACTIVE_SUBSCRIPTIONS) {
+    return content.activeSubscriptions;
+  }
+  if (errorCode === VALIDATION_ERROR_CODES.ACTIVE_ARTEFACTS) {
+    return content.activeArtefacts;
+  }
+  return content.locationNotFound;
+}
+
+function getLocalizedLocationName(location: LocationDetails, language: Language): string {
+  return language === "cy" ? location.welshName : location.name;
+}
+
+function getLocalizedRegions(location: LocationDetails, language: Language): string {
+  return location.regions.map((r) => (language === "cy" ? r.welshName : r.name)).join(", ");
+}
+
+function getLocalizedJurisdictions(location: LocationDetails, language: Language): string {
+  return location.subJurisdictions.map((sj) => (language === "cy" ? sj.jurisdictionWelshName : sj.jurisdictionName)).join(", ");
+}
+
+function renderConfirmationPage(
+  res: Response,
+  content: Content,
+  location: LocationDetails,
+  language: Language,
+  errors?: Array<{ text: string; href?: string }>
+) {
+  res.render("delete-court-confirm/index", {
+    ...content,
+    locationName: getLocalizedLocationName(location, language),
+    locationType: "Court",
+    jurisdiction: getLocalizedJurisdictions(location, language) || "N/A",
+    region: getLocalizedRegions(location, language) || "N/A",
+    errors
+  });
+}
+
+async function handleRadioValidationError(
+  res: Response,
+  content: Content,
+  session: DeleteCourtSession,
+  language: Language,
+  validationError: { href: string }
+): Promise<void> {
+  const location = await getLocationWithDetails(session.deleteCourt!.locationId);
+  if (!location) {
+    delete session.deleteCourt;
+    res.redirect(buildRedirectUrl("/delete-court", language));
+    return;
+  }
+
+  renderConfirmationPage(res, content, location, language, [{ ...validationError, text: content.noRadioSelected }]);
+}
+
+async function handleLocationValidationError(
+  res: Response,
+  content: Content,
+  session: DeleteCourtSession,
+  language: Language,
+  validationResult: ValidationResult
+): Promise<void> {
+  const location = validationResult.location;
+  if (!location) {
+    delete session.deleteCourt;
+    res.redirect(buildRedirectUrl("/delete-court", language));
+    return;
+  }
+
+  const errorText = getErrorTextForValidationCode(validationResult.errorCode, content);
+  renderConfirmationPage(res, content, location, language, [{ text: errorText }]);
+}
+
 export const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
+  const language: Language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
   const session = req.session as DeleteCourtSession;
 
   if (!session.deleteCourt) {
-    return res.redirect(`/delete-court${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(buildRedirectUrl("/delete-court", language));
   }
 
   const location = await getLocationWithDetails(session.deleteCourt.locationId);
   if (!location) {
     delete session.deleteCourt;
-    return res.redirect(`/delete-court${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(buildRedirectUrl("/delete-court", language));
   }
 
-  const locationName = language === "cy" ? location.welshName : location.name;
-  const regions = location.regions.map((r) => (language === "cy" ? r.welshName : r.name)).join(", ");
-  const jurisdictions = location.subJurisdictions.map((sj) => (language === "cy" ? sj.jurisdictionWelshName : sj.jurisdictionName)).join(", ");
-
-  res.render("delete-court-confirm/index", {
-    ...content,
-    locationName,
-    locationType: "Court",
-    jurisdiction: jurisdictions || "N/A",
-    region: regions || "N/A",
-    errors: undefined
-  });
+  renderConfirmationPage(res, content, location, language);
 };
 
 export const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
+  const language: Language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
   const session = req.session as DeleteCourtSession;
 
   if (!session.deleteCourt) {
-    return res.redirect(`/delete-court${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(buildRedirectUrl("/delete-court", language));
   }
 
   const confirmDelete = req.body.confirmDelete as string | undefined;
   const validationError = validateRadioSelection(confirmDelete);
 
   if (validationError) {
-    const location = await getLocationWithDetails(session.deleteCourt.locationId);
-    if (!location) {
-      delete session.deleteCourt;
-      return res.redirect(`/delete-court${language === "cy" ? "?lng=cy" : ""}`);
-    }
-
-    const locationName = language === "cy" ? location.welshName : location.name;
-    const regions = location.regions.map((r) => (language === "cy" ? r.welshName : r.name)).join(", ");
-    const jurisdictions = location.subJurisdictions.map((sj) => (language === "cy" ? sj.jurisdictionWelshName : sj.jurisdictionName)).join(", ");
-
-    return res.render("delete-court-confirm/index", {
-      ...content,
-      locationName,
-      locationType: "Court",
-      jurisdiction: jurisdictions || "N/A",
-      region: regions || "N/A",
-      errors: [{ ...validationError, text: content.noRadioSelected }]
-    });
+    return await handleRadioValidationError(res, content, session, language, validationError);
   }
 
   if (confirmDelete === "no") {
     delete session.deleteCourt;
-    return res.redirect(`/system-admin-dashboard${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(buildRedirectUrl("/system-admin-dashboard", language));
   }
 
   const validationResult = await validateLocationForDeletion(session.deleteCourt.locationId);
 
   if (!validationResult.isValid) {
-    const location = validationResult.location;
-    if (!location) {
-      delete session.deleteCourt;
-      return res.redirect(`/delete-court${language === "cy" ? "?lng=cy" : ""}`);
-    }
-
-    const locationName = language === "cy" ? location.welshName : location.name;
-    const regions = location.regions.map((r) => (language === "cy" ? r.welshName : r.name)).join(", ");
-    const jurisdictions = location.subJurisdictions.map((sj) => (language === "cy" ? sj.jurisdictionWelshName : sj.jurisdictionName)).join(", ");
-
-    const errorText =
-      validationResult.errorCode === "ACTIVE_SUBSCRIPTIONS"
-        ? content.activeSubscriptions
-        : validationResult.errorCode === "ACTIVE_ARTEFACTS"
-          ? content.activeArtefacts
-          : content.locationNotFound;
-
-    return res.render("delete-court-confirm/index", {
-      ...content,
-      locationName,
-      locationType: "Court",
-      jurisdiction: jurisdictions || "N/A",
-      region: regions || "N/A",
-      errors: [{ text: errorText }]
-    });
+    return await handleLocationValidationError(res, content, session, language, validationResult);
   }
 
   await performLocationDeletion(session.deleteCourt.locationId);
-
-  res.redirect(`/delete-court-success${language === "cy" ? "?lng=cy" : ""}`);
+  res.redirect(buildRedirectUrl("/delete-court-success", language));
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
