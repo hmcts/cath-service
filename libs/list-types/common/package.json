@@ -22,9 +22,12 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
   },
+  "dependencies": {
+    "exceljs": "4.4.0"
+  },
   "devDependencies": {
     "@types/node": "24.10.1",
     "typescript": "5.9.3",
-    "vitest": "4.0.15"
+    "vitest": "4.0.16"
   }
 }

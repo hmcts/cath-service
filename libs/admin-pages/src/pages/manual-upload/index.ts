@@ -12,7 +12,7 @@ import { en } from "./en.js";
 
 const LIST_TYPES = [
   { value: "", text: "<Please choose a list type>" },
-  ...mockListTypes.map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
+  ...mockListTypes.filter((listType) => !listType.isNonStrategic).map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
 ];
 
 const SENSITIVITY_OPTIONS = [
