@@ -154,7 +154,7 @@ describe("delete-court-confirm page", () => {
       (validateRadioSelection as any).mockReturnValue(null);
       (validateLocationForDeletion as any).mockResolvedValue({
         isValid: false,
-        error: "There are active subscriptions for the given location.",
+        errorCode: "ACTIVE_SUBSCRIPTIONS",
         location: {
           locationId: 123,
           name: "Test Court",
@@ -180,7 +180,7 @@ describe("delete-court-confirm page", () => {
       (validateRadioSelection as any).mockReturnValue(null);
       (validateLocationForDeletion as any).mockResolvedValue({
         isValid: false,
-        error: "There are active artefacts for the given location.",
+        errorCode: "ACTIVE_ARTEFACTS",
         location: {
           locationId: 123,
           name: "Test Court",
@@ -206,7 +206,7 @@ describe("delete-court-confirm page", () => {
       (validateRadioSelection as any).mockReturnValue(null);
       (validateLocationForDeletion as any).mockResolvedValue({
         isValid: false,
-        error: "Location not found",
+        errorCode: "LOCATION_NOT_FOUND",
         location: null
       });
 

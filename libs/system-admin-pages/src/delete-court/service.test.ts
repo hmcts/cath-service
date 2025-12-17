@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { performLocationDeletion, validateLocationForDeletion } from "./service.js";
+import { performLocationDeletion, VALIDATION_ERROR_CODES, validateLocationForDeletion } from "./service.js";
 
 vi.mock("@hmcts/location", () => ({
   getLocationWithDetails: vi.fn(),
@@ -37,7 +37,7 @@ describe("validateLocationForDeletion", () => {
 
     expect(result).toEqual({
       isValid: false,
-      error: "Court or tribunal not found"
+      errorCode: VALIDATION_ERROR_CODES.LOCATION_NOT_FOUND
     });
   });
 
@@ -49,7 +49,7 @@ describe("validateLocationForDeletion", () => {
 
     expect(result).toEqual({
       isValid: false,
-      error: "There are active subscriptions for the given location.",
+      errorCode: VALIDATION_ERROR_CODES.ACTIVE_SUBSCRIPTIONS,
       location: mockLocation
     });
   });
@@ -63,7 +63,7 @@ describe("validateLocationForDeletion", () => {
 
     expect(result).toEqual({
       isValid: false,
-      error: "There are active artefacts for the given location.",
+      errorCode: VALIDATION_ERROR_CODES.ACTIVE_ARTEFACTS,
       location: mockLocation
     });
   });
@@ -88,7 +88,7 @@ describe("validateLocationForDeletion", () => {
 
     const result = await validateLocationForDeletion(1);
 
-    expect(result.error).toBe("There are active subscriptions for the given location.");
+    expect(result.errorCode).toBe(VALIDATION_ERROR_CODES.ACTIVE_SUBSCRIPTIONS);
     expect(hasActiveArtefacts).not.toHaveBeenCalled();
   });
 });

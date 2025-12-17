@@ -95,11 +95,11 @@ export const postHandler = async (req: Request, res: Response) => {
     const jurisdictions = location.subJurisdictions.map((sj) => (language === "cy" ? sj.jurisdictionWelshName : sj.jurisdictionName)).join(", ");
 
     const errorText =
-      validationResult.error === "There are active subscriptions for the given location."
+      validationResult.errorCode === "ACTIVE_SUBSCRIPTIONS"
         ? content.activeSubscriptions
-        : validationResult.error === "There are active artefacts for the given location."
+        : validationResult.errorCode === "ACTIVE_ARTEFACTS"
           ? content.activeArtefacts
-          : validationResult.error || content.locationNotFound;
+          : content.locationNotFound;
 
     return res.render("delete-court-confirm/index", {
       ...content,
