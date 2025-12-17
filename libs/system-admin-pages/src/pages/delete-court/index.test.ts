@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler, postHandler } from "./index.js";
 
 // Mock dependencies
-vi.mock("../../delete-court/queries.js", () => ({
+vi.mock("@hmcts/location", () => ({
   getLocationWithDetails: vi.fn()
 }));
 
@@ -11,7 +11,7 @@ vi.mock("../../delete-court/validation.js", () => ({
   validateLocationSelected: vi.fn()
 }));
 
-import { getLocationWithDetails } from "../../delete-court/queries.js";
+import { getLocationWithDetails } from "@hmcts/location";
 import { validateLocationSelected } from "../../delete-court/validation.js";
 
 describe("delete-court page", () => {

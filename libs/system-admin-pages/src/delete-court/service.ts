@@ -1,4 +1,4 @@
-import { getLocationWithDetails, hasActiveArtefacts, hasActiveSubscriptions, type LocationDetails, softDeleteLocation } from "./queries.js";
+import { getLocationWithDetails, hasActiveArtefacts, hasActiveSubscriptions, type LocationDetails, softDeleteLocation } from "@hmcts/location";
 
 export interface ValidationResult {
   isValid: boolean;

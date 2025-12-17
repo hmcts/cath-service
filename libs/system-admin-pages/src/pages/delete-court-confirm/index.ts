@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { getLocationWithDetails } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
-import { getLocationWithDetails } from "../../delete-court/queries.js";
 import { performLocationDeletion, validateLocationForDeletion } from "../../delete-court/service.js";
 import { validateRadioSelection } from "../../delete-court/validation.js";
 import { cy } from "./cy.js";

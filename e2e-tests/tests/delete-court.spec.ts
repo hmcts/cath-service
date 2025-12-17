@@ -57,7 +57,7 @@ test.describe("Delete Court Journey", () => {
     await authenticateSystemAdmin(page);
   });
 
-  test("user can complete delete court journey with validation checks @nightly", async ({ page }) => {
+  test("user can complete delete court journey with validation checks", async ({ page }) => {
     // Create dedicated test courts for this test
     await createTestCourt(90001, "Delete Test Court A", "Llys Prawf Dileu A");
     await createTestCourt(90002, "Delete Test Court B", "Llys Prawf Dileu B");

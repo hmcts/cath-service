@@ -5,7 +5,6 @@ describe("validateLocationSelected", () => {
   it("should return error when locationId is undefined", () => {
     const result = validateLocationSelected(undefined);
     expect(result).toEqual({
-      text: "Enter a court or tribunal name",
       href: "#court-search"
     });
   });
@@ -13,7 +12,6 @@ describe("validateLocationSelected", () => {
   it("should return error when locationId is empty string", () => {
     const result = validateLocationSelected("");
     expect(result).toEqual({
-      text: "Enter a court or tribunal name",
       href: "#court-search"
     });
   });
@@ -21,7 +19,6 @@ describe("validateLocationSelected", () => {
   it("should return error when locationId is whitespace", () => {
     const result = validateLocationSelected("   ");
     expect(result).toEqual({
-      text: "Enter a court or tribunal name",
       href: "#court-search"
     });
   });
@@ -36,7 +33,6 @@ describe("validateRadioSelection", () => {
   it("should return error when value is undefined", () => {
     const result = validateRadioSelection(undefined);
     expect(result).toEqual({
-      text: "Select yes or no to continue",
       href: "#confirm-delete"
     });
   });

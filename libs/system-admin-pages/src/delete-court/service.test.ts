@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { performLocationDeletion, validateLocationForDeletion } from "./service.js";
 
-vi.mock("./queries.js", () => ({
+vi.mock("@hmcts/location", () => ({
   getLocationWithDetails: vi.fn(),
   hasActiveSubscriptions: vi.fn(),
   hasActiveArtefacts: vi.fn(),
   softDeleteLocation: vi.fn()
 }));
 
-const { getLocationWithDetails, hasActiveSubscriptions, hasActiveArtefacts, softDeleteLocation } = await import("./queries.js");
+const { getLocationWithDetails, hasActiveSubscriptions, hasActiveArtefacts, softDeleteLocation } = await import("@hmcts/location");
 
 const mockLocation = {
   locationId: 1,
