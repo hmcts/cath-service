@@ -153,6 +153,15 @@
                     </h1>
                   </legend>
                   <div class="govuk-checkboxes govuk-checkboxes--small" id="postcodes-checkbox" data-module="govuk-checkboxes">
+                    {% if hasLondonPostcodes %}
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="postcode-london" name="postcode" type="checkbox" value="LONDON_POSTCODES" {% if filters.postcode == 'LONDON_POSTCODES' %}checked{% endif %}>
+                      <label class="govuk-label govuk-checkboxes__label" for="postcode-london">
+                        <strong>{{ londonPostcodesLabel }}</strong>
+                      </label>
+                    </div>
+                    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+                    {% endif %}
                     {% for area in postcodeAreas %}
                     <div class="govuk-checkboxes__item">
                       <input class="govuk-checkboxes__input" id="postcode-{{ loop.index }}" name="postcode" type="checkbox" value="{{ area }}" {% if area == filters.postcode %}checked{% endif %}>

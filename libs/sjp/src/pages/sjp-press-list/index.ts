@@ -48,7 +48,7 @@ export const GET = async (req: Request, res: Response) => {
 
   const { cases, totalCases } = await getSjpPressCases(artefactId, filters, page);
   const prosecutors = await getUniqueProsecutors(artefactId);
-  const postcodeAreas = await getUniquePostcodes(artefactId);
+  const postcodeData = await getUniquePostcodes(artefactId);
   const pagination = calculatePagination(page, totalCases, 50);
 
   res.render("sjp-press-list/index", {
@@ -59,7 +59,9 @@ export const GET = async (req: Request, res: Response) => {
     list,
     cases,
     prosecutors,
-    postcodeAreas,
+    postcodeAreas: postcodeData.postcodes,
+    hasLondonPostcodes: postcodeData.hasLondonPostcodes,
+    londonPostcodes: postcodeData.londonPostcodes,
     pagination,
     filters,
     errors: undefined

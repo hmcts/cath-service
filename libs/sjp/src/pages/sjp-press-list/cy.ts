@@ -14,6 +14,7 @@ export const cy = {
   showFilters: "Dangos hidlwyr",
   hideFilters: "Cuddio hidlwyr",
   postcodeFilterHeading: "Cod post",
+  londonPostcodesLabel: "Codau Post Llundain",
   postcodeLabel: "Rhowch god post",
   prosecutorFilterHeading: "Erlynydd",
   prosecutorLabel: "Dewiswch erlynydd",

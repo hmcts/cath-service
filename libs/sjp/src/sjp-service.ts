@@ -138,8 +138,13 @@ function applyFilters(cases: SjpCasePress[], filters: SjpSearchFilters): SjpCase
   }
 
   if (filters.postcode) {
-    const postcodeQuery = filters.postcode.toLowerCase();
-    filteredCases = filteredCases.filter((c) => c.postcode?.toLowerCase().startsWith(postcodeQuery));
+    if (filters.postcode === "LONDON_POSTCODES") {
+      // Filter for all London postcodes
+      filteredCases = filteredCases.filter((c) => c.postcode && LONDON_POSTCODES.has(c.postcode));
+    } else {
+      const postcodeQuery = filters.postcode.toLowerCase();
+      filteredCases = filteredCases.filter((c) => c.postcode?.toLowerCase().startsWith(postcodeQuery));
+    }
   }
 
   if (filters.prosecutor) {
@@ -219,12 +224,37 @@ export async function getUniqueProsecutors(artefactId: string): Promise<string[]
 }
 
 /**
- * Gets unique postcode areas from the list
+ * London postcode areas
  */
-export async function getUniquePostcodes(artefactId: string): Promise<string[]> {
+const LONDON_POSTCODES = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
+
+/**
+ * Checks if a postcode is a London postcode
+ */
+function isLondonPostcode(postcode: string): boolean {
+  return LONDON_POSTCODES.has(postcode);
+}
+
+/**
+ * Gets unique postcode areas from the list, grouped with London postcodes first if present
+ */
+export async function getUniquePostcodes(artefactId: string): Promise<{
+  hasLondonPostcodes: boolean;
+  postcodes: string[];
+  londonPostcodes: string[];
+}> {
   const sjpData = await readSjpJson(artefactId);
   const allCases = extractPressCases(sjpData);
 
   const postcodes = new Set(allCases.map((c) => c.postcode).filter((p): p is string => p !== null));
-  return Array.from(postcodes).sort();
+  const postcodesArray = Array.from(postcodes).sort();
+
+  const londonPostcodes = postcodesArray.filter(isLondonPostcode);
+  const hasLondonPostcodes = londonPostcodes.length > 0;
+
+  return {
+    hasLondonPostcodes,
+    postcodes: postcodesArray,
+    londonPostcodes
+  };
 }
