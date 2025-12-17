@@ -1,7 +1,7 @@
 // MOJ Filter Layout Styles
 .moj-filter-layout {
-  display: block;
-  font-size: 0; // Remove whitespace between inline-block elements
+  display: flex;
+  align-items: flex-start;
 }
 
 .moj-filter-layout__filter {
@@ -9,37 +9,33 @@
 }
 
 .layout-width-two-filters {
-  display: inline-block;
-  width: calc(30% - 30px);
-  vertical-align: top;
-  font-size: 1rem; // Reset font size
+  flex: 0 0 30%;
   margin-right: 30px;
+  min-width: 0;
   box-sizing: border-box;
 
-  &[hidden] {
+  &[hidden],
+  &.hidden {
     display: none !important;
   }
 }
 
 .layout-width-four-fifths {
-  display: inline-block;
-  width: 100%;
-  vertical-align: top;
-  font-size: 1rem; // Reset font size
+  flex: 1 1 auto;
+  min-width: 0;
   box-sizing: border-box;
 
   &.with-filters {
-    width: 70%;
+    flex: 0 0 calc(70% - 30px);
   }
 }
 
 .moj-filter {
-  background: #f3f2f1;
-  padding: 20px;
+  // Background and padding removed - using inline styles in template
 }
 
 .moj-filter__header {
-  margin-bottom: 20px;
+  // Styling handled in template with inline styles
 }
 
 .moj-filter__header-title {
@@ -51,19 +47,7 @@
 }
 
 .moj-filter__selected {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #b1b4b6;
-
-  h2 {
-    margin-top: 0;
-    margin-bottom: 10px;
-  }
-
-  p {
-    margin-top: 0;
-    margin-bottom: 10px;
-  }
+  // Styling handled in template with inline styles
 }
 
 .moj-filter-tags {
@@ -123,14 +107,19 @@
 
 // Responsive layout
 @media (max-width: 768px) {
-  .layout-width-two-filters,
-  .layout-width-four-fifths {
-    display: block;
-    width: 100%;
-    padding-right: 0;
+  .moj-filter-layout {
+    flex-direction: column;
   }
 
   .layout-width-two-filters {
+    flex: 1 1 auto;
+    width: 100%;
+    margin-right: 0;
     margin-bottom: 20px;
+  }
+
+  .layout-width-four-fifths {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }

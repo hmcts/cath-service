@@ -59,55 +59,70 @@
     {% endif %}
 
     <div class="moj-filter-layout">
-      <div class="filter-form layout-width-two-filters" id="filter-panel" {% if not (filters.searchQuery or filters.postcode or filters.prosecutor) %}hidden{% endif %}>
+      <div class="filter-form layout-width-two-filters {% if not (filters.searchQuery or filters.postcode or filters.prosecutor) %}hidden{% endif %}" id="filter-panel">
         <form method="post" class="moj-filter-layout__filter" autocomplete="off">
           <input type="hidden" name="artefactId" value="{{ list.artefactId }}">
 
-        <div class="moj-filter" data-module="moj-filter">
+        <div class="moj-filter" data-module="moj-filter" style="border: 1px solid #b1b4b6;">
           <div class="moj-filter__header">
             <div class="moj-filter__header-title">
-              <h2 class="govuk-heading-m" tabindex="0">{{ filterTitle }}</h2>
+              <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
+                <h2 class="govuk-heading-m govuk-!-margin-bottom-0" tabindex="0">{{ filterTitle }}</h2>
+              </div>
             </div>
           </div>
 
-          <div class="moj-filter__content">
+          {# Selected Filters Section - Always visible #}
+          <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
+            <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFilters }}</h3>
+            <a href="?artefactId={{ list.artefactId }}" class="govuk-link">{{ clearFilters }}</a>
+
             {% if filters.searchQuery or filters.postcode or filters.prosecutor %}
-            <div class="moj-filter__selected">
-              <h2 class="govuk-heading-m">{{ selectedFilters }}</h2>
-              <p><a class="govuk-link govuk-link--no-visited-state" href="?artefactId={{ list.artefactId }}">{{ clearFilters }}</a></p>
-
-              <div class="moj-filter-tags">
-                {% if filters.searchQuery %}
-                <div class="moj-filter-tag-wrapper">
-                  <p class="govuk-body moj-filter-tag-label">{{ searchLabel }}</p>
-                  <div class="moj-filter-tag">
-                    <span class="govuk-body moj-filter-tag__text">{{ filters.searchQuery }}</span>
-                  </div>
+            <div class="moj-filter-tags govuk-!-margin-top-4">
+              {% if filters.searchQuery %}
+              <div class="moj-filter-tag-wrapper">
+                <p class="govuk-body moj-filter-tag-label"><strong>{{ searchLabel }}</strong></p>
+                <div class="moj-filter-tag">
+                  <span class="govuk-body moj-filter-tag__text">{{ filters.searchQuery }}</span>
+                  <a class="moj-filter-tag__remove" href="?artefactId={{ list.artefactId }}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}">
+                    <span class="govuk-visually-hidden">Remove {{ searchLabel }} filter</span>
+                    ✕
+                  </a>
                 </div>
-                {% endif %}
-
-                {% if filters.postcode %}
-                <div class="moj-filter-tag-wrapper">
-                  <p class="govuk-body moj-filter-tag-label">{{ postcodeFilterHeading }}</p>
-                  <div class="moj-filter-tag">
-                    <span class="govuk-body moj-filter-tag__text">{{ filters.postcode }}</span>
-                  </div>
-                </div>
-                {% endif %}
-
-                {% if filters.prosecutor %}
-                <div class="moj-filter-tag-wrapper">
-                  <p class="govuk-body moj-filter-tag-label">{{ prosecutorFilterHeading }}</p>
-                  <div class="moj-filter-tag">
-                    <span class="govuk-body moj-filter-tag__text">{{ filters.prosecutor }}</span>
-                  </div>
-                </div>
-                {% endif %}
               </div>
+              {% endif %}
+
+              {% if filters.postcode %}
+              <div class="moj-filter-tag-wrapper">
+                <p class="govuk-body moj-filter-tag-label"><strong>{{ postcodeFilterHeading }}</strong></p>
+                <div class="moj-filter-tag">
+                  <span class="govuk-body moj-filter-tag__text">{{ filters.postcode }}</span>
+                  <a class="moj-filter-tag__remove" href="?artefactId={{ list.artefactId }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}">
+                    <span class="govuk-visually-hidden">Remove {{ postcodeFilterHeading }} filter</span>
+                    ✕
+                  </a>
+                </div>
+              </div>
+              {% endif %}
+
+              {% if filters.prosecutor %}
+              <div class="moj-filter-tag-wrapper">
+                <p class="govuk-body moj-filter-tag-label"><strong>{{ prosecutorFilterHeading }}</strong></p>
+                <div class="moj-filter-tag">
+                  <span class="govuk-body moj-filter-tag__text">{{ filters.prosecutor }}</span>
+                  <a class="moj-filter-tag__remove" href="?artefactId={{ list.artefactId }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}">
+                    <span class="govuk-visually-hidden">Remove {{ prosecutorFilterHeading }} filter</span>
+                    ✕
+                  </a>
+                </div>
+              </div>
+              {% endif %}
             </div>
             {% endif %}
+          </div>
 
-            <div class="moj-filter__options">
+          {# Filter Controls Section #}
+          <div class="govuk-!-padding-4">
               {{ govukButton({
                 text: applyFilters
               }) }}
@@ -141,6 +156,14 @@
                       </label>
                     </div>
                     {% endfor %}
+                    {% if hasLondonPostcodes %}
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="postcode-london" name="postcode" type="checkbox" value="LONDON_POSTCODES" {% if filters.postcode == 'LONDON_POSTCODES' %}checked{% endif %}>
+                      <label class="govuk-label govuk-checkboxes__label" for="postcode-london">
+                        {{ londonPostcodesLabel }}
+                      </label>
+                    </div>
+                    {% endif %}
                   </div>
                 </fieldset>
               </div>
@@ -200,14 +223,6 @@
                   {% endif %}
                 </a>
               </th>
-              <th scope="col" class="govuk-table__header">
-                <a href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=prosecutor&sortOrder={% if sortBy === 'prosecutor' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
-                  {{ prosecutorHeader }}
-                  {% if sortBy === 'prosecutor' %}
-                    {% if sortOrder === 'asc' %}▲{% else %}▼{% endif %}
-                  {% endif %}
-                </a>
-              </th>
             </tr>
           </thead>
           <tbody class="govuk-table__body">
@@ -245,34 +260,22 @@
     const contentArea = document.getElementById('content-area');
 
     if (filterToggle && filterPanel && contentArea) {
-      // Check sessionStorage for filter visibility state
-      const filtersVisible = sessionStorage.getItem('sjp-filters-visible') === 'true';
-
-      // If filters are visible by default (active filters), set sessionStorage
-      if (!filterPanel.hidden) {
-        sessionStorage.setItem('sjp-filters-visible', 'true');
-      }
-
-      if (filtersVisible && filterPanel.hidden) {
-        // Restore visible state from sessionStorage
-        filterPanel.hidden = false;
+      // Initialize content area class based on initial filter panel state
+      if (!filterPanel.classList.contains('hidden')) {
         contentArea.classList.add('with-filters');
-        filterToggle.textContent = '{{ hideFilters }}';
       }
 
       filterToggle.addEventListener('click', function() {
-        if (filterPanel.hidden) {
+        if (filterPanel.classList.contains('hidden')) {
           // Show filters
-          filterPanel.hidden = false;
+          filterPanel.classList.remove('hidden');
           contentArea.classList.add('with-filters');
           filterToggle.textContent = '{{ hideFilters }}';
-          sessionStorage.setItem('sjp-filters-visible', 'true');
         } else {
           // Hide filters
-          filterPanel.hidden = true;
+          filterPanel.classList.add('hidden');
           contentArea.classList.remove('with-filters');
           filterToggle.textContent = '{{ showFilters }}';
-          sessionStorage.setItem('sjp-filters-visible', 'false');
         }
       });
     }

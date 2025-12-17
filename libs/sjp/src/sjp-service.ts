@@ -230,9 +230,16 @@ const LONDON_POSTCODES = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
 
 /**
  * Checks if a postcode is a London postcode
+ * Checks if the postcode starts with any London postcode area
  */
 function isLondonPostcode(postcode: string): boolean {
-  return LONDON_POSTCODES.has(postcode);
+  // Check if postcode starts with any London area code
+  for (const area of LONDON_POSTCODES) {
+    if (postcode.startsWith(area)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**

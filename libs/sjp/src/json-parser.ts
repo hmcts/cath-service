@@ -27,14 +27,14 @@ export interface SjpParty {
   partyRole: string;
   individualDetails?: {
     title?: string;
-    forename?: string;
-    middleName?: string;
-    surname?: string;
+    individualForenames?: string;
+    individualMiddleName?: string;
+    individualSurname?: string;
     dateOfBirth?: string;
     address?: SjpAddress;
   };
   organisationDetails?: {
-    name: string;
+    organisationName: string;
     address?: SjpAddress;
   };
 }
@@ -54,7 +54,7 @@ export interface SjpOffence {
 
 /**
  * Extracts the postcode outward code (first part) from a full postcode
- * Examples: "BS8 1AB" -> "BS8", "M1 2AA" -> "M1", "EC1A 1BB" -> "EC1A"
+ * Examples: "SE23 6FH" -> "SE23", "M1 2AA" -> "M1", "EC1A 1BB" -> "EC1A"
  */
 function extractPostcodeOutward(postcode: string | undefined): string | null {
   if (!postcode) return null;
@@ -79,8 +79,8 @@ function findAccused(parties: SjpParty[]): SjpParty | undefined {
  * Extracts prosecutor from hearing parties
  */
 function findProsecutor(parties: SjpParty[]): string | null {
-  const prosecutor = parties.find((p) => p.partyRole === "PROSECUTOR");
-  return prosecutor?.organisationDetails?.name || null;
+  const prosecutor = parties.find((p) => p.partyRole === "PROSECUTOR" || p.partyRole === "Prosecuter");
+  return prosecutor?.organisationDetails?.organisationName || null;
 }
 
 /**
@@ -90,13 +90,13 @@ function formatAccusedName(accused: SjpParty | undefined): string {
   if (!accused) return "Unknown";
 
   if (accused.individualDetails) {
-    const { title, forename, middleName, surname } = accused.individualDetails;
-    const parts = [title, forename, middleName, surname].filter(Boolean);
+    const { title, individualForenames, individualMiddleName, individualSurname } = accused.individualDetails;
+    const parts = [title, individualForenames, individualMiddleName, individualSurname].filter(Boolean);
     return parts.join(" ");
   }
 
   if (accused.organisationDetails) {
-    return accused.organisationDetails.name;
+    return accused.organisationDetails.organisationName;
   }
 
   return "Unknown";
@@ -126,10 +126,23 @@ function extractPostcode(accused: SjpParty | undefined): string | null {
 
 /**
  * Parses date of birth string to Date object
+ * Handles DD/MM/YYYY format
  */
 function parseDateOfBirth(dateString: string | undefined): Date | null {
   if (!dateString) return null;
   try {
+    // Check if it's DD/MM/YYYY format
+    if (dateString.includes("/")) {
+      const parts = dateString.split("/");
+      if (parts.length === 3) {
+        const day = Number.parseInt(parts[0], 10);
+        const month = Number.parseInt(parts[1], 10) - 1; // Months are 0-indexed
+        const year = Number.parseInt(parts[2], 10);
+        const date = new Date(year, month, day);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+    }
+    // Try parsing as ISO date
     const date = new Date(dateString);
     return Number.isNaN(date.getTime()) ? null : date;
   } catch {
@@ -204,6 +217,11 @@ function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
  * Press lists include full details (DOB, address), public lists only include minimal info
  */
 export function determineListType(json: SjpJson): "public" | "press" {
+  // Handle empty courtLists
+  if (!json.courtLists || json.courtLists.length === 0) {
+    return "public";
+  }
+
   // Check first hearing to see if it has press-only fields
   const firstHearing = json.courtLists[0]?.courtHouse?.courtRoom[0]?.session[0]?.sittings[0]?.hearing[0];
   if (!firstHearing) return "public";
@@ -220,6 +238,11 @@ export function determineListType(json: SjpJson): "public" | "press" {
  * Extracts all hearings from nested SJP JSON structure
  */
 export function extractAllHearings(json: SjpJson): SjpHearing[] {
+  // Handle empty courtLists
+  if (!json.courtLists || json.courtLists.length === 0) {
+    return [];
+  }
+
   const hearings: SjpHearing[] = [];
   for (const courtList of json.courtLists) {
     for (const courtRoom of courtList.courtHouse.courtRoom) {

@@ -36,17 +36,12 @@ export const GET = async (req: Request, res: Response) => {
 
   const { cases, totalCases } = await getSjpPublicCases(artefactId, filters, page, sortBy, sortOrder);
   const prosecutors = await getUniqueProsecutors(artefactId);
-  const postcodeAreas = await getUniquePostcodes(artefactId);
+  const postcodeData = await getUniquePostcodes(artefactId);
   const pagination = calculatePagination(page, totalCases, 50);
   const t = locale === "cy" ? cy : en;
 
   // Format cases for GOV.UK table component
-  const casesRows = cases.map((caseItem) => [
-    { text: caseItem.name },
-    { text: caseItem.postcode || "" },
-    { text: caseItem.offence || "" },
-    { text: caseItem.prosecutor || "" }
-  ]);
+  const casesRows = cases.map((caseItem) => [{ text: caseItem.name }, { text: caseItem.postcode || "" }, { text: caseItem.offence || "" }]);
 
   res.render("sjp-public-list/index", {
     ...t,
@@ -57,7 +52,9 @@ export const GET = async (req: Request, res: Response) => {
     cases,
     casesRows,
     prosecutors,
-    postcodeAreas,
+    postcodeAreas: postcodeData.postcodes,
+    hasLondonPostcodes: postcodeData.hasLondonPostcodes,
+    londonPostcodes: postcodeData.londonPostcodes,
     pagination,
     filters,
     sortBy,
