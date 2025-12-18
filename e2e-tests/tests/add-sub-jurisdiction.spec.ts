@@ -90,7 +90,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(backToUploadLink).toHaveAttribute("href", "/reference-data-upload");
     });
 
-    test("should be keyboard accessible throughout entire flow", async ({ page }) => {
+    test("should be keyboard accessible throughout entire flow @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       // Verify form fields are accessible
@@ -165,7 +165,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(saveButton).toBeVisible();
     });
 
-    test("should display validation errors when all fields are empty", async ({ page }) => {
+    test("should display validation errors when all fields are empty @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       const saveButton = page.getByRole("button", { name: /save/i });
@@ -195,7 +195,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(welshNameError).toHaveAttribute("href", "#welshName");
     });
 
-    test("should display validation error when jurisdiction is not selected", async ({ page }) => {
+    test("should display validation error when jurisdiction is not selected @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       await page.fill('input[name="name"]', "Test Sub-Jurisdiction");
@@ -217,7 +217,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(page.locator('input[name="welshName"]')).toHaveValue("Is-awdurdodaeth Prawf");
     });
 
-    test("should display validation error when English name is empty", async ({ page }) => {
+    test("should display validation error when English name is empty @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       const jurisdictionSelect = page.locator('select[name="jurisdictionId"]');
@@ -240,7 +240,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(page.locator('input[name="welshName"]')).toHaveValue("Is-awdurdodaeth Cymraeg");
     });
 
-    test("should display validation error when Welsh name is empty", async ({ page }) => {
+    test("should display validation error when Welsh name is empty @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       const jurisdictionSelect = page.locator('select[name="jurisdictionId"]');
@@ -263,7 +263,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(page.locator('input[name="name"]')).toHaveValue("English Sub-Jurisdiction");
     });
 
-    test("should display validation error when names contain HTML tags", async ({ page }) => {
+    test("should display validation error when names contain HTML tags @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       const jurisdictionSelect = page.locator('select[name="jurisdictionId"]');
@@ -286,7 +286,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(welshNameError).toBeVisible();
     });
 
-    test("should display validation error for duplicate English sub-jurisdiction name", async ({ page }) => {
+    test("should display validation error for duplicate English sub-jurisdiction name @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -319,7 +319,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(errorLink).toBeVisible();
     });
 
-    test("should display validation error for duplicate Welsh sub-jurisdiction name", async ({ page }) => {
+    test("should display validation error for duplicate Welsh sub-jurisdiction name @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -360,7 +360,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should meet WCAG 2.2 AA standards with validation errors", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards with validation errors @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction");
 
       const saveButton = page.getByRole("button", { name: /save/i });
@@ -373,7 +373,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
   });
 
   test.describe("Welsh Language Support", () => {
-    test("should display Welsh translations on form page", async ({ page }) => {
+    test("should display Welsh translations on form page @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction?lng=cy");
 
       const heading = page.locator("h1");
@@ -392,7 +392,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(saveButton).toBeVisible();
     });
 
-    test("should display Welsh error messages", async ({ page }) => {
+    test("should display Welsh error messages @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction?lng=cy");
 
       const saveButton = page.getByRole("button", { name: /cadw/i });
@@ -405,7 +405,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(errorSummaryHeading).toBeVisible();
     });
 
-    test("should complete full flow in Welsh", async ({ page }) => {
+    test("should complete full flow in Welsh @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction?lng=cy");
 
       const timestamp = Date.now();
@@ -436,7 +436,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(nextStepsHeading).toBeVisible();
     });
 
-    test("should maintain language preference through navigation", async ({ page }) => {
+    test("should maintain language preference through navigation @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -508,12 +508,12 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(backToUploadLink).toHaveAttribute("href", "/reference-data-upload");
     });
 
-    test("should redirect to add-sub-jurisdiction if accessed directly without session", async ({ page }) => {
+    test("should redirect to add-sub-jurisdiction if accessed directly without session @nightly", async ({ page }) => {
       await page.goto("/add-sub-jurisdiction-success");
       await expect(page).toHaveURL("/add-sub-jurisdiction");
     });
 
-    test("should not allow access after refreshing the page", async ({ page }) => {
+    test("should not allow access after refreshing the page @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -533,7 +533,7 @@ test.describe("Add Sub Jurisdiction End-to-End Flow", () => {
       await expect(page).toHaveURL("/add-sub-jurisdiction");
     });
 
-    test("should meet WCAG 2.2 AA standards on success page", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on success page @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";

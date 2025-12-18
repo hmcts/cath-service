@@ -4,15 +4,15 @@ import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, mockListTypes } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
-import { LANGUAGE_LABELS, type ManualUploadFormData, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
+import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";
 import { storeManualUpload } from "../../manual-upload/storage.js";
-import { validateForm } from "../../manual-upload/validation.js";
+import { validateManualUploadForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const LIST_TYPES = [
   { value: "", text: "<Please choose a list type>" },
-  ...mockListTypes.map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
+  ...mockListTypes.filter((listType) => !listType.isNonStrategic).map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
 ];
 
 const SENSITIVITY_OPTIONS = [
@@ -34,7 +34,7 @@ function parseDateInput(body: any, prefix: string) {
   return hasValue(day) || hasValue(month) || hasValue(year) ? { day: day || "", month: month || "", year: year || "" } : undefined;
 }
 
-function transformDateFields(body: any): ManualUploadFormData {
+function transformDateFields(body: any): UploadFormData {
   return {
     locationId: body.locationId,
     locationName: body["court-display"],
@@ -108,7 +108,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Check for multer errors (e.g., file too large)
   const fileUploadError = req.fileUploadError;
-  let errors = await validateForm(formData, req.file, t);
+  let errors = await validateManualUploadForm(formData, req.file, t);
 
   // If multer threw a file size error, replace the "fileRequired" error with the file size error
   if (fileUploadError && fileUploadError.code === "LIMIT_FILE_SIZE") {

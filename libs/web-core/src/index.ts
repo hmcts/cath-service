@@ -7,7 +7,7 @@ export { en } from "./locales/en.js";
 export type { CookieManagerOptions, CookieManagerState, CookiePreferences } from "./middleware/cookies/cookie-manager-middleware.js";
 export { configureCookieManager } from "./middleware/cookies/cookie-manager-middleware.js";
 export type { FileUploadOptions } from "./middleware/file-upload/file-upload-middleware.js";
-export { createFileUpload } from "./middleware/file-upload/file-upload-middleware.js";
+export { createFileUpload, createFileUploadMiddleware } from "./middleware/file-upload/file-upload-middleware.js";
 export type { GovukSetupOptions } from "./middleware/govuk-frontend/configure-govuk.js";
 export { configureGovuk } from "./middleware/govuk-frontend/configure-govuk.js";
 export { errorHandler, notFoundHandler } from "./middleware/govuk-frontend/error-handler.js";
