@@ -94,7 +94,7 @@ export const GET = async (req: Request, res: Response) => {
 
   const filters = { postcode };
   const { cases, totalCases } = await getSjpPublicCases(listId, filters, page, sortBy, sortOrder);
-  const pagination = calculatePagination(page, totalCases, 50);
+  const pagination = calculatePagination(page, totalCases, 1000);
 
   // Get unique postcodes and prosecutors for filters
   const { postcodes } = await getUniquePostcodes(listId);
@@ -151,7 +151,7 @@ export const POST = async (req: Request, res: Response) => {
   if (postcode && !postcodeValidation.isValid) {
     const filters = {};
     const { cases, totalCases } = await getSjpPublicCases(listId, filters, 1);
-    const pagination = calculatePagination(1, totalCases, 50);
+    const pagination = calculatePagination(1, totalCases, 1000);
 
     // Get unique postcodes and prosecutors for filters
     const { postcodes } = await getUniquePostcodes(listId);

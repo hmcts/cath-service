@@ -267,13 +267,24 @@
     const contentArea = document.getElementById('content-area');
 
     if (filterToggle && filterPanel && contentArea) {
-      // Initialize: check if filter panel is visible on page load
-      const isFilterPanelVisible = !filterPanel.classList.contains('hidden');
+      // Check sessionStorage for filter visibility state
+      const filtersVisible = sessionStorage.getItem('sjp-public-filters-visible') === 'true';
 
-      if (isFilterPanelVisible) {
+      // Restore filter visibility from sessionStorage
+      if (filtersVisible) {
+        filterPanel.classList.remove('hidden');
         contentArea.classList.add('with-filters');
+        filterToggle.textContent = '{{ hideFilters }}';
       } else {
-        contentArea.classList.remove('with-filters');
+        // Initialize: check if filter panel is visible on page load
+        const isFilterPanelVisible = !filterPanel.classList.contains('hidden');
+
+        if (isFilterPanelVisible) {
+          contentArea.classList.add('with-filters');
+          sessionStorage.setItem('sjp-public-filters-visible', 'true');
+        } else {
+          contentArea.classList.remove('with-filters');
+        }
       }
 
       filterToggle.addEventListener('click', function() {
@@ -282,11 +293,13 @@
           filterPanel.classList.remove('hidden');
           contentArea.classList.add('with-filters');
           filterToggle.textContent = '{{ hideFilters }}';
+          sessionStorage.setItem('sjp-public-filters-visible', 'true');
         } else {
           // Hide filters
           filterPanel.classList.add('hidden');
           contentArea.classList.remove('with-filters');
           filterToggle.textContent = '{{ showFilters }}';
+          sessionStorage.setItem('sjp-public-filters-visible', 'false');
         }
       });
     }

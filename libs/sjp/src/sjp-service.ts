@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-const CASES_PER_PAGE = 50;
+const CASES_PER_PAGE = 1000;
 
 export interface SjpListMetadata {
   artefactId: string;
