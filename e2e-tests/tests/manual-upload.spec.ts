@@ -839,14 +839,19 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await page.getByRole("button", { name: "Confirm" }).click();
       await page.waitForURL("/manual-upload-success", { timeout: 10000 });
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
       const successPanel = page.locator(".govuk-panel");
       await expect(successPanel).toBeVisible();
 
       // Verify notifications were sent to all subscribers
-      const notifications1 = await getNotificationsBySubscriptionId(sub1.subscriptionId);
-      const notifications2 = await getNotificationsBySubscriptionId(sub2.subscriptionId);
+      // Poll for notifications with retry logic
+      let notifications1 = [];
+      let notifications2 = [];
+      for (let i = 0; i < 10; i++) {
+        notifications1 = await getNotificationsBySubscriptionId(sub1.subscriptionId);
+        notifications2 = await getNotificationsBySubscriptionId(sub2.subscriptionId);
+        if (notifications1.length > 0 && notifications2.length > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
 
       expect(notifications1.length).toBeGreaterThan(0);
       expect(notifications1[0].status).toBe("Sent");
