@@ -119,7 +119,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       success: true,
       artefact_id: artefactId,
       no_match: noMatch,
-      message: noMatch ? "Blob ingested but location not found in reference data (no_match=true)" : "Blob ingested and published successfully"
+      message: noMatch ? "Blob ingested but location not found in reference data" : "Blob ingested and published successfully"
     };
   } catch (error) {
     // Log system error

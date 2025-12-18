@@ -354,7 +354,7 @@ describe("manual-upload-summary page", () => {
 
     it("should format all sensitivity types correctly", async () => {
       const sensitivities = ["PUBLIC", "PRIVATE", "CLASSIFIED"];
-      const expectedLabels = ["Public", "Private", "Classified"];
+      const expectedLabels = ["Public", "Private – all verified users", "Classified"];
 
       for (let i = 0; i < sensitivities.length; i++) {
         const mockUploadData = {
@@ -386,7 +386,7 @@ describe("manual-upload-summary page", () => {
 
     it("should format all language types correctly", async () => {
       const languages = ["ENGLISH", "WELSH", "BILINGUAL"];
-      const expectedLabels = ["English", "Welsh", "Bilingual"];
+      const expectedLabels = ["English", "Welsh", "Bilingual English/Welsh"];
 
       for (let i = 0; i < languages.length; i++) {
         const mockUploadData = {

@@ -80,7 +80,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(backToUploadLink).toHaveAttribute("href", "/reference-data-upload");
     });
 
-    test("should be keyboard accessible throughout entire flow", async ({ page }) => {
+    test("should be keyboard accessible throughout entire flow @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       // Verify form fields are focusable
@@ -141,7 +141,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(saveButton).toBeVisible();
     });
 
-    test("should display validation errors when both fields are empty", async ({ page }) => {
+    test("should display validation errors when both fields are empty @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       const saveButton = page.getByRole("button", { name: /save/i });
@@ -173,7 +173,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(welshNameErrorMessage).toContainText("Enter region name in Welsh");
     });
 
-    test("should display validation error when English name is empty", async ({ page }) => {
+    test("should display validation error when English name is empty @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       await page.fill('input[name="welshName"]', "Rhanbarth Cymraeg");
@@ -196,7 +196,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(page.locator('input[name="welshName"]')).toHaveValue("Rhanbarth Cymraeg");
     });
 
-    test("should display validation error when Welsh name is empty", async ({ page }) => {
+    test("should display validation error when Welsh name is empty @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       await page.fill('input[name="name"]', "English Region");
@@ -219,7 +219,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(page.locator('input[name="name"]')).toHaveValue("English Region");
     });
 
-    test("should display validation error when names contain HTML tags", async ({ page }) => {
+    test("should display validation error when names contain HTML tags @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       await fillRegionForm(page, '<script>alert("test")</script>', "<b>Bold Region</b>");
@@ -239,7 +239,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(welshNameError).toBeVisible();
     });
 
-    test("should display validation error for duplicate English region name", async ({ page }) => {
+    test("should display validation error for duplicate English region name @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -267,7 +267,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(errorLink).toBeVisible();
     });
 
-    test("should display validation error for duplicate Welsh region name", async ({ page }) => {
+    test("should display validation error for duplicate Welsh region name @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -295,7 +295,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(errorLink).toBeVisible();
     });
 
-    test("should preserve form values after validation error", async ({ page }) => {
+    test("should preserve form values after validation error @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       const testName = "Test Region Preserve";
@@ -321,7 +321,7 @@ test.describe("Add Region End-to-End Flow", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should meet WCAG 2.2 AA standards with validation errors", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards with validation errors @nightly", async ({ page }) => {
       await page.goto("/add-region");
 
       const saveButton = page.getByRole("button", { name: /save/i });
@@ -334,7 +334,7 @@ test.describe("Add Region End-to-End Flow", () => {
   });
 
   test.describe("Welsh Language Support", () => {
-    test("should display Welsh translations on form page", async ({ page }) => {
+    test("should display Welsh translations on form page @nightly", async ({ page }) => {
       await page.goto("/add-region?lng=cy");
 
       const heading = page.locator("h1");
@@ -350,7 +350,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(saveButton).toBeVisible();
     });
 
-    test("should display Welsh error messages", async ({ page }) => {
+    test("should display Welsh error messages @nightly", async ({ page }) => {
       await page.goto("/add-region?lng=cy");
 
       const saveButton = page.getByRole("button", { name: /cadw/i });
@@ -363,7 +363,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(errorSummaryHeading).toBeVisible();
     });
 
-    test("should complete full flow in Welsh", async ({ page }) => {
+    test("should complete full flow in Welsh @nightly", async ({ page }) => {
       await page.goto("/add-region?lng=cy");
 
       const timestamp = Date.now();
@@ -386,7 +386,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(nextStepsHeading).toBeVisible();
     });
 
-    test("should maintain language preference through navigation", async ({ page }) => {
+    test("should maintain language preference through navigation @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
 
@@ -439,12 +439,12 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(backToUploadLink).toHaveAttribute("href", "/reference-data-upload");
     });
 
-    test("should redirect to add-region if accessed directly without session", async ({ page }) => {
+    test("should redirect to add-region if accessed directly without session @nightly", async ({ page }) => {
       await page.goto("/add-region-success");
       await expect(page).toHaveURL("/add-region");
     });
 
-    test("should not allow access after refreshing the page", async ({ page }) => {
+    test("should not allow access after refreshing the page @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -454,7 +454,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(page).toHaveURL("/add-region");
     });
 
-    test("should allow multiple sequential region additions", async ({ page }) => {
+    test("should allow multiple sequential region additions @nightly", async ({ page }) => {
       const timestamp1 = Date.now();
       const random1 = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -473,7 +473,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(successPanel).toBeVisible();
     });
 
-    test("should meet WCAG 2.2 AA standards on success page", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on success page @nightly", async ({ page }) => {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000000);
       const workerId = process.env.TEST_WORKER_INDEX || "0";
@@ -486,7 +486,7 @@ test.describe("Add Region End-to-End Flow", () => {
   });
 
   test.describe("Responsive Design", () => {
-    test("should display correctly on mobile viewport (375x667)", async ({ page }) => {
+    test("should display correctly on mobile viewport (375x667) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/add-region");
 
@@ -503,7 +503,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(saveButton).toBeVisible();
     });
 
-    test("should display correctly on tablet viewport (768x1024)", async ({ page }) => {
+    test("should display correctly on tablet viewport (768x1024) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto("/add-region");
 
@@ -514,7 +514,7 @@ test.describe("Add Region End-to-End Flow", () => {
       await expect(form).toBeVisible();
     });
 
-    test("should complete flow on mobile viewport", async ({ page }) => {
+    test("should complete flow on mobile viewport @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
       const timestamp = Date.now();

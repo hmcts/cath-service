@@ -109,7 +109,7 @@ test.describe("Summary of Publications Page", () => {
   });
 
   test.describe("given invalid locationId", () => {
-    test("should redirect to 400 error page when locationId is missing", async ({ page }) => {
+    test("should redirect to 400 error page when locationId is missing @nightly", async ({ page }) => {
       await page.goto("/summary-of-publications");
 
       // Should redirect to 400 page
@@ -121,7 +121,7 @@ test.describe("Summary of Publications Page", () => {
       await expect(heading).toContainText(/bad request/i);
     });
 
-    test("should redirect to 400 error page when locationId is not numeric", async ({ page }) => {
+    test("should redirect to 400 error page when locationId is not numeric @nightly", async ({ page }) => {
       await page.goto("/summary-of-publications?locationId=abc");
 
       // Should redirect to 400 page
@@ -133,7 +133,7 @@ test.describe("Summary of Publications Page", () => {
       await expect(heading).toContainText(/bad request/i);
     });
 
-    test("should redirect to 400 error page when location does not exist", async ({ page }) => {
+    test("should redirect to 400 error page when location does not exist @nightly", async ({ page }) => {
       // Using locationId=99999 which doesn't exist in location data
       await page.goto("/summary-of-publications?locationId=99999");
 
@@ -148,7 +148,7 @@ test.describe("Summary of Publications Page", () => {
   });
 
   test.describe("given user clicks back link", () => {
-    test("should navigate to the previous page in history", async ({ page }) => {
+    test("should navigate to the previous page in history @nightly", async ({ page }) => {
       // Navigate to view-option page first
       await page.goto("/view-option");
       await page.waitForLoadState("domcontentloaded");
@@ -169,7 +169,7 @@ test.describe("Summary of Publications Page", () => {
   });
 
   test.describe("given user toggles language", () => {
-    test("should display Welsh content when language is changed to Welsh", async ({ page }) => {
+    test("should display Welsh content when language is changed to Welsh @nightly", async ({ page }) => {
       await page.goto("/summary-of-publications?locationId=9");
 
       // Wait for page to load
@@ -204,7 +204,7 @@ test.describe("Summary of Publications Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should switch back to English when language toggle is clicked again", async ({ page }) => {
+    test("should switch back to English when language toggle is clicked again @nightly", async ({ page }) => {
       await page.goto("/summary-of-publications?locationId=9&lng=cy");
 
       // Wait for page to load
@@ -233,7 +233,7 @@ test.describe("Summary of Publications Page", () => {
       await expect(heading).toContainText("What do you want to view from");
     });
 
-    test("should preserve language selection with no publications message", async ({ page }) => {
+    test("should preserve language selection with no publications message @nightly", async ({ page }) => {
       await page.goto("/summary-of-publications?locationId=9002&lng=cy");
 
       // Wait for page to load

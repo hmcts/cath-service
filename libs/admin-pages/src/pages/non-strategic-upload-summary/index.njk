@@ -1,0 +1,154 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block pageTitle %}{{ pageTitle }}{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <h2 class="govuk-heading-m">{{ subHeading }}</h2>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: {
+            text: courtName
+          },
+          value: {
+            text: data.courtName
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#court",
+                text: change,
+                visuallyHiddenText: courtName
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: file
+          },
+          value: {
+            text: data.file
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#file",
+                text: change,
+                visuallyHiddenText: file
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: listType
+          },
+          value: {
+            text: data.listType
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#listType",
+                text: change,
+                visuallyHiddenText: listType
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: hearingStartDate
+          },
+          value: {
+            text: data.hearingStartDate
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#hearingStartDate-day",
+                text: change,
+                visuallyHiddenText: hearingStartDate
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: sensitivity
+          },
+          value: {
+            text: data.sensitivity
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#sensitivity",
+                text: change,
+                visuallyHiddenText: sensitivity
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: language
+          },
+          value: {
+            text: data.language
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#language",
+                text: change,
+                visuallyHiddenText: language
+              }
+            ]
+          }
+        },
+        {
+          key: {
+            text: displayFileDates
+          },
+          value: {
+            text: data.displayFileDates
+          },
+          actions: {
+            items: [
+              {
+                href: "/non-strategic-upload#displayFrom-day",
+                text: change,
+                visuallyHiddenText: displayFileDates
+              }
+            ]
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: confirmButton
+      }) }}
+    </form>
+  </div>
+</div>
+{% endblock %}
