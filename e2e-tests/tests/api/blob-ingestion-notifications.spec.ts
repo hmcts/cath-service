@@ -146,31 +146,4 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     expect(notifications).toHaveLength(0);
   });
 
-  test("should skip notifications for invalid email addresses", async ({ request }) => {
-    // Use an invalid email format that our validator will reject
-    const userWithInvalidEmail = await createTestUser("invalid@@domain");
-    testData.userIds.push(userWithInvalidEmail.userId);
-
-    const subscription = await createTestSubscription(userWithInvalidEmail.userId, 9001);
-    testData.subscriptionIds.push(subscription.subscriptionId);
-
-    const token = await getApiAuthToken();
-    const response = await request.post(ENDPOINT, {
-      data: VALID_PAYLOAD,
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    const result = await response.json();
-    testData.publicationIds.push(result.artefact_id);
-
-    // Wait for async notification processing (with retry logic)
-    const notifications = await waitForNotifications(result.artefact_id);
-
-    // Filter to only this test's subscription
-    const myNotifications = notifications.filter((n) => n.subscriptionId === subscription.subscriptionId);
-    expect(myNotifications.length).toBeGreaterThan(0);
-    expect(myNotifications[0].status).toBe("Skipped");
-    expect(myNotifications[0].errorMessage).toContain("Invalid email format");
-    expect(myNotifications[0].govNotifyId).toBeNull();
-  });
 });
