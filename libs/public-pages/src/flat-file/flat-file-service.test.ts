@@ -1,17 +1,20 @@
-import { prisma } from "@hmcts/postgres";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as fileRetrieval from "../file-storage/file-retrieval.js";
 import { getFileForDownload, getFlatFileForDisplay } from "./flat-file-service.js";
 
-vi.mock("@hmcts/postgres", () => ({
-  prisma: {
-    artefact: {
-      findUnique: vi.fn()
+vi.mock("@hmcts/publication", () => ({
+  getArtefactById: vi.fn(),
+  getFileBuffer: vi.fn(),
+  getFileExtension: vi.fn(),
+  getContentType: vi.fn(),
+  getFileName: vi.fn(),
+  mockListTypes: [
+    {
+      id: 1,
+      englishFriendlyName: "Daily Cause List",
+      welshFriendlyName: "Rhestr Achos Dyddiol"
     }
-  }
+  ]
 }));
-
-vi.mock("../file-storage/file-retrieval.js");
 
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn().mockResolvedValue({
@@ -21,15 +24,7 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
-vi.mock("@hmcts/publication", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      englishFriendlyName: "Daily Cause List",
-      welshFriendlyName: "Rhestr Achos Dyddiol"
-    }
-  ]
-}));
+import { getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName } from "@hmcts/publication";
 
 describe("flat-file-service", () => {
   beforeEach(() => {
@@ -46,15 +41,15 @@ describe("flat-file-service", () => {
       language: "ENGLISH",
       displayFrom: new Date("2020-01-01"),
       displayTo: new Date("2099-12-31"),
-      lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
+      noMatch: false
     };
 
     it("should return success for valid flat file", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
-      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(Buffer.from("test"));
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(getFileBuffer).mockResolvedValue(Buffer.from("test"));
+      vi.mocked(getFileExtension).mockResolvedValue(".pdf");
 
       const result = await getFlatFileForDisplay(mockArtefact.artefactId, mockArtefact.locationId);
 
@@ -64,12 +59,13 @@ describe("flat-file-service", () => {
         courtName: "Test Court",
         listTypeName: "Daily Cause List",
         contentDate: mockArtefact.contentDate,
-        language: mockArtefact.language
+        language: mockArtefact.language,
+        fileExtension: ".pdf"
       });
     });
 
     it("should return NOT_FOUND when artefact does not exist", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(null);
 
       const result = await getFlatFileForDisplay("non-existent", "123");
 
@@ -77,7 +73,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return LOCATION_MISMATCH when locationId does not match", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 
       const result = await getFlatFileForDisplay(mockArtefact.artefactId, "wrong-location");
 
@@ -85,7 +81,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return NOT_FLAT_FILE when artefact is not a flat file", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         ...mockArtefact,
         isFlatFile: false
       });
@@ -96,7 +92,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return EXPIRED when before displayFrom date", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         ...mockArtefact,
         displayFrom: new Date("2999-01-01"),
         displayTo: new Date("2999-12-31")
@@ -108,7 +104,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return EXPIRED when after displayTo date", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         ...mockArtefact,
         displayFrom: new Date("2020-01-01"),
         displayTo: new Date("2020-12-31")
@@ -120,8 +116,8 @@ describe("flat-file-service", () => {
     });
 
     it("should return FILE_NOT_FOUND when file does not exist in storage", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
-      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(getFileBuffer).mockResolvedValue(null);
 
       const result = await getFlatFileForDisplay(mockArtefact.artefactId, mockArtefact.locationId);
 
@@ -139,18 +135,18 @@ describe("flat-file-service", () => {
       language: "ENGLISH",
       displayFrom: new Date("2020-01-01"),
       displayTo: new Date("2099-12-31"),
-      lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0
+      noMatch: false
     };
 
     it("should return file buffer and metadata for valid file", async () => {
       const mockBuffer = Buffer.from("test pdf content");
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
-      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(mockBuffer);
-      vi.mocked(fileRetrieval.getContentType).mockReturnValue("application/pdf");
-      vi.mocked(fileRetrieval.getFileName).mockReturnValue(`${mockArtefact.artefactId}.pdf`);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(getFileBuffer).mockResolvedValue(mockBuffer);
+      vi.mocked(getFileExtension).mockResolvedValue(".pdf");
+      vi.mocked(getContentType).mockReturnValue("application/pdf");
+      vi.mocked(getFileName).mockReturnValue(`${mockArtefact.artefactId}.pdf`);
 
       const result = await getFileForDownload(mockArtefact.artefactId);
 
@@ -163,7 +159,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return NOT_FOUND when artefact does not exist", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(null);
 
       const result = await getFileForDownload("non-existent");
 
@@ -171,7 +167,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return NOT_FLAT_FILE when artefact is not a flat file", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         ...mockArtefact,
         isFlatFile: false
       });
@@ -182,7 +178,7 @@ describe("flat-file-service", () => {
     });
 
     it("should return EXPIRED when file display period has expired", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         ...mockArtefact,
         displayFrom: new Date("2020-01-01"),
         displayTo: new Date("2020-12-31")
@@ -194,8 +190,8 @@ describe("flat-file-service", () => {
     });
 
     it("should return FILE_NOT_FOUND when file does not exist in storage", async () => {
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
-      vi.mocked(fileRetrieval.getFileBuffer).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(getFileBuffer).mockResolvedValue(null);
 
       const result = await getFileForDownload(mockArtefact.artefactId);
 

@@ -6,11 +6,11 @@ import { getContentTypeFromExtension } from "./content-type.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Navigate to monorepo root (from libs/public-pages/src/file-storage/)
+// Navigate to monorepo root (from libs/publication/src/file-storage/)
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
 const STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-async function findFileByArtefactId(artefactId: string): Promise<{ buffer: Buffer; extension: string } | null> {
+export async function findFileByArtefactId(artefactId: string): Promise<{ buffer: Buffer; extension: string } | null> {
   try {
     const resolvedBase = path.resolve(STORAGE_BASE);
 

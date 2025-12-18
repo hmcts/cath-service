@@ -1,12 +1,8 @@
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
-import { mockListTypes } from "@hmcts/publication";
-import { getContentType, getFileBuffer, getFileExtension, getFileName } from "../file-storage/file-retrieval.js";
+import { getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName, mockListTypes } from "@hmcts/publication";
 
 export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en") {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId }
-  });
+  const artefact = await getArtefactById(artefactId);
 
   if (!artefact) {
     return { error: "NOT_FOUND" as const };
@@ -52,9 +48,7 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
 }
 
 export async function getFileForDownload(artefactId: string) {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId }
-  });
+  const artefact = await getArtefactById(artefactId);
 
   if (!artefact) {
     return { error: "NOT_FOUND" as const };
