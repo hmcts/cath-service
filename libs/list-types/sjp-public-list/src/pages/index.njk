@@ -286,8 +286,9 @@
       const checkbox = document.getElementById(checkboxId);
 
       if (anchor && link && checkbox) {
-        // Initially hide the checkboxes
-        checkbox.style.display = 'none';
+        // Initially show the checkboxes
+        checkbox.style.display = 'block';
+        link.classList.add('rotated');
 
         anchor.addEventListener('click', function(e) {
           e.preventDefault();

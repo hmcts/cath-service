@@ -41,7 +41,12 @@ export const GET = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   // Format cases for GOV.UK table component
-  const casesRows = cases.map((caseItem) => [{ text: caseItem.name }, { text: caseItem.postcode || "" }, { text: caseItem.offence || "" }]);
+  const casesRows = cases.map((caseItem) => [
+    { text: caseItem.name },
+    { text: caseItem.postcode || "" },
+    { text: caseItem.offence || "" },
+    { text: caseItem.prosecutor || "" }
+  ]);
 
   res.render("sjp-public-list/index", {
     ...t,

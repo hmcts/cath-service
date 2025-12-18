@@ -222,6 +222,14 @@
                   {% endif %}
                 </a>
               </th>
+              <th scope="col" class="govuk-table__header">
+                <a href="?artefactId={{ list.artefactId }}&page={{ pagination.currentPage }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcode %}&postcode={{ filters.postcode }}{% endif %}{% if filters.prosecutor %}&prosecutor={{ filters.prosecutor }}{% endif %}&sortBy=prosecutor&sortOrder={% if sortBy === 'prosecutor' and sortOrder === 'asc' %}desc{% else %}asc{% endif %}" class="govuk-link">
+                  {{ prosecutorHeader }}
+                  {% if sortBy === 'prosecutor' %}
+                    {% if sortOrder === 'asc' %}▲{% else %}▼{% endif %}
+                  {% endif %}
+                </a>
+              </th>
             </tr>
           </thead>
           <tbody class="govuk-table__body">
@@ -290,8 +298,9 @@
       const checkbox = document.getElementById(checkboxId);
 
       if (anchor && link && checkbox) {
-        // Initially hide the checkboxes
-        checkbox.style.display = 'none';
+        // Initially show the checkboxes
+        checkbox.style.display = 'block';
+        link.classList.add('rotated');
 
         anchor.addEventListener('click', function(e) {
           e.preventDefault();

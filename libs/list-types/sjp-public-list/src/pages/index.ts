@@ -1,4 +1,4 @@
-import { calculatePagination, getSjpListById, getSjpPublicCases, validateUkPostcode } from "@hmcts/sjp";
+import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors, validateUkPostcode } from "@hmcts/sjp";
 import type { Request, Response } from "express";
 
 const en = {
@@ -13,6 +13,14 @@ const en = {
   postcodeHint: "Enter the first part of a postcode to search for cases in your area",
   searchButton: "Search",
   clearSearch: "Clear search",
+  filterTitle: "Filter",
+  postcodeFilterHeading: "Postcode",
+  prosecutorFilterHeading: "Prosecutor",
+  selectedFilters: "Selected filters",
+  clearFilters: "Clear filters",
+  applyFilters: "Apply filters",
+  showFilters: "Show filters",
+  hideFilters: "Hide filters",
   nameHeader: "Name",
   postcodeHeader: "Postcode",
   prosecutorHeader: "Prosecutor",
@@ -37,6 +45,14 @@ const cy = {
   postcodeHint: "Rhowch y rhan gyntaf o god post i chwilio am achosion yn eich ardal",
   searchButton: "Chwilio",
   clearSearch: "Clirio chwiliad",
+  filterTitle: "Hidlo",
+  postcodeFilterHeading: "Cod post",
+  prosecutorFilterHeading: "Erlynydd",
+  selectedFilters: "Hidlwyr a ddewiswyd",
+  clearFilters: "Clirio hidlwyr",
+  applyFilters: "Cymhwyso hidlwyr",
+  showFilters: "Dangos hidlwyr",
+  hideFilters: "Cuddio hidlwyr",
   nameHeader: "Enw",
   postcodeHeader: "Cod post",
   prosecutorHeader: "Erlynydd",
@@ -56,6 +72,8 @@ export const GET = async (req: Request, res: Response) => {
   const listId = req.query.listId as string;
   const page = Number.parseInt(req.query.page as string, 10) || 1;
   const postcode = req.query.postcode as string | undefined;
+  const sortBy = (req.query.sortBy as string) || "name";
+  const sortOrder = (req.query.sortOrder as string) || "asc";
 
   if (!listId) {
     return res.status(400).render("errors/400", {
@@ -75,8 +93,15 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   const filters = { postcode };
-  const { cases, totalCases } = await getSjpPublicCases(listId, filters, page);
+  const { cases, totalCases } = await getSjpPublicCases(listId, filters, page, sortBy, sortOrder);
   const pagination = calculatePagination(page, totalCases, 50);
+
+  // Get unique postcodes and prosecutors for filters
+  const { postcodes } = await getUniquePostcodes(listId);
+  const prosecutors = await getUniqueProsecutors(listId);
+
+  // Format cases into table rows
+  const casesRows = cases.map((c) => [{ text: c.name }, { text: c.postcode || "" }, { text: c.offence || "" }, { text: c.prosecutor || "" }]);
 
   res.render("index", {
     ...t,
@@ -85,8 +110,14 @@ export const GET = async (req: Request, res: Response) => {
     locale,
     list,
     cases,
+    casesRows,
     pagination,
     postcode,
+    sortBy,
+    sortOrder,
+    filters: { postcode },
+    postcodeAreas: postcodes,
+    prosecutors,
     errors: undefined
   });
 };
@@ -122,6 +153,13 @@ export const POST = async (req: Request, res: Response) => {
     const { cases, totalCases } = await getSjpPublicCases(listId, filters, 1);
     const pagination = calculatePagination(1, totalCases, 50);
 
+    // Get unique postcodes and prosecutors for filters
+    const { postcodes } = await getUniquePostcodes(listId);
+    const prosecutors = await getUniqueProsecutors(listId);
+
+    // Format cases into table rows
+    const casesRows = cases.map((c) => [{ text: c.name }, { text: c.postcode || "" }, { text: c.offence || "" }, { text: c.prosecutor || "" }]);
+
     return res.status(400).render("index", {
       ...t,
       en,
@@ -129,8 +167,14 @@ export const POST = async (req: Request, res: Response) => {
       locale,
       list,
       cases,
+      casesRows,
       pagination,
       postcode,
+      sortBy: "name",
+      sortOrder: "asc",
+      filters: {},
+      postcodeAreas: postcodes,
+      prosecutors,
       errors: [
         {
           text: t.errorInvalidPostcode,

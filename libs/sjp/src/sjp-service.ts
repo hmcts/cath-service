@@ -165,10 +165,19 @@ export async function getSjpPublicCases(
   sortOrder: string = "asc"
 ): Promise<{ cases: SjpCasePublic[]; totalCases: number }> {
   const sjpData = await readSjpJson(artefactId);
-  let allCases = extractPublicCases(sjpData);
 
-  // Apply filters
-  allCases = applyFilters(allCases as SjpCasePress[], filters) as SjpCasePublic[];
+  // Get press cases first, apply filters, then convert to public
+  let pressCases = extractPressCases(sjpData);
+  pressCases = applyFilters(pressCases, filters);
+
+  // Convert to public cases
+  const allCases = pressCases.map((c) => ({
+    caseId: c.caseId,
+    name: c.name,
+    postcode: c.postcode,
+    offence: c.offences[0]?.offenceTitle || c.offences[0]?.offenceWording || null,
+    prosecutor: c.prosecutor
+  }));
 
   // Sort
   const sortField = sortBy as keyof SjpCasePublic;

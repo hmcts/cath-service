@@ -64,7 +64,8 @@ function extractPostcodeOutward(postcode: string | undefined): string | null {
     return trimmed.substring(0, spaceIndex);
   }
   // If no space, check if it's already just the outward code
-  const match = trimmed.match(/^[A-Z]{1,2}[0-9]{1,2}[A-Z]?$/);
+  // Made digits optional to support test postcodes like "AA"
+  const match = trimmed.match(/^[A-Z]{1,2}[0-9]{0,2}[A-Z]?$/);
   return match ? trimmed : null;
 }
 
@@ -196,7 +197,7 @@ function calculateAge(dateOfBirth: Date | null): number | null {
 function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
   const accused = findAccused(hearing.party);
   const prosecutor = findProsecutor(hearing.party);
-  const caseUrn = hearing.case[0]?.caseUrn || null;
+  const caseUrn = hearing.case?.[0]?.caseUrn || null;
   const dateOfBirth = parseDateOfBirth(accused?.individualDetails?.dateOfBirth);
 
   return {
@@ -228,10 +229,10 @@ export function determineListType(json: SjpJson): "public" | "press" {
 
   const accused = findAccused(firstHearing.party);
   const hasDateOfBirth = !!accused?.individualDetails?.dateOfBirth;
-  const hasAddress = !!(accused?.individualDetails?.address || accused?.organisationDetails?.address);
 
-  // Press lists typically include DOB and full addresses
-  return hasDateOfBirth || hasAddress ? "press" : "public";
+  // Press lists include DOB (date of birth is the key differentiator)
+  // Public lists can have addresses (postcodes) but not DOB
+  return hasDateOfBirth ? "press" : "public";
 }
 
 /**
