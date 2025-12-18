@@ -190,11 +190,10 @@
               </div>
             </div>
           </div>
-        </div>
         </form>
       </div>
 
-      <div class="layout-width-four-fifths{% if filters.searchQuery or filters.postcode or filters.prosecutor %} with-filters{% endif %}" id="content-area">
+      <div class="layout-width-four-fifths" id="content-area">
         {% if cases.length > 0 %}
         <table class="govuk-table">
           <thead class="govuk-table__head">
@@ -260,9 +259,13 @@
     const contentArea = document.getElementById('content-area');
 
     if (filterToggle && filterPanel && contentArea) {
-      // Initialize content area class based on initial filter panel state
-      if (!filterPanel.classList.contains('hidden')) {
+      // Initialize: check if filter panel is visible on page load
+      const isFilterPanelVisible = !filterPanel.classList.contains('hidden');
+
+      if (isFilterPanelVisible) {
         contentArea.classList.add('with-filters');
+      } else {
+        contentArea.classList.remove('with-filters');
       }
 
       filterToggle.addEventListener('click', function() {

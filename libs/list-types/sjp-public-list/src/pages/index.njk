@@ -167,11 +167,10 @@
               </div>
             </div>
           </div>
-        </div>
         </form>
       </div>
 
-      <div class="layout-width-four-fifths{% if filters.searchQuery or filters.postcode or filters.prosecutor %} with-filters{% endif %}" id="content-area">
+      <div class="layout-width-four-fifths" id="content-area">
         {% if cases.length > 0 %}
         <table class="govuk-table">
           <thead class="govuk-table__head">
@@ -251,6 +250,9 @@
       // If filters are visible by default (active filters), set sessionStorage
       if (!filterPanel.hidden) {
         sessionStorage.setItem('sjp-filters-visible', 'true');
+        contentArea.classList.add('with-filters');
+      } else {
+        contentArea.classList.remove('with-filters');
       }
 
       if (filtersVisible && filterPanel.hidden) {

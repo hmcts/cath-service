@@ -1,7 +1,7 @@
 // MOJ Filter Layout Styles
 .moj-filter-layout {
-  display: flex;
-  align-items: flex-start;
+  display: block !important;
+  font-size: 0; // Remove whitespace between inline-block elements
 }
 
 .moj-filter-layout__filter {
@@ -9,10 +9,12 @@
 }
 
 .layout-width-two-filters {
-  flex: 0 0 30%;
-  margin-right: 30px;
-  min-width: 0;
+  display: inline-block !important;
+  vertical-align: top !important;
+  width: 30% !important;
+  margin-right: 3% !important;
   box-sizing: border-box;
+  font-size: 1rem; // Reset font size
 
   &[hidden],
   &.hidden {
@@ -21,12 +23,14 @@
 }
 
 .layout-width-four-fifths {
-  flex: 1 1 auto;
-  min-width: 0;
+  display: inline-block !important;
+  vertical-align: top !important;
+  width: 100% !important;
   box-sizing: border-box;
+  font-size: 1rem; // Reset font size
 
   &.with-filters {
-    flex: 0 0 calc(70% - 30px);
+    width: 67% !important;
   }
 }
 
