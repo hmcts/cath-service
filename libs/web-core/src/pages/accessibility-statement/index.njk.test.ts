@@ -21,6 +21,10 @@ describe("accessibility-statement template", () => {
       expect(en.title).toBe("Accessibility statement");
     });
 
+    it("should have back to top text", () => {
+      expect(en.backToTop).toBe("Back to top");
+    });
+
     it("should have intro section", () => {
       expect(en.sections.intro).toBeDefined();
       expect(en.sections.intro.content).toBeDefined();
@@ -29,8 +33,11 @@ describe("accessibility-statement template", () => {
     });
 
     it("should have contact information", () => {
+      expect(en.sections.feedback.contact.name).toBeDefined();
       expect(en.sections.feedback.contact.email).toBeDefined();
       expect(en.sections.feedback.contact.phone).toBeDefined();
+      expect(en.sections.feedback.textRelay).toBeDefined();
+      expect(en.sections.feedback.audioLoops).toBeDefined();
     });
 
     it("should have compliance section", () => {
@@ -44,6 +51,10 @@ describe("accessibility-statement template", () => {
       expect(cy.title).toBe("Datganiad hygyrchedd");
     });
 
+    it("should have back to top text", () => {
+      expect(cy.backToTop).toBe("Yn ôl i frig y dudalen");
+    });
+
     it("should have intro section", () => {
       expect(cy.sections.intro).toBeDefined();
       expect(cy.sections.intro.content).toBeDefined();
@@ -52,8 +63,11 @@ describe("accessibility-statement template", () => {
     });
 
     it("should have contact information", () => {
+      expect(cy.sections.feedback.contact.name).toBeDefined();
       expect(cy.sections.feedback.contact.email).toBeDefined();
       expect(cy.sections.feedback.contact.phone).toBeDefined();
+      expect(cy.sections.feedback.textRelay).toBeDefined();
+      expect(cy.sections.feedback.audioLoops).toBeDefined();
     });
 
     it("should have compliance section", () => {

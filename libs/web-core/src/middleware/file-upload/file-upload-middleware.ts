@@ -1,3 +1,4 @@
+import type { RequestHandler } from "express";
 import multer from "multer";
 
 const DEFAULT_MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -15,4 +16,17 @@ export function createFileUpload(options: FileUploadOptions = {}) {
     storage,
     limits: { fileSize: maxFileSize }
   });
+}
+
+export function createFileUploadMiddleware(fieldName = "file", options: FileUploadOptions = {}): RequestHandler {
+  const upload = createFileUpload(options);
+
+  return (req, res, next) => {
+    upload.single(fieldName)(req, res, (err) => {
+      if (err) {
+        req.fileUploadError = err;
+      }
+      next();
+    });
+  };
 }
