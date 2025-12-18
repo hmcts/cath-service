@@ -63,7 +63,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
   });
 
   test.describe("Complete End-to-End Journey", () => {
-    test("should be keyboard accessible throughout entire upload flow", async ({ page }) => {
+    test("should be keyboard accessible throughout entire upload flow @nightly", async ({ page }) => {
       // Step 1: Test keyboard accessibility on form page
       await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
@@ -297,7 +297,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(displayToHelp).toBeVisible();
     });
 
-    test("should display validation errors for all required fields when form is empty", async ({ page }) => {
+    test("should display validation errors for all required fields when form is empty @nightly", async ({ page }) => {
       await page.goto("/manual-upload");
 
       const continueButton = page.getByRole("button", { name: /continue/i });
@@ -326,7 +326,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should display file validation errors for invalid type and large size", async ({ page }) => {
+    test("should display file validation errors for invalid type and large size @nightly", async ({ page }) => {
       await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
@@ -389,7 +389,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(inlineErrorMessage).toContainText(/file too large, please upload file smaller than 2mb/i);
     });
 
-    test("should show court name input with autocomplete initialized", async ({ page }) => {
+    test("should show court name input with autocomplete initialized @nightly", async ({ page }) => {
       await page.goto("/manual-upload");
 
       const autocompleteInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
@@ -399,7 +399,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(autocompleteInput).toHaveAttribute("role", "combobox");
     });
 
-    test("should validate court name with empty, short, invalid inputs and preserve values", async ({ page }) => {
+    test("should validate court name with empty, short, invalid inputs and preserve values @nightly", async ({ page }) => {
       await page.goto("/manual-upload");
 
       const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
@@ -454,7 +454,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(courtInput).toHaveValue(preservedCourtName);
     });
 
-    test("should validate date range and preserve all form data when validation fails", async ({ page }) => {
+    test("should validate date range and preserve all form data when validation fails @nightly", async ({ page }) => {
       await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
@@ -588,7 +588,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(form).toHaveAttribute("method", "post");
     });
 
-    test("should meet WCAG 2.2 AA standards on summary page", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on summary page @nightly", async ({ page }) => {
       await navigateToSummaryPage(page);
 
       const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -633,12 +633,12 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test("should redirect to manual-upload if accessed directly without upload session", async ({ page }) => {
+    test("should redirect to manual-upload if accessed directly without upload session @nightly", async ({ page }) => {
       await page.goto("/manual-upload-success");
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test("should support Welsh language with correct translations", async ({ page }) => {
+    test("should support Welsh language with correct translations @nightly", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       const welshToggle = page.locator('a[href*="lng=cy"]');
@@ -662,7 +662,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(homeLink).toBeVisible();
     });
 
-    test("should meet WCAG 2.2 AA standards on success page", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on success page @nightly", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -670,7 +670,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should not allow access after refreshing the page", async ({ page }) => {
+    test("should not allow access after refreshing the page @nightly", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       await page.reload();
@@ -678,7 +678,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test("should allow multiple sequential uploads", async ({ page }) => {
+    test("should allow multiple sequential uploads @nightly", async ({ page }) => {
       await completeManualUploadFlow(page);
       await expect(page).toHaveURL("/manual-upload-success");
 
@@ -715,7 +715,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
   });
 
   test.describe("Responsive Design Across All Pages", () => {
-    test("should display correctly on mobile viewport throughout entire flow", async ({ page }) => {
+    test("should display correctly on mobile viewport throughout entire flow @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
       await page.goto("/manual-upload?locationId=9001");

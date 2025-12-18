@@ -246,7 +246,7 @@ test.describe("Email Subscriptions", () => {
   });
 
   test.describe("Unsubscribe Journey", () => {
-    test("should complete unsubscribe flow with validation and accessibility checks", async ({ page }, testInfo) => {
+    test("should complete unsubscribe flow with validation and accessibility checks @nightly", async ({ page }, testInfo) => {
       // Get test-specific location data
       const locationData = testLocationMap.get(testInfo.testId);
       if (!locationData) throw new Error("Test location data not found");
@@ -323,7 +323,7 @@ test.describe("Email Subscriptions", () => {
   });
 
   test.describe("Authentication Protection", () => {
-    test("should require authentication for all subscription pages", async ({ page, context }) => {
+    test("should require authentication for all subscription pages @nightly", async ({ page, context }) => {
       await context.clearCookies();
 
       // Test all subscription pages redirect to sign-in when not authenticated

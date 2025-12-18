@@ -65,13 +65,13 @@ test.describe("Admin Dashboard", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should have logical heading hierarchy", async ({ page }) => {
+    test("should have logical heading hierarchy @nightly", async ({ page }) => {
       const h1 = page.locator("h1");
       await expect(h1).toHaveCount(1);
       await expect(h1).toHaveText("Admin Dashboard");
     });
 
-    test("should have accessible links", async ({ page }) => {
+    test("should have accessible links @nightly", async ({ page }) => {
       const links = page.locator("a.admin-tile");
       await expect(links).toHaveCount(3);
 
@@ -82,7 +82,7 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Keyboard Navigation", () => {
-    test("should allow keyboard navigation through all tiles", async ({ page }) => {
+    test("should allow keyboard navigation through all tiles @nightly", async ({ page }) => {
       const tileLinks = page.locator("a.admin-tile");
       const count = await tileLinks.count();
 
@@ -104,7 +104,7 @@ test.describe("Admin Dashboard", () => {
       expect(foundTiles).toBeGreaterThan(0);
     });
 
-    test("should show focus indicators on tiles", async ({ page }) => {
+    test("should show focus indicators on tiles @nightly", async ({ page }) => {
       // Verify all tile links are visible and have proper href attributes
       const tileLinks = page.locator("a.admin-tile");
       await expect(tileLinks.first()).toBeVisible();
@@ -126,7 +126,7 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Responsive Design", () => {
-    test("should display correctly on mobile viewport (375x667)", async ({ page }) => {
+    test("should display correctly on mobile viewport (375x667) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto("/admin-dashboard");
 
@@ -137,7 +137,7 @@ test.describe("Admin Dashboard", () => {
       await expect(tiles).toHaveCount(3);
     });
 
-    test("should display correctly on tablet viewport (768x1024)", async ({ page }) => {
+    test("should display correctly on tablet viewport (768x1024) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto("/admin-dashboard");
 
@@ -148,7 +148,7 @@ test.describe("Admin Dashboard", () => {
       await expect(tiles).toHaveCount(3);
     });
 
-    test("should display correctly on desktop viewport (1920x1080)", async ({ page }) => {
+    test("should display correctly on desktop viewport (1920x1080) @nightly", async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/admin-dashboard");
 
@@ -169,7 +169,7 @@ test.describe("Admin Dashboard", () => {
       await expect(page.locator("h1")).toHaveText("Manual upload");
     });
 
-    test("should have hover state on tiles", async ({ page }) => {
+    test("should have hover state on tiles @nightly", async ({ page }) => {
       const firstTile = page.locator(".admin-tile").first();
 
       await firstTile.hover();
@@ -178,7 +178,7 @@ test.describe("Admin Dashboard", () => {
   });
 
   test.describe("Role-Based Access", () => {
-    test("System Admin can access admin dashboard", async ({ page, context }) => {
+    test("System Admin can access admin dashboard @nightly", async ({ page, context }) => {
       // Clear existing session
       await context.clearCookies();
 
@@ -203,7 +203,7 @@ test.describe("Admin Dashboard", () => {
       await expect(adminDashboardLink).toHaveText("Admin Dashboard");
     });
 
-    test("CTSC Admin can access admin dashboard", async ({ page, context }) => {
+    test("CTSC Admin can access admin dashboard @nightly", async ({ page, context }) => {
       // Clear existing session
       await context.clearCookies();
 

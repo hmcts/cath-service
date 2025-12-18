@@ -122,7 +122,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user submits without selecting an option", () => {
-    test("should display validation error message", async ({ page }) => {
+    test("should display validation error message @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Click continue without selecting an option
@@ -157,7 +157,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user toggles language", () => {
-    test("should display Welsh content when language is changed to Welsh", async ({ page }) => {
+    test("should display Welsh content when language is changed to Welsh @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Find and click the Welsh language toggle
@@ -208,7 +208,7 @@ test.describe("Sign In Account Selection Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should switch back to English when language toggle is clicked again", async ({ page }) => {
+    test("should switch back to English when language toggle is clicked again @nightly", async ({ page }) => {
       await page.goto("/sign-in?lng=cy");
 
       // Verify we're in Welsh mode
@@ -236,7 +236,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(continueButton).toBeVisible();
     });
 
-    test("should preserve language selection after validation error", async ({ page }) => {
+    test("should preserve language selection after validation error @nightly", async ({ page }) => {
       await page.goto("/sign-in?lng=cy");
 
       // Click continue without selecting an option (in Welsh)
@@ -274,7 +274,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user tests keyboard navigation", () => {
-    test("should allow keyboard navigation through all interactive elements", async ({ page }) => {
+    test("should allow keyboard navigation through all interactive elements @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Tab through interactive elements
@@ -307,7 +307,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(continueButton).toBeFocused();
     });
 
-    test("should allow radio selection via keyboard", async ({ page }) => {
+    test("should allow radio selection via keyboard @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Get references to all radio buttons
@@ -343,7 +343,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user relies on screen reader", () => {
-    test("should have proper ARIA attributes and accessible names", async ({ page }) => {
+    test("should have proper ARIA attributes and accessible names @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Verify page has proper heading structure
@@ -380,7 +380,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(createAccountLink).toHaveAccessibleName(/create one here/i);
     });
 
-    test("should announce error messages properly to screen readers", async ({ page }) => {
+    test("should announce error messages properly to screen readers @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Submit without selection to trigger error
@@ -416,7 +416,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(errorInFieldset).toBeVisible();
     });
 
-    test("should announce error messages in Welsh to screen readers", async ({ page }) => {
+    test("should announce error messages in Welsh to screen readers @nightly", async ({ page }) => {
       await page.goto("/sign-in?lng=cy");
 
       // Submit without selection to trigger Welsh error
@@ -441,7 +441,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(errorMessage).toContainText(/rhaid dewis opsiwn/i);
     });
 
-    test("should have proper semantic HTML structure", async ({ page }) => {
+    test("should have proper semantic HTML structure @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Verify form element is present
@@ -477,7 +477,7 @@ test.describe("Sign In Account Selection Page", () => {
       }
     });
 
-    test("should maintain focus order for screen reader navigation", async ({ page }) => {
+    test("should maintain focus order for screen reader navigation @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Verify logical focus order by checking tab order
@@ -512,7 +512,7 @@ test.describe("Sign In Account Selection Page", () => {
       expect(linkElements.length).toBeGreaterThan(0);
     });
 
-    test("should properly announce form field context", async ({ page }) => {
+    test("should properly announce form field context @nightly", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Verify radio group provides context through fieldset/legend
