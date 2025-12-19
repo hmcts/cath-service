@@ -1126,10 +1126,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
   dependencies:
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
+    zod: "npm:3.24.1"
+  peerDependencies:
+    "@prisma/client": "*"
   languageName: unknown
   linkType: soft
 
@@ -1196,27 +1201,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/sjp-common@workspace:*, @hmcts/sjp-common@workspace:libs/list-types/sjp-common":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/sjp-common@workspace:libs/list-types/sjp-common"
-  dependencies:
-    "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@types/node": "npm:24.10.4"
-    typescript: "npm:5.9.3"
-    vitest: "npm:4.0.16"
-    zod: "npm:3.24.1"
-  peerDependencies:
-    "@prisma/client": "*"
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/sjp-press-list@workspace:*, @hmcts/sjp-press-list@workspace:libs/list-types/sjp-press-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/sjp-press-list@workspace:libs/list-types/sjp-press-list"
   dependencies:
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres": "workspace:*"
-    "@hmcts/sjp-common": "workspace:*"
     "@types/node": "npm:24.10.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
@@ -1229,8 +1219,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/sjp-public-list@workspace:libs/list-types/sjp-public-list"
   dependencies:
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres": "workspace:*"
-    "@hmcts/sjp-common": "workspace:*"
     "@types/node": "npm:24.10.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
