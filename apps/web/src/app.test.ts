@@ -99,12 +99,14 @@ vi.mock("@hmcts/web-core/config", () => ({
 }));
 
 vi.mock("@hmcts/sjp-press-list/config", () => ({
-  pageRoutes: { path: "/mock/sjp-press-list/pages" },
+  pageRoutes: { path: "/mock/sjp-press-list/pages", prefix: "/sjp-press-list" },
+  moduleRoot: "/mock/sjp-press-list",
   assets: "/mock/sjp-press-list/assets"
 }));
 
 vi.mock("@hmcts/sjp-public-list/config", () => ({
-  pageRoutes: { path: "/mock/sjp-public-list/pages" }
+  pageRoutes: { path: "/mock/sjp-public-list/pages", prefix: "/sjp-public-list" },
+  moduleRoot: "/mock/sjp-public-list"
 }));
 
 describe("Web Application", () => {

@@ -254,7 +254,7 @@ describe("getSjpPublicCases", () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
-    const result = await getSjpPublicCases("list-1", { postcode: "SW" }, 1);
+    const result = await getSjpPublicCases("list-1", { postcodes: ["SW"] }, 1);
 
     expect(result.cases).toHaveLength(1);
     expect(result.cases[0].postcode).toBe("SW1A");
@@ -269,7 +269,7 @@ describe("getSjpPublicCases", () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(extractPressCases).mockReturnValue(londonCases);
 
-    const result = await getSjpPublicCases("list-1", { postcode: "LONDON_POSTCODES" }, 1);
+    const result = await getSjpPublicCases("list-1", { postcodes: ["LONDON_POSTCODES"] }, 1);
 
     expect(result.cases).toHaveLength(1);
     expect(result.cases[0].postcode).toBe("E1");
@@ -279,7 +279,7 @@ describe("getSjpPublicCases", () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
-    const result = await getSjpPublicCases("list-1", { prosecutor: "CPS" }, 1);
+    const result = await getSjpPublicCases("list-1", { prosecutors: ["CPS"] }, 1);
 
     expect(result.cases).toHaveLength(1);
     expect(result.cases[0].prosecutor).toBe("CPS");

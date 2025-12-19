@@ -39,10 +39,18 @@ export const GET = async (req: Request, res: Response) => {
     });
   }
 
+  // Handle multiple prosecutors from query string
+  const prosecutorQuery = req.query.prosecutor;
+  const selectedProsecutors = prosecutorQuery ? (Array.isArray(prosecutorQuery) ? prosecutorQuery : [prosecutorQuery]) : [];
+
+  // Handle multiple postcodes from query string
+  const postcodeQuery = req.query.postcode;
+  const selectedPostcodes = postcodeQuery ? (Array.isArray(postcodeQuery) ? postcodeQuery : [postcodeQuery]) : [];
+
   const filters = {
     searchQuery: req.query.search as string | undefined,
-    postcode: req.query.postcode as string | undefined,
-    prosecutor: req.query.prosecutor as string | undefined
+    postcodes: selectedPostcodes.length > 0 ? selectedPostcodes : undefined,
+    prosecutors: selectedProsecutors.length > 0 ? selectedProsecutors : undefined
   };
 
   const { cases, totalCases } = await getSjpPressCases(artefactId, filters, page);
@@ -50,7 +58,7 @@ export const GET = async (req: Request, res: Response) => {
   const postcodeData = await getUniquePostcodes(artefactId);
   const pagination = calculatePagination(page, totalCases, 200);
 
-  res.render("sjp-press-list/index", {
+  res.render("sjp-press-list", {
     ...t,
     en,
     cy,
@@ -62,7 +70,11 @@ export const GET = async (req: Request, res: Response) => {
     hasLondonPostcodes: postcodeData.hasLondonPostcodes,
     londonPostcodes: postcodeData.londonPostcodes,
     pagination,
-    filters,
+    filters: {
+      searchQuery: filters.searchQuery,
+      postcodes: selectedPostcodes,
+      prosecutors: selectedProsecutors
+    },
     errors: undefined
   });
 };
@@ -86,16 +98,33 @@ export const POST = async (req: Request, res: Response) => {
 
   const filters = {
     searchQuery: req.body.search?.trim(),
-    postcode: req.body.postcode,
-    prosecutor: req.body.prosecutor
+    postcodes: req.body.postcode,
+    prosecutors: req.body.prosecutor
   };
 
   // No validation needed for postcode/prosecutor as they come from predefined checkboxes
 
   const queryParams = new URLSearchParams({ artefactId });
   if (filters.searchQuery) queryParams.set("search", filters.searchQuery);
-  if (filters.postcode) queryParams.set("postcode", filters.postcode);
-  if (filters.prosecutor) queryParams.set("prosecutor", filters.prosecutor);
+
+  // Handle multiple postcodes
+  if (filters.postcodes) {
+    const postcodeArray = Array.isArray(filters.postcodes) ? filters.postcodes : [filters.postcodes];
+    for (const postcode of postcodeArray) {
+      const trimmedPostcode = postcode.trim();
+      if (trimmedPostcode) {
+        queryParams.append("postcode", trimmedPostcode);
+      }
+    }
+  }
+
+  // Handle multiple prosecutors
+  if (filters.prosecutors) {
+    const prosecutorArray = Array.isArray(filters.prosecutors) ? filters.prosecutors : [filters.prosecutors];
+    for (const prosecutor of prosecutorArray) {
+      queryParams.append("prosecutor", prosecutor);
+    }
+  }
 
   res.redirect(`/sjp-press-list?${queryParams.toString()}`);
 };

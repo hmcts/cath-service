@@ -8,8 +8,8 @@ import { determineListType, extractCaseCount, extractPressCases } from "./json-p
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Navigate to monorepo root (from libs/sjp/src/)
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..");
+// Navigate to monorepo root (from libs/list-types/common/src/sjp/)
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 const CASES_PER_PAGE = 200;
@@ -48,8 +48,8 @@ export interface SjpCasePress extends Omit<SjpCasePublic, "offence"> {
 
 export interface SjpSearchFilters {
   searchQuery?: string;
-  postcode?: string;
-  prosecutor?: string;
+  postcodes?: string[];
+  prosecutors?: string[];
 }
 
 /**
@@ -170,18 +170,21 @@ function applyFilters(cases: SjpCasePress[], filters: SjpSearchFilters): SjpCase
     filteredCases = filteredCases.filter((c) => c.name.toLowerCase().includes(query) || c.reference?.toLowerCase().includes(query));
   }
 
-  if (filters.postcode) {
-    if (filters.postcode === "LONDON_POSTCODES") {
-      // Filter for all London postcodes
-      filteredCases = filteredCases.filter((c) => c.postcode && isLondonPostcode(c.postcode));
-    } else {
-      const postcodeQuery = filters.postcode.toLowerCase();
-      filteredCases = filteredCases.filter((c) => c.postcode?.toLowerCase().startsWith(postcodeQuery));
-    }
+  if (filters.postcodes && filters.postcodes.length > 0) {
+    filteredCases = filteredCases.filter((c) => {
+      if (!c.postcode) return false;
+
+      return filters.postcodes?.some((selectedPostcode) => {
+        if (selectedPostcode === "LONDON_POSTCODES") {
+          return isLondonPostcode(c.postcode);
+        }
+        return c.postcode.toLowerCase().startsWith(selectedPostcode.toLowerCase());
+      });
+    });
   }
 
-  if (filters.prosecutor) {
-    filteredCases = filteredCases.filter((c) => c.prosecutor === filters.prosecutor);
+  if (filters.prosecutors && filters.prosecutors.length > 0) {
+    filteredCases = filteredCases.filter((c) => c.prosecutor && filters.prosecutors?.includes(c.prosecutor));
   }
 
   return filteredCases;

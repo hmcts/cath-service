@@ -118,13 +118,13 @@ describe("SJP Public List Controller", () => {
       await GET(req, res);
 
       expect(getSjpListById).toHaveBeenCalledWith("test-123");
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcode: undefined, prosecutor: undefined }, 2, "name", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcodes: undefined, prosecutors: undefined }, 2, "name", "asc");
       expect(getUniqueProsecutors).toHaveBeenCalledWith("test-123");
       expect(getUniquePostcodes).toHaveBeenCalledWith("test-123");
       expect(calculatePagination).toHaveBeenCalledWith(2, 300, 200);
 
       expect(res.render).toHaveBeenCalledWith(
-        "sjp-public-list/index",
+        "sjp-public-list",
         expect.objectContaining({
           list: mockList,
           cases: mockCases,
@@ -134,7 +134,7 @@ describe("SJP Public List Controller", () => {
           hasLondonPostcodes: true,
           londonPostcodes: ["SW1A"],
           pagination: expect.any(Object),
-          filters: { searchQuery: undefined, postcode: undefined, prosecutor: undefined },
+          filters: { searchQuery: undefined, postcodes: [], prosecutors: [] },
           sortBy: "name",
           sortOrder: "asc"
         })
@@ -177,7 +177,7 @@ describe("SJP Public List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcode: "SW1A", prosecutor: "CPS" }, 1, "name", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1, "name", "asc");
     });
 
     it("should handle custom sort parameters", async () => {
@@ -288,7 +288,7 @@ describe("SJP Public List Controller", () => {
       await GET(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
-        "sjp-public-list/index",
+        "sjp-public-list",
         expect.objectContaining({
           casesRows: [
             [{ text: "John Doe" }, { text: "M1" }, { text: "Speeding" }, { text: "CPS" }],
@@ -329,7 +329,7 @@ describe("SJP Public List Controller", () => {
 
       await GET(req, res);
 
-      expect(res.render).toHaveBeenCalledWith("sjp-public-list/index", expect.objectContaining({ locale: "cy" }));
+      expect(res.render).toHaveBeenCalledWith("sjp-public-list", expect.objectContaining({ locale: "cy" }));
     });
   });
 

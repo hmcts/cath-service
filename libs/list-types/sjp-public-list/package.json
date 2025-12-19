@@ -13,8 +13,9 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
+    "build": "tsc && yarn build:nunjucks && yarn build:schemas",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",

@@ -1,2 +1,4 @@
 // SJP Press List Module
-// No business logic exports - this is a page module
+
+export type { ValidationResult } from "@hmcts/publication";
+export { validateSjpPressList } from "./validation/json-validator.js";

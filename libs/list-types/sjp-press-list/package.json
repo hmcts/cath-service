@@ -14,9 +14,10 @@
     "./src/assets/css/sjp-filters.scss": "./src/assets/css/sjp-filters.scss"
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:assets",
+    "build": "tsc && yarn build:nunjucks && yarn build:assets && yarn build:schemas",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
     "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
+    "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",

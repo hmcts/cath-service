@@ -1,2 +1,4 @@
 // SJP Public List Module
-// No business logic exports - this is a page module
+
+export type { ValidationResult } from "@hmcts/publication";
+export { validateSjpPublicList } from "./validation/json-validator.js";

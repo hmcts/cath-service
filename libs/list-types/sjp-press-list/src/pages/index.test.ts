@@ -91,7 +91,7 @@ describe("SJP Press List Controller", () => {
 
       await GET(req, res);
 
-      expect(res.render).toHaveBeenCalledWith("sjp-press-list/index", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.any(Object));
     });
 
     it("should render 400 error when artefactId is missing", async () => {
@@ -188,13 +188,13 @@ describe("SJP Press List Controller", () => {
       await GET(req, res);
 
       expect(getSjpListById).toHaveBeenCalledWith("test-123");
-      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcode: undefined, prosecutor: undefined }, 2);
+      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcodes: undefined, prosecutors: undefined }, 2);
       expect(getUniqueProsecutors).toHaveBeenCalledWith("test-123");
       expect(getUniquePostcodes).toHaveBeenCalledWith("test-123");
       expect(calculatePagination).toHaveBeenCalledWith(2, 300, 200);
 
       expect(res.render).toHaveBeenCalledWith(
-        "sjp-press-list/index",
+        "sjp-press-list",
         expect.objectContaining({
           list: mockList,
           cases: mockCases,
@@ -203,7 +203,7 @@ describe("SJP Press List Controller", () => {
           hasLondonPostcodes: true,
           londonPostcodes: ["SW1A"],
           pagination: expect.any(Object),
-          filters: { searchQuery: undefined, postcode: undefined, prosecutor: undefined },
+          filters: { searchQuery: undefined, postcodes: [], prosecutors: [] },
           errors: undefined
         })
       );
@@ -245,7 +245,7 @@ describe("SJP Press List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcode: "SW1A", prosecutor: "CPS" }, 1);
+      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1);
     });
 
     it("should use Welsh translations when locale is cy", async () => {
@@ -279,7 +279,7 @@ describe("SJP Press List Controller", () => {
 
       await GET(req, res);
 
-      expect(res.render).toHaveBeenCalledWith("sjp-press-list/index", expect.objectContaining({ locale: "cy" }));
+      expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.objectContaining({ locale: "cy" }));
     });
   });
 
