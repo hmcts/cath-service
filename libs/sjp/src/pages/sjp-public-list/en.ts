@@ -11,6 +11,7 @@ export const en = {
   hideFilters: "Hide filters",
   postcodeFilterHeading: "Postcode",
   postcodeLabel: "Enter postcode",
+  londonPostcodesLabel: "London Postcodes",
   prosecutorFilterHeading: "Prosecutor",
   prosecutorLabel: "Select prosecutor",
   selectProsecutor: "Select a prosecutor",
