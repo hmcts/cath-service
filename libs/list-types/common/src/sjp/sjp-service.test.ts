@@ -3,7 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
 import type { SjpCasePress } from "./sjp-service.js";
-import { getLatestSjpLists, getSjpListById, getSjpPressCases, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "./sjp-service.js";
+import {
+  getAllSjpPressCases,
+  getLatestSjpLists,
+  getSjpListById,
+  getSjpPressCases,
+  getSjpPublicCases,
+  getUniquePostcodes,
+  getUniqueProsecutors
+} from "./sjp-service.js";
 
 vi.mock("node:fs/promises");
 vi.mock("./json-parser.js");
@@ -368,6 +376,118 @@ describe("getSjpPressCases", () => {
 
     expect(result.cases[0].name).toBe("Alice Smith");
     expect(result.cases[1].name).toBe("Zoe Brown");
+  });
+});
+
+describe("getAllSjpPressCases", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return all press cases without pagination", async () => {
+    const manyCases: SjpCasePress[] = Array.from({ length: 250 }, (_, i) => ({
+      ...mockPressCases[0],
+      caseId: `case-${i}`,
+      name: `Person ${i.toString().padStart(3, "0")}`
+    }));
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(manyCases);
+
+    const result = await getAllSjpPressCases("list-1", {});
+
+    expect(result.cases).toHaveLength(250);
+    expect(result.totalCases).toBe(250);
+  });
+
+  it("should apply filters to all cases", async () => {
+    const manyCases: SjpCasePress[] = [
+      { ...mockPressCases[0], name: "John Doe" },
+      { ...mockPressCases[1], name: "Jane Smith" },
+      { ...mockPressCases[0], name: "John Adams", caseId: "case-3" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(manyCases);
+
+    const result = await getAllSjpPressCases("list-1", { searchQuery: "john" });
+
+    expect(result.cases).toHaveLength(2);
+    expect(result.cases[0].name).toBe("John Adams");
+    expect(result.cases[1].name).toBe("John Doe");
+  });
+
+  it("should sort all cases by name", async () => {
+    const unsortedCases: SjpCasePress[] = [
+      { ...mockPressCases[0], name: "Zoe Brown" },
+      { ...mockPressCases[1], name: "Alice Smith" },
+      { ...mockPressCases[0], name: "Bob Jones", caseId: "case-3" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
+
+    const result = await getAllSjpPressCases("list-1", {});
+
+    expect(result.cases[0].name).toBe("Alice Smith");
+    expect(result.cases[1].name).toBe("Bob Jones");
+    expect(result.cases[2].name).toBe("Zoe Brown");
+  });
+});
+
+describe("artefactId validation (path traversal protection)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should reject artefactId with path traversal sequences", async () => {
+    await expect(getSjpListById("../../../etc/passwd")).rejects.toThrow("Invalid artefactId");
+    await expect(getSjpListById("..\\..\\..\\windows\\system32")).rejects.toThrow("Invalid artefactId");
+    await expect(getSjpListById("test/../secret")).rejects.toThrow("Invalid artefactId");
+  });
+
+  it("should reject artefactId with path separators", async () => {
+    await expect(getSjpListById("test/file")).rejects.toThrow("Invalid artefactId");
+    await expect(getSjpListById("test\\file")).rejects.toThrow("Invalid artefactId");
+    await expect(getSjpListById("/absolute/path")).rejects.toThrow("Invalid artefactId");
+  });
+
+  it("should reject artefactId with special characters", async () => {
+    await expect(getSjpListById("test<>file")).rejects.toThrow("Invalid artefactId");
+    await expect(getSjpListById("test|file")).rejects.toThrow("Invalid artefactId");
+    await expect(getSjpListById("test&file")).rejects.toThrow("Invalid artefactId");
+  });
+
+  it("should accept valid artefactId with alphanumerics, hyphens, and underscores", async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(determineListType).mockReturnValue("press");
+    vi.mocked(extractCaseCount).mockReturnValue(10);
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      artefactId: "test-123_abc",
+      locationId: "1",
+      contentDate: new Date("2025-01-20"),
+      listTypeId: 10,
+      provenance: "CFT_IDAM",
+      search: {},
+      lastReceivedDate: new Date("2025-01-20"),
+      displayFrom: new Date("2025-01-20"),
+      displayTo: new Date("2025-01-21"),
+      language: "ENGLISH",
+      locationName: "Test Court",
+      sensitivity: "PUBLIC",
+      version: "1.0",
+      listType: "SJP_PRESS_LIST",
+      createdDate: new Date("2025-01-20")
+    });
+
+    const result = await getSjpListById("test-123_abc");
+    expect(result).toBeDefined();
+    expect(result?.artefactId).toBe("test-123_abc");
+  });
+
+  it("should reject empty artefactId", async () => {
+    await expect(getSjpListById("")).rejects.toThrow("Invalid artefactId");
   });
 });
 

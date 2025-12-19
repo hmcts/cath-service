@@ -53,10 +53,40 @@ export interface SjpSearchFilters {
 }
 
 /**
+ * Validates that an artefactId is safe to use in file paths
+ * Prevents path traversal attacks by ensuring only safe characters are used
+ */
+function validateArtefactId(artefactId: string): void {
+  // Only allow alphanumerics, hyphens, and underscores
+  const SAFE_ARTEFACT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+  if (!artefactId || !SAFE_ARTEFACT_ID_PATTERN.test(artefactId)) {
+    throw new Error("Invalid artefactId: must contain only alphanumerics, hyphens, and underscores");
+  }
+
+  // Additional check: reject common path traversal sequences
+  if (artefactId.includes("..") || artefactId.includes("/") || artefactId.includes("\\")) {
+    throw new Error("Invalid artefactId: path traversal sequences are not allowed");
+  }
+}
+
+/**
  * Reads and parses SJP JSON file from storage
+ * Validates artefactId to prevent path traversal attacks
  */
 async function readSjpJson(artefactId: string): Promise<SjpJson> {
-  const jsonPath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
+  // Validate artefactId to prevent path traversal
+  validateArtefactId(artefactId);
+
+  // Resolve the full path
+  const jsonPath = path.resolve(TEMP_UPLOAD_DIR, `${artefactId}.json`);
+
+  // Ensure the resolved path is within TEMP_UPLOAD_DIR
+  const resolvedUploadDir = path.resolve(TEMP_UPLOAD_DIR);
+  if (!jsonPath.startsWith(resolvedUploadDir + path.sep)) {
+    throw new Error("Invalid artefactId: attempted path traversal");
+  }
+
   const jsonContent = await readFile(jsonPath, "utf-8");
   return JSON.parse(jsonContent);
 }
@@ -102,6 +132,9 @@ export async function getLatestSjpLists(): Promise<SjpListMetadata[]> {
  * Gets SJP list metadata by artefact ID
  */
 export async function getSjpListById(artefactId: string): Promise<SjpListMetadata | null> {
+  // Validate artefactId first (throws on invalid input)
+  validateArtefactId(artefactId);
+
   const artefact = await prisma.artefact.findUnique({
     where: { artefactId }
   });
@@ -217,6 +250,26 @@ export async function getSjpPressCases(artefactId: string, filters: SjpSearchFil
 
   return {
     cases: paginatedCases,
+    totalCases: allCases.length
+  };
+}
+
+/**
+ * Gets all press SJP cases with filtering but without pagination
+ * Used for CSV downloads where all cases are needed
+ */
+export async function getAllSjpPressCases(artefactId: string, filters: SjpSearchFilters): Promise<{ cases: SjpCasePress[]; totalCases: number }> {
+  const sjpData = await readSjpJson(artefactId);
+  let allCases = extractPressCases(sjpData);
+
+  // Apply filters
+  allCases = applyFilters(allCases, filters);
+
+  // Sort by name
+  allCases.sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    cases: allCases,
     totalCases: allCases.length
   };
 }

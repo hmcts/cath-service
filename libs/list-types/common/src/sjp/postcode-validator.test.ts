@@ -57,4 +57,33 @@ describe("validateUkPostcode", () => {
     const result = validateUkPostcode("  SW1A 1AA  ");
     expect(result.isValid).toBe(true);
   });
+
+  it("should validate special case GIR 0AA", () => {
+    expect(validateUkPostcode("GIR 0AA").isValid).toBe(true);
+    expect(validateUkPostcode("GIR0AA").isValid).toBe(true);
+    expect(validateUkPostcode("gir 0aa").isValid).toBe(true);
+  });
+
+  it("should reject postcodes with disallowed letters in first position", () => {
+    expect(validateUkPostcode("Q1 1AA").isValid).toBe(false);
+    expect(validateUkPostcode("V1 1AA").isValid).toBe(false);
+    expect(validateUkPostcode("X1 1AA").isValid).toBe(false);
+  });
+
+  it("should reject postcodes with disallowed letters in second position", () => {
+    expect(validateUkPostcode("SI1 1AA").isValid).toBe(false);
+    expect(validateUkPostcode("SJ1 1AA").isValid).toBe(false);
+    expect(validateUkPostcode("SZ1 1AA").isValid).toBe(false);
+  });
+
+  it("should reject postcodes with completely invalid format", () => {
+    expect(validateUkPostcode("AA 1AA").isValid).toBe(false); // Invalid outward code format
+    expect(validateUkPostcode("SW1A 1CA").isValid).toBe(false); // C not allowed in inward code
+    expect(validateUkPostcode("SW1A 1IA").isValid).toBe(false); // I not allowed in inward code
+  });
+
+  it("should handle multiple spaces in postcode", () => {
+    const result = validateUkPostcode("SW1A    1AA");
+    expect(result.isValid).toBe(true);
+  });
 });

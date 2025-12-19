@@ -98,6 +98,15 @@ vi.mock("@hmcts/web-core/config", () => ({
   moduleRoot: "/mock/web-core"
 }));
 
+vi.mock("@hmcts/sjp-press-list/config", () => ({
+  pageRoutes: { path: "/mock/sjp-press-list/pages" },
+  assets: "/mock/sjp-press-list/assets"
+}));
+
+vi.mock("@hmcts/sjp-public-list/config", () => ({
+  pageRoutes: { path: "/mock/sjp-public-list/pages" }
+}));
+
 describe("Web Application", () => {
   let app: Express;
 

@@ -1,7 +1,7 @@
+import { getLatestSjpLists } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { mockListTypes } from "@hmcts/publication";
-import { getLatestSjpLists } from "@hmcts/sjp";
+import { mockListTypes, SJP_PUBLIC_LIST_ID } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -82,7 +82,7 @@ export const GET = async (req: Request, res: Response) => {
   const sjpPublications = sjpListsForLocation.map((sjpList) => ({
     id: sjpList.artefactId,
     listTypeName: "Single Justice Procedure",
-    listTypeId: 1,
+    listTypeId: SJP_PUBLIC_LIST_ID,
     contentDate: sjpList.contentDate,
     language: "ENGLISH",
     formattedDate: formatDateAndLocale(sjpList.contentDate.toISOString(), locale),

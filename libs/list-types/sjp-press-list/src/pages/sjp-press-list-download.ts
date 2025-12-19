@@ -1,6 +1,29 @@
 import type { Request, Response } from "express";
 import "@hmcts/auth";
-import { getSjpListById, getSjpPressCases } from "@hmcts/list-types-common";
+import { getAllSjpPressCases, getSjpListById } from "@hmcts/list-types-common";
+
+/**
+ * Escapes a CSV field to prevent CSV injection and handle embedded quotes
+ * - Escapes embedded double quotes by replacing " with ""
+ * - Prefixes formula characters (=, +, -, @) with a single quote to prevent CSV injection
+ * - Wraps the result in double quotes
+ */
+function escapeCsvField(value: string | null | undefined): string {
+  if (value === null || value === undefined) {
+    return '""';
+  }
+
+  const stringValue = String(value);
+
+  // Prevent CSV injection by prefixing formula characters
+  const safeValue = /^[=+\-@]/.test(stringValue) ? `'${stringValue}` : stringValue;
+
+  // Escape embedded double quotes
+  const escapedValue = safeValue.replace(/"/g, '""');
+
+  // Wrap in double quotes
+  return `"${escapedValue}"`;
+}
 
 export const GET = async (req: Request, res: Response) => {
   // Skip authentication in development mode
@@ -27,7 +50,7 @@ export const GET = async (req: Request, res: Response) => {
     prosecutor: req.query.prosecutor as string | undefined
   };
 
-  const { cases } = await getSjpPressCases(artefactId, filters, 1);
+  const { cases } = await getAllSjpPressCases(artefactId, filters);
 
   // Generate CSV
   const csvRows = [];
@@ -41,13 +64,13 @@ export const GET = async (req: Request, res: Response) => {
     const offenceTitles = caseItem.offences.map((offence) => offence.offenceTitle).join("; ");
 
     const row = [
-      `"${caseItem.name}"`,
-      caseItem.dateOfBirth ? `"${new Date(caseItem.dateOfBirth).toLocaleDateString("en-GB")}"` : "",
-      `"${caseItem.reference || ""}"`,
-      `"${caseItem.address || ""}"`,
-      `"${caseItem.prosecutor || ""}"`,
+      escapeCsvField(caseItem.name),
+      caseItem.dateOfBirth ? escapeCsvField(new Date(caseItem.dateOfBirth).toLocaleDateString("en-GB")) : '""',
+      escapeCsvField(caseItem.reference),
+      escapeCsvField(caseItem.address),
+      escapeCsvField(caseItem.prosecutor),
       hasReportingRestriction ? "True" : "False",
-      `"${offenceTitles}"`
+      escapeCsvField(offenceTitles)
     ];
     csvRows.push(row.join(","));
   }

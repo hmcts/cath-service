@@ -4,7 +4,7 @@ import { GET } from "./sjp-press-list-download.js";
 
 vi.mock("@hmcts/list-types-common");
 
-import { getSjpListById, getSjpPressCases } from "@hmcts/list-types-common";
+import { getAllSjpPressCases, getSjpListById } from "@hmcts/list-types-common";
 
 describe("SJP Press List Download Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>
@@ -66,7 +66,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [],
         totalCases: 0
       });
@@ -130,7 +130,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [
           {
             caseId: "case-1",
@@ -176,7 +176,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [
           {
             caseId: "case-1",
@@ -215,7 +215,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [
           {
             caseId: "case-1",
@@ -255,7 +255,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [
           {
             caseId: "case-1",
@@ -276,7 +276,7 @@ describe("SJP Press List Download Controller", () => {
 
       const csvCall = vi.mocked(res.send).mock.calls[0]?.[0] as string;
       const lines = csvCall.split("\n");
-      expect(lines[1]).toContain('"John Doe",,"","","",False,""');
+      expect(lines[1]).toContain('"John Doe","","","","",False,""');
     });
 
     it("should apply filters when provided", async () => {
@@ -299,14 +299,14 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [],
         totalCases: 0
       });
 
       await GET(req, res);
 
-      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcode: "SW1A", prosecutor: "CPS" }, 1);
+      expect(getAllSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcode: "SW1A", prosecutor: "CPS" });
     });
 
     it("should format filename with content date", async () => {
@@ -322,7 +322,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [],
         totalCases: 0
       });
@@ -345,7 +345,7 @@ describe("SJP Press List Download Controller", () => {
         locationId: 1
       });
 
-      vi.mocked(getSjpPressCases).mockResolvedValue({
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
         cases: [],
         totalCases: 0
       });
@@ -356,6 +356,83 @@ describe("SJP Press List Download Controller", () => {
       const lines = csvCall.split("\n");
       expect(lines).toHaveLength(1); // Only header
       expect(lines[0]).toBe("Name,Date of Birth,Reference,Address,Prosecutor,Reporting Restriction,Offence");
+    });
+
+    it("should escape embedded double quotes in CSV fields", async () => {
+      const req = mockRequest({ query: { artefactId: "test-123" } });
+      const res = mockResponse();
+
+      vi.mocked(getSjpListById).mockResolvedValue({
+        artefactId: "test-123",
+        listType: "press",
+        contentDate: new Date("2025-01-20"),
+        publicationDate: new Date("2025-01-20T09:00:00Z"),
+        caseCount: 1,
+        locationId: 1
+      });
+
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
+        cases: [
+          {
+            caseId: "case-1",
+            name: 'John "Johnny" Doe',
+            postcode: "SW1A",
+            prosecutor: "CPS",
+            dateOfBirth: new Date("1990-01-01"),
+            age: 35,
+            reference: "REF123",
+            address: '123 "Main" Street',
+            offences: [{ offenceTitle: 'Speeding "Fast"', offenceWording: "Exceeded speed limit", reportingRestriction: false }]
+          }
+        ],
+        totalCases: 1
+      });
+
+      await GET(req, res);
+
+      const csvCall = vi.mocked(res.send).mock.calls[0]?.[0] as string;
+      expect(csvCall).toContain('"John ""Johnny"" Doe"');
+      expect(csvCall).toContain('"123 ""Main"" Street"');
+      expect(csvCall).toContain('"Speeding ""Fast"""');
+    });
+
+    it("should prevent CSV injection by prefixing formula characters", async () => {
+      const req = mockRequest({ query: { artefactId: "test-123" } });
+      const res = mockResponse();
+
+      vi.mocked(getSjpListById).mockResolvedValue({
+        artefactId: "test-123",
+        listType: "press",
+        contentDate: new Date("2025-01-20"),
+        publicationDate: new Date("2025-01-20T09:00:00Z"),
+        caseCount: 1,
+        locationId: 1
+      });
+
+      vi.mocked(getAllSjpPressCases).mockResolvedValue({
+        cases: [
+          {
+            caseId: "case-1",
+            name: "=1+1",
+            postcode: "SW1A",
+            prosecutor: "@DANGEROUS",
+            dateOfBirth: new Date("1990-01-01"),
+            age: 35,
+            reference: "+REF123",
+            address: "-malicious",
+            offences: [{ offenceTitle: "Normal offence", offenceWording: "Test", reportingRestriction: false }]
+          }
+        ],
+        totalCases: 1
+      });
+
+      await GET(req, res);
+
+      const csvCall = vi.mocked(res.send).mock.calls[0]?.[0] as string;
+      expect(csvCall).toContain('"\'=1+1"');
+      expect(csvCall).toContain('"\'@DANGEROUS"');
+      expect(csvCall).toContain('"\'+REF123"');
+      expect(csvCall).toContain('"\'-malicious"');
     });
   });
 });

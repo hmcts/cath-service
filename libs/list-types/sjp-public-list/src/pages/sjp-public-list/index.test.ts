@@ -108,10 +108,11 @@ describe("SJP Public List Controller", () => {
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 2,
         totalPages: 2,
-        hasNextPage: false,
-        hasPreviousPage: true,
-        nextPage: null,
-        previousPage: 1
+        totalItems: 300,
+        itemsPerPage: 200,
+        hasNext: false,
+        hasPrevious: true,
+        pageNumbers: [1, 2]
       });
 
       await GET(req, res);
@@ -167,10 +168,11 @@ describe("SJP Public List Controller", () => {
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        nextPage: null,
-        previousPage: null
+        totalItems: 0,
+        itemsPerPage: 200,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
       });
 
       await GET(req, res);
@@ -203,10 +205,11 @@ describe("SJP Public List Controller", () => {
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        nextPage: null,
-        previousPage: null
+        totalItems: 0,
+        itemsPerPage: 200,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
       });
 
       await GET(req, res);
@@ -235,10 +238,11 @@ describe("SJP Public List Controller", () => {
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        nextPage: null,
-        previousPage: null
+        totalItems: 0,
+        itemsPerPage: 200,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
       });
 
       await GET(req, res);
@@ -274,10 +278,11 @@ describe("SJP Public List Controller", () => {
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        nextPage: null,
-        previousPage: null
+        totalItems: 0,
+        itemsPerPage: 200,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
       });
 
       await GET(req, res);
@@ -315,10 +320,11 @@ describe("SJP Public List Controller", () => {
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        nextPage: null,
-        previousPage: null
+        totalItems: 0,
+        itemsPerPage: 200,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
       });
 
       await GET(req, res);

@@ -8,6 +8,9 @@ export interface ListType {
   isNonStrategic: boolean;
 }
 
+export const SJP_PRESS_LIST_ID = 10;
+export const SJP_PUBLIC_LIST_ID = 11;
+
 export const mockListTypes: ListType[] = [
   {
     id: 1,

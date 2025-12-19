@@ -41,8 +41,15 @@ export function authenticateApi() {
       };
 
       next();
-    } catch (_error) {
-      console.error("API authentication error");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      console.error("API authentication error:", {
+        message: errorMessage,
+        stack: errorStack
+      });
+
       return res.status(401).json({
         success: false,
         message: "Invalid or expired token"
