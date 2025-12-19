@@ -34,14 +34,20 @@ export const GET = async (req: Request, res: Response) => {
   csvRows.push("Name,Date of Birth,Reference,Address,Prosecutor,Reporting Restriction,Offence");
 
   for (const caseItem of cases) {
+    // Get the reporting restriction status (true if any offence has reporting restrictions)
+    const hasReportingRestriction = caseItem.offences.some((offence) => offence.reportingRestriction);
+
+    // Combine all offence titles
+    const offenceTitles = caseItem.offences.map((offence) => offence.offenceTitle).join("; ");
+
     const row = [
       `"${caseItem.name}"`,
       caseItem.dateOfBirth ? `"${new Date(caseItem.dateOfBirth).toLocaleDateString("en-GB")}"` : "",
       `"${caseItem.reference || ""}"`,
       `"${caseItem.address || ""}"`,
       `"${caseItem.prosecutor || ""}"`,
-      caseItem.reportingRestriction ? "True" : "False",
-      `"${caseItem.offence || ""}"`
+      hasReportingRestriction ? "True" : "False",
+      `"${offenceTitles}"`
     ];
     csvRows.push(row.join(","));
   }

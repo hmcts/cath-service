@@ -27,6 +27,7 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
+    "@hmcts/sjp": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/verified-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*",
