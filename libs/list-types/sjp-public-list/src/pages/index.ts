@@ -43,7 +43,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   const list = await getSjpListById(artefactId);
-  if (!list || list.listType !== "public") {
+  if (list?.listType !== "public") {
     return res.status(404).render("errors/404", {
       en,
       cy,

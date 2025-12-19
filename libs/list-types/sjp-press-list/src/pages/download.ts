@@ -29,7 +29,7 @@ function escapeCsvField(value: string | null | undefined): string {
   const safeValue = /^[=+\-@]/.test(stringValue) ? `'${stringValue}` : stringValue;
 
   // Escape embedded double quotes
-  const escapedValue = safeValue.replaceAll(/"/g, '""');
+  const escapedValue = safeValue.replaceAll('"', '""');
 
   // Wrap in double quotes
   return `"${escapedValue}"`;
@@ -84,7 +84,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   const list = await getSjpListById(artefactId);
-  if (!list || list.listType !== "press") {
+  if (list?.listType !== "press") {
     return res.status(404).send("Not Found");
   }
 

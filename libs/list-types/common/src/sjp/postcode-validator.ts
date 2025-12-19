@@ -10,7 +10,7 @@
  * - https://ideal-postcodes.co.uk/guides/uk-postcode-format
  * - https://www.gov.uk/government/publications/bulk-data-transfer-specification
  */
-const UK_POSTCODE_REGEX = /^(GIR\s?0AA|[A-PR-UWYZ](\d{1,2}|([A-HK-Y]\d[\dABEHMNPRV-Y]?)|\d[A-HJKPS-UW])\s?\d[ABD-HJLNP-UW-Z]{2})$/i;
+const UK_POSTCODE_REGEX = /^(GIR\s?0AA|[A-PR-UWYZ](\d{1,2}|[A-HK-Y]\d[\dABEHMNPRV-Y]?|\d[A-HJKPS-UW])\s?\d[ABD-HJLNP-UW-Z]{2})$/i;
 
 export interface PostcodeValidationResult {
   isValid: boolean;

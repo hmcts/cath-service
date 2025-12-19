@@ -55,7 +55,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   const list = await getSjpListById(artefactId);
-  if (!list || list.listType !== "press") {
+  if (list?.listType !== "press") {
     return res.status(404).render("errors/404", {
       en,
       cy,
