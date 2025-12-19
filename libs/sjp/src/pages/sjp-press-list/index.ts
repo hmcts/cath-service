@@ -49,7 +49,7 @@ export const GET = async (req: Request, res: Response) => {
   const { cases, totalCases } = await getSjpPressCases(artefactId, filters, page);
   const prosecutors = await getUniqueProsecutors(artefactId);
   const postcodeData = await getUniquePostcodes(artefactId);
-  const pagination = calculatePagination(page, totalCases, 50);
+  const pagination = calculatePagination(page, totalCases, 200);
 
   res.render("sjp-press-list/index", {
     ...t,

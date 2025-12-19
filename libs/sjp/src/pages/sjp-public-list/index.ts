@@ -37,7 +37,7 @@ export const GET = async (req: Request, res: Response) => {
   const { cases, totalCases } = await getSjpPublicCases(artefactId, filters, page, sortBy, sortOrder);
   const prosecutors = await getUniqueProsecutors(artefactId);
   const postcodeData = await getUniquePostcodes(artefactId);
-  const pagination = calculatePagination(page, totalCases, 1000);
+  const pagination = calculatePagination(page, totalCases, 200);
   const t = locale === "cy" ? cy : en;
 
   // Format cases for GOV.UK table component

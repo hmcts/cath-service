@@ -109,6 +109,16 @@
   z-index: 1000;
 }
 
+// Remove border from summary list rows
+.govuk-summary-list__row {
+  border-bottom: none !important;
+}
+
+// Add margin to section breaks
+.govuk-section-break.govuk-section-break--visible {
+  margin-bottom: 20px !important;
+}
+
 // Responsive layout
 @media (max-width: 768px) {
   .moj-filter-layout {

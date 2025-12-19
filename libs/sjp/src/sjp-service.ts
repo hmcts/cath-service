@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-const CASES_PER_PAGE = 1000;
+const CASES_PER_PAGE = 200;
 
 export interface SjpListMetadata {
   artefactId: string;
@@ -140,7 +140,7 @@ function applyFilters(cases: SjpCasePress[], filters: SjpSearchFilters): SjpCase
   if (filters.postcode) {
     if (filters.postcode === "LONDON_POSTCODES") {
       // Filter for all London postcodes
-      filteredCases = filteredCases.filter((c) => c.postcode && LONDON_POSTCODES.has(c.postcode));
+      filteredCases = filteredCases.filter((c) => c.postcode && isLondonPostcode(c.postcode));
     } else {
       const postcodeQuery = filters.postcode.toLowerCase();
       filteredCases = filteredCases.filter((c) => c.postcode?.toLowerCase().startsWith(postcodeQuery));

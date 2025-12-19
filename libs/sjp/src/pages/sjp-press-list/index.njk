@@ -217,7 +217,7 @@
 
     {% if cases.length > 0 %}
       {% for case in cases %}
-        <div class="govuk-!-margin-top-6 govuk-!-padding-3" style="border: 1px solid #b1b4b6;">
+        <div>
           {{ govukSummaryList({
             rows: [
               {
@@ -235,6 +235,10 @@
               {
                 key: { text: addressHeader },
                 value: { text: case.address or '' }
+              },
+              {
+                key: { text: prosecutorHeader },
+                value: { text: case.prosecutor or '' }
               }
             ]
           }) }}
@@ -250,7 +254,7 @@
           {% endfor %}
         </div>
         {% if not loop.last %}
-          <hr class="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6">
+          <hr class="govuk-section-break govuk-section-break--visible">
         {% endif %}
       {% endfor %}
 
