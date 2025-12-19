@@ -286,7 +286,7 @@ export async function getUniqueProsecutors(artefactId: string): Promise<string[]
   const allCases = extractPressCases(sjpData);
 
   const prosecutors = new Set(allCases.map((c) => c.prosecutor).filter((p): p is string => p !== null));
-  return Array.from(prosecutors).sort();
+  return Array.from(prosecutors).sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -320,7 +320,7 @@ export async function getUniquePostcodes(artefactId: string): Promise<{
   const allCases = extractPressCases(sjpData);
 
   const postcodes = new Set(allCases.map((c) => c.postcode).filter((p): p is string => p !== null));
-  const postcodesArray = Array.from(postcodes).sort();
+  const postcodesArray = Array.from(postcodes).sort((a, b) => a.localeCompare(b));
 
   const londonPostcodes = postcodesArray.filter(isLondonPostcode);
   const hasLondonPostcodes = londonPostcodes.length > 0;

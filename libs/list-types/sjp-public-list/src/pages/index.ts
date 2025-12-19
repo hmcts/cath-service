@@ -29,11 +29,15 @@ export const GET = async (req: Request, res: Response) => {
 
   // Handle multiple prosecutors from query string
   const prosecutorQuery = req.query.prosecutor;
-  const selectedProsecutors = prosecutorQuery ? (Array.isArray(prosecutorQuery) ? prosecutorQuery : [prosecutorQuery]) : [];
+  const selectedProsecutors = prosecutorQuery
+    ? (Array.isArray(prosecutorQuery) ? prosecutorQuery : [prosecutorQuery]).filter((p): p is string => typeof p === "string")
+    : [];
 
   // Handle multiple postcodes from query string
   const postcodeQuery = req.query.postcode;
-  const selectedPostcodes = postcodeQuery ? (Array.isArray(postcodeQuery) ? postcodeQuery : [postcodeQuery]) : [];
+  const selectedPostcodes = postcodeQuery
+    ? (Array.isArray(postcodeQuery) ? postcodeQuery : [postcodeQuery]).filter((p): p is string => typeof p === "string")
+    : [];
 
   const filters = {
     searchQuery: req.query.search as string | undefined,
