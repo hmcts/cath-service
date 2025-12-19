@@ -1,8 +1,7 @@
 {
-  "name": "@hmcts/sjp",
+  "name": "@hmcts/sjp-public-list",
   "version": "1.0.0",
   "type": "module",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "production": "./dist/index.js",
@@ -11,18 +10,12 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
-    },
-    "./src/assets/css/sjp-filters.scss": {
-      "production": "./dist/assets/css/sjp-filters.scss",
-      "default": "./src/assets/css/sjp-filters.scss"
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:assets",
+    "build": "tsc && yarn build:nunjucks",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
     "dev": "tsc --watch",
-    "import": "node ../../node_modules/.bin/tsx scripts/import-sjp.ts",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
@@ -30,12 +23,15 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
-    "@hmcts/location": "workspace:*",
     "@hmcts/postgres": "workspace:*",
-    "zod": "3.24.1"
+    "@hmcts/sjp-common": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.4",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16"
   },
   "peerDependencies": {
-    "@prisma/client": "*",
     "express": "^5.1.0"
   }
 }

@@ -2,9 +2,9 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("../../sjp-service.js");
+vi.mock("@hmcts/sjp-common");
 
-import { getLatestSjpLists } from "../../sjp-service.js";
+import { getLatestSjpLists } from "@hmcts/sjp-common";
 
 describe("SJP Selection Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>

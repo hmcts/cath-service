@@ -1,5 +1,5 @@
+import { getLatestSjpLists } from "@hmcts/sjp-common";
 import type { Request, Response } from "express";
-import { getLatestSjpLists } from "../../sjp-service.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

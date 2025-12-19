@@ -28,8 +28,11 @@
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
       "@hmcts/subscriptions": ["libs/subscriptions/src"],
-      "@hmcts/sjp": ["libs/sjp/src"],
-      "@hmcts/sjp/config": ["libs/sjp/src/config"]
+      "@hmcts/sjp-common": ["libs/list-types/sjp-common/src"],
+      "@hmcts/sjp-press-list": ["libs/list-types/sjp-press-list/src"],
+      "@hmcts/sjp-press-list/config": ["libs/list-types/sjp-press-list/src/config"],
+      "@hmcts/sjp-public-list": ["libs/list-types/sjp-public-list/src"],
+      "@hmcts/sjp-public-list/config": ["libs/list-types/sjp-public-list/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

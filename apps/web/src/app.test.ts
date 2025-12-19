@@ -180,8 +180,8 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 10 times: location API routes, civil-family-cause-list pages, care-standards-tribunal pages, web pages, auth routes, public pages, verified pages, SJP routes, system-admin pages, admin routes
-      expect(createSimpleRouter).toHaveBeenCalledTimes(10);
+      // Should be called 11 times: location API routes, civil-family-cause-list pages, care-standards-tribunal pages, web pages, auth routes, public pages, verified pages, SJP press list routes, SJP public list routes, system-admin pages, admin routes
+      expect(createSimpleRouter).toHaveBeenCalledTimes(11);
     });
 
     it("should register system-admin page routes", async () => {

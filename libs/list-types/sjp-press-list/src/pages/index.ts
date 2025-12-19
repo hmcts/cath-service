@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import "@hmcts/auth";
-import { calculatePagination } from "../../sjp-paginator.js";
-import { getSjpListById, getSjpPressCases, getUniquePostcodes, getUniqueProsecutors } from "../../sjp-service.js";
+import { calculatePagination, getSjpListById, getSjpPressCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/sjp-common";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

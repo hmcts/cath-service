@@ -2,11 +2,9 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
-vi.mock("../../sjp-service.js");
-vi.mock("../../sjp-paginator.js");
+vi.mock("@hmcts/sjp-common");
 
-import { calculatePagination } from "../../sjp-paginator.js";
-import { getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "../../sjp-service.js";
+import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/sjp-common";
 
 describe("SJP Public List Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>

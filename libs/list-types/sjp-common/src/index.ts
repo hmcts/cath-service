@@ -1,4 +1,4 @@
-// Service exports
+// SJP Common Utilities and Services
 
 export * from "./json-parser.js";
 export * from "./postcode-validator.js";

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import "@hmcts/auth";
-import { getSjpListById, getSjpPressCases } from "../sjp-service.js";
+import { getSjpListById, getSjpPressCases } from "@hmcts/sjp-common";
 
 export const GET = async (req: Request, res: Response) => {
   // Skip authentication in development mode

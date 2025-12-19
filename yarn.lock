@@ -1196,15 +1196,45 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/sjp@workspace:*, @hmcts/sjp@workspace:libs/sjp":
+"@hmcts/sjp-common@workspace:*, @hmcts/sjp-common@workspace:libs/list-types/sjp-common":
   version: 0.0.0-use.local
-  resolution: "@hmcts/sjp@workspace:libs/sjp"
+  resolution: "@hmcts/sjp-common@workspace:libs/list-types/sjp-common"
   dependencies:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.0.16"
     zod: "npm:3.24.1"
   peerDependencies:
     "@prisma/client": "*"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/sjp-press-list@workspace:*, @hmcts/sjp-press-list@workspace:libs/list-types/sjp-press-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/sjp-press-list@workspace:libs/list-types/sjp-press-list"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
+    "@hmcts/sjp-common": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.0.16"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/sjp-public-list@workspace:*, @hmcts/sjp-public-list@workspace:libs/list-types/sjp-public-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/sjp-public-list@workspace:libs/list-types/sjp-public-list"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
+    "@hmcts/sjp-common": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.0.16"
+  peerDependencies:
     express: ^5.1.0
   languageName: unknown
   linkType: soft
@@ -1297,7 +1327,8 @@ __metadata:
     "@hmcts/postgres": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
-    "@hmcts/sjp": "workspace:*"
+    "@hmcts/sjp-press-list": "workspace:*"
+    "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/verified-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"

@@ -1,8 +1,8 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assets, moduleRoot, pageRoutes } from "./config.js";
+import { assets, pageRoutes } from "./config.js";
 
-describe("SJP Config", () => {
+describe("SJP Press List Config", () => {
   describe("pageRoutes", () => {
     it("should export page routes configuration", () => {
       expect(pageRoutes).toBeDefined();
@@ -31,31 +31,6 @@ describe("SJP Config", () => {
 
     it("should resolve to an absolute path", () => {
       expect(path.isAbsolute(assets)).toBe(true);
-    });
-  });
-
-  describe("moduleRoot", () => {
-    it("should export module root configuration", () => {
-      expect(moduleRoot).toBeDefined();
-      expect(typeof moduleRoot).toBe("string");
-    });
-
-    it("should resolve to an absolute path", () => {
-      expect(path.isAbsolute(moduleRoot)).toBe(true);
-    });
-
-    it("should point to sjp module directory", () => {
-      expect(moduleRoot).toContain("sjp");
-    });
-  });
-
-  describe("path relationships", () => {
-    it("should have pageRoutes.path as subdirectory of moduleRoot", () => {
-      expect(pageRoutes.path).toContain(moduleRoot);
-    });
-
-    it("should have assets as subdirectory of moduleRoot", () => {
-      expect(assets).toContain(moduleRoot);
     });
   });
 });
