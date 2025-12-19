@@ -44,10 +44,18 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   // Get all cases without pagination
+  // Handle multiple prosecutors from query string
+  const prosecutorQuery = req.query.prosecutor;
+  const selectedProsecutors = prosecutorQuery ? (Array.isArray(prosecutorQuery) ? prosecutorQuery : [prosecutorQuery]) : [];
+
+  // Handle multiple postcodes from query string
+  const postcodeQuery = req.query.postcode;
+  const selectedPostcodes = postcodeQuery ? (Array.isArray(postcodeQuery) ? postcodeQuery : [postcodeQuery]) : [];
+
   const filters = {
     searchQuery: req.query.search as string | undefined,
-    postcode: req.query.postcode as string | undefined,
-    prosecutor: req.query.prosecutor as string | undefined
+    postcodes: selectedPostcodes.length > 0 ? selectedPostcodes : undefined,
+    prosecutors: selectedProsecutors.length > 0 ? selectedProsecutors : undefined
   };
 
   const { cases } = await getAllSjpPressCases(artefactId, filters);

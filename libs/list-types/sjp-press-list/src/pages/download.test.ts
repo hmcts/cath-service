@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET } from "./sjp-press-list-download.js";
+import { GET } from "./download.js";
 
 vi.mock("@hmcts/list-types-common");
 
@@ -306,7 +306,7 @@ describe("SJP Press List Download Controller", () => {
 
       await GET(req, res);
 
-      expect(getAllSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcode: "SW1A", prosecutor: "CPS" });
+      expect(getAllSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] });
     });
 
     it("should format filename with content date", async () => {
