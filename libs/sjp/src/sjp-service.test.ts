@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
-import type { SjpCasePress, SjpListMetadata } from "./sjp-service.js";
+import type { SjpCasePress } from "./sjp-service.js";
 import { getLatestSjpLists, getSjpListById, getSjpPressCases, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "./sjp-service.js";
 
 vi.mock("node:fs/promises");
