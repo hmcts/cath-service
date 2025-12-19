@@ -16,3 +16,7 @@ export {
 } from "./conversion/non-strategic-list-registry.js";
 export { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-type-validator.js";
 export { type ListType, mockListTypes } from "./mock-list-types.js";
+export * from "./sjp/json-parser.js";
+export * from "./sjp/postcode-validator.js";
+export * from "./sjp/sjp-paginator.js";
+export * from "./sjp/sjp-service.js";

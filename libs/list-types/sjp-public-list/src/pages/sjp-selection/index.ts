@@ -1,4 +1,4 @@
-import { getLatestSjpLists } from "@hmcts/sjp-common";
+import { getLatestSjpLists } from "@hmcts/list-types-common";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";

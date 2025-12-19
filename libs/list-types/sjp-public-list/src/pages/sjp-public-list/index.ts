@@ -1,4 +1,4 @@
-import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/sjp-common";
+import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";

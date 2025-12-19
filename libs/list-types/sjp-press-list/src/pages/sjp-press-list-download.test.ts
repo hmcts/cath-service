@@ -2,9 +2,9 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./sjp-press-list-download.js";
 
-vi.mock("@hmcts/sjp-common");
+vi.mock("@hmcts/list-types-common");
 
-import { getSjpListById, getSjpPressCases } from "@hmcts/sjp-common";
+import { getSjpListById, getSjpPressCases } from "@hmcts/list-types-common";
 
 describe("SJP Press List Download Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>
