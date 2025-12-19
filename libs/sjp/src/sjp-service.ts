@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres";
 import type { SjpJson } from "./json-parser.js";
-import { determineListType, extractCaseCount, extractPressCases, extractPublicCases } from "./json-parser.js";
+import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

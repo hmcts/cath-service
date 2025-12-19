@@ -1,67 +1,139 @@
+import { readFile } from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SjpCasePress, SjpCasePublic, SjpListMetadata } from "./sjp-service.js";
+import type { SjpJson } from "./json-parser.js";
+import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
+import type { SjpCasePress, SjpListMetadata } from "./sjp-service.js";
 import { getLatestSjpLists, getSjpListById, getSjpPressCases, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "./sjp-service.js";
 
+vi.mock("node:fs/promises");
+vi.mock("./json-parser.js");
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
-    sjpList: {
+    artefact: {
       findMany: vi.fn(),
       findUnique: vi.fn()
-    },
-    sjpCase: {
-      findMany: vi.fn(),
-      count: vi.fn()
     }
   }
 }));
 
 import { prisma } from "@hmcts/postgres";
 
+const mockSjpJson: SjpJson = {
+  document: {
+    publicationDate: "2025-11-28T09:00:00Z"
+  },
+  courtLists: []
+};
+
+const mockPressCases: SjpCasePress[] = [
+  {
+    caseId: "case-1",
+    name: "John Doe",
+    postcode: "SW1A",
+    prosecutor: "CPS",
+    dateOfBirth: new Date("1990-01-01"),
+    age: 35,
+    reference: "REF123",
+    address: "123 Test Street, London",
+    offences: [
+      {
+        offenceTitle: "Speeding",
+        offenceWording: "Exceeded speed limit",
+        reportingRestriction: false
+      }
+    ]
+  },
+  {
+    caseId: "case-2",
+    name: "Jane Smith",
+    postcode: "M1",
+    prosecutor: "DVLA",
+    dateOfBirth: new Date("1985-05-15"),
+    age: 40,
+    reference: "REF456",
+    address: "456 Test Road, Manchester",
+    offences: [
+      {
+        offenceTitle: "No TV License",
+        offenceWording: null,
+        reportingRestriction: false
+      }
+    ]
+  }
+];
+
 describe("getLatestSjpLists", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should return latest SJP lists", async () => {
-    const mockLists: SjpListMetadata[] = [
+  it("should return latest SJP lists from artefacts", async () => {
+    const mockArtefacts = [
       {
-        listId: "list-1",
-        listType: "public",
-        generatedAt: new Date("2025-11-28T09:00:00Z"),
-        publishedAt: new Date("2025-11-28T09:05:00Z"),
+        artefactId: "list-1",
+        listTypeId: 10,
+        lastReceivedDate: new Date("2025-11-28"),
         contentDate: new Date("2025-11-28"),
-        caseCount: 100,
-        locationId: 1
+        locationId: "1"
       },
       {
-        listId: "list-2",
-        listType: "press",
-        generatedAt: new Date("2025-11-27T09:00:00Z"),
-        publishedAt: new Date("2025-11-27T09:05:00Z"),
+        artefactId: "list-2",
+        listTypeId: 9,
+        lastReceivedDate: new Date("2025-11-27"),
         contentDate: new Date("2025-11-27"),
-        caseCount: 50,
-        locationId: 1
+        locationId: "2"
       }
     ];
 
-    vi.mocked(prisma.sjpList.findMany).mockResolvedValue(mockLists as never);
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as never);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(determineListType).mockReturnValue("public");
+    vi.mocked(extractCaseCount).mockReturnValue(100);
 
     const result = await getLatestSjpLists();
 
-    expect(result).toEqual(mockLists);
-    expect(prisma.sjpList.findMany).toHaveBeenCalledWith({
-      orderBy: { publishedAt: "desc" },
-      take: 10,
-      select: {
-        listId: true,
-        listType: true,
-        generatedAt: true,
-        publishedAt: true,
-        contentDate: true,
-        caseCount: true,
-        locationId: true
-      }
+    expect(result).toHaveLength(2);
+    expect(result[0].artefactId).toBe("list-1");
+    expect(result[0].listType).toBe("public");
+    expect(result[0].caseCount).toBe(100);
+    expect(result[1].artefactId).toBe("list-2");
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: {
+        listTypeId: { in: [9, 10] }
+      },
+      orderBy: { lastReceivedDate: "desc" },
+      take: 10
     });
+  });
+
+  it("should filter out artefacts with read errors", async () => {
+    const mockArtefacts = [
+      {
+        artefactId: "list-1",
+        listTypeId: 10,
+        lastReceivedDate: new Date("2025-11-28"),
+        contentDate: new Date("2025-11-28"),
+        locationId: "1"
+      },
+      {
+        artefactId: "list-2",
+        listTypeId: 9,
+        lastReceivedDate: new Date("2025-11-27"),
+        contentDate: new Date("2025-11-27"),
+        locationId: "2"
+      }
+    ];
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as never);
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(mockSjpJson)).mockRejectedValueOnce(new Error("File not found"));
+    vi.mocked(determineListType).mockReturnValue("public");
+    vi.mocked(extractCaseCount).mockReturnValue(100);
+
+    const result = await getLatestSjpLists();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].artefactId).toBe("list-1");
   });
 });
 
@@ -70,40 +142,52 @@ describe("getSjpListById", () => {
     vi.clearAllMocks();
   });
 
-  it("should return SJP list by ID", async () => {
-    const mockList: SjpListMetadata = {
-      listId: "list-1",
-      listType: "public",
-      generatedAt: new Date("2025-11-28T09:00:00Z"),
-      publishedAt: new Date("2025-11-28T09:05:00Z"),
+  it("should return SJP list metadata by artefact ID", async () => {
+    const mockArtefact = {
+      artefactId: "list-1",
+      listTypeId: 10,
       contentDate: new Date("2025-11-28"),
-      caseCount: 100,
-      locationId: 1
+      locationId: "1"
     };
 
-    vi.mocked(prisma.sjpList.findUnique).mockResolvedValue(mockList as never);
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(determineListType).mockReturnValue("public");
+    vi.mocked(extractCaseCount).mockReturnValue(100);
 
     const result = await getSjpListById("list-1");
 
-    expect(result).toEqual(mockList);
-    expect(prisma.sjpList.findUnique).toHaveBeenCalledWith({
-      where: { listId: "list-1" },
-      select: {
-        listId: true,
-        listType: true,
-        generatedAt: true,
-        publishedAt: true,
-        contentDate: true,
-        caseCount: true,
-        locationId: true
-      }
+    expect(result).not.toBeNull();
+    expect(result?.artefactId).toBe("list-1");
+    expect(result?.listType).toBe("public");
+    expect(result?.caseCount).toBe(100);
+    expect(result?.locationId).toBe(1);
+
+    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+      where: { artefactId: "list-1" }
     });
   });
 
-  it("should return null if list not found", async () => {
-    vi.mocked(prisma.sjpList.findUnique).mockResolvedValue(null);
+  it("should return null if artefact not found", async () => {
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
 
     const result = await getSjpListById("nonexistent");
+
+    expect(result).toBeNull();
+  });
+
+  it("should return null if JSON read fails", async () => {
+    const mockArtefact = {
+      artefactId: "list-1",
+      listTypeId: 10,
+      contentDate: new Date("2025-11-28"),
+      locationId: "1"
+    };
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
+    vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+
+    const result = await getSjpListById("list-1");
 
     expect(result).toBeNull();
   });
@@ -115,98 +199,131 @@ describe("getSjpPublicCases", () => {
   });
 
   it("should return public cases with pagination", async () => {
-    const mockCases: SjpCasePublic[] = [
-      {
-        caseId: "case-1",
-        name: "John Doe",
-        postcode: "SW1A 1AA",
-        offence: "Speeding",
-        prosecutor: "CPS"
-      }
-    ];
-
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue(mockCases as never);
-    vi.mocked(prisma.sjpCase.count).mockResolvedValue(1);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
     const result = await getSjpPublicCases("list-1", {}, 1);
 
-    expect(result.cases).toEqual(mockCases);
-    expect(result.totalCases).toBe(1);
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith({
-      where: { listId: "list-1" },
-      select: {
-        caseId: true,
-        name: true,
-        postcode: true,
-        offence: true,
-        prosecutor: true
-      },
-      orderBy: { name: "asc" },
-      skip: 0,
-      take: 50
+    expect(result.cases).toHaveLength(2);
+    expect(result.totalCases).toBe(2);
+    expect(result.cases[0]).toEqual({
+      caseId: "case-2",
+      name: "Jane Smith",
+      postcode: "M1",
+      offence: "No TV License",
+      prosecutor: "DVLA"
+    });
+    expect(result.cases[1]).toEqual({
+      caseId: "case-1",
+      name: "John Doe",
+      postcode: "SW1A",
+      offence: "Speeding",
+      prosecutor: "CPS"
     });
   });
 
-  it("should apply search filter", async () => {
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.sjpCase.count).mockResolvedValue(0);
+  it("should apply search filter by name", async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
-    await getSjpPublicCases("list-1", { searchQuery: "John" }, 1);
+    const result = await getSjpPublicCases("list-1", { searchQuery: "john" }, 1);
 
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          listId: "list-1",
-          OR: [{ name: { contains: "John", mode: "insensitive" } }, { reference: { contains: "John", mode: "insensitive" } }]
-        }
-      })
-    );
+    expect(result.cases).toHaveLength(1);
+    expect(result.cases[0].name).toBe("John Doe");
+  });
+
+  it("should apply search filter by reference", async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
+
+    const result = await getSjpPublicCases("list-1", { searchQuery: "ref123" }, 1);
+
+    expect(result.cases).toHaveLength(1);
+    expect(result.cases[0].name).toBe("John Doe");
   });
 
   it("should apply postcode filter", async () => {
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.sjpCase.count).mockResolvedValue(0);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
-    await getSjpPublicCases("list-1", { postcode: "SW1A" }, 1);
+    const result = await getSjpPublicCases("list-1", { postcode: "SW" }, 1);
 
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          listId: "list-1",
-          postcode: { startsWith: "SW1A", mode: "insensitive" }
-        }
-      })
-    );
+    expect(result.cases).toHaveLength(1);
+    expect(result.cases[0].postcode).toBe("SW1A");
+  });
+
+  it("should filter London postcodes", async () => {
+    const londonCases: SjpCasePress[] = [
+      { ...mockPressCases[0], postcode: "E1" },
+      { ...mockPressCases[1], postcode: "M1" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(londonCases);
+
+    const result = await getSjpPublicCases("list-1", { postcode: "LONDON_POSTCODES" }, 1);
+
+    expect(result.cases).toHaveLength(1);
+    expect(result.cases[0].postcode).toBe("E1");
   });
 
   it("should apply prosecutor filter", async () => {
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.sjpCase.count).mockResolvedValue(0);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
-    await getSjpPublicCases("list-1", { prosecutor: "CPS" }, 1);
+    const result = await getSjpPublicCases("list-1", { prosecutor: "CPS" }, 1);
 
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          listId: "list-1",
-          prosecutor: "CPS"
-        }
-      })
-    );
+    expect(result.cases).toHaveLength(1);
+    expect(result.cases[0].prosecutor).toBe("CPS");
   });
 
   it("should handle pagination correctly", async () => {
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.sjpCase.count).mockResolvedValue(0);
+    const manyCases: SjpCasePress[] = Array.from({ length: 250 }, (_, i) => ({
+      ...mockPressCases[0],
+      caseId: `case-${i}`,
+      name: `Person ${i}`
+    }));
 
-    await getSjpPublicCases("list-1", {}, 3);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(manyCases);
 
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        skip: 100,
-        take: 50
-      })
-    );
+    const page1 = await getSjpPublicCases("list-1", {}, 1);
+    expect(page1.cases).toHaveLength(200);
+    expect(page1.totalCases).toBe(250);
+
+    const page2 = await getSjpPublicCases("list-1", {}, 2);
+    expect(page2.cases).toHaveLength(50);
+    expect(page2.totalCases).toBe(250);
+  });
+
+  it("should sort by name ascending by default", async () => {
+    const unsortedCases: SjpCasePress[] = [
+      { ...mockPressCases[0], name: "Zoe Brown" },
+      { ...mockPressCases[1], name: "Alice Smith" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
+
+    const result = await getSjpPublicCases("list-1", {}, 1);
+
+    expect(result.cases[0].name).toBe("Alice Smith");
+    expect(result.cases[1].name).toBe("Zoe Brown");
+  });
+
+  it("should sort by name descending", async () => {
+    const unsortedCases: SjpCasePress[] = [
+      { ...mockPressCases[0], name: "Alice Smith" },
+      { ...mockPressCases[1], name: "Zoe Brown" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
+
+    const result = await getSjpPublicCases("list-1", {}, 1, "name", "desc");
+
+    expect(result.cases[0].name).toBe("Zoe Brown");
+    expect(result.cases[1].name).toBe("Alice Smith");
   });
 });
 
@@ -216,27 +333,41 @@ describe("getSjpPressCases", () => {
   });
 
   it("should return press cases with all fields", async () => {
-    const mockCases: SjpCasePress[] = [
-      {
-        caseId: "case-1",
-        name: "John Doe",
-        postcode: "SW1A 1AA",
-        offence: "Speeding",
-        prosecutor: "CPS",
-        dateOfBirth: new Date("1990-01-01"),
-        reference: "REF123",
-        address: "123 Test Street",
-        reportingRestriction: false
-      }
-    ];
-
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue(mockCases as never);
-    vi.mocked(prisma.sjpCase.count).mockResolvedValue(1);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
     const result = await getSjpPressCases("list-1", {}, 1);
 
-    expect(result.cases).toEqual(mockCases);
-    expect(result.totalCases).toBe(1);
+    expect(result.cases).toHaveLength(2);
+    expect(result.totalCases).toBe(2);
+    expect(result.cases[0]).toEqual(mockPressCases[0]);
+    expect(result.cases[0].dateOfBirth).toBeDefined();
+    expect(result.cases[0].address).toBeDefined();
+  });
+
+  it("should apply filters to press cases", async () => {
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
+
+    const result = await getSjpPressCases("list-1", { searchQuery: "john" }, 1);
+
+    expect(result.cases).toHaveLength(1);
+    expect(result.cases[0].name).toBe("John Doe");
+  });
+
+  it("should sort press cases by name", async () => {
+    const unsortedCases: SjpCasePress[] = [
+      { ...mockPressCases[0], name: "Zoe Brown" },
+      { ...mockPressCases[1], name: "Alice Smith" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
+
+    const result = await getSjpPressCases("list-1", {}, 1);
+
+    expect(result.cases[0].name).toBe("Alice Smith");
+    expect(result.cases[1].name).toBe("Zoe Brown");
   });
 });
 
@@ -245,26 +376,29 @@ describe("getUniqueProsecutors", () => {
     vi.clearAllMocks();
   });
 
-  it("should return unique prosecutors", async () => {
-    const mockProsecutors = [{ prosecutor: "CPS" }, { prosecutor: "DVLA" }, { prosecutor: "TV Licensing" }];
+  it("should return unique prosecutors sorted", async () => {
+    const casesWithProsecutors: SjpCasePress[] = [
+      { ...mockPressCases[0], prosecutor: "CPS" },
+      { ...mockPressCases[1], prosecutor: "DVLA" },
+      { ...mockPressCases[0], prosecutor: "CPS" }
+    ];
 
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue(mockProsecutors as never);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(casesWithProsecutors);
 
     const result = await getUniqueProsecutors("list-1");
 
-    expect(result).toEqual(["CPS", "DVLA", "TV Licensing"]);
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith({
-      where: { listId: "list-1", prosecutor: { not: null } },
-      select: { prosecutor: true },
-      distinct: ["prosecutor"],
-      orderBy: { prosecutor: "asc" }
-    });
+    expect(result).toEqual(["CPS", "DVLA"]);
   });
 
   it("should filter out null prosecutors", async () => {
-    const mockProsecutors = [{ prosecutor: "CPS" }, { prosecutor: null }];
+    const casesWithNulls: SjpCasePress[] = [
+      { ...mockPressCases[0], prosecutor: "CPS" },
+      { ...mockPressCases[1], prosecutor: null }
+    ];
 
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue(mockProsecutors as never);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(casesWithNulls);
 
     const result = await getUniqueProsecutors("list-1");
 
@@ -277,29 +411,50 @@ describe("getUniquePostcodes", () => {
     vi.clearAllMocks();
   });
 
-  it("should return unique postcodes", async () => {
-    const mockPostcodes = [{ postcode: "BS8" }, { postcode: "NE1" }, { postcode: "M1" }];
+  it("should return unique postcodes sorted", async () => {
+    const casesWithPostcodes: SjpCasePress[] = [
+      { ...mockPressCases[0], postcode: "M1" },
+      { ...mockPressCases[1], postcode: "BS8" },
+      { ...mockPressCases[0], postcode: "M1" }
+    ];
 
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue(mockPostcodes as never);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(casesWithPostcodes);
 
     const result = await getUniquePostcodes("list-1");
 
-    expect(result).toEqual(["BS8", "NE1", "M1"]);
-    expect(prisma.sjpCase.findMany).toHaveBeenCalledWith({
-      where: { listId: "list-1", postcode: { not: null } },
-      select: { postcode: true },
-      distinct: ["postcode"],
-      orderBy: { postcode: "asc" }
-    });
+    expect(result.postcodes).toEqual(["BS8", "M1"]);
+    expect(result.hasLondonPostcodes).toBe(false);
   });
 
   it("should filter out null postcodes", async () => {
-    const mockPostcodes = [{ postcode: "BS8" }, { postcode: null }];
+    const casesWithNulls: SjpCasePress[] = [
+      { ...mockPressCases[0], postcode: "M1" },
+      { ...mockPressCases[1], postcode: null }
+    ];
 
-    vi.mocked(prisma.sjpCase.findMany).mockResolvedValue(mockPostcodes as never);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(casesWithNulls);
 
     const result = await getUniquePostcodes("list-1");
 
-    expect(result).toEqual(["BS8"]);
+    expect(result.postcodes).toEqual(["M1"]);
+  });
+
+  it("should identify London postcodes", async () => {
+    const casesWithLondon: SjpCasePress[] = [
+      { ...mockPressCases[0], postcode: "E1" },
+      { ...mockPressCases[1], postcode: "SW1A" },
+      { ...mockPressCases[0], postcode: "M1" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(casesWithLondon);
+
+    const result = await getUniquePostcodes("list-1");
+
+    expect(result.hasLondonPostcodes).toBe(true);
+    expect(result.londonPostcodes).toEqual(["E1", "SW1A"]);
+    expect(result.postcodes).toEqual(["E1", "M1", "SW1A"]);
   });
 });

@@ -152,20 +152,6 @@ function parseDateOfBirth(dateString: string | undefined): Date | null {
 }
 
 /**
- * Extracts the first offence title from offences array
- */
-function extractOffenceTitle(offences: SjpOffence[]): string | null {
-  return offences[0]?.offenceTitle || offences[0]?.offenceWording || null;
-}
-
-/**
- * Checks if any offence has a reporting restriction
- */
-function hasReportingRestriction(offences: SjpOffence[]): boolean {
-  return offences.some((o) => o.reportingRestriction === true);
-}
-
-/**
  * Extracts all offence details for press lists
  */
 function extractOffenceDetails(offences: SjpOffence[]): Array<{ offenceTitle: string; offenceWording: string | null; reportingRestriction: boolean }> {
