@@ -10,7 +10,7 @@
  * - https://ideal-postcodes.co.uk/guides/uk-postcode-format
  * - https://www.gov.uk/government/publications/bulk-data-transfer-specification
  */
-const UK_POSTCODE_REGEX = /^(GIR\s?0AA|[A-PR-UWYZ]([0-9]{1,2}|([A-HK-Y][0-9]([0-9ABEHMNPRV-Y])?)|[0-9][A-HJKPS-UW])\s?[0-9][ABD-HJLNP-UW-Z]{2})$/i;
+const UK_POSTCODE_REGEX = /^(GIR\s?0AA|[A-PR-UWYZ](\d{1,2}|([A-HK-Y]\d[\dABEHMNPRV-Y]?)|\d[A-HJKPS-UW])\s?\d[ABD-HJLNP-UW-Z]{2})$/i;
 
 export interface PostcodeValidationResult {
   isValid: boolean;
@@ -23,7 +23,7 @@ export function validateUkPostcode(postcode: string | undefined): PostcodeValida
   }
 
   // Normalize: remove extra whitespace and convert to uppercase for testing
-  const normalized = postcode.trim().toUpperCase().replace(/\s+/g, " ");
+  const normalized = postcode.trim().toUpperCase().replaceAll(/\s+/g, " ");
 
   if (!UK_POSTCODE_REGEX.test(normalized)) {
     return { isValid: false, errorMessage: "Enter a valid postcode" };

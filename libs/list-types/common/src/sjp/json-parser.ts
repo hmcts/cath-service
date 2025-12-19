@@ -65,7 +65,8 @@ function extractPostcodeOutward(postcode: string | undefined): string | null {
   }
   // If no space, check if it's already just the outward code
   // Made digits optional to support test postcodes like "AA"
-  const match = trimmed.match(/^[A-Z]{1,2}[0-9]{0,2}[A-Z]?$/);
+  const regex = /^[A-Z]{1,2}\d{0,2}[A-Z]?$/;
+  const match = regex.exec(trimmed);
   return match ? trimmed : null;
 }
 

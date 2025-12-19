@@ -1,6 +1,16 @@
 import type { Request, Response } from "express";
+import type { ParsedQs } from "qs";
 import "@hmcts/auth";
 import { getAllSjpPressCases, getSjpListById } from "@hmcts/list-types-common";
+
+/**
+ * Parses query parameter as string array, filtering out non-string values
+ */
+function parseQueryAsStringArray(param: string | ParsedQs | (string | ParsedQs)[] | undefined): string[] {
+  if (!param) return [];
+  const items = Array.isArray(param) ? param : [param];
+  return items.filter((item): item is string => typeof item === "string");
+}
 
 /**
  * Escapes a CSV field to prevent CSV injection and handle embedded quotes
@@ -19,10 +29,45 @@ function escapeCsvField(value: string | null | undefined): string {
   const safeValue = /^[=+\-@]/.test(stringValue) ? `'${stringValue}` : stringValue;
 
   // Escape embedded double quotes
-  const escapedValue = safeValue.replace(/"/g, '""');
+  const escapedValue = safeValue.replaceAll(/"/g, '""');
 
   // Wrap in double quotes
   return `"${escapedValue}"`;
+}
+
+/**
+ * Generates CSV rows from cases
+ */
+function generateCsvRows(
+  cases: Array<{
+    name: string;
+    dateOfBirth: Date | null;
+    reference: string | null;
+    address: string | null;
+    prosecutor: string | null;
+    offences: Array<{ offenceTitle: string; reportingRestriction: boolean }>;
+  }>
+): string[] {
+  const csvRows = ["Name,Date of Birth,Reference,Address,Prosecutor,Reporting Restriction,Offence"];
+
+  for (const caseItem of cases) {
+    const hasReportingRestriction = caseItem.offences.some((offence) => offence.reportingRestriction);
+    const offenceTitles = caseItem.offences.map((offence) => offence.offenceTitle).join("; ");
+    const dateOfBirth = caseItem.dateOfBirth ? escapeCsvField(new Date(caseItem.dateOfBirth).toLocaleDateString("en-GB")) : '""';
+
+    const row = [
+      escapeCsvField(caseItem.name),
+      dateOfBirth,
+      escapeCsvField(caseItem.reference),
+      escapeCsvField(caseItem.address),
+      escapeCsvField(caseItem.prosecutor),
+      hasReportingRestriction ? "True" : "False",
+      escapeCsvField(offenceTitles)
+    ];
+    csvRows.push(row.join(","));
+  }
+
+  return csvRows;
 }
 
 export const GET = async (req: Request, res: Response) => {
@@ -44,17 +89,8 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   // Get all cases without pagination
-  // Handle multiple prosecutors from query string
-  const prosecutorQuery = req.query.prosecutor;
-  const selectedProsecutors = prosecutorQuery
-    ? (Array.isArray(prosecutorQuery) ? prosecutorQuery : [prosecutorQuery]).filter((p): p is string => typeof p === "string")
-    : [];
-
-  // Handle multiple postcodes from query string
-  const postcodeQuery = req.query.postcode;
-  const selectedPostcodes = postcodeQuery
-    ? (Array.isArray(postcodeQuery) ? postcodeQuery : [postcodeQuery]).filter((p): p is string => typeof p === "string")
-    : [];
+  const selectedProsecutors = parseQueryAsStringArray(req.query.prosecutor);
+  const selectedPostcodes = parseQueryAsStringArray(req.query.postcode);
 
   const filters = {
     searchQuery: req.query.search as string | undefined,
@@ -63,30 +99,7 @@ export const GET = async (req: Request, res: Response) => {
   };
 
   const { cases } = await getAllSjpPressCases(artefactId, filters);
-
-  // Generate CSV
-  const csvRows = [];
-  csvRows.push("Name,Date of Birth,Reference,Address,Prosecutor,Reporting Restriction,Offence");
-
-  for (const caseItem of cases) {
-    // Get the reporting restriction status (true if any offence has reporting restrictions)
-    const hasReportingRestriction = caseItem.offences.some((offence) => offence.reportingRestriction);
-
-    // Combine all offence titles
-    const offenceTitles = caseItem.offences.map((offence) => offence.offenceTitle).join("; ");
-
-    const row = [
-      escapeCsvField(caseItem.name),
-      caseItem.dateOfBirth ? escapeCsvField(new Date(caseItem.dateOfBirth).toLocaleDateString("en-GB")) : '""',
-      escapeCsvField(caseItem.reference),
-      escapeCsvField(caseItem.address),
-      escapeCsvField(caseItem.prosecutor),
-      hasReportingRestriction ? "True" : "False",
-      escapeCsvField(offenceTitles)
-    ];
-    csvRows.push(row.join(","));
-  }
-
+  const csvRows = generateCsvRows(cases);
   const csv = csvRows.join("\n");
   const filename = `sjp-press-list-${list.contentDate.toISOString().split("T")[0]}.csv`;
 

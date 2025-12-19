@@ -1,7 +1,31 @@
 import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
 import type { Request, Response } from "express";
+import type { ParsedQs } from "qs";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+/**
+ * Parses query parameter as string array, filtering out non-string values
+ */
+function parseQueryAsStringArray(param: string | ParsedQs | (string | ParsedQs)[] | undefined): string[] {
+  if (!param) return [];
+  const items = Array.isArray(param) ? param : [param];
+  return items.filter((item): item is string => typeof item === "string");
+}
+
+/**
+ * Appends array values to URLSearchParams
+ */
+function appendArrayToParams(params: URLSearchParams, key: string, values: string | string[] | undefined, shouldTrim = false): void {
+  if (!values) return;
+  const items = Array.isArray(values) ? values : [values];
+  for (const item of items) {
+    const value = shouldTrim ? item.trim() : item;
+    if (value) {
+      params.append(key, value);
+    }
+  }
+}
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -27,17 +51,9 @@ export const GET = async (req: Request, res: Response) => {
     });
   }
 
-  // Handle multiple prosecutors from query string
-  const prosecutorQuery = req.query.prosecutor;
-  const selectedProsecutors = prosecutorQuery
-    ? (Array.isArray(prosecutorQuery) ? prosecutorQuery : [prosecutorQuery]).filter((p): p is string => typeof p === "string")
-    : [];
-
-  // Handle multiple postcodes from query string
-  const postcodeQuery = req.query.postcode;
-  const selectedPostcodes = postcodeQuery
-    ? (Array.isArray(postcodeQuery) ? postcodeQuery : [postcodeQuery]).filter((p): p is string => typeof p === "string")
-    : [];
+  // Handle multiple prosecutors and postcodes from query string
+  const selectedProsecutors = parseQueryAsStringArray(req.query.prosecutor);
+  const selectedPostcodes = parseQueryAsStringArray(req.query.postcode);
 
   const filters = {
     searchQuery: req.query.search as string | undefined,
@@ -91,27 +107,11 @@ export const POST = async (req: Request, res: Response) => {
     prosecutors: req.body.prosecutor
   };
 
+  // Build query parameters
   const queryParams = new URLSearchParams({ artefactId });
   if (filters.searchQuery) queryParams.set("search", filters.searchQuery);
-
-  // Handle multiple postcodes
-  if (filters.postcodes) {
-    const postcodeArray = Array.isArray(filters.postcodes) ? filters.postcodes : [filters.postcodes];
-    for (const postcode of postcodeArray) {
-      const trimmedPostcode = postcode.trim();
-      if (trimmedPostcode) {
-        queryParams.append("postcode", trimmedPostcode);
-      }
-    }
-  }
-
-  // Handle multiple prosecutors
-  if (filters.prosecutors) {
-    const prosecutorArray = Array.isArray(filters.prosecutors) ? filters.prosecutors : [filters.prosecutors];
-    for (const prosecutor of prosecutorArray) {
-      queryParams.append("prosecutor", prosecutor);
-    }
-  }
+  appendArrayToParams(queryParams, "postcode", filters.postcodes, true);
+  appendArrayToParams(queryParams, "prosecutor", filters.prosecutors);
 
   res.redirect(`/sjp-public-list?${queryParams.toString()}`);
 };
