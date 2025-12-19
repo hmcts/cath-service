@@ -174,11 +174,12 @@ function applyFilters(cases: SjpCasePress[], filters: SjpSearchFilters): SjpCase
     filteredCases = filteredCases.filter((c) => {
       if (!c.postcode) return false;
 
+      const postcode = c.postcode; // TypeScript type narrowing
       return filters.postcodes?.some((selectedPostcode) => {
         if (selectedPostcode === "LONDON_POSTCODES") {
-          return isLondonPostcode(c.postcode);
+          return isLondonPostcode(postcode);
         }
-        return c.postcode.toLowerCase().startsWith(selectedPostcode.toLowerCase());
+        return postcode.toLowerCase().startsWith(selectedPostcode.toLowerCase());
       });
     });
   }
