@@ -4,8 +4,29 @@ import { expect, test } from "@playwright/test";
 import { prisma } from "@hmcts/postgres";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
+// Helper to validate required environment variables
+function validateEnvVars() {
+  const missing: string[] = [];
+
+  if (!process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL) {
+    missing.push("SSO_TEST_SYSTEM_ADMIN_EMAIL");
+  }
+  if (!process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD) {
+    missing.push("SSO_TEST_SYSTEM_ADMIN_PASSWORD");
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(", ")}. ` +
+      "Please set these variables before running the tests."
+    );
+  }
+}
+
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {
+  validateEnvVars();
+
   await page.goto("/system-admin-dashboard");
 
   if (page.url().includes("login.microsoftonline.com")) {
@@ -13,6 +34,34 @@ async function authenticateSystemAdmin(page: Page) {
     const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
     await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
   }
+}
+
+// Helper to wait for autocomplete to complete and select option
+async function selectAutocompleteOption(page: Page, searchText: string) {
+  // Wait for the autocomplete API request to complete
+  const responsePromise = page.waitForResponse(
+    response => response.url().includes("/locations?q=") && response.status() === 200,
+    { timeout: 10000 }
+  );
+
+  // Wait for the response to complete
+  await responsePromise;
+
+  // Wait for autocomplete dropdown menu to appear with results
+  await page.waitForSelector(".autocomplete__menu", { state: "visible", timeout: 5000 });
+
+  // Select from dropdown using keyboard
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+
+  // Wait for the hidden locationId field to be populated
+  await page.waitForFunction(
+    () => {
+      const hiddenInput = document.getElementById("court-searchId") as HTMLInputElement;
+      return hiddenInput && hiddenInput.value !== "";
+    },
+    { timeout: 5000 }
+  );
 }
 
 // Track created resources for cleanup
@@ -98,15 +147,8 @@ test.describe("Delete Court Journey", () => {
     await courtInput.waitFor({ state: 'visible', timeout: 10000 });
     await courtInput.fill("Delete Test Court A");
 
-    // Wait for autocomplete to load results
-    await page.waitForTimeout(1500);
-
-    // Select from dropdown using keyboard
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    // Wait for the selection to populate the hidden locationId field
-    await page.waitForTimeout(1000);
+    // Wait for autocomplete to load and select option
+    await selectAutocompleteOption(page, "Delete Test Court A");
 
     await page.click('button:has-text("Continue")');
     await page.waitForURL("**/delete-court-confirm");
@@ -144,14 +186,8 @@ test.describe("Delete Court Journey", () => {
     const courtInput2 = page.getByRole('combobox', { name: /court or tribunal name/i });
     await courtInput2.fill("Delete Test Court B");
 
-    // Wait for autocomplete to load results
-    await page.waitForTimeout(1500);
-
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    // Wait for the selection to populate the hidden locationId field
-    await page.waitForTimeout(1000);
+    // Wait for autocomplete to load and select option
+    await selectAutocompleteOption(page, "Delete Test Court B");
 
     await page.click('button:has-text("Continue")');
     await page.waitForURL("**/delete-court-confirm");
@@ -258,14 +294,8 @@ test.describe("Delete Court Journey", () => {
     await courtInput.waitFor({ state: 'visible', timeout: 10000 });
     await courtInput.fill(courtName);
 
-    // Wait for autocomplete to load results
-    await page.waitForTimeout(1500);
-
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    // Wait for the selection to populate the hidden locationId field
-    await page.waitForTimeout(1000);
+    // Wait for autocomplete to load and select option
+    await selectAutocompleteOption(page, courtName);
 
     await page.click('button:has-text("Continue")');
     await page.waitForURL("**/delete-court-confirm");
@@ -307,14 +337,8 @@ test.describe("Delete Court Journey", () => {
     // Fill and submit using keyboard and autocomplete
     await courtInput.fill("Delete Test Court C");
 
-    // Wait for autocomplete to load results
-    await page.waitForTimeout(1500);
-
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Enter");
-
-    // Wait for the selection to populate the hidden locationId field
-    await page.waitForTimeout(1000);
+    // Wait for autocomplete to load and select option
+    await selectAutocompleteOption(page, "Delete Test Court C");
 
     // Submit form
     await page.click('button:has-text("Continue")');
