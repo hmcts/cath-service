@@ -24,7 +24,7 @@ async function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof
       const listType = listTypeMap.get(artefact.listTypeId);
       let listTypeName = String(artefact.listTypeId);
       if (listType) {
-        listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+        listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || String(artefact.listTypeId);
       }
 
       const location = await getLocationById(Number.parseInt(artefact.locationId, 10));

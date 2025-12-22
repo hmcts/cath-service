@@ -39,7 +39,7 @@ const getHandler = async (req: Request, res: Response) => {
   const listType = listTypeId ? await findListTypeById(listTypeId) : null;
   let listTypeName = uploadData.listType;
   if (listType) {
-    listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+    listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
   }
 
   res.render("non-strategic-upload-summary/index", {
@@ -165,7 +165,7 @@ const postHandler = async (req: Request, res: Response) => {
     const listType = listTypeId ? await findListTypeById(listTypeId) : null;
     let listTypeName = uploadData.listType;
     if (listType) {
-      listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+      listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
     }
 
     // Extract error message from error object

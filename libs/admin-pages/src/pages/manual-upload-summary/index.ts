@@ -38,7 +38,7 @@ const getHandler = async (req: Request, res: Response) => {
   const listType = listTypeId ? await findListTypeById(listTypeId) : null;
   let listTypeName = uploadData.listType;
   if (listType) {
-    listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+    listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
   }
 
   res.render("manual-upload-summary/index", {
@@ -152,7 +152,7 @@ const postHandler = async (req: Request, res: Response) => {
     const listType = listTypeId ? await findListTypeById(listTypeId) : null;
     let listTypeName = uploadData.listType;
     if (listType) {
-      listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+      listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
     }
 
     return res.render("manual-upload-summary/index", {
