@@ -7,6 +7,7 @@ export {
   type RegionItem,
   type SubJurisdictionItem
 } from "./filtering/service.js";
+export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { locationData } from "./location-data.js";
 export type { Jurisdiction, Region, SubJurisdiction } from "./repository/model.js";
 export {
@@ -19,3 +20,4 @@ export {
 } from "./repository/queries.js";
 export { getLocationsGroupedByLetter, type Location, searchLocations } from "./repository/service.js";
 export { seedLocationData } from "./seed-data.js";
+export { seedListTypes } from "./seed-list-types.js";

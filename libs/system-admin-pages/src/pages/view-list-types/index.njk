@@ -1,0 +1,73 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .table-wrapper {
+      overflow: auto hidden;
+      margin-bottom: 20px;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ title }}</h1>
+
+    {% if tableRows.length > 0 %}
+      <div class="table-wrapper">
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header no-wrap">{{ nameColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ friendlyNameColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ welshFriendlyNameColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ shortenedFriendlyNameColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ urlColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ sensitivityColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ provenanceColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ nonStrategicColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ subJurisdictionsColumn }}</th>
+              <th scope="col" class="govuk-table__header no-wrap">{{ actionsColumn }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for row in tableRows %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell no-wrap">{{ row[0].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[1].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[2].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[3].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[4].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[5].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[6].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[7].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[8].text }}</td>
+                <td class="govuk-table__cell no-wrap">{{ row[9].html | safe }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="govuk-body">{{ noListTypesText }}</p>
+    {% endif %}
+
+    <p class="govuk-body">
+      <a href="/configure-list-type-enter-details" class="govuk-link">{{ addNewListTypeLink }}</a>
+    </p>
+
+    <p class="govuk-body">
+      <a href="/system-admin-dashboard" class="govuk-link">{{ backToDashboard }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

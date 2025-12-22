@@ -7,6 +7,7 @@ export const common = {
 export const configureListType = {
   enterDetails: {
     title: "Rhowch fanylion math o restr",
+    viewAllLink: "Gweld pob math o restr",
     nameLabel: "Enw",
     friendlyNameLabel: "Enw cyfeillgar",
     welshFriendlyNameLabel: "Enw cyfeillgar Cymraeg",

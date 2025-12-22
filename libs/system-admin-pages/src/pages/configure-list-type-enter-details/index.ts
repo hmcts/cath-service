@@ -29,25 +29,32 @@ const getHandler = async (req: Request, res: Response) => {
   const content = language === "cy" ? cy : en;
   const editId = req.query.id ? Number.parseInt(req.query.id as string, 10) : undefined;
 
-  let formData: Partial<ListTypeFormData> = session.configureListType || {};
+  let formData: Partial<ListTypeFormData> = {};
 
-  if (editId && !session.configureListType?.editId) {
-    const existingListType = await findListTypeById(editId);
-    if (existingListType) {
-      formData = {
-        name: existingListType.name,
-        friendlyName: existingListType.friendlyName || "",
-        welshFriendlyName: existingListType.welshFriendlyName || "",
-        shortenedFriendlyName: existingListType.shortenedFriendlyName || "",
-        url: existingListType.url || "",
-        defaultSensitivity: existingListType.defaultSensitivity || "",
-        allowedProvenance: existingListType.allowedProvenance.split(","),
-        isNonStrategic: existingListType.isNonStrategic,
-        subJurisdictionIds: existingListType.subJurisdictions.map((sj) => sj.subJurisdictionId),
-        editId
-      };
-      session.configureListType = formData;
+  if (editId) {
+    if (!session.configureListType?.editId || session.configureListType.editId !== editId) {
+      const existingListType = await findListTypeById(editId);
+      if (existingListType) {
+        formData = {
+          name: existingListType.name,
+          friendlyName: existingListType.friendlyName || "",
+          welshFriendlyName: existingListType.welshFriendlyName || "",
+          shortenedFriendlyName: existingListType.shortenedFriendlyName || "",
+          url: existingListType.url || "",
+          defaultSensitivity: existingListType.defaultSensitivity || "",
+          allowedProvenance: existingListType.allowedProvenance.split(","),
+          isNonStrategic: existingListType.isNonStrategic,
+          subJurisdictionIds: existingListType.subJurisdictions.map((sj) => sj.subJurisdictionId),
+          editId
+        };
+        session.configureListType = formData;
+      }
+    } else {
+      formData = session.configureListType;
     }
+  } else {
+    delete session.configureListType;
+    formData = {};
   }
 
   const checkedProvenance = {

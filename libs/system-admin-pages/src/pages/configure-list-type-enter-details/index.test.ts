@@ -60,7 +60,7 @@ describe("enter-details page", () => {
       expect(res.render).toHaveBeenCalled();
     });
 
-    it("should populate form from session data", async () => {
+    it("should clear session and render empty form when no id provided", async () => {
       const sessionData = {
         name: "TEST_LIST",
         friendlyName: "Test",
@@ -69,14 +69,17 @@ describe("enter-details page", () => {
         url: "/test",
         defaultSensitivity: "Public",
         allowedProvenance: ["CFT_IDAM"],
-        isNonStrategic: false
+        isNonStrategic: false,
+        editId: 1
       };
-      const req = { session: { configureListType: sessionData }, query: {} } as unknown as Request;
+      const session = { configureListType: sessionData };
+      const req = { session, query: {} } as unknown as Request;
       const res = { render: vi.fn() } as unknown as Response;
 
       await callHandler(GET, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ data: sessionData }));
+      expect(session.configureListType).toBeUndefined();
+      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ data: {}, isEdit: false }));
     });
 
     it("should load existing list type when id provided", async () => {
@@ -102,9 +105,21 @@ describe("enter-details page", () => {
       expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ isEdit: true }));
     });
 
-    it("should set checked provenance from form data", async () => {
-      const sessionData = { allowedProvenance: ["CFT_IDAM", "B2C"] };
-      const req = { session: { configureListType: sessionData }, query: {} } as unknown as Request;
+    it("should set checked provenance from form data when editing", async () => {
+      const existingData = {
+        id: 1,
+        name: "EXISTING",
+        friendlyName: "Existing",
+        welshFriendlyName: "Bodoli",
+        shortenedFriendlyName: "Exist",
+        url: "/exist",
+        defaultSensitivity: "Private",
+        allowedProvenance: "CFT_IDAM,B2C",
+        isNonStrategic: true,
+        subJurisdictions: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
+      };
+      vi.mocked(findListTypeById).mockResolvedValue(existingData as any);
+      const req = { session: {}, query: { id: "1" } } as unknown as Request;
       const res = { render: vi.fn() } as unknown as Response;
 
       await callHandler(GET, req, res);
