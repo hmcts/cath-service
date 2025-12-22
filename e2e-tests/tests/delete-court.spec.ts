@@ -15,41 +15,34 @@ async function authenticateSystemAdmin(page: Page) {
   }
 }
 
+// Track created resources for cleanup
+const createdCourts: number[] = [];
+const createdUsers: string[] = [];
+
 // Helper to create a test court for deletion
-async function createTestCourt(locationId: number, name: string, welshName: string) {
-  // First, check if the court exists
-  const existing = await prisma.location.findUnique({
-    where: { locationId }
+async function createTestCourt(name: string, welshName: string): Promise<number> {
+  // Generate unique locationId using timestamp and random number
+  const locationId = 90000 + Math.floor(Math.random() * 9000) + Date.now() % 1000;
+
+  // Create new court
+  await prisma.location.create({
+    data: {
+      locationId,
+      name,
+      welshName,
+      email: `${name.toLowerCase().replace(/\s+/g, '-')}@test.hmcts.net`,
+      contactNo: "01234567890",
+      locationRegions: {
+        create: [{ regionId: 4 }] // North
+      },
+      locationSubJurisdictions: {
+        create: [{ subJurisdictionId: 1 }] // Civil Court
+      }
+    }
   });
 
-  if (existing) {
-    // Restore if it was soft-deleted
-    await prisma.location.update({
-      where: { locationId },
-      data: {
-        name,
-        welshName,
-        deletedAt: null
-      }
-    });
-  } else {
-    // Create new court
-    await prisma.location.create({
-      data: {
-        locationId,
-        name,
-        welshName,
-        email: `${name.toLowerCase().replace(/\s+/g, '-')}@test.hmcts.net`,
-        contactNo: "01234567890",
-        locationRegions: {
-          create: [{ regionId: 4 }] // North
-        },
-        locationSubJurisdictions: {
-          create: [{ subJurisdictionId: 1 }] // Civil Court
-        }
-      }
-    });
-  }
+  createdCourts.push(locationId);
+  return locationId;
 }
 
 test.describe("Delete Court Journey", () => {
@@ -57,10 +50,33 @@ test.describe("Delete Court Journey", () => {
     await authenticateSystemAdmin(page);
   });
 
+  test.afterAll(async () => {
+    // Clean up test users (this will cascade delete subscriptions)
+    for (const userId of createdUsers) {
+      await prisma.user.delete({
+        where: { userId }
+      }).catch(() => {
+        // Ignore errors if already deleted
+      });
+    }
+    createdUsers.length = 0;
+
+    // Clean up any courts that weren't deleted during the test
+    // (this will cascade delete artefacts and other related data)
+    for (const locationId of createdCourts) {
+      await prisma.location.delete({
+        where: { locationId }
+      }).catch(() => {
+        // Ignore errors if court was already deleted during test
+      });
+    }
+    createdCourts.length = 0;
+  });
+
   test("user can complete delete court journey with validation checks", async ({ page }) => {
     // Create dedicated test courts for this test
-    await createTestCourt(90001, "Delete Test Court A", "Llys Prawf Dileu A");
-    await createTestCourt(90002, "Delete Test Court B", "Llys Prawf Dileu B");
+    await createTestCourt("Delete Test Court A", "Llys Prawf Dileu A");
+    await createTestCourt("Delete Test Court B", "Llys Prawf Dileu B");
 
     // Step 1: Navigate to Delete Court from dashboard
     await page.click('a:has-text("Delete Court")');
@@ -192,14 +208,55 @@ test.describe("Delete Court Journey", () => {
   });
 
   test("should block deletion of court with active subscriptions", async ({ page }) => {
+    // Create a dedicated test court with active data
+    const courtName = "Delete Test Court With Subs";
+    const courtWelshName = "Llys Prawf Dileu Gyda Thanysgrifiadau";
+    const courtLocationId = await createTestCourt(courtName, courtWelshName);
+
+    // Create a test user for the subscription
+    const testUser = await prisma.user.create({
+      data: {
+        email: `test-delete-court-${Date.now()}@hmcts.net`,
+        firstName: "Test",
+        surname: "User",
+        userProvenance: "PI_AAD",
+        userProvenanceId: `test-${Date.now()}`,
+        role: "VERIFIED"
+      }
+    });
+    createdUsers.push(testUser.userId);
+
+    // Create an active subscription for this court
+    await prisma.subscription.create({
+      data: {
+        userId: testUser.userId,
+        locationId: courtLocationId
+      }
+    });
+
+    // Create an active artefact for this court
+    await prisma.artefact.create({
+      data: {
+        locationId: courtLocationId.toString(),
+        listTypeId: 1, // Use a valid list type ID
+        contentDate: new Date(),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date(),
+        displayTo: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD"
+      }
+    });
+
     // Navigate to delete court
     await page.click('a:has-text("Delete Court")');
     await page.waitForURL("**/delete-court");
 
-    // Search for Test SJP Court (locationId 9 which has active artefacts/subscriptions in seed data)
+    // Search for the test court
     const courtInput = page.getByRole('combobox', { name: /court or tribunal name/i });
     await courtInput.waitFor({ state: 'visible', timeout: 10000 });
-    await courtInput.fill("Test SJP Court");
+    await courtInput.fill(courtName);
 
     // Wait for autocomplete to load results
     await page.waitForTimeout(1500);
@@ -235,7 +292,7 @@ test.describe("Delete Court Journey", () => {
 
   test("should maintain keyboard navigation throughout journey @nightly", async ({ page }) => {
     // Create dedicated test court for this test
-    await createTestCourt(90003, "Delete Test Court C", "Llys Prawf Dileu C");
+    await createTestCourt("Delete Test Court C", "Llys Prawf Dileu C");
 
     // Navigate to delete court
     await page.click('a:has-text("Delete Court")');
