@@ -69,9 +69,14 @@ const getHandler = async (req: Request, res: Response) => {
 
   let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
     const listType = listTypeMap.get(artefact.listTypeId);
-    const listTypeName = listType
-      ? (locale === "cy" ? listType.welshFriendlyName || listType.friendlyName : listType.friendlyName) || String(artefact.listTypeId)
-      : String(artefact.listTypeId);
+    let listTypeName = String(artefact.listTypeId);
+    if (listType) {
+      if (locale === "cy") {
+        listTypeName = listType.welshFriendlyName || listType.friendlyName || String(artefact.listTypeId);
+      } else {
+        listTypeName = listType.friendlyName || String(artefact.listTypeId);
+      }
+    }
 
     return {
       artefactId: artefact.artefactId,
@@ -122,7 +127,10 @@ const postHandler = async (req: Request, res: Response) => {
 
     const artefacts = await getArtefactsByLocation(sessionData.locationId);
     const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
-    const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
+    let courtName = sessionData.locationId;
+    if (location) {
+      courtName = locale === "cy" ? location.welshName : location.name;
+    }
 
     // Fetch list types from database and create a map for quick lookup
     const listTypes = await findAllListTypes();
@@ -130,9 +138,14 @@ const postHandler = async (req: Request, res: Response) => {
 
     let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
       const listType = listTypeMap.get(artefact.listTypeId);
-      const listTypeName = listType
-        ? (locale === "cy" ? listType.welshFriendlyName || listType.friendlyName : listType.friendlyName) || String(artefact.listTypeId)
-        : String(artefact.listTypeId);
+      let listTypeName = String(artefact.listTypeId);
+      if (listType) {
+        if (locale === "cy") {
+          listTypeName = listType.welshFriendlyName || listType.friendlyName || String(artefact.listTypeId);
+        } else {
+          listTypeName = listType.friendlyName || String(artefact.listTypeId);
+        }
+      }
 
       return {
         artefactId: artefact.artefactId,

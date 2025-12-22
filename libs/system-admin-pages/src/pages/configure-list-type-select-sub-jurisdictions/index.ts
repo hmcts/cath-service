@@ -52,11 +52,14 @@ const postHandler = async (req: Request, res: Response) => {
 
     const subJurisdictions = await findAllSubJurisdictions();
 
-    const items = subJurisdictions.map((subJurisdiction) => ({
-      value: String(subJurisdiction.subJurisdictionId),
-      text: language === "cy" ? subJurisdiction.welshName : subJurisdiction.name,
-      checked: subJurisdictionIds.includes(subJurisdiction.subJurisdictionId)
-    }));
+    const items = subJurisdictions.map((subJurisdiction) => {
+      const text = language === "cy" ? subJurisdiction.welshName : subJurisdiction.name;
+      return {
+        value: String(subJurisdiction.subJurisdictionId),
+        text,
+        checked: subJurisdictionIds.includes(subJurisdiction.subJurisdictionId)
+      };
+    });
 
     return res.render("configure-list-type-select-sub-jurisdictions/index", {
       t: content,

@@ -22,10 +22,16 @@ async function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof
   return Promise.all(
     artefacts.map(async (artefact) => {
       const listType = listTypeMap.get(artefact.listTypeId);
-      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) : String(artefact.listTypeId);
+      let listTypeName = String(artefact.listTypeId);
+      if (listType) {
+        listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+      }
 
       const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
-      const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
+      let courtName = artefact.locationId;
+      if (location) {
+        courtName = locale === "cy" ? location.welshName : location.name;
+      }
 
       const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
       const language = capitalizeFirstLetter(artefact.language);

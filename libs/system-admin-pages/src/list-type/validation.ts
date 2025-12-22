@@ -1,111 +1,113 @@
 const SENSITIVITY_OPTIONS = ["Public", "Private", "Classified"] as const;
 const PROVENANCE_OPTIONS = ["CFT_IDAM", "B2C", "COMMON_PLATFORM"] as const;
 
-export function validateListTypeDetails(data: ListTypeDetailsInput) {
-  const errors: ValidationError[] = [];
+function getFieldLabel(fieldName: string): string {
+  const labels: Record<string, string> = {
+    name: "name",
+    friendlyName: "friendly name",
+    welshFriendlyName: "Welsh friendly name",
+    shortenedFriendlyName: "shortened friendly name",
+    url: "URL"
+  };
+  return labels[fieldName] || fieldName;
+}
 
-  if (!data.name || data.name.trim() === "") {
-    errors.push({
-      field: "name",
-      message: "Enter a value for name",
-      href: "#name"
-    });
-  } else if (data.name.length > 1000) {
-    errors.push({
-      field: "name",
-      message: "Name must be 1000 characters or less",
-      href: "#name"
-    });
+function getFieldLabelCapitalized(fieldName: string): string {
+  const labels: Record<string, string> = {
+    name: "Name",
+    friendlyName: "Friendly name",
+    welshFriendlyName: "Welsh friendly name",
+    shortenedFriendlyName: "Shortened friendly name",
+    url: "URL"
+  };
+  return labels[fieldName] || fieldName;
+}
+
+function validateRequiredField(value: string, fieldName: string, maxLength: number): ValidationError | null {
+  if (!value || value.trim() === "") {
+    return {
+      field: fieldName,
+      message: `Enter a value for ${getFieldLabel(fieldName)}`,
+      href: `#${fieldName}`
+    };
   }
 
-  if (!data.friendlyName || data.friendlyName.trim() === "") {
-    errors.push({
-      field: "friendlyName",
-      message: "Enter a value for friendly name",
-      href: "#friendlyName"
-    });
-  } else if (data.friendlyName.length > 1000) {
-    errors.push({
-      field: "friendlyName",
-      message: "Friendly name must be 1000 characters or less",
-      href: "#friendlyName"
-    });
+  if (value.length > maxLength) {
+    return {
+      field: fieldName,
+      message: `${getFieldLabelCapitalized(fieldName)} must be ${maxLength} characters or less`,
+      href: `#${fieldName}`
+    };
   }
 
-  if (!data.welshFriendlyName || data.welshFriendlyName.trim() === "") {
-    errors.push({
-      field: "welshFriendlyName",
-      message: "Enter a value for Welsh friendly name",
-      href: "#welshFriendlyName"
-    });
-  } else if (data.welshFriendlyName.length > 255) {
-    errors.push({
-      field: "welshFriendlyName",
-      message: "Welsh friendly name must be 255 characters or less",
-      href: "#welshFriendlyName"
-    });
-  }
+  return null;
+}
 
-  if (!data.shortenedFriendlyName || data.shortenedFriendlyName.trim() === "") {
-    errors.push({
-      field: "shortenedFriendlyName",
-      message: "Enter a value for shortened friendly name",
-      href: "#shortenedFriendlyName"
-    });
-  } else if (data.shortenedFriendlyName.length > 255) {
-    errors.push({
-      field: "shortenedFriendlyName",
-      message: "Shortened friendly name must be 255 characters or less",
-      href: "#shortenedFriendlyName"
-    });
-  }
-
-  if (!data.url || data.url.trim() === "") {
-    errors.push({
-      field: "url",
-      message: "Enter a value for URL",
-      href: "#url"
-    });
-  } else if (data.url.length > 255) {
-    errors.push({
-      field: "url",
-      message: "URL must be 255 characters or less",
-      href: "#url"
-    });
-  }
-
-  if (!data.defaultSensitivity || data.defaultSensitivity.trim() === "") {
-    errors.push({
+function validateSensitivity(sensitivity: string): ValidationError | null {
+  if (!sensitivity || sensitivity.trim() === "") {
+    return {
       field: "defaultSensitivity",
       message: "Select a default sensitivity",
       href: "#defaultSensitivity"
-    });
-  } else if (!SENSITIVITY_OPTIONS.includes(data.defaultSensitivity as never)) {
-    errors.push({
+    };
+  }
+
+  if (!SENSITIVITY_OPTIONS.includes(sensitivity as never)) {
+    return {
       field: "defaultSensitivity",
       message: "Select a valid default sensitivity",
       href: "#defaultSensitivity"
-    });
+    };
   }
 
-  if (!data.allowedProvenance || data.allowedProvenance.length === 0) {
-    errors.push({
+  return null;
+}
+
+function validateProvenance(provenanceList: string[]): ValidationError | null {
+  if (!provenanceList || provenanceList.length === 0) {
+    return {
       field: "allowedProvenance",
       message: "Select at least one allowed provenance",
       href: "#allowedProvenance"
-    });
-  } else {
-    for (const provenance of data.allowedProvenance) {
-      if (!PROVENANCE_OPTIONS.includes(provenance as never)) {
-        errors.push({
-          field: "allowedProvenance",
-          message: "Select valid provenance options",
-          href: "#allowedProvenance"
-        });
-        break;
-      }
+    };
+  }
+
+  for (const provenance of provenanceList) {
+    if (!PROVENANCE_OPTIONS.includes(provenance as never)) {
+      return {
+        field: "allowedProvenance",
+        message: "Select valid provenance options",
+        href: "#allowedProvenance"
+      };
     }
   }
+
+  return null;
+}
+
+export function validateListTypeDetails(data: ListTypeDetailsInput) {
+  const errors: ValidationError[] = [];
+
+  const nameError = validateRequiredField(data.name, "name", 1000);
+  if (nameError) errors.push(nameError);
+
+  const friendlyNameError = validateRequiredField(data.friendlyName, "friendlyName", 1000);
+  if (friendlyNameError) errors.push(friendlyNameError);
+
+  const welshFriendlyNameError = validateRequiredField(data.welshFriendlyName, "welshFriendlyName", 255);
+  if (welshFriendlyNameError) errors.push(welshFriendlyNameError);
+
+  const shortenedFriendlyNameError = validateRequiredField(data.shortenedFriendlyName, "shortenedFriendlyName", 255);
+  if (shortenedFriendlyNameError) errors.push(shortenedFriendlyNameError);
+
+  const urlError = validateRequiredField(data.url, "url", 255);
+  if (urlError) errors.push(urlError);
+
+  const sensitivityError = validateSensitivity(data.defaultSensitivity);
+  if (sensitivityError) errors.push(sensitivityError);
+
+  const provenanceError = validateProvenance(data.allowedProvenance);
+  if (provenanceError) errors.push(provenanceError);
 
   if (data.isNonStrategic === undefined || data.isNonStrategic === null) {
     errors.push({

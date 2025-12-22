@@ -79,7 +79,10 @@ const postHandler = async (req: Request, res: Response) => {
 
   const existingListType = await findListTypeByName(formData.name);
   if (existingListType && existingListType.id !== session.configureListType?.editId) {
-    const duplicateMessage = language === "cy" ? "Mae math o restr gyda'r enw hwn eisoes yn bodoli" : "A list type with this name already exists";
+    let duplicateMessage = "A list type with this name already exists";
+    if (language === "cy") {
+      duplicateMessage = "Mae math o restr gyda'r enw hwn eisoes yn bodoli";
+    }
     errors.push({
       field: "name",
       message: duplicateMessage,

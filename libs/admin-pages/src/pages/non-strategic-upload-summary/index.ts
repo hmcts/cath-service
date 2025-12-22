@@ -29,12 +29,18 @@ const getHandler = async (req: Request, res: Response) => {
 
   const locale = req.query.lng === "cy" ? "cy" : "en";
   const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
-  const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
+  let courtName = uploadData.locationId;
+  if (location) {
+    courtName = locale === "cy" ? location.welshName : location.name;
+  }
 
   // Find list type by ID
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
   const listType = listTypeId ? await findListTypeById(listTypeId) : null;
-  const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) : uploadData.listType;
+  let listTypeName = uploadData.listType;
+  if (listType) {
+    listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+  }
 
   res.render("non-strategic-upload-summary/index", {
     pageTitle: lang.pageTitle,
@@ -149,12 +155,18 @@ const postHandler = async (req: Request, res: Response) => {
 
     const locale = req.query.lng === "cy" ? "cy" : "en";
     const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
-    const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
+    let courtName = uploadData.locationId;
+    if (location) {
+      courtName = locale === "cy" ? location.welshName : location.name;
+    }
 
     // Find list type by ID
     const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
     const listType = listTypeId ? await findListTypeById(listTypeId) : null;
-    const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) : uploadData.listType;
+    let listTypeName = uploadData.listType;
+    if (listType) {
+      listTypeName = locale === "cy" ? listType.welshFriendlyName : listType.friendlyName;
+    }
 
     // Extract error message from error object
     const errorMessage = error instanceof Error ? error.message : "We could not process your upload. Please try again.";

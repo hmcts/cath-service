@@ -77,13 +77,12 @@ export async function seedListTypes() {
 
 // Allow running directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  seedListTypes()
-    .then(() => {
-      console.log("Seed script completed");
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error("Seed script failed:", error);
-      process.exit(1);
-    });
+  try {
+    await seedListTypes();
+    console.log("Seed script completed");
+    process.exit(0);
+  } catch (error) {
+    console.error("Seed script failed:", error);
+    process.exit(1);
+  }
 }
