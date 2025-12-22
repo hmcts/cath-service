@@ -30,8 +30,8 @@ export async function sendMediaApprovalEmail(data: MediaApplicationEmailData): P
 
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_APPROVAL, data.email, {
     personalisation: {
-      name: data.name,
-      employer: data.employer
+      "full name": data.name,
+      Employer: data.employer
     },
     reference: `media-approval-${Date.now()}`
   });
