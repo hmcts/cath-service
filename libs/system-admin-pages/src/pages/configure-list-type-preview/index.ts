@@ -1,25 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import type { Session } from "express-session";
 import { findAllSubJurisdictions } from "../../list-type/queries.js";
 import { saveListType } from "../../list-type/service.js";
+import type { ListTypeSession } from "../../list-type/types.js";
 import * as cy from "./cy.js";
 import * as en from "./en.js";
-
-interface ListTypeSession extends Session {
-  configureListType?: {
-    name: string;
-    friendlyName: string;
-    welshFriendlyName: string;
-    shortenedFriendlyName: string;
-    url: string;
-    defaultSensitivity: string;
-    allowedProvenance: string[];
-    isNonStrategic: boolean;
-    subJurisdictionIds: number[];
-    editId?: number;
-  };
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
@@ -32,7 +17,7 @@ const getHandler = async (req: Request, res: Response) => {
   const content = language === "cy" ? cy : en;
 
   const allSubJurisdictions = await findAllSubJurisdictions();
-  const selectedSubJurisdictions = allSubJurisdictions.filter((sj) => session.configureListType?.subJurisdictionIds.includes(sj.subJurisdictionId));
+  const selectedSubJurisdictions = allSubJurisdictions.filter((sj) => session.configureListType!.subJurisdictionIds!.includes(sj.subJurisdictionId));
 
   const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 
@@ -53,15 +38,15 @@ const postHandler = async (req: Request, res: Response) => {
   try {
     await saveListType(
       {
-        name: session.configureListType.name,
-        friendlyName: session.configureListType.friendlyName,
-        welshFriendlyName: session.configureListType.welshFriendlyName,
-        shortenedFriendlyName: session.configureListType.shortenedFriendlyName,
-        url: session.configureListType.url,
-        defaultSensitivity: session.configureListType.defaultSensitivity,
-        allowedProvenance: session.configureListType.allowedProvenance,
-        isNonStrategic: session.configureListType.isNonStrategic,
-        subJurisdictionIds: session.configureListType.subJurisdictionIds
+        name: session.configureListType.name!,
+        friendlyName: session.configureListType.friendlyName!,
+        welshFriendlyName: session.configureListType.welshFriendlyName!,
+        shortenedFriendlyName: session.configureListType.shortenedFriendlyName!,
+        url: session.configureListType.url!,
+        defaultSensitivity: session.configureListType.defaultSensitivity!,
+        allowedProvenance: session.configureListType.allowedProvenance!,
+        isNonStrategic: session.configureListType.isNonStrategic!,
+        subJurisdictionIds: session.configureListType.subJurisdictionIds!
       },
       session.configureListType.editId
     );
@@ -74,7 +59,7 @@ const postHandler = async (req: Request, res: Response) => {
     const content = language === "cy" ? cy : en;
 
     const allSubJurisdictions = await findAllSubJurisdictions();
-    const selectedSubJurisdictions = allSubJurisdictions.filter((sj) => session.configureListType?.subJurisdictionIds.includes(sj.subJurisdictionId));
+    const selectedSubJurisdictions = allSubJurisdictions.filter((sj) => session.configureListType!.subJurisdictionIds!.includes(sj.subJurisdictionId));
 
     const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 

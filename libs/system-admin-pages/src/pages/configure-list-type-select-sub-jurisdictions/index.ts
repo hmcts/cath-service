@@ -1,25 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import type { Session } from "express-session";
 import { findAllSubJurisdictions } from "../../list-type/queries.js";
+import type { ListTypeSession } from "../../list-type/types.js";
 import { validateSubJurisdictions } from "../../list-type/validation.js";
 import * as cy from "./cy.js";
 import * as en from "./en.js";
-
-interface ListTypeSession extends Session {
-  configureListType?: {
-    name: string;
-    friendlyName: string;
-    welshFriendlyName: string;
-    shortenedFriendlyName: string;
-    url: string;
-    defaultSensitivity: string;
-    allowedProvenance: string[];
-    isNonStrategic: boolean;
-    subJurisdictionIds: number[];
-    editId?: number;
-  };
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
