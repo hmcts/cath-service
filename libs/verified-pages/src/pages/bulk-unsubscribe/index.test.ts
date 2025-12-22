@@ -24,7 +24,9 @@ describe("bulk-unsubscribe", () => {
       path: "/bulk-unsubscribe",
       query: {},
       body: {},
-      session: {} as any
+      session: {
+        save: vi.fn((callback: (err?: any) => void) => callback())
+      } as any
     };
     mockRes = {
       render: vi.fn(),

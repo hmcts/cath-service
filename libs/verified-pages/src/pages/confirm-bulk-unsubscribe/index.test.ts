@@ -26,7 +26,8 @@ describe("confirm-bulk-unsubscribe", () => {
       session: {
         bulkUnsubscribe: {
           selectedIds: ["sub-1", "sub-2"]
-        }
+        },
+        save: vi.fn((callback: (err?: any) => void) => callback())
       } as any
     };
     mockRes = {

@@ -87,9 +87,13 @@ async function processUnsubscribe(req: Request, res: Response, selectedIds: stri
       req.session.bulkUnsubscribe = {};
     }
 
-    return res.redirect("/bulk-unsubscribe-success");
+    return req.session.save((err?: any) => {
+      if (err) {
+        return res.redirect("/confirm-bulk-unsubscribe");
+      }
+      res.redirect("/bulk-unsubscribe-success");
+    });
   } catch (error) {
-    console.error("Error deleting subscriptions:", error);
     return res.redirect("/bulk-unsubscribe");
   }
 }
@@ -114,7 +118,12 @@ const postHandler = async (req: Request, res: Response) => {
     if (req.session.bulkUnsubscribe) {
       req.session.bulkUnsubscribe = {};
     }
-    return res.redirect("/subscription-management");
+    return req.session.save((err?: any) => {
+      if (err) {
+        return res.redirect("/confirm-bulk-unsubscribe");
+      }
+      res.redirect("/subscription-management");
+    });
   }
 
   if (confirm === "yes") {

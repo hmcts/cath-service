@@ -187,6 +187,151 @@ describe("select-all", () => {
     });
   });
 
+  describe("synchronizing checkboxes across tabs", () => {
+    it("should sync checkboxes with the same subscription ID across multiple tables", async () => {
+      document.body.innerHTML = `
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="all-table" />
+          <table id="all-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" /></td></tr>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-2" class="row-checkbox" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="court-table" />
+          <table id="court-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" /></td></tr>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-2" class="row-checkbox" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      await loadSelectAllScript();
+
+      const allTableCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>("#all-table .row-checkbox"));
+      const courtTableCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>("#court-table .row-checkbox"));
+
+      // Check first checkbox in all-table (sub-1)
+      allTableCheckboxes[0].checked = true;
+      allTableCheckboxes[0].dispatchEvent(new Event("change"));
+
+      // Verify the corresponding checkbox in court-table is also checked
+      expect(courtTableCheckboxes[0].checked).toBe(true);
+      expect(courtTableCheckboxes[1].checked).toBe(false);
+    });
+
+    it("should sync when unchecking a checkbox across tables", async () => {
+      document.body.innerHTML = `
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="all-table" />
+          <table id="all-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" checked /></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="court-table" />
+          <table id="court-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" checked /></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      await loadSelectAllScript();
+
+      const allTableCheckbox = document.querySelector<HTMLInputElement>("#all-table .row-checkbox");
+      const courtTableCheckbox = document.querySelector<HTMLInputElement>("#court-table .row-checkbox");
+
+      // Uncheck in all-table
+      allTableCheckbox!.checked = false;
+      allTableCheckbox!.dispatchEvent(new Event("change"));
+
+      // Verify it's unchecked in court-table too
+      expect(courtTableCheckbox!.checked).toBe(false);
+    });
+
+    it("should update all select-all checkboxes when syncing across tables", async () => {
+      document.body.innerHTML = `
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="all-table" />
+          <table id="all-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" /></td></tr>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-2" class="row-checkbox" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="court-table" />
+          <table id="court-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" /></td></tr>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-2" class="row-checkbox" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      await loadSelectAllScript();
+
+      const selectAllCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>(".select-all-checkbox"));
+      const allTableCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>("#all-table .row-checkbox"));
+
+      // Check all checkboxes in all-table
+      allTableCheckboxes.forEach((checkbox) => {
+        checkbox.checked = true;
+        checkbox.dispatchEvent(new Event("change"));
+      });
+
+      // Both select-all checkboxes should be checked
+      expect(selectAllCheckboxes[0].checked).toBe(true);
+      expect(selectAllCheckboxes[1].checked).toBe(true);
+    });
+
+    it("should handle select-all checking all subscriptions across tables", async () => {
+      document.body.innerHTML = `
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="all-table" />
+          <table id="all-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" /></td></tr>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-2" class="row-checkbox" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <input type="checkbox" class="select-all-checkbox" data-table="court-table" />
+          <table id="court-table">
+            <tbody>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-1" class="row-checkbox" /></td></tr>
+              <tr><td><input type="checkbox" name="subscriptions" value="sub-2" class="row-checkbox" /></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      await loadSelectAllScript();
+
+      const selectAllCheckbox = document.querySelector<HTMLInputElement>(".select-all-checkbox");
+      const courtTableCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>("#court-table .row-checkbox"));
+
+      // Check select-all in all-table
+      selectAllCheckbox!.checked = true;
+      selectAllCheckbox!.dispatchEvent(new Event("change"));
+
+      // All checkboxes in court-table should also be checked
+      expect(courtTableCheckboxes[0].checked).toBe(true);
+      expect(courtTableCheckboxes[1].checked).toBe(true);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle select-all checkbox without data-table attribute", async () => {
       document.body.innerHTML = `

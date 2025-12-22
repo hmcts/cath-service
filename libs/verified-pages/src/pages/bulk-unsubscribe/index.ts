@@ -82,7 +82,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   let selectedIds: string[] = [];
   if (Array.isArray(req.body.subscriptions)) {
-    selectedIds = req.body.subscriptions;
+    selectedIds = [...new Set(req.body.subscriptions as string[])];
   } else if (req.body.subscriptions) {
     selectedIds = [req.body.subscriptions];
   }
@@ -129,7 +129,12 @@ const postHandler = async (req: Request, res: Response) => {
   }
   req.session.bulkUnsubscribe.selectedIds = selectedIds;
 
-  res.redirect("/confirm-bulk-unsubscribe");
+  req.session.save((err?: any) => {
+    if (err) {
+      return res.redirect("/bulk-unsubscribe");
+    }
+    res.redirect("/confirm-bulk-unsubscribe");
+  });
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
