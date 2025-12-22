@@ -94,6 +94,7 @@ async function processUnsubscribe(req: Request, res: Response, selectedIds: stri
       res.redirect("/bulk-unsubscribe-success");
     });
   } catch (error) {
+    console.error("Failed to delete subscriptions:", error);
     return res.redirect("/bulk-unsubscribe");
   }
 }
