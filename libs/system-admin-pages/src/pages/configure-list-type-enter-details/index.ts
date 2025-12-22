@@ -58,11 +58,13 @@ const postHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
   const language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
-  const allowedProvenance = Array.isArray(req.body.allowedProvenance)
-    ? req.body.allowedProvenance
-    : req.body.allowedProvenance
-      ? [req.body.allowedProvenance]
-      : [];
+
+  let allowedProvenance: string[] = [];
+  if (Array.isArray(req.body.allowedProvenance)) {
+    allowedProvenance = req.body.allowedProvenance;
+  } else if (req.body.allowedProvenance) {
+    allowedProvenance = [req.body.allowedProvenance];
+  }
 
   const formData = {
     name: req.body.name || "",

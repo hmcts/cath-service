@@ -38,11 +38,12 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/configure-list-type-enter-details");
   }
 
-  const subJurisdictionIds = Array.isArray(req.body.subJurisdictions)
-    ? req.body.subJurisdictions.map((id: string) => Number.parseInt(id, 10))
-    : req.body.subJurisdictions
-      ? [Number.parseInt(req.body.subJurisdictions, 10)]
-      : [];
+  let subJurisdictionIds: number[] = [];
+  if (Array.isArray(req.body.subJurisdictions)) {
+    subJurisdictionIds = req.body.subJurisdictions.map((id: string) => Number.parseInt(id, 10));
+  } else if (req.body.subJurisdictions) {
+    subJurisdictionIds = [Number.parseInt(req.body.subJurisdictions, 10)];
+  }
 
   const errors = validateSubJurisdictions(subJurisdictionIds);
 
