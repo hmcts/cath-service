@@ -54,8 +54,8 @@ describe("GOV Notify Service", () => {
 
       expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-approval", "john@example.com", {
         personalisation: {
-          name: "John Smith",
-          employer: "BBC"
+          "full name": "John Smith",
+          Employer: "BBC"
         },
         reference: expect.stringContaining("media-approval-")
       });
