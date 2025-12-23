@@ -8,6 +8,8 @@ import {
   findListTypeByName,
   findNonStrategicListTypes,
   findStrategicListTypes,
+  hasArtefactsForListType,
+  softDeleteListType,
   updateListType
 } from "./queries.js";
 
@@ -24,6 +26,9 @@ vi.mock("@hmcts/postgres", () => ({
     },
     listTypeSubJurisdiction: {
       deleteMany: vi.fn()
+    },
+    artefact: {
+      count: vi.fn()
     },
     $transaction: vi.fn()
   }
@@ -237,6 +242,49 @@ describe("list-type-queries", () => {
         orderBy: { shortenedFriendlyName: "asc" }
       });
       expect(result).toEqual(mockStrategicLists);
+    });
+  });
+
+  describe("softDeleteListType", () => {
+    it("should soft delete a list type by setting deletedAt", async () => {
+      const mockDeletedListType = {
+        id: 1,
+        name: "TEST_LIST",
+        deletedAt: new Date()
+      };
+      vi.mocked(prisma.listType.update).mockResolvedValue(mockDeletedListType as any);
+
+      const result = await softDeleteListType(1);
+
+      expect(prisma.listType.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { deletedAt: expect.any(Date) }
+      });
+      expect(result).toEqual(mockDeletedListType);
+    });
+  });
+
+  describe("hasArtefactsForListType", () => {
+    it("should return true when artefacts exist", async () => {
+      vi.mocked(prisma.artefact.count).mockResolvedValue(5);
+
+      const result = await hasArtefactsForListType(1);
+
+      expect(prisma.artefact.count).toHaveBeenCalledWith({
+        where: { listTypeId: 1 }
+      });
+      expect(result).toBe(true);
+    });
+
+    it("should return false when no artefacts exist", async () => {
+      vi.mocked(prisma.artefact.count).mockResolvedValue(0);
+
+      const result = await hasArtefactsForListType(1);
+
+      expect(prisma.artefact.count).toHaveBeenCalledWith({
+        where: { listTypeId: 1 }
+      });
+      expect(result).toBe(false);
     });
   });
 });
