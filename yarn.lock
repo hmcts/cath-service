@@ -1148,7 +1148,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:
-    "@types/node": "npm:^22.10.2"
+    "@types/node": "npm:^24.0.0"
     notifications-node-client: "npm:^8.2.1"
     typescript: "npm:^5.7.3"
     vitest: "npm:4.0.6"
@@ -2878,7 +2878,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:24.10.4":
+"@types/node@npm:24.10.4, @types/node@npm:^24.0.0":
   version: 24.10.4
   resolution: "@types/node@npm:24.10.4"
   dependencies:
@@ -2909,15 +2909,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 10c0/a5d6cfc483c99580503ef4bd3937b5db1c940a125e2d12c1d25cdc61734089fb349755e1fcd019cb3f7e05f53509dcf8282e1c37e2224f4d9cb79147aa8ea820
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.10.2":
-  version: 22.19.3
-  resolution: "@types/node@npm:22.19.3"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/a30a75d503da795ddbd5f8851014f3e91925c2a63fa3f14128d54c998f25d682dfba96dc9589c73cf478b87a16d88beb790b11697bb8cd5bee913079237a58f2
   languageName: node
   linkType: hard
 
