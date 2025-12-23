@@ -64,7 +64,7 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       templateParameters: params.templateParameters
     });
 
-    const response = (await notifyClient.sendEmail(templateId, params.emailAddress, {
+    const response = (await (notifyClient as any).sendEmail(templateId, params.emailAddress, {
       personalisation: params.templateParameters
     })) as unknown as AxiosEmailResponse;
 
