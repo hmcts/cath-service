@@ -25,6 +25,44 @@ describe("GOV Notify Service", () => {
   });
 
   describe("sendMediaApprovalEmail", () => {
+    it("should throw error when API key not configured", async () => {
+      const originalApiKey = process.env.GOVUK_NOTIFY_API_KEY;
+      delete process.env.GOVUK_NOTIFY_API_KEY;
+
+      const testData = {
+        name: "John Smith",
+        email: "john@example.com",
+        employer: "BBC"
+      };
+
+      // Re-import to pick up the changed environment variable
+      vi.resetModules();
+      const { sendMediaApprovalEmail: testFunc } = await import("./govuk-notify-service.js");
+
+      await expect(testFunc(testData)).rejects.toThrow("GOV Notify API key not configured");
+
+      process.env.GOVUK_NOTIFY_API_KEY = originalApiKey;
+    });
+
+    it("should throw error when approval template ID not configured", async () => {
+      const originalTemplateId = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL;
+      delete process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL;
+
+      const testData = {
+        name: "John Smith",
+        email: "john@example.com",
+        employer: "BBC"
+      };
+
+      // Re-import to pick up the changed environment variable
+      vi.resetModules();
+      const { sendMediaApprovalEmail: testFunc } = await import("./govuk-notify-service.js");
+
+      await expect(testFunc(testData)).rejects.toThrow("GOV Notify approval template ID not configured");
+
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL = originalTemplateId;
+    });
+
     it("should send email with correct parameters", async () => {
       mockSendEmail.mockResolvedValue({
         data: {
@@ -106,6 +144,46 @@ describe("GOV Notify Service", () => {
   });
 
   describe("sendMediaRejectionEmail", () => {
+    it("should throw error when API key not configured", async () => {
+      const originalApiKey = process.env.GOVUK_NOTIFY_API_KEY;
+      delete process.env.GOVUK_NOTIFY_API_KEY;
+
+      const testData = {
+        fullName: "John Smith",
+        email: "john@example.com",
+        rejectReasons: "The applicant is not an accredited member of the media.",
+        linkToService: "https://example.com"
+      };
+
+      // Re-import to pick up the changed environment variable
+      vi.resetModules();
+      const { sendMediaRejectionEmail: testFunc } = await import("./govuk-notify-service.js");
+
+      await expect(testFunc(testData)).rejects.toThrow("GOV Notify API key not configured");
+
+      process.env.GOVUK_NOTIFY_API_KEY = originalApiKey;
+    });
+
+    it("should throw error when rejection template ID not configured", async () => {
+      const originalTemplateId = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION;
+      delete process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION;
+
+      const testData = {
+        fullName: "John Smith",
+        email: "john@example.com",
+        rejectReasons: "The applicant is not an accredited member of the media.",
+        linkToService: "https://example.com"
+      };
+
+      // Re-import to pick up the changed environment variable
+      vi.resetModules();
+      const { sendMediaRejectionEmail: testFunc } = await import("./govuk-notify-service.js");
+
+      await expect(testFunc(testData)).rejects.toThrow("GOV Notify rejection template ID not configured");
+
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION = originalTemplateId;
+    });
+
     it("should send email with correct parameters", async () => {
       mockSendEmail.mockResolvedValue({
         data: {

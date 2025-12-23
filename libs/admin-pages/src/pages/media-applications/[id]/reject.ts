@@ -8,6 +8,16 @@ import { rejectApplication } from "../../../media-application/service.js";
 import rejectCy from "./reject-cy.js";
 import rejectEn from "./reject-en.js";
 
+const MAX_REASON_LENGTH = 10000;
+
+function stripHtmlTags(input: string): string {
+  if (input.length > MAX_REASON_LENGTH) {
+    throw new Error("Input exceeds maximum allowed length");
+  }
+
+  return input.replace(/<[^>]*>/g, "");
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? rejectCy : rejectEn;
   const { id } = req.params;
@@ -100,8 +110,8 @@ const postHandler = async (req: Request, res: Response) => {
       // Strip HTML tags for email and format for GOV.UK Notify numbered list
       const rejectReasons = reasonsList
         .map((r: string[], index: number) => {
-          const reason = r[0].replace(/<[^>]*>/g, "");
-          const explanation = r[1].replace(/<[^>]*>/g, "");
+          const reason = stripHtmlTags(r[0]);
+          const explanation = stripHtmlTags(r[1]);
           return `${index + 1}. ${reason}\n^${explanation}`;
         })
         .join("\n");
