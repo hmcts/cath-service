@@ -1,4 +1,4 @@
-import * as queries from "@hmcts/subscriptions";
+import * as subscriptionService from "@hmcts/subscriptions";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
@@ -10,7 +10,7 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  findSubscriptionById: vi.fn()
+  getSubscriptionById: vi.fn()
 }));
 
 describe("delete-subscription", () => {
@@ -53,32 +53,19 @@ describe("delete-subscription", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
-    it("should redirect if subscription not found", async () => {
+    it("should redirect if subscription not found or user does not own it", async () => {
       mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000" };
-      vi.mocked(queries.findSubscriptionById).mockResolvedValue(null);
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue(null);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
-    });
-
-    it("should redirect if user does not own the subscription", async () => {
-      mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000" };
-      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
-        subscriptionId: "550e8400-e29b-41d4-a716-446655440000",
-        userId: "different-user",
-        locationId: "456",
-        dateAdded: new Date()
-      });
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000", "user123");
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
     it("should render page when user owns the subscription", async () => {
       mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000" };
-      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: "550e8400-e29b-41d4-a716-446655440000",
         userId: "user123",
         locationId: "456",
@@ -87,6 +74,7 @@ describe("delete-subscription", () => {
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000", "user123");
       expect(mockRes.render).toHaveBeenCalledWith(
         "delete-subscription/index",
         expect.objectContaining({
@@ -97,7 +85,7 @@ describe("delete-subscription", () => {
 
     it("should redirect on database error", async () => {
       mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000" };
-      vi.mocked(queries.findSubscriptionById).mockRejectedValue(new Error("DB error"));
+      vi.mocked(subscriptionService.getSubscriptionById).mockRejectedValue(new Error("DB error"));
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
@@ -110,7 +98,7 @@ describe("delete-subscription", () => {
     it("should redirect to GET page when no confirmation choice provided", async () => {
       const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
       mockReq.body = { subscriptionId: validSubscriptionId };
-      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: validSubscriptionId,
         userId: "user123",
         locationId: "456",
@@ -119,13 +107,14 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(validSubscriptionId, "user123");
       expect(mockRes.redirect).toHaveBeenCalledWith(`/delete-subscription?subscriptionId=${validSubscriptionId}`);
     });
 
     it("should redirect to subscription-management if user selects no", async () => {
       const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
       mockReq.body = { subscription: validSubscriptionId, "unsubscribe-confirm": "no" };
-      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: validSubscriptionId,
         userId: "user123",
         locationId: "456",
@@ -134,6 +123,7 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(validSubscriptionId, "user123");
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
 
@@ -141,7 +131,7 @@ describe("delete-subscription", () => {
       const validSubscriptionId = "550e8400-e29b-41d4-a716-446655440000";
       mockReq.body = { subscription: validSubscriptionId, "unsubscribe-confirm": "yes" };
       mockReq.session = {} as any;
-      vi.mocked(queries.findSubscriptionById).mockResolvedValue({
+      vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: validSubscriptionId,
         userId: "user123",
         locationId: "456",
@@ -150,6 +140,7 @@ describe("delete-subscription", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(validSubscriptionId, "user123");
       expect(mockReq.session.emailSubscriptions?.subscriptionToRemove).toBe(validSubscriptionId);
       expect(mockRes.redirect).toHaveBeenCalledWith("/unsubscribe-confirmation");
     });

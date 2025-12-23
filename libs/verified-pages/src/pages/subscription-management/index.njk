@@ -11,10 +11,20 @@
 
   <h1 class="govuk-heading-l">{{ heading }}</h1>
 
-  {{ govukButton({
-    text: addButton,
-    href: '/location-name-search'
-  }) }}
+  <div class="govuk-button-group">
+    {{ govukButton({
+      text: addButton,
+      href: '/location-name-search'
+    }) }}
+
+    {% if count > 0 %}
+      {{ govukButton({
+        text: bulkUnsubscribeButton,
+        href: '/bulk-unsubscribe',
+        classes: 'govuk-button--secondary'
+      }) }}
+    {% endif %}
+  </div>
 
   {% if count > 0 %}
     <table class="govuk-table" id="locations-table">
