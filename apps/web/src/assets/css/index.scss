@@ -7,7 +7,7 @@
 @use "@hmcts/web-core/src/assets/css/button-as-link.scss";
 @use "@hmcts/admin-pages/src/assets/css/index.scss" as admin;
 @use "@hmcts/system-admin-pages/src/assets/css/dashboard.scss";
-@use "@hmcts/verified-pages/src/assets/css/index.scss" as verified;
+@use "@hmcts/verified-pages/src/assets/css/verified-pages.scss" as verified;
 
 .govuk-service-navigation__navigation-end {
   margin-left: auto !important;

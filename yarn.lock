@@ -503,17 +503,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.3.10":
+"@biomejs/cli-linux-arm64@npm:2.3.10, @biomejs/cli-linux-arm64@npm:^2.3.6":
   version: 2.3.10
   resolution: "@biomejs/cli-linux-arm64@npm:2.3.10"
-  conditions: os=linux & cpu=arm64 & libc=glibc
-  languageName: node
-  linkType: hard
-
-"@biomejs/cli-linux-arm64@npm:^2.3.6":
-  version: 2.3.8
-  resolution: "@biomejs/cli-linux-arm64@npm:2.3.8"
-  checksum: 10c0/1f10e8c05be93baf297ce77efb1e47e31008600f67af38886cb0c3a5b928d281c86d399fdb29caa5b0ae0216a68c7c49097c55af26e6e163c06f2b6969dfd7aa
+  checksum: 10c0/5467cf817b9384c713b64934e1a4c76e18f8a9cee7aec3d7d38b43982b65e3cb3a06820b1dd995ca55f85f64bf182bf76f8d8f9c85910aa96710e6ff0b479774
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
@@ -1000,7 +993,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1036,7 +1029,7 @@ __metadata:
     "@types/passport": "npm:1.0.17"
     passport-azure-ad: "npm:4.3.5"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
     express-session: ^1.18.2
     passport: ^0.7.0
   languageName: unknown
@@ -1054,7 +1047,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1091,7 +1084,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1107,7 +1100,7 @@ __metadata:
     js-yaml: "npm:^4.1.0"
   peerDependencies:
     config: ^3.3.12 || ^4.0.0
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1162,6 +1155,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/notifications@workspace:libs/notifications":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/notifications@workspace:libs/notifications"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
+    notifications-node-client: "npm:8.2.1"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/postgres@npm:*, @hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
@@ -1181,7 +1185,7 @@ __metadata:
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1211,7 +1215,7 @@ __metadata:
   dependencies:
     "@types/express": "npm:5.0.5"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1223,7 +1227,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1238,7 +1242,7 @@ __metadata:
     "@types/papaparse": "npm:5.5.2"
     papaparse: "npm:5.5.3"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1248,7 +1252,7 @@ __metadata:
   dependencies:
     "@hmcts/subscriptions": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1269,7 +1273,7 @@ __metadata:
   peerDependencies:
     "@hmcts/cookie-manager": ^1.1.0
     connect-redis: ^9.0.0
-    express: ^5.1.0
+    express: ^5.2.0
     express-session: ^1.18.2
     govuk-frontend: ^5.2.0
     helmet: ^8.0.0
@@ -1329,7 +1333,7 @@ __metadata:
     nodemon: "npm:3.1.11"
     nunjucks: "npm:3.2.4"
     redis: "npm:5.10.0"
-    sass: "npm:1.97.0"
+    sass: "npm:1.97.1"
     supertest: "npm:7.1.4"
     vite: "npm:7.3.0"
     vite-plugin-static-copy: "npm:3.1.4"
@@ -2909,11 +2913,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:^22.10.2":
-  version: 22.19.1
-  resolution: "@types/node@npm:22.19.1"
+  version: 22.19.3
+  resolution: "@types/node@npm:22.19.3"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/6edd93aea86da740cb7872626839cd6f4a67a049d3a3a6639cb592c620ec591408a30989ab7410008d1a0b2d4985ce50f1e488e79c033e4476d3bec6833b0a2f
+  checksum: 10c0/a30a75d503da795ddbd5f8851014f3e91925c2a63fa3f14128d54c998f25d682dfba96dc9589c73cf478b87a16d88beb790b11697bb8cd5bee913079237a58f2
   languageName: node
   linkType: hard
 
@@ -3880,7 +3884,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"chai@npm:^6.0.1, chai@npm:^6.2.1":
+"chai@npm:^6.0.1":
+  version: 6.2.2
+  resolution: "chai@npm:6.2.2"
+  checksum: 10c0/e6c69e5f0c11dffe6ea13d0290936ebb68fcc1ad688b8e952e131df6a6d5797d5e860bc55cef1aca2e950c3e1f96daf79e9d5a70fb7dbaab4e46355e2635ed53
+  languageName: node
+  linkType: hard
+
+"chai@npm:^6.2.1":
   version: 6.2.1
   resolution: "chai@npm:6.2.1"
   checksum: 10c0/0c2d84392d7c6d44ca5d14d94204f1760e22af68b83d1f4278b5c4d301dabfc0242da70954dd86b1eda01e438f42950de6cf9d569df2103678538e4014abe50b
@@ -4405,6 +4416,7 @@ __metadata:
     "@azure/keyvault-secrets": "npm:4.10.0"
     "@hmcts/postgres": "npm:*"
     "@playwright/test": "npm:1.57.0"
+    dotenv: "npm:^17.2.3"
     exceljs: "npm:4.4.0"
   languageName: unknown
   linkType: soft
@@ -5572,7 +5584,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:9.0.3":
+"jsonwebtoken@npm:9.0.3, jsonwebtoken@npm:^9.0.2":
   version: 9.0.3
   resolution: "jsonwebtoken@npm:9.0.3"
   dependencies:
@@ -5590,7 +5602,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^9.0.0, jsonwebtoken@npm:^9.0.2":
+"jsonwebtoken@npm:^9.0.0":
   version: 9.0.2
   resolution: "jsonwebtoken@npm:9.0.2"
   dependencies:
@@ -6366,7 +6378,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"notifications-node-client@npm:^8.2.1":
+"notifications-node-client@npm:8.2.1, notifications-node-client@npm:^8.2.1":
   version: 8.2.1
   resolution: "notifications-node-client@npm:8.2.1"
   dependencies:
@@ -7238,9 +7250,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.97.0":
-  version: 1.97.0
-  resolution: "sass@npm:1.97.0"
+"sass@npm:1.97.1":
+  version: 1.97.1
+  resolution: "sass@npm:1.97.1"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -7251,7 +7263,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10c0/4c0e2596131054089beeeb6e98f7318beb909c4775187690656cbb85a45153d04eecd970e6a4431fe47dc94f9749cf8d58c9c5e59055d2cae39f4887a4bb6104
+  checksum: 10c0/c389d5d6405869b49fa2291e8328500fe7936f3b72136bc2c338bee6e7fec936bb9a48d77a1310dea66aa4669ba74ae6b82a112eb32521b9b36d740138a39ea0
   languageName: node
   linkType: hard
 

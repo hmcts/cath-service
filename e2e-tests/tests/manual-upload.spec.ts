@@ -2,6 +2,15 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
+import {
+  cleanupTestNotifications,
+  cleanupTestSubscriptions,
+  cleanupTestUsers,
+  createTestSubscription,
+  createTestUser,
+  getNotificationsByPublicationId,
+  getNotificationsBySubscriptionId
+} from "../utils/notification-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -63,7 +72,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
   });
 
   test.describe("Complete End-to-End Journey", () => {
-    test("should be keyboard accessible throughout entire upload flow @nightly", async ({ page }) => {
+    test("should be keyboard accessible throughout entire upload flow", async ({ page }) => {
       // Step 1: Test keyboard accessibility on form page
       await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
@@ -297,7 +306,8 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(displayToHelp).toBeVisible();
     });
 
-    test("should display validation errors for all required fields when form is empty @nightly", async ({ page }) => {
+    test("should validate form fields and file requirements", async ({ page }) => {
+      // Test empty form validation
       await page.goto("/manual-upload");
 
       const continueButton = page.getByRole("button", { name: /continue/i });
@@ -305,7 +315,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       await expect(page).toHaveURL("/manual-upload");
 
-      const errorSummary = page.locator(".govuk-error-summary");
+      let errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
       const errorSummaryHeading = errorSummary.getByRole("heading", { name: /there is a problem/i });
@@ -315,18 +325,18 @@ test.describe("Manual Upload End-to-End Flow", () => {
       const errorCount = await errorLinks.count();
       expect(errorCount).toBeGreaterThan(0);
 
-      const fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+      let fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
       await expect(fileErrorMessage).toBeVisible();
 
+      // Test accessibility with error state
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
         .disableRules(["target-size", "link-name"])
         .analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
-    });
 
-    test("should display file validation errors for invalid type and large size @nightly", async ({ page }) => {
+      // Test invalid file type validation
       await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
@@ -350,22 +360,22 @@ test.describe("Manual Upload End-to-End Flow", () => {
         buffer: Buffer.from("test content")
       });
 
-      const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
       await expect(page).toHaveURL(/\/manual-upload/);
 
-      let errorSummary = page.locator(".govuk-error-summary");
+      errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
       let errorLink = errorSummary.getByRole("link", { name: /please upload a valid file format/i });
       await expect(errorLink).toBeVisible();
       await expect(errorLink).toHaveAttribute("href", "#file");
 
-      let inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
-      await expect(inlineErrorMessage).toBeVisible();
-      await expect(inlineErrorMessage).toContainText(/please upload a valid file format/i);
+      fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+      await expect(fileErrorMessage).toBeVisible();
+      await expect(fileErrorMessage).toContainText(/please upload a valid file format/i);
 
+      // Test file size validation
       const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
       await fileInput.setInputFiles({
         name: "large-file.pdf",
@@ -384,27 +394,21 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(errorLink).toBeVisible();
       await expect(errorLink).toHaveAttribute("href", "#file");
 
-      inlineErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
-      await expect(inlineErrorMessage).toBeVisible();
-      await expect(inlineErrorMessage).toContainText(/file too large, please upload file smaller than 2mb/i);
+      fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+      await expect(fileErrorMessage).toBeVisible();
+      await expect(fileErrorMessage).toContainText(/file too large, please upload file smaller than 2mb/i);
     });
 
-    test("should show court name input with autocomplete initialized @nightly", async ({ page }) => {
-      await page.goto("/manual-upload");
-
-      const autocompleteInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
-      await autocompleteInput.waitFor({ state: "visible", timeout: 10000 });
-
-      await expect(autocompleteInput).toBeVisible();
-      await expect(autocompleteInput).toHaveAttribute("role", "combobox");
-    });
-
-    test("should validate court name with empty, short, invalid inputs and preserve values @nightly", async ({ page }) => {
+    test("should validate court name, date range, and preserve form data on validation errors", async ({ page }) => {
+      // Part 1: Verify autocomplete is initialized
       await page.goto("/manual-upload");
 
       const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
       await courtInput.waitFor({ state: "visible", timeout: 10000 });
+      await expect(courtInput).toBeVisible();
+      await expect(courtInput).toHaveAttribute("role", "combobox");
 
+      // Part 2: Test court name validation with empty input
       const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
         name: "test.pdf",
@@ -413,7 +417,6 @@ test.describe("Manual Upload End-to-End Flow", () => {
       });
 
       const continueButton = page.getByRole("button", { name: /continue/i });
-
       await continueButton.click();
 
       let errorSummary = page.locator(".govuk-error-summary");
@@ -423,6 +426,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       let inlineError = page.locator(".govuk-error-message").filter({ hasText: /court name must be three characters or more/i });
       await expect(inlineError).toBeVisible();
 
+      // Part 3: Test court name validation with short input
       await courtInput.fill("AB");
       await continueButton.click();
 
@@ -435,6 +439,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(inlineError).toBeVisible();
       await expect(inlineError).toContainText(/court name must be three characters or more/i);
 
+      // Part 4: Test court name validation with invalid input
       await courtInput.fill("Invalid Court Name That Does Not Exist");
       await continueButton.click();
 
@@ -447,18 +452,16 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(inlineError).toBeVisible();
       await expect(inlineError).toContainText(/please enter and select a valid court/i);
 
+      // Part 5: Verify court name value is preserved
       const preservedCourtName = "Invalid Court Name";
       await courtInput.fill(preservedCourtName);
       await continueButton.click();
-
       await expect(courtInput).toHaveValue(preservedCourtName);
-    });
 
-    test("should validate date range and preserve all form data when validation fails @nightly", async ({ page }) => {
+      // Part 6: Test date range validation with complete form
       await page.goto("/manual-upload?locationId=9001");
       await page.waitForTimeout(1000);
 
-      const fileInput = page.locator('input[name="file"]');
       await fileInput.setInputFiles({
         name: "test.pdf",
         mimeType: "application/pdf",
@@ -478,18 +481,18 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await page.fill('input[name="displayTo-month"]', "06");
       await page.fill('input[name="displayTo-year"]', "2025");
 
-      const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      const errorSummary = page.locator(".govuk-error-summary");
+      errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
-      const errorLink = errorSummary.getByRole("link", { name: /display to date must be after display from date/i });
+      errorLink = errorSummary.getByRole("link", { name: /display to date must be after display from date/i });
       await expect(errorLink).toBeVisible();
 
-      const inlineError = page.locator("#displayTo-error.govuk-error-message");
+      inlineError = page.locator("#displayTo-error.govuk-error-message");
       await expect(inlineError).toBeVisible();
       await expect(inlineError).toContainText(/display to date must be after display from date/i);
 
+      // Part 7: Verify all form data is preserved after validation error
       await page.selectOption('select[name="sensitivity"]', "PRIVATE");
       await page.selectOption('select[name="language"]', "WELSH");
       await page.fill('input[name="displayFrom-day"]', "10");
@@ -588,7 +591,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(form).toHaveAttribute("method", "post");
     });
 
-    test("should meet WCAG 2.2 AA standards on summary page @nightly", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on summary page", async ({ page }) => {
       await navigateToSummaryPage(page);
 
       const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -633,12 +636,12 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test("should redirect to manual-upload if accessed directly without upload session @nightly", async ({ page }) => {
+    test("should redirect to manual-upload if accessed directly without upload session", async ({ page }) => {
       await page.goto("/manual-upload-success");
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test("should support Welsh language with correct translations @nightly", async ({ page }) => {
+    test("should support Welsh language with correct translations", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       const welshToggle = page.locator('a[href*="lng=cy"]');
@@ -662,7 +665,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(homeLink).toBeVisible();
     });
 
-    test("should meet WCAG 2.2 AA standards on success page @nightly", async ({ page }) => {
+    test("should meet WCAG 2.2 AA standards on success page", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
@@ -670,7 +673,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
-    test("should not allow access after refreshing the page @nightly", async ({ page }) => {
+    test("should not allow access after refreshing the page", async ({ page }) => {
       await completeManualUploadFlow(page);
 
       await page.reload();
@@ -678,7 +681,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page).toHaveURL("/manual-upload");
     });
 
-    test("should allow multiple sequential uploads @nightly", async ({ page }) => {
+    test("should allow multiple sequential uploads", async ({ page }) => {
       await completeManualUploadFlow(page);
       await expect(page).toHaveURL("/manual-upload-success");
 
@@ -715,7 +718,7 @@ test.describe("Manual Upload End-to-End Flow", () => {
   });
 
   test.describe("Responsive Design Across All Pages", () => {
-    test("should display correctly on mobile viewport throughout entire flow @nightly", async ({ page }) => {
+    test("should display correctly on mobile viewport throughout entire flow", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
       await page.goto("/manual-upload?locationId=9001");
@@ -768,6 +771,103 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       const links = page.locator(".govuk-list a");
       await expect(links).toHaveCount(3);
+    });
+  });
+
+  test.describe("Manual Upload - Notification E2E Tests", () => {
+    const testData: {
+      userIds: string[];
+      subscriptionIds: string[];
+      publicationIds: string[];
+    } = {
+      userIds: [],
+      subscriptionIds: [],
+      publicationIds: []
+    };
+
+    test.beforeEach(async ({ page }) => {
+      await authenticateSystemAdmin(page);
+    });
+
+    test.afterEach(async () => {
+      await cleanupTestNotifications(testData.publicationIds);
+      await cleanupTestSubscriptions(testData.subscriptionIds);
+      await cleanupTestUsers(testData.userIds);
+
+      testData.userIds = [];
+      testData.subscriptionIds = [];
+      testData.publicationIds = [];
+    });
+
+    test("should send notifications to subscribers after manual upload confirmation", async ({ page }) => {
+      // Create multiple subscribers to test notification delivery
+      const user1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
+      const user2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
+      testData.userIds.push(user1.userId, user2.userId);
+
+      const sub1 = await createTestSubscription(user1.userId, 9001);
+      const sub2 = await createTestSubscription(user2.userId, 9001);
+      testData.subscriptionIds.push(sub1.subscriptionId, sub2.subscriptionId);
+
+      // Complete manual upload journey
+      await page.goto("/manual-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      await page.selectOption('select[name="listType"]', "6");
+      await page.fill('input[name="hearingStartDate-day"]', "23");
+      await page.fill('input[name="hearingStartDate-month"]', "10");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "20");
+      await page.fill('input[name="displayFrom-month"]', "10");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "30");
+      await page.fill('input[name="displayTo-month"]', "10");
+      await page.fill('input[name="displayTo-year"]', "2025");
+
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "test-notification.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("%PDF-1.4\nTest content")
+      });
+
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/manual-upload-summary\?uploadId=/);
+
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/manual-upload-success", { timeout: 10000 });
+
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
+
+      // Verify notifications were sent to all subscribers
+      // Poll for notifications with retry logic
+      let notifications1 = [];
+      let notifications2 = [];
+      for (let i = 0; i < 10; i++) {
+        notifications1 = await getNotificationsBySubscriptionId(sub1.subscriptionId);
+        notifications2 = await getNotificationsBySubscriptionId(sub2.subscriptionId);
+        if (notifications1.length > 0 && notifications2.length > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      expect(notifications1.length).toBeGreaterThan(0);
+      expect(notifications1[0].status).toBe("Sent");
+      expect(notifications1[0].govNotifyId).toBeDefined();
+
+      expect(notifications2.length).toBeGreaterThan(0);
+      expect(notifications2[0].status).toBe("Sent");
+      expect(notifications2[0].govNotifyId).toBeDefined();
+
+      // Both notifications should be for the same publication
+      expect(notifications1[0].publicationId).toBe(notifications2[0].publicationId);
+
+      // Track publication ID for cleanup
+      if (notifications1.length > 0) {
+        testData.publicationIds.push(notifications1[0].publicationId);
+      }
     });
   });
 });
