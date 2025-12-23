@@ -1,0 +1,71 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+      <p><a href="/media-applications" class="govuk-link">{{ returnLink }}</a></p>
+    {% elif application %}
+      {{ govukPanel({
+        titleText: pageTitle,
+        classes: "govuk-panel--confirmation"
+      }) }}
+
+      {% set reasonsHtml = '' %}
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set reasonsHtml = '<ol class="govuk-list govuk-list--number">' %}
+        {% for reason in reasonsList %}
+          {% if reason[0] %}
+            {% set reasonsHtml = reasonsHtml + '<li>' + reason[0] %}
+            {% if reason[1] %}
+              {% set reasonsHtml = reasonsHtml + '<br>' + reason[1] %}
+            {% endif %}
+            {% set reasonsHtml = reasonsHtml + '</li>' %}
+          {% endif %}
+        {% endfor %}
+        {% set reasonsHtml = reasonsHtml + '</ol>' %}
+      {% endif %}
+
+      {% set summaryRows = [
+          {
+            key: { text: tableHeaders.name },
+            value: { text: application.name }
+          },
+          {
+            key: { text: tableHeaders.email },
+            value: { text: application.email }
+          },
+          {
+            key: { text: tableHeaders.employer },
+            value: { text: application.employer }
+          },
+          {
+            key: { text: tableHeaders.dateApplied },
+            value: { text: application.appliedDate | date('DD MMM YYYY') }
+          }
+        ] %}
+
+      {% if reasonsList and reasonsList.length > 0 %}
+        {% set summaryRows = (summaryRows.push({
+          key: { text: reasonsHeading },
+          value: { html: reasonsHtml }
+        }), summaryRows) %}
+      {% endif %}
+
+      {{ govukSummaryList({
+        rows: summaryRows
+      }) }}
+
+      <h2 class="govuk-heading-m">{{ whatHappensNextHeading }}</h2>
+      <p class="govuk-body">{{ whatHappensNextText | replace('{applicantEmail}', '<a href="mailto:' + application.email + '">' + application.email + '</a>') | safe }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

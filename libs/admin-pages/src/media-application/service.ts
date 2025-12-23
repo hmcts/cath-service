@@ -21,6 +21,20 @@ export async function approveApplication(id: string): Promise<void> {
   }
 }
 
+export async function rejectApplication(id: string): Promise<void> {
+  const application = await getApplicationById(id);
+
+  if (!application) {
+    throw new Error("Application not found");
+  }
+
+  if (application.status !== APPLICATION_STATUS.PENDING) {
+    throw new Error("Application has already been reviewed");
+  }
+
+  await updateApplicationStatus(id, APPLICATION_STATUS.REJECTED);
+}
+
 export async function deleteProofOfIdFile(filePath: string): Promise<void> {
   if (filePath.includes("..")) {
     throw new Error("Invalid file path");
