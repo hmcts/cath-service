@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
+import { sendPublicationNotifications } from "@hmcts/notifications";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
@@ -106,6 +107,43 @@ const postHandler = async (req: Request, res: Response) => {
 
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+
+    // Trigger email notifications for subscribers
+    try {
+      // Get location name
+      const location = await getLocationById(Number(uploadData.locationId));
+      if (!location) {
+        console.warn("[Manual Upload] Location not found for notifications", {
+          locationId: uploadData.locationId
+        });
+      } else {
+        // Get list type details for notification
+        const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+        const listTypeFriendlyName = listType?.englishFriendlyName || `LIST_TYPE_${listTypeId}`;
+
+        const notificationResult = await sendPublicationNotifications({
+          publicationId: artefactId,
+          locationId: uploadData.locationId,
+          locationName: location.name,
+          hearingListName: listTypeFriendlyName,
+          publicationDate: contentDate
+        });
+
+        console.log("[Manual Upload] Notification process completed", {
+          artefactId,
+          locationId: uploadData.locationId,
+          notificationResult,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (notificationError) {
+      // Log error but don't fail the upload
+      console.error("[Manual Upload] Failed to send notifications", {
+        artefactId,
+        error: notificationError,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Clear session data
     delete req.session.manualUploadForm;

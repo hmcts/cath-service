@@ -12,11 +12,12 @@ describe("Schema Discovery", () => {
       expect(Array.isArray(result)).toBe(true);
     });
 
-    it("should return array with subscriptions and location schemas", () => {
+    it("should return array with subscriptions, location, and notifications schemas", () => {
       const result = getPrismaSchemas();
-      expect(result.length).toBe(2);
-      expect(result[0]).toContain("subscriptions");
-      expect(result[1]).toContain("location");
+      expect(result.length).toBe(3);
+      expect(result.some((path) => path.includes("subscriptions"))).toBe(true);
+      expect(result.some((path) => path.includes("location"))).toBe(true);
+      expect(result.some((path) => path.includes("notifications"))).toBe(true);
     });
 
     it("should return a new array on each call", () => {

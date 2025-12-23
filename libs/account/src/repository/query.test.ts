@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { User } from "./model.js";
-import { createOrUpdateUser, createUser, findUserByEmail, findUserByProvenanceId, updateUser } from "./query.js";
+import { createOrUpdateUser, createUser, findUserByEmail, findUserById, findUserByProvenanceId, updateUser } from "./query.js";
 
 // Mock @hmcts/postgres
 vi.mock("@hmcts/postgres", () => ({
@@ -94,6 +94,40 @@ describe("User Repository", () => {
           surname: undefined
         })
       });
+    });
+  });
+
+  describe("findUserById", () => {
+    it("should find a user by user ID", async () => {
+      const userId = "user-123";
+      const mockUser = {
+        userId,
+        email: "test@example.com",
+        firstName: "John",
+        surname: "Doe",
+        userProvenance: "SSO",
+        userProvenanceId: "123e4567-e89b-12d3-a456-426614174000",
+        role: "VERIFIED",
+        createdDate: new Date(),
+        lastSignedInDate: new Date()
+      };
+
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+
+      const result = await findUserById(userId);
+
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { userId }
+      });
+      expect(result).toEqual(mockUser);
+    });
+
+    it("should return null if user not found by ID", async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+      const result = await findUserById("non-existent-id");
+
+      expect(result).toBeNull();
     });
   });
 
