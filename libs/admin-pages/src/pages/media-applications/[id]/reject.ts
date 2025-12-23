@@ -15,7 +15,22 @@ function stripHtmlTags(input: string): string {
     throw new Error("Input exceeds maximum allowed length");
   }
 
-  return input.replace(/<[^>]*>/g, "");
+  let result = "";
+  let insideTag = false;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+
+    if (char === "<") {
+      insideTag = true;
+    } else if (char === ">") {
+      insideTag = false;
+    } else if (!insideTag) {
+      result += char;
+    }
+  }
+
+  return result;
 }
 
 const getHandler = async (req: Request, res: Response) => {
