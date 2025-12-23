@@ -44,7 +44,7 @@
         label: {
           text: fullNameLabel
         },
-        value: data.fullName if data else "",
+        value: data.name if data else "",
         errorMessage: { text: fullNameErrorText } if (fullNameErrorText and fullNameErrorText | length > 0) else undefined
       }) }}
 

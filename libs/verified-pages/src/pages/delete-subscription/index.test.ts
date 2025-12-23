@@ -68,7 +68,7 @@ describe("delete-subscription", () => {
       vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: "550e8400-e29b-41d4-a716-446655440000",
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -101,7 +101,7 @@ describe("delete-subscription", () => {
       vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: validSubscriptionId,
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -117,7 +117,7 @@ describe("delete-subscription", () => {
       vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: validSubscriptionId,
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 
@@ -134,7 +134,7 @@ describe("delete-subscription", () => {
       vi.mocked(subscriptionService.getSubscriptionById).mockResolvedValue({
         subscriptionId: validSubscriptionId,
         userId: "user123",
-        locationId: "456",
+        locationId: 456,
         dateAdded: new Date()
       });
 

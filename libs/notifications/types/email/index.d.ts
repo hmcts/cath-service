@@ -37,7 +37,7 @@ declare module "notifications-node-client" {
   }
 
   export interface EmailOptions {
-    personalisation?: Record<string, string>;
+    personalisation?: Record<string, any>;
     reference?: string;
     emailReplyToId?: string;
   }
