@@ -26,6 +26,7 @@ const getHandler = async (req: Request, res: Response) => {
   const yesText = language === "cy" ? cy.yesText : en.yesText;
   const noText = language === "cy" ? cy.noText : en.noText;
   const editText = language === "cy" ? cy.editText : en.editText;
+  const deleteText = language === "cy" ? cy.deleteText : en.deleteText;
 
   const tableRows = listTypesData.map((listType) => [
     { text: listType.name },
@@ -37,7 +38,9 @@ const getHandler = async (req: Request, res: Response) => {
     { text: listType.allowedProvenance },
     { text: listType.isNonStrategic ? yesText : noText },
     { text: listType.subJurisdictions },
-    { html: `<a class="govuk-link" href="/configure-list-type-enter-details?id=${listType.id}">${editText}</a>` }
+    {
+      html: `<a class="govuk-link" href="/configure-list-type-enter-details?id=${listType.id}">${editText}</a> | <a class="govuk-link" href="/delete-list-type?id=${listType.id}">${deleteText}</a>`
+    }
   ]);
 
   res.render("view-list-types/index", {

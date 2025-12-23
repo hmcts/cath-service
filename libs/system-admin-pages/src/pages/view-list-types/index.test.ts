@@ -78,7 +78,7 @@ describe("view-list-types", () => {
     expect(res.render).toHaveBeenCalledWith(
       "view-list-types/index",
       expect.objectContaining({
-        title: "Gweld Mathau o Restrau"
+        title: "Gweld/Dileu Mathau o Restrau"
       })
     );
   });

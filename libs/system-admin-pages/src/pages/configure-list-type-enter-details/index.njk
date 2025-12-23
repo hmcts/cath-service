@@ -20,7 +20,11 @@
     <h1 class="govuk-heading-xl">{{ configureListType.enterDetails.title }}</h1>
 
     <p class="govuk-body">
-      <a href="/view-list-types" class="govuk-link">{{ configureListType.enterDetails.viewAllLink }}</a>
+      {{ govukButton({
+        text: configureListType.enterDetails.viewAllLink,
+        href: "/view-list-types",
+        classes: "govuk-button--secondary"
+      }) }}
     </p>
 
     <form method="post" novalidate>

@@ -5,6 +5,7 @@ import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { seedListTypes, seedLocationData } from "@hmcts/location";
 import dotenv from "dotenv";
 import { createApp } from "./app.js";
 
@@ -19,6 +20,10 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 async function startServer() {
   const app = await createApp();
+
+  // Seed reference data if needed
+  await seedLocationData();
+  await seedListTypes();
 
   // Check if we should use HTTPS (local development with certificates)
   const certsDir = path.join(__dirname, "..", "certs");

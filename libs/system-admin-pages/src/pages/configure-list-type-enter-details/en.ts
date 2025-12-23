@@ -7,7 +7,7 @@ export const common = {
 export const configureListType = {
   enterDetails: {
     title: "Enter list type details",
-    viewAllLink: "View all list types",
+    viewAllLink: "View/Delete List Types",
     nameLabel: "Name",
     friendlyNameLabel: "Friendly name",
     welshFriendlyNameLabel: "Welsh friendly name",

@@ -2,6 +2,7 @@ import { prisma } from "@hmcts/postgres";
 
 export async function findAllListTypes() {
   return prisma.listType.findMany({
+    where: { deletedAt: null },
     orderBy: { name: "asc" },
     include: {
       subJurisdictions: {
@@ -111,14 +112,28 @@ interface UpdateListTypeData {
 
 export async function findNonStrategicListTypes() {
   return prisma.listType.findMany({
-    where: { isNonStrategic: true },
+    where: { isNonStrategic: true, deletedAt: null },
     orderBy: { shortenedFriendlyName: "asc" }
   });
 }
 
 export async function findStrategicListTypes() {
   return prisma.listType.findMany({
-    where: { isNonStrategic: false },
+    where: { isNonStrategic: false, deletedAt: null },
     orderBy: { shortenedFriendlyName: "asc" }
   });
+}
+
+export async function softDeleteListType(id: number) {
+  return prisma.listType.update({
+    where: { id },
+    data: { deletedAt: new Date() }
+  });
+}
+
+export async function hasArtefactsForListType(listTypeId: number): Promise<boolean> {
+  const count = await prisma.artefact.count({
+    where: { listTypeId }
+  });
+  return count > 0;
 }

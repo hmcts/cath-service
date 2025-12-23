@@ -4,7 +4,7 @@ export const common = {
   errorSummaryTitle: "There is a problem"
 };
 
-export const title = "View List Types";
+export const title = "View/Delete List Types";
 export const nameColumn = "Name";
 export const friendlyNameColumn = "Friendly Name";
 export const welshFriendlyNameColumn = "Welsh Friendly Name";
@@ -18,6 +18,7 @@ export const actionsColumn = "Actions";
 export const yesText = "Yes";
 export const noText = "No";
 export const editText = "Edit";
+export const deleteText = "Delete";
 export const noListTypesText = "No list types found.";
 export const addNewListTypeLink = "Add a new list type";
 export const backToDashboard = "Back to System Admin Dashboard";

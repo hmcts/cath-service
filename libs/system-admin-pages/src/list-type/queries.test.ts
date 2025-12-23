@@ -45,6 +45,7 @@ describe("list-type-queries", () => {
       const result = await findAllListTypes();
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
+        where: { deletedAt: null },
         orderBy: { name: "asc" },
         include: {
           subJurisdictions: {
@@ -214,7 +215,7 @@ describe("list-type-queries", () => {
       const result = await findNonStrategicListTypes();
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
-        where: { isNonStrategic: true },
+        where: { isNonStrategic: true, deletedAt: null },
         orderBy: { shortenedFriendlyName: "asc" }
       });
       expect(result).toEqual(mockNonStrategicLists);
@@ -232,7 +233,7 @@ describe("list-type-queries", () => {
       const result = await findStrategicListTypes();
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
-        where: { isNonStrategic: false },
+        where: { isNonStrategic: false, deletedAt: null },
         orderBy: { shortenedFriendlyName: "asc" }
       });
       expect(result).toEqual(mockStrategicLists);
