@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { getSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
+import { getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -99,7 +99,7 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     try {
-      const existingSubscriptions = await getSubscriptionsByUserId(userId);
+      const existingSubscriptions = await getAllSubscriptionsByUserId(userId);
       const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId.toString());
       const allLocationIds = [...new Set([...existingLocationIds, ...pendingLocationIds])];
 

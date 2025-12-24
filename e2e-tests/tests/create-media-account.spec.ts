@@ -59,7 +59,7 @@ test.describe("Create Media Account", () => {
 
 		await expect(page.locator(".govuk-error-summary")).toBeVisible();
 		await expect(page.locator("#email-error")).toContainText(
-			"There is a problem - Email address field must be populated",
+			"Enter an email address in the correct format, like name@example.com",
 		);
 	});
 
@@ -82,7 +82,7 @@ test.describe("Create Media Account", () => {
 
 		await expect(page.locator(".govuk-error-summary")).toBeVisible();
 		await expect(page.locator("#idProof-error")).toContainText(
-			"There is a problem - We will need ID evidence to support your application for an account",
+			"ID evidence must be a JPG, PDF or PNG",
 		);
 	});
 
@@ -106,7 +106,7 @@ test.describe("Create Media Account", () => {
 
 		await expect(page.locator(".govuk-error-summary")).toBeVisible();
 		await expect(page.locator("#idProof-error")).toContainText(
-			"Your file must be smaller than 2MB",
+			"ID evidence needs to be less than 2Mbs",
 		);
 	});
 
@@ -190,7 +190,7 @@ test.describe("Create Media Account", () => {
 		});
 
 		expect(application).not.toBeNull();
-		expect(application?.fullName).toBe("Database Test User");
+		expect(application?.name).toBe("Database Test User");
 		expect(application?.email).toBe(testEmail.toLowerCase());
 		expect(application?.employer).toBe("Test Organization");
 		expect(application?.status).toBe("PENDING");

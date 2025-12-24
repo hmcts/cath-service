@@ -4,7 +4,7 @@
 {% set govukRebrand = true %}
 
 {% block head %}
-  <link href="{{ index_css }}" rel="stylesheet">
+  <link href="{{ web_css }}" rel="stylesheet">
 
   {% include "components/head-analytics.njk" %}
 {% endblock %}
@@ -52,9 +52,12 @@
 {% block bodyEnd %}
   {% include "components/body-end-scripts.njk" %}
   <script nonce="{{ cspNonce }}">
-    document.getElementsByClassName("govuk-back-link").item(0).addEventListener("click", function() {
-      history.back();
-      event.preventDefault();
-    });
+    const backLink = document.getElementsByClassName("govuk-back-link").item(0);
+    if (backLink) {
+      backLink.addEventListener("click", function(event) {
+        history.back();
+        event.preventDefault();
+      });
+    }
   </script>
 {% endblock %}

@@ -15,6 +15,12 @@ export async function createUser(input: User) {
   });
 }
 
+export async function findUserById(userId: string) {
+  return await prisma.user.findUnique({
+    where: { userId }
+  });
+}
+
 export async function findUserByProvenanceId(userProvenanceId: string) {
   return await prisma.user.findUnique({
     where: { userProvenanceId }

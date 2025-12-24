@@ -41,11 +41,12 @@ model SubJurisdiction {
 }
 
 model Location {
-  locationId  Int     @id @map("location_id")
-  name        String  @unique
-  welshName   String  @unique @map("welsh_name")
+  locationId  Int       @id @map("location_id")
+  name        String    @unique
+  welshName   String    @unique @map("welsh_name")
   email       String?
-  contactNo   String? @map("contact_no")
+  contactNo   String?   @map("contact_no")
+  deletedAt   DateTime? @map("deleted_at")
 
   locationRegions          LocationRegion[]
   locationSubJurisdictions LocationSubJurisdiction[]

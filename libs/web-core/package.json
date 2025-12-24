@@ -64,7 +64,7 @@
   "peerDependencies": {
     "@hmcts/cookie-manager": "^1.1.0",
     "connect-redis": "^9.0.0",
-    "express": "^5.1.0",
+    "express": "^5.2.0",
     "express-session": "^1.18.2",
     "govuk-frontend": "^5.2.0",
     "helmet": "^8.0.0",
@@ -95,7 +95,7 @@
     "@types/express-session": "1.18.2",
     "@types/multer": "2.0.0",
     "@types/nunjucks": "3.2.6",
-    "@types/pg": "8.15.6",
+    "@types/pg": "8.16.0",
     "@types/pg-format": "1.0.5",
     "connect-redis": "9.0.0",
     "express-session": "1.18.2",
