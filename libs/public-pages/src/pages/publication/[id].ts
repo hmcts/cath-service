@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { getArtefactById } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 export const GET = async (req: Request, res: Response) => {
@@ -10,9 +10,7 @@ export const GET = async (req: Request, res: Response) => {
 
   try {
     // Get artefact from database
-    const artefact = await prisma.artefact.findUnique({
-      where: { artefactId: publicationId }
-    });
+    const artefact = await getArtefactById(publicationId);
 
     if (!artefact) {
       return res.redirect("/404");

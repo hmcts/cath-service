@@ -33,7 +33,7 @@ export function configureHelmet(options: SecurityOptions = {}) {
 
   const imageSources = ["'self'", "data:", ...(enableGoogleTagManager ? ["https://*.google-analytics.com", "https://*.googletagmanager.com"] : [])];
 
-  const frameSources = [...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
+  const frameSources = ["'self'", ...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
 
   const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : [])];
 
@@ -47,6 +47,7 @@ export function configureHelmet(options: SecurityOptions = {}) {
         fontSrc: ["'self'", "data:"],
         connectSrc: connectSources,
         formAction: formActionSources,
+        objectSrc: ["'self'"],
         ...(frameSources.length > 0 && { frameSrc: frameSources })
       }
     }

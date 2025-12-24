@@ -7,6 +7,15 @@ nodejs:
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
+
+  # Single pod deployment required due to ephemeral filesystem storage
+  # Files are stored in container storage at storage/temp/uploads/
+  # Multiple pods would have isolated filesystems causing file access issues
+  # TODO: Enable autoscaling after Azure Blob Storage implementation (follow-up ticket)
+  replicas: 1
+  autoscaling:
+    enabled: false
+
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
