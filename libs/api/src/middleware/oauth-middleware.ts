@@ -41,7 +41,7 @@ export function authenticateApi() {
       };
 
       next();
-    } catch (error) {
+    } catch (_error) {
       console.error("API authentication error");
       return res.status(401).json({
         success: false,
@@ -58,15 +58,18 @@ async function validateToken(token: string): Promise<any> {
 
   try {
     tenantId = config.get<string>("AZURE_TENANT_ID");
-    clientId = config.get<string>("AZURE_CLIENT_ID");
+    clientId = config.get<string>("AZURE_API_CLIENT_ID");
   } catch {
     // Config not found, use environment variables
     tenantId = process.env.AZURE_TENANT_ID;
-    clientId = process.env.AZURE_CLIENT_ID;
+    // Use AZURE_API_CLIENT_ID (CI/production) or fall back to AZURE_CLIENT_ID (local)
+    clientId = process.env.AZURE_API_CLIENT_ID || process.env.AZURE_CLIENT_ID;
   }
 
   if (!tenantId || !clientId) {
-    throw new Error("Azure AD configuration not found. Ensure AZURE_TENANT_ID and AZURE_CLIENT_ID are set in Key Vault or environment variables.");
+    throw new Error(
+      "Azure AD configuration not found. Ensure AZURE_TENANT_ID and AZURE_API_CLIENT_ID (or AZURE_CLIENT_ID) are set in Key Vault or environment variables."
+    );
   }
 
   // Create JWKS client to fetch Azure AD public keys

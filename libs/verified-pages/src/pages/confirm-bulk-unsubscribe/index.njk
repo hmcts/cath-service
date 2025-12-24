@@ -1,0 +1,100 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block pageTitle %}
+  {{ confirmTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+<div class="parent-box">
+
+  {% if errors %}
+    {{ govukErrorSummary({
+      titleText: errorSummaryTitle,
+      errorList: errors
+    }) }}
+  {% endif %}
+
+  <h1 class="govuk-heading-l">{{ confirmHeading }}</h1>
+
+  {% if hasCaseSubscriptions %}
+    <h2 class="govuk-heading-m">{{ tabSubscriptionsByCase }}</h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaderPartyName }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaderDateAdded }}</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for subscription in caseSubscriptions %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ subscription.caseName }}</td>
+            <td class="govuk-table__cell">{{ subscription.partyName }}</td>
+            <td class="govuk-table__cell">{{ subscription.referenceNumber }}</td>
+            <td class="govuk-table__cell">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if hasCourtSubscriptions %}
+    {% if hasCaseSubscriptions %}
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ tabSubscriptionsByCourt }}</h2>
+    {% endif %}
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">{{ tableHeaderCourtName }}</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaderDateAdded }}</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for subscription in courtSubscriptions %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ subscription.courtOrTribunalName }}</td>
+            <td class="govuk-table__cell">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <form method="post" action="/confirm-bulk-unsubscribe" novalidate>
+    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+    {{ govukRadios({
+      name: "confirm",
+      classes: "govuk-radios--inline",
+      fieldset: {
+        legend: {
+          text: confirmHeading,
+          isPageHeading: false,
+          classes: "govuk-visually-hidden"
+        }
+      },
+      errorMessage: errors[0] if errors,
+      items: [
+        {
+          value: "yes",
+          text: radioYes
+        },
+        {
+          value: "no",
+          text: radioNo
+        }
+      ]
+    }) }}
+
+    {{ govukButton({
+      text: continueButton
+    }) }}
+  </form>
+
+</div>
+{% endblock %}

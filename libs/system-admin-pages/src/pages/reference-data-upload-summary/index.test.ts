@@ -124,8 +124,32 @@ describe("reference-data-upload-summary page", () => {
         mimeType: "text/csv"
       };
 
-      const mockData = [{ locationId: 1, locationName: "Test Court" }];
-      const enrichedData = [{ locationId: 1, locationName: "Test Court", region: "London" }];
+      const mockData = [
+        {
+          locationId: 1,
+          locationName: "Test Court",
+          welshLocationName: "Llys Prawf",
+          email: "test@court.gov.uk",
+          contactNo: "01234567890",
+          subJurisdictionNames: ["Civil"],
+          regionNames: ["London"]
+        }
+      ];
+      const enrichedData = [
+        {
+          locationId: 1,
+          locationName: "Test Court",
+          welshLocationName: "Llys Prawf",
+          email: "test@court.gov.uk",
+          contactNo: "01234567890",
+          subJurisdictionNames: ["Civil"],
+          regionNames: ["London"],
+          jurisdictionNames: ["Family Court"],
+          jurisdictionWelshNames: ["Llys Teulu"],
+          subJurisdictionWelshNames: ["Sifil"],
+          regionWelshNames: ["Llundain"]
+        }
+      ];
 
       vi.mocked(csvParser.parseCsv).mockReturnValue({
         success: true,
@@ -168,7 +192,17 @@ describe("reference-data-upload-summary page", () => {
         mimeType: "text/csv"
       };
 
-      const mockData = [{ locationId: 1, locationName: "Test Court" }];
+      const mockData = [
+        {
+          locationId: 1,
+          locationName: "Test Court",
+          welshLocationName: "Llys Prawf",
+          email: "test@court.gov.uk",
+          contactNo: "01234567890",
+          subJurisdictionNames: ["Civil"],
+          regionNames: ["London"]
+        }
+      ];
 
       vi.mocked(csvParser.parseCsv).mockReturnValue({
         success: true,

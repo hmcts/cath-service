@@ -3,7 +3,7 @@ import path from "node:path";
 
 const TEMP_STORAGE_BASE = path.join(process.cwd(), "storage", "temp", "files");
 
-export async function saveIdProofFile(applicationId: string, originalFileName: string, fileBuffer: Buffer): Promise<void> {
+export async function saveIdProofFile(applicationId: string, originalFileName: string, fileBuffer: Buffer): Promise<string> {
   const fileExtension = path.extname(originalFileName).toLowerCase();
   const newFileName = `${applicationId}${fileExtension}`;
 
@@ -11,4 +11,6 @@ export async function saveIdProofFile(applicationId: string, originalFileName: s
 
   const filePath = path.join(TEMP_STORAGE_BASE, newFileName);
   await fs.writeFile(filePath, fileBuffer);
+
+  return filePath;
 }

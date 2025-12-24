@@ -14,8 +14,9 @@ model Subscription {
   locationId     Int      @map("location_id") @db.Integer
   dateAdded      DateTime @default(now()) @map("date_added")
 
-  user     User     @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  location Location @relation(fields: [locationId], references: [locationId])
+  user                  User                   @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  location              Location               @relation(fields: [locationId], references: [locationId])
+  notificationAuditLogs NotificationAuditLog[]
 
   @@unique([userId, locationId], name: "unique_user_location")
   @@index([userId], name: "idx_subscription_user")

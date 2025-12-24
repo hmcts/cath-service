@@ -64,6 +64,8 @@ test.describe("Reference Data Upload End-to-End Flow", () => {
 
   test.describe("Complete End-to-End Journey", () => {
     test("should complete full upload flow from upload to confirmation", async ({ page }) => {
+      test.setTimeout(120000); // Increase timeout for SSO authentication
+
       // Step 1: Navigate to upload page
       await page.goto("/reference-data-upload");
       await expect(page.locator("h1")).toContainText("Manually upload a csv file");

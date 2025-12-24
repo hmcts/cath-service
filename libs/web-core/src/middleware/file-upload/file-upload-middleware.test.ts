@@ -6,8 +6,12 @@ const { mockMulter, mockMemoryStorage } = vi.hoisted(() => ({
 }));
 
 vi.mock("multer", () => {
-  const multerFn = vi.fn((options) => mockMulter(options));
-  multerFn.memoryStorage = mockMemoryStorage;
+  const multerFn = Object.assign(
+    vi.fn((options: any) => mockMulter(options)),
+    {
+      memoryStorage: mockMemoryStorage
+    }
+  );
   return {
     default: multerFn
   };

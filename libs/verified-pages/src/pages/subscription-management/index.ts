@@ -1,6 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getLocationById } from "@hmcts/location";
-import { getSubscriptionsByUserId } from "@hmcts/subscriptions";
+import { getAllSubscriptionsByUserId } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -16,25 +15,12 @@ const getHandler = async (req: Request, res: Response) => {
   const userId = req.user.id;
 
   try {
-    const subscriptions = await getSubscriptionsByUserId(userId);
+    const subscriptions = await getAllSubscriptionsByUserId(userId, locale);
 
-    const subscriptionsWithDetails = await Promise.all(
-      subscriptions.map(async (sub) => {
-        try {
-          const location = await getLocationById(sub.locationId);
-          return {
-            ...sub,
-            locationName: location ? (locale === "cy" ? location.welshName : location.name) : sub.locationId.toString()
-          };
-        } catch (error) {
-          console.error(`Failed to lookup location ${sub.locationId} for user ${userId}:`, error);
-          return {
-            ...sub,
-            locationName: sub.locationId.toString()
-          };
-        }
-      })
-    );
+    const subscriptionsWithDetails = subscriptions.map((sub) => ({
+      ...sub,
+      locationName: sub.courtOrTribunalName
+    }));
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
