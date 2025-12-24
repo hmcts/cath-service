@@ -90,8 +90,13 @@ jobs:
 
       # API Authentication Configuration (for blob ingestion endpoint)
       AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
+      AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
+      AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
       APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
+
+      # GOV.UK Notify Configuration (for notification E2E tests)
+      GOVUK_NOTIFY_API_KEY: ${{ secrets.GOVUK_NOTIFY_API_KEY }}
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION }}
 
     steps:
       - name: Checkout
@@ -106,7 +111,7 @@ jobs:
           node-version: '24.12.0'
 
       - name: Cache Yarn dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .yarn/cache
@@ -163,7 +168,7 @@ jobs:
           ./scripts/generate-ci-certs.sh
 
       - name: Restore Playwright browsers cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -181,7 +186,7 @@ jobs:
 
       - name: Save Playwright browsers cache
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('e2e-tests/package.json') }}

@@ -21,11 +21,13 @@ describe("saveIdProofFile", () => {
     const originalFileName = "passport.jpg";
     const fileBuffer = Buffer.from("test file content");
 
-    await saveIdProofFile(applicationId, originalFileName, fileBuffer);
+    const result = await saveIdProofFile(applicationId, originalFileName, fileBuffer);
 
     expect(fs.mkdir).toHaveBeenCalledWith(path.join(process.cwd(), "storage", "temp", "files"), { recursive: true });
 
-    expect(fs.writeFile).toHaveBeenCalledWith(path.join(process.cwd(), "storage", "temp", "files", "test-uuid-123.jpg"), fileBuffer);
+    const expectedPath = path.join(process.cwd(), "storage", "temp", "files", "test-uuid-123.jpg");
+    expect(fs.writeFile).toHaveBeenCalledWith(expectedPath, fileBuffer);
+    expect(result).toBe(expectedPath);
   });
 
   it("should preserve file extension from original filename", async () => {

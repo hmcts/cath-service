@@ -1,0 +1,70 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if not error %}
+
+      <form method="post" novalidate>
+        {{ govukCheckboxes({
+          name: "rejectionReasons",
+          fieldset: {
+            legend: {
+              text: checkboxLegend,
+              classes: "govuk-visually-hidden"
+            }
+          },
+          hint: {
+            text: selectAllText
+          },
+          errorMessage: { text: errors[0].text } if errors else undefined,
+          items: [
+            {
+              value: "notAccredited",
+              text: reasons.notAccredited,
+              name: "notAccredited",
+              checked: selectedReasons.notAccredited
+            },
+            {
+              value: "invalidId",
+              text: reasons.invalidId,
+              name: "invalidId",
+              checked: selectedReasons.invalidId
+            },
+            {
+              value: "detailsMismatch",
+              text: reasons.detailsMismatch,
+              name: "detailsMismatch",
+              checked: selectedReasons.detailsMismatch
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: continueButton
+        }) }}
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

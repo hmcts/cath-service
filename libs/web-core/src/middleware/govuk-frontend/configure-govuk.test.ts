@@ -48,7 +48,7 @@ describe("configureGovuk", () => {
 
     expect(env).toBeDefined();
     // The environment should be configured with the custom view path
-    expect(env.loaders).toBeDefined();
+    expect((env as any).loaders).toBeDefined();
   });
 
   it("should add filters to nunjucks environment", async () => {
@@ -181,7 +181,7 @@ describe("configureGovuk", () => {
         return undefined;
       })
     };
-    const res = { locals: {} };
+    const res = { locals: {} as any };
     const next = vi.fn();
 
     // Call the middleware
@@ -252,7 +252,7 @@ describe("configureGovuk", () => {
 
     expect(env).toBeDefined();
     // Both view paths should be added to the environment
-    expect(env.loaders).toBeDefined();
+    expect((env as any).loaders).toBeDefined();
   });
 
   it("should add custom nunjucks globals", async () => {

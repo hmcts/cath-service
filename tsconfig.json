@@ -3,6 +3,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types", "./types", "./libs/notifications/types"],
     "paths": {
       "@hmcts/api": ["apps/api/src"],
       "@hmcts/crons": ["apps/crons/src"],
@@ -31,12 +32,15 @@
       "@hmcts/sjp-press-list": ["libs/list-types/sjp-press-list/src"],
       "@hmcts/sjp-press-list/config": ["libs/list-types/sjp-press-list/src/config"],
       "@hmcts/sjp-public-list": ["libs/list-types/sjp-public-list/src"],
-      "@hmcts/sjp-public-list/config": ["libs/list-types/sjp-public-list/src/config"]
+      "@hmcts/sjp-public-list/config": ["libs/list-types/sjp-public-list/src/config"],
+      "@hmcts/notification": ["libs/notification/src"],
+      "@hmcts/notifications": ["libs/notifications/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": false
-  }
+  },
+  "exclude": ["vitest.config.ts"]
 }
