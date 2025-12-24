@@ -24,7 +24,7 @@ export const GET = async (req: Request, res: Response) => {
       res.clearCookie("connect.sid");
 
       // Check if user logged in via CFT IDAM
-      if (userProvenance === "CFT") {
+      if (userProvenance === "CFT_IDAM") {
         return res.redirect("/session-logged-out");
       }
 

@@ -51,7 +51,7 @@ export const GET = async (req: Request, res: Response) => {
       email: userInfo.email,
       displayName: userInfo.displayName,
       role: "VERIFIED",
-      provenance: "CFT"
+      provenance: "CFT_IDAM"
     };
 
     console.log("CFT IDAM: Creating user session with:", {
