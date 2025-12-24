@@ -27,11 +27,12 @@
     "lint:fix": "biome check --write ."
   },
   "peerDependencies": {
-    "express": "^5.1.0"
+    "express": "^5.2.0"
   },
   "dependencies": {
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/location": "workspace:*",
+    "@hmcts/notification": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
