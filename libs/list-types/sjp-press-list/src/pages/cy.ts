@@ -9,7 +9,6 @@ export const cy = {
   importantInfoContent:
     "Yn unol â'r protocol cyfryngau, mae dogfennau ychwanegol o'r achosion hyn ar gael i aelodau o'r cyfryngau ar gais. Mae'r ddolen isod yn mynd â chi at y protocol llawn a rhagor o wybodaeth ynghylch pa ddogfennaeth y gellir ei chael",
   mediaProtocolLink: "Protocol ar rannu rhestrau llysoedd, cofrestrau a dogfennau gyda'r cyfryngau",
-  downloadButton: "Lawrlwytho copi",
   searchLabel: "Chwilio hidlwyr",
   showFilters: "Dangos hidlwyr",
   hideFilters: "Cuddio hidlwyr",

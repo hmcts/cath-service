@@ -37,12 +37,6 @@
     }) }}
 
     <div>
-      <a href="/sjp-press-list/download?artefactId={{ list.artefactId }}{% if filters.searchQuery %}&search={{ filters.searchQuery }}{% endif %}{% if filters.postcodes %}{% for pc in filters.postcodes %}&postcode={{ pc }}{% endfor %}{% endif %}{% if filters.prosecutors %}{% for p in filters.prosecutors %}&prosecutor={{ p }}{% endfor %}{% endif %}" class="govuk-button govuk-!-margin-top-4" data-module="govuk-button">
-        {{ downloadButton }}
-      </a>
-    </div>
-
-    <div>
       <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-top-2" data-module="govuk-button" id="filter-toggle">
         {% if filters.searchQuery or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}{{ hideFilters }}{% else %}{{ showFilters }}{% endif %}
       </button>

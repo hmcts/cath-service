@@ -9,7 +9,6 @@ export const en = {
   importantInfoContent:
     "In accordance with the media protocol, additional documents from these cases are available to the members of the media on request. The link below takes you to the full protocol and further information in relation to what documentation can be obtained",
   mediaProtocolLink: "Protocol on sharing court lists, registers and documents with the media",
-  downloadButton: "Download a copy",
   searchLabel: "Search filters",
   showFilters: "Show filters",
   hideFilters: "Hide filters",
