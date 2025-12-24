@@ -18,7 +18,7 @@ vi.mock("@hmcts/location", () => ({
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  getSubscriptionsByUserId: vi.fn(),
+  getAllSubscriptionsByUserId: vi.fn(),
   replaceUserSubscriptions: vi.fn()
 }));
 
@@ -118,8 +118,14 @@ describe("pending-subscriptions", () => {
 
     it("should confirm subscriptions when action is confirm", async () => {
       mockReq.body = { action: "confirm" };
-      vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([
-        { subscriptionId: "sub1", userId: "user123", locationId: 123, dateAdded: new Date() }
+      vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue([
+        {
+          subscriptionId: "sub1",
+          type: "court" as const,
+          courtOrTribunalName: "Test Court",
+          locationId: 123,
+          dateAdded: new Date()
+        }
       ]);
       vi.mocked(subscriptionService.replaceUserSubscriptions).mockResolvedValue({
         added: 2,
@@ -128,7 +134,7 @@ describe("pending-subscriptions", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(subscriptionService.getSubscriptionsByUserId).toHaveBeenCalledWith("user123");
+      expect(subscriptionService.getAllSubscriptionsByUserId).toHaveBeenCalledWith("user123");
       expect(subscriptionService.replaceUserSubscriptions).toHaveBeenCalledWith("user123", ["123", "456", "789"]);
       expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
@@ -145,7 +151,7 @@ describe("pending-subscriptions", () => {
 
     it("should handle error when confirming subscriptions", async () => {
       mockReq.body = { action: "confirm" };
-      vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue([]);
       vi.mocked(subscriptionService.replaceUserSubscriptions).mockRejectedValue(new Error("Test error"));
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -164,8 +170,14 @@ describe("pending-subscriptions", () => {
       mockReq.body = { action: "confirm" };
       mockReq.session = { emailSubscriptions: { pendingSubscriptions: ["456", "789"] } } as any;
 
-      vi.mocked(subscriptionService.getSubscriptionsByUserId).mockResolvedValue([
-        { subscriptionId: "sub1", userId: "user123", locationId: 123, dateAdded: new Date() }
+      vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue([
+        {
+          subscriptionId: "sub1",
+          type: "court" as const,
+          courtOrTribunalName: "Test Court",
+          locationId: 123,
+          dateAdded: new Date()
+        }
       ]);
       vi.mocked(subscriptionService.replaceUserSubscriptions).mockResolvedValue({
         added: 2,

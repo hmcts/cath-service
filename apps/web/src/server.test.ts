@@ -23,16 +23,24 @@ vi.mock("node:fs", async () => {
 
 // Mock the app creation to avoid actually starting a server
 vi.mock("./app.js", () => ({
-  createApp: vi.fn(async () => ({
-    listen: vi.fn((_port: number, callback: () => void) => {
+  createApp: vi.fn(async () => {
+    // Express app is actually a function, so we need to mock it as such
+    const mockApp = vi.fn((_req: any, _res: any) => {
+      // Mock request handler
+    }) as any;
+
+    // Add the listen method to the function
+    mockApp.listen = vi.fn((_port: number, callback: () => void) => {
       // Simulate successful server start
       setTimeout(callback, 0);
       return {
         close: vi.fn((cb: () => void) => cb()),
         on: vi.fn()
       };
-    })
-  }))
+    });
+
+    return mockApp;
+  })
 }));
 
 describe("Web Server", () => {

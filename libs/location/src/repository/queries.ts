@@ -5,6 +5,9 @@ export type { Location };
 
 export async function getAllLocations(language: "en" | "cy"): Promise<Location[]> {
   const locations = await prisma.location.findMany({
+    where: {
+      deletedAt: null
+    },
     include: {
       locationRegions: {
         include: {
@@ -35,8 +38,11 @@ export async function getAllLocations(language: "en" | "cy"): Promise<Location[]
 }
 
 export async function getLocationById(id: number): Promise<Location | undefined> {
-  const location = await prisma.location.findUnique({
-    where: { locationId: id },
+  const location = await prisma.location.findFirst({
+    where: {
+      locationId: id,
+      deletedAt: null
+    },
     include: {
       locationRegions: {
         include: {
@@ -113,4 +119,83 @@ export async function getSubJurisdictionsByJurisdiction(jurisdictionId: number):
     welshName: sj.welshName,
     jurisdictionId: sj.jurisdictionId
   }));
+}
+
+export async function getLocationWithDetails(locationId: number): Promise<import("./model.js").LocationDetails | null> {
+  const location = await prisma.location.findFirst({
+    where: {
+      locationId,
+      deletedAt: null
+    },
+    include: {
+      locationRegions: {
+        include: {
+          region: true
+        }
+      },
+      locationSubJurisdictions: {
+        include: {
+          subJurisdiction: {
+            include: {
+              jurisdiction: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!location) {
+    return null;
+  }
+
+  return {
+    locationId: location.locationId,
+    name: location.name,
+    welshName: location.welshName,
+    regions: location.locationRegions.map((lr) => ({
+      name: lr.region.name,
+      welshName: lr.region.welshName
+    })),
+    subJurisdictions: location.locationSubJurisdictions.map((lsj) => ({
+      name: lsj.subJurisdiction.name,
+      welshName: lsj.subJurisdiction.welshName,
+      jurisdictionName: lsj.subJurisdiction.jurisdiction.name,
+      jurisdictionWelshName: lsj.subJurisdiction.jurisdiction.welshName
+    }))
+  };
+}
+
+export async function hasActiveSubscriptions(locationId: number): Promise<boolean> {
+  const count = await prisma.subscription.count({
+    where: {
+      locationId
+    }
+  });
+
+  return count > 0;
+}
+
+export async function hasActiveArtefacts(locationId: number): Promise<boolean> {
+  const count = await prisma.artefact.count({
+    where: {
+      locationId: locationId.toString(),
+      displayTo: {
+        gt: new Date()
+      }
+    }
+  });
+
+  return count > 0;
+}
+
+export async function softDeleteLocation(locationId: number): Promise<void> {
+  await prisma.location.update({
+    where: {
+      locationId
+    },
+    data: {
+      deletedAt: new Date()
+    }
+  });
 }

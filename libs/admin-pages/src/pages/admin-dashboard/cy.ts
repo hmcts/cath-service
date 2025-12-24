@@ -17,5 +17,7 @@ export default {
       heading: "Rheoli Ceisiadau am Gyfrif y Cyfryngau",
       description: "CTSC yn asesu ceisiadau newydd am gyfrif y cyfryngau"
     }
-  ]
+  ],
+  notificationText: "Mae x cais cyfryngau heb eu hasesu.",
+  notificationLink: "Rheoli ceisiadau cyfrif cyfryngau"
 };

@@ -107,7 +107,8 @@ test.describe("Add Jurisdiction End-to-End Flow", () => {
 
       // Submit with keyboard
       await saveButton.focus();
-      await page.keyboard.press("Enter");
+      await expect(saveButton).toBeFocused();
+      await page.keyboard.press('Enter');
       await page.waitForURL("/add-jurisdiction-success", { timeout: 15000 });
 
       // Verify all links are keyboard accessible

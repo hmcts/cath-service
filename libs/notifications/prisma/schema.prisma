@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model NotificationAuditLog {
+  notificationId String    @id @default(uuid()) @map("notification_id") @db.Uuid
+  subscriptionId String    @map("subscription_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  publicationId  String    @map("publication_id") @db.Uuid
+  govNotifyId    String?   @map("gov_notify_id")
+  status         String    @default("Pending")
+  errorMessage   String?   @map("error_message")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  sentAt         DateTime? @map("sent_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [subscriptionId])
+
+  @@index([publicationId])
+  @@index([status])
+  @@index([govNotifyId])
+  @@map("notification_audit_log")
+}

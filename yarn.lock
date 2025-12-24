@@ -982,6 +982,7 @@ __metadata:
   dependencies:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/notification": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
@@ -992,7 +993,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1028,7 +1029,7 @@ __metadata:
     "@types/passport": "npm:1.0.17"
     passport-azure-ad: "npm:4.3.5"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
     express-session: ^1.18.2
     passport: ^0.7.0
   languageName: unknown
@@ -1046,7 +1047,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1083,7 +1084,7 @@ __metadata:
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1099,7 +1100,7 @@ __metadata:
     js-yaml: "npm:^4.1.0"
   peerDependencies:
     config: ^3.3.12 || ^4.0.0
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1143,6 +1144,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/notification@workspace:*, @hmcts/notification@workspace:libs/notification":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/notification@workspace:libs/notification"
+  dependencies:
+    "@types/node": "npm:^22.10.2"
+    notifications-node-client: "npm:^8.2.1"
+    typescript: "npm:^5.7.3"
+    vitest: "npm:4.0.16"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/notifications@workspace:libs/notifications":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/notifications@workspace:libs/notifications"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
+    notifications-node-client: "npm:8.2.1"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/postgres@npm:*, @hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
@@ -1162,7 +1185,7 @@ __metadata:
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1192,7 +1215,7 @@ __metadata:
   dependencies:
     "@types/express": "npm:5.0.5"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1204,7 +1227,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1219,7 +1242,7 @@ __metadata:
     "@types/papaparse": "npm:5.5.2"
     papaparse: "npm:5.5.3"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1229,7 +1252,7 @@ __metadata:
   dependencies:
     "@hmcts/subscriptions": "workspace:*"
   peerDependencies:
-    express: ^5.1.0
+    express: ^5.2.0
   languageName: unknown
   linkType: soft
 
@@ -1250,7 +1273,7 @@ __metadata:
   peerDependencies:
     "@hmcts/cookie-manager": ^1.1.0
     connect-redis: ^9.0.0
-    express: ^5.1.0
+    express: ^5.2.0
     express-session: ^1.18.2
     govuk-frontend: ^5.2.0
     helmet: ^8.0.0
@@ -1310,7 +1333,7 @@ __metadata:
     nodemon: "npm:3.1.11"
     nunjucks: "npm:3.2.4"
     redis: "npm:5.10.0"
-    sass: "npm:1.97.0"
+    sass: "npm:1.97.1"
     supertest: "npm:7.1.4"
     vite: "npm:7.3.0"
     vite-plugin-static-copy: "npm:3.1.4"
@@ -2889,6 +2912,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^22.10.2":
+  version: 22.19.3
+  resolution: "@types/node@npm:22.19.3"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 10c0/a30a75d503da795ddbd5f8851014f3e91925c2a63fa3f14128d54c998f25d682dfba96dc9589c73cf478b87a16d88beb790b11697bb8cd5bee913079237a58f2
+  languageName: node
+  linkType: hard
+
 "@types/nunjucks@npm:3.2.6":
   version: 3.2.6
   resolution: "@types/nunjucks@npm:3.2.6"
@@ -3444,6 +3476,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.7.2":
+  version: 1.13.2
+  resolution: "axios@npm:1.13.2"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.4"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10c0/e8a42e37e5568ae9c7a28c348db0e8cf3e43d06fcbef73f0048669edfe4f71219664da7b6cc991b0c0f01c28a48f037c515263cb79be1f1ae8ff034cd813867b
+  languageName: node
+  linkType: hard
+
 "balanced-match@npm:^1.0.0":
   version: 1.0.2
   resolution: "balanced-match@npm:1.0.2"
@@ -3750,6 +3793,7 @@ __metadata:
     happy-dom: "npm:^20.0.5"
     jsonwebtoken: "npm:9.0.3"
     jwks-rsa: "npm:3.2.0"
+    notifications-node-client: "npm:^8.2.1"
     passport: "npm:0.7.0"
     passport-azure-ad: "npm:4.3.5"
     supertest: "npm:7.1.4"
@@ -4285,6 +4329,7 @@ __metadata:
     "@azure/keyvault-secrets": "npm:4.10.0"
     "@hmcts/postgres": "npm:*"
     "@playwright/test": "npm:1.57.0"
+    dotenv: "npm:^17.2.3"
     exceljs: "npm:4.4.0"
   languageName: unknown
   linkType: soft
@@ -4808,6 +4853,16 @@ __metadata:
   version: 3.3.3
   resolution: "flatted@npm:3.3.3"
   checksum: 10c0/e957a1c6b0254aa15b8cce8533e24165abd98fadc98575db082b786b5da1b7d72062b81bfdcd1da2f4d46b6ed93bec2434e62333e9b4261d79ef2e75a10dd538
+  languageName: node
+  linkType: hard
+
+"follow-redirects@npm:^1.15.6":
+  version: 1.15.11
+  resolution: "follow-redirects@npm:1.15.11"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 10c0/d301f430542520a54058d4aeeb453233c564aaccac835d29d15e050beb33f339ad67d9bddbce01739c5dc46a6716dbe3d9d0d5134b1ca203effa11a7ef092343
   languageName: node
   linkType: hard
 
@@ -5442,7 +5497,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:9.0.3":
+"jsonwebtoken@npm:9.0.3, jsonwebtoken@npm:^9.0.2":
   version: 9.0.3
   resolution: "jsonwebtoken@npm:9.0.3"
   dependencies:
@@ -6236,6 +6291,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"notifications-node-client@npm:8.2.1, notifications-node-client@npm:^8.2.1":
+  version: 8.2.1
+  resolution: "notifications-node-client@npm:8.2.1"
+  dependencies:
+    axios: "npm:^1.7.2"
+    jsonwebtoken: "npm:^9.0.2"
+  checksum: 10c0/50fe98073d95960417bcf63e8706cf3464c149f5b2b05403d0ca0979c7318aa158113f9aaf3812c290c449ed6a6c38346dc30eea2e8e4a5df146b30a10d35f36
+  languageName: node
+  linkType: hard
+
 "nunjucks@npm:3.2.4":
   version: 3.2.4
   resolution: "nunjucks@npm:3.2.4"
@@ -6732,6 +6797,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"proxy-from-env@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "proxy-from-env@npm:1.1.0"
+  checksum: 10c0/fe7dd8b1bdbbbea18d1459107729c3e4a2243ca870d26d34c2c1bcd3e4425b7bcc5112362df2d93cc7fb9746f6142b5e272fd1cc5c86ddf8580175186f6ad42b
+  languageName: node
+  linkType: hard
+
 "pstree.remy@npm:^1.1.8":
   version: 1.1.8
   resolution: "pstree.remy@npm:1.1.8"
@@ -7091,9 +7163,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.97.0":
-  version: 1.97.0
-  resolution: "sass@npm:1.97.0"
+"sass@npm:1.97.1":
+  version: 1.97.1
+  resolution: "sass@npm:1.97.1"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^4.0.0"
@@ -7104,7 +7176,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10c0/4c0e2596131054089beeeb6e98f7318beb909c4775187690656cbb85a45153d04eecd970e6a4431fe47dc94f9749cf8d58c9c5e59055d2cae39f4887a4bb6104
+  checksum: 10c0/c389d5d6405869b49fa2291e8328500fe7936f3b72136bc2c338bee6e7fec936bb9a48d77a1310dea66aa4669ba74ae6b82a112eb32521b9b36d740138a39ea0
   languageName: node
   linkType: hard
 
@@ -7704,7 +7776,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.9.3":
+"typescript@npm:5.9.3, typescript@npm:^5.7.3":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
   bin:
@@ -7714,7 +7786,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>":
   version: 5.9.3
   resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"
   bin:

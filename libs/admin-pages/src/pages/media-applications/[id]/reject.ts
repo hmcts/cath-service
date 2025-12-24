@@ -1,0 +1,157 @@
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { sendMediaRejectionEmail } from "@hmcts/notification";
+import "@hmcts/web-core";
+import type { Request, RequestHandler, Response } from "express";
+import "../../../media-application/model.js";
+import { getApplicationById } from "../../../media-application/queries.js";
+import { rejectApplication } from "../../../media-application/service.js";
+import rejectCy from "./reject-cy.js";
+import rejectEn from "./reject-en.js";
+
+const MAX_REASON_LENGTH = 10000;
+
+function stripHtmlTags(input: string): string {
+  if (input.length > MAX_REASON_LENGTH) {
+    throw new Error("Input exceeds maximum allowed length");
+  }
+
+  let result = "";
+  let insideTag = false;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+
+    if (char === "<") {
+      insideTag = true;
+    } else if (char === ">") {
+      insideTag = false;
+    } else if (!insideTag) {
+      result += char;
+    }
+  }
+
+  return result;
+}
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? rejectCy : rejectEn;
+  const { id } = req.params;
+
+  try {
+    const application = await getApplicationById(id);
+
+    if (!application) {
+      return res.status(404).render("errors/404", {
+        error: lang.errorMessages.notFound
+      });
+    }
+
+    // Get rejection reasons from session
+    const sessionReasons = req.session?.rejectionReasons || {};
+    const selectedReasons = sessionReasons.selectedReasons || [];
+    const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
+    res.render("media-applications/[id]/reject", {
+      pageTitle: lang.pageTitle,
+      subheading: lang.subheading,
+      reasonsHeading: lang.reasonsHeading,
+      tableHeaders: lang.tableHeaders,
+      viewLinkText: lang.viewLinkText,
+      radioLegend: lang.radioLegend,
+      radioOptions: lang.radioOptions,
+      continueButton: lang.continueButton,
+      emailPreview: lang.emailPreview,
+      application,
+      reasonsList,
+      hideLanguageToggle: true
+    });
+  } catch (_error) {
+    res.render("media-applications/[id]/reject", {
+      pageTitle: lang.pageTitle,
+      error: lang.errorMessages.loadFailed,
+      application: null,
+      hideLanguageToggle: true
+    });
+  }
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? rejectCy : rejectEn;
+  const { id } = req.params;
+  const { confirm } = req.body;
+
+  try {
+    const application = await getApplicationById(id);
+
+    if (!application) {
+      return res.status(404).render("errors/404", {
+        error: lang.errorMessages.notFound
+      });
+    }
+
+    if (!confirm) {
+      // Get rejection reasons from session for re-rendering
+      const sessionReasons = req.session?.rejectionReasons || {};
+      const selectedReasons = sessionReasons.selectedReasons || [];
+      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+
+      return res.render("media-applications/[id]/reject", {
+        pageTitle: lang.pageTitle,
+        subheading: lang.subheading,
+        reasonsHeading: lang.reasonsHeading,
+        tableHeaders: lang.tableHeaders,
+        viewLinkText: lang.viewLinkText,
+        radioLegend: lang.radioLegend,
+        radioOptions: lang.radioOptions,
+        continueButton: lang.continueButton,
+        emailPreview: lang.emailPreview,
+        application,
+        reasonsList,
+        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
+        hideLanguageToggle: true
+      });
+    }
+
+    if (confirm === "no") {
+      return res.redirect(`/media-applications/${id}`);
+    }
+
+    await rejectApplication(id);
+
+    try {
+      const sessionReasons = req.session?.rejectionReasons || {};
+      const selectedReasons = sessionReasons.selectedReasons || [];
+      const reasonsList = selectedReasons.map((key: string) => lang.reasons[key as keyof typeof lang.reasons]);
+      // Strip HTML tags for email and format for GOV.UK Notify numbered list
+      const rejectReasons = reasonsList
+        .map((r: string[], index: number) => {
+          const reason = stripHtmlTags(r[0]);
+          const explanation = stripHtmlTags(r[1]);
+          return `${index + 1}. ${reason}\n^${explanation}`;
+        })
+        .join("\n");
+      const linkToService = process.env.BASE_URL || "https://localhost:8080";
+
+      await sendMediaRejectionEmail({
+        fullName: application.name,
+        email: application.email,
+        rejectReasons,
+        linkToService
+      });
+    } catch (error) {
+      console.error("❌ Failed to send rejection email:", error);
+    }
+
+    res.redirect(`/media-applications/${id}/rejected`);
+  } catch (_error) {
+    res.render("media-applications/[id]/reject", {
+      pageTitle: lang.pageTitle,
+      error: lang.errorMessages.loadFailed,
+      application: null,
+      hideLanguageToggle: true
+    });
+  }
+};
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.INTERNAL_ADMIN_CTSC]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.INTERNAL_ADMIN_CTSC]), postHandler];
