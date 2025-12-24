@@ -12,15 +12,20 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findAllListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 1,
+        name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+        friendlyName: "Civil and Family Daily Cause List",
+        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
+      }
+    ])
+  )
+}));
+
 vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Civil and Family Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
-    }
-  ],
   validateListTypeJson: vi.fn(() => Promise.resolve({ isValid: true, errors: [], schemaVersion: "1.0" }))
 }));
 

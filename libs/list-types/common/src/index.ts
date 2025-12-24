@@ -14,5 +14,4 @@ export {
   type ListTypeConverter,
   registerConverter
 } from "./conversion/non-strategic-list-registry.js";
-export { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-type-validator.js";
-export { type ListType, mockListTypes } from "./mock-list-types.js";
+export { convertListTypeNameToKebabCase, type ListTypeInfo, validateListTypeJson } from "./list-type-validator.js";

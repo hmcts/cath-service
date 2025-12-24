@@ -3,6 +3,7 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -28,12 +29,18 @@ const getHandler = async (req: Request, res: Response) => {
 
   const locale = req.query.lng === "cy" ? "cy" : "en";
   const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
-  const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
+  let courtName = uploadData.locationId;
+  if (location) {
+    courtName = locale === "cy" ? location.welshName : location.name;
+  }
 
   // Find list type by ID
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
-  const listType = listTypeId ? mockListTypes.find((lt) => lt.id === listTypeId) : null;
-  const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : uploadData.listType;
+  const listType = listTypeId ? await findListTypeById(listTypeId) : null;
+  let listTypeName = uploadData.listType;
+  if (listType) {
+    listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
+  }
 
   res.render("manual-upload-summary/index", {
     pageTitle: lang.pageTitle,
@@ -173,12 +180,18 @@ const postHandler = async (req: Request, res: Response) => {
 
     const locale = req.query.lng === "cy" ? "cy" : "en";
     const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
-    const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
+    let courtName = uploadData.locationId;
+    if (location) {
+      courtName = locale === "cy" ? location.welshName : location.name;
+    }
 
     // Find list type by ID
     const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
-    const listType = listTypeId ? mockListTypes.find((lt) => lt.id === listTypeId) : null;
-    const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : uploadData.listType;
+    const listType = listTypeId ? await findListTypeById(listTypeId) : null;
+    let listTypeName = uploadData.listType;
+    if (listType) {
+      listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
+    }
 
     return res.render("manual-upload-summary/index", {
       pageTitle: lang.pageTitle,
