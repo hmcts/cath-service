@@ -1,14 +1,38 @@
-import { prisma } from "@hmcts/postgres";
 import { validateLocationId } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
   createSubscriptionRecord,
   deleteSubscriptionRecord,
+  deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
+  findSubscriptionById,
   findSubscriptionByUserAndLocation,
-  findSubscriptionsByUserId
+  findSubscriptionsByUserId,
+  findSubscriptionsWithLocationByIds,
+  findSubscriptionsWithLocationByUserId
 } from "./queries.js";
 
 const MAX_SUBSCRIPTIONS = 50;
+
+interface SubscriptionDto {
+  subscriptionId: string;
+  type: "court" | "case";
+  courtOrTribunalName: string;
+  locationId: number;
+  dateAdded: Date;
+}
+
+function mapSubscriptionToDto(
+  sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
+  locale: string
+): SubscriptionDto {
+  return {
+    subscriptionId: sub.subscriptionId,
+    type: "court",
+    courtOrTribunalName: locale === "cy" && sub.location.welshName ? sub.location.welshName : sub.location.name,
+    locationId: sub.locationId,
+    dateAdded: sub.dateAdded
+  };
+}
 
 export async function createSubscription(userId: string, locationId: string) {
   const locationValid = await validateLocationId(locationId);
@@ -30,24 +54,24 @@ export async function createSubscription(userId: string, locationId: string) {
   return createSubscriptionRecord(userId, locationIdNumber);
 }
 
-export async function getSubscriptionsByUserId(userId: string) {
-  return findSubscriptionsByUserId(userId);
+export async function getSubscriptionById(subscriptionId: string, userId: string) {
+  return findSubscriptionById(subscriptionId, userId);
 }
 
 export async function removeSubscription(subscriptionId: string, userId: string) {
-  const subscription = await prisma.subscription.findUnique({
-    where: { subscriptionId }
-  });
+  const subscription = await findSubscriptionById(subscriptionId, userId);
 
   if (!subscription) {
     throw new Error("Subscription not found");
   }
 
-  if (subscription.userId !== userId) {
-    throw new Error("Unauthorized");
+  const count = await deleteSubscriptionRecord(subscriptionId, userId);
+
+  if (count === 0) {
+    throw new Error("Subscription not found");
   }
 
-  return deleteSubscriptionRecord(subscriptionId);
+  return count;
 }
 
 export async function createMultipleSubscriptions(userId: string, locationIds: string[]) {
@@ -91,7 +115,7 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 
   // Perform deletions and creations after validation passes
   await Promise.all([
-    ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId)),
+    ...toDelete.map((sub) => deleteSubscriptionRecord(sub.subscriptionId, userId)),
     ...toAdd.map((locationId) => createSubscriptionRecord(userId, locationId))
   ]);
 
@@ -99,4 +123,42 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
     added: toAdd.length,
     removed: toDelete.length
   };
+}
+
+export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
+  const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
+  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
+}
+
+export async function getCaseSubscriptionsByUserId(userId: string, locale = "en") {
+  // Case subscriptions not yet implemented (VIBE-300)
+  // When implemented, this will query a case_subscription table
+  return [];
+}
+
+export async function getCourtSubscriptionsByUserId(userId: string, locale = "en") {
+  return getAllSubscriptionsByUserId(userId, locale);
+}
+
+export async function getSubscriptionDetailsForConfirmation(subscriptionIds: string[], userId: string, locale = "en") {
+  if (subscriptionIds.length === 0) {
+    return [];
+  }
+
+  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
+  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
+}
+
+export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {
+  if (subscriptionIds.length === 0) {
+    throw new Error("No subscriptions provided for deletion");
+  }
+
+  const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
+
+  if (count !== subscriptionIds.length) {
+    throw new Error("Unauthorized: User does not own all selected subscriptions");
+  }
+
+  return count;
 }

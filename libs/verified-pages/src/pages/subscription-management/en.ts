@@ -3,6 +3,7 @@ export const en = {
   heading: "Your email subscriptions",
   noSubscriptions: "You do not have any active subscriptions",
   addButton: "Add email subscription",
+  bulkUnsubscribeButton: "Bulk unsubscribe",
   tableHeaderLocation: "Court or tribunal name",
   tableHeaderDate: "Date added",
   tableHeaderActions: "Actions",

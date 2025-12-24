@@ -27,11 +27,12 @@
     "lint:fix": "biome check --write ."
   },
   "peerDependencies": {
-    "express": "^5.1.0"
+    "express": "^5.2.0"
   },
   "dependencies": {
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/location": "workspace:*",
+    "@hmcts/notification": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
@@ -40,8 +41,8 @@
   "devDependencies": {
     "@types/luxon": "3.7.1",
     "@types/multer": "2.0.0",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.4",
     "typescript": "5.9.3",
-    "vitest": "4.0.15"
+    "vitest": "4.0.16"
   }
 }
