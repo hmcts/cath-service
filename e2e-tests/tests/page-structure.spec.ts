@@ -82,7 +82,6 @@ test.describe("Page Structure - VIBE-149", () => {
       const sameTablLinks = [
         { text: "Help", href: "https://www.gov.uk/help" },
         { text: "Privacy policy", href: "https://www.gov.uk/help/privacy-notice" },
-        { text: "Cookies", href: "/cookie-preferences" },
         { text: "Contact us", href: "https://www.gov.uk/contact" },
         { text: "Terms and conditions", href: "https://www.gov.uk/help/terms-conditions" },
         { text: "Welsh", href: "https://www.gov.uk/cymraeg" },
@@ -96,6 +95,12 @@ test.describe("Page Structure - VIBE-149", () => {
         const targetAttr = await footerLink.getAttribute("target");
         expect(targetAttr).not.toBe("_blank");
       }
+
+      // Cookie policy should open in new tab
+      const cookiePolicyLink = page.locator('.govuk-footer__link[href="/cookie-policy"]').first();
+      await expect(cookiePolicyLink).toBeVisible({ timeout: 5000 });
+      await expect(cookiePolicyLink).toHaveAttribute("target", "_blank");
+      await expect(cookiePolicyLink).toHaveAttribute("rel", "noopener noreferrer");
 
       // Accessibility statement should open in new tab
       const accessibilityLink = page.locator('.govuk-footer__link[href="/accessibility-statement"]').first();
@@ -160,7 +165,7 @@ test.describe("Page Structure - VIBE-149", () => {
       await expect(signInLink).toHaveText("Mewngofnodi");
 
       // Verify footer links are in Welsh
-      const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-preferences"]');
+      const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-policy"]');
       await expect(cookiesLink).toHaveText("Cwcis");
 
       // Click language toggle to switch back to English
