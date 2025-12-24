@@ -1,7 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderCauseListData } from "./renderer.js";
 
+// Mock the location module to avoid database calls in unit tests
+vi.mock("@hmcts/location", () => ({
+  getLocationById: vi.fn()
+}));
+
+import { getLocationById } from "@hmcts/location";
+
 describe("renderCauseListData", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default mock implementation - returns undefined so venue name from JSON is used
+    (getLocationById as any).mockResolvedValue(undefined);
+  });
   it("should render cause list data with correct header information", async () => {
     const inputData = {
       document: {

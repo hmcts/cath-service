@@ -24,3 +24,11 @@ export interface SubJurisdiction {
   welshName: string;
   jurisdictionId: number;
 }
+
+export interface LocationDetails {
+  locationId: number;
+  name: string;
+  welshName: string;
+  regions: Array<{ name: string; welshName: string }>;
+  subJurisdictions: Array<{ name: string; welshName: string; jurisdictionName: string; jurisdictionWelshName: string }>;
+}
