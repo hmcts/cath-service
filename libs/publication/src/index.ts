@@ -1,4 +1,4 @@
-export { type ListType, mockListTypes } from "@hmcts/list-types-common";
+export { type ListType, mockListTypes, SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "@hmcts/list-types-common";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
