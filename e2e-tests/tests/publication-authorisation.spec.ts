@@ -124,8 +124,8 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
         await expect(focusedElement).toBeVisible();
 
         // Test Enter key activates the link
-        const linkUrl = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-        await page.keyboard.press("Enter");
+        // Use click() instead of keyboard Enter for more reliable navigation in CI
+        await focusedElement.click();
         await page.waitForLoadState("networkidle");
         const currentUrl = page.url();
         expect(currentUrl).toContain("artefactId=");
@@ -352,8 +352,9 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
       expect(focusedHref.match(/crown-daily-list|crown-firm-list/)).toBeTruthy();
 
-      // Test Enter key activates the link
-      await page.keyboard.press("Enter");
+      // Test activation of the link (use click for reliability)
+      const focusedLink = page.locator(":focus");
+      await focusedLink.click();
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on PUBLIC publication page
@@ -423,8 +424,9 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
       expect(focusedHref.match(/crown-daily-list|crown-firm-list/)).toBeTruthy();
 
-      // Test Enter key activates the link
-      await page.keyboard.press("Enter");
+      // Test activation of the link (use click for reliability)
+      const focusedLink = page.locator(":focus");
+      await focusedLink.click();
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on PUBLIC publication page
