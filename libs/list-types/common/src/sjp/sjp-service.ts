@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres";
+import { getLatestSjpArtefacts } from "@hmcts/publication";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
 
@@ -95,13 +96,7 @@ async function readSjpJson(artefactId: string): Promise<SjpJson> {
  * Gets the latest SJP lists from the artefact table
  */
 export async function getLatestSjpLists(): Promise<SjpListMetadata[]> {
-  const artefacts = await prisma.artefact.findMany({
-    where: {
-      listTypeId: { in: [9, 10] } // SJP_PRESS_LIST (9), SJP_PUBLIC_LIST (10)
-    },
-    orderBy: { lastReceivedDate: "desc" },
-    take: 10
-  });
+  const artefacts = await getLatestSjpArtefacts();
 
   // Read metadata from each JSON file
   const lists = await Promise.all(

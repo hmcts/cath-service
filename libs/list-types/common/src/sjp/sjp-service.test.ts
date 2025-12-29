@@ -15,16 +15,19 @@ import {
 
 vi.mock("node:fs/promises");
 vi.mock("./json-parser.js");
+vi.mock("@hmcts/publication", () => ({
+  getLatestSjpArtefacts: vi.fn()
+}));
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
-      findMany: vi.fn(),
       findUnique: vi.fn()
     }
   }
 }));
 
 import { prisma } from "@hmcts/postgres";
+import { getLatestSjpArtefacts } from "@hmcts/publication";
 
 const mockSjpJson: SjpJson = {
   document: {
@@ -82,18 +85,32 @@ describe("getLatestSjpLists", () => {
         listTypeId: 10,
         lastReceivedDate: new Date("2025-11-28"),
         contentDate: new Date("2025-11-28"),
-        locationId: "1"
+        locationId: "1",
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-11-28"),
+        displayTo: new Date("2025-12-28"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        noMatch: false
       },
       {
         artefactId: "list-2",
         listTypeId: 9,
         lastReceivedDate: new Date("2025-11-27"),
         contentDate: new Date("2025-11-27"),
-        locationId: "2"
+        locationId: "2",
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-11-27"),
+        displayTo: new Date("2025-12-27"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        noMatch: false
       }
     ];
 
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as never);
+    vi.mocked(getLatestSjpArtefacts).mockResolvedValue(mockArtefacts);
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
@@ -106,13 +123,7 @@ describe("getLatestSjpLists", () => {
     expect(result[0].caseCount).toBe(100);
     expect(result[1].artefactId).toBe("list-2");
 
-    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
-      where: {
-        listTypeId: { in: [9, 10] }
-      },
-      orderBy: { lastReceivedDate: "desc" },
-      take: 10
-    });
+    expect(getLatestSjpArtefacts).toHaveBeenCalledWith();
   });
 
   it("should filter out artefacts with read errors", async () => {
@@ -122,18 +133,32 @@ describe("getLatestSjpLists", () => {
         listTypeId: 10,
         lastReceivedDate: new Date("2025-11-28"),
         contentDate: new Date("2025-11-28"),
-        locationId: "1"
+        locationId: "1",
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-11-28"),
+        displayTo: new Date("2025-12-28"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        noMatch: false
       },
       {
         artefactId: "list-2",
         listTypeId: 9,
         lastReceivedDate: new Date("2025-11-27"),
         contentDate: new Date("2025-11-27"),
-        locationId: "2"
+        locationId: "2",
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-11-27"),
+        displayTo: new Date("2025-12-27"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        noMatch: false
       }
     ];
 
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as never);
+    vi.mocked(getLatestSjpArtefacts).mockResolvedValue(mockArtefacts);
     vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(mockSjpJson)).mockRejectedValueOnce(new Error("File not found"));
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
