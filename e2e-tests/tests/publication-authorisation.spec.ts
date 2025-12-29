@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { assertAuthenticated, loginWithCftIdam, logout } from "../utils/cft-idam-helpers.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
@@ -73,6 +74,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
+      // Run accessibility check on authenticated summary page
+      const summaryAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(summaryAccessibility.violations).toEqual([]);
+
       // 3. Verify CFT user sees PUBLIC, PRIVATE, and CLASSIFIED CFT publications
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const initialCount = await publicationLinks.count();
@@ -86,6 +94,42 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
         const firstLinkText = await publicationLinks.first().textContent();
         expect(firstLinkText).toBeTruthy();
         expect(firstLinkText?.length).toBeGreaterThan(0);
+
+        // Test keyboard navigation through publication links
+        const heading = page.locator("h1.govuk-heading-l");
+        await heading.focus();
+
+        // Tab through to reach the first publication link
+        let currentFocusedElement = await page.evaluate(() => document.activeElement?.tagName);
+        let tabCount = 0;
+        const maxTabs = 20; // Safety limit
+
+        while (currentFocusedElement !== "A" && tabCount < maxTabs) {
+          await page.keyboard.press("Tab");
+          tabCount++;
+          currentFocusedElement = await page.evaluate(() => document.activeElement?.tagName);
+          const href = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+          if (href.includes("artefactId=")) break;
+        }
+
+        // Verify focus is on a publication link
+        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+        expect(focusedHref).toContain("artefactId=");
+
+        // Verify focus indicator is visible
+        const focusedElement = page.locator(":focus");
+        await expect(focusedElement).toBeVisible();
+
+        // Test Enter key activates the link
+        const linkUrl = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+        await page.keyboard.press("Enter");
+        await page.waitForLoadState("networkidle");
+        const currentUrl = page.url();
+        expect(currentUrl).toContain("artefactId=");
+
+        // Navigate back for subsequent tests
+        await page.goto("/summary-of-publications?locationId=9");
+        await page.waitForSelector("h1.govuk-heading-l");
       }
 
       // 4. Verify provenance-based filtering: CFT user sees CFT CLASSIFIED publications
@@ -151,6 +195,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const welshHeading = await page.locator("h1.govuk-heading-l").textContent();
       expect(welshHeading).toBeTruthy();
 
+      // Run accessibility check on Welsh summary page
+      const welshAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(welshAccessibility.violations).toEqual([]);
+
       // Navigate back to English version
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
@@ -178,6 +229,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       // Navigate back to summary page as unauthenticated user
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
+
+      // Run accessibility check on unauthenticated summary page after logout
+      const logoutAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(logoutAccessibility.violations).toEqual([]);
 
       const publicationLinksUnauth = page.locator('.govuk-list a[href*="artefactId="]');
       const unauthenticatedCount = await publicationLinksUnauth.count();
@@ -208,19 +266,21 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
       // 4. Verify can access CLASSIFIED publication
       const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
-      if (await classifiedLink.isVisible()) {
-        await classifiedLink.click();
-        await page.waitForLoadState("networkidle");
 
-        // Should successfully access the publication
-        await expect(page).toHaveURL(/\/civil-and-family-daily-cause-list\?artefactId=/);
-        const bodyText = await page.locator("body").textContent();
-        expect(bodyText).not.toContain("Access Denied");
+      // Assert that the classified link is visible (test should fail if not present)
+      await expect(classifiedLink).toBeVisible();
 
-        // Navigate back to summary page
-        await page.goto("/summary-of-publications?locationId=9");
-        await page.waitForSelector("h1.govuk-heading-l");
-      }
+      await classifiedLink.click();
+      await page.waitForLoadState("networkidle");
+
+      // Should successfully access the publication
+      await expect(page).toHaveURL(/\/civil-and-family-daily-cause-list\?artefactId=/);
+      const classifiedBodyText = await page.locator("body").textContent();
+      expect(classifiedBodyText).not.toContain("Access Denied");
+
+      // Navigate back to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
 
       // 5. Verify can view actual publication data (not just metadata)
       const firstLink = page.locator('.govuk-list a[href*="artefactId="]').first();
@@ -228,9 +288,9 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForLoadState("networkidle");
 
       // Should not see metadata-only restriction message
-      const bodyText = await page.locator("body").textContent();
-      expect(bodyText).not.toContain("You do not have permission to view the data for this publication");
-      expect(bodyText).not.toContain("You can view metadata only");
+      const publicationBodyText = await page.locator("body").textContent();
+      expect(publicationBodyText).not.toContain("You do not have permission to view the data for this publication");
+      expect(publicationBodyText).not.toContain("You can view metadata only");
     });
   });
 
@@ -244,6 +304,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       // 2. Navigate to summary page
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
+
+      // Run accessibility check on CTSC admin summary page
+      const ctscSummaryAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(ctscSummaryAccessibility.violations).toEqual([]);
 
       // 3. Verify CTSC admin only sees PUBLIC publications
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
@@ -260,15 +327,43 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       // 5. Verify can view PUBLIC publication data
       const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
 
-      if (await publicLink.isVisible()) {
-        await publicLink.click();
-        await page.waitForLoadState("networkidle");
+      // Assert that the public link is visible (test should fail if not present)
+      await expect(publicLink).toBeVisible();
 
-        // Should successfully access PUBLIC publication data
-        const bodyText = await page.locator("body").textContent();
-        expect(bodyText).not.toContain("Access Denied");
-        expect(bodyText).not.toContain("You do not have permission to view the data");
+      // Test keyboard navigation to the public link
+      const heading = page.locator("h1.govuk-heading-l");
+      await heading.focus();
+
+      // Tab through to reach the public link
+      let tabCount = 0;
+      const maxTabs = 30; // Safety limit
+
+      while (tabCount < maxTabs) {
+        await page.keyboard.press("Tab");
+        tabCount++;
+        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+        if (focusedHref.includes("crown-daily-list") || focusedHref.includes("crown-firm-list")) break;
       }
+
+      // Verify focus is on a public link
+      const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+      expect(focusedHref.match(/crown-daily-list|crown-firm-list/)).toBeTruthy();
+
+      // Test Enter key activates the link
+      await page.keyboard.press("Enter");
+      await page.waitForLoadState("networkidle");
+
+      // Run accessibility check on PUBLIC publication page
+      const ctscPublicationAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(ctscPublicationAccessibility.violations).toEqual([]);
+
+      // Should successfully access PUBLIC publication data
+      const ctscBodyText = await page.locator("body").textContent();
+      expect(ctscBodyText).not.toContain("Access Denied");
+      expect(ctscBodyText).not.toContain("You do not have permission to view the data");
     });
 
     test("Local Admin can only see PUBLIC publications and view their data", async ({ page }) => {
@@ -280,6 +375,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       // 2. Navigate to summary page
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
+
+      // Run accessibility check on Local admin summary page
+      const localSummaryAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(localSummaryAccessibility.violations).toEqual([]);
 
       // 3. Verify Local admin only sees PUBLIC publications
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
@@ -296,15 +398,43 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       // 5. Verify can view PUBLIC publication data
       const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
 
-      if (await publicLink.isVisible()) {
-        await publicLink.click();
-        await page.waitForLoadState("networkidle");
+      // Assert that the public link is visible (test should fail if not present)
+      await expect(publicLink).toBeVisible();
 
-        // Should successfully access PUBLIC publication data
-        const bodyText = await page.locator("body").textContent();
-        expect(bodyText).not.toContain("Access Denied");
-        expect(bodyText).not.toContain("You do not have permission to view the data");
+      // Test keyboard navigation to the public link
+      const heading = page.locator("h1.govuk-heading-l");
+      await heading.focus();
+
+      // Tab through to reach the public link
+      let tabCount = 0;
+      const maxTabs = 30; // Safety limit
+
+      while (tabCount < maxTabs) {
+        await page.keyboard.press("Tab");
+        tabCount++;
+        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+        if (focusedHref.includes("crown-daily-list") || focusedHref.includes("crown-firm-list")) break;
       }
+
+      // Verify focus is on a public link
+      const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+      expect(focusedHref.match(/crown-daily-list|crown-firm-list/)).toBeTruthy();
+
+      // Test Enter key activates the link
+      await page.keyboard.press("Enter");
+      await page.waitForLoadState("networkidle");
+
+      // Run accessibility check on PUBLIC publication page
+      const localPublicationAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(localPublicationAccessibility.violations).toEqual([]);
+
+      // Should successfully access PUBLIC publication data
+      const localBodyText = await page.locator("body").textContent();
+      expect(localBodyText).not.toContain("Access Denied");
+      expect(localBodyText).not.toContain("You do not have permission to view the data");
     });
   });
 });
