@@ -100,19 +100,22 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
         await heading.focus();
 
         // Tab through to reach the first publication link
-        let currentFocusedElement = await page.evaluate(() => document.activeElement?.tagName);
         let tabCount = 0;
-        const maxTabs = 20; // Safety limit
+        const maxTabs = 50; // Increased safety limit to account for navigation links
+        let foundPublicationLink = false;
 
-        while (currentFocusedElement !== "A" && tabCount < maxTabs) {
+        while (tabCount < maxTabs) {
           await page.keyboard.press("Tab");
           tabCount++;
-          currentFocusedElement = await page.evaluate(() => document.activeElement?.tagName);
           const href = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-          if (href.includes("artefactId=")) break;
+          if (href.includes("artefactId=")) {
+            foundPublicationLink = true;
+            break;
+          }
         }
 
-        // Verify focus is on a publication link
+        // Verify we found a publication link
+        expect(foundPublicationLink).toBe(true);
         const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
         expect(focusedHref).toContain("artefactId=");
 
