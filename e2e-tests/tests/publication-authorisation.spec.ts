@@ -254,6 +254,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
+      // Run accessibility check on summary page
+      const summaryAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(summaryAccessibility.violations).toEqual([]);
+
       // 3. Verify System admin sees all publications including CLASSIFIED
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const count = await publicationLinks.count();
@@ -270,6 +277,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await classifiedLink.click();
       await page.waitForLoadState("networkidle");
 
+      // Run accessibility check on CLASSIFIED publication page
+      const classifiedAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(classifiedAccessibility.violations).toEqual([]);
+
       // Should successfully access the publication
       await expect(page).toHaveURL(/\/civil-and-family-daily-cause-list\?artefactId=/);
       const classifiedBodyText = await page.locator("body").textContent();
@@ -283,6 +297,13 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const firstLink = page.locator('.govuk-list a[href*="artefactId="]').first();
       await firstLink.click();
       await page.waitForLoadState("networkidle");
+
+      // Run accessibility check on publication data view page
+      const publicationAccessibility = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name", "region"])
+        .analyze();
+      expect(publicationAccessibility.violations).toEqual([]);
 
       // Should not see metadata-only restriction message
       const publicationBodyText = await page.locator("body").textContent();
