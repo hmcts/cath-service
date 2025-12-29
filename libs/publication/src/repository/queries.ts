@@ -113,3 +113,29 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
     }
   });
 }
+
+export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
+  const artefacts = await prisma.artefact.findMany({
+    where: {
+      listTypeId: { in: [9, 10] } // SJP_PRESS_LIST (9), SJP_PUBLIC_LIST (10)
+    },
+    orderBy: { lastReceivedDate: "desc" },
+    take: 10
+  });
+
+  return artefacts.map(
+    (artefact: (typeof artefacts)[number]): Artefact => ({
+      artefactId: artefact.artefactId,
+      locationId: artefact.locationId,
+      listTypeId: artefact.listTypeId,
+      contentDate: artefact.contentDate,
+      sensitivity: artefact.sensitivity,
+      language: artefact.language,
+      displayFrom: artefact.displayFrom,
+      displayTo: artefact.displayTo,
+      isFlatFile: artefact.isFlatFile,
+      provenance: artefact.provenance,
+      noMatch: artefact.noMatch
+    })
+  );
+}
