@@ -139,36 +139,33 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const cftPublicationLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
       const cftCount = await cftPublicationLinks.count();
 
-      // Should see CFT publications (if they exist for this location)
-      expect(cftCount).toBeGreaterThanOrEqual(0);
+      // CFT user should see CLASSIFIED CFT publications
+      expect(cftCount).toBeGreaterThan(0);
 
-      // If CLASSIFIED Civil and Family publications exist, verify access and provenance matching
-      if (cftCount > 0) {
-        // Verify link text contains "Civil"
-        const linkText = await cftPublicationLinks.first().textContent();
-        expect(linkText).toContain("Civil");
+      // Verify link text contains "Civil"
+      const linkText = await cftPublicationLinks.first().textContent();
+      expect(linkText).toContain("Civil");
 
-        // Click on the first CFT publication
-        await cftPublicationLinks.first().click();
+      // Click on the first CFT publication
+      await cftPublicationLinks.first().click();
 
-        // Should navigate to the publication page without 403 error
-        await page.waitForLoadState("networkidle");
-        const currentUrl = page.url();
+      // Should navigate to the publication page without 403 error
+      await page.waitForLoadState("networkidle");
+      const currentUrl = page.url();
 
-        // Should be on a list type page, not an error page
-        expect(currentUrl).toMatch(/\/civil-and-family-daily-cause-list\?artefactId=/);
-        expect(currentUrl).not.toContain("/403");
-        expect(currentUrl).not.toContain("/sign-in");
+      // Should be on a list type page, not an error page
+      expect(currentUrl).toMatch(/\/civil-and-family-daily-cause-list\?artefactId=/);
+      expect(currentUrl).not.toContain("/403");
+      expect(currentUrl).not.toContain("/sign-in");
 
-        // Should not see access denied message (provenance matches)
-        const accessDeniedText = await page.locator("body").textContent();
-        expect(accessDeniedText).not.toContain("Access Denied");
-        expect(accessDeniedText).not.toContain("Mynediad wedi'i Wrthod");
+      // Should not see access denied message (provenance matches)
+      const accessDeniedText = await page.locator("body").textContent();
+      expect(accessDeniedText).not.toContain("Access Denied");
+      expect(accessDeniedText).not.toContain("Mynediad wedi'i Wrthod");
 
-        // Navigate back to summary page
-        await page.goto("/summary-of-publications?locationId=9");
-        await page.waitForSelector("h1.govuk-heading-l");
-      }
+      // Navigate back to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
 
       // 5. Verify can access any publication (provenance-based access control)
       if (initialCount > 0) {
