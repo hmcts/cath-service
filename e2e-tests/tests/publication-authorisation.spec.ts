@@ -19,22 +19,19 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const count = await publicationLinks.count();
 
-      // Verify that publications are visible (PUBLIC ones should be available)
-      // Note: This assumes locationId=9 has at least some PUBLIC publications
-      // If no PUBLIC publications exist, count would be 0, which is correct behavior
-      expect(count).toBeGreaterThanOrEqual(0);
+      // Unauthenticated users should see at least some PUBLIC publications
+      expect(count).toBeGreaterThan(0);
 
-      // If publications exist, verify they don't include sensitive data indicators
-      if (count > 0) {
-        const firstLinkText = await publicationLinks.first().textContent();
-        expect(firstLinkText).toBeTruthy();
-      }
+      // Verify publications are accessible
+      const firstLinkText = await publicationLinks.first().textContent();
+      expect(firstLinkText).toBeTruthy();
 
-      // 3. Verify CLASSIFIED Civil and Family publications are not in the list
-      // We can't directly check for absence of specific publications,
-      // but we verify the count is less than what an authenticated CFT user would see
-      // This is validated in combination with the authenticated user tests below
-      expect(count).toBeGreaterThanOrEqual(0);
+      // 3. Verify CLASSIFIED Civil and Family publications are NOT visible
+      const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
+      const classifiedCount = await classifiedLinks.count();
+
+      // Unauthenticated users should NOT see any CLASSIFIED publications
+      expect(classifiedCount).toBe(0);
 
       // 4. Test Welsh translation
       await page.goto("/summary-of-publications?locationId=9&lng=cy");
