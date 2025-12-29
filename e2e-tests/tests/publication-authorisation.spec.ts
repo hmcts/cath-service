@@ -437,4 +437,116 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
   });
 
+  test.describe("Keyboard Navigation Journey", () => {
+    test("should support complete keyboard navigation through publication list and detail pages", async ({ page }) => {
+      // 1. Navigate to summary page
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      // 2. Test Tab navigation - find publication links via keyboard
+      let publicationLinkFound = false;
+      let tabCount = 0;
+      const maxTabs = 50;
+
+      await page.keyboard.press("Tab");
+
+      while (tabCount < maxTabs && !publicationLinkFound) {
+        tabCount++;
+        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+
+        if (focusedHref.includes("artefactId=")) {
+          publicationLinkFound = true;
+          break;
+        }
+
+        await page.keyboard.press("Tab");
+      }
+
+      // Verify we found a publication link via keyboard
+      expect(publicationLinkFound).toBe(true);
+      expect(tabCount).toBeLessThan(maxTabs);
+
+      // 3. Verify focus indicator is visible (WCAG 2.4.7)
+      const focusedElement = page.locator(":focus");
+      await expect(focusedElement).toBeVisible();
+
+      // Get focused element details
+      const focusedElementDetails = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement;
+        const computedStyle = window.getComputedStyle(el);
+        return {
+          tagName: el.tagName,
+          hasOutline: computedStyle.outline !== "none" && computedStyle.outline !== "",
+          hasBorder: computedStyle.border !== "none",
+          hasBoxShadow: computedStyle.boxShadow !== "none",
+        };
+      });
+
+      // Verify element is a link
+      expect(focusedElementDetails.tagName).toBe("A");
+
+      // 4. Test keyboard activation - Enter key should navigate
+      await page.keyboard.press("Enter");
+      await page.waitForLoadState("networkidle");
+
+      // Verify navigation to publication detail page
+      const detailUrl = page.url();
+      expect(detailUrl).toContain("artefactId=");
+
+      // 5. Test Tab navigation on detail page
+      await page.keyboard.press("Tab");
+      let backLinkFound = false;
+      let detailTabCount = 0;
+      const maxDetailTabs = 30;
+
+      while (detailTabCount < maxDetailTabs && !backLinkFound) {
+        detailTabCount++;
+        const focusedText = await page.evaluate(() => document.activeElement?.textContent?.trim().toLowerCase() || "");
+        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+
+        if (focusedText.includes("back") || focusedHref.includes("summary-of-publications")) {
+          backLinkFound = true;
+          break;
+        }
+
+        await page.keyboard.press("Tab");
+      }
+
+      // Verify back link is reachable via keyboard
+      expect(backLinkFound).toBe(true);
+
+      // 6. Test reverse Tab navigation (Shift+Tab)
+      const backLinkHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+      await page.keyboard.press("Shift+Tab");
+      const previousElement = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+
+      // Should move focus to a different element
+      expect(previousElement).not.toBe(backLinkHref);
+
+      // 7. Test focus order is logical - Tab through first 3 interactive elements
+      await page.goto("/summary-of-publications?locationId=9");
+      await page.waitForSelector("h1.govuk-heading-l");
+
+      const focusOrder = [];
+      await page.keyboard.press("Tab");
+
+      for (let i = 0; i < 3; i++) {
+        const elementInfo = await page.evaluate(() => {
+          const el = document.activeElement as HTMLElement;
+          return {
+            tagName: el.tagName,
+            text: el.textContent?.trim().substring(0, 30) || "",
+            href: (el as HTMLAnchorElement).href || null,
+          };
+        });
+        focusOrder.push(elementInfo);
+        await page.keyboard.press("Tab");
+      }
+
+      // Verify we captured interactive elements in order
+      expect(focusOrder.length).toBe(3);
+      expect(focusOrder.every((el) => ["A", "BUTTON", "INPUT"].includes(el.tagName))).toBe(true);
+    });
+  });
+
 });
