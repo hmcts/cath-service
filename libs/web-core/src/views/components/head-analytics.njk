@@ -1,4 +1,4 @@
-{% if gtm and gtm.containerId %}
+{% if gtm and gtm.containerId and cookieManager.cookiePreferences.analytics %}
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -8,7 +8,7 @@
   <!-- End Google Tag Manager -->
 {% endif %}
 
-{% if dynatrace and dynatrace.dynatraceUrl %}
+{% if dynatrace and dynatrace.dynatraceUrl and cookieManager.cookiePreferences.performance %}
   <!-- Dynatrace -->
   <script type="text/javascript" src="{{ dynatrace.dynatraceUrl }}" crossorigin="anonymous"></script>
   <!-- End Dynatrace -->

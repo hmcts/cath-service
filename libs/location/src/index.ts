@@ -8,14 +8,18 @@ export {
   type SubJurisdictionItem
 } from "./filtering/service.js";
 export { locationData } from "./location-data.js";
-export type { Jurisdiction, Region, SubJurisdiction } from "./repository/model.js";
+export type { Jurisdiction, LocationDetails, Region, SubJurisdiction } from "./repository/model.js";
 export {
   getAllJurisdictions,
   getAllLocations,
   getAllRegions,
   getAllSubJurisdictions,
   getLocationById,
-  getSubJurisdictionsByJurisdiction
+  getLocationWithDetails,
+  getSubJurisdictionsByJurisdiction,
+  hasActiveArtefacts,
+  hasActiveSubscriptions,
+  softDeleteLocation
 } from "./repository/queries.js";
 export { getLocationsGroupedByLetter, type Location, searchLocations } from "./repository/service.js";
 export { seedLocationData } from "./seed-data.js";

@@ -6,7 +6,9 @@ vi.mock("@hmcts/postgres", () => ({
   prisma: {
     location: {
       findMany: vi.fn(),
-      findUnique: vi.fn()
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn()
     },
     jurisdiction: {
       findMany: vi.fn()
@@ -16,6 +18,12 @@ vi.mock("@hmcts/postgres", () => ({
     },
     subJurisdiction: {
       findMany: vi.fn()
+    },
+    subscription: {
+      count: vi.fn()
+    },
+    artefact: {
+      count: vi.fn()
     }
   }
 }));
@@ -152,7 +160,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Setup default mock implementations
   vi.mocked(prisma.location.findMany).mockResolvedValue(mockLocations as any);
-  vi.mocked(prisma.location.findUnique).mockImplementation((args: any) => {
+  vi.mocked(prisma.location.findFirst).mockImplementation((args: any) => {
     const id = args?.where?.locationId;
     const location = mockLocations.find((loc) => loc.locationId === id);
     return Promise.resolve(location as any);
@@ -327,5 +335,188 @@ describe("getSubJurisdictionsByJurisdiction", () => {
     await getSubJurisdictionsByJurisdiction(1);
 
     expect(mockSubJurisdictions).toEqual(mockSnapshot);
+  });
+});
+
+describe("Soft delete filtering", () => {
+  it("getAllLocations should filter out soft-deleted locations", async () => {
+    await getAllLocations("en");
+    expect(prisma.location.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          deletedAt: null
+        }
+      })
+    );
+  });
+
+  it("getLocationById should filter out soft-deleted locations", async () => {
+    await getLocationById(1);
+    expect(prisma.location.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          locationId: 1,
+          deletedAt: null
+        }
+      })
+    );
+  });
+});
+
+describe("getLocationWithDetails", () => {
+  it("should return location details with regions and jurisdictions", async () => {
+    const mockLocation = {
+      locationId: 1,
+      name: "Test Court",
+      welshName: "Llys Prawf",
+      locationRegions: [
+        {
+          region: {
+            name: "London",
+            welshName: "Llundain"
+          }
+        }
+      ],
+      locationSubJurisdictions: [
+        {
+          subJurisdiction: {
+            name: "Civil Court",
+            welshName: "Llys Sifil",
+            jurisdiction: {
+              name: "Civil",
+              welshName: "Sifil"
+            }
+          }
+        }
+      ]
+    };
+
+    vi.mocked(prisma.location.findFirst).mockResolvedValue(mockLocation as any);
+
+    const { getLocationWithDetails } = await import("./queries.js");
+    const result = await getLocationWithDetails(1);
+
+    expect(result).toEqual({
+      locationId: 1,
+      name: "Test Court",
+      welshName: "Llys Prawf",
+      regions: [{ name: "London", welshName: "Llundain" }],
+      subJurisdictions: [
+        {
+          name: "Civil Court",
+          welshName: "Llys Sifil",
+          jurisdictionName: "Civil",
+          jurisdictionWelshName: "Sifil"
+        }
+      ]
+    });
+  });
+
+  it("should filter out soft-deleted locations", async () => {
+    vi.mocked(prisma.location.findFirst).mockResolvedValue(null);
+
+    const { getLocationWithDetails } = await import("./queries.js");
+    const result = await getLocationWithDetails(1);
+
+    expect(prisma.location.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          locationId: 1,
+          deletedAt: null
+        }
+      })
+    );
+    expect(result).toBeNull();
+  });
+
+  it("should return null for non-existent location", async () => {
+    vi.mocked(prisma.location.findFirst).mockResolvedValue(null);
+
+    const { getLocationWithDetails } = await import("./queries.js");
+    const result = await getLocationWithDetails(999);
+
+    expect(result).toBeNull();
+  });
+});
+
+describe("hasActiveSubscriptions", () => {
+  it("should return true when location has subscriptions", async () => {
+    vi.mocked(prisma.subscription.count).mockResolvedValue(5);
+
+    const { hasActiveSubscriptions } = await import("./queries.js");
+    const result = await hasActiveSubscriptions(1);
+
+    expect(result).toBe(true);
+    expect(prisma.subscription.count).toHaveBeenCalledWith({
+      where: { locationId: 1 }
+    });
+  });
+
+  it("should return false when location has no subscriptions", async () => {
+    vi.mocked(prisma.subscription.count).mockResolvedValue(0);
+
+    const { hasActiveSubscriptions } = await import("./queries.js");
+    const result = await hasActiveSubscriptions(1);
+
+    expect(result).toBe(false);
+  });
+});
+
+describe("hasActiveArtefacts", () => {
+  it("should return true when location has active artefacts", async () => {
+    vi.mocked(prisma.artefact.count).mockResolvedValue(3);
+
+    const { hasActiveArtefacts } = await import("./queries.js");
+    const result = await hasActiveArtefacts(1);
+
+    expect(result).toBe(true);
+    expect(prisma.artefact.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          locationId: "1",
+          displayTo: expect.objectContaining({
+            gt: expect.any(Date)
+          })
+        })
+      })
+    );
+  });
+
+  it("should return false when location has no active artefacts", async () => {
+    vi.mocked(prisma.artefact.count).mockResolvedValue(0);
+
+    const { hasActiveArtefacts } = await import("./queries.js");
+    const result = await hasActiveArtefacts(1);
+
+    expect(result).toBe(false);
+  });
+
+  it("should convert locationId to string for artefact query", async () => {
+    vi.mocked(prisma.artefact.count).mockResolvedValue(0);
+
+    const { hasActiveArtefacts } = await import("./queries.js");
+    await hasActiveArtefacts(123);
+
+    expect(prisma.artefact.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          locationId: "123"
+        })
+      })
+    );
+  });
+});
+
+describe("softDeleteLocation", () => {
+  it("should update location with deletedAt timestamp", async () => {
+    vi.mocked(prisma.location.update).mockResolvedValue({} as any);
+
+    const { softDeleteLocation } = await import("./queries.js");
+    await softDeleteLocation(1);
+
+    expect(prisma.location.update).toHaveBeenCalledWith({
+      where: { locationId: 1 },
+      data: { deletedAt: expect.any(Date) }
+    });
   });
 });

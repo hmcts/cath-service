@@ -99,7 +99,8 @@ export async function createApp(): Promise<Express> {
     preferencesPath: "/cookie-preferences",
     categories: {
       essential: ["connect.sid"],
-      analytics: ["_ga", "_gid", "dtCookie", "dtSa", "rxVisitor", "rxvt"],
+      analytics: ["_ga", "_gid"],
+      performance: ["dtCookie", "dtSa", "rxVisitor", "rxvt"],
       preferences: ["language"]
     }
   });
