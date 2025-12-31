@@ -25,8 +25,8 @@ describe("system-admin-dashboard template", () => {
       expect(en.title).toBe("System Admin Dashboard");
     });
 
-    it("should have 8 tiles", () => {
-      expect(en.tiles).toHaveLength(8);
+    it("should have 9 tiles", () => {
+      expect(en.tiles).toHaveLength(9);
     });
 
     it("should have tiles with required properties", () => {

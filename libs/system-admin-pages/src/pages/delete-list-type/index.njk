@@ -1,0 +1,67 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ title }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: { text: listTypeLabel },
+          value: { text: listTypeName }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      {{ govukRadios({
+        name: "confirmDelete",
+        fieldset: {
+          legend: {
+            text: confirmDeleteLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        hint: {
+          text: confirmDeleteHint
+        },
+        items: [
+          {
+            value: "yes",
+            text: yesOption,
+            checked: data.confirmDelete === "yes"
+          },
+          {
+            value: "no",
+            text: noOption,
+            checked: data.confirmDelete === "no"
+          }
+        ],
+        errorMessage: errors.confirmDelete if errors.confirmDelete
+      }) }}
+
+      {{ govukButton({
+        text: confirmButton
+      }) }}
+
+      <p class="govuk-body">
+        <a href="/view-list-types" class="govuk-link">{{ cancelLink }}</a>
+      </p>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

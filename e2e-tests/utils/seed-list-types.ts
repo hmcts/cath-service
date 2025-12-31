@@ -1,4 +1,6 @@
-export interface ListType {
+import { prisma } from "@hmcts/postgres";
+
+interface ListTypeData {
   id: number;
   name: string;
   englishFriendlyName: string;
@@ -8,7 +10,7 @@ export interface ListType {
   isNonStrategic: boolean;
 }
 
-export const mockListTypes: ListType[] = [
+const listTypes: ListTypeData[] = [
   {
     id: 1,
     name: "CIVIL_DAILY_CAUSE_LIST",
@@ -85,9 +87,60 @@ export const mockListTypes: ListType[] = [
     id: 9,
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
-    welshFriendlyName: "Welsh placeholder",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true
   }
 ];
+
+export async function seedListTypes() {
+  console.log("Seeding list types...");
+
+  const allSubJurisdictions = await (prisma as any).subJurisdiction.findMany();
+
+  if (allSubJurisdictions.length === 0) {
+    throw new Error("No sub-jurisdictions found. Please ensure sub-jurisdictions are seeded first.");
+  }
+
+  let seededCount = 0;
+  let skippedCount = 0;
+
+  for (const listType of listTypes) {
+    const existing = await (prisma as any).listType.findUnique({
+      where: { name: listType.name }
+    });
+
+    if (existing) {
+      skippedCount++;
+      continue;
+    }
+
+    try {
+      await (prisma as any).listType.create({
+        data: {
+          name: listType.name,
+          friendlyName: listType.englishFriendlyName,
+          welshFriendlyName: listType.welshFriendlyName,
+          shortenedFriendlyName: listType.englishFriendlyName,
+          url: listType.urlPath || "",
+          defaultSensitivity: "Public",
+          allowedProvenance: listType.provenance,
+          isNonStrategic: listType.isNonStrategic,
+          subJurisdictions: {
+            create: allSubJurisdictions.map((sj: any) => ({
+              subJurisdictionId: sj.subJurisdictionId
+            }))
+          }
+        }
+      });
+
+      seededCount++;
+    } catch (error) {
+      console.error(`Failed to seed list type "${listType.name}":`, error);
+      throw error;
+    }
+  }
+
+  console.log(`Seeded ${seededCount} list types (${skippedCount} already existed)`);
+}

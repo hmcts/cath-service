@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, Provenance } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -152,7 +153,7 @@ async function triggerPublicationNotifications(publicationId: string, courtId: s
     return;
   }
 
-  const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+  const listType = await findListTypeById(listTypeId);
   if (!listType) {
     console.error("List type not found for notifications:", listTypeId);
     return;
@@ -162,7 +163,7 @@ async function triggerPublicationNotifications(publicationId: string, courtId: s
     publicationId,
     locationId: String(locationIdNum),
     locationName: location.name,
-    hearingListName: listType.englishFriendlyName,
+    hearingListName: listType.friendlyName || `LIST_TYPE_${listTypeId}`,
     publicationDate
   });
 
