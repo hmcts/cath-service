@@ -77,7 +77,11 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn()
+    createArtefact: vi.fn(),
+    mockListTypes: [
+      { id: 6, englishFriendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" },
+      { id: 4, englishFriendlyName: "Family Daily List", welshFriendlyName: "Rhestr Ddyddiol Teulu" }
+    ]
   };
 });
 
@@ -576,6 +580,11 @@ describe("manual-upload-summary page", () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(getLocationById).mockResolvedValue({
+        locationId: 1,
+        name: "Test Crown Court",
+        welshName: "Test Crown Court CY"
+      });
       vi.mocked(sendPublicationNotifications).mockResolvedValue({
         totalSubscriptions: 5,
         sent: 5,
