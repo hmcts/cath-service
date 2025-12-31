@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, Provenance } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
@@ -125,8 +125,8 @@ const postHandler = async (req: Request, res: Response) => {
         });
       } else {
         // Get list type details for notification
-        const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-        const listTypeFriendlyName = listType?.englishFriendlyName || `LIST_TYPE_${listTypeId}`;
+        const listType = await findListTypeById(listTypeId);
+        const listTypeFriendlyName = listType?.friendlyName || `LIST_TYPE_${listTypeId}`;
 
         const notificationResult = await sendPublicationNotifications({
           publicationId: artefactId,
