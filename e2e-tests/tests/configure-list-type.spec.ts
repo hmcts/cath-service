@@ -37,6 +37,15 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
     .analyze();
   expect(accessibilityResults.violations).toEqual([]);
 
+  // Step 5a: Test keyboard navigation - tab through form fields
+  await page.getByLabel("Name", { exact: true }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Friendly name", { exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Welsh friendly name")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Shortened friendly name")).toBeFocused();
+
   // Step 6: Fill in list type details
   await page.getByLabel("Name", { exact: true }).fill(uniqueName);
   await page.getByLabel("Friendly name", { exact: true }).fill("Test List Type");
@@ -66,6 +75,12 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
     .analyze();
   expect(subJurisdictionsResults.violations).toEqual([]);
 
+  // Step 10a: Test keyboard navigation - navigate checkboxes with keyboard
+  const secondCheckbox = page.getByRole("checkbox").nth(1);
+  await secondCheckbox.focus();
+  await page.keyboard.press("Space");
+  await expect(secondCheckbox).toBeChecked();
+
   // Step 11: Continue to preview page
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL("/configure-list-type-preview");
@@ -83,8 +98,12 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
     .analyze();
   expect(previewResults.violations).toEqual([]);
 
-  // Step 14: Confirm and submit
-  await page.getByRole("button", { name: "Confirm" }).click();
+  // Step 13a: Test keyboard navigation - focus and press Enter to submit
+  await page.getByRole("button", { name: "Confirm" }).focus();
+  await expect(page.getByRole("button", { name: "Confirm" })).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  // Step 14: Verify submission success
   await expect(page).toHaveURL("/configure-list-type-success");
   await expect(page.getByRole("heading", { name: "List type saved" })).toBeVisible();
   await expect(page.getByText("List type saved successfully")).toBeVisible();
@@ -166,8 +185,14 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
     .analyze();
   expect(deletePageResults.violations).toEqual([]);
 
-  // Step 32: Select "No" option and verify redirect
-  await page.getByLabel("No, do not delete").check();
+  // Step 31a: Test keyboard navigation - navigate radio buttons with arrow keys
+  await page.getByLabel("Yes, delete this list type").focus();
+  await expect(page.getByLabel("Yes, delete this list type")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByLabel("No, do not delete")).toBeFocused();
+
+  // Step 32: Select "No" option with Space key and verify redirect
+  await page.keyboard.press("Space");
   await page.getByRole("button", { name: "Confirm" }).click();
   await expect(page).toHaveURL("/view-list-types");
 
@@ -175,9 +200,15 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   await page.locator(`a[href="/delete-list-type?id=${listTypeId}"]`).click();
   await expect(page).toHaveURL(`/delete-list-type?id=${listTypeId}`);
 
-  // Step 34: Select "Yes" option to confirm deletion
-  await page.getByLabel("Yes, delete this list type").check();
-  await page.getByRole("button", { name: "Confirm" }).click();
+  // Step 34: Select "Yes" option to confirm deletion with keyboard
+  await page.getByLabel("Yes, delete this list type").focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByLabel("Yes, delete this list type")).toBeChecked();
+
+  // Step 34a: Tab to Confirm button and press Enter
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Confirm" })).toBeFocused();
+  await page.keyboard.press("Enter");
 
   // Step 35: Verify success page
   await expect(page).toHaveURL("/delete-list-type-success");
