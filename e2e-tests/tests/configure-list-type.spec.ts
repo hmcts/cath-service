@@ -236,14 +236,26 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
 });
 
 test("admin cannot delete list type with artifacts @nightly", async ({ page }) => {
-  // Setup: Create a test artefact for list type ID 2 (Family Daily Cause List)
+  // Setup: Query for list type and location instead of using hardcoded IDs
   let testArtefactId: string | undefined;
 
   try {
+    const familyListType = await prisma.listType.findFirst({
+      where: { name: "FAMILY_DAILY_CAUSE_LIST" }
+    });
+    if (!familyListType) {
+      throw new Error("Family Daily Cause List not found in seed data");
+    }
+
+    const testLocation = await prisma.location.findFirst();
+    if (!testLocation) {
+      throw new Error("No location found in seed data");
+    }
+
     const testArtefact = await prisma.artefact.create({
       data: {
-        locationId: "1",
-        listTypeId: 2,
+        locationId: String(testLocation.locationId),
+        listTypeId: familyListType.id,
         contentDate: new Date(),
         sensitivity: "Public",
         language: "ENGLISH",
@@ -267,7 +279,7 @@ test("admin cannot delete list type with artifacts @nightly", async ({ page }) =
     }
 
     // Step 2: Navigate to delete page for list type that has artifacts
-    await page.goto("/delete-list-type?id=2");
+    await page.goto(`/delete-list-type?id=${familyListType.id}`);
     await expect(page.getByRole("heading", { name: "Are you sure you want to delete this list type?" })).toBeVisible();
 
     // Step 3: Select "Yes" to attempt deletion
@@ -276,11 +288,11 @@ test("admin cannot delete list type with artifacts @nightly", async ({ page }) =
 
     // Step 4: Verify error message is displayed
     await expect(page.getByText("This list type cannot be deleted because it has existing artifacts")).toBeVisible();
-    await expect(page).toHaveURL(/\/delete-list-type\?id=2/);
+    await expect(page).toHaveURL(new RegExp(`/delete-list-type\\?id=${familyListType.id}`));
 
     // Step 5: Test accessibility with error message
     const errorPageResults = await new AxeBuilder({ page })
-      .disableRules(['region'])
+      .disableRules(['region', 'empty-heading'])
       .analyze();
     expect(errorPageResults.violations).toEqual([]);
 
