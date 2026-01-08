@@ -11,7 +11,12 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   // Step 1: Navigate to System Admin dashboard and authenticate
   await page.goto("/system-admin-dashboard");
   if (page.url().includes("login.microsoftonline.com")) {
-    await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
+    const email = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL;
+    const password = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD;
+    if (!email || !password) {
+      throw new Error('SSO_TEST_SYSTEM_ADMIN_EMAIL and SSO_TEST_SYSTEM_ADMIN_PASSWORD must be set');
+    }
+    await loginWithSSO(page, email, password);
   }
 
   // Step 2: Click "Configure List Type" tile
@@ -253,7 +258,12 @@ test("admin cannot delete list type with artifacts @nightly", async ({ page }) =
     // Step 1: Authenticate as System Admin
     await page.goto("/system-admin-dashboard");
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
+      const email = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL;
+      const password = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD;
+      if (!email || !password) {
+        throw new Error('SSO_TEST_SYSTEM_ADMIN_EMAIL and SSO_TEST_SYSTEM_ADMIN_PASSWORD must be set');
+      }
+      await loginWithSSO(page, email, password);
     }
 
     // Step 2: Navigate to delete page for list type that has artifacts
