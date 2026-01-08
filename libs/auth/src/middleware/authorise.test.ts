@@ -255,7 +255,7 @@ describe("blockUserAccess middleware", () => {
         email: "user@example.com",
         displayName: "Test User",
         role: "VERIFIED",
-        provenance: "CFT"
+        provenance: "CFT_IDAM"
       }
     } as unknown as Request;
 
