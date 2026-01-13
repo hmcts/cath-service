@@ -1,10 +1,36 @@
+import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
-vi.mock("@hmcts/list-types-common");
+vi.mock("node:fs/promises");
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    artefact: {
+      findUnique: vi.fn()
+    }
+  }
+}));
+vi.mock("@hmcts/list-types-common", async () => {
+  const actual = await vi.importActual("@hmcts/list-types-common");
+  return {
+    ...actual,
+    calculatePagination: vi.fn(),
+    determineListType: vi.fn(),
+    extractPressCases: vi.fn()
+  };
+});
+vi.mock("../validation/json-validator.js");
+vi.mock("@hmcts/publication", () => ({
+  PROVENANCE_LABELS: {
+    MANUAL: "Manual Upload",
+    API: "API Upload"
+  }
+}));
 
-import { calculatePagination, getSjpListById, getSjpPressCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
+import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
+import { prisma } from "@hmcts/postgres";
+import { validateSjpPressList } from "../validation/json-validator.js";
 
 describe("SJP Press List Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>
@@ -24,6 +50,74 @@ describe("SJP Press List Controller", () => {
     res.locals = { locale: "en" };
     return res;
   };
+
+  const mockJsonData = {
+    document: {
+      publicationDate: "2025-01-20T09:00:00.000Z",
+      documentName: "SJP Press List",
+      version: "1.0"
+    },
+    courtLists: [
+      {
+        courtHouse: {
+          courtRoom: [
+            {
+              session: [
+                {
+                  sittings: [
+                    {
+                      hearing: [
+                        {
+                          case: [
+                            {
+                              caseNumber: "12345678",
+                              defendant: {
+                                individualDetails: {
+                                  individualForenames: "John",
+                                  individualSurname: "Doe",
+                                  dateOfBirth: "1990-01-01",
+                                  address: {
+                                    line: ["123 Test Street"],
+                                    postCode: "SW1A 1AA"
+                                  }
+                                }
+                              },
+                              prosecutionCaseReference: "REF123",
+                              offence: [
+                                {
+                                  offenceTitle: "Speeding",
+                                  offenceWording: "Exceeded speed limit"
+                                }
+                              ],
+                              prosecutor: "CPS"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  };
+
+  const mockCases = [
+    {
+      caseId: "case-1",
+      name: "John Doe",
+      postcode: "SW1A",
+      prosecutor: "CPS",
+      dateOfBirth: new Date("1990-01-01"),
+      age: 35,
+      reference: "REF123",
+      address: "123 Test St, London",
+      offences: [{ offenceTitle: "Speeding", offenceWording: "Exceeded speed limit", reportingRestriction: false }]
+    }
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -59,30 +153,20 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      vi.mocked(getSjpListById).mockResolvedValue({
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
         artefactId: "test-123",
-        listType: "press",
+        locationId: "1",
         contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 10,
-        locationId: 1
-      });
-
-      vi.mocked(getSjpPressCases).mockResolvedValue({
-        cases: [],
-        totalCases: 0
-      });
-
-      vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
-      vi.mocked(getUniquePostcodes).mockResolvedValue({
-        postcodes: [],
-        hasLondonPostcodes: false,
-        londonPostcodes: []
-      });
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+      vi.mocked(determineListType).mockReturnValue("press");
+      vi.mocked(extractPressCases).mockReturnValue(mockCases);
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        totalItems: 0,
+        totalItems: 1,
         itemsPerPage: 200,
         hasNext: false,
         hasPrevious: false,
@@ -108,7 +192,7 @@ describe("SJP Press List Controller", () => {
       const req = mockRequest({ query: { artefactId: "nonexistent" } });
       const res = mockResponse();
 
-      vi.mocked(getSjpListById).mockResolvedValue(null);
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
 
       await GET(req, res);
 
@@ -120,14 +204,15 @@ describe("SJP Press List Controller", () => {
       const req = mockRequest({ query: { artefactId: "test-123" } });
       const res = mockResponse();
 
-      vi.mocked(getSjpListById).mockResolvedValue({
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
         artefactId: "test-123",
-        listType: "public",
+        locationId: "1",
         contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 10,
-        locationId: 1
-      });
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+      vi.mocked(determineListType).mockReturnValue("public");
 
       await GET(req, res);
 
@@ -141,40 +226,16 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      const mockList = {
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
         artefactId: "test-123",
-        listType: "press" as const,
+        locationId: "1",
         contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 300,
-        locationId: 1
-      };
-
-      const mockCases = [
-        {
-          caseId: "case-1",
-          name: "John Doe",
-          postcode: "SW1A",
-          prosecutor: "CPS",
-          dateOfBirth: new Date("1990-01-01"),
-          age: 35,
-          reference: "REF123",
-          address: "123 Test St, London",
-          offences: [{ offenceTitle: "Speeding", offenceWording: "Exceeded speed limit", reportingRestriction: false }]
-        }
-      ];
-
-      vi.mocked(getSjpListById).mockResolvedValue(mockList);
-      vi.mocked(getSjpPressCases).mockResolvedValue({
-        cases: mockCases,
-        totalCases: 300
-      });
-      vi.mocked(getUniqueProsecutors).mockResolvedValue(["CPS", "DVLA"]);
-      vi.mocked(getUniquePostcodes).mockResolvedValue({
-        postcodes: ["SW1A", "M1"],
-        hasLondonPostcodes: true,
-        londonPostcodes: ["SW1A"]
-      });
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+      vi.mocked(determineListType).mockReturnValue("press");
+      vi.mocked(extractPressCases).mockReturnValue(mockCases);
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 2,
         totalPages: 2,
@@ -187,24 +248,14 @@ describe("SJP Press List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpListById).toHaveBeenCalledWith("test-123");
-      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcodes: undefined, prosecutors: undefined }, 2);
-      expect(getUniqueProsecutors).toHaveBeenCalledWith("test-123");
-      expect(getUniquePostcodes).toHaveBeenCalledWith("test-123");
-      expect(calculatePagination).toHaveBeenCalledWith(2, 300, 200);
-
       expect(res.render).toHaveBeenCalledWith(
         "sjp-press-list",
         expect.objectContaining({
-          list: mockList,
-          cases: mockCases,
-          prosecutors: ["CPS", "DVLA"],
-          postcodeAreas: ["SW1A", "M1"],
-          hasLondonPostcodes: true,
-          londonPostcodes: ["SW1A"],
+          cases: [],
           pagination: expect.any(Object),
           filters: { searchQuery: undefined, postcodes: [], prosecutors: [] },
-          errors: undefined
+          errors: undefined,
+          dataSource: "Manual Upload"
         })
       );
     });
@@ -221,22 +272,20 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      vi.mocked(getSjpListById).mockResolvedValue({
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
         artefactId: "test-123",
-        listType: "press",
+        locationId: "1",
         contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 10,
-        locationId: 1
-      });
-
-      vi.mocked(getSjpPressCases).mockResolvedValue({ cases: [], totalCases: 0 });
-      vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
-      vi.mocked(getUniquePostcodes).mockResolvedValue({ postcodes: [], hasLondonPostcodes: false, londonPostcodes: [] });
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+      vi.mocked(determineListType).mockReturnValue("press");
+      vi.mocked(extractPressCases).mockReturnValue(mockCases);
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        totalItems: 0,
+        totalItems: 1,
         itemsPerPage: 200,
         hasNext: false,
         hasPrevious: false,
@@ -245,7 +294,12 @@ describe("SJP Press List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpPressCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1);
+      expect(res.render).toHaveBeenCalledWith(
+        "sjp-press-list",
+        expect.objectContaining({
+          filters: { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }
+        })
+      );
     });
 
     it("should use Welsh translations when locale is cy", async () => {
@@ -255,22 +309,20 @@ describe("SJP Press List Controller", () => {
       const res = mockResponse();
       res.locals.locale = "cy";
 
-      vi.mocked(getSjpListById).mockResolvedValue({
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
         artefactId: "test-123",
-        listType: "press",
+        locationId: "1",
         contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 10,
-        locationId: 1
-      });
-
-      vi.mocked(getSjpPressCases).mockResolvedValue({ cases: [], totalCases: 0 });
-      vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
-      vi.mocked(getUniquePostcodes).mockResolvedValue({ postcodes: [], hasLondonPostcodes: false, londonPostcodes: [] });
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+      vi.mocked(determineListType).mockReturnValue("press");
+      vi.mocked(extractPressCases).mockReturnValue(mockCases);
       vi.mocked(calculatePagination).mockReturnValue({
         currentPage: 1,
         totalPages: 1,
-        totalItems: 0,
+        totalItems: 1,
         itemsPerPage: 200,
         hasNext: false,
         hasPrevious: false,
