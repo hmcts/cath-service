@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
-import type { CareStandardsTribunalHearingList } from "../models/types.js";
-import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
-import { validateCareStandardsTribunalList } from "../validation/json-validator.js";
+import type { StandardHearingList } from "../models/types.js";
+import { renderStandardDailyCauseList } from "../rendering/renderer.js";
+import { validateStandardDailyCauseList } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -15,6 +15,18 @@ const __dirname = path.dirname(__filename);
 
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
+
+// Map list type IDs to their names
+const LIST_TYPE_NAMES: Record<number, { en: string; cy: string }> = {
+  10: { en: en[10].pageTitle, cy: cy[10].pageTitle },
+  11: { en: en[11].pageTitle, cy: cy[11].pageTitle },
+  12: { en: en[12].pageTitle, cy: cy[12].pageTitle },
+  13: { en: en[13].pageTitle, cy: cy[13].pageTitle },
+  14: { en: en[14].pageTitle, cy: cy[14].pageTitle },
+  15: { en: en[15].pageTitle, cy: cy[15].pageTitle },
+  16: { en: en[16].pageTitle, cy: cy[16].pageTitle },
+  17: { en: en[17].pageTitle, cy: cy[17].pageTitle }
+};
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -45,6 +57,18 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
+    const listTypeId = artefact.listTypeId;
+
+    // Verify this is one of our supported list types
+    if (!LIST_TYPE_NAMES[listTypeId]) {
+      return res.status(400).render("errors/common", {
+        en,
+        cy,
+        errorTitle: "Invalid List Type",
+        errorMessage: "This list type is not supported by this module"
+      });
+    }
+
     const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
 
     let jsonContent: string;
@@ -60,9 +84,9 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const jsonData: CareStandardsTribunalHearingList = JSON.parse(jsonContent);
+    const jsonData: StandardHearingList = JSON.parse(jsonContent);
 
-    const validationResult = validateCareStandardsTribunalList(jsonData);
+    const validationResult = validateStandardDailyCauseList(jsonData);
     if (!validationResult.isValid) {
       console.error("Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {
@@ -73,11 +97,12 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const courtName = "Care Standards Tribunal";
+    const listTitle = LIST_TYPE_NAMES[listTypeId][locale as keyof (typeof LIST_TYPE_NAMES)[number]];
 
-    const { header, hearings } = renderCareStandardsTribunalData(jsonData, {
+    const { header, hearings } = renderStandardDailyCauseList(jsonData, {
       locale,
-      courtName,
+      listTypeId,
+      listTitle,
       displayFrom: artefact.displayFrom,
       displayTo: artefact.displayTo,
       lastReceivedDate: artefact.lastReceivedDate.toISOString()
@@ -85,21 +110,28 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
-    res.render("care-standards-tribunal-weekly-hearing-list", {
+    // Get list-specific content
+    const listContent = (t as any)[listTypeId] || {};
+
+    res.render("rcj-standard-daily-cause-list/standard-daily-cause-list", {
       en,
       cy,
       t,
+      title: header.listTitle,
       header,
       hearings,
-      dataSource
+      dataSource,
+      listTypeId,
+      listContent,
+      common: t.common
     });
   } catch (error) {
-    console.error("Error rendering Care Standards Tribunal list:", error);
+    console.error("Error rendering RCJ Standard Daily Cause List:", error);
     return res.status(500).render("errors/common", {
       en,
       cy,
-      errorTitle: "Server Error",
-      errorMessage: "An error occurred while loading the list"
+      errorTitle: "Error",
+      errorMessage: "An error occurred while displaying the list"
     });
   }
 };

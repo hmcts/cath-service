@@ -1,0 +1,85 @@
+import { DateTime } from "luxon";
+import type { LondonAdminCourtData, StandardHearing } from "../models/types.js";
+
+export interface RenderOptions {
+  locale: string;
+  displayFrom: Date;
+  displayTo: Date;
+  lastReceivedDate: string;
+}
+
+export interface RenderedHearing {
+  venue: string;
+  judge: string;
+  time: string;
+  caseNumber: string;
+  caseDetails: string;
+  hearingType: string;
+  additionalInformation: string;
+}
+
+export interface RenderedData {
+  header: {
+    listTitle: string;
+    listDate: string;
+    lastUpdated: string;
+  };
+  mainHearings: RenderedHearing[];
+  planningCourt: RenderedHearing[];
+}
+
+function formatDisplayDate(date: Date, locale: string): string {
+  const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
+  return date.toLocaleDateString(localeCode, {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+}
+
+function formatLastUpdated(isoDateTime: string, locale: string): string {
+  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
+
+  const dateStr = dt.toFormat("d MMMM yyyy");
+
+  const hours = dt.hour;
+  const minutes = dt.minute;
+  const period = hours >= 12 ? "pm" : "am";
+  const hour12 = hours % 12 || 12;
+
+  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
+  const timeStr = `${hour12}${minuteStr}${period}`;
+
+  return `${dateStr} at ${timeStr}`;
+}
+
+function normalizeTime(time: string): string {
+  return time.replace(".", ":");
+}
+
+function renderHearings(hearings: StandardHearing[]): RenderedHearing[] {
+  return hearings.map((hearing) => ({
+    venue: hearing.venue,
+    judge: hearing.judge,
+    time: normalizeTime(hearing.time),
+    caseNumber: hearing.caseNumber,
+    caseDetails: hearing.caseDetails,
+    hearingType: hearing.hearingType,
+    additionalInformation: hearing.additionalInformation || ""
+  }));
+}
+
+export function renderLondonAdminCourt(data: LondonAdminCourtData, options: RenderOptions): RenderedData {
+  const listDate = `List for ${formatDisplayDate(options.displayFrom, options.locale)}`;
+  const lastUpdated = `Last updated ${formatLastUpdated(options.lastReceivedDate, options.locale)}`;
+
+  return {
+    header: {
+      listTitle: options.locale === "cy" ? "Rhestr Achosion Dyddiol y Llys Gweinyddol Llundain" : "London Administrative Court Daily Cause List",
+      listDate,
+      lastUpdated
+    },
+    mainHearings: renderHearings(data.mainHearings),
+    planningCourt: renderHearings(data.planningCourt)
+  };
+}

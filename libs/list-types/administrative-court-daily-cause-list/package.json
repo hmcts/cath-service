@@ -1,0 +1,44 @@
+{
+  "name": "@hmcts/administrative-court-daily-cause-list",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && yarn build:nunjucks && yarn build:schemas",
+    "build:nunjucks": "mkdir -p dist/pages dist/views && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\; && cd ../views && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/views/$(dirname {}) && cp {} ../../dist/views/{}' \\;",
+    "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*",
+    "@hmcts/publication": "workspace:*",
+    "@hmcts/web-core": "workspace:*",
+    "ajv": "8.17.1",
+    "luxon": "3.7.2"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.1",
+    "@types/node": "24.10.4",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16"
+  },
+  "peerDependencies": {
+    "express": "^5.1.0"
+  }
+}

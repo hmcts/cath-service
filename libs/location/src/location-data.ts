@@ -76,6 +76,34 @@ export const locationData: {
       welshName: "Canolfan Llysoedd Cyfun Newcastle",
       regions: [4],
       subJurisdictions: [1, 4]
+    },
+    {
+      locationId: 11,
+      name: "Birmingham Administrative Court",
+      welshName: "Llys Gweinyddol Birmingham",
+      regions: [2],
+      subJurisdictions: [1]
+    },
+    {
+      locationId: 12,
+      name: "Leeds Administrative Court",
+      welshName: "Llys Gweinyddol Leeds",
+      regions: [6],
+      subJurisdictions: [1]
+    },
+    {
+      locationId: 13,
+      name: "Bristol and Cardiff Administrative Court",
+      welshName: "Llys Gweinyddol Bryste a Chaerdydd",
+      regions: [3, 5],
+      subJurisdictions: [1]
+    },
+    {
+      locationId: 14,
+      name: "Manchester Administrative Court",
+      welshName: "Llys Gweinyddol Manceinion",
+      regions: [4],
+      subJurisdictions: [1]
     }
   ],
   regions: [

@@ -2,14 +2,14 @@
 
 ## Overview
 
-Implement 13 hearing list types for Royal Courts of Justice and Administrative Courts through the non-strategic publishing route. This includes creating validation schemas, Excel templates, bilingual templates, PDF generation, and a unified RCJ landing page.
+Implement 14 hearing list types for Royal Courts of Justice and Administrative Courts through the non-strategic publishing route. This includes creating validation schemas, Excel templates, bilingual templates, PDF generation, and a unified RCJ landing page.
 
 ## Scope Summary
 
 - **8 Standard Format Lists** (RCJ venue): 7-column table layout
-- **1 Special Format (Family)**: Accordion-grouped layout with 9 columns
-- **1 Special Format (Court of Appeal Civil)**: Two-tab Excel support
-- **4 Administrative Court Lists**: Standard 7-column format (different venues)
+- **1 Special Format (London Administrative Court)**: Two-tab Excel support (Main hearings + Planning Court)
+- **1 Special Format (Court of Appeal Civil)**: Two-tab Excel support (Daily hearings + Future judgments)
+- **4 Administrative Court Lists**: Standard 7-column format (different venues, outside RCJ)
 - **1 RCJ Landing Page**: Hub for all RCJ hearing lists
 - **Full bilingual support** (English/Welsh)
 - **PDF generation** for all lists
@@ -55,7 +55,7 @@ The system already has comprehensive infrastructure for hearing lists:
 - ❌ 13 Excel converter configurations
 - ❌ 13 JSON validation schemas
 - ❌ 13 rendering implementations
-- ❌ 13 Nunjucks templates (3 unique layouts: standard, family, civil appeal)
+- ❌ 13 Nunjucks templates (3 unique layouts: standard, London Admin Court with Planning Court tab, Court of Appeal Civil)
 - ❌ PDF generation system
 - ❌ 4 Administrative Court venue configurations
 - ❌ Welsh translations for all content
@@ -82,10 +82,11 @@ The system already has comprehensive infrastructure for hearing lists:
    - Parameterized by list type ID
    - Reusable renderer and validator
 
-2. **Module 2: `rcj-family-daily-cause-list`** (1 list)
-   - Special accordion layout with 9 columns
-   - Grouping by Courtroom & Recorder
-   - Hide/Show controls
+2. **Module 2: `london-administrative-court-daily-cause-list`** (1 list)
+   - Two-tab Excel support (Main hearings + Planning Court)
+   - Dual sub-sections in display
+   - Planning Court section with header
+   - 7 columns for both tabs
 
 3. **Module 3: `rcj-court-of-appeal-civil`** (1 list)
    - Two-tab Excel support
@@ -94,7 +95,7 @@ The system already has comprehensive infrastructure for hearing lists:
 
 4. **Module 4: `administrative-court-daily-cause-list`** (4 lists)
    - Same as Module 1 (7-column table)
-   - Different venues/regions
+   - Different venues/regions (outside RCJ)
 
 5. **Module 5: `rcj-landing-page`**
    - Venue hub page
@@ -114,12 +115,12 @@ The system already has comprehensive infrastructure for hearing lists:
 **Location**: `libs/list-types/rcj-standard-daily-cause-list/`
 
 **Supports 8 List Types:**
-1. County Court at Central London Civil Daily Cause List (ID 10)
-2. Court of Appeal (Criminal Division) Daily Cause List (ID 11)
-3. Family Division of the High Court Daily Cause List (ID 12)
-4. King's Bench Division Daily Cause List (ID 13)
-5. King's Bench Masters Daily Cause List (ID 14)
-6. London Administrative Court Daily Cause List (ID 15)
+1. Civil Courts at the RCJ Daily Cause List (ID 10)
+2. County Court at Central London Civil Daily Cause List (ID 11)
+3. Court of Appeal (Criminal Division) Daily Cause List (ID 12)
+4. Family Division of the High Court Daily Cause List (ID 13)
+5. King's Bench Division Daily Cause List (ID 14)
+6. King's Bench Masters Daily Cause List (ID 15)
 7. Mayor & City Civil Daily Cause List (ID 16)
 8. Senior Courts Costs Office Daily Cause List (ID 17)
 
@@ -134,8 +135,8 @@ rcj-standard-daily-cause-list/
 │   ├── pages/
 │   │   ├── index.ts                     # GET handler (detects list type)
 │   │   ├── standard-daily-cause-list.njk  # Shared template
-│   │   ├── en.ts                        # English content (all 8 lists)
-│   │   └── cy.ts                        # Welsh content (all 8 lists)
+│   │   ├── en.ts                        # English content (all lists)
+│   │   └── cy.ts                        # Welsh content (all lists)
 │   ├── models/
 │   │   └── types.ts                     # StandardHearing interface
 │   ├── conversion/
@@ -232,7 +233,7 @@ export const GET = async (req: Request, res: Response) => {
     <h1 class="govuk-heading-xl">{{ content.pageTitle }}</h1>
 
     <!-- Special content for Court of Appeal (Criminal Division) -->
-    {% if listTypeId == 11 %}
+    {% if listTypeId == 12 %}
       <p class="govuk-body">
         For further information about our hearings, please see
         <a href="{{ content.quickGuideUrl }}" class="govuk-link">{{ content.quickGuideText }}</a>
@@ -279,17 +280,21 @@ export const GET = async (req: Request, res: Response) => {
 **Content Structure (en.ts):**
 ```typescript
 export const en = {
-  10: {  // County Court at Central London Civil
+  10: {  // Civil Courts at the RCJ
+    pageTitle: "Civil Courts at the RCJ Daily Cause List",
+    // ... rest of content
+  },
+  11: {  // County Court at Central London Civil
     pageTitle: "County Court at Central London Civil Daily Cause List",
     // ... rest of content
   },
-  11: {  // Court of Appeal (Criminal Division)
+  12: {  // Court of Appeal (Criminal Division)
     pageTitle: "Court of Appeal (Criminal Division) Daily Cause List",
     quickGuideText: "this quick guide",
     quickGuideUrl: "https://www.judiciary.uk/wp-content/uploads/2025/07/A-QUICK-GUIDE-TO-HEARINGS-IN-THE-CACD.docx",
     // ... rest of content
   },
-  // ... entries for IDs 12-17
+  // ... entries for IDs 13-17
   common: {
     tableHeaders: {
       venue: "Venue",
@@ -310,16 +315,16 @@ export const en = {
 
 ---
 
-#### Module 2: RCJ Family Daily Cause List
+#### Module 2: London Administrative Court Daily Cause List
 
-**Location**: `libs/list-types/rcj-family-daily-cause-list/`
+**Location**: `libs/list-types/london-administrative-court-daily-cause-list/`
 
 **Supports 1 List Type:**
-- Family Daily Cause List for Royal Courts of Justice (ID 18)
+- London Administrative Court Daily Cause List (ID 18)
 
 **File Structure:**
 ```
-rcj-family-daily-cause-list/
+london-administrative-court-daily-cause-list/
 ├── package.json
 ├── tsconfig.json
 ├── src/
@@ -327,115 +332,85 @@ rcj-family-daily-cause-list/
 │   ├── index.ts
 │   ├── pages/
 │   │   ├── index.ts                     # GET handler
-│   │   ├── family-daily-cause-list.njk  # Accordion template
+│   │   ├── london-admin-court.njk       # Two-section template
 │   │   ├── en.ts                        # English content
 │   │   └── cy.ts                        # Welsh content
 │   ├── models/
-│   │   └── types.ts                     # FamilyHearing interface
+│   │   └── types.ts                     # StandardHearing interface
 │   ├── conversion/
-│   │   └── family-config.ts             # 9-field converter
+│   │   └── london-admin-config.ts       # Two-tab converter
 │   ├── validation/
 │   │   └── json-validator.ts
 │   ├── rendering/
-│   │   └── renderer.ts                  # Groups by Courtroom & Recorder
-│   ├── schemas/
-│   │   └── family-daily-cause-list.json
-│   └── assets/
-│       └── js/
-│           └── accordion.ts             # Hide/Show all sections
+│   │   └── renderer.ts                  # Formats both sections
+│   └── schemas/
+│       └── london-admin-court.json
 ```
 
-**9 Fields (Family):**
-1. Courtroom & Recorder (string, grouping key)
-2. Time (string)
-3. Case ref (string)
-4. Case name (string)
-5. Case type (string)
-6. Hearing type (string)
-7. Location (string)
-8. Duration (string)
-9. Applicant/Petitioner (string)
-10. Respondent (string)
-
 **Special Requirements:**
-- Group hearings by "Courtroom & Recorder"
-- Each group is an accordion section
-- Global "Hide all sections" / "Show all sections" button
-- Per-section "Hide" / "Show" button
-- Scrollable sections with increased vertical spacing
+- Excel template with 2 tabs
+- **Tab 1 (Main hearings):** 7 fields (Venue, Judge, Time, Case Number, Case Details, Hearing Type, Additional Information)
+- **Tab 2 (Planning Court):** Header "Planning Court" + 7 fields (same as Tab 1)
+- Display as two sub-sections on single page
 
-**Rendering Logic:**
+**Excel Converter Configuration:**
 ```typescript
-// src/rendering/renderer.ts
-export function renderFamilyDailyCauseList(
-  hearingList: FamilyHearing[],
-  locale: string
-): RenderedFamilyData {
-  // Group by courtroomAndRecorder
-  const grouped = hearingList.reduce((acc, hearing) => {
-    const key = hearing.courtroomAndRecorder;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(hearing);
-    return acc;
-  }, {} as Record<string, FamilyHearing[]>);
+// src/conversion/london-admin-config.ts
+const LONDON_ADMIN_CONFIG: ExcelConverterConfig = {
+  sheets: [
+    {
+      name: "Main hearings",
+      fields: [
+        { header: "Venue", fieldName: "venue", required: true },
+        { header: "Judge", fieldName: "judge", required: true },
+        { header: "Time", fieldName: "time", required: true },
+        { header: "Case Number", fieldName: "caseNumber", required: true },
+        { header: "Case Details", fieldName: "caseDetails", required: true },
+        { header: "Hearing Type", fieldName: "hearingType", required: true },
+        { header: "Additional Information", fieldName: "additionalInformation", required: false }
+      ],
+      minRows: 0  // Optional tab
+    },
+    {
+      name: "Planning Court",
+      fields: [
+        { header: "Venue", fieldName: "venue", required: true },
+        { header: "Judge", fieldName: "judge", required: true },
+        { header: "Time", fieldName: "time", required: true },
+        { header: "Case Number", fieldName: "caseNumber", required: true },
+        { header: "Case Details", fieldName: "caseDetails", required: true },
+        { header: "Hearing Type", fieldName: "hearingType", required: true },
+        { header: "Additional Information", fieldName: "additionalInformation", required: false }
+      ],
+      minRows: 0  // Optional tab
+    }
+  ]
+};
+```
 
-  return {
-    header: { /* list title, date, etc. */ },
-    sections: Object.entries(grouped).map(([sectionTitle, hearings]) => ({
-      title: sectionTitle,
-      hearings: hearings.map(h => ({
-        time: h.time,
-        caseRef: h.caseRef,
-        caseName: h.caseName,
-        caseType: h.caseType,
-        hearingType: h.hearingType,
-        location: h.location,
-        duration: h.duration,
-        applicantPetitioner: h.applicantPetitioner,
-        respondent: h.respondent
-      }))
-    }))
-  };
+**Data Structure:**
+```typescript
+interface LondonAdminCourtData {
+  mainHearings: StandardHearing[];
+  planningCourt: StandardHearing[];
 }
 ```
 
-**Template (Accordion Layout):**
+**Template:**
 ```html
-<!-- src/pages/family-daily-cause-list.njk -->
-<h1 class="govuk-heading-xl">{{ content.pageTitle }}</h1>
+<h1>{{ content.pageTitle }}</h1>
 
-<button class="govuk-button govuk-button--secondary" id="toggle-all">
-  {{ content.hideAllSections }}
-</button>
+<!-- Sub-section 1: Main hearings -->
+{% if mainHearings.length > 0 %}
+<h2 class="govuk-heading-l">{{ content.mainHearings }}</h2>
+{{ govukTable({ /* ... main hearings data ... */ }) }}
+{% endif %}
 
-{% for section in sections %}
-<div class="govuk-accordion__section" data-module="govuk-accordion">
-  <div class="govuk-accordion__section-header">
-    <h2 class="govuk-accordion__section-heading">
-      <button class="govuk-accordion__section-button">
-        {{ section.title }}
-      </button>
-    </h2>
-  </div>
-  <div class="govuk-accordion__section-content scrollable-section">
-    {% for hearing in section.hearings %}
-    <div class="hearing-entry">
-      <dl class="govuk-summary-list">
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">{{ content.fields.time }}</dt>
-          <dd class="govuk-summary-list__value">{{ hearing.time }}</dd>
-        </div>
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">{{ content.fields.caseRef }}</dt>
-          <dd class="govuk-summary-list__value">{{ hearing.caseRef }}</dd>
-        </div>
-        <!-- ... more fields ... -->
-      </dl>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endfor %}
+<!-- Sub-section 2: Planning Court -->
+{% if planningCourt.length > 0 %}
+<h2 class="govuk-heading-l">{{ content.planningCourt }}</h2>
+{{ govukTable({ /* ... planning court data ... */ }) }}
+{% endif %}
 ```
 
 ---
@@ -555,9 +530,9 @@ royal-courts-of-justice/
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
 
-  // Get all RCJ list types (IDs 10-17)
+  // Get all RCJ list types (IDs 10-18, including London Admin Court)
   const rcjListTypes = mockListTypes.filter(lt =>
-    [10, 11, 12, 13, 14, 15, 16, 17].includes(lt.id)
+    [10, 11, 12, 13, 14, 15, 16, 17, 18].includes(lt.id)
   );
 
   // Sort alphabetically
@@ -633,6 +608,15 @@ export const mockListTypes: ListType[] = [
   // RCJ Standard Format (Module 1)
   {
     id: 10,
+    name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Civil Courts at the RCJ Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llysoedd Sifil yn y Llys Barn Brenhinol",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "civil-courts-rcj-daily-cause-list",
+    isNonStrategic: true
+  },
+  {
+    id: 11,
     name: "COUNTY_COURT_CENTRAL_LONDON_CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "County Court at Central London Civil Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Sifil Llys Sirol Canolog Llundain",
@@ -641,7 +625,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 11,
+    id: 12,
     name: "COURT_OF_APPEAL_CRIMINAL_DIVISION_DAILY_CAUSE_LIST",
     englishFriendlyName: "Court of Appeal (Criminal Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Droseddol)",
@@ -650,7 +634,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 12,
+    id: 13,
     name: "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Family Division of the High Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Adran Deulu'r Uchel Lys",
@@ -659,7 +643,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 13,
+    id: 14,
     name: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
     englishFriendlyName: "King's Bench Division Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Adran Mainc y Brenin",
@@ -668,7 +652,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 14,
+    id: 15,
     name: "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
     englishFriendlyName: "King's Bench Masters Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Meistri Mainc y Brenin",
@@ -677,7 +661,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 15,
+    id: 16,
     name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "London Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gweinyddol Llundain",
@@ -686,7 +670,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 16,
+    id: 17,
     name: "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Mayor & City Civil Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Sifil Dyddiol y Maer a'r Ddinas",
@@ -695,7 +679,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 17,
+    id: 18,
     name: "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST",
     englishFriendlyName: "Senior Courts Costs Office Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Swyddfa Costau'r Uchel Lysoedd",
@@ -706,7 +690,7 @@ export const mockListTypes: ListType[] = [
 
   // RCJ Special Format - Family (Module 2)
   {
-    id: 18,
+    id: 19,
     name: "FAMILY_DAILY_CAUSE_LIST_RCJ",
     englishFriendlyName: "Family Daily Cause List for Royal Courts of Justice",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Teulu ar Llys Barn Brenhinol",
@@ -717,7 +701,7 @@ export const mockListTypes: ListType[] = [
 
   // RCJ Special Format - Civil Appeal (Module 3)
   {
-    id: 19,
+    id: 20,
     name: "COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST",
     englishFriendlyName: "Court of Appeal (Civil Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
@@ -728,7 +712,7 @@ export const mockListTypes: ListType[] = [
 
   // Administrative Courts (Module 4)
   {
-    id: 20,
+    id: 21,
     name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Birmingham Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gweinyddol Birmingham",
@@ -737,7 +721,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 21,
+    id: 22,
     name: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Leeds Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gweinyddol Leeds",
@@ -746,7 +730,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 22,
+    id: 23,
     name: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Bristol and Cardiff Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gweinyddol Bryste a Chaerdydd",
@@ -755,7 +739,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 23,
+    id: 24,
     name: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Manchester Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gweinyddol Manceinion",
@@ -998,9 +982,9 @@ test.describe("RCJ Hearing Lists @nightly", () => {
     // Verify caution message
     await expect(page.getByText(/subject to change until 4:30pm/i)).toBeVisible();
 
-    // Verify at least 8 hearing list links (RCJ lists)
+    // Verify at least 9 hearing list links (RCJ lists)
     const listLinks = page.locator("ul.govuk-list a");
-    await expect(listLinks).toHaveCount(8);
+    await expect(listLinks).toHaveCount(9);
 
     // Test accessibility
     const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
@@ -1104,7 +1088,7 @@ test("should meet WCAG 2.2 AA standards", async ({ page }) => {
 ## Implementation Checklist
 
 ### Phase 1: Foundation (Week 1)
-- [ ] Update list type registry with 13 new entries (IDs 10-23)
+- [ ] Update list type registry with 14 new entries (IDs 10-24)
 - [ ] Add Administrative Court venues to location data
 - [ ] Create RCJ landing page module (Module 5)
 - [ ] Create empty module structures for Modules 1-4
@@ -1116,9 +1100,9 @@ test("should meet WCAG 2.2 AA standards", async ({ page }) => {
 - [ ] Create JSON schema for validation
 - [ ] Implement renderer for standard format
 - [ ] Create Nunjucks template
-- [ ] Create English content (en.ts) for all 8 lists
-- [ ] Create Welsh content (cy.ts) for all 8 lists
-- [ ] Register 8 converters (IDs 10-17)
+- [ ] Create English content (en.ts) for all 9 lists
+- [ ] Create Welsh content (cy.ts) for all 9 lists
+- [ ] Register 9 converters (IDs 10-18)
 - [ ] Add special content for Court of Appeal (Criminal) quick guide link
 - [ ] Implement search JavaScript
 - [ ] Add unit tests
@@ -1143,7 +1127,7 @@ test("should meet WCAG 2.2 AA standards", async ({ page }) => {
 - [ ] Add unit tests
 
 ### Phase 5: Module 4 - Administrative Courts (Week 3)
-- [ ] Reuse Module 1 code for 4 lists (IDs 20-23)
+- [ ] Reuse Module 1 code for 4 lists (IDs 21-24)
 - [ ] Create venue-specific content
 - [ ] Register 4 converters
 - [ ] Add unit tests
@@ -1157,7 +1141,7 @@ test("should meet WCAG 2.2 AA standards", async ({ page }) => {
 
 ### Phase 7: Testing & QA (Week 4)
 - [ ] Write E2E tests for all list types
-- [ ] Test Excel upload flow for all 13 types
+- [ ] Test Excel upload flow for all 14 types
 - [ ] Test search functionality
 - [ ] Test accordion functionality (Family list)
 - [ ] Run accessibility tests (Axe)
@@ -1191,7 +1175,7 @@ test("should meet WCAG 2.2 AA standards", async ({ page }) => {
    - **Action Required**: Check `location-data.ts` for next available IDs (suggest 101-104)
 
 4. **List Type ID Range**:
-   - Are IDs 10-23 available?
+   - Are IDs 10-24 available?
    - **Action Required**: Verify no conflicts with planned future list types
 
 5. **Court of Appeal (Criminal) Quick Guide**:
@@ -1219,7 +1203,7 @@ test("should meet WCAG 2.2 AA standards", async ({ page }) => {
 ## Success Criteria
 
 1. **Functional Requirements**
-   - ✅ All 13 list types can be uploaded via Excel
+   - ✅ All 14 list types can be uploaded via Excel
    - ✅ All lists display correctly with proper formatting
    - ✅ RCJ landing page shows all RCJ lists alphabetically
    - ✅ Family list accordion grouping works correctly

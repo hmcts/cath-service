@@ -1,0 +1,46 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ content.pageTitle }}</h1>
+
+    {{ govukWarningText({
+      text: content.cautionMessage,
+      iconFallbackText: content.cautionTitle
+    }) }}
+
+    <section class="govuk-!-margin-bottom-8">
+      <h2 class="govuk-heading-m">{{ content.factTitle }}</h2>
+      <p class="govuk-body">{{ content.factDescription }}</p>
+      <p class="govuk-body">
+        <a href="{{ content.factLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+          {{ content.factLinkText }}
+        </a>
+      </p>
+    </section>
+
+    <section>
+      <h2 class="govuk-heading-m">{{ content.hearingListsTitle }}</h2>
+      <p class="govuk-body">{{ content.hearingListsDescription }}</p>
+
+      {% if listTypes.length > 0 %}
+        <ul class="govuk-list">
+          {% for listType in listTypes %}
+            <li>
+              <a href="/{{ listType.urlPath }}?artefactId={{ listType.artefactId }}" class="govuk-link">
+                {{ listType.name }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="govuk-body">{{ content.noListsMessage }}</p>
+      {% endif %}
+    </section>
+
+  </div>
+</div>
+{% endblock %}

@@ -4,15 +4,15 @@ import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
-import { renderCauseListData } from "../rendering/renderer.js";
-import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
+import type { CourtOfAppealCivilData } from "../models/types.js";
+import { renderCourtOfAppealCivil } from "../rendering/renderer.js";
+import { validateCourtOfAppealCivil } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Navigate to monorepo root (from libs/list-types/civil-and-family-daily-cause-list/src/pages/)
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
@@ -26,8 +26,8 @@ export const GET = async (req: Request, res: Response) => {
     return res.status(400).render("errors/common", {
       en,
       cy,
-      errorTitle: t.errorTitle,
-      errorMessage: t.errorMessage
+      errorTitle: "Bad Request",
+      errorMessage: "Missing artefactId parameter"
     });
   }
 
@@ -40,8 +40,18 @@ export const GET = async (req: Request, res: Response) => {
       return res.status(404).render("errors/common", {
         en,
         cy,
-        errorTitle: t.errorTitle,
-        errorMessage: t.errorMessage
+        errorTitle: "Not Found",
+        errorMessage: "The requested list could not be found"
+      });
+    }
+
+    // Verify this is list type 19 (Court of Appeal Civil Division)
+    if (artefact.listTypeId !== 19) {
+      return res.status(400).render("errors/common", {
+        en,
+        cy,
+        errorTitle: "Invalid List Type",
+        errorMessage: "This list type is not supported by this module"
       });
     }
 
@@ -55,48 +65,50 @@ export const GET = async (req: Request, res: Response) => {
       return res.status(404).render("errors/common", {
         en,
         cy,
-        errorTitle: t.errorTitle,
-        errorMessage: t.errorMessage
+        errorTitle: "Not Found",
+        errorMessage: "The requested list could not be found"
       });
     }
 
-    const jsonData = JSON.parse(jsonContent);
+    const jsonData: CourtOfAppealCivilData = JSON.parse(jsonContent);
 
-    const validationResult = validateCivilFamilyCauseList(jsonData);
+    const validationResult = validateCourtOfAppealCivil(jsonData);
     if (!validationResult.isValid) {
       console.error("Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {
         en,
         cy,
-        errorTitle: t.errorTitle,
-        errorMessage: t.errorMessage
+        errorTitle: "Invalid Data",
+        errorMessage: "The list data is invalid"
       });
     }
 
-    const { header, openJustice, listData } = await renderCauseListData(jsonData, {
-      locationId: artefact.locationId,
-      contentDate: artefact.contentDate,
-      locale
+    const { header, dailyHearings, futureJudgments } = renderCourtOfAppealCivil(jsonData, {
+      locale,
+      displayFrom: artefact.displayFrom,
+      displayTo: artefact.displayTo,
+      lastReceivedDate: artefact.lastReceivedDate.toISOString()
     });
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
-    res.render("civil-and-family-daily-cause-list", {
+    res.render("rcj-court-of-appeal-civil/civil-appeal", {
       en,
       cy,
+      t,
+      title: header.listTitle,
       header,
-      openJustice,
-      listData,
-      dataSource,
-      t
+      dailyHearings,
+      futureJudgments,
+      dataSource
     });
   } catch (error) {
-    console.error("Error rendering cause list:", error);
+    console.error("Error rendering Court of Appeal (Civil Division) list:", error);
     return res.status(500).render("errors/common", {
       en,
       cy,
-      errorTitle: t.errorTitle,
-      errorMessage: t.errorMessage
+      errorTitle: "Error",
+      errorMessage: "An error occurred while displaying the list"
     });
   }
 };

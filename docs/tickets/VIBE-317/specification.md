@@ -20,12 +20,12 @@ Hearing lists are published in CaTH through various routes. This ticket covers t
 All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Justice Group" region:
 
 ### Standard Daily Cause List Format (7 columns)
-1. **County Court at Central London Civil Daily Cause List** (Civil/Civil)
-2. **Court of Appeal (Criminal Division) Daily Cause List** (Criminal/Criminal) - *includes special quick guide link*
-3. **Family Division of the High Court Daily Cause List** (Family/Family)
-4. **King's Bench Division Daily Cause List** (Civil/High Court)
-5. **King's Bench Masters Daily Cause List** (Civil/High Court)
-6. **London Administrative Court Daily Cause List** (Civil/High Court)
+1. **Civil Courts at the RCJ Daily Cause List** (Civil/Civil)
+2. **County Court at Central London Civil Daily Cause List** (Civil/Civil)
+3. **Court of Appeal (Criminal Division) Daily Cause List** (Criminal/Criminal) - *includes special quick guide link*
+4. **Family Division of the High Court Daily Cause List** (Family/Family)
+5. **King's Bench Division Daily Cause List** (Civil/High Court)
+6. **King's Bench Masters Daily Cause List** (Civil/High Court)
 7. **Mayor & City Civil Daily Cause List** (Civil/Civil)
 8. **Senior Courts Costs Office Daily Cause List** (Civil/High Court)
 
@@ -38,27 +38,16 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 6. Hearing Type
 7. Additional Information
 
-### Special Format 1: Family Daily Cause List
-**Family Daily Cause List for Royal Courts of Justice** (Family/Family)
+### Special Format 1: London Administrative Court Daily Cause List
+**London Administrative Court Daily Cause List** (Civil/High Court)
 
-**Special Layout:**
-- Hearings grouped by "Courtroom & Recorder"
-- Each group is a collapsible accordion section
-- Global "Hide all sections" / "Show all sections" control
-- Per-section "Hide" / "Show" control
-- Scrollable sections supporting long content
-- Increased vertical spacing between entries
+**Special Schema:**
+- Excel template has 2 tabs
+- **Tab 1 (Main hearings):** 7 fields (Venue, Judge, Time, Case Number, Case Details, Hearing Type, Additional Information)
+- **Tab 2 (Planning Court):** Header "Planning Court" + 7 fields (Venue, Judge, Time, Case Number, Case Details, Hearing Type, Additional Information)
 
-**Columns (in order):**
-1. Time
-2. Case ref
-3. Case name
-4. Case type
-5. Hearing type
-6. Location
-7. Duration
-8. Applicant/Petitioner
-9. Respondent
+**Display:**
+- Two sub-sections: Main hearings and "Planning Court" with Planning Court data displayed in the style guide format
 
 ### Special Format 2: Court of Appeal (Civil Division)
 **Court of Appeal (Civil Division) Daily Cause List** (Civil/High Court)
@@ -138,16 +127,6 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 - **Required:** No
 - **Behaviour:** downloads PDF version of currently viewed hearing list
 
-#### Hide all sections (Family Daily Cause List only)
-- **Input type:** accordion toggle
-- **Required:** No
-- **Behaviour:** collapses or expands all Family list sections
-
-#### Hide/Show (per section – Family Daily Cause List only)
-- **Input type:** accordion toggle
-- **Required:** No
-- **Behaviour:** collapses or expands an individual section
-
 ### Admin (Non-Strategic Publishing Route)
 
 #### List type
@@ -177,27 +156,19 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 - **EN:** "Download PDF"
 - **CY:** "Lawrlwytho PDF"
 
-### Family Daily Cause List Page
+### London Administrative Court Daily Cause List Page
 
 **Title:**
-- **EN:** "Family Daily Cause List for Royal Courts of Justice"
-- **CY:** "Rhestr Achosion Dyddiol y Llys Teulu ar Llys Barn Brenhinol"
+- **EN:** "London Administrative Court Daily Cause List"
+- **CY:** "Rhestr Achosion Dyddiol y Llys Gweinyddol Llundain"
 
-**Global Control:**
-- **EN:** "Hide all sections" / "Show all sections"
-- **CY:** "Cuddio pob adran" / "Dangos pob adran"
+**Sub-sections:**
+- **EN:** Main hearings and "Planning Court"
+- **CY:** Prif wrandawiadau and "Llys Cynllunio"
 
-**Section Grouping:**
-- **EN:** "Courtroom & Recorder"
-- **CY:** "Ystafell Lys a Chofnodwr"
-
-**Per-section Control:**
-- **EN:** "Hide" / "Show"
-- **CY:** "Cuddio" / "Dangos"
-
-**Column Headers:**
-- **EN:** Time, Case ref, Case name, Case type, Hearing type, Location, Duration, Applicant/Petitioner, Respondent
-- **CY:** Amser, Cyfeirnod yr Achos, Enw'r Achos, Math o Achos, Math o Wrandawiad, Lleoliad, Hyd, Ceisydd/Deisebydd, Atebydd
+**Column Headers (both tabs):**
+- **EN:** Venue, Judge, Time, Case Number, Case Details, Hearing Type, Additional Information
+- **CY:** Lleoliad, Barnwr, Amser, Rhif yr Achos, Manylion yr achos, Math o Wrandawiad, Gwybodaeth ychwanegol
 
 ### Court of Appeal (Civil Division) Page
 
@@ -242,9 +213,6 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 ### From any RCJ hearing list
 - **Behaviour:** Back returns the user to the RCJ landing page
 
-### From Family list accordion interactions
-- **Behaviour:** Hide/Show actions do not affect browser history
-
 ### From PDF view
 - **Behaviour:** Back returns to the same hearing list page
 
@@ -254,9 +222,7 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 ## Accessibility
 
 - All pages must meet WCAG 2.2 AA standards
-- Accordions must be keyboard accessible and announce expanded/collapsed state
 - Tables must use semantic table markup with correctly associated headers
-- Scrollable Family list sections must remain keyboard and screen-reader accessible
 - Error messages must be announced to assistive technologies and appear next to the relevant control
 
 ## Test Scenarios
@@ -274,10 +240,9 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 4. **Standard lists:**
    - Columns render in the specified order and match the validation schema
 
-5. **Family Daily Cause List:**
-   - Hearings are grouped by Courtroom & Recorder
-   - Sections are scrollable and support long descriptive content
-   - Global and per-section Hide/Show controls work correctly
+5. **London Administrative Court Daily Cause List:**
+   - Excel template supports two tabs (Main hearings and Planning Court)
+   - "Planning Court" renders as a distinct sub-section with header
 
 6. **Court of Appeal (Civil Division):**
    - Excel template supports two tabs
@@ -295,9 +260,9 @@ All lists are for venue "Royal Courts of Justice" linked to "Royal Courts of Jus
 - [ ] Royal Courts of Justice venue and region configuration
 - [ ] RCJ landing page implementation
 - [ ] 8 standard format list type implementations with validation schemas
-- [ ] Family Daily Cause List with accordion layout
+- [ ] London Administrative Court Daily Cause List with two-tab support (Planning Court)
 - [ ] Court of Appeal (Civil Division) with two-tab support
-- [ ] 4 Administrative Court list type implementations
+- [ ] 4 Administrative Court list type implementations (outside RCJ)
 - [ ] Excel templates for all list types
 - [ ] PDF generation for all list types
 - [ ] Confluence documentation pages for all list types

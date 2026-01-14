@@ -1,0 +1,65 @@
+import { createConverter, type ExcelConverterConfig, registerConverter, validateNoHtmlTags } from "@hmcts/list-types-common";
+
+// Matches h:mma, h.mma (e.g., 9:30am, 10.15pm) or ha (e.g., 9am, 2pm)
+const TIME_PATTERN = /^\d{1,2}([:.]\d{2})?[ap]m\s*$/i;
+
+function validateTimeFormat(value: string, rowNumber: number): void {
+  if (!TIME_PATTERN.test(value)) {
+    throw new Error(`Invalid time format '${value}' in row ${rowNumber}. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)`);
+  }
+}
+
+// RCJ Standard Daily Cause List (listTypeIds: 10-17)
+export const STANDARD_EXCEL_CONFIG: ExcelConverterConfig = {
+  fields: [
+    {
+      header: "Venue",
+      fieldName: "venue",
+      required: true,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)]
+    },
+    {
+      header: "Judge",
+      fieldName: "judge",
+      required: true,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge", rowNumber)]
+    },
+    {
+      header: "Time",
+      fieldName: "time",
+      required: true,
+      validators: [validateTimeFormat]
+    },
+    {
+      header: "Case Number",
+      fieldName: "caseNumber",
+      required: true,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Number", rowNumber)]
+    },
+    {
+      header: "Case Details",
+      fieldName: "caseDetails",
+      required: true,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Details", rowNumber)]
+    },
+    {
+      header: "Hearing Type",
+      fieldName: "hearingType",
+      required: true,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
+    },
+    {
+      header: "Additional Information",
+      fieldName: "additionalInformation",
+      required: false,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
+    }
+  ],
+  minRows: 1
+};
+
+// Register all 8 converters with the same config
+// IDs: 10-17 (excluding 18 which is London Admin Court with 2-tab format)
+for (const listTypeId of [10, 11, 12, 13, 14, 15, 16, 17]) {
+  registerConverter(listTypeId, createConverter(STANDARD_EXCEL_CONFIG));
+}

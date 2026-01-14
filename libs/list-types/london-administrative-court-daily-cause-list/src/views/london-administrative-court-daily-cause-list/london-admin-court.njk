@@ -1,0 +1,159 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .back-to-top {
+      margin-top: 40px;
+    }
+    .search-container {
+      margin-top: 32px;
+      margin-bottom: 32px;
+    }
+    .section-divider {
+      margin-top: 48px;
+      margin-bottom: 32px;
+    }
+  </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
+
+    <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">{{ t.locationLine1 }}</p>
+    <p class="govuk-body govuk-!-margin-bottom-0">{{ t.locationLine2 }}</p>
+    <p class="govuk-body">{{ t.locationLine3 }}</p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.listDate }}</p>
+    <p class="govuk-body">{{ header.lastUpdated }}</p>
+
+    {{ govukDetails({
+      summaryText: t.importantInfoTitle,
+      html: '<p class="govuk-body">' + t.importantInfoText + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">' + t.judgmentsTitle + '</h3><p class="govuk-body">' + t.judgmentsText + '</p>',
+      open: true
+    }) }}
+
+    <div class="govuk-form-group search-container">
+      <h2 class="govuk-heading-s">{{ t.searchCasesTitle }}</h2>
+      <label class="govuk-label govuk-visually-hidden" for="case-search-input">
+        {{ t.searchCasesLabel }}
+      </label>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text" aria-label="{{ t.searchCasesLabel }}">
+    </div>
+
+    {# Main Hearings Section #}
+    {% if mainHearings.length > 0 %}
+    <div class="hearings-section" id="main-hearings-section">
+      <div id="main-hearings-table-container">
+        <table class="govuk-table hearings-table" role="table" aria-label="{{ t.mainHearingsTitle }}">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.venue }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.judge }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.time }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseNumber }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseDetails }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingType }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.additionalInformation }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for hearing in mainHearings %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ hearing.venue }}</td>
+                <td class="govuk-table__cell">{{ hearing.judge }}</td>
+                <td class="govuk-table__cell">{{ hearing.time }}</td>
+                <td class="govuk-table__cell">{{ hearing.caseNumber }}</td>
+                <td class="govuk-table__cell">{{ hearing.caseDetails }}</td>
+                <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
+                <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="hearings-section">
+      <p class="govuk-body">{{ t.noHearingsMessage }}</p>
+    </div>
+    {% endif %}
+
+    {# Planning Court Section #}
+    {% if planningCourt.length > 0 %}
+    <div class="hearings-section section-divider" id="planning-court-section">
+      <h2 class="govuk-heading-l">{{ t.planningCourtTitle }}</h2>
+      <div id="planning-court-table-container">
+        <table class="govuk-table hearings-table" role="table" aria-label="{{ t.planningCourtTitle }}">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.venue }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.judge }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.time }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseNumber }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseDetails }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingType }}</th>
+              <th scope="col" class="govuk-table__header">{{ t.tableHeaders.additionalInformation }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for hearing in planningCourt %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ hearing.venue }}</td>
+                <td class="govuk-table__cell">{{ hearing.judge }}</td>
+                <td class="govuk-table__cell">{{ hearing.time }}</td>
+                <td class="govuk-table__cell">{{ hearing.caseNumber }}</td>
+                <td class="govuk-table__cell">{{ hearing.caseDetails }}</td>
+                <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
+                <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="hearings-section section-divider">
+      <h2 class="govuk-heading-l">{{ t.planningCourtTitle }}</h2>
+      <p class="govuk-body">{{ t.noHearingsMessage }}</p>
+    </div>
+    {% endif %}
+
+    <p class="govuk-body govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
+
+    <div class="back-to-top">
+      <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Client-side search functionality - searches across both sections
+  (function() {
+    const searchInput = document.getElementById('case-search-input');
+    const tableRows = document.querySelectorAll('.hearings-table tbody tr');
+
+    if (!searchInput || !tableRows.length) return;
+
+    searchInput.addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase().trim();
+
+      tableRows.forEach(function(row) {
+        const text = row.textContent.toLowerCase();
+        const matches = !query || text.includes(query);
+        row.style.display = matches ? '' : 'none';
+      });
+    });
+  })();
+</script>
+{% endblock %}
