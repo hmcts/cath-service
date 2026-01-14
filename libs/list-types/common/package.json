@@ -10,6 +10,14 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
+    },
+    "./src/assets/js/*": {
+      "production": "./dist/assets/js/*",
+      "default": "./src/assets/js/*"
+    },
+    "./src/assets/css/*": {
+      "production": "./dist/assets/css/*",
+      "default": "./src/assets/css/*"
     }
   },
   "scripts": {

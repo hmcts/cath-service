@@ -27,16 +27,16 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-// Map list type IDs to their names
-const LIST_TYPE_NAMES: Record<number, { en: string; cy: string }> = {
-  10: { en: en[10].pageTitle, cy: cy[10].pageTitle },
-  11: { en: en[11].pageTitle, cy: cy[11].pageTitle },
-  12: { en: en[12].pageTitle, cy: cy[12].pageTitle },
-  13: { en: en[13].pageTitle, cy: cy[13].pageTitle },
-  14: { en: en[14].pageTitle, cy: cy[14].pageTitle },
-  15: { en: en[15].pageTitle, cy: cy[15].pageTitle },
-  16: { en: en[16].pageTitle, cy: cy[16].pageTitle },
-  17: { en: en[17].pageTitle, cy: cy[17].pageTitle }
+// Map list type IDs to their names and template names
+const LIST_TYPE_CONFIG: Record<number, { en: string; cy: string; template: string }> = {
+  10: { en: en[10].pageTitle, cy: cy[10].pageTitle, template: "civil-courts-rcj-daily-cause-list" },
+  11: { en: en[11].pageTitle, cy: cy[11].pageTitle, template: "county-court-central-london-civil-daily-cause-list" },
+  12: { en: en[12].pageTitle, cy: cy[12].pageTitle, template: "court-of-appeal-criminal-division-daily-cause-list" },
+  13: { en: en[13].pageTitle, cy: cy[13].pageTitle, template: "family-division-high-court-daily-cause-list" },
+  14: { en: en[14].pageTitle, cy: cy[14].pageTitle, template: "kings-bench-division-daily-cause-list" },
+  15: { en: en[15].pageTitle, cy: cy[15].pageTitle, template: "kings-bench-masters-daily-cause-list" },
+  16: { en: en[16].pageTitle, cy: cy[16].pageTitle, template: "mayor-city-civil-daily-cause-list" },
+  17: { en: en[17].pageTitle, cy: cy[17].pageTitle, template: "senior-courts-costs-office-daily-cause-list" }
 };
 
 export const GET = async (req: Request, res: Response) => {
@@ -71,7 +71,7 @@ export const GET = async (req: Request, res: Response) => {
     const listTypeId = artefact.listTypeId;
 
     // Verify this is one of our supported list types
-    if (!LIST_TYPE_NAMES[listTypeId]) {
+    if (!LIST_TYPE_CONFIG[listTypeId]) {
       return res.status(400).render("errors/common", {
         en,
         cy,
@@ -108,7 +108,8 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const listTitle = LIST_TYPE_NAMES[listTypeId][locale as keyof (typeof LIST_TYPE_NAMES)[number]];
+    const listConfig = LIST_TYPE_CONFIG[listTypeId];
+    const listTitle = listConfig[locale as "en" | "cy"];
 
     const { header, hearings } = renderStandardDailyCauseList(jsonData, {
       locale,
@@ -124,7 +125,7 @@ export const GET = async (req: Request, res: Response) => {
     // Get list-specific content
     const listContent = (t as any)[listTypeId] || {};
 
-    res.render("rcj-standard-daily-cause-list/standard-daily-cause-list", {
+    res.render(listConfig.template, {
       en,
       cy,
       t,

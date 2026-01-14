@@ -13,10 +13,9 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:schemas && yarn build:views",
+    "build": "tsc && yarn build:nunjucks && yarn build:schemas",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
     "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
-    "build:views": "mkdir -p dist/views && cd src/views && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/views/$(dirname {}) && cp {} ../../dist/views/{}' \\;",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",

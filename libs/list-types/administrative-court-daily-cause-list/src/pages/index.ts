@@ -23,12 +23,12 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-// Map list type IDs to their names
-const LIST_TYPE_NAMES: Record<number, { en: string; cy: string }> = {
-  20: { en: en[20].pageTitle, cy: cy[20].pageTitle },
-  21: { en: en[21].pageTitle, cy: cy[21].pageTitle },
-  22: { en: en[22].pageTitle, cy: cy[22].pageTitle },
-  23: { en: en[23].pageTitle, cy: cy[23].pageTitle }
+// Map list type IDs to their names and template names
+const LIST_TYPE_CONFIG: Record<number, { en: string; cy: string; template: string }> = {
+  20: { en: en[20].pageTitle, cy: cy[20].pageTitle, template: "birmingham-administrative-court-daily-cause-list" },
+  21: { en: en[21].pageTitle, cy: cy[21].pageTitle, template: "leeds-administrative-court-daily-cause-list" },
+  22: { en: en[22].pageTitle, cy: cy[22].pageTitle, template: "bristol-cardiff-administrative-court-daily-cause-list" },
+  23: { en: en[23].pageTitle, cy: cy[23].pageTitle, template: "manchester-administrative-court-daily-cause-list" }
 };
 
 export const GET = async (req: Request, res: Response) => {
@@ -63,7 +63,7 @@ export const GET = async (req: Request, res: Response) => {
     const listTypeId = artefact.listTypeId;
 
     // Verify this is one of our supported list types
-    if (!LIST_TYPE_NAMES[listTypeId]) {
+    if (!LIST_TYPE_CONFIG[listTypeId]) {
       return res.status(400).render("errors/common", {
         en,
         cy,
@@ -100,7 +100,8 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const listTitle = LIST_TYPE_NAMES[listTypeId][locale as keyof (typeof LIST_TYPE_NAMES)[number]];
+    const listConfig = LIST_TYPE_CONFIG[listTypeId];
+    const listTitle = listConfig[locale as "en" | "cy"];
 
     const { header, hearings } = renderAdminCourt(jsonData, {
       locale,
@@ -116,7 +117,7 @@ export const GET = async (req: Request, res: Response) => {
     // Get list-specific content
     const listContent = (t as any)[listTypeId] || {};
 
-    res.render("administrative-court-daily-cause-list/admin-court", {
+    res.render("administrative-court-daily-cause-list", {
       en,
       cy,
       t,

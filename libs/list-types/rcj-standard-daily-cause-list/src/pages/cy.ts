@@ -1,13 +1,9 @@
 export const cy = {
   10: {
     pageTitle: "Rhestr Achosion Dyddiol y Llysoedd Sifil yn Llysoedd Barn Brenhinol",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, Llundain",
     locationLine3: "WC2A 2LL",
-    importantInfoTitle: "Gwybodaeth bwysig",
     mediaInquiriesText:
       "Dylid gwneud ceisiadau gan y cyfryngau ac eraill, gan gynnwys blogwyr cyfreithiol, i'r Llys Sifil yn Llysoedd Barn Brenhinol yn mediaenquiries.civilcourtsatthercj@justice.gov.uk. Yna bydd trefniadau'n cael eu gwneud i chi fynychu.",
     openJusticeText: "Wrth ystyried defnyddio technoleg ffôn a fideo bydd y farnwriaeth yn ystyried egwyddorion cyfiawnder agored.",
@@ -15,14 +11,10 @@ export const cy = {
   },
   11: {
     pageTitle: "Rhestr Achosion Dyddiol Sifil Llys Sirol Canolog Llundain",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Adeilad Thomas More",
     locationLine3: "Strand, Llundain",
     locationLine4: "WC2A 2LL",
-    importantInfoTitle: "Gwybodaeth bwysig",
     hearingsInfoText:
       "Llys Sirol Canol Llundain a Llys Maer a Dinas Llundain – Bydd gwrandawiadau ar gyfer Llys Sirol Canol Llundain yn cael eu gwrando yn Adeilad Thomas More, sydd wedi'i leoli yn y Llysoedd Barn Brenhinol. Rhestrir achosion hefyd yn Llys Maer a Dinas Llundain, Adeiladau'r Guildhall, Stryd Basinghall, Llundain, EC2V 5AR. Oherwydd argaeledd barnwrol, gellir symud achosion rhwng y Llys Sirol yng Nghanol Llundain a Llys Maer a Dinas Llundain. Gwnewch yn siŵr eich bod yn gwirio rhestrau achosion Llys Sirol Canol Llundain a Llys Maer a Dinas Llundain y diwrnod cyn eich gwrandawiad. Anelir at gyhoeddi rhestrau erbyn 1700.",
     mediaAndObserversText:
@@ -30,13 +22,9 @@ export const cy = {
   },
   12: {
     pageTitle: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Droseddol)",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, Llundain",
     locationLine3: "WC2A 2LL",
-    importantInfoTitle: "Gwybodaeth bwysig",
     importantInfoText:
       "Sylwch fod gofyn i eiriolwyr, boed yn ymddangos o bell neu'n bersonol, wisgo gŵn ar gyfer pob gwrandawiad o 1 Hydref 2020 ymlaen. Os ydych chi'n barti â diddordeb neu'r cyfryngau ac yn dymuno mynychu unrhyw un o'r Llysoedd Apêl Troseddol, cysylltwch â courtclerks@criminalappealoffice.justice.gov.uk.",
     quickGuideText: "Am ragor o wybodaeth am ein gwrandawiadau, gweler",
@@ -45,13 +33,9 @@ export const cy = {
   },
   13: {
     pageTitle: "Rhestr Achosion Dyddiol Adran Deulu'r Uchel Lys",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, Llundain",
     locationLine3: "WC2A 2LL",
-    importantInfoTitle: "Gwybodaeth bwysig",
     generalHearingRulesText:
       "Bydd unrhyw gais a wneir ar ôl 1 Mawrth 2022 yn cael ei restru fel gwrandawiad yn bersonol oni bai bod cais iddo gael ei glywed o bell wedi'i wneud cyn y gwrandawiad a'i ganiatáu gan farnwr. Bydd pob gwrandawiad arall yn cael ei restru yn unol â chyfarwyddyd y barnwr yn y gwrandawiad blaenorol.\n\nDylai aelodau achrededig o'r wasg, blogwyr cyfreithiol neu aelodau o'r cyhoedd sydd am fynychu gwrandawiad o bell e-bostio eu cais i rcj.familyhighcourt@justice.gov.uk a rcj.familylisting@justice.gov.uk a fydd yn anfon eich manylion e-bost at y Tîm Cydweithwyr. Dylid e-bostio ceisiadau y diwrnod cyn y gwrandawiad, neu ddim yn hwyrach na 9am ar ddiwrnod y gwrandawiad i osgoi unrhyw oedi wrth allu ymuno â'r gwrandawiad.\n\nCaiff y trefniadau presennol eu cadw dan adolygiad.",
     courtOfProtectionTitle: "Llys Gwarchod (Llysoedd Barn Brenhinol)",
@@ -66,13 +50,9 @@ export const cy = {
   },
   14: {
     pageTitle: "Rhestr Achosion Dyddiol Adran Mainc y Brenin",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, Llundain",
     locationLine3: "WC2A 2LL",
-    importantInfoTitle: "Gwybodaeth bwysig",
     remoteHearingsTitle: "Gwrandawiadau o bell gerbron Barnwr",
     remoteHearingsText:
       "Bydd y gwrandawiad ar gael i gynrychiolwyr y cyfryngau ar gais. Bydd yn cael ei drefnu a'i gynnal gan ddefnyddio MS Teams (oni nodir fel arall).\n\nBydd angen i unrhyw gynrychiolydd cyfryngau (neu unrhyw aelod arall o'r cyhoedd) sydd am fod yn dyst i'r gwrandawiad wneud hynny dros y rhyngrwyd a darparu cyfeiriad e-bost y gellir anfon dolen briodol ato ar gyfer mynediad. Cysylltwch â kbjudgeslistingoffice@justice.gov.uk.",
@@ -85,13 +65,9 @@ export const cy = {
   },
   15: {
     pageTitle: "Rhestr Achosion Dyddiol Meistri Mainc y Brenin",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, Llundain",
     locationLine3: "WC2A 2LL",
-    importantInfoTitle: "Gwybodaeth bwysig",
     pressAndPublicTitle: "Mynediad y Wasg a'r Cyhoedd",
     pressAndPublicText:
       "Dylai unrhyw gynrychiolydd cyfryngau (neu unrhyw aelod arall o'r cyhoedd) sydd am fynychu gwrandawiad o bell ddarparu cyfeiriad e-bost a rhif cyswllt i gael dolen briodol ar gyfer mynediad. Cysylltwch â chlerc penodedig y Meistri gan roi dyddiad ac amser y gwrandawiad yn y blwch pwnc. Gellir dod o hyd i fanylion y clerc yn Atodiad 2 o Ganllaw Adran Mainc y Brenin.\n\nMae gwrandawiadau yn bersonol gerbron y Meistri yn agored i'r wasg a'r cyhoedd, ond mae'r ystafelloedd wedi'u lleoli mewn ardaloedd diogel o'r adeilad. Os ydych chi am fynychu gwrandawiad yn bersonol, cyrhaeddwch y Bear Garden mewn da bryd cyn gwrandawiad a gwnewch eich hun yn hysbys i'r rhingyll.",
@@ -109,21 +85,19 @@ export const cy = {
     kbGuideLinkUrl: "https://www.judiciary.uk/guidance-and-resources/kings-bench-division-guide-master-s-trial-windows/"
   },
   16: {
-    pageTitle: "Rhestr Achosion Sifil Dyddiol y Maer a'r Ddinas",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban."
+    pageTitle: "Rhestr Achosion Sifil Dyddiol y Maer a'r Ddinas"
   },
   17: {
     pageTitle: "Rhestr Achosion Dyddiol Swyddfa Costau'r Uchel Lysoedd",
-    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, Llundain",
     locationLine3: "WC2A 2LL"
   },
   common: {
+    factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+    factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
+    importantInfoTitle: "Gwybodaeth bwysig",
     searchCasesTitle: "Chwilio Achosion",
     searchCasesLabel: "Chwilio yn ôl rhif achos, manylion, lleoliad, barnwr, neu wybodaeth arall",
     tableHeaders: {

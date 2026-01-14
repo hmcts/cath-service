@@ -1,4 +1,5 @@
 export const en = {
+  title: "Civil and Family Daily Cause List",
   pageTitle: "Civil and Family Daily Cause List for",
   listFor: "List for",
   lastUpdated: "Last updated",

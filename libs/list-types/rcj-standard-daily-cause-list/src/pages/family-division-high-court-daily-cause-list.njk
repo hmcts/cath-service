@@ -1,19 +1,5 @@
 {% extends "layouts/base-template.njk" %}
-{% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
-
-{% block head %}
-  {{ super() }}
-  <style>
-    .back-to-top {
-      margin-top: 40px;
-    }
-    .search-container {
-      margin-top: 32px;
-      margin-bottom: 32px;
-    }
-  </style>
-{% endblock %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
@@ -21,23 +7,22 @@
 
     <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
 
-    {% if listContent.factLinkText %}
     <p class="govuk-body">
-      <a href="{{ listContent.factLinkUrl }}" class="govuk-link">{{ listContent.factLinkText }}</a> {{ listContent.factAdditionalText }}
+      <a href="{{ common.factLinkUrl }}" class="govuk-link">{{ common.factLinkText }}</a> {{ common.factAdditionalText }}
     </p>
-    {% endif %}
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.listDate }}</p>
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">{{ listContent.locationLine1 }}</p>
+    <p class="govuk-body govuk-!-margin-bottom-0">{{ listContent.locationLine2 }}</p>
+    <p class="govuk-body">{{ listContent.locationLine3 }}</p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1 govuk-!-margin-top-4">{{ header.listDate }}</p>
     <p class="govuk-body">{{ header.lastUpdated }}</p>
 
-    {# Important information for Birmingham (20), Leeds (21), Bristol/Cardiff (22), and Manchester (23) Administrative Courts #}
-    {% if (listTypeId == 20 or listTypeId == 21 or listTypeId == 22 or listTypeId == 23) and listContent.importantInfoTitle %}
     {{ govukDetails({
-      summaryText: listContent.importantInfoTitle,
-      html: '<p class="govuk-body">' + listContent.importantInfoText.split('\n\n').join('</p><p class="govuk-body">') + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">' + listContent.judgmentsTitle + '</h3><p class="govuk-body">' + listContent.judgmentsText + '</p>',
+      summaryText: common.importantInfoTitle,
+      html: '<p class="govuk-body">' + listContent.generalHearingRulesText.split('\n\n').join('</p><p class="govuk-body">') + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6">' + listContent.courtOfProtectionTitle + '</h3><p class="govuk-body">' + listContent.courtOfProtectionText.split('\n\n').join('</p><p class="govuk-body">') + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6">' + listContent.tipstaffTitle + '</h3><p class="govuk-body">' + listContent.tipstaffText.split('\n\n').join('</p><p class="govuk-body">') + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6">' + listContent.judgmentsTitle + '</h3><p class="govuk-body">' + listContent.judgmentsText + '</p>',
       open: true
     }) }}
-    {% endif %}
 
     <div class="govuk-form-group search-container">
       <h2 class="govuk-heading-s">{{ common.searchCasesTitle }}</h2>
@@ -76,7 +61,7 @@
       </table>
     </div>
 
-    <p class="govuk-body govuk-!-margin-top-6">{{ common.dataSource }}: {{ dataSource }}</p>
+    <p class="govuk-body-s govuk-!-margin-top-6">{{ common.dataSource }}: {{ dataSource }}</p>
 
     <div class="back-to-top">
       <a href="#top" class="govuk-link">{{ common.backToTop }}</a>
@@ -84,24 +69,4 @@
 
   </div>
 </div>
-
-<script>
-  // Client-side search functionality
-  (function() {
-    const searchInput = document.getElementById('case-search-input');
-    const tableRows = document.querySelectorAll('#hearings-table tbody tr');
-
-    if (!searchInput || !tableRows.length) return;
-
-    searchInput.addEventListener('input', function(e) {
-      const query = e.target.value.toLowerCase().trim();
-
-      tableRows.forEach(function(row) {
-        const text = row.textContent.toLowerCase();
-        const matches = !query || text.includes(query);
-        row.style.display = matches ? '' : 'none';
-      });
-    });
-  })();
-</script>
 {% endblock %}

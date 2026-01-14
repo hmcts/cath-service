@@ -1392,6 +1392,7 @@ __metadata:
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/public-pages": "workspace:*"

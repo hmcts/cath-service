@@ -1,8 +1,15 @@
 export function initSearchHighlight() {
   const searchInput = document.getElementById("case-search-input");
-  const containers = [document.getElementById("hearings-table-container"), document.getElementById("court-lists-container")].filter(
+
+  // Look for containers by ID first, then fall back to class-based tables
+  const containersById = [document.getElementById("hearings-table-container"), document.getElementById("court-lists-container")].filter(
     (el): el is HTMLElement => el !== null
   );
+
+  // Also support pages with multiple tables using .hearings-table class
+  const tablesByClass = Array.from(document.querySelectorAll(".hearings-table")) as HTMLElement[];
+
+  const containers = containersById.length > 0 ? containersById : tablesByClass;
 
   if (!searchInput || containers.length === 0) return;
 

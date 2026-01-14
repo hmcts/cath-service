@@ -2,23 +2,6 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 
-{% block head %}
-  {{ super() }}
-  <style>
-    .back-to-top {
-      margin-top: 40px;
-    }
-    .search-container {
-      margin-top: 32px;
-      margin-bottom: 32px;
-    }
-    .section-divider {
-      margin-top: 48px;
-      margin-bottom: 32px;
-    }
-  </style>
-{% endblock %}
-
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
@@ -136,24 +119,4 @@
 
   </div>
 </div>
-
-<script>
-  // Client-side search functionality - searches across both sections
-  (function() {
-    const searchInput = document.getElementById('case-search-input');
-    const tableRows = document.querySelectorAll('.hearings-table tbody tr');
-
-    if (!searchInput || !tableRows.length) return;
-
-    searchInput.addEventListener('input', function(e) {
-      const query = e.target.value.toLowerCase().trim();
-
-      tableRows.forEach(function(row) {
-        const text = row.textContent.toLowerCase();
-        const matches = !query || text.includes(query);
-        row.style.display = matches ? '' : 'none';
-      });
-    });
-  })();
-</script>
 {% endblock %}
