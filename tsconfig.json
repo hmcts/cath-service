@@ -28,7 +28,7 @@
       "@hmcts/care-standards-tribunal-weekly-hearing-list": ["libs/list-types/care-standards-tribunal-weekly-hearing-list/src"],
       "@hmcts/rcj-standard-daily-cause-list": ["libs/list-types/rcj-standard-daily-cause-list/src"],
       "@hmcts/london-administrative-court-daily-cause-list": ["libs/list-types/london-administrative-court-daily-cause-list/src"],
-      "@hmcts/rcj-court-of-appeal-civil": ["libs/list-types/rcj-court-of-appeal-civil/src"],
+      "@hmcts/court-of-appeal-civil-daily-cause-list": ["libs/list-types/court-of-appeal-civil-daily-cause-list/src"],
       "@hmcts/administrative-court-daily-cause-list": ["libs/list-types/administrative-court-daily-cause-list/src"],
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],

@@ -3,7 +3,7 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
 import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
 import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
-import "@hmcts/rcj-court-of-appeal-civil"; // Register civil appeal converter (19)
+import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";

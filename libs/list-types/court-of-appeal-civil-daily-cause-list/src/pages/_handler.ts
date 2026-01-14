@@ -92,7 +92,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
-    res.render("rcj-court-of-appeal-civil/civil-appeal", {
+    res.render("court-of-appeal-civil-daily-cause-list/civil-appeal", {
       en,
       cy,
       t,

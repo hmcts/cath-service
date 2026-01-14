@@ -11,6 +11,7 @@ import {
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot, pageRoutes as londonAdminRoutes } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -19,7 +20,6 @@ import {
   moduleRoot as publicPagesModuleRoot,
   pageRoutes as publicPagesRoutes
 } from "@hmcts/public-pages/config";
-import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/rcj-court-of-appeal-civil/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import {

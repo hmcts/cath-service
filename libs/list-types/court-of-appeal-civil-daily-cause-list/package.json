@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/rcj-court-of-appeal-civil",
+  "name": "@hmcts/court-of-appeal-civil-daily-cause-list",
   "version": "1.0.0",
   "type": "module",
   "exports": {
