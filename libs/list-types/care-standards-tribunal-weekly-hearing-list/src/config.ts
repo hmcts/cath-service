@@ -9,4 +9,3 @@ export const pageRoutes = {
   path: path.join(__dirname, "pages"),
   prefix: "/care-standards-tribunal-weekly-hearing-list"
 };
-export const assets = path.join(__dirname, "../assets/");

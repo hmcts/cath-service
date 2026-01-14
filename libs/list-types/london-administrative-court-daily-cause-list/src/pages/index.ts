@@ -94,7 +94,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
-    res.render("london-administrative-court-daily-cause-list/london-admin-court", {
+    res.render("london-administrative-court-daily-cause-list", {
       en,
       cy,
       t,

@@ -8,4 +8,3 @@ export const moduleRoot = __dirname;
 export const pageRoutes = {
   path: path.join(__dirname, "pages")
 };
-export const assets = path.join(__dirname, "assets/");
