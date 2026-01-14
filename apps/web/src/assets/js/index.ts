@@ -3,7 +3,6 @@ import { initTableSearch } from "@hmcts/list-types-common/src/assets/js/table-se
 import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
 import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
-import { initSearchHighlight } from "@hmcts/web-core/src/assets/js/search-highlight.js";
 import { initAll } from "govuk-frontend";
 
 initAll();
@@ -16,7 +15,6 @@ if (document.readyState === "loading") {
     });
     initFilterPanel();
     initBackToTop();
-    initSearchHighlight();
     initTableSearch();
   });
 } else {
@@ -25,7 +23,6 @@ if (document.readyState === "loading") {
   });
   initFilterPanel();
   initBackToTop();
-  initSearchHighlight();
   initTableSearch();
 }
 
