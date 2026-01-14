@@ -10,6 +10,8 @@ import { validateCourtOfAppealCivil } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+export const ROUTES = ["/court-of-appeal-civil-division-daily-cause-list"];
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

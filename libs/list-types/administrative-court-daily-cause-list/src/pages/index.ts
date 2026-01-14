@@ -10,6 +10,13 @@ import { validateAdminCourt } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+export const ROUTES = [
+  "/birmingham-administrative-court-daily-cause-list",
+  "/bristol-cardiff-administrative-court-daily-cause-list",
+  "/leeds-administrative-court-daily-cause-list",
+  "/manchester-administrative-court-daily-cause-list"
+];
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

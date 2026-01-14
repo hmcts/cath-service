@@ -10,6 +10,17 @@ import { validateStandardDailyCauseList } from "../validation/json-validator.js"
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+export const ROUTES = [
+  "/civil-courts-rcj-daily-cause-list",
+  "/county-court-central-london-civil-daily-cause-list",
+  "/court-of-appeal-criminal-division-daily-cause-list",
+  "/family-division-high-court-daily-cause-list",
+  "/kings-bench-division-daily-cause-list",
+  "/kings-bench-masters-daily-cause-list",
+  "/mayor-city-civil-daily-cause-list",
+  "/senior-courts-costs-office-daily-cause-list"
+];
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
