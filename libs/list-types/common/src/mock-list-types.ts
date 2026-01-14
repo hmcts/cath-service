@@ -90,7 +90,7 @@ export const mockListTypes: ListType[] = [
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true
   },
-  // RCJ Standard Format (Module 1)
+  // RCJ Standard Format
   {
     id: 10,
     name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
@@ -163,7 +163,7 @@ export const mockListTypes: ListType[] = [
     urlPath: "senior-courts-costs-office-daily-cause-list",
     isNonStrategic: true
   },
-  // RCJ Special Format - London Administrative Court (Module 2)
+  // RCJ Special Format - London Administrative Court
   {
     id: 18,
     name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
@@ -173,7 +173,7 @@ export const mockListTypes: ListType[] = [
     urlPath: "london-administrative-court-daily-cause-list",
     isNonStrategic: true
   },
-  // RCJ Special Format - Court of Appeal Civil (Module 3)
+  // RCJ Special Format - Court of Appeal Civil
   {
     id: 19,
     name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
@@ -183,7 +183,7 @@ export const mockListTypes: ListType[] = [
     urlPath: "court-of-appeal-civil-division-daily-cause-list",
     isNonStrategic: true
   },
-  // Administrative Courts (Module 4)
+  // Administrative Courts
   {
     id: 20,
     name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
