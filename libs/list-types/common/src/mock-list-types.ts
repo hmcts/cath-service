@@ -8,6 +8,9 @@ export interface ListType {
   isNonStrategic: boolean;
 }
 
+export const SJP_PRESS_LIST_ID = 10;
+export const SJP_PUBLIC_LIST_ID = 11;
+
 export const mockListTypes: ListType[] = [
   {
     id: 1,
@@ -89,5 +92,23 @@ export const mockListTypes: ListType[] = [
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true
+  },
+  {
+    id: 10,
+    name: "SJP_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
+    provenance: "CFT_IDAM",
+    urlPath: "sjp-press-list",
+    isNonStrategic: false
+  },
+  {
+    id: 11,
+    name: "SJP_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
+    provenance: "CFT_IDAM",
+    urlPath: "sjp-public-list",
+    isNonStrategic: false
   }
 ];
