@@ -8,6 +8,7 @@ interface ListTypeData {
   provenance: string;
   urlPath?: string;
   isNonStrategic: boolean;
+  defaultSensitivity: string;
 }
 
 const listTypes: ListTypeData[] = [
@@ -18,7 +19,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Civil Daily Cause List",
     provenance: "CFT_IDAM",
     urlPath: "civil-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 2,
@@ -27,7 +29,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Family Daily Cause List",
     provenance: "CFT_IDAM",
     urlPath: "family-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PRIVATE"
   },
   {
     id: 3,
@@ -36,7 +39,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Crime Daily List",
     provenance: "CFT_IDAM",
     urlPath: "crime-daily-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 4,
@@ -45,7 +49,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Magistrates Public List",
     provenance: "CFT_IDAM",
     urlPath: "magistrates-public-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 5,
@@ -54,7 +59,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Crown Warned List",
     provenance: "CFT_IDAM",
     urlPath: "crown-warned-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 6,
@@ -63,7 +69,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Crown Daily List",
     provenance: "CFT_IDAM",
     urlPath: "crown-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 7,
@@ -72,7 +79,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Crown Firm List",
     provenance: "CFT_IDAM",
     urlPath: "crown-firm-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 8,
@@ -81,7 +89,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "PUBLIC"
   },
   {
     id: 9,
@@ -90,7 +99,8 @@ const listTypes: ListTypeData[] = [
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "PUBLIC"
   }
 ];
 
@@ -112,6 +122,19 @@ export async function seedListTypes() {
     });
 
     if (existing) {
+      // Update existing list type to ensure correct defaultSensitivity
+      await (prisma as any).listType.update({
+        where: { name: listType.name },
+        data: {
+          friendlyName: listType.englishFriendlyName,
+          welshFriendlyName: listType.welshFriendlyName,
+          shortenedFriendlyName: listType.englishFriendlyName,
+          url: listType.urlPath || "",
+          defaultSensitivity: listType.defaultSensitivity,
+          allowedProvenance: listType.provenance,
+          isNonStrategic: listType.isNonStrategic
+        }
+      });
       skippedCount++;
       continue;
     }
@@ -124,7 +147,7 @@ export async function seedListTypes() {
           welshFriendlyName: listType.welshFriendlyName,
           shortenedFriendlyName: listType.englishFriendlyName,
           url: listType.urlPath || "",
-          defaultSensitivity: "Public",
+          defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,
           isNonStrategic: listType.isNonStrategic,
           subJurisdictions: {

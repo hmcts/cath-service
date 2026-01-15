@@ -1,3 +1,4 @@
+import { initListTypeSensitivity } from "@hmcts/admin-pages/src/assets/js/list-type-sensitivity.js";
 import cookieManager from "@hmcts/cookie-manager";
 import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
@@ -16,6 +17,7 @@ if (document.readyState === "loading") {
     initFilterPanel();
     initBackToTop();
     initSearchHighlight();
+    initListTypeSensitivity();
   });
 } else {
   void initSearchAutocomplete().catch((error) => {
@@ -24,6 +26,7 @@ if (document.readyState === "loading") {
   initFilterPanel();
   initBackToTop();
   initSearchHighlight();
+  initListTypeSensitivity();
 }
 
 const config = {

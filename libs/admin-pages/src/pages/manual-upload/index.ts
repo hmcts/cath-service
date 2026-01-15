@@ -96,6 +96,17 @@ const getHandler = async (req: Request, res: Response) => {
 
   const listTypes = await getListTypes();
 
+  // Create mapping of list type ID to default sensitivity for client-side use
+  const strategicListTypes = await findStrategicListTypes();
+  const listTypeSensitivityMap = strategicListTypes.reduce(
+    (acc, lt) => {
+      // Convert to uppercase to match dropdown values (PUBLIC, PRIVATE, CLASSIFIED)
+      acc[lt.id.toString()] = lt.defaultSensitivity?.toUpperCase() || "";
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+
   res.render("manual-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
@@ -104,6 +115,7 @@ const getHandler = async (req: Request, res: Response) => {
     listTypes: selectOption(listTypes, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
+    listTypeSensitivityMap: JSON.stringify(listTypeSensitivityMap),
     locale,
     hideLanguageToggle: true
   });
