@@ -15,5 +15,6 @@ export {
   registerConverter
 } from "./conversion/non-strategic-list-registry.js";
 export { type ListType, mockListTypes } from "./mock-list-types.js";
+export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
 export { convertListTypeNameToKebabCase, validateListTypeJson } from "./validation/list-type-validator.js";

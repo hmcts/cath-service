@@ -124,7 +124,7 @@ export const cy = {
       additionalInformation: "Gwybodaeth ychwanegol"
     },
     dataSource: "Ffynhonnell data",
-    backToTop: "Yn ôl i'r brig",
+    backToTop: "Yn ôl i frig y dudalen",
     listFor: "Rhestr ar gyfer",
     lastUpdated: "Diweddarwyd ddiwethaf",
     at: "am",

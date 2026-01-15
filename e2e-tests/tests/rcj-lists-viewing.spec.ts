@@ -122,7 +122,7 @@ test.describe("RCJ Standard Daily Cause Lists - Viewing @nightly", () => {
     await expect(page.locator("tbody tr:visible")).toHaveCount(1);
 
     // Test back to top link
-    const backToTopLink = page.getByRole("link", { name: /yn ôl i'r brig/i });
+    const backToTopLink = page.getByRole("link", { name: /Yn ôl i frig y dudalen/i });
     await expect(backToTopLink).toBeVisible();
   });
 

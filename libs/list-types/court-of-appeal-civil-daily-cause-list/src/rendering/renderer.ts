@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
 import type { CourtOfAppealCivilData, FutureJudgment, StandardHearing } from "../models/types.js";
 
 export interface RenderOptions {
@@ -33,47 +33,6 @@ export interface RenderedData {
   futureJudgments: RenderedFutureJudgment[];
 }
 
-function formatDisplayDate(date: Date, locale: string): string {
-  const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
-  return date.toLocaleDateString(localeCode, {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-}
-
-function formatLastUpdatedDateTime(isoDateTime: string, locale: string): { date: string; time: string } {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-
-  const date = dt.toFormat("d MMMM yyyy");
-
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  const time = `${hour12}${minuteStr}${period}`;
-
-  return { date, time };
-}
-
-function normalizeTime(time: string): string {
-  return time.replace(".", ":");
-}
-
-function formatJudgmentDate(ddMMyyyyDate: string, locale: string): string {
-  const [day, month, year] = ddMMyyyyDate.split("/");
-  const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1, Number.parseInt(day, 10));
-
-  const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
-  return date.toLocaleDateString(localeCode, {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-}
-
 function renderStandardHearings(hearings: StandardHearing[]): RenderedHearing[] {
   return hearings.map((hearing) => ({
     venue: hearing.venue,
@@ -88,7 +47,7 @@ function renderStandardHearings(hearings: StandardHearing[]): RenderedHearing[] 
 
 function renderFutureJudgments(judgments: FutureJudgment[], locale: string): RenderedFutureJudgment[] {
   return judgments.map((judgment) => ({
-    date: formatJudgmentDate(judgment.date, locale),
+    date: formatDdMmYyyyDate(judgment.date, locale),
     venue: judgment.venue,
     judge: judgment.judge,
     time: normalizeTime(judgment.time),
