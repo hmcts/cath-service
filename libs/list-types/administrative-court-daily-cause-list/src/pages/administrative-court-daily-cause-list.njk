@@ -14,8 +14,8 @@
     </p>
     {% endif %}
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.listDate }}</p>
-    <p class="govuk-body">{{ header.lastUpdated }}</p>
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ common.listFor }} {{ header.listDate }}</p>
+    <p class="govuk-body">{{ common.lastUpdated }} {{ header.lastUpdatedDate }} {{ common.at }} {{ header.lastUpdatedTime }}</p>
 
     {# Important information for Birmingham (20), Leeds (21), Bristol/Cardiff (22), and Manchester (23) Administrative Courts #}
     {% if (listTypeId == 20 or listTypeId == 21 or listTypeId == 22 or listTypeId == 23) and common.importantInfoTitle %}
@@ -63,7 +63,7 @@
       </table>
     </div>
 
-    <p class="govuk-body govuk-!-margin-top-6">{{ common.dataSource }}: {{ dataSource }}</p>
+    <p class="govuk-body-s govuk-!-margin-top-6">{{ common.dataSource }}: {{ dataSource }}</p>
 
     <div class="back-to-top">
       <a href="#top" class="govuk-link">{{ common.backToTop }}</a>

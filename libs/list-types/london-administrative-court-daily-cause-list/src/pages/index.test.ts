@@ -286,7 +286,7 @@ describe("London Administrative Court page controller", () => {
 
       const mockRenderedData = {
         header: {
-          listTitle: "Rhestr Achosion Dyddiol y Llys Gweinyddol Llundain",
+          listTitle: "Rhestr Achosion Dyddiol Llys Gweinyddol Llundain",
           listDate: "Rhestr ar gyfer 15 Ionawr 2026",
           lastUpdated: "Diweddarwyd ddiwethaf 14 Ionawr 2026"
         },

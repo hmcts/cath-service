@@ -48,6 +48,15 @@ export const en = {
       additionalInformation: "Additional Information"
     },
     dataSource: "Data source",
-    backToTop: "Back to top"
+    backToTop: "Back to top",
+    listFor: "List for",
+    lastUpdated: "Last updated",
+    at: "at",
+    provenanceLabels: {
+      MANUAL_UPLOAD: "Manual Upload",
+      XHIBIT: "XHIBIT",
+      SNL: "SNL",
+      COMMON_PLATFORM: "Common Platform"
+    }
   }
 };

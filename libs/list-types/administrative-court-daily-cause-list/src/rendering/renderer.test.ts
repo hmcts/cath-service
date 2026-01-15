@@ -36,7 +36,8 @@ describe("renderAdminCourt", () => {
 
     expect(result.header.listTitle).toBe("Birmingham Administrative Court Daily Cause List");
     expect(result.header.listDate).toContain("15 January 2025");
-    expect(result.header.lastUpdated).toContain("15 January 2025");
+    expect(result.header.lastUpdatedDate).toContain("15 January 2025");
+    expect(result.header.lastUpdatedTime).toBeDefined();
     expect(result.hearings).toHaveLength(2);
     expect(result.hearings[0].venue).toBe("Court 1");
     expect(result.hearings[0].time).toBe("10:00am");
@@ -114,7 +115,7 @@ describe("renderAdminCourt", () => {
       lastReceivedDate: "2025-01-15T14:30:00Z"
     });
 
-    expect(result.header.lastUpdated).toMatch(/2:30pm|14:30/);
+    expect(result.header.lastUpdatedTime).toMatch(/2:30pm/);
   });
 
   it("should format last updated without minutes when on the hour", () => {
@@ -127,7 +128,7 @@ describe("renderAdminCourt", () => {
       lastReceivedDate: "2025-01-15T14:00:00Z"
     });
 
-    expect(result.header.lastUpdated).toMatch(/2pm|14pm/);
+    expect(result.header.lastUpdatedTime).toMatch(/2pm/);
   });
 
   it("should handle hearing with undefined additional information", () => {
@@ -166,7 +167,7 @@ describe("renderAdminCourt", () => {
     });
 
     expect(result.header.listDate).toContain("25 December 2025");
-    expect(result.header.lastUpdated).toContain("25 December 2025");
+    expect(result.header.lastUpdatedDate).toContain("25 December 2025");
   });
 
   it("should handle all supported list type IDs", () => {

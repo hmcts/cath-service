@@ -15,8 +15,8 @@
     <p class="govuk-body govuk-!-margin-bottom-0">{{ t.locationLine2 }}</p>
     <p class="govuk-body">{{ t.locationLine3 }}</p>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.listDate }}</p>
-    <p class="govuk-body">{{ header.lastUpdated }}</p>
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.listDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
 
     {{ govukDetails({
       summaryText: t.importantInfoTitle,
@@ -112,7 +112,7 @@
     </div>
     {% endif %}
 
-    <p class="govuk-body govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
+    <p class="govuk-body-s govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
 
     <div class="back-to-top">
       <a href="#top" class="govuk-link">{{ t.backToTop }}</a>

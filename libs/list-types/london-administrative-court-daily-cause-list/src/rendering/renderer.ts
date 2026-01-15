@@ -1,5 +1,7 @@
 import { DateTime } from "luxon";
 import type { LondonAdminCourtData, StandardHearing } from "../models/types.js";
+import { cy } from "../pages/cy.js";
+import { en } from "../pages/en.js";
 
 export interface RenderOptions {
   locale: string;
@@ -22,7 +24,8 @@ export interface RenderedData {
   header: {
     listTitle: string;
     listDate: string;
-    lastUpdated: string;
+    lastUpdatedDate: string;
+    lastUpdatedTime: string;
   };
   mainHearings: RenderedHearing[];
   planningCourt: RenderedHearing[];
@@ -37,10 +40,10 @@ function formatDisplayDate(date: Date, locale: string): string {
   });
 }
 
-function formatLastUpdated(isoDateTime: string, locale: string): string {
+function formatLastUpdatedDateTime(isoDateTime: string, locale: string): { date: string; time: string } {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
 
-  const dateStr = dt.toFormat("d MMMM yyyy");
+  const date = dt.toFormat("d MMMM yyyy");
 
   const hours = dt.hour;
   const minutes = dt.minute;
@@ -48,9 +51,9 @@ function formatLastUpdated(isoDateTime: string, locale: string): string {
   const hour12 = hours % 12 || 12;
 
   const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  const timeStr = `${hour12}${minuteStr}${period}`;
+  const time = `${hour12}${minuteStr}${period}`;
 
-  return `${dateStr} at ${timeStr}`;
+  return { date, time };
 }
 
 function normalizeTime(time: string): string {
@@ -70,14 +73,16 @@ function renderHearings(hearings: StandardHearing[]): RenderedHearing[] {
 }
 
 export function renderLondonAdminCourt(data: LondonAdminCourtData, options: RenderOptions): RenderedData {
-  const listDate = `List for ${formatDisplayDate(options.displayFrom, options.locale)}`;
-  const lastUpdated = `Last updated ${formatLastUpdated(options.lastReceivedDate, options.locale)}`;
+  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
+  const t = options.locale === "cy" ? cy : en;
 
   return {
     header: {
-      listTitle: options.locale === "cy" ? "Rhestr Achosion Dyddiol y Llys Gweinyddol Llundain" : "London Administrative Court Daily Cause List",
+      listTitle: t.pageTitle,
       listDate,
-      lastUpdated
+      lastUpdatedDate,
+      lastUpdatedTime
     },
     mainHearings: renderHearings(data.mainHearings),
     planningCourt: renderHearings(data.planningCourt)

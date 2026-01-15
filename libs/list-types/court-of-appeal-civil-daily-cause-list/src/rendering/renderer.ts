@@ -26,7 +26,8 @@ export interface RenderedData {
   header: {
     listTitle: string;
     listDate: string;
-    lastUpdated: string;
+    lastUpdatedDate: string;
+    lastUpdatedTime: string;
   };
   dailyHearings: RenderedHearing[];
   futureJudgments: RenderedFutureJudgment[];
@@ -41,10 +42,10 @@ function formatDisplayDate(date: Date, locale: string): string {
   });
 }
 
-function formatLastUpdated(isoDateTime: string, locale: string): string {
+function formatLastUpdatedDateTime(isoDateTime: string, locale: string): { date: string; time: string } {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
 
-  const dateStr = dt.toFormat("d MMMM yyyy");
+  const date = dt.toFormat("d MMMM yyyy");
 
   const hours = dt.hour;
   const minutes = dt.minute;
@@ -52,9 +53,9 @@ function formatLastUpdated(isoDateTime: string, locale: string): string {
   const hour12 = hours % 12 || 12;
 
   const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  const timeStr = `${hour12}${minuteStr}${period}`;
+  const time = `${hour12}${minuteStr}${period}`;
 
-  return `${dateStr} at ${timeStr}`;
+  return { date, time };
 }
 
 function normalizeTime(time: string): string {
@@ -99,14 +100,15 @@ function renderFutureJudgments(judgments: FutureJudgment[], locale: string): Ren
 }
 
 export function renderCourtOfAppealCivil(data: CourtOfAppealCivilData, options: RenderOptions): RenderedData {
-  const listDate = `List for ${formatDisplayDate(options.displayFrom, options.locale)}`;
-  const lastUpdated = `Last updated ${formatLastUpdated(options.lastReceivedDate, options.locale)}`;
+  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   return {
     header: {
       listTitle: options.locale === "cy" ? "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)" : "Court of Appeal (Civil Division) Daily Cause List",
       listDate,
-      lastUpdated
+      lastUpdatedDate,
+      lastUpdatedTime
     },
     dailyHearings: renderStandardHearings(data.dailyHearings),
     futureJudgments: renderFutureJudgments(data.futureJudgments, options.locale)

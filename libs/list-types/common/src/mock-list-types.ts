@@ -168,7 +168,7 @@ export const mockListTypes: ListType[] = [
     id: 18,
     name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "London Administrative Court Daily Cause List",
-    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gweinyddol Llundain",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Llundain",
     provenance: "MANUAL_UPLOAD",
     urlPath: "london-administrative-court-daily-cause-list",
     isNonStrategic: true

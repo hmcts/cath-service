@@ -19,9 +19,9 @@ describe("renderCourtOfAppealCivil", () => {
     const result = renderCourtOfAppealCivil(data, baseOptions);
 
     expect(result.header.listTitle).toBe("Court of Appeal (Civil Division) Daily Cause List");
-    expect(result.header.listDate).toContain("List for");
     expect(result.header.listDate).toContain("15 January 2025");
-    expect(result.header.lastUpdated).toContain("Last updated");
+    expect(result.header.lastUpdatedDate).toContain("14 January 2025");
+    expect(result.header.lastUpdatedTime).toBeDefined();
   });
 
   it("should render header with Welsh title when locale is cy", () => {
@@ -252,7 +252,7 @@ describe("renderCourtOfAppealCivil", () => {
       lastReceivedDate: "2025-01-14T09:30:00Z"
     });
 
-    expect(result.header.lastUpdated).toContain("at 9:30am");
+    expect(result.header.lastUpdatedTime).toMatch(/9:30am/);
   });
 
   it("should format PM times correctly in lastUpdated", () => {
@@ -266,7 +266,7 @@ describe("renderCourtOfAppealCivil", () => {
       lastReceivedDate: "2025-01-14T14:45:00Z"
     });
 
-    expect(result.header.lastUpdated).toContain("at 2:45pm");
+    expect(result.header.lastUpdatedTime).toMatch(/2:45pm/);
   });
 
   it("should format times on the hour without minutes in lastUpdated", () => {
@@ -280,7 +280,7 @@ describe("renderCourtOfAppealCivil", () => {
       lastReceivedDate: "2025-01-14T10:00:00Z"
     });
 
-    expect(result.header.lastUpdated).toContain("at 10am");
+    expect(result.header.lastUpdatedTime).toMatch(/10am/);
   });
 
   it("should handle both daily hearings and future judgments together", () => {

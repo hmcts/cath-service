@@ -15,8 +15,8 @@
     <p class="govuk-body govuk-!-margin-bottom-0">{{ listContent.locationLine2 }}</p>
     <p class="govuk-body">{{ listContent.locationLine3 }}</p>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1 govuk-!-margin-top-4">{{ header.listDate }}</p>
-    <p class="govuk-body">{{ header.lastUpdated }}</p>
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1 govuk-!-margin-top-4">{{ common.listFor }} {{ header.listDate }}</p>
+    <p class="govuk-body">{{ common.lastUpdated }} {{ header.lastUpdatedDate }} {{ common.at }} {{ header.lastUpdatedTime }}</p>
 
     {{ govukDetails({
       summaryText: common.importantInfoTitle,

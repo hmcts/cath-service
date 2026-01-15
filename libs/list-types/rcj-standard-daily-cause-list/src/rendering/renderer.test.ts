@@ -36,7 +36,8 @@ describe("renderStandardDailyCauseList", () => {
 
     expect(result.header.listTitle).toBe("Civil Courts at the RCJ Daily Cause List");
     expect(result.header.listDate).toContain("15 January 2025");
-    expect(result.header.lastUpdated).toContain("15 January 2025");
+    expect(result.header.lastUpdatedDate).toContain("15 January 2025");
+    expect(result.header.lastUpdatedTime).toBeDefined();
     expect(result.hearings).toHaveLength(2);
     expect(result.hearings[0].venue).toBe("Court 1");
     expect(result.hearings[0].time).toBe("10:00");
