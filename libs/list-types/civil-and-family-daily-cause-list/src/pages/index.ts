@@ -84,6 +84,7 @@ export const GET = async (req: Request, res: Response) => {
     res.render("civil-and-family-daily-cause-list", {
       en,
       cy,
+      title: t.title,
       header,
       openJustice,
       listData,
