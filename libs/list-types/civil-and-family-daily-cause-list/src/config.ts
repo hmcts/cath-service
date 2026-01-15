@@ -9,3 +9,4 @@ export const pageRoutes = {
   prefix: "/civil-and-family-daily-cause-list"
 };
 export const moduleRoot = __dirname;
+export const assets = path.join(__dirname, "../assets/");
