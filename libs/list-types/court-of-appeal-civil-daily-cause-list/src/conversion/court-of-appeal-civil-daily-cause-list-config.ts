@@ -2,6 +2,7 @@ import {
   createMultiSheetConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
+  RCJ_EXCEL_CONFIG_SIMPLE_TIME,
   registerConverter,
   validateDateFormat,
   validateNoHtmlTags,
@@ -9,53 +10,7 @@ import {
 } from "@hmcts/list-types-common";
 
 // Standard 7 fields configuration for Tab 1
-export const DAILY_HEARINGS_CONFIG: ExcelConverterConfig = {
-  fields: [
-    {
-      header: "Venue",
-      fieldName: "venue",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Venue", rowNumber)]
-    },
-    {
-      header: "Judge",
-      fieldName: "judge",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Judge", rowNumber)]
-    },
-    {
-      header: "Time",
-      fieldName: "time",
-      required: true,
-      validators: [validateTimeFormatSimple]
-    },
-    {
-      header: "Case Number",
-      fieldName: "caseNumber",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Case Number", rowNumber)]
-    },
-    {
-      header: "Case Details",
-      fieldName: "caseDetails",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Case Details", rowNumber)]
-    },
-    {
-      header: "Hearing Type",
-      fieldName: "hearingType",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
-    },
-    {
-      header: "Additional Information",
-      fieldName: "additionalInformation",
-      required: false,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
-    }
-  ],
-  minRows: 0
-};
+export const DAILY_HEARINGS_CONFIG = RCJ_EXCEL_CONFIG_SIMPLE_TIME;
 
 // Tab 2 has Date field at the beginning, then standard 7 fields
 export const FUTURE_JUDGMENTS_CONFIG: ExcelConverterConfig = {

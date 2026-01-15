@@ -1,59 +1,7 @@
-import {
-  createMultiSheetConverter,
-  type ExcelConverterConfig,
-  registerConverter,
-  validateNoHtmlTags,
-  validateTimeFormatSimple
-} from "@hmcts/list-types-common";
+import { createMultiSheetConverter, RCJ_EXCEL_CONFIG_SIMPLE_TIME, registerConverter } from "@hmcts/list-types-common";
 
 // Standard 7 fields configuration for both tabs
-export const STANDARD_CONFIG: ExcelConverterConfig = {
-  fields: [
-    {
-      header: "Venue",
-      fieldName: "venue",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Venue", rowNumber)]
-    },
-    {
-      header: "Judge",
-      fieldName: "judge",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Judge", rowNumber)]
-    },
-    {
-      header: "Time",
-      fieldName: "time",
-      required: true,
-      validators: [validateTimeFormatSimple]
-    },
-    {
-      header: "Case Number",
-      fieldName: "caseNumber",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Case Number", rowNumber)]
-    },
-    {
-      header: "Case Details",
-      fieldName: "caseDetails",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Case Details", rowNumber)]
-    },
-    {
-      header: "Hearing Type",
-      fieldName: "hearingType",
-      required: true,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Hearing Type", rowNumber)]
-    },
-    {
-      header: "Additional Information",
-      fieldName: "additionalInformation",
-      required: false,
-      validators: [(value: string, rowNumber: number) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
-    }
-  ],
-  minRows: 0
-};
+export const STANDARD_CONFIG = RCJ_EXCEL_CONFIG_SIMPLE_TIME;
 
 // Multi-sheet converter for London Administrative Court
 const convertLondonAdminExcel = (buffer: Buffer) =>

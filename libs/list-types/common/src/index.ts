@@ -15,6 +15,7 @@ export {
   type ListTypeConverter,
   registerConverter
 } from "./conversion/non-strategic-list-registry.js";
+export { RCJ_EXCEL_CONFIG, RCJ_EXCEL_CONFIG_SIMPLE_TIME } from "./conversion/rcj-field-configs.js";
 export { DD_MM_YYYY_PATTERN, TIME_PATTERN, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
 export { type ListType, mockListTypes } from "./mock-list-types.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
