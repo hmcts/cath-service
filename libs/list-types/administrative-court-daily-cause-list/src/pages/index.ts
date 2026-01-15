@@ -114,7 +114,10 @@ export const GET = async (req: Request, res: Response) => {
       lastReceivedDate: artefact.lastReceivedDate.toISOString()
     });
 
-    const dataSource = t.common.provenanceLabels?.[artefact.provenance] || PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
+    const dataSource =
+      t.common.provenanceLabels?.[artefact.provenance as keyof typeof t.common.provenanceLabels] ||
+      PROVENANCE_LABELS[artefact.provenance] ||
+      artefact.provenance;
 
     // Get list-specific content
     const listContent = (t as any)[listTypeId] || {};

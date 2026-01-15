@@ -94,7 +94,8 @@ export const GET = async (req: Request, res: Response) => {
       lastReceivedDate: artefact.lastReceivedDate.toISOString()
     });
 
-    const dataSource = t.provenanceLabels?.[artefact.provenance] || PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
+    const dataSource =
+      t.provenanceLabels?.[artefact.provenance as keyof typeof t.provenanceLabels] || PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
     res.render("court-of-appeal-civil-daily-cause-list", {
       en,

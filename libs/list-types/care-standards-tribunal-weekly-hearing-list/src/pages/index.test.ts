@@ -1,9 +1,8 @@
 import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET } from "./index.js";
 
-const mockValidate = vi.fn();
+const mockValidate = vi.hoisted(() => vi.fn());
 
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn()
@@ -27,6 +26,7 @@ vi.mock("../rendering/renderer.js", () => ({
 
 import { prisma } from "@hmcts/postgres";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
+import { GET } from "./index.js";
 
 describe("Care Standards Tribunal page controller", () => {
   let req: Partial<Request>;
