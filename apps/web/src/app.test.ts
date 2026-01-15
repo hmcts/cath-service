@@ -68,6 +68,31 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   pageRoutes: { path: "/mock/civil-family/pages" }
 }));
 
+vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list/config", () => ({
+  moduleRoot: "/mock/care-standards-tribunal",
+  pageRoutes: { path: "/mock/care-standards-tribunal/pages" }
+}));
+
+vi.mock("@hmcts/rcj-standard-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/rcj-standard",
+  pageRoutes: { path: "/mock/rcj-standard/pages" }
+}));
+
+vi.mock("@hmcts/london-administrative-court-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/london-admin",
+  pageRoutes: { path: "/mock/london-admin/pages" }
+}));
+
+vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/civil-appeal",
+  pageRoutes: { path: "/mock/civil-appeal/pages" }
+}));
+
+vi.mock("@hmcts/administrative-court-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/admin-court",
+  pageRoutes: { path: "/mock/admin-court/pages" }
+}));
+
 vi.mock("@hmcts/list-types-common/config", () => ({
   moduleRoot: "/mock/list-types-common"
 }));
@@ -180,16 +205,18 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 9 times: location API routes, civil-family-cause-list pages, care-standards-tribunal pages, web pages, auth routes, public pages, verified pages, system-admin pages, admin routes
-      expect(createSimpleRouter).toHaveBeenCalledTimes(9);
+      // Should be called 13 times: location API routes, civil-family-cause-list pages, care-standards-tribunal pages,
+      // rcj-standard pages, london-admin pages, civil-appeal pages, admin-court pages, web pages, auth routes,
+      // public pages, verified pages, system-admin pages, admin routes
+      expect(createSimpleRouter).toHaveBeenCalledTimes(13);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (should have 8 total calls)
-      expect(calls.length).toBeGreaterThanOrEqual(8);
+      // Verify system-admin routes were registered (should have 13 total calls)
+      expect(calls.length).toBeGreaterThanOrEqual(13);
     });
 
     it("should configure error handlers at the end", async () => {
