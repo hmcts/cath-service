@@ -24,7 +24,7 @@ export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
 
-  const artefactId = req.query.artefactId as string;
+  const artefactId = typeof req.query.artefactId === "string" ? req.query.artefactId : undefined;
 
   if (!artefactId) {
     return res.status(400).render("errors/common", {

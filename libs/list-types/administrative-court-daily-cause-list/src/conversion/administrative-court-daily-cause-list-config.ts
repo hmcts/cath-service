@@ -1,10 +1,17 @@
 import { createConverter, type ExcelConverterConfig, registerConverter, validateNoHtmlTags } from "@hmcts/list-types-common";
 
 // Matches h:mma, h.mma (e.g., 9:30am, 10.15pm) or ha (e.g., 9am, 2pm)
-const TIME_PATTERN = /^\d{1,2}([:.]\d{2})?[ap]m\s*$/i;
+// Allows optional space before am/pm and trailing spaces
+const TIME_PATTERN = /^(\d{1,2})([:.]\d{2})?\s*[ap]m\s*$/i;
 
 function validateTimeFormat(value: string, rowNumber: number): void {
-  if (!TIME_PATTERN.test(value)) {
+  const match = TIME_PATTERN.exec(value);
+  if (!match) {
+    throw new Error(`Invalid time format '${value}' in row ${rowNumber}. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)`);
+  }
+
+  const hour = Number.parseInt(match[1], 10);
+  if (hour < 1 || hour > 12) {
     throw new Error(`Invalid time format '${value}' in row ${rowNumber}. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)`);
   }
 }
