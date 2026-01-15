@@ -1,5 +1,5 @@
 import {
-  convertSheetToJson,
+  createMultiSheetConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
   registerConverter,
@@ -7,9 +7,6 @@ import {
   validateNoHtmlTags,
   validateTimeFormatSimple
 } from "@hmcts/list-types-common";
-import ExcelJSPkg from "exceljs";
-
-const { Workbook } = ExcelJSPkg;
 
 // Standard 7 fields configuration for Tab 1
 export const DAILY_HEARINGS_CONFIG: ExcelConverterConfig = {
@@ -115,29 +112,12 @@ export const FUTURE_JUDGMENTS_CONFIG: ExcelConverterConfig = {
   minRows: 0
 };
 
-// Custom multi-sheet converter for Court of Appeal Civil
-async function convertCivilAppealExcel(buffer: Buffer) {
-  const workbook = new Workbook();
-  // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
-  await workbook.xlsx.load(buffer);
-
-  // Extract data from each sheet
-  const dailyHearingsSheet = workbook.getWorksheet("Daily hearings") || workbook.worksheets[0];
-  const futureJudgmentsSheet = workbook.getWorksheet("Notice for future judgments") || workbook.worksheets[1];
-
-  if (!dailyHearingsSheet) {
-    throw new Error("Excel file must contain at least one worksheet");
-  }
-
-  // Convert each sheet to JSON
-  const dailyHearings = dailyHearingsSheet ? await convertSheetToJson(dailyHearingsSheet, DAILY_HEARINGS_CONFIG) : [];
-  const futureJudgments = futureJudgmentsSheet ? await convertSheetToJson(futureJudgmentsSheet, FUTURE_JUDGMENTS_CONFIG) : [];
-
-  return {
-    dailyHearings,
-    futureJudgments
-  };
-}
+// Multi-sheet converter for Court of Appeal Civil
+const convertCivilAppealExcel = (buffer: Buffer) =>
+  createMultiSheetConverter(buffer, [
+    { worksheetName: "Daily hearings", worksheetIndex: 0, dataKey: "dailyHearings", config: DAILY_HEARINGS_CONFIG },
+    { worksheetName: "Notice for future judgments", worksheetIndex: 1, dataKey: "futureJudgments", config: FUTURE_JUDGMENTS_CONFIG }
+  ]);
 
 // Register the converter with listTypeId 19
 registerConverter(19, {

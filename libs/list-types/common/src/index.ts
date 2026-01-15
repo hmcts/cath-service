@@ -6,7 +6,7 @@ export {
   validateDateFormat,
   validateNoHtmlTags
 } from "./conversion/excel-to-json.js";
-export { convertSheetToJson } from "./conversion/multi-sheet-converter.js";
+export { convertSheetToJson, createMultiSheetConverter, type SheetConfig } from "./conversion/multi-sheet-converter.js";
 export {
   convertExcelForListType,
   createConverter,

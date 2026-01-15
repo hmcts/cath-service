@@ -1,7 +1,10 @@
-import { convertSheetToJson, type ExcelConverterConfig, registerConverter, validateNoHtmlTags, validateTimeFormatSimple } from "@hmcts/list-types-common";
-import ExcelJSPkg from "exceljs";
-
-const { Workbook } = ExcelJSPkg;
+import {
+  createMultiSheetConverter,
+  type ExcelConverterConfig,
+  registerConverter,
+  validateNoHtmlTags,
+  validateTimeFormatSimple
+} from "@hmcts/list-types-common";
 
 // Standard 7 fields configuration for both tabs
 export const STANDARD_CONFIG: ExcelConverterConfig = {
@@ -52,29 +55,12 @@ export const STANDARD_CONFIG: ExcelConverterConfig = {
   minRows: 0
 };
 
-// Custom multi-sheet converter for London Administrative Court
-async function convertLondonAdminExcel(buffer: Buffer) {
-  const workbook = new Workbook();
-  // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
-  await workbook.xlsx.load(buffer);
-
-  // Extract data from each sheet
-  const mainHearingsSheet = workbook.getWorksheet("Main hearings") || workbook.worksheets[0];
-  const planningCourtSheet = workbook.getWorksheet("Planning Court") || workbook.worksheets[1];
-
-  if (!mainHearingsSheet) {
-    throw new Error("Excel file must contain at least one worksheet");
-  }
-
-  // Convert each sheet to JSON
-  const mainHearings = mainHearingsSheet ? await convertSheetToJson(mainHearingsSheet, STANDARD_CONFIG) : [];
-  const planningCourt = planningCourtSheet ? await convertSheetToJson(planningCourtSheet, STANDARD_CONFIG) : [];
-
-  return {
-    mainHearings,
-    planningCourt
-  };
-}
+// Multi-sheet converter for London Administrative Court
+const convertLondonAdminExcel = (buffer: Buffer) =>
+  createMultiSheetConverter(buffer, [
+    { worksheetName: "Main hearings", worksheetIndex: 0, dataKey: "mainHearings", config: STANDARD_CONFIG },
+    { worksheetName: "Planning Court", worksheetIndex: 1, dataKey: "planningCourt", config: STANDARD_CONFIG }
+  ]);
 
 // Register the converter with listTypeId 18
 registerConverter(18, {
