@@ -1,20 +1,4 @@
-import { createConverter, type ExcelConverterConfig, registerConverter, validateNoHtmlTags } from "@hmcts/list-types-common";
-
-// Matches h:mma, h.mma (e.g., 9:30am, 10.15pm) or ha (e.g., 9am, 2pm)
-// Allows optional space before am/pm and trailing spaces
-const TIME_PATTERN = /^(\d{1,2})([:.]\d{2})?\s*[ap]m\s*$/i;
-
-function validateTimeFormat(value: string, rowNumber: number): void {
-  const match = TIME_PATTERN.exec(value);
-  if (!match) {
-    throw new Error(`Invalid time format '${value}' in row ${rowNumber}. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)`);
-  }
-
-  const hour = Number.parseInt(match[1], 10);
-  if (hour < 1 || hour > 12) {
-    throw new Error(`Invalid time format '${value}' in row ${rowNumber}. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)`);
-  }
-}
+import { createConverter, type ExcelConverterConfig, registerConverter, validateNoHtmlTags, validateTimeFormat } from "@hmcts/list-types-common";
 
 // RCJ Standard Daily Cause List (listTypeIds: 10-17)
 export const STANDARD_EXCEL_CONFIG: ExcelConverterConfig = {

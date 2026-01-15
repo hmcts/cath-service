@@ -6,6 +6,7 @@ export {
   validateDateFormat,
   validateNoHtmlTags
 } from "./conversion/excel-to-json.js";
+export { convertSheetToJson } from "./conversion/multi-sheet-converter.js";
 export {
   convertExcelForListType,
   createConverter,
@@ -14,6 +15,7 @@ export {
   type ListTypeConverter,
   registerConverter
 } from "./conversion/non-strategic-list-registry.js";
+export { DD_MM_YYYY_PATTERN, TIME_PATTERN, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
 export { type ListType, mockListTypes } from "./mock-list-types.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
