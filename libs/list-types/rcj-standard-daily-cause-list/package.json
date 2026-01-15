@@ -29,7 +29,6 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "ajv": "8.17.1",
     "luxon": "3.7.2"
   },
   "devDependencies": {

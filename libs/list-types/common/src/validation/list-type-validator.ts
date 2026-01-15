@@ -1,4 +1,4 @@
-import type { ListType } from "./mock-list-types.js";
+import type { ListType } from "../mock-list-types.js";
 
 export interface ValidationResult {
   isValid: boolean;

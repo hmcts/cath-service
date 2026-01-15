@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createJsonValidator } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import type { StandardHearingList } from "../models/types.js";
 import { renderAdminCourt } from "../rendering/renderer.js";
-import { validateAdminCourt } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -22,6 +22,8 @@ const __dirname = path.dirname(__filename);
 
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
+const schemaPath = path.join(__dirname, "../schemas/administrative-court-daily-cause-list.json");
+const validate = createJsonValidator(schemaPath);
 
 // Map list type IDs to their names and template names
 const LIST_TYPE_CONFIG: Record<number, { en: string; cy: string; template: string }> = {
@@ -89,7 +91,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const jsonData: StandardHearingList = JSON.parse(jsonContent);
 
-    const validationResult = validateAdminCourt(jsonData);
+    const validationResult = validate(jsonData);
     if (!validationResult.isValid) {
       console.error("Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {

@@ -29,7 +29,6 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "ajv": "8.17.1",
     "exceljs": "4.4.0",
     "luxon": "3.7.2"
   },

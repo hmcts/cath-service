@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { mockListTypes } from "../mock-list-types.js";
 import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-type-validator.js";
-import { mockListTypes } from "./mock-list-types.js";
 
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({

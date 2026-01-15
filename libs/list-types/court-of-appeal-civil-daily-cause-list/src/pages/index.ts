@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createJsonValidator } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import type { CourtOfAppealCivilData } from "../models/types.js";
 import { renderCourtOfAppealCivil } from "../rendering/renderer.js";
-import { validateCourtOfAppealCivil } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -17,6 +17,8 @@ const __dirname = path.dirname(__filename);
 
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
+const schemaPath = path.join(__dirname, "../schemas/court-of-appeal-civil-daily-cause-list.json");
+const validate = createJsonValidator(schemaPath);
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -74,7 +76,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const jsonData: CourtOfAppealCivilData = JSON.parse(jsonContent);
 
-    const validationResult = validateCourtOfAppealCivil(jsonData);
+    const validationResult = validate(jsonData);
     if (!validationResult.isValid) {
       console.error("Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {

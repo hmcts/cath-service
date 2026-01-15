@@ -3,8 +3,14 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
+const mockValidate = vi.fn();
+
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn()
+}));
+
+vi.mock("@hmcts/list-types-common", () => ({
+  createJsonValidator: () => mockValidate
 }));
 
 vi.mock("@hmcts/postgres", () => ({
@@ -19,13 +25,8 @@ vi.mock("../rendering/renderer.js", () => ({
   renderCareStandardsTribunalData: vi.fn()
 }));
 
-vi.mock("../validation/json-validator.js", () => ({
-  validateCareStandardsTribunalList: vi.fn()
-}));
-
 import { prisma } from "@hmcts/postgres";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
-import { validateCareStandardsTribunalList } from "../validation/json-validator.js";
 
 describe("Care Standards Tribunal page controller", () => {
   let req: Partial<Request>;
@@ -91,7 +92,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
-      vi.mocked(validateCareStandardsTribunalList).mockReturnValue({ isValid: true, errors: [] });
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);
 
       await GET(req as Request, res as Response);
@@ -100,7 +101,7 @@ describe("Care Standards Tribunal page controller", () => {
         where: { artefactId: "test-artefact-123" }
       });
       expect(readFile).toHaveBeenCalled();
-      expect(validateCareStandardsTribunalList).toHaveBeenCalledWith(mockJsonData);
+      expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderCareStandardsTribunalData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
         courtName: "Care Standards Tribunal",
@@ -205,7 +206,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
-      vi.mocked(validateCareStandardsTribunalList).mockReturnValue({
+      mockValidate.mockReturnValue({
         isValid: false,
         errors: ["Invalid date format"]
       });
@@ -276,7 +277,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
-      vi.mocked(validateCareStandardsTribunalList).mockReturnValue({ isValid: true, errors: [] });
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);
 
       await GET(req as Request, res as Response);
