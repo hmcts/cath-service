@@ -53,7 +53,7 @@ export async function seedListTypes() {
           welshFriendlyName: listType.welshFriendlyName,
           shortenedFriendlyName: listType.englishFriendlyName,
           url: listType.urlPath || "",
-          defaultSensitivity: "Public",
+          defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,
           isNonStrategic: listType.isNonStrategic,
           subJurisdictions: {

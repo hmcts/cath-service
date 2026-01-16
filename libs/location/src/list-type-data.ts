@@ -6,6 +6,7 @@ export interface ListTypeData {
   provenance: string;
   urlPath?: string;
   isNonStrategic: boolean;
+  defaultSensitivity: string;
 }
 
 export const listTypeData: ListTypeData[] = [
@@ -16,7 +17,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Civil Daily Cause List",
     provenance: "CFT_IDAM",
     urlPath: "civil-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 2,
@@ -25,7 +27,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Family Daily Cause List",
     provenance: "CFT_IDAM",
     urlPath: "family-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Private"
   },
   {
     id: 3,
@@ -34,7 +37,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Crime Daily List",
     provenance: "CFT_IDAM",
     urlPath: "crime-daily-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 4,
@@ -43,7 +47,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Magistrates Public List",
     provenance: "CFT_IDAM",
     urlPath: "magistrates-public-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 5,
@@ -52,7 +57,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Crown Warned List",
     provenance: "CFT_IDAM",
     urlPath: "crown-warned-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 6,
@@ -61,7 +67,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Crown Daily List",
     provenance: "CFT_IDAM",
     urlPath: "crown-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 7,
@@ -70,7 +77,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Crown Firm List",
     provenance: "CFT_IDAM",
     urlPath: "crown-firm-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 8,
@@ -79,7 +87,8 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 9,
@@ -88,6 +97,7 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   }
 ];

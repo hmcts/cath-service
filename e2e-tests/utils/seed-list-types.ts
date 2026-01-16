@@ -20,7 +20,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "civil-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 2,
@@ -30,7 +30,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "family-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "PRIVATE"
+    defaultSensitivity: "Private"
   },
   {
     id: 3,
@@ -40,7 +40,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "crime-daily-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 4,
@@ -50,7 +50,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 5,
@@ -60,7 +60,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "crown-warned-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 6,
@@ -70,7 +70,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "crown-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 7,
@@ -80,7 +80,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "crown-firm-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 8,
@@ -90,7 +90,7 @@ const listTypes: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   },
   {
     id: 9,
@@ -100,7 +100,7 @@ const listTypes: ListTypeData[] = [
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true,
-    defaultSensitivity: "PUBLIC"
+    defaultSensitivity: "Public"
   }
 ];
 
