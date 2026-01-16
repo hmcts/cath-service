@@ -201,23 +201,20 @@ async function completeCSTUploadFlow(page: Page): Promise<string> {
   const excelBuffer = await createValidCSTExcel();
   await uploadCSTExcel(page, excelBuffer, true);
 
+  // Get uploadId from the summary page URL
+  const summaryUrl = page.url();
+  const uploadIdMatch = summaryUrl.match(/uploadId=([^&]+)/);
+  const uploadId = uploadIdMatch ? uploadIdMatch[1] : "";
+
+  if (!uploadId) {
+    throw new Error("Could not extract uploadId from URL");
+  }
+
   await page.getByRole("button", { name: "Confirm" }).click();
   await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
 
-  // Navigate to summary of publications to find the artefactId
-  await page.goto("/summary-of-publications");
-  await page.waitForTimeout(1000);
-
-  // Find the first CST publication link
-  const publicationLinks = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list?artefactId="]');
-  const firstLinkHref = await publicationLinks.first().getAttribute("href");
-
-  if (!firstLinkHref) {
-    throw new Error("Could not find published CST list");
-  }
-
-  const match = firstLinkHref.match(/artefactId=([^&]+)/);
-  return match ? match[1] : "";
+  // The artefactId is the same as the uploadId for non-strategic uploads
+  return uploadId;
 }
 
 // Helper function to navigate to published CST list
