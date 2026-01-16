@@ -220,7 +220,10 @@ async function completeCSTUploadFlow(page: Page): Promise<string> {
 // Helper function to navigate to published CST list
 async function navigateToPublishedList(page: Page, artefactId: string) {
   await page.goto(`/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}`);
-  await page.waitForTimeout(1000);
+
+  // Wait for the page to load by checking for the main heading
+  await page.waitForSelector("h1", { timeout: 10000 });
+  await page.waitForTimeout(500);
 }
 
 test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
@@ -350,12 +353,14 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       await expect(page.locator("h1")).toContainText("Care Standards Tribunal Weekly Hearing List");
 
       // Verify "List for week commencing" date line
-      const weekCommencingText = await page.locator(".govuk-body.govuk-\\!-font-weight-bold").textContent();
+      const weekCommencingPara = page.locator('p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1');
+      await expect(weekCommencingPara).toBeVisible();
+      const weekCommencingText = await weekCommencingPara.textContent();
       expect(weekCommencingText).toContain("List for week commencing");
       expect(weekCommencingText).toMatch(/\d{1,2} \w+ \d{4}/); // Matches date format like "1 January 2026"
 
       // Verify "Last updated" date and time line
-      const bodyParagraphs = page.locator(".govuk-body");
+      const bodyParagraphs = page.locator("p.govuk-body");
       let foundLastUpdated = false;
       for (let i = 0; i < await bodyParagraphs.count(); i++) {
         const text = await bodyParagraphs.nth(i).textContent();
@@ -604,11 +609,13 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       await expect(page.locator("h1")).toContainText("Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal");
 
       // Verify "List for week commencing" is in Welsh
-      const weekCommencingText = await page.locator(".govuk-body.govuk-\\!-font-weight-bold").textContent();
+      const weekCommencingPara = page.locator('p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1');
+      await expect(weekCommencingPara).toBeVisible();
+      const weekCommencingText = await weekCommencingPara.textContent();
       expect(weekCommencingText).toContain("Rhestr ar gyfer yr wythnos yn dechrau");
 
       // Verify "Last updated" is in Welsh
-      const bodyParagraphs = page.locator(".govuk-body");
+      const bodyParagraphs = page.locator("p.govuk-body");
       let foundLastUpdated = false;
       for (let i = 0; i < await bodyParagraphs.count(); i++) {
         const text = await bodyParagraphs.nth(i).textContent();
