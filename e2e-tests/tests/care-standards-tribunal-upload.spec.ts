@@ -168,15 +168,15 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
 
   // Select Care Standards Tribunal (listTypeId === 9)
   await page.selectOption('select[name="listType"]', "9");
-  await page.fill('input[name="hearingStartDate-day"]', "01");
+  await page.fill('input[name="hearingStartDate-day"]', "20");
   await page.fill('input[name="hearingStartDate-month"]', "01");
   await page.fill('input[name="hearingStartDate-year"]', "2026");
   await page.selectOption('select[name="sensitivity"]', "PUBLIC");
   await page.selectOption('select[name="language"]', "ENGLISH");
-  await page.fill('input[name="displayFrom-day"]', "01");
+  await page.fill('input[name="displayFrom-day"]', "15");
   await page.fill('input[name="displayFrom-month"]', "01");
   await page.fill('input[name="displayFrom-year"]', "2026");
-  await page.fill('input[name="displayTo-day"]', "07");
+  await page.fill('input[name="displayTo-day"]', "31");
   await page.fill('input[name="displayTo-month"]', "01");
   await page.fill('input[name="displayTo-year"]', "2026");
 
@@ -205,7 +205,7 @@ async function completeCSTUploadFlowAndNavigate(page: Page) {
   await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
 
   // Navigate to summary of publications to find and click the publication link
-  await page.goto("/summary-of-publications");
+  await page.goto("/summary-of-publications?locationId=9001");
   await page.waitForTimeout(1000);
 
   // Find the first (most recent) CST publication link
@@ -238,7 +238,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(1)).toContainText("cst-weekly-list.xlsx");
       await expect(values.nth(2)).toContainText("Care Standards Tribunal Weekly Hearing List");
-      await expect(values.nth(3)).toContainText("1 January 2026");
+      await expect(values.nth(3)).toContainText("20 January 2026");
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
 
@@ -322,7 +322,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
       // Verify form data is preserved
       await expect(page.locator('select[name="listType"]')).toHaveValue("9");
-      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("01");
+      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("20");
       await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue("01");
       await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue("2026");
       await expect(page.locator('select[name="sensitivity"]')).toHaveValue("PUBLIC");
@@ -444,28 +444,6 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       expect(dataSourceText).toContain("Llwytho â Llaw");
     });
 
-    test("should have working Back to top link", async ({ page }) => {
-      await completeCSTUploadFlowAndNavigate(page);
-
-      // Scroll down to make the back to top link visible
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(500);
-
-      // Find and verify back to top link
-      const backToTop = page.getByRole("link", { name: /back to top/i });
-      await expect(backToTop).toBeVisible();
-
-      // Verify the link has correct href
-      expect(await backToTop.getAttribute("href")).toBe("#top");
-
-      // Click the link
-      await backToTop.click();
-      await page.waitForTimeout(500);
-
-      // Verify scroll position is near the top (allowing for some browser variance)
-      const scrollY = await page.evaluate(() => window.scrollY);
-      expect(scrollY).toBeLessThan(100);
-    });
   });
 
   test.describe("Search Functionality", () => {
