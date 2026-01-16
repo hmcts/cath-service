@@ -196,71 +196,25 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
   }
 }
 
-// Helper function to complete full CST upload flow and return artefactId
-async function completeCSTUploadFlow(page: Page): Promise<string> {
+// Helper function to complete full CST upload flow and navigate to published list
+async function completeCSTUploadFlowAndNavigate(page: Page) {
   const excelBuffer = await createValidCSTExcel();
   await uploadCSTExcel(page, excelBuffer, true);
-
-  // Get uploadId from the summary page URL
-  const summaryUrl = page.url();
-  const uploadIdMatch = summaryUrl.match(/uploadId=([^&]+)/);
-  const uploadId = uploadIdMatch ? uploadIdMatch[1] : "";
-
-  if (!uploadId) {
-    throw new Error("Could not extract uploadId from URL");
-  }
-
-  console.log(`UploadId/ArtefactId: ${uploadId}`);
 
   await page.getByRole("button", { name: "Confirm" }).click();
   await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
 
-  // Wait a moment for the publication to be processed
-  await page.waitForTimeout(2000);
+  // Navigate to summary of publications to find and click the publication link
+  await page.goto("/summary-of-publications");
+  await page.waitForTimeout(1000);
 
-  // The artefactId is the same as the uploadId for non-strategic uploads
-  return uploadId;
-}
+  // Find the first (most recent) CST publication link
+  const publicationLinks = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list?artefactId="]');
+  await expect(publicationLinks.first()).toBeVisible();
 
-// Helper function to navigate to published CST list with retry logic
-async function navigateToPublishedList(page: Page, artefactId: string) {
-  const url = `/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}`;
-  console.log(`Navigating to: ${url}`);
-
-  // Retry up to 5 times with increasing delays to allow publication to be processed
-  let lastError: Error | null = null;
-  for (let attempt = 1; attempt <= 5; attempt++) {
-    console.log(`Attempt ${attempt} to load published list...`);
-
-    const response = await page.goto(url);
-
-    // Check if we got a proper response
-    if (!response) {
-      throw new Error(`No response received for URL: ${url}`);
-    }
-
-    // Wait a bit for the page to render
-    await page.waitForTimeout(1000);
-
-    // Check if we got the actual list page (not a 404 error page)
-    const h1Text = await page.locator("h1").textContent();
-
-    if (h1Text?.includes("Not Found")) {
-      console.log(`Attempt ${attempt}: Publication not ready yet (got 404). Waiting...`);
-      lastError = new Error(`Publication not found. ArtefactId: ${artefactId}`);
-
-      // Wait before retrying (exponential backoff)
-      await page.waitForTimeout(attempt * 2000);
-      continue;
-    }
-
-    // Success! The page loaded correctly
-    console.log(`Successfully loaded list page. H1: ${h1Text}`);
-    return;
-  }
-
-  // All retries failed
-  throw lastError || new Error(`Failed to load published list after 5 attempts. ArtefactId: ${artefactId}`);
+  // Click the publication link to navigate to the list page
+  await publicationLinks.first().click();
+  await page.waitForLoadState("networkidle");
 }
 
 test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
@@ -300,18 +254,13 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should display the published CST list with correct formatting", async ({ page }) => {
-      // Upload and publish the list
-      await completeCSTUploadFlow(page);
+      // Upload and navigate to published list
+      await completeCSTUploadFlowAndNavigate(page);
 
-      // Navigate to the published list
-      // Note: In a real scenario, you'd navigate via search or direct URL
-      // For now, we'll construct the URL pattern
-      await page.goto("/care-standards-tribunal-weekly-hearing-list?artefactId=test");
-      await page.waitForTimeout(1000);
-
-      // Verify page loads (may need adjustment based on actual implementation)
+      // Verify page loads
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
+      await expect(heading).toContainText("Care Standards Tribunal Weekly Hearing List");
     });
   });
 
@@ -383,8 +332,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
   test.describe("CST List Display Page", () => {
     test("should display list with correct header information", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       // Verify page title
       await expect(page.locator("h1")).toContainText("Care Standards Tribunal Weekly Hearing List");
@@ -411,8 +359,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should display Important Information accordion expanded by default", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       // Verify details element exists and is open by default
       const details = page.locator("details.govuk-details");
@@ -441,8 +388,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should display table with all hearing data and correct columns", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       const table = page.locator(".govuk-table");
       await expect(table).toBeVisible();
@@ -471,8 +417,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should display data source as Manual Upload in English", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       // Find the data source text
       const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Data source" });
@@ -484,9 +429,11 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should display data source as Llwytho â Llaw in Welsh", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await page.goto(`/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}&lng=cy`);
-      await page.waitForTimeout(1000);
+      await completeCSTUploadFlowAndNavigate(page);
+
+      // Switch to Welsh
+      await page.getByRole("link", { name: "Cymraeg" }).click();
+      await page.waitForLoadState("networkidle");
 
       // Find the data source text in Welsh
       const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Ffynhonnell data" });
@@ -498,8 +445,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should have working Back to top link", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       // Scroll down to make the back to top link visible
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -524,8 +470,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
   test.describe("Search Functionality", () => {
     test("should filter and highlight table rows based on search term", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       const searchInput = page.locator("#case-search-input");
       await expect(searchInput).toBeVisible();
@@ -544,8 +489,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should highlight matches in multiple columns", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       const searchInput = page.locator("#case-search-input");
       await searchInput.fill("Remote");
@@ -558,8 +502,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should clear search when input is cleared", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       const searchInput = page.locator("#case-search-input");
       await searchInput.fill("Test");
@@ -602,8 +545,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should meet WCAG 2.2 AA standards on list display page", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await navigateToPublishedList(page, artefactId);
+      await completeCSTUploadFlowAndNavigate(page);
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
@@ -638,9 +580,11 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
   test.describe("Welsh Language Support", () => {
     test("should display Welsh content throughout the list page", async ({ page }) => {
-      const artefactId = await completeCSTUploadFlow(page);
-      await page.goto(`/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}&lng=cy`);
-      await page.waitForTimeout(1000);
+      await completeCSTUploadFlowAndNavigate(page);
+
+      // Switch to Welsh
+      await page.getByRole("link", { name: "Cymraeg" }).click();
+      await page.waitForLoadState("networkidle");
 
       // Verify page title is in Welsh
       await expect(page.locator("h1")).toContainText("Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal");
