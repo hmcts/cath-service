@@ -3,7 +3,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import type { CareStandardsTribunalHearingList } from "../models/types.js";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
@@ -82,10 +81,11 @@ export const GET = async (req: Request, res: Response) => {
       courtName,
       displayFrom: artefact.displayFrom,
       displayTo: artefact.displayTo,
-      lastReceivedDate: artefact.lastReceivedDate.toISOString()
+      lastReceivedDate: artefact.lastReceivedDate.toISOString(),
+      listTitle: t.pageTitle
     });
 
-    const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
+    const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
 
     res.render("care-standards-tribunal-weekly-hearing-list", {
       en,
