@@ -1,1 +1,1 @@
-// Module exports will be added here as needed
+export * from "./services/service.js";

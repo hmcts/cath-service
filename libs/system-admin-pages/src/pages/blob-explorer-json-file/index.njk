@@ -1,0 +1,143 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ jsonFileTitle }}</h1>
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: [
+          {
+            text: error
+          }
+        ]
+      }) }}
+    {% else %}
+
+      <form method="post" novalidate>
+        {{ govukButton({
+          text: jsonFileResubmitButton,
+          classes: "govuk-button"
+        }) }}
+      </form>
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ jsonFileMetadataHeading }}</h2>
+
+      {{ govukTable({
+        rows: [
+          [
+            {
+              text: metadataArtefactId
+            },
+            {
+              text: metadata.artefactId
+            }
+          ],
+          [
+            {
+              text: metadataLocationId
+            },
+            {
+              text: metadata.locationId
+            }
+          ],
+          [
+            {
+              text: metadataLocationName
+            },
+            {
+              text: metadata.locationName
+            }
+          ],
+          [
+            {
+              text: metadataPublicationType
+            },
+            {
+              text: metadata.publicationType
+            }
+          ],
+          [
+            {
+              text: metadataListType
+            },
+            {
+              text: metadata.listType
+            }
+          ],
+          [
+            {
+              text: metadataProvenance
+            },
+            {
+              text: metadata.provenance
+            }
+          ],
+          [
+            {
+              text: metadataLanguage
+            },
+            {
+              text: metadata.language
+            }
+          ],
+          [
+            {
+              text: metadataSensitivity
+            },
+            {
+              text: metadata.sensitivity
+            }
+          ],
+          [
+            {
+              text: metadataContentDate
+            },
+            {
+              text: formatDateTime(metadata.contentDate)
+            }
+          ],
+          [
+            {
+              text: metadataDisplayFrom
+            },
+            {
+              text: formatDateTime(metadata.displayFrom)
+            }
+          ],
+          [
+            {
+              text: metadataDisplayTo
+            },
+            {
+              text: formatDateTime(metadata.displayTo)
+            }
+          ]
+        ]
+      }) }}
+
+      {% if renderedTemplateUrl %}
+        <p class="govuk-body govuk-!-margin-top-4">
+          <a href="{{ renderedTemplateUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ jsonFileLinkToTemplate }}</a>
+        </p>
+      {% endif %}
+
+      {% if jsonContent %}
+        {{ govukDetails({
+          summaryText: jsonFileAccordionTitle,
+          html: '<pre class="govuk-body" style="white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto; background-color: #f3f2f1; padding: 15px; border: 1px solid #b1b4b6;">' + jsonContent + '</pre>'
+        }) }}
+      {% endif %}
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -19,6 +19,7 @@ import {
 } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import {
+  apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
   moduleRoot as systemAdminModuleRoot,
   pageRoutes as systemAdminPageRoutes
@@ -111,6 +112,9 @@ export async function createApp(): Promise<Express> {
 
   // Register API routes for location autocomplete
   app.use(await createSimpleRouter(locationApiRoutes));
+
+  // Register API routes for system admin (file serving)
+  app.use(await createSimpleRouter(systemAdminApiRoutes));
 
   // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));

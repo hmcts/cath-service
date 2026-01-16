@@ -1,0 +1,20 @@
+export const en = {
+  jsonFileTitle: "Blob Explorer – JSON file",
+  jsonFileResubmitButton: "Re-submit subscription",
+  jsonFileMetadataHeading: "Metadata",
+  jsonFileAccordionTitle: "View Raw JSON Content",
+  jsonFileLinkToTemplate: "Link to rendered template",
+  jsonFileError: "We could not load the JSON publication.",
+  errorSummaryTitle: "There is a problem",
+  metadataArtefactId: "Artefact ID",
+  metadataLocationId: "Location ID",
+  metadataLocationName: "Location Name",
+  metadataPublicationType: "Publication Type",
+  metadataListType: "List Type",
+  metadataProvenance: "Provenance",
+  metadataLanguage: "Language",
+  metadataSensitivity: "Sensitivity",
+  metadataContentDate: "Content Date",
+  metadataDisplayFrom: "Display From",
+  metadataDisplayTo: "Display To"
+};

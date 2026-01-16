@@ -1,0 +1,48 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ publicationsTitle }}</h1>
+
+    <p class="govuk-body">{{ publicationsDescription }}</p>
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: error
+          }
+        ]
+      }) }}
+    {% endif %}
+
+    {% if tableRows.length > 0 %}
+      {{ govukTable({
+        head: [
+          {
+            text: publicationsTableHeadingArtefactId
+          },
+          {
+            text: publicationsTableHeadingListType
+          },
+          {
+            text: publicationsTableHeadingDisplayFrom
+          },
+          {
+            text: publicationsTableHeadingDisplayTo
+          }
+        ],
+        rows: tableRows
+      }) }}
+    {% else %}
+      <p class="govuk-body">No publications found for this location.</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
