@@ -210,20 +210,57 @@ async function completeCSTUploadFlow(page: Page): Promise<string> {
     throw new Error("Could not extract uploadId from URL");
   }
 
+  console.log(`UploadId/ArtefactId: ${uploadId}`);
+
   await page.getByRole("button", { name: "Confirm" }).click();
   await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+  // Wait a moment for the publication to be processed
+  await page.waitForTimeout(2000);
 
   // The artefactId is the same as the uploadId for non-strategic uploads
   return uploadId;
 }
 
-// Helper function to navigate to published CST list
+// Helper function to navigate to published CST list with retry logic
 async function navigateToPublishedList(page: Page, artefactId: string) {
-  await page.goto(`/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}`);
+  const url = `/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}`;
+  console.log(`Navigating to: ${url}`);
 
-  // Wait for the page to load by checking for the main heading
-  await page.waitForSelector("h1", { timeout: 10000 });
-  await page.waitForTimeout(500);
+  // Retry up to 5 times with increasing delays to allow publication to be processed
+  let lastError: Error | null = null;
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    console.log(`Attempt ${attempt} to load published list...`);
+
+    const response = await page.goto(url);
+
+    // Check if we got a proper response
+    if (!response) {
+      throw new Error(`No response received for URL: ${url}`);
+    }
+
+    // Wait a bit for the page to render
+    await page.waitForTimeout(1000);
+
+    // Check if we got the actual list page (not a 404 error page)
+    const h1Text = await page.locator("h1").textContent();
+
+    if (h1Text?.includes("Not Found")) {
+      console.log(`Attempt ${attempt}: Publication not ready yet (got 404). Waiting...`);
+      lastError = new Error(`Publication not found. ArtefactId: ${artefactId}`);
+
+      // Wait before retrying (exponential backoff)
+      await page.waitForTimeout(attempt * 2000);
+      continue;
+    }
+
+    // Success! The page loaded correctly
+    console.log(`Successfully loaded list page. H1: ${h1Text}`);
+    return;
+  }
+
+  // All retries failed
+  throw lastError || new Error(`Failed to load published list after 5 attempts. ArtefactId: ${artefactId}`);
 }
 
 test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
