@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
 import ExcelJSPkg from "exceljs";
+import { prisma } from "@hmcts/postgres";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 const { Workbook } = ExcelJSPkg;
@@ -465,15 +466,32 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should meet WCAG 2.2 AA standards on list display page", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // await page.goto("/care-standards-tribunal-weekly-hearing-list?artefactId=test");
-      //
-      // const accessibilityScanResults = await new AxeBuilder({ page })
-      //   .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      //   .disableRules(["target-size", "link-name"])
-      //   .analyze();
-      //
-      // expect(accessibilityScanResults.violations).toEqual([]);
+      // Upload a valid CST file
+      await completeCSTUploadFlow(page);
+
+      // Query database to get the most recent CST artefact
+      const artefact = await prisma.artefact.findFirst({
+        where: { locationId: "9001", listTypeId: 9 },
+        orderBy: { lastReceivedDate: "desc" }
+      });
+
+      expect(artefact).toBeTruthy();
+
+      // Navigate to the list display page
+      await page.goto(`/care-standards-tribunal-weekly-hearing-list?artefactId=${artefact!.artefactId}`);
+      await page.waitForTimeout(1000);
+
+      // Verify the page loaded successfully (not an error page)
+      const heading = page.locator("h1");
+      await expect(heading).toBeVisible();
+
+      // Run accessibility scan
+      const accessibilityScanResults = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name"])
+        .analyze();
+
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
 
