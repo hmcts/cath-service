@@ -20,16 +20,16 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 2),
       displayTo: new Date(2025, 0, 8),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
 
     expect(result.header.listTitle).toBe("Care Standards Tribunal Weekly Hearing List");
-    expect(result.header.duration).toContain("List for week commencing");
-    expect(result.header.duration).toContain("2 January 2025");
-    expect(result.header.lastUpdated).toContain("Last updated");
-    expect(result.header.lastUpdated).toContain("1 January 2025");
+    expect(result.header.weekCommencingDate).toBe("2 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
+    expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
     expect(result.hearings[0].date).toBe("2 January 2025");
@@ -65,7 +65,8 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 2),
       displayTo: new Date(2025, 0, 8),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
@@ -92,7 +93,8 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 1),
       displayTo: new Date(2025, 0, 7),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
@@ -117,12 +119,13 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 2),
       displayTo: new Date(2025, 0, 8),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
 
-    expect(result.header.lastUpdated).toContain("at 9:55am");
+    expect(result.header.lastUpdatedTime).toBe("9:55am");
   });
 
   it("should format PM times correctly", () => {
@@ -142,12 +145,13 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 2),
       displayTo: new Date(2025, 0, 8),
-      lastReceivedDate: "2025-01-01T14:30:00Z"
+      lastReceivedDate: "2025-01-01T14:30:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
 
-    expect(result.header.lastUpdated).toContain("at 2:30pm");
+    expect(result.header.lastUpdatedTime).toBe("2:30pm");
   });
 
   it("should handle empty hearing list", () => {
@@ -158,13 +162,40 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 2),
       displayTo: new Date(2025, 0, 8),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
 
     expect(result.hearings).toHaveLength(0);
     expect(result.header.listTitle).toBe("Care Standards Tribunal Weekly Hearing List");
+  });
+
+  it("should use the provided listTitle from translations", () => {
+    const hearingList: CareStandardsTribunalHearingList = [
+      {
+        date: "02/01/2025",
+        caseName: "A Vs B",
+        hearingLength: "1 hour",
+        hearingType: "Substantive hearing",
+        venue: "Care Standards Tribunal",
+        additionalInformation: "Remote hearing"
+      }
+    ];
+
+    const optionsWelsh = {
+      locale: "cy",
+      courtName: "Care Standards Tribunal",
+      displayFrom: new Date(2025, 0, 2),
+      displayTo: new Date(2025, 0, 8),
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal"
+    };
+
+    const result = renderCareStandardsTribunalData(hearingList, optionsWelsh);
+
+    expect(result.header.listTitle).toBe("Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal");
   });
 
   it("should preserve all hearing fields without modification", () => {
@@ -184,7 +215,8 @@ describe("renderCareStandardsTribunalData", () => {
       courtName: "Care Standards Tribunal",
       displayFrom: new Date(2025, 0, 2),
       displayTo: new Date(2025, 0, 8),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
 
     const result = renderCareStandardsTribunalData(hearingList, options);
