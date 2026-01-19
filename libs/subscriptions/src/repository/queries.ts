@@ -14,7 +14,8 @@ export async function findSubscriptionsByUserId(userId: string) {
 export async function findSubscriptionsByLocationId(locationId: number) {
   return prisma.subscription.findMany({
     where: {
-      locationId
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
     },
     orderBy: {
       dateAdded: "desc"
@@ -45,7 +46,9 @@ export async function createSubscriptionRecord(userId: string, locationId: numbe
   return prisma.subscription.create({
     data: {
       userId,
-      locationId
+      locationId,
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
     }
   });
 }
