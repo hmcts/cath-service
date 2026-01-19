@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,26 +24,27 @@ describe("400 error page template", () => {
       expect(templateContent).toContain('{% extends "layouts/base-template.njk" %}');
     });
 
-    it("should set page title", () => {
-      expect(templateContent).toContain('{% set title = "Bad request" %}');
+    it("should set page title from locale", () => {
+      expect(templateContent).toContain("{% set title = t.title %}");
     });
 
-    it("should have main heading", () => {
-      expect(templateContent).toContain('<h1 class="govuk-heading-l">Bad request</h1>');
+    it("should have main heading from locale", () => {
+      expect(templateContent).toContain('<h1 class="govuk-heading-l">{{ t.heading }}</h1>');
     });
 
-    it("should have description text", () => {
-      expect(templateContent).toContain("The page you were trying to access has missing or invalid information.");
+    it("should use locale variables for content", () => {
+      expect(templateContent).toContain("{{ t.description }}");
+      expect(templateContent).toContain("{{ t.youCan }}");
+      expect(templateContent).toContain("{{ t.checkAddress }}");
+      expect(templateContent).toContain("{{ t.contactLink }}");
     });
 
-    it("should have bullet list with guidance", () => {
+    it("should have bullet list structure", () => {
       expect(templateContent).toContain('<ul class="govuk-list govuk-list--bullet">');
-      expect(templateContent).toContain("check the web address is correct");
-      expect(templateContent).toContain('go back to the <a href="/" class="govuk-link">start page</a> and try again');
     });
 
     it("should have contact us link", () => {
-      expect(templateContent).toContain('<a href="/contact-us" class="govuk-link">contact us</a>');
+      expect(templateContent).toContain('<a href="/contact-us" class="govuk-link">');
     });
 
     it("should use GOV.UK Design System classes", () => {
@@ -49,6 +52,25 @@ describe("400 error page template", () => {
       expect(templateContent).toContain("govuk-body");
       expect(templateContent).toContain("govuk-list");
       expect(templateContent).toContain("govuk-link");
+    });
+  });
+
+  describe("English translations", () => {
+    it("should have all required English text", () => {
+      expect(en.error400.title).toBe("Bad request");
+      expect(en.error400.heading).toBe("Bad request");
+      expect(en.error400.description).toContain("missing or invalid information");
+      expect(en.error400.checkAddress).toContain("check the web address");
+      expect(en.error400.contactLink).toBe("contact us");
+    });
+  });
+
+  describe("Welsh translations", () => {
+    it("should have all required Welsh text", () => {
+      expect(cy.error400.title).toBe("Cais gwael");
+      expect(cy.error400.heading).toBe("Cais gwael");
+      expect(cy.error400.description).toContain("gwybodaeth");
+      expect(cy.error400.contactLink).toBe("cysylltwch â ni");
     });
   });
 });
