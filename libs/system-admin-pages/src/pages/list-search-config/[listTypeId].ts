@@ -1,34 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import * as service from "@hmcts/list-search-config";
 import type { Request, RequestHandler, Response } from "express";
-import * as service from "../../list-search-config-service.js";
-
-const en = {
-  pageTitle: "Configure list type search fields",
-  heading: "Configure list type search fields",
-  body: "Enter the JSON field names used to extract case details for this list type.",
-  caseNumberFieldLabel: "Case number JSON field name",
-  caseNameFieldLabel: "Case name JSON field name",
-  saveButton: "Confirm",
-  errorSummaryTitle: "There is a problem",
-  errorCaseNumberRequired: "Enter the case number JSON field name",
-  errorCaseNumberInvalid: "Case number field name must contain only letters, numbers and underscores",
-  errorCaseNameRequired: "Enter the case name JSON field name",
-  errorCaseNameInvalid: "Case name field name must contain only letters, numbers and underscores"
-};
-
-const cy = {
-  pageTitle: "Ffurfweddu meysydd chwilio math rhestr",
-  heading: "Ffurfweddu meysydd chwilio math rhestr",
-  body: "Rhowch yr enwau meysydd JSON a ddefnyddir i dynnu manylion achosion ar gyfer y math o restr hwn.",
-  caseNumberFieldLabel: "Enw maes JSON rhif achos",
-  caseNameFieldLabel: "Enw maes JSON enw achos",
-  saveButton: "Cadarnhau",
-  errorSummaryTitle: "Mae problem wedi codi",
-  errorCaseNumberRequired: "Rhowch enw maes JSON rhif yr achos",
-  errorCaseNumberInvalid: "Rhaid i enw maes rhif yr achos gynnwys llythrennau, rhifau a thanlinellau yn unig",
-  errorCaseNameRequired: "Rhowch enw maes JSON enw'r achos",
-  errorCaseNameInvalid: "Rhaid i enw maes enw'r achos gynnwys llythrennau, rhifau a thanlinellau yn unig"
-};
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
@@ -40,7 +14,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const existingConfig = await service.getConfigForListType(listTypeId);
 
-  res.render("list-search-config/config", {
+  res.render("list-search-config/index", {
     pageTitle: lang.pageTitle,
     heading: lang.heading,
     body: lang.body,
@@ -80,7 +54,7 @@ const postHandler = async (req: Request, res: Response) => {
       fieldErrors[fieldId] = { text: error.message };
     }
 
-    return res.render("list-search-config/config", {
+    return res.render("list-search-config/index", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
       body: lang.body,
