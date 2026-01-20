@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import * as service from "../list-search-config-service.js";
+import * as service from "../../list-search-config-service.js";
 
 const en = {
   pageTitle: "Configure list search fields",
@@ -40,7 +40,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const existingConfig = await service.getConfigForListType(listTypeId);
 
-  res.render("list-search-config", {
+  res.render("list-search-config/[listTypeId]", {
     pageTitle: lang.pageTitle,
     heading: lang.heading,
     body: lang.body,
