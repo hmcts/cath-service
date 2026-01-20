@@ -15,20 +15,14 @@ describe("list-search-config service", () => {
       expect(validateFieldName("CASE_NUMBER", "Case number")).toBeNull();
     });
 
-    it("should return error for empty field name", () => {
+    it("should return null for empty field name (optional field)", () => {
       const result = validateFieldName("", "Case number field name");
-      expect(result).toEqual({
-        field: "Case number field name",
-        message: "Enter the case number field name"
-      });
+      expect(result).toBeNull();
     });
 
-    it("should return error for whitespace-only field name", () => {
+    it("should return null for whitespace-only field name (optional field)", () => {
       const result = validateFieldName("   ", "Case number field name");
-      expect(result).toEqual({
-        field: "Case number field name",
-        message: "Enter the case number field name"
-      });
+      expect(result).toBeNull();
     });
 
     it("should return error for field name with invalid characters", () => {
@@ -144,45 +138,43 @@ describe("list-search-config service", () => {
       expect(result.errors![0].message).toContain("must contain only letters, numbers and underscores");
     });
 
-    it("should return validation errors for empty case number field name", async () => {
-      const result = await saveConfig(1, "", "caseName");
+    it("should save config with only case number field (case name blank)", async () => {
+      const { upsert } = await import("./queries.js");
+      vi.mocked(upsert).mockResolvedValue({} as any);
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toEqual([
-        {
-          field: "Case number field name",
-          message: "Enter the case number field name"
-        }
-      ]);
-    });
-
-    it("should return validation errors for empty case name field name", async () => {
       const result = await saveConfig(1, "caseNumber", "");
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toEqual([
-        {
-          field: "Case name field name",
-          message: "Enter the case name field name"
-        }
-      ]);
+      expect(result).toEqual({ success: true });
+      expect(upsert).toHaveBeenCalledWith(1, {
+        caseNumberFieldName: "caseNumber",
+        caseNameFieldName: ""
+      });
     });
 
-    it("should return validation errors for both invalid field names", async () => {
+    it("should save config with only case name field (case number blank)", async () => {
+      const { upsert } = await import("./queries.js");
+      vi.mocked(upsert).mockResolvedValue({} as any);
+
+      const result = await saveConfig(1, "", "caseName");
+
+      expect(result).toEqual({ success: true });
+      expect(upsert).toHaveBeenCalledWith(1, {
+        caseNumberFieldName: "",
+        caseNameFieldName: "caseName"
+      });
+    });
+
+    it("should save config with both fields blank", async () => {
+      const { upsert } = await import("./queries.js");
+      vi.mocked(upsert).mockResolvedValue({} as any);
+
       const result = await saveConfig(1, "", "");
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toHaveLength(2);
-      expect(result.errors).toEqual([
-        {
-          field: "Case number field name",
-          message: "Enter the case number field name"
-        },
-        {
-          field: "Case name field name",
-          message: "Enter the case name field name"
-        }
-      ]);
+      expect(result).toEqual({ success: true });
+      expect(upsert).toHaveBeenCalledWith(1, {
+        caseNumberFieldName: "",
+        caseNameFieldName: ""
+      });
     });
 
     it("should return validation errors for invalid characters in case number field", async () => {
@@ -225,7 +217,7 @@ describe("list-search-config service", () => {
     it("should not call upsert when validation fails", async () => {
       const { upsert } = await import("./queries.js");
 
-      await saveConfig(1, "", "caseName");
+      await saveConfig(1, "invalid-field", "caseName");
 
       expect(upsert).not.toHaveBeenCalled();
     });

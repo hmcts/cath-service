@@ -12,11 +12,9 @@ export async function getConfigForListType(listTypeId: number) {
 }
 
 export function validateFieldName(fieldName: string, fieldLabel: string): ValidationError | null {
+  // Field is optional - blank values are allowed
   if (!fieldName || fieldName.trim() === "") {
-    return {
-      field: fieldLabel,
-      message: `Enter the ${fieldLabel.toLowerCase()}`
-    };
+    return null;
   }
 
   if (!FIELD_NAME_PATTERN.test(fieldName)) {
@@ -57,9 +55,13 @@ export async function saveConfig(
     return { success: false, errors };
   }
 
+  // Normalize empty/whitespace values to empty strings
+  const normalizedCaseNumber = caseNumberFieldName ? caseNumberFieldName.trim() : "";
+  const normalizedCaseName = caseNameFieldName ? caseNameFieldName.trim() : "";
+
   await repository.upsert(listTypeId, {
-    caseNumberFieldName: caseNumberFieldName.trim(),
-    caseNameFieldName: caseNameFieldName.trim()
+    caseNumberFieldName: normalizedCaseNumber,
+    caseNameFieldName: normalizedCaseName
   });
 
   return { success: true };

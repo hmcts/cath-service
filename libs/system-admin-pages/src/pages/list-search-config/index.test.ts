@@ -122,16 +122,29 @@ describe("list-search-config page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/list-search-config-success?lng=cy");
     });
 
-    it("should show validation errors when fields are invalid", async () => {
+    it("should allow saving with blank fields", async () => {
       req.body = {
         caseNumberFieldName: "",
         caseNameFieldName: ""
       };
+      (service.saveConfig as any).mockResolvedValue({ success: true });
+
+      await postHandler(req as Request, res as Response);
+
+      expect(service.saveConfig).toHaveBeenCalledWith(5, "", "");
+      expect(res.redirect).toHaveBeenCalledWith("/list-search-config-success");
+    });
+
+    it("should show validation errors when fields have invalid characters", async () => {
+      req.body = {
+        caseNumberFieldName: "case-number",
+        caseNameFieldName: "case@name"
+      };
       (service.saveConfig as any).mockResolvedValue({
         success: false,
         errors: [
-          { field: "Case number field name", message: "Enter the case number JSON field name" },
-          { field: "Case name field name", message: "Enter the case name JSON field name" }
+          { field: "Case number field name", message: "Case number field name must contain only letters, numbers and underscores" },
+          { field: "Case name field name", message: "Case name field name must contain only letters, numbers and underscores" }
         ]
       });
 
@@ -141,12 +154,12 @@ describe("list-search-config page", () => {
         "list-search-config/index",
         expect.objectContaining({
           errors: expect.arrayContaining([
-            expect.objectContaining({ text: "Enter the case number JSON field name" }),
-            expect.objectContaining({ text: "Enter the case name JSON field name" })
+            expect.objectContaining({ text: "Case number field name must contain only letters, numbers and underscores" }),
+            expect.objectContaining({ text: "Case name field name must contain only letters, numbers and underscores" })
           ]),
           fieldErrors: expect.objectContaining({
-            caseNumberFieldName: { text: "Enter the case number JSON field name" },
-            caseNameFieldName: { text: "Enter the case name JSON field name" }
+            caseNumberFieldName: { text: "Case number field name must contain only letters, numbers and underscores" },
+            caseNameFieldName: { text: "Case name field name must contain only letters, numbers and underscores" }
           })
         })
       );

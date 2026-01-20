@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createArtefact,
   createArtefactSearch,
+  deleteArtefactSearchByArtefactId,
   deleteArtefacts,
   findArtefactSearchByArtefactId,
   getArtefactListTypeId,
@@ -25,7 +26,8 @@ vi.mock("@hmcts/postgres", () => ({
     },
     artefactSearch: {
       create: vi.fn(),
-      findFirst: vi.fn()
+      findFirst: vi.fn(),
+      deleteMany: vi.fn()
     },
     $queryRaw: vi.fn()
   }
@@ -1194,5 +1196,46 @@ describe("findArtefactSearchByArtefactId", () => {
 
     expect(result).toEqual(mockArtefactSearch);
     expect(result.artefactId).toBe("artefact-xyz-999");
+  });
+});
+
+describe("deleteArtefactSearchByArtefactId", () => {
+  it("should delete all artefact search entries for given artefact ID", async () => {
+    const mockDeleteResult = { count: 3 };
+
+    vi.mocked(prisma.artefactSearch.deleteMany).mockResolvedValue(mockDeleteResult);
+
+    const result = await deleteArtefactSearchByArtefactId("artefact-123");
+
+    expect(prisma.artefactSearch.deleteMany).toHaveBeenCalledWith({
+      where: { artefactId: "artefact-123" }
+    });
+    expect(result).toEqual(mockDeleteResult);
+  });
+
+  it("should delete single artefact search entry", async () => {
+    const mockDeleteResult = { count: 1 };
+
+    vi.mocked(prisma.artefactSearch.deleteMany).mockResolvedValue(mockDeleteResult);
+
+    const result = await deleteArtefactSearchByArtefactId("artefact-456");
+
+    expect(prisma.artefactSearch.deleteMany).toHaveBeenCalledWith({
+      where: { artefactId: "artefact-456" }
+    });
+    expect(result).toEqual(mockDeleteResult);
+  });
+
+  it("should return zero count when no entries exist for artefact ID", async () => {
+    const mockDeleteResult = { count: 0 };
+
+    vi.mocked(prisma.artefactSearch.deleteMany).mockResolvedValue(mockDeleteResult);
+
+    const result = await deleteArtefactSearchByArtefactId("non-existent-artefact");
+
+    expect(prisma.artefactSearch.deleteMany).toHaveBeenCalledWith({
+      where: { artefactId: "non-existent-artefact" }
+    });
+    expect(result).toEqual(mockDeleteResult);
   });
 });

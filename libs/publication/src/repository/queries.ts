@@ -260,3 +260,9 @@ export async function findArtefactSearchByArtefactId(artefactId: string) {
     where: { artefactId }
   });
 }
+
+export async function deleteArtefactSearchByArtefactId(artefactId: string) {
+  return await prisma.artefactSearch.deleteMany({
+    where: { artefactId }
+  });
+}
