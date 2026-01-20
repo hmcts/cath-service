@@ -19,41 +19,31 @@
     <p class="govuk-body">{{ body }}</p>
 
     <form method="post" action="" novalidate>
-      <div class="govuk-form-group{% if fieldErrors and fieldErrors.caseNumberFieldName %} govuk-form-group--error{% endif %}">
-        <label class="govuk-label" for="caseNumberFieldName">
-          {{ caseNumberFieldLabel }}
-        </label>
-        {% if fieldErrors and fieldErrors.caseNumberFieldName %}
-          <p class="govuk-error-message">
-            <span class="govuk-visually-hidden">Error:</span> {{ fieldErrors.caseNumberFieldName.text }}
-          </p>
-        {% endif %}
-        <input class="govuk-input{% if fieldErrors and fieldErrors.caseNumberFieldName %} govuk-input--error{% endif %}"
-               id="caseNumberFieldName"
-               name="caseNumberFieldName"
-               type="text"
-               value="{{ data.caseNumberFieldName }}">
-      </div>
+      {{ govukInput({
+        id: "caseNumberFieldName",
+        name: "caseNumberFieldName",
+        type: "text",
+        label: {
+          text: caseNumberFieldLabel
+        },
+        errorMessage: fieldErrors.caseNumberFieldName if fieldErrors and fieldErrors.caseNumberFieldName,
+        value: data.caseNumberFieldName
+      }) }}
 
-      <div class="govuk-form-group{% if fieldErrors and fieldErrors.caseNameFieldName %} govuk-form-group--error{% endif %}">
-        <label class="govuk-label" for="caseNameFieldName">
-          {{ caseNameFieldLabel }}
-        </label>
-        {% if fieldErrors and fieldErrors.caseNameFieldName %}
-          <p class="govuk-error-message">
-            <span class="govuk-visually-hidden">Error:</span> {{ fieldErrors.caseNameFieldName.text }}
-          </p>
-        {% endif %}
-        <input class="govuk-input{% if fieldErrors and fieldErrors.caseNameFieldName %} govuk-input--error{% endif %}"
-               id="caseNameFieldName"
-               name="caseNameFieldName"
-               type="text"
-               value="{{ data.caseNameFieldName }}">
-      </div>
+      {{ govukInput({
+        id: "caseNameFieldName",
+        name: "caseNameFieldName",
+        type: "text",
+        label: {
+          text: caseNameFieldLabel
+        },
+        errorMessage: fieldErrors.caseNameFieldName if fieldErrors and fieldErrors.caseNameFieldName,
+        value: data.caseNameFieldName
+      }) }}
 
-      <button type="submit" class="govuk-button" data-module="govuk-button">
-        {{ saveButton }}
-      </button>
+      {{ govukButton({
+        text: saveButton
+      }) }}
     </form>
 
   </div>

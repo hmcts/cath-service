@@ -27,7 +27,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -37,7 +38,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-2",
         userId: "user-2",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user2@example.com",
           firstName: "Jane",
@@ -80,7 +82,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "invalid-email",
           firstName: "John",
@@ -162,7 +165,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: null,
           firstName: "John",
@@ -205,7 +209,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -254,7 +259,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",

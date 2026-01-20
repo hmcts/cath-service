@@ -4,7 +4,7 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const getHandler = async (req: Request, res: Response) => {
+export const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const listTypeId = Number.parseInt(req.params.listTypeId, 10);
 
@@ -30,7 +30,7 @@ const getHandler = async (req: Request, res: Response) => {
   });
 };
 
-const postHandler = async (req: Request, res: Response) => {
+export const postHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const listTypeId = Number.parseInt(req.params.listTypeId, 10);
 
