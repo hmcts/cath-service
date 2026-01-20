@@ -22,9 +22,18 @@ interface SubscriptionDto {
 }
 
 function mapSubscriptionToDto(
-  sub: { subscriptionId: string; locationId: number; dateAdded: Date; location: { name: string; welshName: string | null } },
+  sub: {
+    subscriptionId: string;
+    locationId: number | null;
+    dateAdded: Date;
+    location: { name: string; welshName: string } | null;
+  },
   locale: string
-): SubscriptionDto {
+): SubscriptionDto | null {
+  if (!sub.locationId || !sub.location) {
+    return null;
+  }
+
   return {
     subscriptionId: sub.subscriptionId,
     type: "court",
@@ -89,13 +98,13 @@ export async function createMultipleSubscriptions(userId: string, locationIds: s
 
 export async function replaceUserSubscriptions(userId: string, newLocationIds: string[]) {
   const existingSubscriptions = await findSubscriptionsByUserId(userId);
-  const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId);
+  const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId).filter((id): id is number => id !== null);
 
   const newLocationIdNumbers = newLocationIds.map((id) => Number.parseInt(id, 10));
   const newLocationIdSet = new Set(newLocationIdNumbers);
   const existingLocationIdSet = new Set(existingLocationIds);
 
-  const toDelete = existingSubscriptions.filter((sub) => !newLocationIdSet.has(sub.locationId));
+  const toDelete = existingSubscriptions.filter((sub) => sub.locationId !== null && !newLocationIdSet.has(sub.locationId));
   const toAdd = newLocationIdNumbers.filter((locId) => !existingLocationIdSet.has(locId));
 
   if (toAdd.length > 0) {
@@ -127,7 +136,7 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
   const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
-  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
+  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale)).filter((dto): dto is SubscriptionDto => dto !== null);
 }
 
 export async function getCaseSubscriptionsByUserId(userId: string, locale = "en") {
@@ -146,7 +155,7 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
   }
 
   const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
-  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale));
+  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale)).filter((dto): dto is SubscriptionDto => dto !== null);
 }
 
 export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {

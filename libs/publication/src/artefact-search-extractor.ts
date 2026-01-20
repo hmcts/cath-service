@@ -17,8 +17,11 @@ export async function extractAndStoreArtefactSearch(artefactId: string, listType
 
     const payload = jsonPayload as Record<string, unknown>;
 
-    const caseNumber = typeof payload[config.caseNumberFieldName] === "string" ? payload[config.caseNumberFieldName] : null;
-    const caseName = typeof payload[config.caseNameFieldName] === "string" ? payload[config.caseNameFieldName] : null;
+    const caseNumberValue = payload[config.caseNumberFieldName];
+    const caseNumber: string | null = typeof caseNumberValue === "string" ? caseNumberValue : null;
+
+    const caseNameValue = payload[config.caseNameFieldName];
+    const caseName: string | null = typeof caseNameValue === "string" ? caseNameValue : null;
 
     if (!caseNumber && !caseName) {
       console.log(`[ArtefactSearch] No case data found in payload for artefact ${artefactId}`);
