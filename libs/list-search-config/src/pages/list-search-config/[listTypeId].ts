@@ -40,7 +40,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const existingConfig = await service.getConfigForListType(listTypeId);
 
-  res.render("list-search-config/[listTypeId]", {
+  res.render("list-search-config/config", {
     pageTitle: lang.pageTitle,
     heading: lang.heading,
     body: lang.body,
