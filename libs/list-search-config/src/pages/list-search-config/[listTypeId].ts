@@ -99,7 +99,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const lng = req.query.lng === "cy" ? "?lng=cy" : "";
-  res.redirect(`/system-admin/list-configuration${lng}`);
+  res.redirect(`/list-search-config/${listTypeId}${lng}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
