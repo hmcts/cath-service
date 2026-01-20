@@ -40,6 +40,11 @@ export const en = {
       title: "Manage Location Metadata",
       description: "View, update and remove location metadata",
       href: "/location-metadata"
+    },
+    {
+      title: "Manage List Types",
+      description: "View, create and update list type configuration",
+      href: "/manage-list-types"
     }
   ]
 };

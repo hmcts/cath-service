@@ -3,12 +3,12 @@ import type { Request, RequestHandler, Response } from "express";
 import * as service from "../../list-search-config-service.js";
 
 const en = {
-  pageTitle: "Configure list search fields",
-  heading: "Configure list search fields",
+  pageTitle: "Configure list type search fields",
+  heading: "Configure list type search fields",
   body: "Enter the JSON field names used to extract case details for this list type.",
   caseNumberFieldLabel: "Case number JSON field name",
   caseNameFieldLabel: "Case name JSON field name",
-  saveButton: "Save configuration",
+  saveButton: "Confirm",
   errorSummaryTitle: "There is a problem",
   errorCaseNumberRequired: "Enter the case number JSON field name",
   errorCaseNumberInvalid: "Case number field name must contain only letters, numbers and underscores",
@@ -17,12 +17,12 @@ const en = {
 };
 
 const cy = {
-  pageTitle: "Ffurfweddu meysydd chwilio rhestr",
-  heading: "Ffurfweddu meysydd chwilio rhestr",
+  pageTitle: "Ffurfweddu meysydd chwilio math rhestr",
+  heading: "Ffurfweddu meysydd chwilio math rhestr",
   body: "Rhowch yr enwau meysydd JSON a ddefnyddir i dynnu manylion achosion ar gyfer y math o restr hwn.",
   caseNumberFieldLabel: "Enw maes JSON rhif achos",
   caseNameFieldLabel: "Enw maes JSON enw achos",
-  saveButton: "Cadw ffurfweddiad",
+  saveButton: "Cadarnhau",
   errorSummaryTitle: "Mae problem wedi codi",
   errorCaseNumberRequired: "Rhowch enw maes JSON rhif yr achos",
   errorCaseNumberInvalid: "Rhaid i enw maes rhif yr achos gynnwys llythrennau, rhifau a thanlinellau yn unig",
@@ -80,7 +80,7 @@ const postHandler = async (req: Request, res: Response) => {
       fieldErrors[fieldId] = { text: error.message };
     }
 
-    return res.render("list-search-config", {
+    return res.render("list-search-config/config", {
       pageTitle: lang.pageTitle,
       heading: lang.heading,
       body: lang.body,
@@ -99,7 +99,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const lng = req.query.lng === "cy" ? "?lng=cy" : "";
-  res.redirect(`/list-search-config/${listTypeId}${lng}`);
+  res.redirect(`/list-search-config-success${lng}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
