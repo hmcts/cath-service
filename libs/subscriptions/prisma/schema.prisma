@@ -9,20 +9,17 @@ datasource db {
 }
 
 model Subscription {
-  subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
-  userId         String   @map("user_id") @db.Uuid
-  locationId     Int?     @map("location_id") @db.Integer
-  searchType     String?  @map("search_type") @db.VarChar(50)
-  searchValue    String?  @map("search_value")
-  dateAdded      DateTime @default(now()) @map("date_added")
+	subscriptionId String   @id @default(uuid()) @map("subscription_id") @db.Uuid
+	userId         String   @map("user_id") @db.Uuid
+	searchType     String   @map("search_type") @db.VarChar(50)
+	searchValue    String   @map("search_value")
+	dateAdded      DateTime @default(now()) @map("date_added")
 
-  user                  User                   @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  location              Location?              @relation(fields: [locationId], references: [locationId])
-  notificationAuditLogs NotificationAuditLog[]
+	user                  User                   @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+	notificationAuditLogs NotificationAuditLog[]
 
-  @@unique([userId, locationId], name: "unique_user_location")
-  @@index([userId], name: "idx_subscription_user")
-  @@index([locationId], name: "idx_subscription_location")
-  @@index([searchType, searchValue], name: "idx_subscription_search")
-  @@map("subscription")
+	@@unique([userId, searchType, searchValue], name: "unique_user_subscription")
+	@@index([userId], name: "idx_subscription_user")
+	@@index([searchType, searchValue], name: "idx_subscription_search")
+	@@map("subscription")
 }

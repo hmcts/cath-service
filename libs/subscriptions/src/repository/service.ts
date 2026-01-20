@@ -1,3 +1,4 @@
+import { getLocationById } from "@hmcts/location";
 import { validateLocationId } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
@@ -24,21 +25,17 @@ interface SubscriptionDto {
 function mapSubscriptionToDto(
   sub: {
     subscriptionId: string;
-    locationId: number | null;
+    searchValue: string;
     dateAdded: Date;
-    location: { name: string; welshName: string } | null;
   },
+  location: { name: string; welshName: string; locationId: number },
   locale: string
-): SubscriptionDto | null {
-  if (!sub.locationId || !sub.location) {
-    return null;
-  }
-
+): SubscriptionDto {
   return {
     subscriptionId: sub.subscriptionId,
     type: "court",
-    courtOrTribunalName: locale === "cy" && sub.location.welshName ? sub.location.welshName : sub.location.name,
-    locationId: sub.locationId,
+    courtOrTribunalName: locale === "cy" && location.welshName ? location.welshName : location.name,
+    locationId: location.locationId,
     dateAdded: sub.dateAdded
   };
 }
@@ -98,13 +95,16 @@ export async function createMultipleSubscriptions(userId: string, locationIds: s
 
 export async function replaceUserSubscriptions(userId: string, newLocationIds: string[]) {
   const existingSubscriptions = await findSubscriptionsByUserId(userId);
-  const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId).filter((id): id is number => id !== null);
+  const existingLocationIds = existingSubscriptions
+    .filter((sub) => sub.searchType === "LOCATION_ID")
+    .map((sub) => Number.parseInt(sub.searchValue, 10))
+    .filter((id) => !Number.isNaN(id));
 
   const newLocationIdNumbers = newLocationIds.map((id) => Number.parseInt(id, 10));
   const newLocationIdSet = new Set(newLocationIdNumbers);
   const existingLocationIdSet = new Set(existingLocationIds);
 
-  const toDelete = existingSubscriptions.filter((sub) => sub.locationId !== null && !newLocationIdSet.has(sub.locationId));
+  const toDelete = existingSubscriptions.filter((sub) => sub.searchType === "LOCATION_ID" && !newLocationIdSet.has(Number.parseInt(sub.searchValue, 10)));
   const toAdd = newLocationIdNumbers.filter((locId) => !existingLocationIdSet.has(locId));
 
   if (toAdd.length > 0) {
@@ -136,7 +136,19 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
   const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
-  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale)).filter((dto): dto is SubscriptionDto => dto !== null);
+
+  const dtos = await Promise.all(
+    subscriptions.map(async (sub) => {
+      const locationId = Number.parseInt(sub.searchValue, 10);
+      const location = await getLocationById(locationId);
+      if (!location) {
+        return null;
+      }
+      return mapSubscriptionToDto(sub, location, locale);
+    })
+  );
+
+  return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
 }
 
 export async function getCaseSubscriptionsByUserId(userId: string, locale = "en") {
@@ -155,7 +167,19 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
   }
 
   const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
-  return subscriptions.map((sub) => mapSubscriptionToDto(sub, locale)).filter((dto): dto is SubscriptionDto => dto !== null);
+
+  const dtos = await Promise.all(
+    subscriptions.map(async (sub) => {
+      const locationId = Number.parseInt(sub.searchValue, 10);
+      const location = await getLocationById(locationId);
+      if (!location) {
+        return null;
+      }
+      return mapSubscriptionToDto(sub, location, locale);
+    })
+  );
+
+  return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
 }
 
 export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {

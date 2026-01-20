@@ -3,9 +3,8 @@ import { prisma } from "@hmcts/postgres";
 export interface SubscriptionWithUser {
   subscriptionId: string;
   userId: string;
-  locationId: number | null;
-  searchType: string | null;
-  searchValue: string | null;
+  searchType: string;
+  searchValue: string;
   user: {
     email: string;
     firstName: string | null;
