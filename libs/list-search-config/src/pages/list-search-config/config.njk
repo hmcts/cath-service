@@ -26,7 +26,7 @@
         label: {
           text: caseNumberFieldLabel
         },
-        errorMessage: fieldErrors.caseNumberFieldName if fieldErrors,
+        errorMessage: fieldErrors.caseNumberFieldName if fieldErrors and fieldErrors.caseNumberFieldName,
         value: data.caseNumberFieldName
       }) }}
 
@@ -37,14 +37,13 @@
         label: {
           text: caseNameFieldLabel
         },
-        errorMessage: fieldErrors.caseNameFieldName if fieldErrors,
+        errorMessage: fieldErrors.caseNameFieldName if fieldErrors and fieldErrors.caseNameFieldName,
         value: data.caseNameFieldName
       }) }}
 
-      {{ govukButton({
-        text: saveButton,
-        type: "submit"
-      }) }}
+      <button type="submit" class="govuk-button" data-module="govuk-button">
+        {{ saveButton }}
+      </button>
     </form>
 
   </div>
