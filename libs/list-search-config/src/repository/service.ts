@@ -1,4 +1,4 @@
-import * as repository from "./list-search-config-repository.js";
+import * as repository from "./queries.js";
 
 const FIELD_NAME_PATTERN = /^[a-zA-Z0-9_]+$/;
 

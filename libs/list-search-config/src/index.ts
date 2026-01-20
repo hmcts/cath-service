@@ -1,4 +1,4 @@
 // Business logic exports
 
-export * from "./list-search-config-repository.js";
-export * from "./list-search-config-service.js";
+export * from "./repository/queries.js";
+export * from "./repository/service.js";

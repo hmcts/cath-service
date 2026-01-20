@@ -1,5 +1,5 @@
 import { getConfigForListType } from "@hmcts/list-search-config";
-import * as repository from "./artefact-search-repository.js";
+import * as repository from "./repository/queries.js";
 
 export async function extractAndStoreArtefactSearch(artefactId: string, listTypeId: number, jsonPayload: unknown): Promise<void> {
   try {

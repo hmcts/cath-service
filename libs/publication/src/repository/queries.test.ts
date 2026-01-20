@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createArtefact,
+  createArtefactSearch,
   deleteArtefacts,
+  findArtefactSearchByArtefactId,
   getArtefactListTypeId,
   getArtefactMetadata,
   getArtefactSummariesByLocation,
@@ -20,6 +22,10 @@ vi.mock("@hmcts/postgres", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       deleteMany: vi.fn()
+    },
+    artefactSearch: {
+      create: vi.fn(),
+      findFirst: vi.fn()
     },
     $queryRaw: vi.fn()
   }
@@ -1028,5 +1034,165 @@ describe("getArtefactListTypeId", () => {
     const result = await getArtefactListTypeId("another-artefact");
 
     expect(result).toBe(5);
+  });
+});
+
+describe("createArtefactSearch", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should create artefact search with all fields", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-1",
+      artefactId: "artefact-123",
+      caseNumber: "CASE-456",
+      caseName: "Smith vs Jones"
+    };
+
+    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await createArtefactSearch("artefact-123", "CASE-456", "Smith vs Jones");
+
+    expect(result).toEqual(mockArtefactSearch);
+    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
+      data: {
+        artefactId: "artefact-123",
+        caseNumber: "CASE-456",
+        caseName: "Smith vs Jones"
+      }
+    });
+  });
+
+  it("should create artefact search with null case number", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-2",
+      artefactId: "artefact-456",
+      caseNumber: null,
+      caseName: "Jones vs Smith"
+    };
+
+    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await createArtefactSearch("artefact-456", null, "Jones vs Smith");
+
+    expect(result).toEqual(mockArtefactSearch);
+    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
+      data: {
+        artefactId: "artefact-456",
+        caseNumber: null,
+        caseName: "Jones vs Smith"
+      }
+    });
+  });
+
+  it("should create artefact search with null case name", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-3",
+      artefactId: "artefact-789",
+      caseNumber: "CASE-789",
+      caseName: null
+    };
+
+    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await createArtefactSearch("artefact-789", "CASE-789", null);
+
+    expect(result).toEqual(mockArtefactSearch);
+    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
+      data: {
+        artefactId: "artefact-789",
+        caseNumber: "CASE-789",
+        caseName: null
+      }
+    });
+  });
+
+  it("should create artefact search with both fields null", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-4",
+      artefactId: "artefact-000",
+      caseNumber: null,
+      caseName: null
+    };
+
+    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await createArtefactSearch("artefact-000", null, null);
+
+    expect(result).toEqual(mockArtefactSearch);
+    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
+      data: {
+        artefactId: "artefact-000",
+        caseNumber: null,
+        caseName: null
+      }
+    });
+  });
+});
+
+describe("findArtefactSearchByArtefactId", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should find artefact search by artefact id", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-1",
+      artefactId: "artefact-123",
+      caseNumber: "CASE-456",
+      caseName: "Smith vs Jones"
+    };
+
+    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await findArtefactSearchByArtefactId("artefact-123");
+
+    expect(result).toEqual(mockArtefactSearch);
+    expect(prisma.artefactSearch.findFirst).toHaveBeenCalledWith({
+      where: { artefactId: "artefact-123" }
+    });
+  });
+
+  it("should return null when artefact search not found", async () => {
+    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(null);
+
+    const result = await findArtefactSearchByArtefactId("non-existent-artefact");
+
+    expect(result).toBeNull();
+    expect(prisma.artefactSearch.findFirst).toHaveBeenCalledWith({
+      where: { artefactId: "non-existent-artefact" }
+    });
+  });
+
+  it("should find artefact search with null fields", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-2",
+      artefactId: "artefact-456",
+      caseNumber: null,
+      caseName: null
+    };
+
+    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await findArtefactSearchByArtefactId("artefact-456");
+
+    expect(result).toEqual(mockArtefactSearch);
+  });
+
+  it("should handle different artefact ids", async () => {
+    const mockArtefactSearch = {
+      artefactSearchId: "search-id-3",
+      artefactId: "artefact-xyz-999",
+      caseNumber: "CASE-XYZ",
+      caseName: "Test Case"
+    };
+
+    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(mockArtefactSearch as any);
+
+    const result = await findArtefactSearchByArtefactId("artefact-xyz-999");
+
+    expect(result).toEqual(mockArtefactSearch);
+    expect(result.artefactId).toBe("artefact-xyz-999");
   });
 });
