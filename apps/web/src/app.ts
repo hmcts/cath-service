@@ -10,7 +10,7 @@ import {
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import { pageRoutes as listSearchConfigRoutes } from "@hmcts/list-search-config/config";
+import { moduleRoot as listSearchConfigModuleRoot, pageRoutes as listSearchConfigRoutes } from "@hmcts/list-search-config/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import {
@@ -79,7 +79,8 @@ export async function createApp(): Promise<Express> {
     civilFamilyCauseListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
-    verifiedPagesModuleRoot
+    verifiedPagesModuleRoot,
+    listSearchConfigModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
