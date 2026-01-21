@@ -12,19 +12,16 @@ vi.mock("@hmcts/list-types-common", () => ({
   createJsonValidator: () => mockValidate
 }));
 
-vi.mock("@hmcts/postgres", () => ({
-  prisma: {
-    artefact: {
-      findUnique: vi.fn()
-    }
-  }
+vi.mock("@hmcts/publication", () => ({
+  getArtefactById: vi.fn(),
+  PROVENANCE_LABELS: {}
 }));
 
 vi.mock("../rendering/renderer.js", () => ({
   renderCareStandardsTribunalData: vi.fn()
 }));
 
-import { prisma } from "@hmcts/postgres";
+import { getArtefactById } from "@hmcts/publication";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
 import { GET } from "./index.js";
 
@@ -90,7 +87,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);
@@ -136,7 +133,7 @@ describe("Care Standards Tribunal page controller", () => {
     it("should return 404 when artefact is not found", async () => {
       req.query = { artefactId: "non-existent-artefact" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -164,7 +161,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
 
       await GET(req as Request, res as Response);
@@ -204,7 +201,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({
         isValid: false,
@@ -226,7 +223,7 @@ describe("Care Standards Tribunal page controller", () => {
     it("should return 500 on server error", async () => {
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockRejectedValue(new Error("Database connection failed"));
+      vi.mocked(getArtefactById).mockRejectedValue(new Error("Database connection failed"));
 
       await GET(req as Request, res as Response);
 
@@ -275,7 +272,7 @@ describe("Care Standards Tribunal page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
       res.locals = { locale: "cy" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);

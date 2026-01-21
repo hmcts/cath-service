@@ -1,4 +1,4 @@
-export interface StandardHearing {
+export interface AdministrativeCourtHearing {
   venue: string;
   judge: string;
   time: string;
@@ -8,4 +8,4 @@ export interface StandardHearing {
   additionalInformation: string;
 }
 
-export type StandardHearingList = StandardHearing[];
+export type AdministrativeCourtHearingList = AdministrativeCourtHearing[];

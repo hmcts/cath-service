@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
@@ -32,9 +31,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   try {
-    const artefact = await prisma.artefact.findUnique({
-      where: { artefactId }
-    });
+    const artefact = await getArtefactById(artefactId);
 
     if (!artefact) {
       return res.status(404).render("errors/common", {

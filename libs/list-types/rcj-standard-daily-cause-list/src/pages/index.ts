@@ -2,8 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
-import { prisma } from "@hmcts/postgres";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import type { StandardHearingList } from "../models/types.js";
 import { renderStandardDailyCauseList } from "../rendering/renderer.js";
@@ -29,16 +28,58 @@ const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const schemaPath = path.join(__dirname, "../schemas/rcj-standard-daily-cause-list.json");
 const validate = createJsonValidator(schemaPath);
 
-// Map list type IDs to their names and template names
-const LIST_TYPE_CONFIG: Record<number, { en: string; cy: string; template: string }> = {
-  10: { en: en[10].pageTitle, cy: cy[10].pageTitle, template: "civil-courts-rcj-daily-cause-list" },
-  11: { en: en[11].pageTitle, cy: cy[11].pageTitle, template: "county-court-central-london-civil-daily-cause-list" },
-  12: { en: en[12].pageTitle, cy: cy[12].pageTitle, template: "court-of-appeal-criminal-division-daily-cause-list" },
-  13: { en: en[13].pageTitle, cy: cy[13].pageTitle, template: "family-division-high-court-daily-cause-list" },
-  14: { en: en[14].pageTitle, cy: cy[14].pageTitle, template: "kings-bench-division-daily-cause-list" },
-  15: { en: en[15].pageTitle, cy: cy[15].pageTitle, template: "kings-bench-masters-daily-cause-list" },
-  16: { en: en[16].pageTitle, cy: cy[16].pageTitle, template: "mayor-city-civil-daily-cause-list" },
-  17: { en: en[17].pageTitle, cy: cy[17].pageTitle, template: "senior-courts-costs-office-daily-cause-list" }
+const LIST_TYPE_ID_TO_NAME: Record<number, string> = {
+  10: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
+  11: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
+  12: "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST",
+  13: "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
+  14: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
+  15: "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
+  16: "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+  17: "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST"
+};
+
+const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: string }> = {
+  CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: {
+    en: en.CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST.pageTitle,
+    template: "civil-courts-rcj-daily-cause-list"
+  },
+  COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: {
+    en: en.COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST.pageTitle,
+    template: "county-court-central-london-civil-daily-cause-list"
+  },
+  COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: {
+    en: en.COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST.pageTitle,
+    template: "court-of-appeal-criminal-division-daily-cause-list"
+  },
+  FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: {
+    en: en.FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST.pageTitle,
+    template: "family-division-high-court-daily-cause-list"
+  },
+  KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: {
+    en: en.KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST.pageTitle,
+    template: "kings-bench-division-daily-cause-list"
+  },
+  KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: {
+    en: en.KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST.pageTitle,
+    template: "kings-bench-masters-daily-cause-list"
+  },
+  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: {
+    en: en.MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST.pageTitle,
+    template: "mayor-city-civil-daily-cause-list"
+  },
+  SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: {
+    en: en.SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST.pageTitle,
+    template: "senior-courts-costs-office-daily-cause-list"
+  }
 };
 
 export const GET = async (req: Request, res: Response) => {
@@ -57,9 +98,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   try {
-    const artefact = await prisma.artefact.findUnique({
-      where: { artefactId }
-    });
+    const artefact = await getArtefactById(artefactId);
 
     if (!artefact) {
       return res.status(404).render("errors/common", {
@@ -71,9 +110,9 @@ export const GET = async (req: Request, res: Response) => {
     }
 
     const listTypeId = artefact.listTypeId;
+    const listTypeName = LIST_TYPE_ID_TO_NAME[listTypeId];
 
-    // Verify this is one of our supported list types
-    if (!LIST_TYPE_CONFIG[listTypeId]) {
+    if (!listTypeName || !LIST_TYPE_CONFIG[listTypeName]) {
       return res.status(400).render("errors/common", {
         en,
         cy,
@@ -110,7 +149,7 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const listConfig = LIST_TYPE_CONFIG[listTypeId];
+    const listConfig = LIST_TYPE_CONFIG[listTypeName];
     const listTitle = listConfig[locale as "en" | "cy"];
 
     const { header, hearings } = renderStandardDailyCauseList(jsonData, {
@@ -127,8 +166,7 @@ export const GET = async (req: Request, res: Response) => {
       PROVENANCE_LABELS[artefact.provenance] ||
       artefact.provenance;
 
-    // Get list-specific content
-    const listContent = (t as any)[listTypeId] || {};
+    const listContent = (t as any)[listTypeName] || {};
 
     res.render(listConfig.template, {
       en,
@@ -138,7 +176,7 @@ export const GET = async (req: Request, res: Response) => {
       header,
       hearings,
       dataSource,
-      listTypeId,
+      listTypeName,
       listContent,
       common: t.common
     });

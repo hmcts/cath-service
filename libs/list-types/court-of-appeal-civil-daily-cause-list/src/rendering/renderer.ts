@@ -8,20 +8,6 @@ export interface RenderOptions {
   lastReceivedDate: string;
 }
 
-export interface RenderedHearing {
-  venue: string;
-  judge: string;
-  time: string;
-  caseNumber: string;
-  caseDetails: string;
-  hearingType: string;
-  additionalInformation: string;
-}
-
-export interface RenderedFutureJudgment extends RenderedHearing {
-  date: string; // Formatted date
-}
-
 export interface RenderedData {
   header: {
     listTitle: string;
@@ -29,11 +15,11 @@ export interface RenderedData {
     lastUpdatedDate: string;
     lastUpdatedTime: string;
   };
-  dailyHearings: RenderedHearing[];
-  futureJudgments: RenderedFutureJudgment[];
+  dailyHearings: StandardHearing[];
+  futureJudgments: FutureJudgment[];
 }
 
-function renderStandardHearings(hearings: StandardHearing[]): RenderedHearing[] {
+function renderStandardHearings(hearings: StandardHearing[]): StandardHearing[] {
   return hearings.map((hearing) => ({
     venue: hearing.venue,
     judge: hearing.judge,
@@ -45,7 +31,7 @@ function renderStandardHearings(hearings: StandardHearing[]): RenderedHearing[] 
   }));
 }
 
-function renderFutureJudgments(judgments: FutureJudgment[], locale: string): RenderedFutureJudgment[] {
+function renderFutureJudgments(judgments: FutureJudgment[], locale: string): FutureJudgment[] {
   return judgments.map((judgment) => ({
     date: formatDdMmYyyyDate(judgment.date, locale),
     venue: judgment.venue,

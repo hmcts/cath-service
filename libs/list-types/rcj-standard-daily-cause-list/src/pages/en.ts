@@ -1,5 +1,5 @@
 export const en = {
-  10: {
+  CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: {
     pageTitle: "Civil Courts at the Royal Courts of Justice Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Strand, London",
@@ -9,7 +9,7 @@ export const en = {
     openJusticeText: "When considering the use of telephone and video technology the judiciary will have regard to the principles of open justice.",
     courtExclusionText: "The court may exclude observers where necessary to secure the proper administration of justice."
   },
-  11: {
+  COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: {
     pageTitle: "County Court at Central London Civil Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Thomas More Building",
@@ -20,7 +20,7 @@ export const en = {
     mediaAndObserversText:
       "Requests for the media and others, including legal bloggers, should be made to County Court at Central London via enquiries.centrallondon.countycourt@justice.gov.uk or Mayors and City of London Court via enquiries.centrallondon.countycourt@justice.gov.uk. Arrangements will then be made for you to attend. When considering the use of telephone and video technology the judiciary will have regard to the principles of open justice. The Court may exclude observers where necessary to secure the proper administration of Justice."
   },
-  12: {
+  COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: {
     pageTitle: "Court of Appeal (Criminal Division) Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Strand, London",
@@ -31,7 +31,7 @@ export const en = {
     quickGuideLinkText: "this quick guide",
     quickGuideLinkUrl: "https://www.judiciary.uk/wp-content/uploads/2025/07/A-QUICK-GUIDE-TO-HEARINGS-IN-THE-CACD.docx"
   },
-  13: {
+  FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: {
     pageTitle: "Family Division of the High Court Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Strand, London",
@@ -48,7 +48,7 @@ export const en = {
     judgmentsText:
       "Judgments will be handed down remotely by circulation to the parties or their representatives by email and released to the National Archives. A copy of the judgment in final form as handed down should be available on the National Archives website shortly thereafter."
   },
-  14: {
+  KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: {
     pageTitle: "King's Bench Division Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Strand, London",
@@ -63,7 +63,7 @@ export const en = {
     bundleFilingText:
       "In-person hearings – Any bundles to be filed must be provided in hard-copy at least 3 days before the hearing. These may be brought to room WG07 for delivery."
   },
-  15: {
+  KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: {
     pageTitle: "King's Bench Masters Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Strand, London",
@@ -86,7 +86,7 @@ export const en = {
     trialWindowsLinkText: "Current trial windows",
     trialWindowsLinkUrl: "https://www.gov.uk/guidance/kings-bench-hearing-and-trial-dates"
   },
-  16: {
+  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: {
     pageTitle: "Civil Daily Cause List",
     locationLine1: "Mayor & City",
     locationLine2: "Guildhall Buildings",
@@ -97,7 +97,7 @@ export const en = {
     mediaAndObserversText:
       "Requests for the media and others, including legal bloggers, should be made to County Court at Central London via enquiries.centrallondon.countycourt@justice.gov.uk or Mayors and City of London Court via enquiries.centrallondon.countycourt@justice.gov.uk. Arrangements will then be made for you to attend. When considering the use of telephone and video technology the judiciary will have regard to the principles of open justice. The Court may exclude observers where necessary to secure the proper administration of Justice."
   },
-  17: {
+  SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: {
     pageTitle: "Senior Courts Costs Office Daily Cause List",
     locationLine1: "Royal Courts of Justice",
     locationLine2: "Strand, London",

@@ -1,5 +1,5 @@
 export const cy = {
-  10: {
+  CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol Llys Sifil yn y Llysoedd Barn Brenhinol",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, London",
@@ -9,7 +9,7 @@ export const cy = {
     openJusticeText: "Wrth ystyried y defnydd o dechnoleg ffôn a fideo, bydd y farnwriaeth yn ystyried egwyddorion cyfiawnder agored.",
     courtExclusionText: "Gall y llys eithrio arsylwyr lle bo angen i sicrhau gweinyddiaeth briodol cyfiawnder."
   },
-  11: {
+  COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol Sifil yn y Llys Sirol yng Nghanol Llundain",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Thomas More Building",
@@ -20,7 +20,7 @@ export const cy = {
     mediaAndObserversText:
       "Dylid gwneud ceisiadau ar gyfer y cyfryngau ac eraill, gan gynnwys blogwyr cyfreithiol, i Lys Sirol Canol Llundain drwy enquiries.centrallondon.countycourt@justice.gov.uk neu Lys Maer a Dinas Llundain drwy enquiries.centrallondon.countycourt@justice.gov.uk. Yna gwneir trefniadau i chi fynychu. Wrth ystyried y defnydd o dechnoleg ffôn a fideo, bydd y farnwriaeth yn ystyried egwyddorion cyfiawnder agored. Gall y llys eithrio arsylwyr lle bo angen i sicrhau gweinyddiaeth briodol cyfiawnder."
   },
-  12: {
+  COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Troseddol)",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, London",
@@ -31,7 +31,7 @@ export const cy = {
     quickGuideLinkText: "y canllaw cyflym hwn",
     quickGuideLinkUrl: "https://www.judiciary.uk/wp-content/uploads/2025/07/A-QUICK-GUIDE-TO-HEARINGS-IN-THE-CACD.docx"
   },
-  13: {
+  FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol Adran Deulu yr Uchel Lys",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, London",
@@ -48,7 +48,7 @@ export const cy = {
     judgmentsText:
       "Bydd y dyfarniad hwn yn cael ei draddodi o bell trwy gylchrediad i'r partïon neu eu cynrychiolwyr trwy e-bost a'i ryddhau i'r Archifau Cenedlaethol. Dylai copi o'r dyfarniad ar ffurf derfynol fel y'i rhoddwyd fod ar gael ar wefan yr Archifau Cenedlaethol yn fuan wedyn."
   },
-  14: {
+  KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol Adran Mainc y Brenin",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, London",
@@ -63,7 +63,7 @@ export const cy = {
     bundleFilingText:
       "Gwrandawiadau wyneb yn wyneb - Rhaid darparu unrhyw fwndeli i'w ffeilio ar ffurf copi caled o leiaf 3 diwrnod cyn y gwrandawiad. Gellir dod â'r rhain i ystafell WG07 i'w dosbarthu."
   },
-  15: {
+  KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol Meistri Mainc y Brenin",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, London",
@@ -86,7 +86,7 @@ export const cy = {
     trialWindowsLinkText: "Cyfnodau treial cyfredol",
     trialWindowsLinkUrl: "https://www.gov.uk/guidance/kings-bench-hearing-and-trial-dates"
   },
-  16: {
+  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol y Llys Sifil",
     locationLine1: "Mayor & City",
     locationLine2: "Guildhall Buildings",
@@ -97,8 +97,8 @@ export const cy = {
     mediaAndObserversText:
       "Dylid gwneud ceisiadau ar gyfer y cyfryngau ac eraill, gan gynnwys blogwyr cyfreithiol, i Lys Sirol Canol Llundain drwy enquiries.centrallondon.countycourt@justice.gov.uk neu Lys Maer a Dinas Llundain drwy enquiries.centrallondon.countycourt@justice.gov.uk. Yna gwneir trefniadau i chi fynychu. Wrth ystyried y defnydd o dechnoleg ffôn a fideo, bydd y farnwriaeth yn ystyried egwyddorion cyfiawnder agored. Gall y llys eithrio arsylwyr lle bo angen i sicrhau gweinyddiaeth briodol cyfiawnder."
   },
-  17: {
-    pageTitle: "Rhestr Achosion Dyddiol Swyddfa Costau’r Uwchlysoedd",
+  SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: {
+    pageTitle: "Rhestr Achosion Dyddiol Swyddfa Costau'r Uwchlysoedd",
     locationLine1: "Llysoedd Barn Brenhinol",
     locationLine2: "Strand, London",
     locationLine3: "WC2A 2LL",

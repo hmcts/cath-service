@@ -10,16 +10,6 @@ export interface RenderOptions {
   lastReceivedDate: string;
 }
 
-export interface RenderedHearing {
-  venue: string;
-  judge: string;
-  time: string;
-  caseNumber: string;
-  caseDetails: string;
-  hearingType: string;
-  additionalInformation: string;
-}
-
 export interface RenderedData {
   header: {
     listTitle: string;
@@ -27,11 +17,11 @@ export interface RenderedData {
     lastUpdatedDate: string;
     lastUpdatedTime: string;
   };
-  mainHearings: RenderedHearing[];
-  planningCourt: RenderedHearing[];
+  mainHearings: StandardHearing[];
+  planningCourt: StandardHearing[];
 }
 
-function renderHearings(hearings: StandardHearing[]): RenderedHearing[] {
+function renderHearings(hearings: StandardHearing[]): StandardHearing[] {
   return hearings.map((hearing) => ({
     venue: hearing.venue,
     judge: hearing.judge,
