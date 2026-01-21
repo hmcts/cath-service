@@ -216,7 +216,6 @@ describe("Web Application", () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (should have 13 total calls)
       expect(calls.length).toBeGreaterThanOrEqual(14);
     });
 
