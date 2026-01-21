@@ -14,7 +14,10 @@ vi.mock("@hmcts/list-types-common", () => ({
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
-  PROVENANCE_LABELS: {}
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    LIST_ASSIST: "List Assist"
+  }
 }));
 
 vi.mock("../rendering/renderer.js", () => ({
@@ -94,9 +97,7 @@ describe("Care Standards Tribunal page controller", () => {
 
       await GET(req as Request, res as Response);
 
-      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-        where: { artefactId: "test-artefact-123" }
-      });
+      expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
       expect(readFile).toHaveBeenCalled();
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderCareStandardsTribunalData).toHaveBeenCalledWith(mockJsonData, {

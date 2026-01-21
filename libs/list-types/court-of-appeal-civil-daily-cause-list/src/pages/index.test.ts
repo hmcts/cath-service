@@ -103,9 +103,7 @@ describe("Court of Appeal Civil Division page controller", () => {
 
       await GET(req as Request, res as Response);
 
-      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-        where: { artefactId: "test-artefact-123" }
-      });
+      expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
       expect(readFile).toHaveBeenCalled();
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderCourtOfAppealCivil).toHaveBeenCalledWith(mockJsonData, {

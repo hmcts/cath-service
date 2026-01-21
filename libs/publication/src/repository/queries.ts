@@ -205,7 +205,7 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
   }
 
   const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-  const location = await getLocationById(Number.parseInt(artefact.locationId));
+  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
 
   return {
     artefactId: artefact.artefactId,

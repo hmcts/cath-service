@@ -9,7 +9,12 @@ import { GET } from "./index.js";
 vi.mock("node:fs/promises");
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
-  PROVENANCE_LABELS: {}
+  canAccessPublicationData: vi.fn(() => true),
+  mockListTypes: [],
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    LIST_ASSIST: "List Assist"
+  }
 }));
 vi.mock("../validation/json-validator.js");
 vi.mock("../rendering/renderer.js");
@@ -57,9 +62,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
       await GET(req as Request, res as Response);
 
-      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-        where: { artefactId: "nonexistent-id" }
-      });
+      expect(getArtefactById).toHaveBeenCalledWith("nonexistent-id");
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
