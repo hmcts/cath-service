@@ -20,6 +20,7 @@ import {
 } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import {
+  apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
   moduleRoot as systemAdminModuleRoot,
   pageRoutes as systemAdminPageRoutes
@@ -95,7 +96,8 @@ export async function createApp(): Promise<Express> {
     preferencesPath: "/cookie-preferences",
     categories: {
       essential: ["connect.sid"],
-      analytics: ["_ga", "_gid", "dtCookie", "dtSa", "rxVisitor", "rxvt"],
+      analytics: ["_ga", "_gid"],
+      performance: ["dtCookie", "dtSa", "rxVisitor", "rxvt"],
       preferences: ["language"]
     }
   });
@@ -114,6 +116,9 @@ export async function createApp(): Promise<Express> {
 
   // Register API routes for public pages (flat file download)
   app.use(await createSimpleRouter({ ...publicPagesApiRoutes, prefix: "/api" }));
+
+  // Register API routes for system admin (file serving)
+  app.use(await createSimpleRouter(systemAdminApiRoutes));
 
   // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));

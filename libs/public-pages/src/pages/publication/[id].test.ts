@@ -1,6 +1,10 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./[id].js";
+
+vi.mock("@hmcts/publication", () => ({
+  requirePublicationAccess: () => vi.fn((_req, _res, next) => next())
+}));
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn()
@@ -11,6 +15,7 @@ import { getArtefactById } from "@hmcts/publication";
 describe("publication/[id] page", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
+  let handler: RequestHandler;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -22,13 +27,15 @@ describe("publication/[id] page", () => {
       status: vi.fn().mockReturnThis(),
       render: vi.fn()
     };
+    // GET is an array [middleware, handler], extract the handler
+    handler = Array.isArray(GET) ? GET[GET.length - 1] : GET;
   });
 
   describe("GET", () => {
     it("should redirect to /400 when publicationId is missing", async () => {
       req.params = {};
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(res.redirect).toHaveBeenCalledWith("/400");
       expect(res.redirect).toHaveBeenCalledTimes(1);
@@ -37,7 +44,7 @@ describe("publication/[id] page", () => {
     it("should redirect to /400 when publicationId is undefined", async () => {
       req.params = { id: undefined };
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(res.redirect).toHaveBeenCalledWith("/400");
     });
@@ -46,7 +53,7 @@ describe("publication/[id] page", () => {
       req.params = { id: "non-existent-id" };
       vi.mocked(getArtefactById).mockResolvedValue(null);
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(getArtefactById).toHaveBeenCalledWith("non-existent-id");
       expect(res.redirect).toHaveBeenCalledWith("/404");
@@ -70,7 +77,7 @@ describe("publication/[id] page", () => {
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-id");
       expect(res.status).toHaveBeenCalledWith(501);
@@ -96,7 +103,7 @@ describe("publication/[id] page", () => {
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(res.status).toHaveBeenCalledWith(501);
       expect(res.render).toHaveBeenCalledWith("publication-not-implemented", {
@@ -109,7 +116,7 @@ describe("publication/[id] page", () => {
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       vi.mocked(getArtefactById).mockRejectedValue(new Error("Database connection failed"));
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(consoleErrorSpy).toHaveBeenCalledWith("Error loading publication:", expect.any(Error));
       expect(res.redirect).toHaveBeenCalledWith("/500");
@@ -122,7 +129,7 @@ describe("publication/[id] page", () => {
       req.params = { id: "specific-id-123" };
       vi.mocked(getArtefactById).mockResolvedValue(null);
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(getArtefactById).toHaveBeenCalledWith("specific-id-123");
     });
@@ -144,7 +151,7 @@ describe("publication/[id] page", () => {
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(res.status).toHaveBeenCalledWith(501);
       expect(res.render).toHaveBeenCalledTimes(1);
@@ -153,7 +160,7 @@ describe("publication/[id] page", () => {
     it("should not call render when redirecting on missing id", async () => {
       req.params = {};
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(res.render).not.toHaveBeenCalled();
     });
@@ -162,7 +169,7 @@ describe("publication/[id] page", () => {
       req.params = { id: "not-found" };
       vi.mocked(getArtefactById).mockResolvedValue(null);
 
-      await GET(req as Request, res as Response);
+      await handler(req as Request, res as Response, vi.fn());
 
       expect(res.render).not.toHaveBeenCalled();
     });

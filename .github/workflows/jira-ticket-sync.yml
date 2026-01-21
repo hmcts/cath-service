@@ -13,10 +13,23 @@ jobs:
   plan-tickets:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Full history for branch operations
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "claude-code-bot[bot]"
+          git config user.email "claude-code-bot[bot]@users.noreply.github.com"
 
       - name: Setup MCP environment
         run: |
@@ -50,7 +63,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
           plugin_marketplaces: |
             https://github.com/hmcts/.claude.git
           plugins: |

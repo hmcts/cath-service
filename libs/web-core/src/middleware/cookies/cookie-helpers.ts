@@ -10,19 +10,20 @@ export function parseCookiePolicy(cookiePolicyValue: string | undefined): Cookie
   }
 
   try {
-    return JSON.parse(decodeURIComponent(cookiePolicyValue));
+    return JSON.parse(cookiePolicyValue);
   } catch {
     return {};
   }
 }
 
 export function setCookiePolicy(res: Response, preferences: CookiePreferences): void {
-  const value = encodeURIComponent(JSON.stringify(preferences));
+  const value = JSON.stringify(preferences);
   res.cookie(COOKIE_POLICY_NAME, value, {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 365 * 24 * 60 * 60 * 1000
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+    path: "/"
   });
 }
 
@@ -30,7 +31,8 @@ export function setCookieBannerSeen(res: Response): void {
   res.cookie(COOKIE_BANNER_SEEN, "true", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
+    sameSite: "strict",
+    path: "/"
   });
 }
 
