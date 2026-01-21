@@ -43,7 +43,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).toHaveBeenCalledWith("artefact-1");
     expect(createArtefactSearch).toHaveBeenCalledWith("artefact-1", "CASE-123", "Smith vs Jones");
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 1 case(s) for artefact artefact-1");
   });
 
   it("should extract only case number when case name is missing", async () => {
@@ -64,7 +63,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).toHaveBeenCalledWith("artefact-2");
     expect(createArtefactSearch).toHaveBeenCalledWith("artefact-2", "CASE-456", null);
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 1 case(s) for artefact artefact-2");
   });
 
   it("should extract only case name when case number is missing", async () => {
@@ -85,7 +83,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).toHaveBeenCalledWith("artefact-3");
     expect(createArtefactSearch).toHaveBeenCalledWith("artefact-3", null, "Jones vs Smith");
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 1 case(s) for artefact artefact-3");
   });
 
   it("should not store when no case data is present", async () => {
@@ -103,7 +100,6 @@ describe("extractAndStoreArtefactSearch", () => {
     await extractAndStoreArtefactSearch("artefact-4", 1, mockPayload);
 
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No case data found in payload for artefact artefact-4");
   });
 
   it("should not store when both case fields are non-string types", async () => {
@@ -122,7 +118,6 @@ describe("extractAndStoreArtefactSearch", () => {
     await extractAndStoreArtefactSearch("artefact-5", 1, mockPayload);
 
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No case data found in payload for artefact artefact-5");
   });
 
   it("should not process when config is not found", async () => {
@@ -131,7 +126,6 @@ describe("extractAndStoreArtefactSearch", () => {
     await extractAndStoreArtefactSearch("artefact-6", 1, { caseNumber: "CASE-123" });
 
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No config found for listTypeId 1");
   });
 
   it("should not process when payload is null", async () => {
@@ -145,7 +139,6 @@ describe("extractAndStoreArtefactSearch", () => {
     await extractAndStoreArtefactSearch("artefact-7", 1, null);
 
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Invalid JSON payload for artefact artefact-7");
   });
 
   it("should handle array of cases at root level", async () => {
@@ -169,7 +162,6 @@ describe("extractAndStoreArtefactSearch", () => {
     expect(createArtefactSearch).toHaveBeenCalledTimes(2);
     expect(createArtefactSearch).toHaveBeenNthCalledWith(1, "artefact-8", "CASE-001", "Case One");
     expect(createArtefactSearch).toHaveBeenNthCalledWith(2, "artefact-8", "CASE-002", "Case Two");
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 2 case(s) for artefact artefact-8");
   });
 
   it("should handle empty array at root level", async () => {
@@ -184,7 +176,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).not.toHaveBeenCalled();
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No case data found in payload for artefact artefact-8b");
   });
 
   it("should not process when payload is not an object", async () => {
@@ -198,7 +189,6 @@ describe("extractAndStoreArtefactSearch", () => {
     await extractAndStoreArtefactSearch("artefact-9", 1, "string");
 
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Invalid JSON payload for artefact artefact-9");
   });
 
   it("should handle errors during extraction and storage", async () => {
@@ -251,7 +241,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).toHaveBeenCalledWith("artefact-12");
     expect(createArtefactSearch).toHaveBeenCalledWith("artefact-12", "CASE-789", null);
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 1 case(s) for artefact artefact-12");
   });
 
   it("should extract multiple cases from nested structure by finding field names", async () => {
@@ -299,7 +288,6 @@ describe("extractAndStoreArtefactSearch", () => {
     expect(createArtefactSearch).toHaveBeenCalledTimes(2);
     expect(createArtefactSearch).toHaveBeenNthCalledWith(1, "artefact-13", "CASE-001", "Smith vs Jones");
     expect(createArtefactSearch).toHaveBeenNthCalledWith(2, "artefact-13", "CASE-002", "Brown vs Green");
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 2 case(s) for artefact artefact-13");
   });
 
   it("should extract cases from deeply nested structure with multiple arrays", async () => {
@@ -361,7 +349,6 @@ describe("extractAndStoreArtefactSearch", () => {
     expect(createArtefactSearch).toHaveBeenNthCalledWith(2, "artefact-14", "CASE-002", "Case Two");
     expect(createArtefactSearch).toHaveBeenNthCalledWith(3, "artefact-14", "CASE-003", "Case Three");
     expect(createArtefactSearch).toHaveBeenNthCalledWith(4, "artefact-14", "CASE-004", "Case Four");
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 4 case(s) for artefact artefact-14");
   });
 
   it("should handle nested structure with missing case data", async () => {
@@ -380,7 +367,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).not.toHaveBeenCalled();
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No case data found in payload for artefact artefact-15");
   });
 
   it("should handle structure without matching field names", async () => {
@@ -409,7 +395,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).not.toHaveBeenCalled();
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No case data found in payload for artefact artefact-16");
   });
 
   it("should handle blank configuration fields", async () => {
@@ -429,7 +414,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).not.toHaveBeenCalled();
     expect(createArtefactSearch).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] No case data found in payload for artefact artefact-17");
   });
 
   it("should extract when only case number field is configured", async () => {
@@ -451,7 +435,6 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).toHaveBeenCalledWith("artefact-18");
     expect(createArtefactSearch).toHaveBeenCalledWith("artefact-18", "CASE-123", null);
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 1 case(s) for artefact artefact-18");
   });
 
   it("should extract when only case name field is configured", async () => {
@@ -473,6 +456,5 @@ describe("extractAndStoreArtefactSearch", () => {
 
     expect(deleteArtefactSearchByArtefactId).toHaveBeenCalledWith("artefact-19");
     expect(createArtefactSearch).toHaveBeenCalledWith("artefact-19", null, "Test Case");
-    expect(console.log).toHaveBeenCalledWith("[ArtefactSearch] Extracted 1 case(s) for artefact artefact-19");
   });
 });

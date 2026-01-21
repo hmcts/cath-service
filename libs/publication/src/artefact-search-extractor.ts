@@ -54,39 +54,72 @@ function findObjectsWithFields(data: unknown, fieldNames: string[]): CaseObject[
 }
 
 /**
+ * Extracts case data from a single object by reading the configured field names.
+ * Returns null if no valid case data is found.
+ */
+function extractCaseDataFromObject(
+  obj: Record<string, unknown>,
+  caseNumberFieldName: string,
+  caseNameFieldName: string,
+  hasCaseNumberField: boolean,
+  hasCaseNameField: boolean
+): CaseData | null {
+  const caseNumberValue = hasCaseNumberField ? obj[caseNumberFieldName] : null;
+  const caseNameValue = hasCaseNameField ? obj[caseNameFieldName] : null;
+
+  const caseNumber = typeof caseNumberValue === "string" ? caseNumberValue : null;
+  const caseName = typeof caseNameValue === "string" ? caseNameValue : null;
+
+  if (caseNumber || caseName) {
+    return { caseNumber, caseName };
+  }
+
+  return null;
+}
+
+/**
+ * Attempts to extract case data from the root level of a flat object structure.
+ * Returns an array with a single case if found, otherwise returns null.
+ */
+function extractFromRootLevel(
+  jsonPayload: unknown,
+  caseNumberFieldName: string,
+  caseNameFieldName: string,
+  hasCaseNumberField: boolean,
+  hasCaseNameField: boolean
+): CaseData[] | null {
+  if (Array.isArray(jsonPayload)) {
+    return null;
+  }
+
+  const rootObj = jsonPayload as Record<string, unknown>;
+  const hasRootFields = (hasCaseNumberField && caseNumberFieldName in rootObj) || (hasCaseNameField && caseNameFieldName in rootObj);
+
+  if (!hasRootFields) {
+    return null;
+  }
+
+  const caseData = extractCaseDataFromObject(rootObj, caseNumberFieldName, caseNameFieldName, hasCaseNumberField, hasCaseNameField);
+  return caseData ? [caseData] : null;
+}
+
+/**
  * Extracts all case data from a JSON payload by searching for objects
  * containing the configured field names anywhere in the structure.
  * Returns an array of case data objects.
  */
 function extractCases(jsonPayload: unknown, caseNumberFieldName: string, caseNameFieldName: string): CaseData[] {
-  if (!jsonPayload || typeof jsonPayload !== "object") {
-    return [];
-  }
+  const hasCaseNumberField = Boolean(caseNumberFieldName && caseNumberFieldName.trim() !== "");
+  const hasCaseNameField = Boolean(caseNameFieldName && caseNameFieldName.trim() !== "");
 
-  // If both field names are blank, no extraction is possible
-  const hasCaseNumberField = caseNumberFieldName && caseNumberFieldName.trim() !== "";
-  const hasCaseNameField = caseNameFieldName && caseNameFieldName.trim() !== "";
-
-  if (!hasCaseNumberField && !hasCaseNameField) {
+  if (!jsonPayload || (!hasCaseNumberField && !hasCaseNameField)) {
     return [];
   }
 
   // First, check if the fields exist at the root level (flat structure)
-  if (!Array.isArray(jsonPayload)) {
-    const rootObj = jsonPayload as Record<string, unknown>;
-    const hasRootFields = (hasCaseNumberField && caseNumberFieldName in rootObj) || (hasCaseNameField && caseNameFieldName in rootObj);
-
-    if (hasRootFields) {
-      const caseNumberValue = hasCaseNumberField ? rootObj[caseNumberFieldName] : null;
-      const caseNameValue = hasCaseNameField ? rootObj[caseNameFieldName] : null;
-
-      const caseNumber = typeof caseNumberValue === "string" ? caseNumberValue : null;
-      const caseName = typeof caseNameValue === "string" ? caseNameValue : null;
-
-      if (caseNumber || caseName) {
-        return [{ caseNumber, caseName }];
-      }
-    }
+  const rootLevelCases = extractFromRootLevel(jsonPayload, caseNumberFieldName, caseNameFieldName, hasCaseNumberField, hasCaseNameField);
+  if (rootLevelCases) {
+    return rootLevelCases;
   }
 
   // Build list of field names to search for
@@ -98,17 +131,10 @@ function extractCases(jsonPayload: unknown, caseNumberFieldName: string, caseNam
   const caseObjects = findObjectsWithFields(jsonPayload, fieldNamesToSearch);
 
   const cases: CaseData[] = [];
-
   for (const obj of caseObjects) {
-    const caseNumberValue = hasCaseNumberField ? obj[caseNumberFieldName] : null;
-    const caseNameValue = hasCaseNameField ? obj[caseNameFieldName] : null;
-
-    const caseNumber = typeof caseNumberValue === "string" ? caseNumberValue : null;
-    const caseName = typeof caseNameValue === "string" ? caseNameValue : null;
-
-    // Only add if at least one field has a value
-    if (caseNumber || caseName) {
-      cases.push({ caseNumber, caseName });
+    const caseData = extractCaseDataFromObject(obj, caseNumberFieldName, caseNameFieldName, hasCaseNumberField, hasCaseNameField);
+    if (caseData) {
+      cases.push(caseData);
     }
   }
 
@@ -119,33 +145,20 @@ export async function extractAndStoreArtefactSearch(artefactId: string, listType
   try {
     const config = await getConfigForListType(listTypeId);
 
-    if (!config) {
-      console.log(`[ArtefactSearch] No config found for listTypeId ${listTypeId}`);
-      return;
+    if (config && jsonPayload) {
+      // Extract all cases from the payload (handles both objects and arrays)
+      const cases = extractCases(jsonPayload, config.caseNumberFieldName, config.caseNameFieldName);
+
+      if (cases.length > 0) {
+        // Delete existing entries for this artefact to ensure idempotency
+        await repository.deleteArtefactSearchByArtefactId(artefactId);
+
+        // Create new entries for all cases
+        for (const caseData of cases) {
+          await repository.createArtefactSearch(artefactId, caseData.caseNumber, caseData.caseName);
+        }
+      }
     }
-
-    if (!jsonPayload || typeof jsonPayload !== "object") {
-      console.log(`[ArtefactSearch] Invalid JSON payload for artefact ${artefactId}`);
-      return;
-    }
-
-    // Extract all cases from the payload (handles both objects and arrays)
-    const cases = extractCases(jsonPayload, config.caseNumberFieldName, config.caseNameFieldName);
-
-    if (cases.length === 0) {
-      console.log(`[ArtefactSearch] No case data found in payload for artefact ${artefactId}`);
-      return;
-    }
-
-    // Delete existing entries for this artefact to ensure idempotency
-    await repository.deleteArtefactSearchByArtefactId(artefactId);
-
-    // Create new entries for all cases
-    for (const caseData of cases) {
-      await repository.createArtefactSearch(artefactId, caseData.caseNumber, caseData.caseName);
-    }
-
-    console.log(`[ArtefactSearch] Extracted ${cases.length} case(s) for artefact ${artefactId}`);
   } catch (error) {
     console.error(`[ArtefactSearch] Failed to extract/store for artefact ${artefactId}:`, error);
   }
