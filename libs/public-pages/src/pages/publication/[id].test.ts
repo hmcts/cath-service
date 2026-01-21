@@ -3,10 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./[id].js";
 
 vi.mock("@hmcts/publication", () => ({
-  requirePublicationAccess: () => vi.fn((_req, _res, next) => next())
-}));
-
-vi.mock("@hmcts/publication", () => ({
+  requirePublicationAccess: () => vi.fn((_req, _res, next) => next()),
   getArtefactById: vi.fn()
 }));
 

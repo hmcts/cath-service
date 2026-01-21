@@ -1,5 +1,4 @@
-import { getArtefactById } from "@hmcts/publication";
-import { requirePublicationAccess } from "@hmcts/publication";
+import { getArtefactById, requirePublicationAccess } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
 
 const handler: RequestHandler = async (req: Request, res: Response) => {

@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createArtefact,
   deleteArtefacts,
+  getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
   getArtefactSummariesByLocation,
-  getArtefactById,
   getArtefactsByIds,
   getArtefactsByLocation,
   getArtefactType,
