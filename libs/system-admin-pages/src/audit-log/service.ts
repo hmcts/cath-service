@@ -72,13 +72,28 @@ export async function getAuditLogById(id: string): Promise<FormattedAuditLog | n
 }
 
 export function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email) && email.length <= 254;
+  // Early length check to prevent ReDoS attacks
+  if (email.length > 254 || email.length === 0) {
+    return false;
+  }
+
+  // Simple email validation regex with bounded quantifiers for security
+  // Pattern: local-part @ domain . tld
+  // Uses negated character classes which are safe from catastrophic backtracking
+  // Bounded to max 254 chars total (checked above) to prevent ReDoS
+  const emailRegex = /^[^\s@]{1,253}@[^\s@]{1,253}\.[^\s@]{1,63}$/;
+  return emailRegex.test(email);
 }
 
 export function validateUserId(userId: string): boolean {
-  const alphanumericRegex = /^[a-zA-Z0-9]+$/;
-  return alphanumericRegex.test(userId) && userId.length <= 50;
+  // Early length check for security
+  if (userId.length > 50) {
+    return false;
+  }
+
+  // Alphanumeric validation with bounded quantifier
+  const alphanumericRegex = /^[a-zA-Z0-9]{1,50}$/;
+  return alphanumericRegex.test(userId);
 }
 
 export function parseDate(day: string, month: string, year: string): Date | null {
