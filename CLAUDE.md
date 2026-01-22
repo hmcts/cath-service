@@ -23,6 +23,24 @@ yarn db:studio                  # Open Prisma Studio
 yarn db:drop                    # Drop all tables and reset the database
 ```
 
+## Ticket Documentation
+
+When working on GitHub issues, use the QK commands to manage planning and implementation:
+
+```bash
+/qk-plan 312       # Create technical plan for issue #312
+/qk-implement 312  # Implement following the plan
+/qk-review 312     # Review the implementation
+```
+
+These commands create documentation in `docs/tickets/<issue-number>/`:
+- `ticket.md` - Fetched issue details
+- `plan.md` - Technical implementation plan
+- `tasks.md` - Implementation checklist
+- `review.md` - Code review feedback
+
+**Note:** Use plain GitHub issue numbers (e.g., `312`), not JIRA prefixes. Legacy `VIBE-*` folders are from the previous JIRA era.
+
 ## Naming Conventions (STRICT - MUST FOLLOW)
 
 ### 1. Database Tables and Fields
