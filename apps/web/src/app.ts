@@ -18,6 +18,7 @@ import {
   pageRoutes as publicPagesRoutes
 } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   fileUploadRoutes as systemAdminFileUploadRoutes,
   moduleRoot as systemAdminModuleRoot,
@@ -125,6 +126,9 @@ export async function createApp(): Promise<Express> {
   }
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
+
+  // Register audit log middleware to capture all system admin actions
+  app.use(auditLogMiddleware());
 
   // Register file upload middleware for system admin pages
   const fileUploadMiddleware = createFileUploadMiddleware();

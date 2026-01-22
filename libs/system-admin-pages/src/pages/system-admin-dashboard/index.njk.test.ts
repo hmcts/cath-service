@@ -58,7 +58,7 @@ describe("system-admin-dashboard template", () => {
       expect(en.tiles[3].href).toBe("/user-management");
       expect(en.tiles[4].href).toBe("/blob-explorer");
       expect(en.tiles[5].href).toBe("/bulk-media-accounts");
-      expect(en.tiles[6].href).toBe("/audit-log-viewer");
+      expect(en.tiles[6].href).toBe("/audit-log-list");
       expect(en.tiles[7].href).toBe("/location-metadata");
     });
 
