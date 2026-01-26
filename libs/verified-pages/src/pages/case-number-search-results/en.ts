@@ -5,6 +5,5 @@ export const en = {
   tableHeaderCaseName: "Case name",
   tableHeaderCaseNumber: "Reference number",
   notAvailable: "Not available",
-  continueButton: "Continue",
-  back: "Back"
+  continueButton: "Continue"
 };

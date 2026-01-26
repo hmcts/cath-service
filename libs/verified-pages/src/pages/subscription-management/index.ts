@@ -18,16 +18,8 @@ const getHandler = async (req: Request, res: Response) => {
   try {
     const [courtSubscriptions, caseSubscriptions] = await Promise.all([getAllSubscriptionsByUserId(userId, locale), getCaseSubscriptionsByUserId(userId)]);
 
-    // Sort court subscriptions by location name
-    const courtSubscriptionsWithDetails = courtSubscriptions
-      .map((sub) => ({
-        ...sub,
-        locationName: sub.courtOrTribunalName
-      }))
-      .sort((a, b) => (a.locationName || "").localeCompare(b.locationName || ""));
-
-    // Sort case subscriptions by case name
-    const sortedCaseSubscriptions = [...caseSubscriptions].sort((a, b) => (a.caseName || "").localeCompare(b.caseName || ""));
+    const courtSubscriptionsWithDetails = sortCourtSubscriptions(courtSubscriptions);
+    const sortedCaseSubscriptions = sortCaseSubscriptions(caseSubscriptions);
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
@@ -65,6 +57,19 @@ const getHandler = async (req: Request, res: Response) => {
       csrfToken: (req as any).csrfToken?.() || ""
     });
   }
+};
+
+const sortCourtSubscriptions = (subscriptions: any[]): any[] => {
+  return subscriptions
+    .map((sub) => ({
+      ...sub,
+      locationName: sub.courtOrTribunalName
+    }))
+    .sort((a, b) => (a.locationName || "").localeCompare(b.locationName || ""));
+};
+
+const sortCaseSubscriptions = (subscriptions: any[]): any[] => {
+  return [...subscriptions].sort((a, b) => (a.caseName || "").localeCompare(b.caseName || ""));
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];

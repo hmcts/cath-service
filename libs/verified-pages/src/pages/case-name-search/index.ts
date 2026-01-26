@@ -88,8 +88,6 @@ const postHandler = async (req: Request, res: Response) => {
       session.caseSearch = {};
     }
     session.caseSearch.nameResults = results;
-    console.log(`[case-name-search] Stored ${results.length} results in session.caseSearch.nameResults`);
-    console.log(`[case-name-search] Redirecting to /case-name-search-results`);
 
     return res.redirect("/case-name-search-results");
   } catch (error) {

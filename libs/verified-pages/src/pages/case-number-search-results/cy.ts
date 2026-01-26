@@ -5,6 +5,5 @@ export const cy = {
   tableHeaderCaseName: "Enw'r achos",
   tableHeaderCaseNumber: "Cyfeirnod",
   notAvailable: "Ddim ar gael",
-  continueButton: "Parhau",
-  back: "Yn ôl"
+  continueButton: "Parhau"
 };

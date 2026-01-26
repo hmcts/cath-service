@@ -8,10 +8,8 @@ const getHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   const searchResults = req.session.caseSearch?.nameResults || [];
-  console.log(`[case-name-search-results] Loading ${searchResults.length} results from session`);
 
   if (searchResults.length === 0) {
-    console.log(`[case-name-search-results] No results found, redirecting to search page`);
     return res.redirect("/case-name-search");
   }
 
@@ -23,7 +21,6 @@ const getHandler = async (req: Request, res: Response) => {
   }
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-  console.log(`[case-name-search-results] Rendering results page with ${searchResults.length} results`);
   res.render("case-name-search-results/index", {
     ...t,
     results: sortedResults,

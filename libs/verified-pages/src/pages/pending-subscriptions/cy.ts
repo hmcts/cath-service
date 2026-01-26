@@ -8,7 +8,6 @@ export const cy = {
   errorSummaryTitle: "Mae problem wedi codi",
   errorAtLeastOne: "Mae angen o leiaf un tanysgrifiad.",
   addSubscriptions: "Ychwanegu Tanysgrifiadau",
-  back: "Yn ôl",
   courtSubscriptionsHeading: "Tanysgrifiadau llys neu dribiwnlys",
   caseSubscriptionsHeading: "Tanysgrifiadau achos",
   courtHeading: "Enw llys neu dribiwnlys",

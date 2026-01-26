@@ -8,7 +8,6 @@ export const en = {
   errorSummaryTitle: "There is a problem",
   errorAtLeastOne: "At least one subscription is needed.",
   addSubscriptions: "Add Subscriptions",
-  back: "Back",
   courtSubscriptionsHeading: "Court or tribunal subscriptions",
   caseSubscriptionsHeading: "Case subscriptions",
   courtHeading: "Court or tribunal name",
