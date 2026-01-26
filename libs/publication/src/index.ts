@@ -1,11 +1,11 @@
-export { type ListType, mockListTypes } from "@hmcts/list-types-common";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {
   canAccessPublication,
   canAccessPublicationData,
   canAccessPublicationMetadata,
   filterAccessiblePublications,
-  filterPublicationsForSummary
+  filterPublicationsForSummary,
+  type ListType
 } from "./authorisation/service.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";

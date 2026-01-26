@@ -10,22 +10,11 @@ vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
     }
   }
-}));
-
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      listType: "test-list",
-      englishFriendlyName: "Test List",
-      welshFriendlyName: "Rhestr Prawf",
-      jsonSchema: {},
-      provenance: "CFT_IDAM",
-      urlPath: "/test"
-    }
-  ]
 }));
 
 const createMockRequest = (params: Record<string, string>, user?: UserProfile): Partial<Request> => ({

@@ -1,6 +1,6 @@
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { filterPublicationsForSummary } from "@hmcts/publication";
+import { filterPublicationsForSummary, type ListType } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
@@ -44,8 +44,15 @@ export const GET = async (req: Request, res: Response) => {
   });
 
   // Fetch list types from database and create a map for quick lookup
-  const listTypes = await findAllListTypes();
-  const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+  const dbListTypes = await findAllListTypes();
+  const listTypeMap = new Map(dbListTypes.map((lt) => [lt.id, lt]));
+
+  // Map database list types to the ListType interface for authorization
+  const listTypes: ListType[] = dbListTypes.map((lt) => ({
+    id: lt.id,
+    provenance: lt.allowedProvenance,
+    isNonStrategic: lt.isNonStrategic
+  }));
 
   // Filter artefacts based on user metadata access rights
   // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance

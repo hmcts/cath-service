@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mockListTypes } from "@hmcts/list-types-common";
+import { prisma } from "@hmcts/postgres";
 import { getArtefactListTypeId } from "./queries.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,12 +57,17 @@ export async function getRenderedTemplateUrl(artefactId: string): Promise<string
     return null;
   }
 
-  const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-  if (!listType?.urlPath) {
+  const listType = await prisma.listType.findUnique({
+    where: {
+      id: listTypeId
+    }
+  });
+
+  if (!listType?.url) {
     return null;
   }
 
-  return `/${listType.urlPath}?artefactId=${encodeURIComponent(artefactId)}`;
+  return `/${listType.url}?artefactId=${encodeURIComponent(artefactId)}`;
 }
 
 export async function getFlatFileUrl(artefactId: string): Promise<string | null> {
