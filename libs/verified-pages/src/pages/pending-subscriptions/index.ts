@@ -182,7 +182,7 @@ const handleConfirm = async (req: Request, res: Response, userId: string, pendin
       },
       locations: pendingLocations,
       cases: pendingCases,
-      isPlural,
+      isPlural
     });
   }
 };
