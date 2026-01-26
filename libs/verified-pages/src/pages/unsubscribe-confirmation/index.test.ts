@@ -238,5 +238,63 @@ describe("unsubscribe-confirmation", () => {
         })
       );
     });
+
+    it("should remove multiple subscriptions for comma-separated IDs", async () => {
+      const id1 = "sub123";
+      const id2 = "sub456";
+      mockReq.session = {
+        emailSubscriptions: {
+          subscriptionToRemove: `${id1},${id2}`
+        }
+      } as any;
+
+      vi.mocked(subscriptionService.removeSubscription)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockResolvedValueOnce({
+          subscriptionId: id2,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        });
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.removeSubscription).toHaveBeenCalledWith(id1, "user123");
+      expect(subscriptionService.removeSubscription).toHaveBeenCalledWith(id2, "user123");
+      expect(subscriptionService.removeSubscription).toHaveBeenCalledTimes(2);
+      expect(mockReq.session?.emailSubscriptions?.subscriptionToRemove).toBeUndefined();
+      expect(mockRes.render).toHaveBeenCalledWith("unsubscribe-confirmation/index", expect.any(Object));
+    });
+
+    it("should redirect on error when removing any of multiple subscriptions", async () => {
+      const id1 = "sub123";
+      const id2 = "sub456";
+      mockReq.session = {
+        emailSubscriptions: {
+          subscriptionToRemove: `${id1},${id2}`
+        }
+      } as any;
+
+      vi.mocked(subscriptionService.removeSubscription)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockRejectedValueOnce(new Error("Failed to remove"));
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.removeSubscription).toHaveBeenCalledWith(id1, "user123");
+      expect(subscriptionService.removeSubscription).toHaveBeenCalledWith(id2, "user123");
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Error removing subscription:", expect.any(Error));
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+    });
   });
 });

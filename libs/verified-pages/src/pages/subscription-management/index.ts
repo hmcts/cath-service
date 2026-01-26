@@ -19,21 +19,22 @@ const getHandler = async (req: Request, res: Response) => {
     const [courtSubscriptions, caseSubscriptions] = await Promise.all([getAllSubscriptionsByUserId(userId, locale), getCaseSubscriptionsByUserId(userId)]);
 
     const courtSubscriptionsWithDetails = sortCourtSubscriptions(courtSubscriptions);
-    const sortedCaseSubscriptions = sortCaseSubscriptions(caseSubscriptions);
+    const deduplicatedCaseSubscriptions = deduplicateCaseSubscriptions(caseSubscriptions);
+    const sortedCaseSubscriptions = sortCaseSubscriptions(deduplicatedCaseSubscriptions);
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
     }
     res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-    const totalCount = courtSubscriptions.length + caseSubscriptions.length;
+    const totalCount = courtSubscriptions.length + deduplicatedCaseSubscriptions.length;
 
     res.render("subscription-management/index", {
       ...t,
       courtSubscriptions: courtSubscriptionsWithDetails,
       caseSubscriptions: sortedCaseSubscriptions,
       courtCount: courtSubscriptions.length,
-      caseCount: caseSubscriptions.length,
+      caseCount: deduplicatedCaseSubscriptions.length,
       totalCount,
       currentView: view,
       csrfToken: (req as any).csrfToken?.() || ""
@@ -66,6 +67,25 @@ const sortCourtSubscriptions = (subscriptions: any[]): any[] => {
       locationName: sub.courtOrTribunalName
     }))
     .sort((a, b) => (a.locationName || "").localeCompare(b.locationName || ""));
+};
+
+const deduplicateCaseSubscriptions = (subscriptions: any[]): any[] => {
+  const seen = new Map<string, any>();
+
+  for (const sub of subscriptions) {
+    const caseNumber = sub.caseNumber || "";
+    const caseName = sub.caseName || "";
+    const key = `${caseNumber}:${caseName}`;
+
+    if (!seen.has(key)) {
+      seen.set(key, { ...sub, allSubscriptionIds: [sub.subscriptionId] });
+    } else {
+      const existing = seen.get(key);
+      existing.allSubscriptionIds.push(sub.subscriptionId);
+    }
+  }
+
+  return Array.from(seen.values());
 };
 
 const sortCaseSubscriptions = (subscriptions: any[]): any[] => {

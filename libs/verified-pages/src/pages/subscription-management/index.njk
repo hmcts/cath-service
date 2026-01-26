@@ -60,7 +60,7 @@
                 <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right;">
                   <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
                     <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-                    <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                    <input type="hidden" name="subscriptionId" value="{{ subscription.allSubscriptionIds.join(',') if subscription.allSubscriptionIds else subscription.subscriptionId }}">
                     <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.caseName or subscription.caseNumber }}">
                       {{ removeLink }}
                     </button>
@@ -122,7 +122,7 @@
                 <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right;">
                   <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
                     <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-                    <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                    <input type="hidden" name="subscriptionId" value="{{ subscription.allSubscriptionIds.join(',') if subscription.allSubscriptionIds else subscription.subscriptionId }}">
                     <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.caseName or subscription.caseNumber }}">
                       {{ removeLink }}
                     </button>

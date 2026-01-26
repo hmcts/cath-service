@@ -333,6 +333,57 @@ describe("subscription-management", () => {
       expect(caseSubscriptions[1].caseName).toBe("Zebra Case");
     });
 
+    it("should deduplicate case subscriptions with same case name and case number", async () => {
+      const mockCaseSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          type: "case" as const,
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          partyName: "Party A",
+          referenceNumber: "REF1",
+          searchType: "CASE_NAME",
+          dateAdded: new Date()
+        },
+        {
+          subscriptionId: "sub2",
+          type: "case" as const,
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          partyName: "Party A",
+          referenceNumber: "REF1",
+          searchType: "CASE_NUMBER",
+          dateAdded: new Date()
+        },
+        {
+          subscriptionId: "sub3",
+          type: "case" as const,
+          caseName: "Different Case",
+          caseNumber: "CASE456",
+          partyName: "Party B",
+          referenceNumber: "REF2",
+          searchType: "CASE_NAME",
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue(mockCaseSubscriptions);
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      const renderCall = vi.mocked(mockRes.render).mock.calls[0];
+      const caseSubscriptions = renderCall[1].caseSubscriptions;
+
+      expect(caseSubscriptions).toHaveLength(2);
+      expect(caseSubscriptions[0].caseName).toBe("Different Case");
+      expect(caseSubscriptions[0].allSubscriptionIds).toEqual(["sub3"]);
+      expect(caseSubscriptions[1].caseName).toBe("Test Case");
+      expect(caseSubscriptions[1].allSubscriptionIds).toEqual(["sub1", "sub2"]);
+      expect(renderCall[1].caseCount).toBe(2);
+      expect(renderCall[1].totalCount).toBe(2);
+    });
+
     it("should handle errors gracefully", async () => {
       vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockRejectedValue(new Error("Database error"));
       vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
