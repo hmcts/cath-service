@@ -1,5 +1,6 @@
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
+import { filterPublicationsForSummary } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
@@ -33,7 +34,7 @@ export const GET = async (req: Request, res: Response) => {
   const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
   // Query real artefacts from database, ordered by lastReceivedDate desc to get latest first
-  const artefacts = await prisma.artefact.findMany({
+  const allArtefacts = await prisma.artefact.findMany({
     where: {
       locationId: locationId.toString(),
       displayFrom: { lte: new Date() },
@@ -45,6 +46,10 @@ export const GET = async (req: Request, res: Response) => {
   // Fetch list types from database and create a map for quick lookup
   const listTypes = await findAllListTypes();
   const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+
+  // Filter artefacts based on user metadata access rights
+  // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
+  const artefacts = filterPublicationsForSummary(req.user, allArtefacts, listTypes);
 
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {

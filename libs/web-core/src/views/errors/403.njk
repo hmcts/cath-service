@@ -1,0 +1,9 @@
+{% extends "layouts/base-template.njk" %}
+
+{% set title = title or t.title %}
+
+{% block page_content %}
+  <h1 class="govuk-heading-l">{{ title or t.heading }}</h1>
+  <p class="govuk-body">{{ message or t.defaultMessage }}</p>
+  <p class="govuk-body">{{ t.contactPrefix }} <a href="/contact-us" class="govuk-link">{{ t.contactLink }}</a> {{ t.contactSuffix }}</p>
+{% endblock %}

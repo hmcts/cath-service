@@ -35,7 +35,7 @@ export const listTypeData: ListTypeData[] = [
     name: "CRIME_DAILY_LIST",
     englishFriendlyName: "Crime Daily List",
     welshFriendlyName: "Crime Daily List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crime-daily-list",
     isNonStrategic: false,
     defaultSensitivity: "Public"

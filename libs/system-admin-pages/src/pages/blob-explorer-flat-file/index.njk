@@ -1,0 +1,135 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ flatFileTitle }}</h1>
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: error
+          }
+        ]
+      }) }}
+    {% else %}
+
+      <form method="post" novalidate>
+        {{ govukButton({
+          text: flatFileResubmitButton,
+          classes: "govuk-button"
+        }) }}
+      </form>
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ flatFileMetadataHeading }}</h2>
+
+      {{ govukTable({
+        rows: [
+          [
+            {
+              text: metadataArtefactId
+            },
+            {
+              text: metadata.artefactId
+            }
+          ],
+          [
+            {
+              text: metadataLocationId
+            },
+            {
+              text: metadata.locationId
+            }
+          ],
+          [
+            {
+              text: metadataLocationName
+            },
+            {
+              text: metadata.locationName
+            }
+          ],
+          [
+            {
+              text: metadataPublicationType
+            },
+            {
+              text: metadata.publicationType
+            }
+          ],
+          [
+            {
+              text: metadataListType
+            },
+            {
+              text: metadata.listType
+            }
+          ],
+          [
+            {
+              text: metadataProvenance
+            },
+            {
+              text: metadata.provenance
+            }
+          ],
+          [
+            {
+              text: metadataLanguage
+            },
+            {
+              text: metadata.language
+            }
+          ],
+          [
+            {
+              text: metadataSensitivity
+            },
+            {
+              text: metadata.sensitivity
+            }
+          ],
+          [
+            {
+              text: metadataContentDate
+            },
+            {
+              text: formatDateTime(metadata.contentDate)
+            }
+          ],
+          [
+            {
+              text: metadataDisplayFrom
+            },
+            {
+              text: formatDateTime(metadata.displayFrom)
+            }
+          ],
+          [
+            {
+              text: metadataDisplayTo
+            },
+            {
+              text: formatDateTime(metadata.displayTo)
+            }
+          ]
+        ]
+      }) }}
+
+      {% if flatFileUrl %}
+        <p class="govuk-body govuk-!-margin-top-4">
+          <a href="{{ flatFileUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ flatFileLinkToFile }}</a>
+        </p>
+      {% endif %}
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
