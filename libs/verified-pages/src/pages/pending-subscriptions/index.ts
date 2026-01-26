@@ -157,8 +157,26 @@ const postHandler = async (req: Request, res: Response) => {
       }
 
       if (pendingCases.length > 0) {
+        // Deduplicate pending cases by searchType + searchValue combination
+        // This prevents attempting to create multiple subscriptions for the same case
+        const uniqueCases = pendingCases.reduce((acc: any[], caseItem: any) => {
+          const searchType = caseItem.searchType || "CASE_NUMBER";
+          const searchValue = searchType === "CASE_NAME" ? caseItem.caseName : caseItem.caseNumber;
+          const key = `${searchType}:${searchValue}`;
+
+          // Only add if we haven't seen this combination before
+          if (!acc.some((c: any) => {
+            const cSearchType = c.searchType || "CASE_NUMBER";
+            const cSearchValue = cSearchType === "CASE_NAME" ? c.caseName : c.caseNumber;
+            return `${cSearchType}:${cSearchValue}` === key;
+          })) {
+            acc.push(caseItem);
+          }
+          return acc;
+        }, []);
+
         await Promise.all(
-          pendingCases.map((caseItem: any) => {
+          uniqueCases.map((caseItem: any) => {
             const searchType = caseItem.searchType || "CASE_NUMBER"; // Default to CASE_NUMBER for backward compatibility
             const searchValue = searchType === "CASE_NAME" ? caseItem.caseName : caseItem.caseNumber;
             return createCaseSubscription(userId, searchType, searchValue, caseItem.caseNumber, caseItem.caseName);
