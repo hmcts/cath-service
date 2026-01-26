@@ -1,4 +1,3 @@
-import { mockListTypes } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "../provenance.js";
@@ -154,12 +153,15 @@ export async function getArtefactSummariesByLocation(locationId: string): Promis
     }
   });
 
+  const listTypes = await prisma.listType.findMany();
+  const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+
   return artefacts.map((artefact) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+    const listType = listTypeMap.get(artefact.listTypeId);
 
     return {
       artefactId: artefact.artefactId,
-      listType: listType?.englishFriendlyName || "Unknown",
+      listType: listType?.friendlyName || "Unknown",
       displayFrom: artefact.displayFrom.toISOString(),
       displayTo: artefact.displayTo.toISOString()
     };
@@ -177,7 +179,11 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     return null;
   }
 
-  const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+  const listType = await prisma.listType.findUnique({
+    where: {
+      id: artefact.listTypeId
+    }
+  });
   const location = await getLocationById(Number.parseInt(artefact.locationId));
 
   return {
@@ -185,7 +191,7 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     locationId: artefact.locationId,
     locationName: location?.name || "Unknown",
     publicationType: artefact.isFlatFile ? "Flat File" : "JSON",
-    listType: listType?.englishFriendlyName || "Unknown",
+    listType: listType?.friendlyName || "Unknown",
     provenance: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance,
     language: artefact.language,
     sensitivity: artefact.sensitivity,
