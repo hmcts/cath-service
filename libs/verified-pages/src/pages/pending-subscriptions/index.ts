@@ -165,11 +165,13 @@ const postHandler = async (req: Request, res: Response) => {
           const key = `${searchType}:${searchValue}`;
 
           // Only add if we haven't seen this combination before
-          if (!acc.some((c: any) => {
-            const cSearchType = c.searchType || "CASE_NUMBER";
-            const cSearchValue = cSearchType === "CASE_NAME" ? c.caseName : c.caseNumber;
-            return `${cSearchType}:${cSearchValue}` === key;
-          })) {
+          if (
+            !acc.some((c: any) => {
+              const cSearchType = c.searchType || "CASE_NUMBER";
+              const cSearchValue = cSearchType === "CASE_NAME" ? c.caseName : c.caseNumber;
+              return `${cSearchType}:${cSearchValue}` === key;
+            })
+          ) {
             acc.push(caseItem);
           }
           return acc;
