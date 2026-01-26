@@ -1,12 +1,12 @@
 export const cy = {
-  title: "Sut hoffech chi ychwanegu tanysgrifiad e-bost?",
-  heading: "Sut hoffech chi ychwanegu tanysgrifiad e-bost?",
-  bodyText: "Gallwch chwilio am wybodaeth sydd wedi'i chyhoeddi yn unig.",
+  title: "Sut ydych chi eisiau ychwanegu tanysgrifiad e-bost?",
+  heading: "Sut ydych chi eisiau ychwanegu tanysgrifiad e-bost?",
+  bodyText: "Gallwch ond chwilio am wybodaeth sydd eisoes wedi’i chyhoeddi.",
   radioLabel: "Dewiswch ddull tanysgrifio",
   optionCourtOrTribunal: "Yn ôl enw llys neu dribiwnlys",
   optionCaseName: "Yn ôl enw'r achos",
   optionCaseReference: "Yn ôl rhif cyfeirnod yr achos, ID yr achos neu rif cyfeirnod unigryw (URN)",
   continueButton: "Parhau",
-  errorRequired: "Dewiswch sut rydych chi am ychwanegu tanysgrifiad e-bost",
+  errorRequired: "Dywedwch wrthym sut yr hoffech ychwanegu tanysgrifiad",
   errorSummaryTitle: "Mae problem wedi codi"
 };

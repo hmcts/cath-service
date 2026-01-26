@@ -1,11 +1,11 @@
 export const cy = {
-  title: "Beth yw'r rhif cyfeirnod?",
-  heading: "Beth yw'r rhif cyfeirnod?",
-  insetText: "Rhowch naill ai rif cyfeirnod yr achos, ID yr achos neu rif cyfeirnod unigryw (URN). Rhaid i chi nodi union gyfatebiaeth.",
+  title: "Beth yw’r cyfeirnod?",
+  heading: "Beth yw’r cyfeirnod?",
+  insetText: "Rhowch gyfeirnod yr achos, ID yr achos neu gyfeirnod unigryw (URN). Mae’n rhaid ichi nodi’r union gyfeirnod neu ID.",
   referenceNumberLabel: "Rhif cyfeirnod",
   continueButton: "Parhau",
   errorRequired: "Rhowch rif cyfeirnod",
-  errorNoResults: "Nid oes unrhyw beth yn cyfateb i'ch meini prawf",
-  errorNoResultsField: "Rhowch rif cyfeirnod achos dilys",
+  errorNoResults: "Does yna ddim yn cyfateb i'r meini prawf",
+  errorNoResultsField: "Rhowch gyfeirnod achos dilys",
   errorSummaryTitle: "Mae problem wedi codi"
 };

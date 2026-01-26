@@ -60,7 +60,7 @@ describe("subscription-add", () => {
       });
 
       it("should have Welsh translations", () => {
-        expect(cy.title).toBe("Sut hoffech chi ychwanegu tanysgrifiad e-bost?");
+        expect(cy.title).toBe("Sut ydych chi eisiau ychwanegu tanysgrifiad e-bost?");
         expect(cy.continueButton).toBe("Parhau");
       });
     });

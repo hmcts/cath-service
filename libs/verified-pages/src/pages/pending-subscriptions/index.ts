@@ -63,7 +63,6 @@ const getHandler = async (req: Request, res: Response) => {
     locations: sortedLocations,
     cases: sortedCases,
     isPlural,
-    confirmButton: isPlural ? t.confirmButtonPlural : t.confirmButton,
     csrfToken: (req as any).csrfToken?.() || ""
   });
 };
@@ -184,7 +183,6 @@ const handleConfirm = async (req: Request, res: Response, userId: string, pendin
       locations: pendingLocations,
       cases: pendingCases,
       isPlural,
-      confirmButton: isPlural ? t.confirmButtonPlural : t.confirmButton
     });
   }
 };

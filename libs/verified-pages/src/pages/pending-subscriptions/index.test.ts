@@ -59,7 +59,6 @@ describe("pending-subscriptions", () => {
         expect(en.title).toBeDefined();
         expect(en.heading).toBeDefined();
         expect(en.confirmButton).toBeDefined();
-        expect(en.confirmButtonPlural).toBeDefined();
         expect(en.removeLink).toBeDefined();
         expect(en.addAnotherSubscription).toBeDefined();
         expect(en.errorSummaryTitle).toBeDefined();

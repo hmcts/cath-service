@@ -1,8 +1,7 @@
 export const en = {
   title: "Confirm your email subscriptions",
   heading: "Confirm your email subscriptions",
-  confirmButton: "Confirm subscription",
-  confirmButtonPlural: "Confirm subscriptions",
+  confirmButton: "Confirm subscriptions",
   removeLink: "Remove",
   addAnotherSubscription: "Add another email subscription",
   errorSummaryTitle: "There is a problem",

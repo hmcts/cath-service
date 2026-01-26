@@ -64,7 +64,7 @@ describe("case-number-search", () => {
       });
 
       it("should have Welsh translations", () => {
-        expect(cy.title).toBe("Beth yw'r rhif cyfeirnod?");
+        expect(cy.title).toBe("Beth yw’r cyfeirnod?");
         expect(cy.continueButton).toBe("Parhau");
       });
     });

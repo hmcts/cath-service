@@ -4,8 +4,8 @@ export const cy = {
   caseNameLabel: "Beth yw enw'r achos?",
   caseNameHint: "Er enghraifft, Smith.",
   continueButton: "Parhau",
-  errorRequired: "Rhowch o leiaf 3 nod",
-  errorNoResults: "Nid oes unrhyw beth yn cyd-fynd â'ch meini prawf",
-  errorNoResultsField: "Darparwch enw achos cywir",
+  errorRequired: "Nodwch o leiaf 3 nod",
+  errorNoResults: "Does yna ddim yn cyfateb i'r meini prawf",
+  errorNoResultsField: "Darparwch enw cywir ar gyfer yr achos",
   errorSummaryTitle: "Mae problem wedi codi"
 };

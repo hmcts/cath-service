@@ -1,7 +1,7 @@
 export const cy = {
-  title: "Canlyniadau chwilio achos tanysgrifiad",
-  heading: "Canlyniadau chwilio achos tanysgrifiad",
-  foundText: "wedi'i ganfod",
+  title: "Canlyniadau’r chwiliad yn ôl tanysgrifiad i restr achosion",
+  heading: "Canlyniadau’r chwiliad yn ôl tanysgrifiad i restr achosion",
+  foundText: "wedi dod i hyd i ganlyniad(au)",
   tableHeaderCaseName: "Enw'r achos",
   tableHeaderCaseNumber: "Cyfeirnod",
   notAvailable: "Ddim ar gael",
