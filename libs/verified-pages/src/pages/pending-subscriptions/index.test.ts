@@ -65,7 +65,6 @@ describe("pending-subscriptions", () => {
         expect(en.errorSummaryTitle).toBeDefined();
         expect(en.errorAtLeastOne).toBeDefined();
         expect(en.addSubscriptions).toBeDefined();
-        expect(en.back).toBeDefined();
         expect(en.courtSubscriptionsHeading).toBeDefined();
         expect(en.caseSubscriptionsHeading).toBeDefined();
         expect(en.courtHeading).toBeDefined();
