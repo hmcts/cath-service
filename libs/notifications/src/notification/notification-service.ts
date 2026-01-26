@@ -1,13 +1,13 @@
 import { findAllArtefactSearchByArtefactId } from "@hmcts/publication";
-import { sendEmail } from "../govnotify/govnotify-client.js";
-import { buildTemplateParameters } from "../govnotify/template-config.js";
-import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import {
   findActiveSubscriptionsByCaseNames,
   findActiveSubscriptionsByCaseNumbers,
   findActiveSubscriptionsByLocation,
   type SubscriptionWithUser
-} from "./subscription-queries.js";
+} from "@hmcts/subscription";
+import { sendEmail } from "../govnotify/govnotify-client.js";
+import { buildTemplateParameters } from "../govnotify/template-config.js";
+import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
 export interface NotificationResult {
@@ -37,54 +37,12 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
   // 1. Get location subscriptions
   const locationSubscriptions = await findActiveSubscriptionsByLocation(locationIdNum);
 
-  // 2. Get case numbers and case names from artefact search table (publicationId is artefactId)
-  const artefactCases = await findAllArtefactSearchByArtefactId(event.publicationId);
-  const caseNumbers = artefactCases.map((ac) => ac.caseNumber).filter((cn): cn is string => cn !== null);
-  const caseNames = artefactCases.map((ac) => ac.caseName).filter((cn): cn is string => cn !== null);
+  // 2. Get case subscriptions from publication artefacts
+  const { caseSubscriptions, artefactCases } = await getCaseSubscriptionsForPublication(event.publicationId);
 
-  console.log("[notification-service] Artefact cases found:", {
-    publicationId: event.publicationId,
-    totalCases: artefactCases.length,
-    caseNumbers,
-    caseNames,
-    caseSamples: artefactCases.slice(0, 3).map((ac) => ({ caseNumber: ac.caseNumber, caseName: ac.caseName }))
-  });
-
-  // 3. Get case subscriptions by both case numbers and case names
-  const caseNumberSubscriptions = caseNumbers.length > 0 ? await findActiveSubscriptionsByCaseNumbers(caseNumbers) : [];
-  const caseNameSubscriptions = caseNames.length > 0 ? await findActiveSubscriptionsByCaseNames(caseNames) : [];
-
-  // Combine and deduplicate case subscriptions by subscriptionId
-  const seenSubscriptionIds = new Set<string>();
-  const caseSubscriptions: SubscriptionWithUser[] = [];
-
-  for (const sub of [...caseNumberSubscriptions, ...caseNameSubscriptions]) {
-    if (!seenSubscriptionIds.has(sub.subscriptionId)) {
-      seenSubscriptionIds.add(sub.subscriptionId);
-      caseSubscriptions.push(sub);
-    }
-  }
-
-  console.log("[notification-service] Case subscriptions found:", {
-    totalCaseNumberSubscriptions: caseNumberSubscriptions.length,
-    totalCaseNameSubscriptions: caseNameSubscriptions.length,
-    totalCaseSubscriptions: caseSubscriptions.length,
-    caseSubscriptionSamples: caseSubscriptions.slice(0, 3).map((cs) => ({
-      userId: cs.userId,
-      searchValue: cs.searchValue,
-      caseName: cs.caseName
-    }))
-  });
-
-  // 4. Group subscriptions by userId while preserving case vs location information
+  // 3. Group subscriptions by userId while preserving case vs location information
   const allSubscriptions = [...locationSubscriptions, ...caseSubscriptions];
   const userSubscriptionsMap = groupSubscriptionsByUser(allSubscriptions);
-
-  console.log("[notification-service] Grouped subscriptions:", {
-    totalLocationSubscriptions: locationSubscriptions.length,
-    totalCaseSubscriptions: caseSubscriptions.length,
-    uniqueUsers: userSubscriptionsMap.size
-  });
 
   if (userSubscriptionsMap.size === 0) {
     return {
@@ -138,6 +96,35 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
   return result;
 }
 
+interface ArtefactCase {
+  caseNumber: string | null;
+  caseName: string | null;
+}
+
+async function getCaseSubscriptionsForPublication(publicationId: string): Promise<{
+  caseSubscriptions: SubscriptionWithUser[];
+  artefactCases: ArtefactCase[];
+}> {
+  const artefactCases = await findAllArtefactSearchByArtefactId(publicationId);
+  const caseNumbers = artefactCases.map((ac) => ac.caseNumber).filter((cn): cn is string => cn !== null);
+  const caseNames = artefactCases.map((ac) => ac.caseName).filter((cn): cn is string => cn !== null);
+
+  const caseNumberSubscriptions = caseNumbers.length > 0 ? await findActiveSubscriptionsByCaseNumbers(caseNumbers) : [];
+  const caseNameSubscriptions = caseNames.length > 0 ? await findActiveSubscriptionsByCaseNames(caseNames) : [];
+
+  const seenSubscriptionIds = new Set<string>();
+  const caseSubscriptions: SubscriptionWithUser[] = [];
+
+  for (const sub of [...caseNumberSubscriptions, ...caseNameSubscriptions]) {
+    if (!seenSubscriptionIds.has(sub.subscriptionId)) {
+      seenSubscriptionIds.add(sub.subscriptionId);
+      caseSubscriptions.push(sub);
+    }
+  }
+
+  return { caseSubscriptions, artefactCases };
+}
+
 function groupSubscriptionsByUser(subscriptions: SubscriptionWithUser[]): Map<string, SubscriptionWithUser[]> {
   const grouped = new Map<string, SubscriptionWithUser[]>();
 
@@ -150,11 +137,6 @@ function groupSubscriptionsByUser(subscriptions: SubscriptionWithUser[]): Map<st
   return grouped;
 }
 
-interface ArtefactCase {
-  caseNumber: string | null;
-  caseName: string | null;
-}
-
 function formatCaseInfo(subscriptions: SubscriptionWithUser[], artefactCases: ArtefactCase[]): string | undefined {
   const caseSubscriptions = subscriptions.filter((sub) => sub.searchType === "CASE_NUMBER" || sub.searchType === "CASE_NAME");
 
@@ -162,47 +144,66 @@ function formatCaseInfo(subscriptions: SubscriptionWithUser[], artefactCases: Ar
     return undefined;
   }
 
-  // Create maps for both case number and case name lookups (case-insensitive)
-  const artefactByCaseNumber = new Map<string, ArtefactCase>();
-  const artefactByCaseName = new Map<string, ArtefactCase>();
+  const artefactByCaseNumber = createArtefactMapByCaseNumber(artefactCases);
+  const artefactByCaseName = createArtefactMapByCaseName(artefactCases);
+
+  const displayedCases = collectDisplayValuesForSubscriptions(caseSubscriptions, artefactByCaseNumber, artefactByCaseName);
+
+  const caseInfo = Array.from(displayedCases).join(", ");
+  return caseInfo || undefined;
+}
+
+function createArtefactMapByCaseNumber(artefactCases: ArtefactCase[]): Map<string, ArtefactCase> {
+  const map = new Map<string, ArtefactCase>();
 
   for (const artefactCase of artefactCases) {
     if (artefactCase.caseNumber) {
-      artefactByCaseNumber.set(artefactCase.caseNumber.toLowerCase(), artefactCase);
-    }
-    if (artefactCase.caseName) {
-      artefactByCaseName.set(artefactCase.caseName.toLowerCase(), artefactCase);
+      map.set(artefactCase.caseNumber.toLowerCase(), artefactCase);
     }
   }
 
-  // Collect display values for each subscription (only show what was searched for)
+  return map;
+}
+
+function createArtefactMapByCaseName(artefactCases: ArtefactCase[]): Map<string, ArtefactCase> {
+  const map = new Map<string, ArtefactCase>();
+
+  for (const artefactCase of artefactCases) {
+    if (artefactCase.caseName) {
+      map.set(artefactCase.caseName.toLowerCase(), artefactCase);
+    }
+  }
+
+  return map;
+}
+
+function collectDisplayValuesForSubscriptions(
+  caseSubscriptions: SubscriptionWithUser[],
+  artefactByCaseNumber: Map<string, ArtefactCase>,
+  artefactByCaseName: Map<string, ArtefactCase>
+): Set<string> {
   const displayedCases = new Set<string>();
 
   for (const sub of caseSubscriptions) {
     const searchValue = sub.searchValue;
 
-    // Check if subscription matches by case number
     const matchedByCaseNumber = artefactByCaseNumber.get(searchValue.toLowerCase());
     if (matchedByCaseNumber) {
-      // Display the case number from the artefact
       if (matchedByCaseNumber.caseNumber) {
         displayedCases.add(matchedByCaseNumber.caseNumber);
       }
       continue;
     }
 
-    // Check if subscription matches by case name
     const matchedByCaseName = artefactByCaseName.get(searchValue.toLowerCase());
     if (matchedByCaseName) {
-      // Display the case name from the artefact
       if (matchedByCaseName.caseName) {
         displayedCases.add(matchedByCaseName.caseName);
       }
     }
   }
 
-  const caseInfo = Array.from(displayedCases).join(", ");
-  return caseInfo || undefined;
+  return displayedCases;
 }
 
 function hasLocationSubscription(subscriptions: SubscriptionWithUser[]): boolean {
