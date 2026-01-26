@@ -145,20 +145,9 @@ export async function extractAndStoreArtefactSearch(artefactId: string, listType
   try {
     const config = await getConfigForListType(listTypeId);
 
-    console.log(`[ArtefactSearch] Extracting cases for artefact ${artefactId}:`, {
-      listTypeId,
-      hasConfig: !!config,
-      caseNumberFieldName: config?.caseNumberFieldName,
-      caseNameFieldName: config?.caseNameFieldName
-    });
-
     if (config && jsonPayload) {
       // Extract all cases from the payload (handles both objects and arrays)
       const cases = extractCases(jsonPayload, config.caseNumberFieldName, config.caseNameFieldName);
-
-      console.log(`[ArtefactSearch] Extracted ${cases.length} cases for artefact ${artefactId}:`, {
-        caseSamples: cases.slice(0, 5).map((c) => ({ caseNumber: c.caseNumber, caseName: c.caseName }))
-      });
 
       if (cases.length > 0) {
         // Delete existing entries for this artefact to ensure idempotency
@@ -168,13 +157,7 @@ export async function extractAndStoreArtefactSearch(artefactId: string, listType
         for (const caseData of cases) {
           await repository.createArtefactSearch(artefactId, caseData.caseNumber, caseData.caseName);
         }
-
-        console.log(`[ArtefactSearch] Stored ${cases.length} cases for artefact ${artefactId}`);
-      } else {
-        console.log(`[ArtefactSearch] No cases found for artefact ${artefactId}`);
       }
-    } else {
-      console.log(`[ArtefactSearch] Skipping extraction for artefact ${artefactId} - no config or payload`);
     }
   } catch (error) {
     console.error(`[ArtefactSearch] Failed to extract/store for artefact ${artefactId}:`, error);
