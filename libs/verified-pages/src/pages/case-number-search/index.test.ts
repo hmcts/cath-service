@@ -1,3 +1,4 @@
+import { searchByCaseReference } from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
@@ -10,9 +11,8 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-const mockSearchByCaseReference = vi.fn();
 vi.mock("@hmcts/subscription", () => ({
-  searchByCaseReference: mockSearchByCaseReference
+  searchByCaseReference: vi.fn()
 }));
 
 describe("case-number-search", () => {
@@ -44,7 +44,6 @@ describe("case-number-search", () => {
         expect(en.title).toBeDefined();
         expect(en.heading).toBeDefined();
         expect(en.referenceNumberLabel).toBeDefined();
-        expect(en.referenceNumberHint).toBeDefined();
         expect(en.continueButton).toBeDefined();
         expect(en.errorRequired).toBeDefined();
         expect(en.errorNoResults).toBeDefined();
@@ -52,7 +51,7 @@ describe("case-number-search", () => {
       });
 
       it("should have correct title", () => {
-        expect(en.title).toBe("By case reference number, case ID or unique reference number (URN)");
+        expect(en.title).toBe("What is the reference number?");
       });
     });
 
@@ -65,7 +64,7 @@ describe("case-number-search", () => {
       });
 
       it("should have Welsh translations", () => {
-        expect(cy.title).toBe("Yn ôl rhif cyfeirnod yr achos, ID yr achos neu rif cyfeirnod unigryw (URN)");
+        expect(cy.title).toBe("Beth yw'r rhif cyfeirnod?");
         expect(cy.continueButton).toBe("Parhau");
       });
     });
@@ -151,18 +150,18 @@ describe("case-number-search", () => {
         { id: "1", caseNumber: "12341234", caseName: "Test Case", artefactId: "art1" },
         { id: "2", caseNumber: "12341234", caseName: "Another Case", artefactId: "art2" }
       ];
-      mockSearchByCaseReference.mockResolvedValue(mockResults);
+      vi.mocked(searchByCaseReference).mockResolvedValue(mockResults);
       mockReq.body = { referenceNumber: "12341234" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockSearchByCaseReference).toHaveBeenCalledWith("12341234");
+      expect(searchByCaseReference).toHaveBeenCalledWith("12341234");
       expect(mockReq.session.caseSearch?.numberResults).toEqual(mockResults);
       expect(mockRes.redirect).toHaveBeenCalledWith("/case-number-search-results");
     });
 
     it("should show no results error when no cases are found", async () => {
-      mockSearchByCaseReference.mockResolvedValue([]);
+      vi.mocked(searchByCaseReference).mockResolvedValue([]);
       mockReq.body = { referenceNumber: "NONEXISTENT" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -185,7 +184,7 @@ describe("case-number-search", () => {
     });
 
     it("should handle search errors", async () => {
-      mockSearchByCaseReference.mockRejectedValue(new Error("Database error"));
+      vi.mocked(searchByCaseReference).mockRejectedValue(new Error("Database error"));
       mockReq.body = { referenceNumber: "12341234" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -205,7 +204,7 @@ describe("case-number-search", () => {
 
     it("should initialize caseSearch in session if not present", async () => {
       const mockResults = [{ id: "1", caseNumber: "12341234", caseName: "Test", artefactId: "art1" }];
-      mockSearchByCaseReference.mockResolvedValue(mockResults);
+      vi.mocked(searchByCaseReference).mockResolvedValue(mockResults);
       mockReq.session = {} as any;
       mockReq.body = { referenceNumber: "12341234" };
 

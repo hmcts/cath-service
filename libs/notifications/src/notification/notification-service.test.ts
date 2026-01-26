@@ -9,12 +9,18 @@ vi.mock("../govnotify/govnotify-client.js", () => ({
 }));
 
 vi.mock("./subscription-queries.js", () => ({
-  findActiveSubscriptionsByLocation: vi.fn()
+  findActiveSubscriptionsByLocation: vi.fn(),
+  findActiveSubscriptionsByCaseNumbers: vi.fn().mockResolvedValue([]),
+  findActiveSubscriptionsByCaseNames: vi.fn().mockResolvedValue([])
 }));
 
 vi.mock("./notification-queries.js", () => ({
   createNotificationAuditLog: vi.fn(),
   updateNotificationStatus: vi.fn()
+}));
+
+vi.mock("@hmcts/publication", () => ({
+  findAllArtefactSearchByArtefactId: vi.fn().mockResolvedValue([])
 }));
 
 describe("notification-service", () => {

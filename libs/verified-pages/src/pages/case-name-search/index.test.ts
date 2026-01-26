@@ -1,3 +1,4 @@
+import { searchByCaseName } from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
@@ -10,9 +11,8 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-const mockSearchByCaseName = vi.fn();
 vi.mock("@hmcts/subscription", () => ({
-  searchByCaseName: mockSearchByCaseName
+  searchByCaseName: vi.fn()
 }));
 
 describe("case-name-search", () => {
@@ -52,7 +52,7 @@ describe("case-name-search", () => {
       });
 
       it("should have correct title", () => {
-        expect(en.title).toBe("By case name");
+        expect(en.title).toBe("What is the name of the case?");
       });
     });
 
@@ -65,7 +65,7 @@ describe("case-name-search", () => {
       });
 
       it("should have Welsh translations", () => {
-        expect(cy.title).toBe("Yn ôl enw'r achos");
+        expect(cy.title).toBe("Beth yw enw'r achos?");
         expect(cy.continueButton).toBe("Parhau");
       });
     });
@@ -151,18 +151,18 @@ describe("case-name-search", () => {
         { id: "1", caseNumber: "12341234", caseName: "Test Case", artefactId: "art1" },
         { id: "2", caseNumber: "56785678", caseName: "Another Case", artefactId: "art2" }
       ];
-      mockSearchByCaseName.mockResolvedValue(mockResults);
+      vi.mocked(searchByCaseName).mockResolvedValue(mockResults);
       mockReq.body = { caseName: "Test" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockSearchByCaseName).toHaveBeenCalledWith("Test");
+      expect(searchByCaseName).toHaveBeenCalledWith("Test");
       expect(mockReq.session.caseSearch?.nameResults).toEqual(mockResults);
       expect(mockRes.redirect).toHaveBeenCalledWith("/case-name-search-results");
     });
 
     it("should show no results error when no cases are found", async () => {
-      mockSearchByCaseName.mockResolvedValue([]);
+      vi.mocked(searchByCaseName).mockResolvedValue([]);
       mockReq.body = { caseName: "NonExistent" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -185,7 +185,7 @@ describe("case-name-search", () => {
     });
 
     it("should handle search errors", async () => {
-      mockSearchByCaseName.mockRejectedValue(new Error("Database error"));
+      vi.mocked(searchByCaseName).mockRejectedValue(new Error("Database error"));
       mockReq.body = { caseName: "Test" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());

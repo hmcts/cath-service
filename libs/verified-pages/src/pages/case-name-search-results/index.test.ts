@@ -50,7 +50,7 @@ describe("case-name-search-results", () => {
         expect(en.heading).toBeDefined();
         expect(en.foundText).toBeDefined();
         expect(en.tableHeaderCaseName).toBeDefined();
-        expect(en.tableHeaderReferenceNumber).toBeDefined();
+        expect(en.tableHeaderCaseNumber).toBeDefined();
         expect(en.continueButton).toBeDefined();
         expect(en.errorNoSelection).toBeDefined();
         expect(en.errorSummaryTitle).toBeDefined();

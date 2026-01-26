@@ -391,14 +391,6 @@ describe("Subscription Service", () => {
     });
   });
 
-  describe("getCaseSubscriptionsByUserId", () => {
-    it("should return empty array as case subscriptions are not yet implemented", async () => {
-      const result = await getCaseSubscriptionsByUserId("user-123");
-
-      expect(result).toEqual([]);
-    });
-  });
-
   describe("getCourtSubscriptionsByUserId", () => {
     const mockUserId = "user-123";
     const mockSubscriptions = [
@@ -503,7 +495,7 @@ describe("Subscription Service", () => {
     ];
 
     it("should return subscription details with location information", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockSubscriptions);
       vi.mocked(getLocationById).mockImplementation(async (id) => {
         if (id === 1) {
           return {
@@ -546,11 +538,11 @@ describe("Subscription Service", () => {
       const result = await getSubscriptionDetailsForConfirmation([], "user-123");
 
       expect(result).toEqual([]);
-      expect(queries.findSubscriptionsWithLocationByIds).not.toHaveBeenCalled();
+      expect(queries.findSubscriptionsByIds).not.toHaveBeenCalled();
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([mockSubscriptions[0]]);
       vi.mocked(getLocationById).mockImplementation(async (id) => {
         if (id === 1) {
           return {
@@ -711,7 +703,7 @@ describe("Subscription Service", () => {
         dateAdded: new Date()
       });
 
-      const result = await createCaseSubscription(userId, caseNumber, caseName);
+      const result = await createCaseSubscription(userId, "CASE_NUMBER", caseNumber, caseNumber, caseName);
 
       expect(queries.countSubscriptionsByUserId).toHaveBeenCalledWith(userId);
       expect(queries.createSubscription).toHaveBeenCalledWith(userId, "CASE_NUMBER", caseNumber, caseName, caseNumber);
@@ -742,7 +734,7 @@ describe("Subscription Service", () => {
         dateAdded: new Date()
       });
 
-      const result = await createCaseSubscription(userId, caseNumber, null);
+      const result = await createCaseSubscription(userId, "CASE_NUMBER", caseNumber, caseNumber, null);
 
       expect(queries.createSubscription).toHaveBeenCalledWith(userId, "CASE_NUMBER", caseNumber, null, caseNumber);
       expect(result.caseName).toBeNull();
@@ -755,7 +747,7 @@ describe("Subscription Service", () => {
 
       vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(50);
 
-      await expect(createCaseSubscription(userId, caseNumber, caseName)).rejects.toThrow("Maximum 50 subscriptions allowed");
+      await expect(createCaseSubscription(userId, "CASE_NUMBER", caseNumber, caseNumber, caseName)).rejects.toThrow("Maximum 50 subscriptions allowed");
       expect(queries.createSubscription).not.toHaveBeenCalled();
     });
   });
@@ -763,7 +755,7 @@ describe("Subscription Service", () => {
   describe("getCaseSubscriptionsByUserId", () => {
     it("should return formatted case subscriptions", async () => {
       const userId = "user123";
-      const mockSubscriptions = [
+      const mockCaseNumberSubscriptions = [
         {
           subscriptionId: "sub1",
           userId,
@@ -784,11 +776,12 @@ describe("Subscription Service", () => {
         }
       ];
 
-      vi.mocked(queries.findByUserIdAndType).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findByUserIdAndType).mockResolvedValueOnce(mockCaseNumberSubscriptions).mockResolvedValueOnce([]);
 
       const result = await getCaseSubscriptionsByUserId(userId);
 
       expect(queries.findByUserIdAndType).toHaveBeenCalledWith(userId, "CASE_NUMBER");
+      expect(queries.findByUserIdAndType).toHaveBeenCalledWith(userId, "CASE_NAME");
       expect(result).toEqual([
         {
           subscriptionId: "sub1",

@@ -119,6 +119,14 @@ async function deleteTestData(testData: TestData): Promise<void> {
 
 test.describe("Bulk Unsubscribe", () => {
   test.beforeEach(async ({ page }, testInfo) => {
+    // Validate required environment variables
+    if (!process.env.CFT_VALID_TEST_ACCOUNT || !process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD) {
+      throw new Error(
+        'Missing required environment variables: CFT_VALID_TEST_ACCOUNT and CFT_VALID_TEST_ACCOUNT_PASSWORD. ' +
+        'Please run E2E tests using: node e2e-tests/run-with-credentials.js test bulk-unsubscribe.spec.ts'
+      );
+    }
+
     const testData = await createTestData();
     testDataMap.set(testInfo.testId, testData);
 
@@ -130,8 +138,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     await loginWithCftIdam(
       page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+      process.env.CFT_VALID_TEST_ACCOUNT,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD
     );
 
     await expect(page).toHaveURL(/\/account-home/);
