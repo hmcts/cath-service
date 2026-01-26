@@ -2,9 +2,13 @@ import { prisma } from "@hmcts/postgres";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   countSubscriptionsByUserId,
+  createSubscription,
   createSubscriptionRecord,
+  deleteSubscription,
   deleteSubscriptionRecord,
   deleteSubscriptionsByIds,
+  findByUserId,
+  findByUserIdAndType,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
   findSubscriptionsByLocationId,
@@ -430,6 +434,190 @@ describe("Subscription Queries", () => {
       vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
 
       await expect(deleteSubscriptionsByIds(subscriptionIds, userId)).rejects.toThrow("Database error");
+    });
+  });
+
+  describe("findByUserId", () => {
+    it("should find all subscriptions for a user", async () => {
+      const userId = "user123";
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId,
+          searchType: "LOCATION_ID",
+          searchValue: "456",
+          caseName: null,
+          caseNumber: null,
+          dateAdded: new Date()
+        },
+        {
+          subscriptionId: "sub2",
+          userId,
+          searchType: "CASE_NUMBER",
+          searchValue: "CASE123",
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await findByUserId(userId);
+
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          userId
+        },
+        orderBy: {
+          dateAdded: "desc"
+        }
+      });
+      expect(result).toEqual(mockSubscriptions);
+    });
+  });
+
+  describe("findByUserIdAndType", () => {
+    it("should find subscriptions for a user by type", async () => {
+      const userId = "user123";
+      const searchType = "CASE_NUMBER";
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId,
+          searchType,
+          searchValue: "CASE123",
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await findByUserIdAndType(userId, searchType);
+
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          userId,
+          searchType
+        },
+        orderBy: {
+          dateAdded: "desc"
+        }
+      });
+      expect(result).toEqual(mockSubscriptions);
+    });
+
+    it("should return empty array when no subscriptions found", async () => {
+      const userId = "user123";
+      const searchType = "CASE_NUMBER";
+
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await findByUserIdAndType(userId, searchType);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("createSubscription", () => {
+    it("should create a case subscription with all fields", async () => {
+      const userId = "user123";
+      const searchType = "CASE_NUMBER";
+      const searchValue = "CASE123";
+      const caseName = "Test Case";
+      const caseNumber = "CASE123";
+
+      const mockSubscription = {
+        subscriptionId: "sub1",
+        userId,
+        searchType,
+        searchValue,
+        caseName,
+        caseNumber,
+        dateAdded: new Date()
+      };
+
+      vi.mocked(prisma.subscription.create).mockResolvedValue(mockSubscription);
+
+      const result = await createSubscription(userId, searchType, searchValue, caseName, caseNumber);
+
+      expect(prisma.subscription.create).toHaveBeenCalledWith({
+        data: {
+          userId,
+          searchType,
+          searchValue,
+          caseName,
+          caseNumber
+        }
+      });
+      expect(result).toEqual(mockSubscription);
+    });
+
+    it("should create a subscription with null case fields", async () => {
+      const userId = "user123";
+      const searchType = "LOCATION_ID";
+      const searchValue = "456";
+
+      const mockSubscription = {
+        subscriptionId: "sub1",
+        userId,
+        searchType,
+        searchValue,
+        caseName: null,
+        caseNumber: null,
+        dateAdded: new Date()
+      };
+
+      vi.mocked(prisma.subscription.create).mockResolvedValue(mockSubscription);
+
+      const result = await createSubscription(userId, searchType, searchValue, null, null);
+
+      expect(prisma.subscription.create).toHaveBeenCalledWith({
+        data: {
+          userId,
+          searchType,
+          searchValue,
+          caseName: null,
+          caseNumber: null
+        }
+      });
+      expect(result).toEqual(mockSubscription);
+    });
+  });
+
+  describe("deleteSubscription", () => {
+    it("should delete a subscription by id", async () => {
+      const subscriptionId = "sub1";
+      const mockSubscription = {
+        subscriptionId,
+        userId: "user123",
+        searchType: "CASE_NUMBER",
+        searchValue: "CASE123",
+        caseName: "Test Case",
+        caseNumber: "CASE123",
+        dateAdded: new Date()
+      };
+
+      vi.mocked(prisma.subscription.delete).mockResolvedValue(mockSubscription);
+
+      const result = await deleteSubscription(subscriptionId);
+
+      expect(prisma.subscription.delete).toHaveBeenCalledWith({
+        where: {
+          subscriptionId
+        }
+      });
+      expect(result).toEqual(mockSubscription);
+    });
+
+    it("should throw error when subscription not found", async () => {
+      const subscriptionId = "nonexistent";
+
+      vi.mocked(prisma.subscription.delete).mockRejectedValue(new Error("Record not found"));
+
+      await expect(deleteSubscription(subscriptionId)).rejects.toThrow("Record not found");
     });
   });
 });

@@ -1,0 +1,68 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {% if errors %}
+    {{ errorPrefix }} - {{ title }} - {{ serviceName }} - {{ govUk }}
+  {% else %}
+    {{ title }} - {{ serviceName }} - {{ govUk }}
+  {% endif %}
+{% endblock %}
+
+{% block page_content %}
+<div class="parent-box">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% if errors %}
+        {{ govukErrorSummary({
+          titleText: errors.titleText,
+          errorList: errors.errorList
+        }) }}
+      {% endif %}
+
+      <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+      <p class="govuk-body"><strong>{{ results.length }} {{ foundText }}</strong></p>
+
+      <form method="post" novalidate>
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ tableHeaderSelect }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderCaseNumber }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for result in results %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">
+                  <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                    <input type="checkbox" class="govuk-checkboxes__input" id="{{ result.id }}" value="{{ result.id }}" name="selectedCases" />
+                    <label class="govuk-label govuk-checkboxes__label no_padding" for="{{ result.id }}">
+                      <span class="govuk-visually-hidden">{{ selectLabel }}</span>
+                    </label>
+                  </div>
+                </td>
+                <td class="govuk-table__cell">{{ result.caseName or notAvailable }}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric">{{ result.caseNumber or notAvailable }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {{ govukButton({
+          text: continueButton
+        }) }}
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -87,6 +87,16 @@ export async function findSubscriptionsWithLocationByIds(subscriptionIds: string
   });
 }
 
+export async function findSubscriptionsByIds(subscriptionIds: string[], userId: string) {
+  return prisma.subscription.findMany({
+    where: {
+      subscriptionId: { in: subscriptionIds },
+      userId
+    },
+    orderBy: { dateAdded: "desc" }
+  });
+}
+
 export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {
   return prisma.$transaction(async (tx) => {
     const deleteResult = await tx.subscription.deleteMany({
@@ -97,5 +107,58 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
     });
 
     return deleteResult.count;
+  });
+}
+
+export async function findByUserId(userId: string) {
+  return prisma.subscription.findMany({
+    where: {
+      userId
+    },
+    orderBy: {
+      dateAdded: "desc"
+    }
+  });
+}
+
+export async function findByUserIdAndType(userId: string, searchType: string) {
+  return prisma.subscription.findMany({
+    where: {
+      userId,
+      searchType
+    },
+    orderBy: {
+      dateAdded: "desc"
+    }
+  });
+}
+
+export async function findByUserIdTypeAndValue(userId: string, searchType: string, searchValue: string) {
+  return prisma.subscription.findFirst({
+    where: {
+      userId,
+      searchType,
+      searchValue
+    }
+  });
+}
+
+export async function createSubscription(userId: string, searchType: string, searchValue: string, caseName: string | null, caseNumber: string | null) {
+  return prisma.subscription.create({
+    data: {
+      userId,
+      searchType,
+      searchValue,
+      caseName,
+      caseNumber
+    }
+  });
+}
+
+export async function deleteSubscription(id: string) {
+  return prisma.subscription.delete({
+    where: {
+      subscriptionId: id
+    }
   });
 }

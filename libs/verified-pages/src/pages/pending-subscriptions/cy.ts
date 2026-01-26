@@ -8,5 +8,12 @@ export const cy = {
   errorSummaryTitle: "Mae problem wedi codi",
   errorAtLeastOne: "Mae angen o leiaf un tanysgrifiad.",
   addSubscriptions: "Ychwanegu Tanysgrifiadau",
-  back: "Yn ôl"
+  back: "Yn ôl",
+  courtSubscriptionsHeading: "Tanysgrifiadau llys neu dribiwnlys",
+  caseSubscriptionsHeading: "Tanysgrifiadau achos",
+  courtHeading: "Enw llys neu dribiwnlys",
+  caseNameHeading: "Enw'r achos",
+  caseNumberHeading: "Cyfeirnod",
+  actionsHeading: "Gweithredoedd",
+  notAvailable: "Ddim ar gael"
 };

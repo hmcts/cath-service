@@ -1,4 +1,4 @@
-import * as subscriptionService from "@hmcts/subscriptions";
+import * as subscriptionService from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
@@ -9,7 +9,7 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-vi.mock("@hmcts/subscriptions", () => ({
+vi.mock("@hmcts/subscription", () => ({
   getCaseSubscriptionsByUserId: vi.fn(),
   getCourtSubscriptionsByUserId: vi.fn()
 }));

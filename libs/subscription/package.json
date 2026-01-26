@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/subscriptions",
+  "name": "@hmcts/subscription",
   "version": "1.0.0",
   "type": "module",
   "exports": {

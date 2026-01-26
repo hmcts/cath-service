@@ -1,4 +1,4 @@
-import * as subscriptionService from "@hmcts/subscriptions";
+import * as subscriptionService from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
@@ -17,7 +17,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("@hmcts/subscriptions", () => ({
+vi.mock("@hmcts/subscription", () => ({
   getAllSubscriptionsByUserId: vi.fn(),
   replaceUserSubscriptions: vi.fn()
 }));

@@ -13,6 +13,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const confirmedLocationIds = req.session.emailSubscriptions.confirmedLocations || [];
+  const confirmedCases = req.session.emailSubscriptions.confirmedCases || [];
 
   const confirmedLocations = (
     await Promise.all(
@@ -25,17 +26,20 @@ const getHandler = async (req: Request, res: Response) => {
 
   delete req.session.emailSubscriptions.confirmationComplete;
   delete req.session.emailSubscriptions.confirmedLocations;
+  delete req.session.emailSubscriptions.confirmedCases;
 
   if (!res.locals.navigation) {
     res.locals.navigation = {};
   }
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-  const isPlural = confirmedLocations.length > 1;
+  const totalCount = confirmedLocations.length + confirmedCases.length;
+  const isPlural = totalCount > 1;
 
   res.render("subscription-confirmed/index", {
     ...t,
     locations: confirmedLocations,
+    cases: confirmedCases,
     isPlural,
     panelTitle: isPlural ? t.panelTitlePlural : t.panelTitle
   });

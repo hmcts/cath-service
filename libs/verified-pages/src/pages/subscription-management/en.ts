@@ -2,10 +2,20 @@ export const en = {
   title: "Your email subscriptions",
   heading: "Your email subscriptions",
   noSubscriptions: "You do not have any active subscriptions",
+  noCaseSubscriptions: "You do not have any case subscriptions",
+  noCourtSubscriptions: "You do not have any court or tribunal subscriptions",
   addButton: "Add email subscription",
   bulkUnsubscribeButton: "Bulk unsubscribe",
   tableHeaderLocation: "Court or tribunal name",
+  tableHeaderCaseName: "Case name",
+  tableHeaderCaseNumber: "Reference number",
   tableHeaderDate: "Date added",
   tableHeaderActions: "Actions",
-  removeLink: "Unsubscribe"
+  removeLink: "Unsubscribe",
+  tabAllLabel: "All subscriptions",
+  tabCaseLabel: "Subscriptions by case",
+  tabCourtLabel: "Subscriptions by court or tribunal",
+  courtSubscriptionsHeading: "Court or tribunal subscriptions",
+  caseSubscriptionsHeading: "Case subscriptions",
+  notAvailable: "Not available"
 };

@@ -1227,9 +1227,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
+"@hmcts/subscription@workspace:*, @hmcts/subscription@workspace:libs/subscription":
   version: 0.0.0-use.local
-  resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
+  resolution: "@hmcts/subscription@workspace:libs/subscription"
   dependencies:
     "@hmcts/auth": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -1258,7 +1258,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   dependencies:
-    "@hmcts/subscriptions": "workspace:*"
+    "@hmcts/subscription": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown

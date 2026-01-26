@@ -2,10 +2,20 @@ export const cy = {
   title: "Eich tanysgrifiadau e-bost",
   heading: "Eich tanysgrifiadau e-bost",
   noSubscriptions: "Nid oes gennych unrhyw danysgrifiadau gweithredol",
+  noCaseSubscriptions: "Nid oes gennych unrhyw danysgrifiadau achos",
+  noCourtSubscriptions: "Nid oes gennych unrhyw danysgrifiadau llys neu dribiwnlys",
   addButton: "Ychwanegu tanysgrifiad e-bost",
   bulkUnsubscribeButton: "Dileu swmp o danysgrifiadau",
   tableHeaderLocation: "Enw llys neu dribiwnlys",
+  tableHeaderCaseName: "Enw'r achos",
+  tableHeaderCaseNumber: "Cyfeirnod",
   tableHeaderDate: "Dyddiad ychwanegu",
   tableHeaderActions: "Gweithredoedd",
-  removeLink: "Dad-danysgrifio"
+  removeLink: "Dad-danysgrifio",
+  tabAllLabel: "Pob tanysgrifiad",
+  tabCaseLabel: "Tanysgrifiadau yn ôl achos",
+  tabCourtLabel: "Tanysgrifiadau yn ôl llys neu dribiwnlys",
+  courtSubscriptionsHeading: "Tanysgrifiadau llys neu dribiwnlys",
+  caseSubscriptionsHeading: "Tanysgrifiadau achos",
+  notAvailable: "Ddim ar gael"
 };

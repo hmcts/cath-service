@@ -1,6 +1,5 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/input/macro.njk" import govukInput %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
@@ -14,10 +13,10 @@
   <div class="govuk-button-group">
     {{ govukButton({
       text: addButton,
-      href: '/location-name-search'
+      href: '/subscription-add'
     }) }}
 
-    {% if count > 0 %}
+    {% if totalCount > 0 %}
       {{ govukButton({
         text: bulkUnsubscribeButton,
         href: '/bulk-unsubscribe',
@@ -26,33 +25,150 @@
     {% endif %}
   </div>
 
-  {% if count > 0 %}
-    <table class="govuk-table" id="locations-table">
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header govuk-!-width-three-quarters" aria-sort="none">{{ tableHeaderLocation }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
-          <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
-        </tr>
-      </thead>
-      <tbody class="govuk-table__body">
-        {% for subscription in subscriptions %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.locationName }}</td>
-            <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-            <td class="govuk-table__cell govuk-table__cell--numeric">
-              <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
-                <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-                <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
-                <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.locationName }}">
-                  {{ removeLink }}
-                </button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  {% if totalCount > 0 %}
+    <nav class="moj-sub-navigation" aria-label="Subscription filters">
+      <ul class="moj-sub-navigation__list">
+        <li class="moj-sub-navigation__item">
+          <a class="moj-sub-navigation__link" {% if currentView == 'all' %}aria-current="page"{% endif %} href="/subscription-management?view=all">{{ tabAllLabel }} ({{ totalCount }})</a>
+        </li>
+        <li class="moj-sub-navigation__item">
+          <a class="moj-sub-navigation__link" {% if currentView == 'case' %}aria-current="page"{% endif %} href="/subscription-management?view=case">{{ tabCaseLabel }} ({{ caseCount }})</a>
+        </li>
+        <li class="moj-sub-navigation__item">
+          <a class="moj-sub-navigation__link" {% if currentView == 'location' %}aria-current="page"{% endif %} href="/subscription-management?view=location">{{ tabCourtLabel }} ({{ courtCount }})</a>
+        </li>
+      </ul>
+    </nav>
+
+    {% if currentView == 'all' %}
+      {% if caseCount > 0 %}
+        <table class="govuk-table" id="cases-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderCaseName }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderCaseNumber }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">{{ tableHeaderActions }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for subscription in caseSubscriptions %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName or notAvailable }}</td>
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber or notAvailable }}</td>
+                <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right;">
+                  <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
+                    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                    <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                    <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.caseName or subscription.caseNumber }}">
+                      {{ removeLink }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      {% if courtCount > 0 %}
+        <table class="govuk-table" id="locations-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header" style="width: 60%;" aria-sort="none">{{ tableHeaderLocation }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">{{ tableHeaderActions }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for subscription in courtSubscriptions %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.locationName }}</td>
+                <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right;">
+                  <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
+                    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                    <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                    <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.locationName }}">
+                      {{ removeLink }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    {% endif %}
+
+    {% if currentView == 'case' %}
+      {% if caseCount > 0 %}
+        <table class="govuk-table" id="cases-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderCaseName }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderCaseNumber }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">{{ tableHeaderActions }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for subscription in caseSubscriptions %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName or notAvailable }}</td>
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber or notAvailable }}</td>
+                <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right;">
+                  <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
+                    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                    <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                    <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.caseName or subscription.caseNumber }}">
+                      {{ removeLink }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="govuk-body">{{ noCaseSubscriptions }}</p>
+      {% endif %}
+    {% endif %}
+
+    {% if currentView == 'location' %}
+      {% if courtCount > 0 %}
+        <table class="govuk-table" id="locations-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header" style="width: 60%;" aria-sort="none">{{ tableHeaderLocation }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">{{ tableHeaderActions }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for subscription in courtSubscriptions %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.locationName }}</td>
+                <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right;">
+                  <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
+                    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                    <input type="hidden" name="subscriptionId" value="{{ subscription.subscriptionId }}">
+                    <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.locationName }}">
+                      {{ removeLink }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="govuk-body">{{ noCourtSubscriptions }}</p>
+      {% endif %}
+    {% endif %}
   {% else %}
     <p class="govuk-body">{{ noSubscriptions }}</p>
   {% endif %}
