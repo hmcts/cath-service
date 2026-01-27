@@ -29,7 +29,7 @@ model Artefact {
 }
 
 model ArtefactSearch {
-  id         String    @id @default(cuid())
+  id         String    @id @default(uuid())
   artefactId String    @map("artefact_id") @db.Uuid
   caseNumber String?   @map("case_number")
   caseName   String?   @map("case_name")

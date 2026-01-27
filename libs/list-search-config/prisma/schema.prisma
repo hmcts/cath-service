@@ -9,7 +9,7 @@ datasource db {
 }
 
 model ListSearchConfig {
-  id                  String   @id @default(cuid())
+  id                  String   @id @default(uuid())
   listTypeId          Int      @map("list_type_id")
   caseNumberFieldName String   @map("case_number_field_name") @db.VarChar(100)
   caseNameFieldName   String   @map("case_name_field_name") @db.VarChar(100)
