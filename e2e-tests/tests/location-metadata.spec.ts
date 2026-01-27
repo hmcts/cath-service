@@ -31,7 +31,7 @@ test.describe("Location Metadata Management", () => {
     test("should display search input with autocomplete", async ({ page }) => {
       await page.goto("/location-metadata-search");
 
-      const searchInput = page.locator("#location-search");
+      const searchInput = page.getByRole("combobox", { name: /search by court or tribunal/i });
       await expect(searchInput).toBeVisible();
 
       const continueButton = page.getByRole("button", { name: /continue/i });

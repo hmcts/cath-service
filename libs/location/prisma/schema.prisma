@@ -79,7 +79,7 @@ model LocationSubJurisdiction {
 }
 
 model LocationMetadata {
-  locationMetadataId  String    @id @default(cuid()) @map("location_metadata_id")
+  locationMetadataId  String    @id @default(uuid()) @map("location_metadata_id")
   locationId          Int       @unique @map("location_id")
   cautionMessage      String?   @map("caution_message") @db.Text
   welshCautionMessage String?   @map("welsh_caution_message") @db.Text
