@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -81,6 +81,9 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     // Save JSON to temp storage for list display pages
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
     await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
+
+    // Extract and store artefact search data for case number/name search
+    await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
 
     // Log successful ingestion
     await createIngestionLog({

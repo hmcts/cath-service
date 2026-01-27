@@ -5,6 +5,7 @@ import { processBlobIngestion } from "./service.js";
 // Mock the dependencies
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(),
+  extractAndStoreArtefactSearch: vi.fn(),
   Provenance: {
     MANUAL_UPLOAD: "MANUAL_UPLOAD",
     XHIBIT: "XHIBIT",
@@ -40,7 +41,7 @@ vi.mock("@hmcts/notifications", () => ({
 }));
 
 describe("processBlobIngestion", async () => {
-  const { createArtefact, mockListTypes } = await import("@hmcts/publication");
+  const { createArtefact, extractAndStoreArtefactSearch, mockListTypes } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
@@ -49,6 +50,7 @@ describe("processBlobIngestion", async () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
   });
 
   const validRequest: BlobIngestionRequest = {

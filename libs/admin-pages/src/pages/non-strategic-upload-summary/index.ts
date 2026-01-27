@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -117,6 +117,16 @@ const postHandler = async (req: Request, res: Response) => {
       if (hasConverterForListType(listTypeId)) {
         const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
         await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+
+        // Extract and store artefact search data from converted JSON
+        try {
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, hearingsData);
+        } catch (error) {
+          console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
+            artefactId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
       }
     }
 
