@@ -3,7 +3,6 @@ export const en = {
   heading: "Subscribe by court or tribunal name",
   description: "Subscribe to receive hearings list by court or tribunal",
   continueButton: "Continue",
-  back: "Back",
   backToTop: "Back to top",
   totalSelected: "Total selected",
   selected: "selected",

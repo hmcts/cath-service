@@ -86,8 +86,12 @@ async function deleteTestLocation(locationData: TestLocationData): Promise<void>
     if (!locationData.locationId) return;
 
     // Delete subscriptions first (if any)
+    // Subscriptions are linked to locations via searchType and searchValue
     await prisma.subscription.deleteMany({
-      where: { locationId: locationData.locationId },
+      where: {
+        searchType: "LOCATION_ID",
+        searchValue: locationData.locationId.toString(),
+      },
     });
 
     // Delete location (cascade will handle relationships)
@@ -103,6 +107,14 @@ async function deleteTestLocation(locationData: TestLocationData): Promise<void>
 test.describe("Email Subscriptions", () => {
   // Create test location and authenticate before each test
   test.beforeEach(async ({ page }, testInfo) => {
+    // Validate required environment variables
+    if (!process.env.CFT_VALID_TEST_ACCOUNT || !process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD) {
+      throw new Error(
+        'Missing required environment variables: CFT_VALID_TEST_ACCOUNT and CFT_VALID_TEST_ACCOUNT_PASSWORD. ' +
+        'Please run E2E tests using: node e2e-tests/run-with-credentials.js test email-subscriptions.spec.ts'
+      );
+    }
+
     // Create test location and store in map
     const locationData = await createTestLocation();
     testLocationMap.set(testInfo.testId, locationData);
@@ -121,8 +133,8 @@ test.describe("Email Subscriptions", () => {
     // Perform CFT IDAM login
     await loginWithCftIdam(
       page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+      process.env.CFT_VALID_TEST_ACCOUNT,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD
     );
 
     // Should be redirected to account-home after successful login
@@ -164,8 +176,13 @@ test.describe("Email Subscriptions", () => {
         .analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Step 2: Navigate to location search
+      // Step 2: Navigate to subscription method selection
       await page.getByRole("button", { name: /add email subscription/i }).click();
+      await expect(page).toHaveURL("/subscription-add");
+
+      // Select court or tribunal subscription method
+      await page.getByRole("radio", { name: /court or tribunal/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
       await expect(page).toHaveURL("/location-name-search");
 
       // Verify location search page
@@ -185,10 +202,17 @@ test.describe("Email Subscriptions", () => {
 
       // Test back navigation from location search
       await page.locator(".govuk-back-link").click();
+      await expect(page).toHaveURL("/subscription-add");
+
+      // Test back navigation from subscription method selection
+      await page.locator(".govuk-back-link").click();
       await expect(page).toHaveURL("/subscription-management");
 
       // Navigate back to location search
       await page.getByRole("button", { name: /add email subscription/i }).click();
+      await expect(page).toHaveURL("/subscription-add");
+      await page.getByRole("radio", { name: /court or tribunal/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
       await expect(page).toHaveURL("/location-name-search");
 
       // Step 3: Select the test location and continue
@@ -257,6 +281,12 @@ test.describe("Email Subscriptions", () => {
       await emailSubsTile.click();
       await page.getByRole("button", { name: /add email subscription/i }).click();
       await page.waitForLoadState("networkidle");
+
+      // Select court or tribunal subscription method
+      await page.getByRole("radio", { name: /court or tribunal/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForLoadState("networkidle");
+
       const testLocationCheckbox = page.locator(`#location-${locationData.locationId}`);
       await testLocationCheckbox.check();
       await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();

@@ -31,6 +31,9 @@ export function formatPublicationDate(date: Date): string {
 
 export interface TemplateParameters {
   locations: string;
+  case: string;
+  display_locations: string;
+  display_case: string;
   ListType: string;
   content_date: string;
   start_page_link: string;
@@ -43,12 +46,31 @@ export function buildTemplateParameters(params: {
   hearingListName: string;
   publicationDate: Date;
   locationName: string;
+  caseInfo?: string;
+  hasLocationSubscription?: boolean;
 }): TemplateParameters {
-  return {
-    locations: params.locationName,
+  const templateParams: TemplateParameters = {
     ListType: params.hearingListName,
     content_date: formatPublicationDate(params.publicationDate),
     start_page_link: getServiceUrl(),
-    subscription_page_link: getServiceUrl()
+    subscription_page_link: getServiceUrl(),
+    locations: "",
+    case: "",
+    display_locations: "",
+    display_case: ""
   };
+
+  // Add case information if present
+  if (params.caseInfo) {
+    templateParams.case = params.caseInfo;
+    templateParams.display_case = "yes";
+  }
+
+  // Add location information only if user has location subscription
+  if (params.hasLocationSubscription) {
+    templateParams.locations = params.locationName;
+    templateParams.display_locations = "yes";
+  }
+
+  return templateParams;
 }

@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getCaseSubscriptionsByUserId, getCourtSubscriptionsByUserId } from "@hmcts/subscriptions";
+import { getCaseSubscriptionsByUserId, getCourtSubscriptionsByUserId } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -23,9 +23,10 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const userId = req.user.id;
+  const currentView = (req.query.view as string) || "all";
 
   try {
-    const caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
+    const caseSubscriptions = await getCaseSubscriptionsByUserId(userId);
     const courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
 
     if (!res.locals.navigation) {
@@ -40,6 +41,7 @@ const getHandler = async (req: Request, res: Response) => {
       caseSubscriptions,
       courtSubscriptions,
       previouslySelected,
+      currentView,
       hasCaseSubscriptions: caseSubscriptions.length > 0,
       hasCourtSubscriptions: courtSubscriptions.length > 0,
       showEmptyState: caseSubscriptions.length === 0 && courtSubscriptions.length === 0,
@@ -61,6 +63,7 @@ const getHandler = async (req: Request, res: Response) => {
       caseSubscriptions: [],
       courtSubscriptions: [],
       previouslySelected: [],
+      currentView,
       hasCaseSubscriptions: false,
       hasCourtSubscriptions: false,
       showEmptyState: true,
@@ -80,6 +83,8 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/sign-in");
   }
 
+  const currentView = req.body.view || "all";
+
   let selectedIds: string[] = [];
   if (Array.isArray(req.body.subscriptions)) {
     selectedIds = [...new Set(req.body.subscriptions as string[])];
@@ -91,7 +96,7 @@ const postHandler = async (req: Request, res: Response) => {
     const userId = req.user.id;
 
     try {
-      const caseSubscriptions = await getCaseSubscriptionsByUserId(userId, locale);
+      const caseSubscriptions = await getCaseSubscriptionsByUserId(userId);
       const courtSubscriptions = await getCourtSubscriptionsByUserId(userId, locale);
 
       if (!res.locals.navigation) {
@@ -104,6 +109,7 @@ const postHandler = async (req: Request, res: Response) => {
         caseSubscriptions,
         courtSubscriptions,
         previouslySelected: [],
+        currentView,
         hasCaseSubscriptions: caseSubscriptions.length > 0,
         hasCourtSubscriptions: courtSubscriptions.length > 0,
         showEmptyState: caseSubscriptions.length === 0 && courtSubscriptions.length === 0,
@@ -120,7 +126,7 @@ const postHandler = async (req: Request, res: Response) => {
       });
     } catch (error) {
       console.error("Error rendering validation error:", error);
-      return res.redirect("/bulk-unsubscribe");
+      return res.redirect(`/bulk-unsubscribe?view=${currentView}`);
     }
   }
 
@@ -131,7 +137,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   req.session.save((err?: any) => {
     if (err) {
-      return res.redirect("/bulk-unsubscribe");
+      return res.redirect(`/bulk-unsubscribe?view=${currentView}`);
     }
     res.redirect("/confirm-bulk-unsubscribe");
   });

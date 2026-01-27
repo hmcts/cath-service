@@ -8,6 +8,7 @@ export const en = {
   tableHeaderReferenceNumber: "Reference number",
   tableHeaderDateAdded: "Date added",
   tableHeaderCourtName: "Court or tribunal name",
+  notAvailable: "Not available",
   radioYes: "Yes",
   radioNo: "No",
   continueButton: "Continue",

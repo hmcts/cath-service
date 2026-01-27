@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { deleteSubscriptionsByIds, getSubscriptionDetailsForConfirmation } from "@hmcts/subscriptions";
+import { deleteSubscriptionsByIds, getSubscriptionDetailsForConfirmation } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";

@@ -11,6 +11,9 @@ export const en = {
   tableHeaderCourtName: "Court or tribunal name",
   bulkUnsubscribeButton: "Bulk unsubscribe",
   emptyStateMessage: "You do not have any subscriptions in this category.",
+  noCaseSubscriptions: "You do not have any case subscriptions.",
+  noCourtSubscriptions: "You do not have any court or tribunal subscriptions.",
+  notAvailable: "Not available",
   errorSummaryTitle: "There is a problem",
   errorNoSelectionMessage: "At least one subscription must be selected",
   errorNoSelectionHref: "#subscriptions"

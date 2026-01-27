@@ -3,7 +3,6 @@ export const cy = {
   heading: "Tanysgrifio yn ôl enw llys neu dribiwnlys",
   description: "Tanysgrifiwch i dderbyn rhestr gwrandawiadau yn ôl llys neu dribiwnlys",
   continueButton: "Parhau",
-  back: "Yn ôl",
   backToTop: "Yn ôl i'r brig",
   totalSelected: "Cyfanswm a ddewiswyd",
   selected: "wedi'u dewis",

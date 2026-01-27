@@ -19,7 +19,7 @@ model NotificationAuditLog {
   createdAt      DateTime  @default(now()) @map("created_at")
   sentAt         DateTime? @map("sent_at")
 
-  subscription Subscription @relation(fields: [subscriptionId], references: [subscriptionId])
+  subscription Subscription @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
 
   @@index([publicationId])
   @@index([status])

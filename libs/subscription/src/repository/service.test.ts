@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as validation from "../validation/validation.js";
 import * as queries from "./queries.js";
 import {
+  createCaseSubscription,
   createMultipleSubscriptions,
   createSubscription,
   deleteSubscriptionsByIds,
@@ -9,6 +10,9 @@ import {
   getCaseSubscriptionsByUserId,
   getCourtSubscriptionsByUserId,
   getSubscriptionDetailsForConfirmation,
+  getSubscriptionsByCase,
+  getSubscriptionsByLocation,
+  getUserSubscriptions,
   removeSubscription,
   replaceUserSubscriptions
 } from "./service.js";
@@ -387,14 +391,6 @@ describe("Subscription Service", () => {
     });
   });
 
-  describe("getCaseSubscriptionsByUserId", () => {
-    it("should return empty array as case subscriptions are not yet implemented", async () => {
-      const result = await getCaseSubscriptionsByUserId("user-123");
-
-      expect(result).toEqual([]);
-    });
-  });
-
   describe("getCourtSubscriptionsByUserId", () => {
     const mockUserId = "user-123";
     const mockSubscriptions = [
@@ -499,7 +495,7 @@ describe("Subscription Service", () => {
     ];
 
     it("should return subscription details with location information", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockSubscriptions);
       vi.mocked(getLocationById).mockImplementation(async (id) => {
         if (id === 1) {
           return {
@@ -542,11 +538,11 @@ describe("Subscription Service", () => {
       const result = await getSubscriptionDetailsForConfirmation([], "user-123");
 
       expect(result).toEqual([]);
-      expect(queries.findSubscriptionsWithLocationByIds).not.toHaveBeenCalled();
+      expect(queries.findSubscriptionsByIds).not.toHaveBeenCalled();
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([mockSubscriptions[0]]);
       vi.mocked(getLocationById).mockImplementation(async (id) => {
         if (id === 1) {
           return {
@@ -606,6 +602,212 @@ describe("Subscription Service", () => {
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(0);
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
+    });
+  });
+
+  describe("getUserSubscriptions", () => {
+    it("should return all subscriptions for a user", async () => {
+      const userId = "user123";
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId,
+          searchType: "LOCATION_ID",
+          searchValue: "456",
+          caseName: null,
+          caseNumber: null,
+          dateAdded: new Date()
+        },
+        {
+          subscriptionId: "sub2",
+          userId,
+          searchType: "CASE_NUMBER",
+          searchValue: "CASE123",
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(mockSubscriptions);
+
+      const result = await getUserSubscriptions(userId);
+
+      expect(queries.findSubscriptionsByUserId).toHaveBeenCalledWith(userId);
+      expect(result).toEqual(mockSubscriptions);
+    });
+  });
+
+  describe("getSubscriptionsByCase", () => {
+    it("should return only case subscriptions for a user", async () => {
+      const userId = "user123";
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId,
+          searchType: "CASE_NUMBER",
+          searchValue: "CASE123",
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(queries.findByUserIdAndType).mockResolvedValue(mockSubscriptions);
+
+      const result = await getSubscriptionsByCase(userId);
+
+      expect(queries.findByUserIdAndType).toHaveBeenCalledWith(userId, "CASE_NUMBER");
+      expect(result).toEqual(mockSubscriptions);
+    });
+  });
+
+  describe("getSubscriptionsByLocation", () => {
+    it("should return only location subscriptions for a user", async () => {
+      const userId = "user123";
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId,
+          searchType: "LOCATION_ID",
+          searchValue: "456",
+          caseName: null,
+          caseNumber: null,
+          dateAdded: new Date()
+        }
+      ];
+
+      vi.mocked(queries.findByUserIdAndType).mockResolvedValue(mockSubscriptions);
+
+      const result = await getSubscriptionsByLocation(userId);
+
+      expect(queries.findByUserIdAndType).toHaveBeenCalledWith(userId, "LOCATION_ID");
+      expect(result).toEqual(mockSubscriptions);
+    });
+  });
+
+  describe("createCaseSubscription", () => {
+    it("should create a case subscription successfully", async () => {
+      const userId = "user123";
+      const caseNumber = "CASE123";
+      const caseName = "Test Case";
+
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(5);
+      vi.mocked(queries.createSubscription).mockResolvedValue({
+        subscriptionId: "sub123",
+        userId,
+        searchType: "CASE_NUMBER",
+        searchValue: caseNumber,
+        caseName,
+        caseNumber,
+        dateAdded: new Date()
+      });
+
+      const result = await createCaseSubscription(userId, "CASE_NUMBER", caseNumber, caseNumber, caseName);
+
+      expect(queries.countSubscriptionsByUserId).toHaveBeenCalledWith(userId);
+      expect(queries.createSubscription).toHaveBeenCalledWith(userId, "CASE_NUMBER", caseNumber, caseName, caseNumber);
+      expect(result).toEqual(
+        expect.objectContaining({
+          subscriptionId: "sub123",
+          userId,
+          searchType: "CASE_NUMBER",
+          searchValue: caseNumber,
+          caseName,
+          caseNumber
+        })
+      );
+    });
+
+    it("should create a case subscription with null case name", async () => {
+      const userId = "user123";
+      const caseNumber = "CASE123";
+
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(5);
+      vi.mocked(queries.createSubscription).mockResolvedValue({
+        subscriptionId: "sub123",
+        userId,
+        searchType: "CASE_NUMBER",
+        searchValue: caseNumber,
+        caseName: null,
+        caseNumber,
+        dateAdded: new Date()
+      });
+
+      const result = await createCaseSubscription(userId, "CASE_NUMBER", caseNumber, caseNumber, null);
+
+      expect(queries.createSubscription).toHaveBeenCalledWith(userId, "CASE_NUMBER", caseNumber, null, caseNumber);
+      expect(result.caseName).toBeNull();
+    });
+
+    it("should throw error when max subscriptions exceeded", async () => {
+      const userId = "user123";
+      const caseNumber = "CASE123";
+      const caseName = "Test Case";
+
+      vi.mocked(queries.countSubscriptionsByUserId).mockResolvedValue(50);
+
+      await expect(createCaseSubscription(userId, "CASE_NUMBER", caseNumber, caseNumber, caseName)).rejects.toThrow("Maximum 50 subscriptions allowed");
+      expect(queries.createSubscription).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getCaseSubscriptionsByUserId", () => {
+    it("should return formatted case subscriptions", async () => {
+      const userId = "user123";
+      const mockCaseNumberSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId,
+          searchType: "CASE_NUMBER",
+          searchValue: "CASE123",
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub2",
+          userId,
+          searchType: "CASE_NUMBER",
+          searchValue: "CASE456",
+          caseName: "Another Case",
+          caseNumber: "CASE456",
+          dateAdded: new Date("2024-01-02")
+        }
+      ];
+
+      vi.mocked(queries.findByUserIdAndType).mockResolvedValueOnce(mockCaseNumberSubscriptions).mockResolvedValueOnce([]);
+
+      const result = await getCaseSubscriptionsByUserId(userId);
+
+      expect(queries.findByUserIdAndType).toHaveBeenCalledWith(userId, "CASE_NUMBER");
+      expect(queries.findByUserIdAndType).toHaveBeenCalledWith(userId, "CASE_NAME");
+      expect(result).toEqual([
+        {
+          subscriptionId: "sub1",
+          type: "case",
+          caseName: "Test Case",
+          caseNumber: "CASE123",
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub2",
+          type: "case",
+          caseName: "Another Case",
+          caseNumber: "CASE456",
+          dateAdded: new Date("2024-01-02")
+        }
+      ]);
+    });
+
+    it("should return empty array when no case subscriptions exist", async () => {
+      const userId = "user123";
+
+      vi.mocked(queries.findByUserIdAndType).mockResolvedValue([]);
+
+      const result = await getCaseSubscriptionsByUserId(userId);
+
+      expect(result).toEqual([]);
     });
   });
 });

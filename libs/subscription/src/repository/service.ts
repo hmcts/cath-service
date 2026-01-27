@@ -2,11 +2,15 @@ import { getLocationById } from "@hmcts/location";
 import { validateLocationId } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
+  createSubscription as createSubscriptionQuery,
   createSubscriptionRecord,
   deleteSubscriptionRecord,
   deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
+  findByUserIdAndType,
+  findByUserIdTypeAndValue,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
+  findSubscriptionsByIds,
   findSubscriptionsByUserId,
   findSubscriptionsWithLocationByIds,
   findSubscriptionsWithLocationByUserId
@@ -17,8 +21,12 @@ const MAX_SUBSCRIPTIONS = 50;
 interface SubscriptionDto {
   subscriptionId: string;
   type: "court" | "case";
-  courtOrTribunalName: string;
-  locationId: number;
+  courtOrTribunalName?: string;
+  locationId?: number;
+  caseName?: string | null;
+  caseNumber?: string | null;
+  partyName?: string;
+  referenceNumber?: string | null;
   dateAdded: Date;
 }
 
@@ -36,6 +44,17 @@ function mapSubscriptionToDto(
     type: "court",
     courtOrTribunalName: locale === "cy" && location.welshName ? location.welshName : location.name,
     locationId: location.locationId,
+    dateAdded: sub.dateAdded
+  };
+}
+
+function mapCaseSubscriptionToDto(sub: { subscriptionId: string; caseName: string | null; caseNumber: string | null; dateAdded: Date }): SubscriptionDto {
+  return {
+    subscriptionId: sub.subscriptionId,
+    type: "case",
+    caseName: sub.caseName,
+    caseNumber: sub.caseNumber,
+    referenceNumber: sub.caseNumber,
     dateAdded: sub.dateAdded
   };
 }
@@ -151,10 +170,18 @@ export async function getAllSubscriptionsByUserId(userId: string, locale = "en")
   return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
 }
 
-export async function getCaseSubscriptionsByUserId(userId: string, locale = "en") {
-  // Case subscriptions not yet implemented (VIBE-300)
-  // When implemented, this will query a case_subscription table
-  return [];
+export async function getCaseSubscriptionsByUserId(userId: string) {
+  const caseNumberSubs = await findByUserIdAndType(userId, "CASE_NUMBER");
+  const caseNameSubs = await findByUserIdAndType(userId, "CASE_NAME");
+  const subscriptions = [...caseNumberSubs, ...caseNameSubs];
+
+  return subscriptions.map((sub) => ({
+    subscriptionId: sub.subscriptionId,
+    type: "case" as const,
+    caseName: sub.caseName,
+    caseNumber: sub.caseNumber,
+    dateAdded: sub.dateAdded
+  }));
 }
 
 export async function getCourtSubscriptionsByUserId(userId: string, locale = "en") {
@@ -166,16 +193,24 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
     return [];
   }
 
-  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
+  const subscriptions = await findSubscriptionsByIds(subscriptionIds, userId);
 
   const dtos = await Promise.all(
     subscriptions.map(async (sub) => {
-      const locationId = Number.parseInt(sub.searchValue, 10);
-      const location = await getLocationById(locationId);
-      if (!location) {
-        return null;
+      if (sub.searchType === "LOCATION_ID") {
+        const locationId = Number.parseInt(sub.searchValue, 10);
+        const location = await getLocationById(locationId);
+        if (!location) {
+          return null;
+        }
+        return mapSubscriptionToDto(sub, location, locale);
       }
-      return mapSubscriptionToDto(sub, location, locale);
+
+      if (sub.searchType === "CASE_NUMBER" || sub.searchType === "CASE_NAME") {
+        return mapCaseSubscriptionToDto(sub);
+      }
+
+      return null;
     })
   );
 
@@ -194,4 +229,37 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
   }
 
   return count;
+}
+
+export async function getUserSubscriptions(userId: string) {
+  return findSubscriptionsByUserId(userId);
+}
+
+export async function getSubscriptionsByCase(userId: string) {
+  return findByUserIdAndType(userId, "CASE_NUMBER");
+}
+
+export async function getSubscriptionsByLocation(userId: string) {
+  return findByUserIdAndType(userId, "LOCATION_ID");
+}
+
+export async function createCaseSubscription(
+  userId: string,
+  searchType: "CASE_NUMBER" | "CASE_NAME",
+  searchValue: string,
+  caseNumber: string | null,
+  caseName: string | null
+) {
+  const count = await countSubscriptionsByUserId(userId);
+  if (count >= MAX_SUBSCRIPTIONS) {
+    throw new Error(`Maximum ${MAX_SUBSCRIPTIONS} subscriptions allowed`);
+  }
+
+  // Check if subscription already exists for this search value and type
+  const existing = await findByUserIdTypeAndValue(userId, searchType, searchValue);
+  if (existing) {
+    return existing; // Return existing subscription instead of creating duplicate
+  }
+
+  return createSubscriptionQuery(userId, searchType, searchValue, caseName, caseNumber);
 }
