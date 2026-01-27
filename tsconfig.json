@@ -33,6 +33,7 @@
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
       "@hmcts/subscriptions": ["libs/subscriptions/src"],
+      "@hmcts/subscriptions/config": ["libs/subscriptions/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
       "@hmcts/notifications": ["libs/notifications/src"]
     },

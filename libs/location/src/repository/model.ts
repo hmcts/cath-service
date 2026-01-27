@@ -32,3 +32,29 @@ export interface LocationDetails {
   regions: Array<{ name: string; welshName: string }>;
   subJurisdictions: Array<{ name: string; welshName: string; jurisdictionName: string; jurisdictionWelshName: string }>;
 }
+
+export interface LocationMetadata {
+  locationMetadataId: string;
+  locationId: number;
+  cautionMessage: string | null;
+  welshCautionMessage: string | null;
+  noListMessage: string | null;
+  welshNoListMessage: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateLocationMetadataInput {
+  locationId: number;
+  cautionMessage?: string;
+  welshCautionMessage?: string;
+  noListMessage?: string;
+  welshNoListMessage?: string;
+}
+
+export interface UpdateLocationMetadataInput {
+  cautionMessage?: string;
+  welshCautionMessage?: string;
+  noListMessage?: string;
+  welshNoListMessage?: string;
+}
