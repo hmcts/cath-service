@@ -24,7 +24,8 @@ vi.mock("@hmcts/location", () => ({
       });
     }
     return Promise.resolve(undefined);
-  })
+  }),
+  getLocationMetadataByLocationId: vi.fn(() => Promise.resolve(null))
 }));
 
 // Mock the postgres module
