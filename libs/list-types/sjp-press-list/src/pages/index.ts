@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Request, RequestHandler, Response } from "express";
-import type { ParsedQs } from "qs";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
+import type { Request, RequestHandler, Response } from "express";
+import type { ParsedQs } from "qs";
 import { validateSjpPressList } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -173,13 +173,9 @@ function paginateCases(cases: PressCase[], page: number): PressCase[] {
 }
 
 function extractFilterOptions(cases: PressCase[]) {
-  const prosecutors = [...new Set(cases.map((c) => c.prosecutor).filter((p): p is string => p !== null))].sort((a, b) =>
-    a.localeCompare(b)
-  );
+  const prosecutors = [...new Set(cases.map((c) => c.prosecutor).filter((p): p is string => p !== null))].sort((a, b) => a.localeCompare(b));
 
-  const postcodes = [...new Set(cases.map((c) => c.postcode).filter((p): p is string => p !== null))].sort((a, b) =>
-    a.localeCompare(b)
-  );
+  const postcodes = [...new Set(cases.map((c) => c.postcode).filter((p): p is string => p !== null))].sort((a, b) => a.localeCompare(b));
 
   const londonPostcodes = postcodes.filter(isLondonPostcode);
 
