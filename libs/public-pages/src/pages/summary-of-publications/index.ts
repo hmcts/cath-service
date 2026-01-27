@@ -104,8 +104,12 @@ export const GET = async (req: Request, res: Response) => {
     cy,
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
+    selectListMessage: t.selectListMessage,
     publications: uniquePublications,
     cautionMessage,
-    noListMessage
+    noListMessage,
+    factLinkText: t.factLinkText,
+    factLinkUrl: t.factLinkUrl,
+    factAdditionalText: t.factAdditionalText
   });
 };
