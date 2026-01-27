@@ -99,6 +99,17 @@ vi.mock("@hmcts/web-core/config", () => ({
   moduleRoot: "/mock/web-core"
 }));
 
+vi.mock("@hmcts/sjp-press-list/config", () => ({
+  pageRoutes: { path: "/mock/sjp-press-list/pages", prefix: "/sjp-press-list" },
+  moduleRoot: "/mock/sjp-press-list",
+  assets: "/mock/sjp-press-list/assets"
+}));
+
+vi.mock("@hmcts/sjp-public-list/config", () => ({
+  pageRoutes: { path: "/mock/sjp-public-list/pages", prefix: "/sjp-public-list" },
+  moduleRoot: "/mock/sjp-public-list"
+}));
+
 describe("Web Application", () => {
   let app: Express;
 
@@ -181,8 +192,7 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 10 times: location API routes, system-admin API routes, civil-family-cause-list pages, care-standards-tribunal pages, web pages, auth routes, public pages, verified pages, system-admin pages, admin routes
-      expect(createSimpleRouter).toHaveBeenCalledTimes(10);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(12);
     });
 
     it("should register system-admin page routes", async () => {

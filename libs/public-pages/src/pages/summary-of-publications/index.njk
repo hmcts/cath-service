@@ -22,7 +22,11 @@
       <ul class="govuk-list">
         {% for publication in publications %}
           <li style="margin-bottom: 15px;">
-            {% if publication.urlPath %}
+            {% if publication.isSjp %}
+              <a href="/{{ publication.urlPath }}?listId={{ publication.id }}" class="govuk-link">
+                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+              </a>
+            {% elif publication.urlPath %}
               <a href="/{{ publication.urlPath }}?artefactId={{ publication.id }}" class="govuk-link">
                 {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
               </a>
