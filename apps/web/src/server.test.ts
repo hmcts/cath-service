@@ -21,23 +21,6 @@ vi.mock("node:fs", async () => {
   };
 });
 
-// Mock https module to prevent actual HTTPS server creation
-vi.mock("node:https", () => ({
-  default: {
-    createServer: vi.fn((_options: any, _app: any) => ({
-      listen: vi.fn((_port: number, callback: () => void) => {
-        setTimeout(callback, 0);
-        return {
-          close: vi.fn((cb: () => void) => cb()),
-          on: vi.fn()
-        };
-      }),
-      close: vi.fn((cb: () => void) => cb()),
-      on: vi.fn()
-    }))
-  }
-}));
-
 // Mock the app creation to avoid actually starting a server
 vi.mock("./app.js", () => ({
   createApp: vi.fn(async () => {

@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
 vi.mock("node:fs/promises");
+vi.mock("@hmcts/auth", () => ({
+  requireRole: vi.fn(() => vi.fn((_req, _res, next) => next())),
+  USER_ROLES: { VERIFIED: "VERIFIED" }
+}));
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
@@ -33,12 +37,14 @@ import { prisma } from "@hmcts/postgres";
 import { validateSjpPressList } from "../validation/json-validator.js";
 
 describe("SJP Press List Controller", () => {
+  // GET and POST are arrays: [requireRole middleware, handler]
+  const getHandler = GET[1];
+  const postHandler = POST[1];
+
   const mockRequest = (overrides?: Partial<Request>) =>
     ({
       query: {},
       body: {},
-      isAuthenticated: vi.fn(() => true),
-      user: { role: "VERIFIED" },
       ...overrides
     }) as unknown as Request;
 
@@ -121,68 +127,14 @@ describe("SJP Press List Controller", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NODE_ENV = "production";
   });
 
   describe("GET", () => {
-    it("should render 403 error when user is not authenticated in production", async () => {
-      const req = mockRequest({ isAuthenticated: vi.fn(() => false) });
-      const res = mockResponse();
-
-      await GET(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.render).toHaveBeenCalledWith("errors/403", expect.objectContaining({ locale: "en" }));
-    });
-
-    it("should render 403 error when user is not VERIFIED in production", async () => {
-      const req = mockRequest({ user: { role: "MEDIA" } });
-      const res = mockResponse();
-
-      await GET(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.render).toHaveBeenCalledWith("errors/403", expect.objectContaining({ locale: "en" }));
-    });
-
-    it("should skip authentication check in development mode", async () => {
-      process.env.NODE_ENV = "development";
-      const req = mockRequest({
-        isAuthenticated: vi.fn(() => false),
-        query: { artefactId: "test-123", page: "1" }
-      });
-      const res = mockResponse();
-
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
-        artefactId: "test-123",
-        locationId: "1",
-        contentDate: new Date("2025-01-20"),
-        provenance: "MANUAL"
-      } as never);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
-      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
-      vi.mocked(determineListType).mockReturnValue("press");
-      vi.mocked(extractPressCases).mockReturnValue(mockCases);
-      vi.mocked(calculatePagination).mockReturnValue({
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: 1,
-        itemsPerPage: 200,
-        hasNext: false,
-        hasPrevious: false,
-        pageNumbers: [1]
-      });
-
-      await GET(req, res);
-
-      expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.any(Object));
-    });
-
     it("should render 400 error when artefactId is missing", async () => {
       const req = mockRequest({ query: {} });
       const res = mockResponse();
 
-      await GET(req, res);
+      await getHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.render).toHaveBeenCalledWith("errors/400", expect.objectContaining({ locale: "en" }));
@@ -194,7 +146,7 @@ describe("SJP Press List Controller", () => {
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
 
-      await GET(req, res);
+      await getHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.render).toHaveBeenCalledWith("errors/404", expect.objectContaining({ locale: "en" }));
@@ -214,7 +166,7 @@ describe("SJP Press List Controller", () => {
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
       vi.mocked(determineListType).mockReturnValue("public");
 
-      await GET(req, res);
+      await getHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.render).toHaveBeenCalledWith("errors/404", expect.objectContaining({ locale: "en" }));
@@ -246,7 +198,7 @@ describe("SJP Press List Controller", () => {
         pageNumbers: [1, 2]
       });
 
-      await GET(req, res);
+      await getHandler(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "sjp-press-list",
@@ -292,7 +244,7 @@ describe("SJP Press List Controller", () => {
         pageNumbers: [1]
       });
 
-      await GET(req, res);
+      await getHandler(req, res);
 
       expect(res.render).toHaveBeenCalledWith(
         "sjp-press-list",
@@ -329,30 +281,20 @@ describe("SJP Press List Controller", () => {
         pageNumbers: [1]
       });
 
-      await GET(req, res);
+      await getHandler(req, res);
 
       expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.objectContaining({ locale: "cy" }));
     });
   });
 
   describe("POST", () => {
-    it("should render 403 error when user is not authenticated in production", async () => {
-      const req = mockRequest({ isAuthenticated: vi.fn(() => false) });
-      const res = mockResponse();
-
-      await POST(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.render).toHaveBeenCalledWith("errors/403", expect.objectContaining({ locale: "en" }));
-    });
-
     it("should redirect with artefactId only when no filters provided", async () => {
       const req = mockRequest({
         body: { artefactId: "test-123" }
       });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123");
     });
@@ -368,7 +310,7 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123&search=Smith&postcode=SW1A&prosecutor=CPS");
     });
@@ -382,7 +324,7 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123&search=test+query");
     });
@@ -398,7 +340,7 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123");
     });
