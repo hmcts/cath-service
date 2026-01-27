@@ -1,25 +1,36 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { createLocationMetadata, getLocationMetadataByLocationId, updateLocationMetadata } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
+import type { LocationMetadataSession } from "../location-metadata-session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-interface LocationMetadataSession {
-  locationMetadata?: {
-    locationId: number;
-    locationName: string;
-    locationWelshName: string;
-    operation?: "created" | "updated" | "deleted";
-  };
-}
+const getLanguage = (req: Request) => (req.query.lng === "cy" ? "cy" : "en");
+const getContent = (language: "cy" | "en") => (language === "cy" ? cy : en);
+const getLanguageParam = (language: "cy" | "en") => (language === "cy" ? "?lng=cy" : "");
+
+const extractFormData = (body: Request["body"]) => ({
+  cautionMessage: body.cautionMessage as string | undefined,
+  welshCautionMessage: body.welshCautionMessage as string | undefined,
+  noListMessage: body.noListMessage as string | undefined,
+  welshNoListMessage: body.welshNoListMessage as string | undefined
+});
+
+const hasNonEmptyValue = (value: string | undefined) => value && value.trim().length > 0;
+
+const hasAtLeastOneMessage = (formData: ReturnType<typeof extractFormData>) =>
+  hasNonEmptyValue(formData.cautionMessage) ||
+  hasNonEmptyValue(formData.welshCautionMessage) ||
+  hasNonEmptyValue(formData.noListMessage) ||
+  hasNonEmptyValue(formData.welshNoListMessage);
 
 export const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+  const language = getLanguage(req);
+  const content = getContent(language);
   const session = req.session as LocationMetadataSession;
 
   if (!session.locationMetadata) {
-    return res.redirect(`/location-metadata-search${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(`/location-metadata-search${getLanguageParam(language)}`);
   }
 
   const { locationId, locationName, locationWelshName } = session.locationMetadata;
@@ -38,79 +49,53 @@ export const getHandler = async (req: Request, res: Response) => {
 };
 
 export const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+  const language = getLanguage(req);
+  const content = getContent(language);
   const session = req.session as LocationMetadataSession;
 
   if (!session.locationMetadata) {
-    return res.redirect(`/location-metadata-search${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(`/location-metadata-search${getLanguageParam(language)}`);
   }
 
   const { locationId, locationName, locationWelshName } = session.locationMetadata;
   const action = req.body.action as string;
 
   if (action === "delete") {
-    return res.redirect(`/location-metadata-delete-confirmation${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(`/location-metadata-delete-confirmation${getLanguageParam(language)}`);
   }
 
-  const cautionMessage = req.body.cautionMessage as string | undefined;
-  const welshCautionMessage = req.body.welshCautionMessage as string | undefined;
-  const noListMessage = req.body.noListMessage as string | undefined;
-  const welshNoListMessage = req.body.welshNoListMessage as string | undefined;
+  const formData = extractFormData(req.body);
 
-  const hasAtLeastOneMessage =
-    (cautionMessage && cautionMessage.trim().length > 0) ||
-    (welshCautionMessage && welshCautionMessage.trim().length > 0) ||
-    (noListMessage && noListMessage.trim().length > 0) ||
-    (welshNoListMessage && welshNoListMessage.trim().length > 0);
-
-  if (!hasAtLeastOneMessage) {
+  const renderWithError = async (errorText: string) => {
     const existingMetadata = await getLocationMetadataByLocationId(locationId);
     return res.render("location-metadata-manage/index", {
       ...content,
       locationName: language === "cy" ? locationWelshName : locationName,
-      cautionMessage: cautionMessage || "",
-      welshCautionMessage: welshCautionMessage || "",
-      noListMessage: noListMessage || "",
-      welshNoListMessage: welshNoListMessage || "",
+      cautionMessage: formData.cautionMessage || "",
+      welshCautionMessage: formData.welshCautionMessage || "",
+      noListMessage: formData.noListMessage || "",
+      welshNoListMessage: formData.welshNoListMessage || "",
       hasExistingMetadata: !!existingMetadata,
-      errors: [{ text: content.atLeastOneMessageRequired, href: "#cautionMessage" }]
+      errors: [{ text: errorText, href: "#cautionMessage" }]
     });
+  };
+
+  if (!hasAtLeastOneMessage(formData)) {
+    return renderWithError(content.atLeastOneMessageRequired);
   }
 
   try {
     if (action === "create") {
-      await createLocationMetadata({
-        locationId,
-        cautionMessage,
-        welshCautionMessage,
-        noListMessage,
-        welshNoListMessage
-      });
+      await createLocationMetadata({ locationId, ...formData });
       session.locationMetadata.operation = "created";
     } else if (action === "update") {
-      await updateLocationMetadata(locationId, {
-        cautionMessage,
-        welshCautionMessage,
-        noListMessage,
-        welshNoListMessage
-      });
+      await updateLocationMetadata(locationId, formData);
       session.locationMetadata.operation = "updated";
     }
 
-    res.redirect(`/location-metadata-success${language === "cy" ? "?lng=cy" : ""}`);
+    res.redirect(`/location-metadata-success${getLanguageParam(language)}`);
   } catch (error) {
-    const existingMetadata = await getLocationMetadataByLocationId(locationId);
-    return res.render("location-metadata-manage/index", {
-      ...content,
-      locationName: language === "cy" ? locationWelshName : locationName,
-      cautionMessage: cautionMessage || "",
-      welshCautionMessage: welshCautionMessage || "",
-      noListMessage: noListMessage || "",
-      welshNoListMessage: welshNoListMessage || "",
-      hasExistingMetadata: !!existingMetadata,
-      errors: [{ text: (error as Error).message, href: "#cautionMessage" }]
-    });
+    return renderWithError((error as Error).message);
   }
 };
 

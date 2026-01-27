@@ -1,16 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import type { LocationMetadataSession } from "../location-metadata-session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-interface LocationMetadataSession {
-  locationMetadata?: {
-    locationId: number;
-    locationName: string;
-    locationWelshName: string;
-    operation?: "created" | "updated" | "deleted";
-  };
-}
 
 export const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
