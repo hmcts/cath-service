@@ -83,6 +83,7 @@ vi.mock("@hmcts/public-pages/config", () => ({
 }));
 
 vi.mock("@hmcts/system-admin-pages/config", () => ({
+  apiRoutes: { path: "/mock/system-admin/api" },
   fileUploadRoutes: ["/reference-data-upload"],
   moduleRoot: "/mock/system-admin",
   pageRoutes: { path: "/mock/system-admin/pages" }
@@ -191,16 +192,15 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 11 times: location API routes, civil-family-cause-list pages, care-standards-tribunal pages, web pages, auth routes, public pages, verified pages, SJP press list routes, SJP public list routes, system-admin pages, admin routes
-      expect(createSimpleRouter).toHaveBeenCalledTimes(11);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(12);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (should have 8 total calls)
-      expect(calls.length).toBeGreaterThanOrEqual(8);
+      // Verify system-admin routes were registered (should have 9 total calls)
+      expect(calls.length).toBeGreaterThanOrEqual(9);
     });
 
     it("should configure error handlers at the end", async () => {

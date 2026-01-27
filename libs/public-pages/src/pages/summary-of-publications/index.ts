@@ -1,7 +1,7 @@
 import { getLatestSjpLists } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { mockListTypes, SJP_PUBLIC_LIST_ID } from "@hmcts/publication";
+import { filterPublicationsForSummary, mockListTypes, SJP_PUBLIC_LIST_ID } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -34,7 +34,7 @@ export const GET = async (req: Request, res: Response) => {
   const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
   // Query real artefacts from database, ordered by lastReceivedDate desc to get latest first
-  const artefacts = await prisma.artefact.findMany({
+  const allArtefacts = await prisma.artefact.findMany({
     where: {
       locationId: locationId.toString(),
       displayFrom: { lte: new Date() },
@@ -42,6 +42,10 @@ export const GET = async (req: Request, res: Response) => {
     },
     orderBy: [{ lastReceivedDate: "desc" }]
   });
+
+  // Filter artefacts based on user metadata access rights
+  // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
+  const artefacts = filterPublicationsForSummary(req.user, allArtefacts, mockListTypes);
 
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {
