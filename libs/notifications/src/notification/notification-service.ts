@@ -1,5 +1,7 @@
+import fs from "node:fs/promises";
+import { type CauseListData, extractCaseSummary, formatCaseSummaryForEmail } from "@hmcts/civil-and-family-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
-import { buildTemplateParameters } from "../govnotify/template-config.js";
+import { buildEnhancedTemplateParameters, buildTemplateParameters, getTemplateIdForListType, type TemplateParameters } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
 import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
@@ -121,16 +123,93 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     });
 
     const userName = buildUserName(subscription.user.firstName, subscription.user.surname);
-    const templateParameters = buildTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName
-    });
+
+    // Determine if this is a Civil and Family Daily Cause List (listTypeId 8)
+    const isCivilFamilyList = event.listTypeId === 8;
+    let templateParameters: TemplateParameters;
+    let templateId: string | undefined;
+
+    // Track PDF buffer for GOV.UK Notify upload
+    let pdfBuffer: Buffer | undefined;
+
+    if (isCivilFamilyList && event.jsonData && event.pdfFilePath) {
+      // Enhanced flow for Civil and Family lists with PDF
+      try {
+        const caseSummaryItems = extractCaseSummary(event.jsonData as CauseListData);
+        const caseSummary = formatCaseSummaryForEmail(caseSummaryItems);
+
+        // Check PDF size
+        const pdfStats = await fs.stat(event.pdfFilePath);
+        const pdfSizeBytes = pdfStats.size;
+        const pdfUnder2MB = pdfSizeBytes < 2 * 1024 * 1024;
+
+        // Get appropriate template ID
+        templateId = getTemplateIdForListType(8, true, pdfUnder2MB);
+
+        // Read PDF buffer for GOV.UK Notify upload (only if under 2MB)
+        if (pdfUnder2MB) {
+          pdfBuffer = await fs.readFile(event.pdfFilePath);
+        }
+
+        // Build enhanced template parameters (link_to_file will be added by govnotify-client)
+        templateParameters = buildEnhancedTemplateParameters({
+          userName,
+          hearingListName: event.hearingListName,
+          publicationDate: event.publicationDate,
+          locationName: event.locationName,
+          caseSummary
+        });
+      } catch (error) {
+        console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
+        // Fall back to standard template
+        templateParameters = buildTemplateParameters({
+          userName,
+          hearingListName: event.hearingListName,
+          publicationDate: event.publicationDate,
+          locationName: event.locationName
+        });
+      }
+    } else if (isCivilFamilyList && event.jsonData) {
+      // Civil/Family list but no PDF (or PDF generation failed)
+      try {
+        const caseSummaryItems = extractCaseSummary(event.jsonData as CauseListData);
+        const caseSummary = formatCaseSummaryForEmail(caseSummaryItems);
+
+        // Get summary-only template ID
+        templateId = getTemplateIdForListType(8, false, false);
+
+        templateParameters = buildEnhancedTemplateParameters({
+          userName,
+          hearingListName: event.hearingListName,
+          publicationDate: event.publicationDate,
+          locationName: event.locationName,
+          caseSummary
+        });
+      } catch (error) {
+        console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
+        // Fall back to standard template
+        templateParameters = buildTemplateParameters({
+          userName,
+          hearingListName: event.hearingListName,
+          publicationDate: event.publicationDate,
+          locationName: event.locationName
+        });
+      }
+    } else {
+      // Standard flow for other list types
+      templateParameters = buildTemplateParameters({
+        userName,
+        hearingListName: event.hearingListName,
+        publicationDate: event.publicationDate,
+        locationName: event.locationName
+      });
+    }
 
     const emailResult = await sendEmail({
       emailAddress: subscription.user.email,
-      templateParameters
+      templateParameters,
+      templateId,
+      pdfBuffer
     });
 
     if (emailResult.success) {

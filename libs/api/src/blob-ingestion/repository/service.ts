@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
@@ -82,6 +85,45 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
     await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
 
+    // Generate PDF for Civil and Family Daily Cause List (listTypeId 8)
+    let pdfPath: string | undefined;
+    if (validation.listTypeId === 8) {
+      console.log("[blob-ingestion] Generating PDF for Civil and Family Daily Cause List:", {
+        artefactId,
+        listTypeId: validation.listTypeId
+      });
+
+      try {
+        const pdfResult = await generateCauseListPdf({
+          artefactId,
+          contentDate: new Date(request.content_date),
+          locale: request.language === "WELSH" ? "cy" : "en",
+          locationId: request.court_id,
+          jsonData: request.hearing_list as CauseListData
+        });
+
+        if (pdfResult.success && pdfResult.pdfPath) {
+          pdfPath = pdfResult.pdfPath;
+          console.log("[blob-ingestion] PDF generated successfully:", {
+            artefactId,
+            pdfPath,
+            sizeBytes: pdfResult.sizeBytes,
+            exceedsMaxSize: pdfResult.exceedsMaxSize
+          });
+        } else {
+          console.warn("[blob-ingestion] PDF generation failed:", {
+            artefactId,
+            error: pdfResult.error
+          });
+        }
+      } catch (error) {
+        console.error("[blob-ingestion] PDF generation error:", {
+          artefactId,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
     // Log successful ingestion
     await createIngestionLog({
       id: randomUUID(),
@@ -100,14 +142,16 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
         listTypeId: validation.listTypeId
       });
 
-      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date)).catch((error) => {
-        console.error("Failed to trigger publication notifications:", {
-          artefactId,
-          courtId: request.court_id,
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
-        });
-      });
+      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date), request.hearing_list, pdfPath).catch(
+        (error) => {
+          console.error("Failed to trigger publication notifications:", {
+            artefactId,
+            courtId: request.court_id,
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          });
+        }
+      );
     } else {
       console.log("[blob-ingestion] Skipping notifications (no_match=true):", {
         artefactId,
@@ -139,7 +183,14 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
   }
 }
 
-async function triggerPublicationNotifications(publicationId: string, courtId: string, listTypeId: number, publicationDate: Date): Promise<void> {
+async function triggerPublicationNotifications(
+  publicationId: string,
+  courtId: string,
+  listTypeId: number,
+  publicationDate: Date,
+  jsonData?: unknown,
+  pdfFilePath?: string
+): Promise<void> {
   const locationIdNum = Number.parseInt(courtId, 10);
   if (Number.isNaN(locationIdNum)) {
     console.error("Invalid location ID for notifications:", courtId);
@@ -163,7 +214,10 @@ async function triggerPublicationNotifications(publicationId: string, courtId: s
     locationId: String(locationIdNum),
     locationName: location.name,
     hearingListName: listType.englishFriendlyName,
-    publicationDate
+    publicationDate,
+    listTypeId,
+    jsonData,
+    pdfFilePath
   });
 
   console.log("Publication notifications sent:", {

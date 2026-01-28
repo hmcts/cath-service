@@ -1,12 +1,36 @@
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
+const CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID = 8;
+
 export function getTemplateId(): string {
-  if (!GOVUK_NOTIFY_TEMPLATE_ID) {
+  if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION) {
     throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION environment variable is not set");
   }
-  return GOVUK_NOTIFY_TEMPLATE_ID;
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION;
+}
+
+export function getTemplateIdForListType(listTypeId: number, hasPdf: boolean, pdfUnder2MB: boolean): string {
+  // For Civil and Family Daily Cause List (listTypeId 8)
+  if (listTypeId === CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID) {
+    if (hasPdf && pdfUnder2MB) {
+      if (!GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY) {
+        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY environment variable is not set");
+      }
+      return GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY;
+    }
+
+    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY) {
+      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY environment variable is not set");
+    }
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY;
+  }
+
+  // For all other list types, use the original template
+  return getTemplateId();
 }
 
 export function getApiKey(): string {
@@ -35,7 +59,11 @@ export interface TemplateParameters {
   content_date: string;
   start_page_link: string;
   subscription_page_link: string;
-  [key: string]: string;
+  // Enhanced template fields for Civil and Family Daily Cause List
+  display_summary?: string;
+  summary_of_cases?: string;
+  // link_to_file is added by govnotify-client when PDF buffer is provided
+  [key: string]: string | unknown | undefined;
 }
 
 export function buildTemplateParameters(params: {
@@ -50,5 +78,27 @@ export function buildTemplateParameters(params: {
     content_date: formatPublicationDate(params.publicationDate),
     start_page_link: getServiceUrl(),
     subscription_page_link: getServiceUrl()
+  };
+}
+
+export function buildEnhancedTemplateParameters(params: {
+  userName: string;
+  hearingListName: string;
+  publicationDate: Date;
+  locationName: string;
+  caseSummary: string;
+}): TemplateParameters {
+  const baseParams = buildTemplateParameters({
+    userName: params.userName,
+    hearingListName: params.hearingListName,
+    publicationDate: params.publicationDate,
+    locationName: params.locationName
+  });
+
+  return {
+    ...baseParams,
+    display_summary: "yes",
+    summary_of_cases: params.caseSummary
+    // link_to_file is added by govnotify-client when PDF buffer is provided
   };
 }

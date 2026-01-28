@@ -79,6 +79,7 @@
     "jwks-rsa": "3.2.0",
     "notifications-node-client": "^8.2.1",
     "passport": "0.7.0",
-    "passport-azure-ad": "4.3.5"
+    "passport-azure-ad": "4.3.5",
+    "puppeteer": "^24.36.1"
   }
 }

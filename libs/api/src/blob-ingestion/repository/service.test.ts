@@ -330,7 +330,10 @@ describe("processBlobIngestion", async () => {
       locationId: "123",
       locationName: "Test Court",
       hearingListName: "Civil And Family Daily Cause List",
-      publicationDate: expect.any(Date)
+      publicationDate: expect.any(Date),
+      listTypeId: 8,
+      jsonData: expect.anything(),
+      pdfFilePath: undefined // PDF generation not mocked in this test
     });
   });
 
@@ -400,6 +403,8 @@ describe("processBlobIngestion", async () => {
     });
 
     vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    // getLocationById may be called during PDF generation (renderCauseListData)
+    vi.mocked(getLocationById).mockResolvedValue(undefined);
 
     const invalidRequest = { ...validRequest, court_id: "invalid-id" };
     await processBlobIngestion(invalidRequest, 1000);
@@ -407,7 +412,7 @@ describe("processBlobIngestion", async () => {
     // Wait for async notification processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(getLocationById).not.toHaveBeenCalled();
+    // getLocationById may be called during PDF generation but notification should fail gracefully
     expect(consoleErrorSpy).toHaveBeenCalledWith("Invalid location ID for notifications:", "invalid-id");
 
     consoleErrorSpy.mockRestore();

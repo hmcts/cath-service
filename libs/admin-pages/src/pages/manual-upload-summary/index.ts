@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
@@ -108,6 +109,50 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
+    // Generate PDF for Civil and Family Daily Cause List (listTypeId 8)
+    let pdfPath: string | undefined;
+    let jsonData: CauseListData | undefined;
+    if (listTypeId === 8 && !isFlatFile) {
+      console.log("[Manual Upload] Generating PDF for Civil and Family Daily Cause List:", {
+        artefactId,
+        listTypeId
+      });
+
+      try {
+        // Parse JSON from uploaded file
+        jsonData = JSON.parse(uploadData.file.toString("utf8")) as CauseListData;
+
+        const pdfResult = await generateCauseListPdf({
+          artefactId,
+          contentDate,
+          locale: uploadData.language === "WELSH" ? "cy" : "en",
+          locationId: uploadData.locationId,
+          jsonData,
+          provenance: Provenance.MANUAL_UPLOAD
+        });
+
+        if (pdfResult.success && pdfResult.pdfPath) {
+          pdfPath = pdfResult.pdfPath;
+          console.log("[Manual Upload] PDF generated successfully:", {
+            artefactId,
+            pdfPath,
+            sizeBytes: pdfResult.sizeBytes,
+            exceedsMaxSize: pdfResult.exceedsMaxSize
+          });
+        } else {
+          console.warn("[Manual Upload] PDF generation failed:", {
+            artefactId,
+            error: pdfResult.error
+          });
+        }
+      } catch (error) {
+        console.error("[Manual Upload] PDF generation error:", {
+          artefactId,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
     // Trigger email notifications for subscribers
     try {
       // Get location name
@@ -126,7 +171,10 @@ const postHandler = async (req: Request, res: Response) => {
           locationId: uploadData.locationId,
           locationName: location.name,
           hearingListName: listTypeFriendlyName,
-          publicationDate: contentDate
+          publicationDate: contentDate,
+          listTypeId,
+          jsonData,
+          pdfFilePath: pdfPath
         });
 
         console.log("[Manual Upload] Notification process completed", {

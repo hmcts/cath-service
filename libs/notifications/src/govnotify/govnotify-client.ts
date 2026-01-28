@@ -32,6 +32,8 @@ interface AxiosEmailResponse {
 export interface SendEmailParams {
   emailAddress: string;
   templateParameters: TemplateParameters;
+  templateId?: string;
+  pdfBuffer?: Buffer;
 }
 
 export interface SendEmailResult {
@@ -55,17 +57,30 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
 
 async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResult> {
   const notifyClient = new NotifyClient(getApiKey());
-  const templateId = getTemplateId();
+  const templateId = params.templateId || getTemplateId();
 
   try {
+    // Build personalisation with optional PDF link
+    const personalisation: Record<string, unknown> = { ...params.templateParameters };
+
+    // If PDF buffer is provided, upload to GOV.UK Notify document service
+    if (params.pdfBuffer) {
+      console.log("[govnotify-client] Preparing PDF upload to GOV.UK Notify document service");
+      const linkToFile = (notifyClient as any).prepareUpload(params.pdfBuffer, {
+        confirmEmailBeforeDownload: false,
+        retentionPeriod: "1 week"
+      });
+      personalisation.link_to_file = linkToFile;
+    }
+
     console.log("[govnotify-client] Sending email:", {
       templateId,
       emailAddress: params.emailAddress,
-      templateParameters: params.templateParameters
+      templateParameters: Object.keys(personalisation)
     });
 
     const response = (await (notifyClient as any).sendEmail(templateId, params.emailAddress, {
-      personalisation: params.templateParameters
+      personalisation
     })) as unknown as AxiosEmailResponse;
 
     console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
