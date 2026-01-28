@@ -65,8 +65,8 @@ describe("extractCaseSummary", () => {
       applicant: "John Smith",
       caseReferenceNumber: "12345",
       caseName: "Smith v Jones",
-      caseType: "Trial",
-      hearingType: "Civil"
+      caseType: "Civil",
+      hearingType: "Trial"
     });
   });
 
@@ -321,18 +321,18 @@ describe("formatCaseSummaryForEmail", () => {
         applicant: "John Smith",
         caseReferenceNumber: "12345",
         caseName: "Smith v Jones",
-        caseType: "Trial",
-        hearingType: "Civil"
+        caseType: "Civil",
+        hearingType: "Trial"
       }
     ];
 
     const result = formatCaseSummaryForEmail(summaries);
 
-    expect(result).toContain("Case: 12345");
-    expect(result).toContain("Name: Smith v Jones");
-    expect(result).toContain("Applicant: John Smith");
-    expect(result).toContain("Type: Trial");
-    expect(result).toContain("Hearing: Civil");
+    expect(result).toContain("Case reference - 12345");
+    expect(result).toContain("Case name - Smith v Jones");
+    expect(result).toContain("Applicant - John Smith");
+    expect(result).toContain("Case type - Civil");
+    expect(result).toContain("Hearing type - Trial");
   });
 
   it("should handle multiple cases with proper spacing", () => {
@@ -341,24 +341,24 @@ describe("formatCaseSummaryForEmail", () => {
         applicant: "John Smith",
         caseReferenceNumber: "12345",
         caseName: "Smith v Jones",
-        caseType: "Trial",
-        hearingType: "Civil"
+        caseType: "Civil",
+        hearingType: "Trial"
       },
       {
         applicant: "Jane Brown",
         caseReferenceNumber: "67890",
         caseName: "Brown v Green",
-        caseType: "Hearing",
-        hearingType: "Family"
+        caseType: "Family",
+        hearingType: "Hearing"
       }
     ];
 
     const result = formatCaseSummaryForEmail(summaries);
 
-    expect(result).toContain("Case: 12345");
-    expect(result).toContain("Case: 67890");
-    // Each case should be separated by an empty line
-    expect(result.split("\n\n").length).toBeGreaterThanOrEqual(2);
+    expect(result).toContain("Case reference - 12345");
+    expect(result).toContain("Case reference - 67890");
+    // Cases should be separated by horizontal lines
+    expect(result).toContain("---");
   });
 
   it("should handle empty applicant field", () => {
@@ -367,15 +367,15 @@ describe("formatCaseSummaryForEmail", () => {
         applicant: "",
         caseReferenceNumber: "12345",
         caseName: "Smith v Jones",
-        caseType: "Trial",
-        hearingType: "Civil"
+        caseType: "Civil",
+        hearingType: "Trial"
       }
     ];
 
     const result = formatCaseSummaryForEmail(summaries);
 
-    expect(result).toContain("Case: 12345");
-    expect(result).not.toContain("Applicant:");
+    expect(result).toContain("Case reference - 12345");
+    expect(result).not.toContain("Applicant -");
   });
 
   it("should return message for empty list", () => {
