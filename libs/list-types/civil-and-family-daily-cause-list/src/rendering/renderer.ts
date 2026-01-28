@@ -38,8 +38,30 @@ function formatPublicationDateTime(isoDateTime: string, locale: string): string 
 }
 
 function formatAddress(address: CauseListData["venue"]["venueAddress"]): string[] {
-  const parts = [...address.line];
-  parts.push(address.postCode);
+  const parts: string[] = [];
+
+  // Add address lines
+  for (const line of address.line) {
+    if (line && line.length > 0) {
+      parts.push(line);
+    }
+  }
+
+  // Add town
+  if (address.town && address.town.length > 0) {
+    parts.push(address.town);
+  }
+
+  // Add county
+  if (address.county && address.county.length > 0) {
+    parts.push(address.county);
+  }
+
+  // Add postcode
+  if (address.postCode && address.postCode.length > 0) {
+    parts.push(address.postCode);
+  }
+
   return parts;
 }
 

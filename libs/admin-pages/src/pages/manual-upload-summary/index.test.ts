@@ -596,7 +596,10 @@ describe("manual-upload-summary page", () => {
         locationId: "1",
         locationName: "Test Crown Court",
         hearingListName: "Crown Daily List",
-        publicationDate: expect.any(Date)
+        publicationDate: expect.any(Date),
+        listTypeId: 6,
+        jsonData: undefined, // Not a JSON upload in this test
+        pdfFilePath: undefined // PDF generation not triggered for this list type
       });
     });
 

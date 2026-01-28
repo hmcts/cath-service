@@ -16,6 +16,7 @@ export {
   type ArtefactSummary,
   createArtefact,
   deleteArtefacts,
+  getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
   getArtefactSummariesByLocation,

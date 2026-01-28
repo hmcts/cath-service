@@ -12,10 +12,13 @@ describe("index exports", () => {
     expect(typeof exports.validateCivilFamilyCauseList).toBe("function");
   });
 
-  it("should export exactly 2 named exports", () => {
+  it("should export all required functions", () => {
     const exportKeys = Object.keys(exports);
-    expect(exportKeys).toHaveLength(2);
     expect(exportKeys).toContain("renderCauseListData");
     expect(exportKeys).toContain("validateCivilFamilyCauseList");
+    expect(exportKeys).toContain("generateCauseListPdf");
+    expect(exportKeys).toContain("extractCaseSummary");
+    expect(exportKeys).toContain("formatCaseSummaryForEmail");
+    expect(exportKeys).toContain("SPECIAL_CATEGORY_DATA_WARNING");
   });
 });

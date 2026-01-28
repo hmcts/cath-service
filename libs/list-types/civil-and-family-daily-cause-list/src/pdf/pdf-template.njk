@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <style>
+    /* Basic GOV.UK-like styling for PDF */
+    * {
+      box-sizing: border-box;
+      font-family: "GDS Transport", arial, sans-serif;
+    }
+    body {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #0b0c0c;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+      font-weight: 700;
+    }
+    h1 { font-size: 32px; margin-bottom: 20px; }
+    h2 { font-size: 24px; margin-bottom: 15px; }
+    h3 { font-size: 18px; margin-bottom: 10px; }
+    p { margin: 0 0 15px 0; }
+    .header-section {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #0b0c0c;
+    }
+    .court-section {
+      margin-bottom: 30px;
+      page-break-inside: avoid;
+    }
+    .court-room-section {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    .section-heading {
+      background-color: #f3f2f1;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+    th, td {
+      border: 1px solid #b1b4b6;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f3f2f1;
+      font-weight: 700;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+    .restriction-row td {
+      background-color: #fff7e6;
+      font-style: italic;
+    }
+    .info-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .info-box p:last-child {
+      margin-bottom: 0;
+    }
+    .address {
+      margin-bottom: 15px;
+    }
+    .bold { font-weight: 700; }
+    .header-date { margin-bottom: 5px; }
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+    }
+    .footer p {
+      margin-bottom: 10px;
+    }
+    .caution-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .caution-box p {
+      margin-bottom: 10px;
+      color: #0b0c0c;
+    }
+    .caution-box p:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformation }}</h3>
+    <p>{{ t.openJusticeIntro }}</p>
+    <p>{{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}</p>
+    <p>{{ t.openJusticeDecision }}</p>
+    <p>{{ t.openJusticePrivate }}</p>
+    <p>{{ t.openJusticeMoreInfo }} <a href="{{ t.openJusticeLink }}">{{ t.openJusticeLinkText }}</a>.</p>
+  </div>
+
+  {% for courtList in listData.courtLists %}
+    {% set courtHouse = courtList.courtHouse %}
+    <div class="court-section">
+      {% if courtHouse.courtHouseAddress %}
+        <h2>{{ courtHouse.courtHouseName }}</h2>
+        <div class="address">
+          {% for line in courtHouse.courtHouseAddress.line %}
+            {% if line | length %}{{ line }}<br>{% endif %}
+          {% endfor %}
+          {% if courtHouse.courtHouseAddress.town | length %}{{ courtHouse.courtHouseAddress.town }}<br>{% endif %}
+          {% if courtHouse.courtHouseAddress.county | length %}{{ courtHouse.courtHouseAddress.county }}<br>{% endif %}
+          {% if courtHouse.courtHouseAddress.postCode | length %}{{ courtHouse.courtHouseAddress.postCode }}{% endif %}
+        </div>
+      {% endif %}
+
+      {% for courtRoom in courtHouse.courtRoom %}
+        {% for session in courtRoom.session %}
+          <div class="court-room-section">
+            <div class="section-heading">
+              {% if session.formattedJudiciaries | length %}
+                {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }}: {{ session.formattedJudiciaries }}
+              {% else %}
+                {{ courtRoom.courtRoomName }}
+              {% endif %}
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th class="no-wrap">{{ t.time }}</th>
+                  <th class="no-wrap">{{ t.caseRef }}</th>
+                  <th class="no-wrap">{{ t.caseName }}</th>
+                  <th class="no-wrap">{{ t.caseType }}</th>
+                  <th class="no-wrap">{{ t.hearingType }}</th>
+                  <th class="no-wrap">{{ t.location }}</th>
+                  <th class="no-wrap">{{ t.duration }}</th>
+                  <th class="no-wrap">{{ t.applicant }}</th>
+                  <th class="no-wrap">{{ t.respondent }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sitting in session.sittings %}
+                  {% set durationText = '' %}
+                  {% if sitting.durationAsHours > 0 %}
+                    {% if sitting.durationAsHours > 1 %}
+                      {% set durationText = sitting.durationAsHours ~ ' hours' %}
+                    {% else %}
+                      {% set durationText = sitting.durationAsHours ~ ' hour' %}
+                    {% endif %}
+                  {% endif %}
+                  {% if sitting.durationAsMinutes > 0 %}
+                    {% if durationText | length %}
+                      {% set durationText = durationText ~ ' ' %}
+                    {% endif %}
+                    {% if sitting.durationAsMinutes > 1 %}
+                      {% set durationText = durationText ~ sitting.durationAsMinutes ~ ' mins' %}
+                    {% else %}
+                      {% set durationText = durationText ~ sitting.durationAsMinutes ~ ' min' %}
+                    {% endif %}
+                  {% endif %}
+
+                  {% for hearing in sitting.hearing %}
+                    {% for case in hearing.case %}
+                      <tr>
+                        <td class="no-wrap">{{ sitting.time }}</td>
+                        <td class="no-wrap">{{ case.caseNumber }}</td>
+                        <td>{{ case.caseName }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                        <td class="no-wrap">{{ case.caseType }}</td>
+                        <td class="no-wrap">{{ hearing.hearingType }}</td>
+                        <td class="no-wrap">{{ sitting.caseHearingChannel }}</td>
+                        <td class="no-wrap">{{ durationText }}</td>
+                        <td>
+                          {% if case.applicant %}
+                            {{ case.applicant }}{% if case.applicantRepresentative %}<br><em>{{ t.legalAdvisor }}: {{ case.applicantRepresentative }}</em>{% endif %}
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.respondent %}
+                            {{ case.respondent }}{% if case.respondentRepresentative %}<br><em>{{ t.legalAdvisor }}: {{ case.respondentRepresentative }}</em>{% endif %}
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% if case.formattedReportingRestriction | length %}
+                        <tr class="restriction-row">
+                          <td colspan="9">
+                            <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>

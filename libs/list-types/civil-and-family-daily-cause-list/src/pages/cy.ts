@@ -1,5 +1,9 @@
 export const cy = {
+  title: "Rhestr Achos Dyddiol Sifil a Theulu",
   pageTitle: "Rhestr Achos Dyddiol Sifil a Theulu ar gyfer",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.",
   listFor: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
   publicationDate: "Dyddiad cyhoeddi",
@@ -33,6 +37,10 @@ export const cy = {
   reportingRestrictions: "Cyfyngiad Adrodd",
   searchCases: "Chwilio Achosion",
   dataSource: "Ffynhonnell Data",
+  cautionNote:
+    "Nodwch fod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn flaenorol yn Ddata Personol Sensitif, a dylid ei thrin yn briodol.",
+  cautionReporting:
+    "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd â'r bwriad o gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cadw at gyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd HMCTS yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y caiff ei ddefnyddio.",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
