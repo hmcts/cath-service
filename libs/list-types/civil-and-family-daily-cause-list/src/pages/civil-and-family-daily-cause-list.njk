@@ -26,6 +26,10 @@
     <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
 
     <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body">
       {% for line in header.addressLines %}
         {{ line }}{% if not loop.last %}<br>{% endif %}
       {% endfor %}

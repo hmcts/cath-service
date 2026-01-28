@@ -73,6 +73,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       language: request.language,
       displayFrom: new Date(request.display_from),
       displayTo: new Date(request.display_to),
+      lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
       noMatch

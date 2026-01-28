@@ -1,5 +1,8 @@
 export const cy = {
   pageTitle: "Welsh placeholder",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
   importantInformationTitle: "Welsh placeholder",
   importantInformationText: "Welsh placeholder",
   importantInformationLinkText: "Welsh placeholder",
