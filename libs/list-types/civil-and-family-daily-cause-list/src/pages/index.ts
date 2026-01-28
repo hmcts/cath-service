@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, mockListTypes, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
@@ -32,9 +31,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   try {
-    const artefact = await prisma.artefact.findUnique({
-      where: { artefactId }
-    });
+    const artefact = await getArtefactById(artefactId);
 
     if (!artefact) {
       return res.status(404).render("errors/common", {
@@ -42,6 +39,21 @@ export const GET = async (req: Request, res: Response) => {
         cy,
         errorTitle: t.errorTitle,
         errorMessage: t.errorMessage
+      });
+    }
+
+    // Check if user has permission to access the publication data
+    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+    if (!canAccessPublicationData(req.user, artefact, listType)) {
+      return res.status(403).render("errors/403", {
+        en: {
+          title: en.error403Title,
+          message: en.error403Message
+        },
+        cy: {
+          title: cy.error403Title,
+          message: cy.error403Message
+        }
       });
     }
 

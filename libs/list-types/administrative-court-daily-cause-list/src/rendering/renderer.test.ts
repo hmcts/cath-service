@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { StandardHearingList } from "../models/types.js";
+import type { AdministrativeCourtHearingList } from "../models/types.js";
 import { renderAdminCourt } from "./renderer.js";
 
 describe("renderAdminCourt", () => {
-  const mockHearings: StandardHearingList = [
+  const mockHearings: AdministrativeCourtHearingList = [
     {
       venue: "Court 1",
       judge: "Judge Smith",
@@ -132,7 +132,7 @@ describe("renderAdminCourt", () => {
   });
 
   it("should handle hearing with undefined additional information", () => {
-    const hearingsWithUndefined: StandardHearingList = [
+    const hearingsWithUndefined: AdministrativeCourtHearingList = [
       {
         venue: "Court 1",
         judge: "Judge Smith",
