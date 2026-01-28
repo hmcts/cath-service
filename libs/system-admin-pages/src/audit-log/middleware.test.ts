@@ -333,7 +333,25 @@ describe("auditLogMiddleware", () => {
   });
 
   describe("Entity extraction - Layer 1 (Explicit metadata)", () => {
-    it("should use explicit auditMetadata when provided on response", async () => {
+    it("should use explicit entityInfo when provided on response", async () => {
+      mockRequest.auditMetadata = {
+        entityInfo: "Custom Court: Westminster, ID: 123"
+      };
+
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      // Trigger response to log
+      (mockResponse.json as any)({ success: true });
+
+      expect(logAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          details: expect.stringContaining("Custom Court: Westminster, ID: 123")
+        })
+      );
+    });
+
+    it("should use other auditMetadata fields when entityInfo not provided", async () => {
       mockRequest.auditMetadata = {
         "Court Name": "Custom Court",
         "Custom ID": 999
@@ -353,6 +371,33 @@ describe("auditLogMiddleware", () => {
       expect(logAction).toHaveBeenCalledWith(
         expect.objectContaining({
           details: expect.stringContaining("Custom ID: 999")
+        })
+      );
+    });
+
+    it("should skip special control fields in auditMetadata", async () => {
+      mockRequest.auditMetadata = {
+        shouldLog: true,
+        action: "TEST_ACTION",
+        entityInfo: "Test Entity",
+        "Custom Field": "Custom Value"
+      };
+
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      // Trigger response to log
+      (mockResponse.json as any)({ success: true });
+
+      expect(logAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          details: expect.stringContaining("Test Entity")
+        })
+      );
+      // Should not include shouldLog, action, or entityInfo as separate fields
+      expect(logAction).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          details: expect.stringContaining("shouldLog:")
         })
       );
     });
@@ -393,8 +438,11 @@ describe("auditLogMiddleware", () => {
   });
 
   describe("Response handling", () => {
-    it("should handle redirect with status code and URL", async () => {
+    it("should handle redirect with status code and URL when shouldLog flag is set", async () => {
       mockRequest.path = "/add-jurisdiction";
+      mockRequest.auditMetadata = {
+        shouldLog: true
+      };
 
       const middleware = auditLogMiddleware();
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);
@@ -406,6 +454,58 @@ describe("auditLogMiddleware", () => {
         expect.objectContaining({
           action: "ADD_JURISDICTION",
           details: expect.stringContaining("Status: Completed successfully")
+        })
+      );
+    });
+
+    it("should not log redirect to success page without shouldLog flag", async () => {
+      mockRequest.path = "/add-jurisdiction";
+
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      // Trigger redirect without shouldLog flag
+      (mockResponse.redirect as any)("/add-jurisdiction-success");
+
+      expect(logAction).not.toHaveBeenCalled();
+    });
+
+    it("should use custom action name from auditMetadata", async () => {
+      mockRequest.path = "/reference-data-upload-summary";
+      mockRequest.auditMetadata = {
+        shouldLog: true,
+        action: "REFERENCE_DATA_UPLOAD"
+      };
+
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      (mockResponse.redirect as any)("/reference-data-upload-confirmation");
+
+      expect(logAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "REFERENCE_DATA_UPLOAD"
+        })
+      );
+    });
+
+    it("should use custom entityInfo from auditMetadata", async () => {
+      mockRequest.path = "/delete-court-confirm";
+      mockRequest.auditMetadata = {
+        shouldLog: true,
+        action: "DELETE_COURT",
+        entityInfo: "Name: Westminster Court, Location ID: 123"
+      };
+
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      (mockResponse.redirect as any)("/delete-court-success");
+
+      expect(logAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "DELETE_COURT",
+          details: expect.stringContaining("Name: Westminster Court, Location ID: 123")
         })
       );
     });

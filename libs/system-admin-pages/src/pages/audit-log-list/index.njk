@@ -34,7 +34,7 @@
         {% if filters.email or filters.userId or filters.day or filters.actions.length > 0 %}
           <div class="filter-tags govuk-!-margin-top-4">
             {% if filters.email %}
-              <span class="filter-tag">
+              <span class="filter-tag" style="max-width: 100%; word-break: break-word;">
                 Email: {{ filters.email }}
                 <a href="/audit-log-list?userId={{ filters.userId }}&day={{ filters.day }}&month={{ filters.month }}&year={{ filters.year }}{% for action in filters.actions %}&actions={{ action }}{% endfor %}" class="filter-tag-remove" aria-label="Remove email filter">×</a>
               </span>
@@ -157,10 +157,6 @@
       </div>
 
     </div>
-
-    <p class="govuk-body-s govuk-!-margin-top-4">
-      <a href="#top" class="govuk-link">{{ backToTopText }}</a>
-    </p>
   </div>
 
   <!-- Main Content -->
@@ -221,6 +217,14 @@
     {% else %}
       <p class="govuk-body">{{ noResultsText }}</p>
     {% endif %}
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <p class="govuk-body-s govuk-!-margin-top-4">
+      <a href="#top" class="govuk-link">{{ backToTopText }}</a>
+    </p>
   </div>
 </div>
 {% endblock %}

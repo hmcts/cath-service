@@ -4,7 +4,12 @@ import { logAction } from "./logger.js";
 
 declare module "express-serve-static-core" {
   interface Request {
-    auditMetadata?: Record<string, string | number>;
+    auditMetadata?: {
+      shouldLog?: boolean;
+      action?: string;
+      entityInfo?: string;
+      [key: string]: string | number | boolean | undefined;
+    };
   }
 }
 
@@ -62,13 +67,12 @@ export function auditLogMiddleware() {
     res.redirect = ((urlOrStatus: string | number, url?: string) => {
       const redirectUrl = typeof urlOrStatus === "number" ? url : urlOrStatus;
 
-      // Only log redirects to final action pages (success/complete/confirmation)
-      // This prevents logging intermediate steps in multi-step flows
-      const isFinalAction = redirectUrl && (redirectUrl.includes("-success") || redirectUrl.includes("-complete") || redirectUrl.includes("-confirmation"));
+      // Check if controller explicitly requested logging
+      const explicitlyRequested = req.auditMetadata?.shouldLog === true;
 
-      // Also log validation errors (redirect back with errors in session) and cancellations
+      // Auto-detect validation errors and cancellations
       const outcome = determineRedirectOutcome(redirectUrl || "", req.path, req.session);
-      const shouldLog = isFinalAction || outcome === "validation_error" || outcome === "cancelled";
+      const shouldLog = explicitlyRequested || outcome === "validation_error" || outcome === "cancelled";
 
       if (shouldLog) {
         logCompletionEntry(outcome === "validation_error" || outcome === "cancelled" ? outcome : "success", redirectUrl);
@@ -130,11 +134,6 @@ function determineRedirectOutcome(redirectUrl: string, requestPath: string, sess
     return "other";
   }
 
-  // Success indicators: redirects to success/complete/confirmation pages
-  if (url.includes("success") || url.includes("complete") || url.includes("confirmation")) {
-    return "success";
-  }
-
   // Cancellation indicators: redirect to dashboard
   if (url.includes("dashboard")) {
     return "cancelled";
@@ -150,6 +149,12 @@ function determineRedirectOutcome(redirectUrl: string, requestPath: string, sess
 }
 
 function generateActionName(req: Request): string {
+  // Use custom action name if provided
+  if (req.auditMetadata?.action && typeof req.auditMetadata.action === "string") {
+    return req.auditMetadata.action.toUpperCase().replace(/[^A-Z0-9_]/g, "_");
+  }
+
+  // Fall back to path-based generation
   const path = req.path;
   const method = req.method;
 
@@ -228,13 +233,22 @@ function generateDetails(req: Request, outcome: "success" | "validation_error" |
 }
 
 function extractEntityInfo(req: Request): string | undefined {
-  const entityParts: string[] = [];
+  // Layer 1: Explicit entityInfo from auditMetadata (highest priority)
+  if (req.auditMetadata?.entityInfo && typeof req.auditMetadata.entityInfo === "string") {
+    return req.auditMetadata.entityInfo;
+  }
 
-  // Layer 1: Explicit audit metadata (highest priority - allows controllers to provide custom context)
+  // Use a Map to deduplicate entity info by normalized key name
+  const entityMap = new Map<string, string>();
+
+  // Layer 1.5: Other explicit audit metadata fields (excluding special flags)
   if (req.auditMetadata && typeof req.auditMetadata === "object") {
     for (const [key, value] of Object.entries(req.auditMetadata)) {
+      // Skip special control fields
+      if (["shouldLog", "action", "entityInfo"].includes(key)) continue;
+
       if (value !== null && value !== undefined && value !== "") {
-        entityParts.push(`${key}: ${value}`);
+        entityMap.set(key.toLowerCase(), `${key}: ${value}`);
       }
     }
   }
@@ -243,13 +257,13 @@ function extractEntityInfo(req: Request): string | undefined {
   if (req.body && typeof req.body === "object") {
     // Name fields (most common entity identifier)
     if (req.body.name && typeof req.body.name === "string" && req.body.name.trim()) {
-      entityParts.push(`Name: ${req.body.name.trim()}`);
+      entityMap.set("name", `Name: ${req.body.name.trim()}`);
     }
     if (req.body.welshName && typeof req.body.welshName === "string" && req.body.welshName.trim()) {
-      entityParts.push(`Welsh Name: ${req.body.welshName.trim()}`);
+      entityMap.set("welshname", `Welsh Name: ${req.body.welshName.trim()}`);
     }
     if (req.body.title && typeof req.body.title === "string" && req.body.title.trim()) {
-      entityParts.push(`Title: ${req.body.title.trim()}`);
+      entityMap.set("title", `Title: ${req.body.title.trim()}`);
     }
 
     // ID fields (common across many entities)
@@ -257,13 +271,13 @@ function extractEntityInfo(req: Request): string | undefined {
     for (const field of idFields) {
       if (req.body[field] && (typeof req.body[field] === "string" || typeof req.body[field] === "number")) {
         const label = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
-        entityParts.push(`${label}: ${req.body[field]}`);
+        entityMap.set(field.toLowerCase(), `${label}: ${req.body[field]}`);
       }
     }
 
     // Email (useful for user-related actions)
     if (req.body.email && typeof req.body.email === "string" && req.body.email.trim()) {
-      entityParts.push(`Email: ${req.body.email.trim()}`);
+      entityMap.set("email", `Email: ${req.body.email.trim()}`);
     }
   }
 
@@ -272,7 +286,7 @@ function extractEntityInfo(req: Request): string | undefined {
     for (const [key, value] of Object.entries(req.params)) {
       if (value && typeof value === "string") {
         const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
-        entityParts.push(`${label}: ${value}`);
+        entityMap.set(key.toLowerCase(), `${label}: ${value}`);
       }
     }
   }
@@ -292,24 +306,29 @@ function extractEntityInfo(req: Request): string | undefined {
       // Extract name from session objects
       if ("name" in value && typeof value.name === "string" && value.name.trim()) {
         const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
-        entityParts.push(`${label}: ${value.name.trim()}`);
+        const mapKey = `${key}_name`.toLowerCase();
+        entityMap.set(mapKey, `${label}: ${value.name.trim()}`);
       }
 
       // Extract ID fields from session objects
       if ("id" in value && (typeof value.id === "string" || typeof value.id === "number")) {
         const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
-        entityParts.push(`${label} ID: ${value.id}`);
+        const mapKey = `${key}_id`.toLowerCase();
+        entityMap.set(mapKey, `${label} ID: ${value.id}`);
       }
       if ("locationId" in value && (typeof value.locationId === "string" || typeof value.locationId === "number")) {
-        entityParts.push(`Location ID: ${value.locationId}`);
+        entityMap.set("locationid", `Location ID: ${value.locationId}`);
       }
 
       // Extract filename from upload sessions
       if ("fileName" in value && typeof value.fileName === "string") {
-        entityParts.push(`File: ${value.fileName}`);
+        const mapKey = `${key}_filename`.toLowerCase();
+        entityMap.set(mapKey, `File: ${value.fileName}`);
       }
     }
   }
 
+  // Convert Map values to array and join
+  const entityParts = Array.from(entityMap.values());
   return entityParts.length > 0 ? entityParts.join(", ") : undefined;
 }

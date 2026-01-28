@@ -52,7 +52,7 @@ function formatAuditLog(log: AuditLog): FormattedAuditLog {
   };
 }
 
-export async function getAuditLogs(filters: AuditLogFilters = {}, page = 1, pageSize = 50): Promise<PaginatedAuditLogs> {
+export async function getAuditLogs(filters: AuditLogFilters = {}, page = 1, pageSize = 20): Promise<PaginatedAuditLogs> {
   const logs = await repository.findAll(filters, page, pageSize);
   const totalCount = await repository.countByFilters(filters);
   const totalPages = Math.ceil(totalCount / pageSize);
