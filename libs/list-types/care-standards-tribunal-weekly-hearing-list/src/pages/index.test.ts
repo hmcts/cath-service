@@ -105,7 +105,8 @@ describe("Care Standards Tribunal page controller", () => {
         courtName: "Care Standards Tribunal",
         displayFrom: mockArtefact.displayFrom,
         displayTo: mockArtefact.displayTo,
-        lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
+        lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
+        listTitle: "Care Standards Tribunal Weekly Hearing List"
       });
       const renderCall = vi.mocked(res.render).mock.calls[0];
       expect(renderCall[0]).toBe("care-standards-tribunal-weekly-hearing-list");

@@ -7,26 +7,22 @@ export interface RenderOptions {
   displayFrom: Date;
   displayTo: Date;
   lastReceivedDate: string;
+  listTitle: string;
 }
 
 export interface RenderedData {
   header: {
     listTitle: string;
-    duration: string;
-    lastUpdated: string;
+    weekCommencingDate: string;
+    lastUpdatedDate: string;
+    lastUpdatedTime: string;
   };
   hearings: CareStandardsTribunalHearing[];
 }
 
-function formatLastUpdated(isoDateTime: string, locale: string): string {
-  const { date, time } = formatLastUpdatedDateTime(isoDateTime, locale);
-  return `${date} at ${time}`;
-}
-
 export function renderCareStandardsTribunalData(hearingList: CareStandardsTribunalHearingList, options: RenderOptions): RenderedData {
-  const listTitle = "Care Standards Tribunal Weekly Hearing List";
-  const duration = `List for week commencing ${formatDisplayDate(options.displayFrom, options.locale)}`;
-  const lastUpdated = `Last updated ${formatLastUpdated(options.lastReceivedDate, options.locale)}`;
+  const weekCommencingDate = formatDisplayDate(options.displayFrom, options.locale);
+  const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   const renderedHearings = hearingList.map((hearing) => ({
     date: formatDdMmYyyyDate(hearing.date, options.locale),
@@ -39,9 +35,10 @@ export function renderCareStandardsTribunalData(hearingList: CareStandardsTribun
 
   return {
     header: {
-      listTitle,
-      duration,
-      lastUpdated
+      listTitle: options.listTitle,
+      weekCommencingDate,
+      lastUpdatedDate,
+      lastUpdatedTime
     },
     hearings: renderedHearings
   };
