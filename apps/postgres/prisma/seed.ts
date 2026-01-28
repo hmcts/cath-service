@@ -11,7 +11,7 @@ async function main() {
     {
       artefactId: "11111111-1111-1111-1111-111111111111",
       locationId: "9",
-      listTypeId: 8, // Civil and Family Daily Cause List
+      listTypeId: 6, // Crown Daily List (CRIME_IDAM) - Changed from 8 to avoid conflict with E2E test data
       contentDate: new Date("2025-01-15"),
       sensitivity: "PUBLIC",
       language: "ENGLISH",

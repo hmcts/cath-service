@@ -1,5 +1,5 @@
 import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
-import type { CareStandardsTribunalHearingList } from "../models/types.js";
+import type { CareStandardsTribunalHearing, CareStandardsTribunalHearingList } from "../models/types.js";
 
 export interface RenderOptions {
   locale: string;
@@ -10,15 +10,6 @@ export interface RenderOptions {
   listTitle: string;
 }
 
-export interface RenderedHearing {
-  date: string;
-  caseName: string;
-  hearingLength: string;
-  hearingType: string;
-  venue: string;
-  additionalInformation: string;
-}
-
 export interface RenderedData {
   header: {
     listTitle: string;
@@ -26,7 +17,7 @@ export interface RenderedData {
     lastUpdatedDate: string;
     lastUpdatedTime: string;
   };
-  hearings: RenderedHearing[];
+  hearings: CareStandardsTribunalHearing[];
 }
 
 export function renderCareStandardsTribunalData(hearingList: CareStandardsTribunalHearingList, options: RenderOptions): RenderedData {

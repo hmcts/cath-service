@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cy } from "../../views/errors/cy.js";
+import { en } from "../../views/errors/en.js";
 import { errorHandler, notFoundHandler } from "./error-handler.js";
 
 describe("Error Handler Middleware", () => {
@@ -15,7 +17,10 @@ describe("Error Handler Middleware", () => {
       };
       res = {
         status: vi.fn().mockReturnThis(),
-        render: vi.fn()
+        render: vi.fn(),
+        locals: {
+          locale: "en"
+        }
       };
       next = vi.fn();
     });
@@ -30,7 +35,11 @@ describe("Error Handler Middleware", () => {
       middleware(req as Request, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.render).toHaveBeenCalledWith("errors/404");
+      expect(res.render).toHaveBeenCalledWith("errors/404", {
+        en: en.error404,
+        cy: cy.error404,
+        t: en.error404
+      });
     });
 
     it("should render 404 for HEAD requests", () => {
@@ -39,7 +48,11 @@ describe("Error Handler Middleware", () => {
       middleware(req as Request, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.render).toHaveBeenCalledWith("errors/404");
+      expect(res.render).toHaveBeenCalledWith("errors/404", {
+        en: en.error404,
+        cy: cy.error404,
+        t: en.error404
+      });
     });
 
     it("should pass through POST requests", () => {
@@ -84,7 +97,10 @@ describe("Error Handler Middleware", () => {
       };
       res = {
         status: vi.fn().mockReturnThis(),
-        render: vi.fn()
+        render: vi.fn(),
+        locals: {
+          locale: "en"
+        }
       };
       next = vi.fn();
       logger = {
@@ -122,7 +138,16 @@ describe("Error Handler Middleware", () => {
       middleware(error, req as Request, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.render).toHaveBeenCalled();
+      expect(res.render).toHaveBeenCalledWith(
+        "errors/500",
+        expect.objectContaining({
+          en: en.error500,
+          cy: cy.error500,
+          t: en.error500,
+          error: error.message,
+          stack: error.stack
+        })
+      );
     });
 
     it("should log error message if stack is not available", () => {

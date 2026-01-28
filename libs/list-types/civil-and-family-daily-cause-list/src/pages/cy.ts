@@ -43,5 +43,7 @@ export const cy = {
     "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd â'r bwriad o gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cadw at gyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd HMCTS yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y caiff ei ddefnyddio.",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
-    "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth."
+    "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
+  error403Title: "Mynediad wedi'i Wrthod",
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
 };

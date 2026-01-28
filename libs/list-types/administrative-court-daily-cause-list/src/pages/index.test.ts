@@ -12,15 +12,8 @@ vi.mock("@hmcts/list-types-common", () => ({
   createJsonValidator: () => mockValidate
 }));
 
-vi.mock("@hmcts/postgres", () => ({
-  prisma: {
-    artefact: {
-      findUnique: vi.fn()
-    }
-  }
-}));
-
 vi.mock("@hmcts/publication", () => ({
+  getArtefactById: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -31,7 +24,7 @@ vi.mock("../rendering/renderer.js", () => ({
   renderAdminCourt: vi.fn()
 }));
 
-import { prisma } from "@hmcts/postgres";
+import { getArtefactById } from "@hmcts/publication";
 import { renderAdminCourt } from "../rendering/renderer.js";
 import { GET } from "./index.js";
 
@@ -99,16 +92,14 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
 
       await GET(req as Request, res as Response);
 
-      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-        where: { artefactId: "test-artefact-123" }
-      });
+      expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
       expect(readFile).toHaveBeenCalled();
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderAdminCourt).toHaveBeenCalledWith(mockJsonData, {
@@ -150,7 +141,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-456" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
@@ -189,7 +180,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-789" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
@@ -228,7 +219,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-012" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
@@ -263,7 +254,7 @@ describe("Administrative Court page controller", () => {
     it("should return 404 when artefact is not found", async () => {
       req.query = { artefactId: "non-existent-artefact" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -289,7 +280,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
 
       await GET(req as Request, res as Response);
 
@@ -315,7 +306,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockRejectedValue(new Error("ENOENT: no such file or directory"));
 
       await GET(req as Request, res as Response);
@@ -344,7 +335,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({
         isValid: false,
@@ -366,7 +357,7 @@ describe("Administrative Court page controller", () => {
     it("should return 500 on server error", async () => {
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockRejectedValue(new Error("Database connection failed"));
+      vi.mocked(getArtefactById).mockRejectedValue(new Error("Database connection failed"));
 
       await GET(req as Request, res as Response);
 
@@ -404,7 +395,7 @@ describe("Administrative Court page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
       res.locals = { locale: "cy" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
@@ -443,7 +434,7 @@ describe("Administrative Court page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
       res.locals = {};
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
@@ -481,7 +472,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
@@ -517,7 +508,7 @@ describe("Administrative Court page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderAdminCourt).mockReturnValue(mockRenderedData);
