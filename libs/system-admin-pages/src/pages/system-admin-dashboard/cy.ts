@@ -34,7 +34,7 @@ export const cy = {
     {
       title: "Gwyliwr Log Archwilio",
       description: "Gweld logiau archwilio ar gamau gweinyddwr y system",
-      href: "/audit-log-viewer"
+      href: "/audit-log-list"
     },
     {
       title: "Rheoli Metadata Lleoliad",
