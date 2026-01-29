@@ -24,7 +24,7 @@ export const en = {
     {
       title: "Blob Explorer",
       description: "Discover content uploaded to all locations",
-      href: "/blob-explorer"
+      href: "/blob-explorer-locations"
     },
     {
       title: "Bulk Create Media Accounts",

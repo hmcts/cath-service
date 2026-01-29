@@ -1,4 +1,6 @@
 import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { cy } from "../../views/errors/cy.js";
+import { en } from "../../views/errors/en.js";
 
 /**
  * 404 Not Found handler
@@ -14,7 +16,11 @@ export function notFoundHandler() {
 
     // Only handle GET/HEAD requests as 404, let others pass through
     if (req.method === "GET" || req.method === "HEAD") {
-      res.status(404).render("errors/404");
+      res.status(404).render("errors/404", {
+        en: en.error404,
+        cy: cy.error404,
+        t: res.locals.locale === "cy" ? cy.error404 : en.error404
+      });
     } else {
       next();
     }
@@ -30,12 +36,22 @@ export function errorHandler(logger: Logger = console): ErrorRequestHandler {
     // Log the error for debugging
     logger.error("Error:", err.stack || err);
 
+    const locale = res.locals.locale || "en";
+    const t = locale === "cy" ? cy.error500 : en.error500;
+
     // Don't leak error details in production
     if (process.env.NODE_ENV === "production") {
-      res.status(500).render("errors/500");
+      res.status(500).render("errors/500", {
+        en: en.error500,
+        cy: cy.error500,
+        t
+      });
     } else {
       // In development, show more detailed error
       res.status(500).render("errors/500", {
+        en: en.error500,
+        cy: cy.error500,
+        t,
         error: err.message,
         stack: err.stack
       });

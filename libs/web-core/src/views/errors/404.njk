@@ -1,10 +1,10 @@
 {% extends "layouts/base-template.njk" %}
 
-{% set title = "Page not found" %}
+{% set title = t.title %}
 
 {% block page_content %}
-  <h1 class="govuk-heading-l">Page not found</h1>
-  <p class="govuk-body">If you typed the web address, check it is correct.</p>
-  <p class="govuk-body">If you pasted the web address, check you copied the entire address.</p>
-  <p class="govuk-body">If the web address is correct or you selected a link or button, <a href="/contact-us" class="govuk-link">contact us</a> if you need to speak to someone about this service.</p>
+  <h1 class="govuk-heading-l">{{ t.heading }}</h1>
+  <p class="govuk-body">{{ t.typedAddress }}</p>
+  <p class="govuk-body">{{ t.pastedAddress }}</p>
+  <p class="govuk-body">{{ t.correctAddress }} <a href="/contact-us" class="govuk-link">{{ t.contactLink }}</a> {{ t.contactSuffix }}</p>
 {% endblock %}
