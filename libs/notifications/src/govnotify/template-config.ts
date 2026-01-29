@@ -1,7 +1,7 @@
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
 const CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID = 8;
@@ -13,20 +13,20 @@ export function getTemplateId(): string {
   return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION;
 }
 
-export function getTemplateIdForListType(listTypeId: number, hasPdf: boolean, pdfUnder2MB: boolean): string {
+export function getSubscriptionTemplateIdForListType(listTypeId: number, hasPdf: boolean, pdfUnder2MB: boolean): string {
   // For Civil and Family Daily Cause List (listTypeId 8)
   if (listTypeId === CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID) {
     if (hasPdf && pdfUnder2MB) {
-      if (!GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY) {
-        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY environment variable is not set");
+      if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY) {
+        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set");
       }
-      return GOVUK_NOTIFY_TEMPLATE_ID_PDF_AND_SUMMARY;
+      return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY;
     }
 
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY environment variable is not set");
+    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY) {
+      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set");
     }
-    return GOVUK_NOTIFY_TEMPLATE_ID_SUMMARY_ONLY;
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY;
   }
 
   // For all other list types, use the original template

@@ -65,7 +65,6 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
 
     // If PDF buffer is provided, upload to GOV.UK Notify document service
     if (params.pdfBuffer) {
-      console.log("[govnotify-client] Preparing PDF upload to GOV.UK Notify document service");
       const linkToFile = (notifyClient as any).prepareUpload(params.pdfBuffer, {
         confirmEmailBeforeDownload: false,
         retentionPeriod: "1 week"
@@ -73,18 +72,9 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       personalisation.link_to_file = linkToFile;
     }
 
-    console.log("[govnotify-client] Sending email:", {
-      templateId,
-      emailAddress: params.emailAddress,
-      templateParameters: Object.keys(personalisation)
-    });
-
     const response = (await (notifyClient as any).sendEmail(templateId, params.emailAddress, {
       personalisation
     })) as unknown as AxiosEmailResponse;
-
-    console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
-    console.log("[govnotify-client] Response.data:", response?.data);
 
     // The notifications-node-client v8.x returns response.data (Axios response structure)
     const notificationId = response?.data?.id;
@@ -101,12 +91,6 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       notificationId
     };
   } catch (error: any) {
-    console.error("[govnotify-client] Error details:", {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    });
-
     const errorDetails = error.response?.data?.errors || error.message || String(error);
     const detailedError = typeof errorDetails === "object" ? JSON.stringify(errorDetails) : errorDetails;
     throw new Error(`GOV.UK Notify error: ${detailedError}`);
