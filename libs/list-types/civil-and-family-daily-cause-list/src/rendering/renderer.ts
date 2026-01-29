@@ -1,6 +1,6 @@
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
-import type { CauseListCase, CauseListData, Party, RenderOptions, Session, Sitting } from "../models/types.js";
+import type { CauseListCase, CauseListData, Party, RenderOptions, Session, Sitting } from "../../models/types.js";
 
 function formatTime(isoDateTime: string): string {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London");
