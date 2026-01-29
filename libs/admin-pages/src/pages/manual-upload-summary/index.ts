@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
+import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
-import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, mockListTypes, Provenance, processPublicationAfterSave } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -110,89 +109,27 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
-    // Generate PDF for Civil and Family Daily Cause List (listTypeId 8)
-    let pdfPath: string | undefined;
+    // Parse JSON data for structured files
     let jsonData: CauseListData | undefined;
-    if (listTypeId === 8 && !isFlatFile) {
-      console.log("[Manual Upload] Generating PDF for Civil and Family Daily Cause List:", {
-        artefactId,
-        listTypeId
-      });
-
+    if (!isFlatFile) {
       try {
-        // Parse JSON from uploaded file
         jsonData = JSON.parse(uploadData.file.toString("utf8")) as CauseListData;
-
-        const pdfResult = await generateCauseListPdf({
-          artefactId,
-          contentDate,
-          locale: uploadData.language === "WELSH" ? "cy" : "en",
-          locationId: uploadData.locationId,
-          jsonData,
-          provenance: Provenance.MANUAL_UPLOAD
-        });
-
-        if (pdfResult.success && pdfResult.pdfPath) {
-          pdfPath = pdfResult.pdfPath;
-          console.log("[Manual Upload] PDF generated successfully:", {
-            artefactId,
-            pdfPath,
-            sizeBytes: pdfResult.sizeBytes,
-            exceedsMaxSize: pdfResult.exceedsMaxSize
-          });
-        } else {
-          console.warn("[Manual Upload] PDF generation failed:", {
-            artefactId,
-            error: pdfResult.error
-          });
-        }
-      } catch (error) {
-        console.error("[Manual Upload] PDF generation error:", {
-          artefactId,
-          error: error instanceof Error ? error.message : String(error)
-        });
+      } catch {
+        // Not valid JSON, treat as flat file
       }
     }
 
-    // Trigger email notifications for subscribers
-    try {
-      // Get location name
-      const location = await getLocationById(Number(uploadData.locationId));
-      if (!location) {
-        console.warn("[Manual Upload] Location not found for notifications", {
-          locationId: uploadData.locationId
-        });
-      } else {
-        // Get list type details for notification
-        const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-        const listTypeFriendlyName = listType?.englishFriendlyName || `LIST_TYPE_${listTypeId}`;
-
-        const notificationResult = await sendPublicationNotifications({
-          publicationId: artefactId,
-          locationId: uploadData.locationId,
-          locationName: location.name,
-          hearingListName: listTypeFriendlyName,
-          publicationDate: contentDate,
-          listTypeId,
-          jsonData,
-          pdfFilePath: pdfPath
-        });
-
-        console.log("[Manual Upload] Notification process completed", {
-          artefactId,
-          locationId: uploadData.locationId,
-          notificationResult,
-          timestamp: new Date().toISOString()
-        });
-      }
-    } catch (notificationError) {
-      // Log error but don't fail the upload
-      console.error("[Manual Upload] Failed to send notifications", {
-        artefactId,
-        error: notificationError,
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Generate PDF and send notifications using common processor
+    await processPublicationAfterSave({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      locale: uploadData.language === "WELSH" ? "cy" : "en",
+      jsonData,
+      provenance: Provenance.MANUAL_UPLOAD,
+      logPrefix: "[Manual Upload]"
+    });
 
     // Clear session data
     delete req.session.manualUploadForm;

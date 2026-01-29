@@ -5,6 +5,7 @@ import { processBlobIngestion } from "./service.js";
 // Mock the dependencies
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(),
+  processPublicationAfterSave: vi.fn(),
   Provenance: {
     MANUAL_UPLOAD: "MANUAL_UPLOAD",
     XHIBIT: "XHIBIT",
@@ -31,24 +32,15 @@ vi.mock("../file-storage.js", () => ({
   saveUploadedFile: vi.fn()
 }));
 
-vi.mock("@hmcts/location", () => ({
-  getLocationById: vi.fn()
-}));
-
-vi.mock("@hmcts/notifications", () => ({
-  sendPublicationNotifications: vi.fn()
-}));
-
 describe("processBlobIngestion", async () => {
-  const { createArtefact, mockListTypes } = await import("@hmcts/publication");
+  const { createArtefact, processPublicationAfterSave } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
-  const { getLocationById } = await import("@hmcts/location");
-  const { sendPublicationNotifications } = await import("@hmcts/notifications");
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(processPublicationAfterSave).mockResolvedValue({});
   });
 
   const validRequest: BlobIngestionRequest = {
@@ -298,7 +290,7 @@ describe("processBlobIngestion", async () => {
     );
   });
 
-  it("should trigger notifications on successful ingestion with location match", async () => {
+  it("should call processPublicationAfterSave on successful ingestion with location match", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
@@ -307,37 +299,25 @@ describe("processBlobIngestion", async () => {
     });
 
     vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    vi.mocked(getLocationById).mockResolvedValue({
-      id: 123,
-      name: "Test Court",
-      welshName: "Llys Prawf"
-    });
-    vi.mocked(sendPublicationNotifications).mockResolvedValue({
-      totalSubscriptions: 5,
-      sent: 5,
-      failed: 0,
-      skipped: 0,
-      errors: []
-    });
 
     await processBlobIngestion(validRequest, 1000);
 
-    // Wait for async notification processing
+    // Wait for async processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(sendPublicationNotifications).toHaveBeenCalledWith({
-      publicationId: "test-artefact-id",
+    expect(processPublicationAfterSave).toHaveBeenCalledWith({
+      artefactId: "test-artefact-id",
       locationId: "123",
-      locationName: "Test Court",
-      hearingListName: "Civil And Family Daily Cause List",
-      publicationDate: expect.any(Date),
       listTypeId: 8,
+      contentDate: expect.any(Date),
+      locale: "en",
       jsonData: expect.anything(),
-      pdfFilePath: undefined // PDF generation not mocked in this test
+      provenance: "XHIBIT",
+      logPrefix: "[blob-ingestion]"
     });
   });
 
-  it("should not trigger notifications when noMatch is true", async () => {
+  it("should not call processPublicationAfterSave when noMatch is true", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
@@ -352,10 +332,10 @@ describe("processBlobIngestion", async () => {
     // Wait to ensure async code has time to execute (if it was going to)
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(sendPublicationNotifications).not.toHaveBeenCalled();
+    expect(processPublicationAfterSave).not.toHaveBeenCalled();
   });
 
-  it("should handle notification errors gracefully without failing ingestion", async () => {
+  it("should handle processPublicationAfterSave errors gracefully without failing ingestion", async () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     vi.mocked(validateBlobRequest).mockResolvedValue({
@@ -366,12 +346,7 @@ describe("processBlobIngestion", async () => {
     });
 
     vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    vi.mocked(getLocationById).mockResolvedValue({
-      id: 123,
-      name: "Test Court",
-      welshName: "Llys Prawf"
-    });
-    vi.mocked(sendPublicationNotifications).mockRejectedValue(new Error("Notification service down"));
+    vi.mocked(processPublicationAfterSave).mockRejectedValue(new Error("Processing failed"));
 
     const result = await processBlobIngestion(validRequest, 1000);
 
@@ -379,22 +354,19 @@ describe("processBlobIngestion", async () => {
     expect(result.success).toBe(true);
     expect(result.artefact_id).toBe("test-artefact-id");
 
-    // Wait for async notification error to be logged
+    // Wait for async error to be logged
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to trigger publication notifications:", {
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[blob-ingestion] Failed to process publication:", {
       artefactId: "test-artefact-id",
       courtId: "123",
-      error: "Notification service down",
-      stack: expect.any(String)
+      error: "Processing failed"
     });
 
     consoleErrorSpy.mockRestore();
   });
 
-  it("should handle invalid location ID in triggerPublicationNotifications", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
+  it("should use Welsh locale when language is WELSH", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
@@ -403,119 +375,17 @@ describe("processBlobIngestion", async () => {
     });
 
     vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    // getLocationById may be called during PDF generation (renderCauseListData)
-    vi.mocked(getLocationById).mockResolvedValue(undefined);
 
-    const invalidRequest = { ...validRequest, court_id: "invalid-id" };
-    await processBlobIngestion(invalidRequest, 1000);
+    const welshRequest = { ...validRequest, language: "WELSH" };
+    await processBlobIngestion(welshRequest, 1000);
 
-    // Wait for async notification processing
+    // Wait for async processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // getLocationById may be called during PDF generation but notification should fail gracefully
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Invalid location ID for notifications:", "invalid-id");
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("should handle location not found in triggerPublicationNotifications", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    vi.mocked(validateBlobRequest).mockResolvedValue({
-      isValid: true,
-      errors: [],
-      locationExists: true,
-      listTypeId: 8
-    });
-
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    vi.mocked(getLocationById).mockResolvedValue(null);
-
-    await processBlobIngestion(validRequest, 1000);
-
-    // Wait for async notification processing
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(getLocationById).toHaveBeenCalledWith(123);
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Location not found for notifications:", "123");
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("should handle list type not found in triggerPublicationNotifications", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    vi.mocked(validateBlobRequest).mockResolvedValue({
-      isValid: true,
-      errors: [],
-      locationExists: true,
-      listTypeId: 999
-    });
-
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    vi.mocked(getLocationById).mockResolvedValue({
-      id: 123,
-      name: "Test Court",
-      welshName: "Llys Prawf"
-    });
-
-    await processBlobIngestion(validRequest, 1000);
-
-    // Wait for async notification processing
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith("List type not found for notifications:", 999);
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("should log notification results including errors", async () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    vi.mocked(validateBlobRequest).mockResolvedValue({
-      isValid: true,
-      errors: [],
-      locationExists: true,
-      listTypeId: 8
-    });
-
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    vi.mocked(getLocationById).mockResolvedValue({
-      id: 123,
-      name: "Test Court",
-      welshName: "Llys Prawf"
-    });
-    vi.mocked(sendPublicationNotifications).mockResolvedValue({
-      totalSubscriptions: 5,
-      sent: 3,
-      failed: 2,
-      skipped: 0,
-      errors: [
-        { email: "user1@example.com", error: "Invalid email" },
-        { email: "user2@example.com", error: "Service unavailable" }
-      ]
-    });
-
-    await processBlobIngestion(validRequest, 1000);
-
-    // Wait for async notification processing
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(consoleLogSpy).toHaveBeenCalledWith("Publication notifications sent:", {
-      publicationId: "test-artefact-id",
-      totalSubscriptions: 5,
-      sent: 3,
-      failed: 2,
-      skipped: 0
-    });
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith("Notification errors:", {
-      count: 2,
-      errors: ['{"email":"[REDACTED_EMAIL]","error":"Invalid email"}', '{"email":"[REDACTED_EMAIL]","error":"Service unavailable"}']
-    });
-
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
+    expect(processPublicationAfterSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: "cy"
+      })
+    );
   });
 });

@@ -1,10 +1,6 @@
 import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
-import { getLocationById } from "@hmcts/location";
-import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
+import { createArtefact, Provenance, processPublicationAfterSave } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -86,45 +82,6 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
     await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
 
-    // Generate PDF for Civil and Family Daily Cause List (listTypeId 8)
-    let pdfPath: string | undefined;
-    if (validation.listTypeId === 8) {
-      console.log("[blob-ingestion] Generating PDF for Civil and Family Daily Cause List:", {
-        artefactId,
-        listTypeId: validation.listTypeId
-      });
-
-      try {
-        const pdfResult = await generateCauseListPdf({
-          artefactId,
-          contentDate: new Date(request.content_date),
-          locale: request.language === "WELSH" ? "cy" : "en",
-          locationId: request.court_id,
-          jsonData: request.hearing_list as CauseListData
-        });
-
-        if (pdfResult.success && pdfResult.pdfPath) {
-          pdfPath = pdfResult.pdfPath;
-          console.log("[blob-ingestion] PDF generated successfully:", {
-            artefactId,
-            pdfPath,
-            sizeBytes: pdfResult.sizeBytes,
-            exceedsMaxSize: pdfResult.exceedsMaxSize
-          });
-        } else {
-          console.warn("[blob-ingestion] PDF generation failed:", {
-            artefactId,
-            error: pdfResult.error
-          });
-        }
-      } catch (error) {
-        console.error("[blob-ingestion] PDF generation error:", {
-          artefactId,
-          error: error instanceof Error ? error.message : String(error)
-        });
-      }
-    }
-
     // Log successful ingestion
     await createIngestionLog({
       id: randomUUID(),
@@ -135,26 +92,26 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       artefactId
     });
 
-    // Trigger notification for subscribed users (fire-and-forget pattern)
+    // Generate PDF and send notifications using common processor (fire-and-forget for notifications)
     if (!noMatch) {
-      console.log("[blob-ingestion] Triggering notifications for publication:", {
+      processPublicationAfterSave({
         artefactId,
-        courtId: request.court_id,
-        listTypeId: validation.listTypeId
+        locationId: request.court_id,
+        listTypeId: validation.listTypeId,
+        contentDate: new Date(request.content_date),
+        locale: request.language === "WELSH" ? "cy" : "en",
+        jsonData: request.hearing_list as CauseListData,
+        provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
+        logPrefix: "[blob-ingestion]"
+      }).catch((error) => {
+        console.error("[blob-ingestion] Failed to process publication:", {
+          artefactId,
+          courtId: request.court_id,
+          error: error instanceof Error ? error.message : String(error)
+        });
       });
-
-      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date), request.hearing_list, pdfPath).catch(
-        (error) => {
-          console.error("Failed to trigger publication notifications:", {
-            artefactId,
-            courtId: request.court_id,
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined
-          });
-        }
-      );
     } else {
-      console.log("[blob-ingestion] Skipping notifications (no_match=true):", {
+      console.log("[blob-ingestion] Skipping PDF/notifications (no_match=true):", {
         artefactId,
         courtId: request.court_id
       });
@@ -181,60 +138,5 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       success: false,
       message: "Internal server error during ingestion"
     };
-  }
-}
-
-async function triggerPublicationNotifications(
-  publicationId: string,
-  courtId: string,
-  listTypeId: number,
-  publicationDate: Date,
-  jsonData?: unknown,
-  pdfFilePath?: string
-): Promise<void> {
-  const locationIdNum = Number.parseInt(courtId, 10);
-  if (Number.isNaN(locationIdNum)) {
-    console.error("Invalid location ID for notifications:", courtId);
-    return;
-  }
-
-  const location = await getLocationById(locationIdNum);
-  if (!location) {
-    console.error("Location not found for notifications:", courtId);
-    return;
-  }
-
-  const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-  if (!listType) {
-    console.error("List type not found for notifications:", listTypeId);
-    return;
-  }
-
-  const result = await sendPublicationNotifications({
-    publicationId,
-    locationId: String(locationIdNum),
-    locationName: location.name,
-    hearingListName: listType.englishFriendlyName,
-    publicationDate,
-    listTypeId,
-    jsonData,
-    pdfFilePath
-  });
-
-  console.log("Publication notifications sent:", {
-    publicationId,
-    totalSubscriptions: result.totalSubscriptions,
-    sent: result.sent,
-    failed: result.failed,
-    skipped: result.skipped
-  });
-
-  if (result.errors.length > 0) {
-    // Sanitize errors to redact email addresses (PII)
-    const sanitizedErrors = result.errors.map((error) => {
-      const errorStr = typeof error === "string" ? error : JSON.stringify(error);
-      return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
-    });
-    console.error("Notification errors:", { count: result.errors.length, errors: sanitizedErrors });
   }
 }
