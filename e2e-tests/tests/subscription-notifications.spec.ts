@@ -212,22 +212,18 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
       // Verify email recipient
       expect(govNotifyEmail.email_address).toBe(process.env.CFT_VALID_TEST_ACCOUNT!);
 
-      // Verify email contains list type information
+      // Verify email contains list type and court information
       expect(govNotifyEmail.body).toContain("Civil and Family Daily Cause List");
       expect(govNotifyEmail.body).toContain("Test Court Alpha");
+      expect(govNotifyEmail.body).toContain("15 June 2025");
 
-      // Verify email contains case summary information
-      expect(govNotifyEmail.body).toContain("NOTIF-TEST-001");
-      expect(govNotifyEmail.body).toContain("Smith v Jones");
-      expect(govNotifyEmail.body).toContain("Civil");
-      expect(govNotifyEmail.body).toContain("Trial");
+      // Verify email contains Special Category Data warning
+      expect(govNotifyEmail.body).toContain("Special Category Data");
+      expect(govNotifyEmail.body).toContain("Data Protection Act 2018");
 
-      // Verify applicant information is included
-      expect(govNotifyEmail.body).toContain("John Smith");
-
-      // Verify second case information
-      expect(govNotifyEmail.body).toContain("NOTIF-TEST-002");
-      expect(govNotifyEmail.body).toContain("ABC Ltd v XYZ Corp");
+      // Verify email contains subscription management links
+      expect(govNotifyEmail.body).toContain("Manage your subscriptions");
+      expect(govNotifyEmail.body).toContain("Unsubscribe");
 
       // Verify email delivery status
       expect(govNotifyEmail.status).toMatch(/delivered|sending|pending|created|permanent-failure/);
