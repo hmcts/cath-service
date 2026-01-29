@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
-import { createArtefact, Provenance, processPublicationAfterSave } from "@hmcts/publication";
+import { createArtefact, Provenance, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -94,7 +94,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
 
     // Generate PDF and send notifications using common processor (fire-and-forget for notifications)
     if (!noMatch) {
-      processPublicationAfterSave({
+      processPublication({
         artefactId,
         locationId: request.court_id,
         listTypeId: validation.listTypeId,

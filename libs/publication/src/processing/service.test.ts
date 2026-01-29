@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generatePublicationPdf, processPublicationAfterSave, sendPublicationNotificationsForArtefact } from "./service.js";
+import { generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   generateCauseListPdf: vi.fn()
@@ -271,7 +271,7 @@ describe("publication-processor", async () => {
     });
   });
 
-  describe("processPublicationAfterSave", () => {
+  describe("processPublication", () => {
     const baseParams = {
       artefactId: "test-artefact-id",
       locationId: "123",
@@ -302,7 +302,7 @@ describe("publication-processor", async () => {
         errors: []
       });
 
-      const result = await processPublicationAfterSave(baseParams);
+      const result = await processPublication(baseParams);
 
       expect(result).toEqual({
         pdfPath: "/path/to/pdf",
@@ -327,7 +327,7 @@ describe("publication-processor", async () => {
         errors: []
       });
 
-      const result = await processPublicationAfterSave({
+      const result = await processPublication({
         ...baseParams,
         jsonData: undefined
       });
@@ -344,7 +344,7 @@ describe("publication-processor", async () => {
         exceedsMaxSize: false
       });
 
-      const result = await processPublicationAfterSave({
+      const result = await processPublication({
         ...baseParams,
         skipNotifications: true
       });
@@ -374,7 +374,7 @@ describe("publication-processor", async () => {
         errors: []
       });
 
-      await processPublicationAfterSave(baseParams);
+      await processPublication(baseParams);
 
       expect(sendPublicationNotifications).toHaveBeenCalledWith(
         expect.objectContaining({

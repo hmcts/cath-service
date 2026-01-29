@@ -5,7 +5,7 @@ import { processBlobIngestion } from "./service.js";
 // Mock the dependencies
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(),
-  processPublicationAfterSave: vi.fn(),
+  processPublication: vi.fn(),
   Provenance: {
     MANUAL_UPLOAD: "MANUAL_UPLOAD",
     XHIBIT: "XHIBIT",
@@ -33,14 +33,14 @@ vi.mock("../file-storage.js", () => ({
 }));
 
 describe("processBlobIngestion", async () => {
-  const { createArtefact, processPublicationAfterSave } = await import("@hmcts/publication");
+  const { createArtefact, processPublication } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(processPublicationAfterSave).mockResolvedValue({});
+    vi.mocked(processPublication).mockResolvedValue({});
   });
 
   const validRequest: BlobIngestionRequest = {
@@ -290,7 +290,7 @@ describe("processBlobIngestion", async () => {
     );
   });
 
-  it("should call processPublicationAfterSave on successful ingestion with location match", async () => {
+  it("should call processPublication on successful ingestion with location match", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
@@ -305,7 +305,7 @@ describe("processBlobIngestion", async () => {
     // Wait for async processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(processPublicationAfterSave).toHaveBeenCalledWith({
+    expect(processPublication).toHaveBeenCalledWith({
       artefactId: "test-artefact-id",
       locationId: "123",
       listTypeId: 8,
@@ -317,7 +317,7 @@ describe("processBlobIngestion", async () => {
     });
   });
 
-  it("should not call processPublicationAfterSave when noMatch is true", async () => {
+  it("should not call processPublication when noMatch is true", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
@@ -332,10 +332,10 @@ describe("processBlobIngestion", async () => {
     // Wait to ensure async code has time to execute (if it was going to)
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(processPublicationAfterSave).not.toHaveBeenCalled();
+    expect(processPublication).not.toHaveBeenCalled();
   });
 
-  it("should handle processPublicationAfterSave errors gracefully without failing ingestion", async () => {
+  it("should handle processPublication errors gracefully without failing ingestion", async () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     vi.mocked(validateBlobRequest).mockResolvedValue({
@@ -346,7 +346,7 @@ describe("processBlobIngestion", async () => {
     });
 
     vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
-    vi.mocked(processPublicationAfterSave).mockRejectedValue(new Error("Processing failed"));
+    vi.mocked(processPublication).mockRejectedValue(new Error("Processing failed"));
 
     const result = await processBlobIngestion(validRequest, 1000);
 
@@ -382,7 +382,7 @@ describe("processBlobIngestion", async () => {
     // Wait for async processing
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(processPublicationAfterSave).toHaveBeenCalledWith(
+    expect(processPublication).toHaveBeenCalledWith(
       expect.objectContaining({
         locale: "cy"
       })

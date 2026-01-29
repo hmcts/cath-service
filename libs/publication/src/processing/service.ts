@@ -144,7 +144,7 @@ interface ProcessPublicationResult {
   notificationsFailed?: number;
 }
 
-export async function processPublicationAfterSave(params: ProcessPublicationParams): Promise<ProcessPublicationResult> {
+export async function processPublication(params: ProcessPublicationParams): Promise<ProcessPublicationResult> {
   const { artefactId, locationId, listTypeId, contentDate, locale, jsonData, provenance, skipNotifications = false, logPrefix = "[Publication]" } = params;
 
   const result: ProcessPublicationResult = {};

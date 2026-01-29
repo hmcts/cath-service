@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes, Provenance, processPublicationAfterSave } from "@hmcts/publication";
+import { createArtefact, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -120,7 +120,7 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     // Generate PDF and send notifications using common processor
-    await processPublicationAfterSave({
+    await processPublication({
       artefactId,
       locationId: uploadData.locationId,
       listTypeId,
