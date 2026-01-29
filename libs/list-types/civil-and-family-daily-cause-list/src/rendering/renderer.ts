@@ -1,6 +1,6 @@
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
-import type { CauseListCase, CauseListData, Party, RenderOptions, Session, Sitting } from "../../models/types.js";
+import type { CauseListCase, CauseListData, Party, RenderOptions, Session, Sitting } from "../models/types.js";
 
 function formatTime(isoDateTime: string): string {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London");
@@ -68,7 +68,7 @@ function formatAddress(address: CauseListData["venue"]["venueAddress"]): string[
 function formatJudiciaries(session: Session): string {
   const judiciaries: string[] = [];
 
-  session.judiciary?.forEach((judiciary) => {
+  for (const judiciary of session.judiciary ?? []) {
     const name = judiciary.johKnownAs?.trim();
     if (name) {
       if (judiciary.isPresiding) {
@@ -77,7 +77,7 @@ function formatJudiciaries(session: Session): string {
         judiciaries.push(name);
       }
     }
-  });
+  }
 
   return judiciaries.join(", ");
 }
@@ -152,11 +152,11 @@ function processParties(caseItem: CauseListCase): void {
   let applicantRepresentative = "";
   let respondentRepresentative = "";
 
-  caseItem.party?.forEach((party) => {
+  for (const party of caseItem.party ?? []) {
     const role = convertPartyRole(party.partyRole);
     const details = createPartyDetails(party).trim();
 
-    if (!details) return;
+    if (!details) continue;
 
     switch (role) {
       case "APPLICANT_PETITIONER":
@@ -176,7 +176,7 @@ function processParties(caseItem: CauseListCase): void {
         respondentRepresentative += details;
         break;
     }
-  });
+  }
 
   (caseItem as any).applicant = applicant.replace(/,\s*$/, "").trim();
   (caseItem as any).applicantRepresentative = applicantRepresentative.replace(/,\s*$/, "").trim();
@@ -185,7 +185,7 @@ function processParties(caseItem: CauseListCase): void {
 }
 
 function formatReportingRestrictions(caseItem: CauseListCase): void {
-  const restrictions = caseItem.reportingRestrictionDetail?.filter((r) => r.length > 0) || [];
+  const restrictions = caseItem.reportingRestrictionDetail?.filter((r: string) => r.length > 0) || [];
   (caseItem as any).formattedReportingRestriction = restrictions.join(", ");
 }
 
