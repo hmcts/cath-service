@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
@@ -110,10 +109,10 @@ const postHandler = async (req: Request, res: Response) => {
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
     // Parse JSON data for structured files
-    let jsonData: CauseListData | undefined;
+    let jsonData: unknown;
     if (!isFlatFile) {
       try {
-        jsonData = JSON.parse(uploadData.file.toString("utf8")) as CauseListData;
+        jsonData = JSON.parse(uploadData.file.toString("utf8"));
       } catch {
         // Not valid JSON, treat as flat file
       }

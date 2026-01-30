@@ -11,7 +11,7 @@ interface GeneratePdfParams {
   contentDate: Date;
   locale: string;
   locationId: string;
-  jsonData: CauseListData;
+  jsonData: unknown;
   provenance?: string;
   logPrefix?: string;
 }
@@ -35,7 +35,7 @@ export async function generatePublicationPdf(params: GeneratePdfParams): Promise
       contentDate,
       locale,
       locationId,
-      jsonData,
+      jsonData: jsonData as CauseListData,
       provenance
     });
 
@@ -130,7 +130,7 @@ interface ProcessPublicationParams {
   listTypeId: number;
   contentDate: Date;
   locale: string;
-  jsonData?: CauseListData;
+  jsonData?: unknown;
   provenance?: string;
   skipNotifications?: boolean;
   logPrefix?: string;
