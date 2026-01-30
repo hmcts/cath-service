@@ -61,6 +61,11 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
+// Mock the sjp module
+vi.mock("@hmcts/sjp", () => ({
+  getLatestSjpLists: vi.fn(() => Promise.resolve([]))
+}));
+
 describe("Summary of Publications - GET handler", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;

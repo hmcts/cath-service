@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { assets as adminPagesAssets } from "@hmcts/admin-pages/config";
+import { assets as sjpPressListAssets } from "@hmcts/sjp-press-list/config";
 import { assets as systemAdminAssets } from "@hmcts/system-admin-pages/config";
 import { assets as verifiedPagesAssets } from "@hmcts/verified-pages/config";
 import { createBaseViteConfig } from "@hmcts/web-core";
@@ -11,7 +12,14 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const baseConfig = createBaseViteConfig([path.join(__dirname, "src", "assets"), webCoreAssets, systemAdminAssets, verifiedPagesAssets, adminPagesAssets]);
+const baseConfig = createBaseViteConfig([
+  path.join(__dirname, "src", "assets"),
+  webCoreAssets,
+  systemAdminAssets,
+  verifiedPagesAssets,
+  adminPagesAssets,
+  sjpPressListAssets
+]);
 
 export default defineConfig(
   mergeConfig(baseConfig, {

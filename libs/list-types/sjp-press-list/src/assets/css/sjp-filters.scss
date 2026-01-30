@@ -1,0 +1,139 @@
+// MOJ Filter Layout Styles
+.moj-filter-layout {
+  display: block !important;
+  font-size: 0; // Remove whitespace between inline-block elements
+}
+
+.moj-filter-layout__filter {
+  width: 100%;
+}
+
+.layout-width-two-filters {
+  display: inline-block !important;
+  vertical-align: top !important;
+  width: 30% !important;
+  margin-right: 3% !important;
+  box-sizing: border-box;
+  font-size: 1rem; // Reset font size
+
+  &[hidden],
+  &.hidden {
+    display: none !important;
+  }
+}
+
+.layout-width-four-fifths {
+  display: inline-block !important;
+  vertical-align: top !important;
+  width: 100% !important;
+  box-sizing: border-box;
+  font-size: 1rem; // Reset font size
+
+  &.with-filters {
+    width: 67% !important;
+  }
+}
+
+.moj-filter {
+  // Background and padding removed - using inline styles in template
+}
+
+.moj-filter__header {
+  // Styling handled in template with inline styles
+}
+
+.moj-filter__header-title {
+  margin: 0;
+}
+
+.moj-filter__content {
+  // No specific styling needed
+}
+
+.moj-filter__selected {
+  // Styling handled in template with inline styles
+}
+
+.moj-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.moj-filter-tag-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.moj-filter-tag-label {
+  margin: 0;
+}
+
+.moj-filter-tag {
+  background-color: #ffffff;
+  border: 1px solid #b1b4b6;
+  padding: 5px 10px;
+  display: inline-block;
+}
+
+.moj-filter-tag__text {
+  // Inherits font styling from parent
+}
+
+.moj-filter__options {
+  // No specific styling needed
+}
+
+.moj-button-menu {
+  margin-bottom: 20px;
+}
+
+.filter-colour {
+  color: #1d70b8;
+  text-decoration: none;
+  margin-left: 5px;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.filter-colour.rotated {
+  transform: rotate(90deg);
+}
+
+.back-to-top-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+// Remove border from summary list rows
+.govuk-summary-list__row {
+  border-bottom: none !important;
+}
+
+// Add margin to section breaks
+.govuk-section-break.govuk-section-break--visible {
+  margin-bottom: 20px !important;
+}
+
+// Responsive layout
+@media (max-width: 768px) {
+  .moj-filter-layout {
+    flex-direction: column;
+  }
+
+  .layout-width-two-filters {
+    flex: 1 1 auto;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .layout-width-four-fifths {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
