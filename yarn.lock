@@ -758,18 +758,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/administrative-court-daily-cause-list@workspace:libs/list-types/administrative-court-daily-cause-list":
+"@hmcts/administrative-court-daily-cause-list@workspace:*, @hmcts/administrative-court-daily-cause-list@workspace:libs/list-types/administrative-court-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/administrative-court-daily-cause-list@workspace:libs/list-types/administrative-court-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
@@ -831,18 +833,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/care-standards-tribunal-weekly-hearing-list@workspace:libs/list-types/care-standards-tribunal-weekly-hearing-list":
+"@hmcts/care-standards-tribunal-weekly-hearing-list@workspace:*, @hmcts/care-standards-tribunal-weekly-hearing-list@workspace:libs/list-types/care-standards-tribunal-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/care-standards-tribunal-weekly-hearing-list@workspace:libs/list-types/care-standards-tribunal-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
@@ -894,12 +898,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hmcts/court-of-appeal-civil-daily-cause-list@workspace:libs/list-types/court-of-appeal-civil-daily-cause-list":
+"@hmcts/court-of-appeal-civil-daily-cause-list@workspace:*, @hmcts/court-of-appeal-civil-daily-cause-list@workspace:libs/list-types/court-of-appeal-civil-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/court-of-appeal-civil-daily-cause-list@workspace:libs/list-types/court-of-appeal-civil-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
@@ -907,6 +912,7 @@ __metadata:
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
@@ -948,12 +954,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/london-administrative-court-daily-cause-list@workspace:libs/list-types/london-administrative-court-daily-cause-list":
+"@hmcts/london-administrative-court-daily-cause-list@workspace:*, @hmcts/london-administrative-court-daily-cause-list@workspace:libs/list-types/london-administrative-court-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/london-administrative-court-daily-cause-list@workspace:libs/list-types/london-administrative-court-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
@@ -961,6 +968,7 @@ __metadata:
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
@@ -983,7 +991,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/notifications@workspace:libs/notifications"
   dependencies:
+    "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres": "workspace:*"
+    "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     notifications-node-client: "npm:8.2.1"
   peerDependencies:
     express: ^5.2.0
@@ -1035,18 +1049,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/rcj-standard-daily-cause-list@workspace:libs/list-types/rcj-standard-daily-cause-list":
+"@hmcts/rcj-standard-daily-cause-list@workspace:*, @hmcts/rcj-standard-daily-cause-list@workspace:libs/list-types/rcj-standard-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/rcj-standard-daily-cause-list@workspace:libs/list-types/rcj-standard-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
