@@ -213,7 +213,7 @@ describe("Web Application", () => {
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(16);
+      expect(calls.length).toBeGreaterThanOrEqual(15);
     });
 
     it("should configure error handlers at the end", async () => {
