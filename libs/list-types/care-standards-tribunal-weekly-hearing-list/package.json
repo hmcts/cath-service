@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks && yarn build:schemas",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\; && cd ../.. && mkdir -p dist/pdf && cd src/pdf && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pdf/$(dirname {}) && cp {} ../../dist/pdf/{}' \\;",
     "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
     "test": "vitest run",
@@ -26,10 +26,12 @@
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
+    "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "luxon": "3.7.2"
+    "luxon": "3.7.2",
+    "nunjucks": "3.2.4"
   },
   "devDependencies": {
     "@types/luxon": "3.7.1",

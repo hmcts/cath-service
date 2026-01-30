@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "GDS Transport", arial, sans-serif;
+    }
+    body {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #0b0c0c;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+      font-weight: 700;
+    }
+    h1 { font-size: 32px; margin-bottom: 20px; }
+    h2 { font-size: 24px; margin-bottom: 15px; }
+    h3 { font-size: 18px; margin-bottom: 10px; }
+    p { margin: 0 0 15px 0; }
+    .header-section {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #0b0c0c;
+    }
+    .bold { font-weight: 700; }
+    .header-date { margin-bottom: 5px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+    th, td {
+      border: 1px solid #b1b4b6;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f3f2f1;
+      font-weight: 700;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+    }
+    .footer p {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+    <p class="bold header-date">{{ t.listForWeekCommencing }} {{ header.weekCommencingDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.date }}</th>
+          <th>{{ t.tableHeaders.caseName }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingLength }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.venue }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td class="no-wrap">{{ hearing.date }}</td>
+            <td>{{ hearing.caseName }}</td>
+            <td>{{ hearing.hearingLength }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hearings scheduled.</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>
