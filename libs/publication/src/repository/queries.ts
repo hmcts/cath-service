@@ -161,30 +161,6 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
   );
 }
 
-export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId }
-  });
-
-  if (!artefact) {
-    return null;
-  }
-
-  return {
-    artefactId: artefact.artefactId,
-    locationId: artefact.locationId,
-    listTypeId: artefact.listTypeId,
-    contentDate: artefact.contentDate,
-    sensitivity: artefact.sensitivity,
-    language: artefact.language,
-    displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo,
-    isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance,
-    noMatch: artefact.noMatch
-  };
-}
-
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   await prisma.artefact.deleteMany({
     where: {
