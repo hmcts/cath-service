@@ -23,6 +23,24 @@ yarn db:studio                  # Open Prisma Studio
 yarn db:drop                    # Drop all tables and reset the database
 ```
 
+## Ticket Documentation
+
+When working on GitHub issues, use the QK commands to manage planning and implementation:
+
+```bash
+/qk-plan 312       # Create technical plan for issue #312
+/qk-implement 312  # Implement following the plan
+/qk-review 312     # Review the implementation
+```
+
+These commands create documentation in `docs/tickets/<issue-number>/`:
+- `ticket.md` - Fetched issue details
+- `plan.md` - Technical implementation plan
+- `tasks.md` - Implementation checklist
+- `review.md` - Code review feedback
+
+**Note:** Use plain GitHub issue numbers (e.g., `312`), not JIRA prefixes. Legacy `VIBE-*` folders are from the previous JIRA era.
+
 ## Naming Conventions (STRICT - MUST FOLLOW)
 
 ### 1. Database Tables and Fields
@@ -78,7 +96,7 @@ The web and API applications use explicit imports to register modules, enabling 
 ```bash
 mkdir -p libs/my-feature/src/pages      # Page controllers and templates
 mkdir -p libs/my-feature/src/routes     # API routes (optional)
-mkdir -p libs/my-feature/src/locales    # Translation files (optional)
+mkdir -p libs/my-feature/src/locales    # Shared translation files (optional)
 mkdir -p libs/my-feature/src/views      # Shared templates (optional)
 mkdir -p libs/my-feature/src/assets/css # Module styles (optional)
 mkdir -p libs/my-feature/src/assets/js  # Module scripts (optional)
@@ -202,11 +220,15 @@ libs/my-feature/
 │   └── schema.prisma           # Prisma schema file
 └── src/
     ├── routes/                 # API routes (auto-discovered)
-    │   └── my-api.ts          # API route file (if needed)
+    │   └── my-api.ts           # API route file (if needed)
     ├── pages/                  # Page routes (auto-discovered)
-    │   ├── my-page.ts          # Controller with GET/POST exports
-    │   └── my-page.njk         # Nunjucks template
-    ├── locales/                # i18n translations (optional)
+    │   └── my-page/            # /my-page/ page
+    │       ├── cy.ts           # Page Welsh content
+    │       ├── en.ts           # Page English content
+    │       ├── index.ts        # Controller with GET/POST exports
+    │       ├── index.test.ts   # Unit tests for controller
+    │       └── index.njk       # Nunjucks template
+    ├── locales/                # Shared i18n translations (optional)
     │   ├── en.ts               # English translations
     │   └── cy.ts               # Welsh translations
     ├── views/                  # Shared templates (optional)
@@ -225,16 +247,8 @@ libs/my-feature/
 ```typescript
 // libs/[module]/src/pages/[page-name].ts
 import type { Request, Response } from "express";
-
-const en = {
-  title: "My Page Title",
-  description: "Page description"
-};
-
-const cy = {
-  title: "Teitl Fy Nhudalen",
-  description: "Disgrifiad tudalen"
-};
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (_req: Request, res: Response) => {
   res.render("my-page", { en, cy });
@@ -249,7 +263,7 @@ export const POST = async (req: Request, res: Response) => {
 
 ```html
 <!-- libs/[my-module]/src/pages/[page-name].njk -->
-{% extends "layouts/base-templates.njk" %}
+{% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
@@ -297,7 +311,7 @@ export const POST = async (req: Request, res: Response) => {
 - Common error messages
 - Content used by multiple pages
 
-**Page-Specific Content** (goes in controllers):
+**Page-Specific Content** (goes in en.ts and cy.ts files next to controllers):
 - Page titles
 - Section headings
 - Body text
@@ -313,7 +327,6 @@ Every page must support both English and Welsh:
 2. **In Templates**: Use the current language data automatically selected by the i18n middleware
 3. **In Locale Files**: Maintain the same structure between en.ts and cy.ts
 4. **Testing**: Always test pages with `?lng=cy` query parameter to verify Welsh content
-
 
 ### Express Middleware Pattern
 
@@ -492,9 +505,6 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
   - **IMPORTANT**: Always add `.js` extension to relative imports (e.g., `import { foo } from "./bar.js"`)
   - This is required for ESM with Node.js "nodenext" module resolution
   - Applies even when importing TypeScript files (they compile to .js)
-  - **Enforcement**: TypeScript will error on missing `.js` extensions with:
-    - `"module": "nodenext"` and `"moduleResolution": "nodenext"` in tsconfig.json
-    - Error: "Relative import paths need explicit file extensions in ECMAScript imports"
 - **Linting**: Fix all Biome warnings before commit
 - **No CommonJS**: Use `import`/`export`, never `require()`/`module.exports`
 - **Pinned dependencies**: Specific versions only (`"express": "5.2.0"`) - except peer dependencies
@@ -535,6 +545,7 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
 * **KISS**: Keep It Simple, Stupid - Avoid unnecessary complexity. Write code that is easy to understand and maintain.
 * **Immutable**: Data should be immutable by default. Use const and avoid mutations to ensure predictable state.
 * **Side Effects**: Functions should have no side effects. Avoid modifying external state or relying on mutable data.
+* **DRY**: Don't repeat yourself, factor out code used in multiple places.
 
 ## Communication Style
 

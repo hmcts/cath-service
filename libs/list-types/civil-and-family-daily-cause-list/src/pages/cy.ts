@@ -38,9 +38,9 @@ export const cy = {
   searchCases: "Chwilio Achosion",
   dataSource: "Ffynhonnell Data",
   cautionNote:
-    "Nodwch fod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn flaenorol yn Ddata Personol Sensitif, a dylid ei thrin yn briodol.",
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y’i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:
-    "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd â'r bwriad o gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cadw at gyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd HMCTS yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y caiff ei ddefnyddio.",
+    "Mae’r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae’n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi’r gorau i anfon y data os cyfyd pryder ynghylch sut y’i defnyddir.",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
