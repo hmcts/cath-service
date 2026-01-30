@@ -29,39 +29,39 @@ describe("template-config", () => {
   });
 
   describe("getSubscriptionTemplateIdForListType", () => {
-    it("should return PDF_AND_SUMMARY template for Civil/Family list with PDF under 2MB", async () => {
+    it("should return PDF_AND_SUMMARY template when PDF is under 2MB", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-summary-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
       expect(getSubscriptionTemplateIdForListType(8, true, true)).toBe("pdf-summary-template");
     });
 
-    it("should return SUMMARY_ONLY template for Civil/Family list with PDF over 2MB", async () => {
+    it("should return SUMMARY_ONLY template when PDF is over 2MB", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-only-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
       expect(getSubscriptionTemplateIdForListType(8, true, false)).toBe("summary-only-template");
     });
 
-    it("should return SUMMARY_ONLY template for Civil/Family list without PDF", async () => {
+    it("should return SUMMARY_ONLY template when no PDF", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-only-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
       expect(getSubscriptionTemplateIdForListType(8, false, false)).toBe("summary-only-template");
     });
 
-    it("should return default template for non-Civil/Family list types", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "default-template";
+    it("should return PDF_AND_SUMMARY template for any list type with PDF under 2MB", async () => {
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-summary-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(getSubscriptionTemplateIdForListType(1, true, true)).toBe("default-template");
+      expect(getSubscriptionTemplateIdForListType(1, true, true)).toBe("pdf-summary-template");
     });
 
     it("should throw error when PDF_AND_SUMMARY template is not set", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateIdForListType(8, true, true)).toThrow(
+      expect(() => getSubscriptionTemplateIdForListType(1, true, true)).toThrow(
         "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set"
       );
     });
@@ -70,7 +70,7 @@ describe("template-config", () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateIdForListType(8, false, false)).toThrow(
+      expect(() => getSubscriptionTemplateIdForListType(1, false, false)).toThrow(
         "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set"
       );
     });

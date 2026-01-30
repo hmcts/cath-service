@@ -2,18 +2,7 @@ const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_RCJ_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_RCJ_PDF_AND_SUMMARY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_RCJ_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_RCJ_SUMMARY_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_PDF_AND_SUMMARY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_SUMMARY_ONLY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
-
-const CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID = 8;
-const RCJ_STANDARD_DAILY_CAUSE_LIST_ID = 9;
-const COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID = 10;
-const ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID = 11;
-const LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID = 12;
-const CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID = 13;
 
 export function getTemplateId(): string {
   if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION) {
@@ -22,61 +11,18 @@ export function getTemplateId(): string {
   return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION;
 }
 
-export function getSubscriptionTemplateIdForListType(listTypeId: number, hasPdf: boolean, pdfUnder2MB: boolean): string {
-  // For Civil and Family Daily Cause List (listTypeId 8)
-  if (listTypeId === CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID) {
-    if (hasPdf && pdfUnder2MB) {
-      if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY) {
-        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set");
-      }
-      return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY;
+export function getSubscriptionTemplateIdForListType(_listTypeId: number, hasPdf: boolean, pdfUnder2MB: boolean): string {
+  if (hasPdf && pdfUnder2MB) {
+    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY) {
+      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set");
     }
-
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set");
-    }
-    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY;
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY;
   }
 
-  // For RCJ lists (listTypeIds 9, 10, 11, 12)
-  if (
-    [
-      RCJ_STANDARD_DAILY_CAUSE_LIST_ID,
-      COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID,
-      ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID,
-      LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID
-    ].includes(listTypeId)
-  ) {
-    if (hasPdf && pdfUnder2MB) {
-      if (!GOVUK_NOTIFY_TEMPLATE_ID_RCJ_PDF_AND_SUMMARY) {
-        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_RCJ_PDF_AND_SUMMARY environment variable is not set");
-      }
-      return GOVUK_NOTIFY_TEMPLATE_ID_RCJ_PDF_AND_SUMMARY;
-    }
-
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_RCJ_SUMMARY_ONLY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_RCJ_SUMMARY_ONLY environment variable is not set");
-    }
-    return GOVUK_NOTIFY_TEMPLATE_ID_RCJ_SUMMARY_ONLY;
+  if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY) {
+    throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set");
   }
-
-  // For Care Standards Tribunal (listTypeId 13)
-  if (listTypeId === CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID) {
-    if (hasPdf && pdfUnder2MB) {
-      if (!GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_PDF_AND_SUMMARY) {
-        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_PDF_AND_SUMMARY environment variable is not set");
-      }
-      return GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_PDF_AND_SUMMARY;
-    }
-
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_SUMMARY_ONLY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_SUMMARY_ONLY environment variable is not set");
-    }
-    return GOVUK_NOTIFY_TEMPLATE_ID_CARE_STANDARDS_SUMMARY_ONLY;
-  }
-
-  // For all other list types, use the original template
-  return getTemplateId();
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY;
 }
 
 export function getApiKey(): string {
