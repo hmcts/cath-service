@@ -16,6 +16,7 @@ import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-commo
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot, pageRoutes as londonAdminRoutes } from "@hmcts/london-administrative-court-daily-cause-list/config";
 import {
+  apiRoutes as publicPagesApiRoutes,
   fileUploadRoutes as publicPagesFileUploadRoutes,
   moduleRoot as publicPagesModuleRoot,
   pageRoutes as publicPagesRoutes
@@ -118,8 +119,11 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
 
-  // Register API routes for location autocomplete
+  // Register location autocomplete routes (no prefix - frontend expects /locations)
   app.use(await createSimpleRouter(locationApiRoutes));
+
+  // Register API routes for public pages (flat file download)
+  app.use(await createSimpleRouter({ ...publicPagesApiRoutes, prefix: "/api" }));
 
   // Register API routes for system admin (file serving)
   app.use(await createSimpleRouter(systemAdminApiRoutes));
