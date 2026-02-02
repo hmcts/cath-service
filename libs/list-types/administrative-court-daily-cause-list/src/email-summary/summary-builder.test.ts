@@ -25,24 +25,24 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(hearingList);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      time: "10:00",
-      caseNumber: "CO/1234/2025",
-      hearingType: "Judicial Review",
-      caseDetails: "R (Smith) v Secretary of State"
-    });
+    expect(result[0]).toEqual([
+      { label: "Time", value: "10:00" },
+      { label: "Case number", value: "CO/1234/2025" },
+      { label: "Hearing type", value: "Judicial Review" },
+      { label: "Case details", value: "R (Smith) v Secretary of State" }
+    ]);
   });
 });
 
 describe("formatCaseSummaryForEmail", () => {
   it("should format case summary correctly", () => {
     const items = [
-      {
-        time: "10:00",
-        caseNumber: "CO/1234/2025",
-        hearingType: "Judicial Review",
-        caseDetails: "R (Smith) v Secretary of State"
-      }
+      [
+        { label: "Time", value: "10:00" },
+        { label: "Case number", value: "CO/1234/2025" },
+        { label: "Hearing type", value: "Judicial Review" },
+        { label: "Case details", value: "R (Smith) v Secretary of State" }
+      ]
     ];
 
     const result = formatCaseSummaryForEmail(items);

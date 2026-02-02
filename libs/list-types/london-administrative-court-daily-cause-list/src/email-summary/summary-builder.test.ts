@@ -38,27 +38,27 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(hearingList);
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      time: "10:00",
-      caseNumber: "LO/1234/2025",
-      caseDetails: "R (Smith) v Mayor of London"
-    });
-    expect(result[1]).toEqual({
-      time: "14:00",
-      caseNumber: "LO/5678/2025",
-      caseDetails: "Planning Appeal"
-    });
+    expect(result[0]).toEqual([
+      { label: "Time", value: "10:00" },
+      { label: "Case number", value: "LO/1234/2025" },
+      { label: "Case details", value: "R (Smith) v Mayor of London" }
+    ]);
+    expect(result[1]).toEqual([
+      { label: "Time", value: "14:00" },
+      { label: "Case number", value: "LO/5678/2025" },
+      { label: "Case details", value: "Planning Appeal" }
+    ]);
   });
 });
 
 describe("formatCaseSummaryForEmail", () => {
   it("should format case summary correctly", () => {
     const items = [
-      {
-        time: "10:00",
-        caseNumber: "LO/1234/2025",
-        caseDetails: "R (Smith) v Mayor of London"
-      }
+      [
+        { label: "Time", value: "10:00" },
+        { label: "Case number", value: "LO/1234/2025" },
+        { label: "Case details", value: "R (Smith) v Mayor of London" }
+      ]
     ];
 
     const result = formatCaseSummaryForEmail(items);

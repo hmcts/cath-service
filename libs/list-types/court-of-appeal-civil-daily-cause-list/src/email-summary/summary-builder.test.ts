@@ -40,16 +40,16 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(hearingList);
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({
-      time: "10:00",
-      caseNumber: "A1/2025/0001",
-      caseDetails: "Smith v Jones"
-    });
-    expect(result[1]).toEqual({
-      time: "14:00",
-      caseNumber: "A1/2025/0002",
-      caseDetails: "Brown v Green"
-    });
+    expect(result[0]).toEqual([
+      { label: "Time", value: "10:00" },
+      { label: "Case number", value: "A1/2025/0001" },
+      { label: "Case details", value: "Smith v Jones" }
+    ]);
+    expect(result[1]).toEqual([
+      { label: "Time", value: "14:00" },
+      { label: "Case number", value: "A1/2025/0002" },
+      { label: "Case details", value: "Brown v Green" }
+    ]);
   });
 
   it("should handle empty hearing list", () => {
@@ -65,11 +65,11 @@ describe("extractCaseSummary", () => {
 describe("formatCaseSummaryForEmail", () => {
   it("should format single case summary correctly", () => {
     const items = [
-      {
-        time: "10:00",
-        caseNumber: "A1/2025/0001",
-        caseDetails: "Smith v Jones"
-      }
+      [
+        { label: "Time", value: "10:00" },
+        { label: "Case number", value: "A1/2025/0001" },
+        { label: "Case details", value: "Smith v Jones" }
+      ]
     ];
 
     const result = formatCaseSummaryForEmail(items);
@@ -80,8 +80,7 @@ describe("formatCaseSummaryForEmail", () => {
   });
 
   it("should handle empty case list", () => {
-    const items: never[] = [];
-    const result = formatCaseSummaryForEmail(items);
+    const result = formatCaseSummaryForEmail([]);
     expect(result).toBe("No cases scheduled.");
   });
 });
