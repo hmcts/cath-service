@@ -362,6 +362,7 @@ jobs:
             ${{ github.event.issue.body }}
 
             ## Instructions
+            - Text in round brackets (like this) is template guidance - remove it and do not include it in the output
             1. Read the template file from templates/${{ steps.parse.outputs.template }}.md
             2. Read .claude/rules/design.md for GOV.UK Design System guidance
             3. Search the codebase for similar implementations to understand existing patterns
