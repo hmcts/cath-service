@@ -566,7 +566,7 @@ describe("notification-service", () => {
     consoleSpy.mockRestore();
   });
 
-  it("should use standard template for non-Civil/Family list types", async () => {
+  it("should use standard template for unsupported list types", async () => {
     const mockSubscriptions = [
       {
         subscriptionId: "sub-1",

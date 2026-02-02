@@ -1,26 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock dependencies before imports
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn()
-  }
+const { mockSavePdfToStorage, mockCreatePdfErrorResult, mockConfigureNunjucks, mockLoadTranslations } = vi.hoisted(() => ({
+  mockSavePdfToStorage: vi.fn(),
+  mockCreatePdfErrorResult: vi.fn(),
+  mockConfigureNunjucks: vi.fn(),
+  mockLoadTranslations: vi.fn()
+}));
+
+vi.mock("@hmcts/list-types-common", () => ({
+  savePdfToStorage: mockSavePdfToStorage,
+  createPdfErrorResult: mockCreatePdfErrorResult,
+  configureNunjucks: mockConfigureNunjucks,
+  loadTranslations: mockLoadTranslations
 }));
 
 vi.mock("@hmcts/pdf-generation", () => ({
   generatePdfFromHtml: vi.fn()
 }));
 
-vi.mock("@hmcts/location", () => ({
-  getLocationById: vi.fn()
-}));
-
 vi.mock("../rendering/renderer.js", () => ({
   renderCauseListData: vi.fn()
 }));
 
-import fs from "node:fs/promises";
+vi.mock("@hmcts/publication", () => ({
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    SNL: "SNL"
+  }
+}));
+
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { generateCauseListPdf } from "./pdf-generator.js";
@@ -62,12 +70,26 @@ const mockCauseListData = {
 };
 
 describe("generateCauseListPdf", () => {
+  const mockNunjucksEnv = {
+    render: vi.fn().mockReturnValue("<html>PDF HTML</html>")
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     vi.mocked(renderCauseListData).mockResolvedValue(mockRenderedData);
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+    mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
+    mockLoadTranslations.mockResolvedValue({ pageTitle: "Test Title" });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/test.pdf",
+      sizeBytes: 1024,
+      exceedsMaxSize: false
+    });
+    mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
+      success: false,
+      error: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+    }));
   });
 
   it("should generate PDF successfully", async () => {
@@ -76,6 +98,12 @@ describe("generateCauseListPdf", () => {
       success: true,
       pdfBuffer,
       sizeBytes: 1024
+    });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/test-artefact-123.pdf",
+      sizeBytes: 1024,
+      exceedsMaxSize: false
     });
 
     const result = await generateCauseListPdf({
@@ -90,16 +118,21 @@ describe("generateCauseListPdf", () => {
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
     expect(result.exceedsMaxSize).toBe(false);
-    expect(fs.mkdir).toHaveBeenCalled();
-    expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-artefact-123.pdf"), pdfBuffer);
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("test-artefact-123", pdfBuffer, 1024);
   });
 
   it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024); // 3MB
+    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
       pdfBuffer: largePdfBuffer,
       sizeBytes: 3 * 1024 * 1024
+    });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/large-pdf-123.pdf",
+      sizeBytes: 3 * 1024 * 1024,
+      exceedsMaxSize: true
     });
 
     const result = await generateCauseListPdf({
@@ -116,11 +149,17 @@ describe("generateCauseListPdf", () => {
   });
 
   it("should return exceedsMaxSize false when PDF is exactly 2MB", async () => {
-    const exactPdfBuffer = Buffer.alloc(2 * 1024 * 1024); // 2MB exactly
+    const exactPdfBuffer = Buffer.alloc(2 * 1024 * 1024);
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
       pdfBuffer: exactPdfBuffer,
       sizeBytes: 2 * 1024 * 1024
+    });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/exact-size-pdf.pdf",
+      sizeBytes: 2 * 1024 * 1024,
+      exceedsMaxSize: false
     });
 
     const result = await generateCauseListPdf({
@@ -226,7 +265,7 @@ describe("generateCauseListPdf", () => {
       pdfBuffer: Buffer.from("PDF"),
       sizeBytes: 100
     });
-    vi.mocked(fs.writeFile).mockRejectedValue(new Error("Disk full"));
+    mockSavePdfToStorage.mockRejectedValue(new Error("Disk full"));
 
     const result = await generateCauseListPdf({
       artefactId: "fs-error",
@@ -280,7 +319,7 @@ describe("generateCauseListPdf", () => {
       provenance: "MANUAL_UPLOAD"
     });
 
-    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("Manual Upload"));
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Manual Upload" }));
   });
 
   it("should use SNL provenance label", async () => {
@@ -299,7 +338,7 @@ describe("generateCauseListPdf", () => {
       provenance: "SNL"
     });
 
-    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("SNL"));
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "SNL" }));
   });
 
   it("should use raw provenance value when label not found", async () => {
@@ -318,7 +357,7 @@ describe("generateCauseListPdf", () => {
       provenance: "UNKNOWN_SOURCE"
     });
 
-    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("UNKNOWN_SOURCE"));
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "UNKNOWN_SOURCE" }));
   });
 
   it("should handle missing provenance", async () => {
@@ -340,10 +379,11 @@ describe("generateCauseListPdf", () => {
     expect(generatePdfFromHtml).toHaveBeenCalled();
   });
 
-  it("should create storage directory with recursive option", async () => {
+  it("should call savePdfToStorage with correct parameters", async () => {
+    const pdfBuffer = Buffer.from("PDF");
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
-      pdfBuffer: Buffer.from("PDF"),
+      pdfBuffer,
       sizeBytes: 100
     });
 
@@ -355,7 +395,7 @@ describe("generateCauseListPdf", () => {
       jsonData: mockCauseListData
     });
 
-    expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining("storage"), { recursive: true });
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("test-mkdir", pdfBuffer, 100);
   });
 
   it("should generate PDF for Welsh locale", async () => {

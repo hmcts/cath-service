@@ -1,34 +1,26 @@
 import fs from "node:fs/promises";
 import {
-  type AdministrativeCourtHearingList,
   extractCaseSummary as extractAdminCourtSummary,
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
 import {
-  type CareStandardsTribunalHearingList,
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import {
-  type CauseListData,
   extractCaseSummary as extractCivilFamilySummary,
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import {
-  type CourtOfAppealCivilData,
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { type CaseSummary, getListTypeName, type ListTypeName } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
-  formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail,
-  type LondonAdminCourtData
+  formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
-import {
-  extractCaseSummary as extractRcjSummary,
-  formatCaseSummaryForEmail as formatRcjSummaryForEmail,
-  type StandardHearingList
-} from "@hmcts/rcj-standard-daily-cause-list";
+import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
@@ -40,15 +32,49 @@ import { createNotificationAuditLog, updateNotificationStatus } from "./notifica
 import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
 import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
-const CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID = 8;
-const CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID = 9;
-// RCJ Standard format list IDs (10-17)
-const RCJ_STANDARD_LIST_IDS = [10, 11, 12, 13, 14, 15, 16, 17];
-const LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID = 18;
-const COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID = 19;
-// Administrative Court list IDs (20-23)
-const ADMINISTRATIVE_COURT_LIST_IDS = [20, 21, 22, 23];
 const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+
+type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
+type SummaryFormatter = (items: CaseSummary[]) => string;
+
+interface EmailBuilderConfig {
+  extract: SummaryExtractor;
+  format: SummaryFormatter;
+}
+
+const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
+const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
+
+const EMAIL_BUILDER_REGISTRY: Partial<Record<ListTypeName, EmailBuilderConfig>> = {
+  CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
+    extract: extractCivilFamilySummary as SummaryExtractor,
+    format: formatCivilFamilySummaryForEmail
+  },
+  CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
+    extract: extractCareStandardsSummary as SummaryExtractor,
+    format: formatCareStandardsSummaryForEmail
+  },
+  CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardConfig,
+  COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: rcjStandardConfig,
+  KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: rcjStandardConfig,
+  KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: rcjStandardConfig,
+  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardConfig,
+  LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
+    extract: extractLondonAdminSummary as SummaryExtractor,
+    format: formatLondonAdminSummaryForEmail
+  },
+  COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
+    extract: extractCourtOfAppealSummary as SummaryExtractor,
+    format: formatCourtOfAppealSummaryForEmail
+  },
+  BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+};
 
 export interface NotificationResult {
   totalSubscriptions: number;
@@ -154,52 +180,22 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 }
 
 async function buildEmailTemplateData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId;
-  const isCivilFamilyList = listTypeId === CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID;
-  const isCareStandards = listTypeId === CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID;
-  const isLondonAdminCourt = listTypeId === LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID;
-  const isCourtOfAppealCivil = listTypeId === COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID;
-  const isAdminCourt = listTypeId !== undefined && ADMINISTRATIVE_COURT_LIST_IDS.includes(listTypeId);
-  const isRcjList = listTypeId !== undefined && RCJ_STANDARD_LIST_IDS.includes(listTypeId);
+  const listTypeName = event.listTypeId !== undefined ? getListTypeName(event.listTypeId) : undefined;
+  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
-  if (isCivilFamilyList && event.jsonData) {
-    return buildCivilFamilyEmailData(event, userName);
+  if (config && event.jsonData) {
+    return buildEnhancedEmailData(event, userName, config);
   }
 
-  if (isCareStandards && event.jsonData) {
-    return buildCareStandardsEmailData(event, userName);
-  }
-
-  if (isLondonAdminCourt && event.jsonData) {
-    return buildLondonAdminEmailData(event, userName);
-  }
-
-  if (isCourtOfAppealCivil && event.jsonData) {
-    return buildCourtOfAppealEmailData(event, userName);
-  }
-
-  if (isAdminCourt && event.jsonData) {
-    return buildAdminCourtEmailData(event, userName);
-  }
-
-  if (isRcjList && event.jsonData) {
-    return buildRcjEmailData(event, userName);
-  }
-
-  return {
-    templateParameters: buildTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName
-    })
-  };
+  return buildFallbackEmailData(event, userName);
 }
 
-async function buildCivilFamilyEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
+async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig): Promise<EmailTemplateData> {
+  const listTypeId = event.listTypeId!;
+
   try {
-    const caseSummaryItems = extractCivilFamilySummary(event.jsonData as CauseListData);
-    const caseSummary = formatCivilFamilySummaryForEmail(caseSummaryItems);
+    const caseSummaryItems = config.extract(event.jsonData);
+    const caseSummary = config.format(caseSummaryItems);
 
     const templateParameters = buildEnhancedTemplateParameters({
       userName,
@@ -210,27 +206,20 @@ async function buildCivilFamilyEmailData(event: PublicationEvent, userName: stri
     });
 
     if (event.pdfFilePath) {
-      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID);
+      return buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
     }
 
     return {
       templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID, false, false)
+      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
     };
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return {
-      templateParameters: buildTemplateParameters({
-        userName,
-        hearingListName: event.hearingListName,
-        publicationDate: event.publicationDate,
-        locationName: event.locationName
-      })
-    };
+    return buildFallbackEmailData(event, userName);
   }
 }
 
-async function buildCivilFamilyWithPdf(pdfFilePath: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
+async function buildEmailDataWithPdf(pdfFilePath: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
   const pdfStats = await fs.stat(pdfFilePath);
   const pdfUnder2MB = pdfStats.size < MAX_PDF_SIZE_BYTES;
 
@@ -244,179 +233,15 @@ async function buildCivilFamilyWithPdf(pdfFilePath: string, templateParameters: 
   return { templateParameters, templateId };
 }
 
-async function buildRcjEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-  try {
-    const caseSummaryItems = extractRcjSummary(event.jsonData as StandardHearingList);
-    const caseSummary = formatRcjSummaryForEmail(caseSummaryItems);
-
-    const templateParameters = buildEnhancedTemplateParameters({
+function buildFallbackEmailData(event: PublicationEvent, userName: string): EmailTemplateData {
+  return {
+    templateParameters: buildTemplateParameters({
       userName,
       hearingListName: event.hearingListName,
       publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseSummary
-    });
-
-    if (event.pdfFilePath) {
-      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
-  } catch (error) {
-    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return {
-      templateParameters: buildTemplateParameters({
-        userName,
-        hearingListName: event.hearingListName,
-        publicationDate: event.publicationDate,
-        locationName: event.locationName
-      })
-    };
-  }
-}
-
-async function buildLondonAdminEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-  try {
-    const caseSummaryItems = extractLondonAdminSummary(event.jsonData as LondonAdminCourtData);
-    const caseSummary = formatLondonAdminSummaryForEmail(caseSummaryItems);
-
-    const templateParameters = buildEnhancedTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseSummary
-    });
-
-    if (event.pdfFilePath) {
-      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
-  } catch (error) {
-    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return {
-      templateParameters: buildTemplateParameters({
-        userName,
-        hearingListName: event.hearingListName,
-        publicationDate: event.publicationDate,
-        locationName: event.locationName
-      })
-    };
-  }
-}
-
-async function buildCourtOfAppealEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-  try {
-    const caseSummaryItems = extractCourtOfAppealSummary(event.jsonData as CourtOfAppealCivilData);
-    const caseSummary = formatCourtOfAppealSummaryForEmail(caseSummaryItems);
-
-    const templateParameters = buildEnhancedTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseSummary
-    });
-
-    if (event.pdfFilePath) {
-      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
-  } catch (error) {
-    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return {
-      templateParameters: buildTemplateParameters({
-        userName,
-        hearingListName: event.hearingListName,
-        publicationDate: event.publicationDate,
-        locationName: event.locationName
-      })
-    };
-  }
-}
-
-async function buildAdminCourtEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-  try {
-    const caseSummaryItems = extractAdminCourtSummary(event.jsonData as AdministrativeCourtHearingList);
-    const caseSummary = formatAdminCourtSummaryForEmail(caseSummaryItems);
-
-    const templateParameters = buildEnhancedTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseSummary
-    });
-
-    if (event.pdfFilePath) {
-      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
-  } catch (error) {
-    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return {
-      templateParameters: buildTemplateParameters({
-        userName,
-        hearingListName: event.hearingListName,
-        publicationDate: event.publicationDate,
-        locationName: event.locationName
-      })
-    };
-  }
-}
-
-async function buildCareStandardsEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-  try {
-    const caseSummaryItems = extractCareStandardsSummary(event.jsonData as CareStandardsTribunalHearingList);
-    const caseSummary = formatCareStandardsSummaryForEmail(caseSummaryItems);
-
-    const templateParameters = buildEnhancedTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseSummary
-    });
-
-    if (event.pdfFilePath) {
-      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
-  } catch (error) {
-    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return {
-      templateParameters: buildTemplateParameters({
-        userName,
-        hearingListName: event.hearingListName,
-        publicationDate: event.publicationDate,
-        locationName: event.locationName
-      })
-    };
-  }
+      locationName: event.locationName
+    })
+  };
 }
 
 function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {

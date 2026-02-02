@@ -17,10 +17,6 @@ vi.mock("@hmcts/notifications", () => ({
   sendPublicationNotifications: vi.fn()
 }));
 
-vi.mock("../repository/queries.js", () => ({
-  getArtefactById: vi.fn()
-}));
-
 vi.mock("../index.js", () => ({
   mockListTypes: [
     { id: 1, englishFriendlyName: "Daily Cause List" },
@@ -34,7 +30,6 @@ describe("publication-processor", async () => {
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendPublicationNotifications } = await import("@hmcts/notifications");
-  const { getArtefactById } = await import("../repository/queries.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,7 +46,7 @@ describe("publication-processor", async () => {
       provenance: "MANUAL_UPLOAD"
     };
 
-    it("should return empty result for non-Civil and Family list types", async () => {
+    it("should return empty result for unsupported list types", async () => {
       const result = await generatePublicationPdf({ ...baseParams, listTypeId: 1 });
 
       expect(result).toEqual({});
@@ -68,14 +63,16 @@ describe("publication-processor", async () => {
 
       const result = await generatePublicationPdf(baseParams);
 
-      expect(generateCauseListPdf).toHaveBeenCalledWith({
-        artefactId: "test-artefact-id",
-        contentDate: baseParams.contentDate,
-        locale: "en",
-        locationId: "123",
-        jsonData: baseParams.jsonData,
-        provenance: "MANUAL_UPLOAD"
-      });
+      expect(generateCauseListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artefactId: "test-artefact-id",
+          contentDate: baseParams.contentDate,
+          locale: "en",
+          locationId: "123",
+          jsonData: baseParams.jsonData,
+          provenance: "MANUAL_UPLOAD"
+        })
+      );
       expect(result).toEqual({
         pdfPath: "/path/to/pdf",
         sizeBytes: 1024,
@@ -137,14 +134,10 @@ describe("publication-processor", async () => {
       const careStandardsParams = {
         ...baseParams,
         listTypeId: 9,
-        jsonData: [{ date: "10/12/2024", caseName: "Test Case" }]
-      };
-
-      vi.mocked(getArtefactById).mockResolvedValue({
-        artefactId: "test-artefact-id",
+        jsonData: [{ date: "10/12/2024", caseName: "Test Case" }],
         displayFrom: new Date("2025-01-20"),
         displayTo: new Date("2025-01-30")
-      } as any);
+      };
 
       vi.mocked(generateCareStandardsTribunalWeeklyHearingListPdf).mockResolvedValue({
         success: true,
@@ -155,41 +148,22 @@ describe("publication-processor", async () => {
 
       const result = await generatePublicationPdf(careStandardsParams);
 
-      expect(getArtefactById).toHaveBeenCalledWith("test-artefact-id");
-      expect(generateCareStandardsTribunalWeeklyHearingListPdf).toHaveBeenCalledWith({
-        artefactId: "test-artefact-id",
-        locale: "en",
-        locationId: "123",
-        jsonData: careStandardsParams.jsonData,
-        provenance: "MANUAL_UPLOAD",
-        displayFrom: new Date("2025-01-20"),
-        displayTo: new Date("2025-01-30")
-      });
+      expect(generateCareStandardsTribunalWeeklyHearingListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artefactId: "test-artefact-id",
+          locale: "en",
+          locationId: "123",
+          jsonData: careStandardsParams.jsonData,
+          provenance: "MANUAL_UPLOAD",
+          displayFrom: new Date("2025-01-20"),
+          displayTo: new Date("2025-01-30")
+        })
+      );
       expect(result).toEqual({
         pdfPath: "/path/to/cst-pdf",
         sizeBytes: 2048,
         exceedsMaxSize: false
       });
-    });
-
-    it("should return empty result when artefact not found for Care Standards", async () => {
-      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      vi.mocked(getArtefactById).mockResolvedValue(null);
-
-      const result = await generatePublicationPdf({
-        ...baseParams,
-        listTypeId: 9,
-        jsonData: [{ date: "10/12/2024", caseName: "Test Case" }]
-      });
-
-      expect(result).toEqual({});
-      expect(generateCareStandardsTribunalWeeklyHearingListPdf).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Artefact not found for PDF generation:", {
-        artefactId: "test-artefact-id"
-      });
-
-      consoleWarnSpy.mockRestore();
     });
   });
 

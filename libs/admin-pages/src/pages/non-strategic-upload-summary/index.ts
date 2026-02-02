@@ -146,6 +146,8 @@ const postHandler = async (req: Request, res: Response) => {
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
       provenance: Provenance.MANUAL_UPLOAD,
+      displayFrom,
+      displayTo,
       logPrefix: "[Non-Strategic Upload]"
     });
 
