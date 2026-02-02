@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import {
-  type CaseSummaryItem as CareStandardsSummaryItem,
   type CareStandardsTribunalHearingList,
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
@@ -11,9 +10,13 @@ import {
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import {
+  extractCaseSummary as extractLondonAdminSummary,
+  formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail,
+  type LondonAdminCourtData
+} from "@hmcts/london-administrative-court-daily-cause-list";
+import {
   extractCaseSummary as extractRcjSummary,
   formatCaseSummaryForEmail as formatRcjSummaryForEmail,
-  type CaseSummaryItem as RcjSummaryItem,
   type StandardHearingList
 } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
@@ -28,11 +31,13 @@ import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./
 import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
 const CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID = 8;
-const RCJ_STANDARD_DAILY_CAUSE_LIST_ID = 9;
-const COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID = 10;
-const ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID = 11;
-const LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID = 12;
-const CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID = 13;
+const CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID = 9;
+// RCJ Standard format list IDs (10-17)
+const RCJ_STANDARD_LIST_IDS = [10, 11, 12, 13, 14, 15, 16, 17];
+const LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID = 18;
+const COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID = 19;
+// Administrative Court list IDs (20-23)
+const ADMINISTRATIVE_COURT_LIST_IDS = [20, 21, 22, 23];
 const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
 
 export interface NotificationResult {
@@ -141,26 +146,25 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 async function buildEmailTemplateData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
   const listTypeId = event.listTypeId;
   const isCivilFamilyList = listTypeId === CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID;
-  const isRcjList =
-    listTypeId !== undefined &&
-    [
-      RCJ_STANDARD_DAILY_CAUSE_LIST_ID,
-      COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID,
-      ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID,
-      LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID
-    ].includes(listTypeId);
   const isCareStandards = listTypeId === CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID;
+  const isLondonAdminCourt = listTypeId === LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID;
+  const isRcjList =
+    listTypeId !== undefined && [...RCJ_STANDARD_LIST_IDS, COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID, ...ADMINISTRATIVE_COURT_LIST_IDS].includes(listTypeId);
 
   if (isCivilFamilyList && event.jsonData) {
     return buildCivilFamilyEmailData(event, userName);
   }
 
-  if (isRcjList && event.jsonData) {
-    return buildRcjEmailData(event, userName);
-  }
-
   if (isCareStandards && event.jsonData) {
     return buildCareStandardsEmailData(event, userName);
+  }
+
+  if (isLondonAdminCourt && event.jsonData) {
+    return buildLondonAdminEmailData(event, userName);
+  }
+
+  if (isRcjList && event.jsonData) {
+    return buildRcjEmailData(event, userName);
   }
 
   return {
@@ -226,6 +230,41 @@ async function buildRcjEmailData(event: PublicationEvent, userName: string): Pro
   try {
     const caseSummaryItems = extractRcjSummary(event.jsonData as StandardHearingList);
     const caseSummary = formatRcjSummaryForEmail(caseSummaryItems);
+
+    const templateParameters = buildEnhancedTemplateParameters({
+      userName,
+      hearingListName: event.hearingListName,
+      publicationDate: event.publicationDate,
+      locationName: event.locationName,
+      caseSummary
+    });
+
+    if (event.pdfFilePath) {
+      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
+    }
+
+    return {
+      templateParameters,
+      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
+    };
+  } catch (error) {
+    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
+    return {
+      templateParameters: buildTemplateParameters({
+        userName,
+        hearingListName: event.hearingListName,
+        publicationDate: event.publicationDate,
+        locationName: event.locationName
+      })
+    };
+  }
+}
+
+async function buildLondonAdminEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
+  const listTypeId = event.listTypeId!;
+  try {
+    const caseSummaryItems = extractLondonAdminSummary(event.jsonData as LondonAdminCourtData);
+    const caseSummary = formatLondonAdminSummaryForEmail(caseSummaryItems);
 
     const templateParameters = buildEnhancedTemplateParameters({
       userName,

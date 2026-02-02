@@ -1,9 +1,22 @@
+import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
+import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
+import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
+import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
 import { sendPublicationNotifications } from "@hmcts/notifications";
+import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
 import { mockListTypes } from "../index.js";
+import { getArtefactById } from "../repository/queries.js";
 
 const LIST_TYPE_CIVIL_AND_FAMILY_DAILY_CAUSE_LIST = 8;
+const LIST_TYPE_CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST = 9;
+// RCJ Standard format list IDs (10-17)
+const RCJ_STANDARD_LIST_IDS = [10, 11, 12, 13, 14, 15, 16, 17];
+const LIST_TYPE_LONDON_ADMINISTRATIVE_COURT = 18;
+const LIST_TYPE_COURT_OF_APPEAL_CIVIL = 19;
+// Administrative Court list IDs (20-23)
+const ADMINISTRATIVE_COURT_LIST_IDS = [20, 21, 22, 23];
 
 interface GeneratePdfParams {
   artefactId: string;
@@ -25,19 +38,73 @@ interface GeneratePdfResult {
 export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
   const { artefactId, listTypeId, contentDate, locale, locationId, jsonData, provenance, logPrefix = "[Publication]" } = params;
 
-  if (listTypeId !== LIST_TYPE_CIVIL_AND_FAMILY_DAILY_CAUSE_LIST) {
-    return {};
-  }
-
   try {
-    const pdfResult = await generateCauseListPdf({
-      artefactId,
-      contentDate,
-      locale,
-      locationId,
-      jsonData: jsonData as CauseListData,
-      provenance
-    });
+    let pdfResult: { success: boolean; pdfPath?: string; sizeBytes?: number; exceedsMaxSize?: boolean; error?: string };
+
+    if (listTypeId === LIST_TYPE_CIVIL_AND_FAMILY_DAILY_CAUSE_LIST) {
+      pdfResult = await generateCauseListPdf({
+        artefactId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData: jsonData as CauseListData,
+        provenance
+      });
+    } else if (listTypeId === LIST_TYPE_CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST) {
+      const artefact = await getArtefactById(artefactId);
+      if (!artefact) {
+        console.warn(`${logPrefix} Artefact not found for PDF generation:`, { artefactId });
+        return {};
+      }
+
+      pdfResult = await generateCareStandardsTribunalWeeklyHearingListPdf({
+        artefactId,
+        locale,
+        locationId,
+        jsonData: jsonData as CareStandardsTribunalHearingList,
+        provenance,
+        displayFrom: artefact.displayFrom,
+        displayTo: artefact.displayTo
+      });
+    } else if (RCJ_STANDARD_LIST_IDS.includes(listTypeId)) {
+      pdfResult = await generateRcjStandardDailyCauseListPdf({
+        artefactId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData: jsonData as StandardHearingList,
+        provenance
+      });
+    } else if (listTypeId === LIST_TYPE_LONDON_ADMINISTRATIVE_COURT) {
+      pdfResult = await generateLondonAdministrativeCourtDailyCauseListPdf({
+        artefactId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData: jsonData as LondonAdminCourtData,
+        provenance
+      });
+    } else if (listTypeId === LIST_TYPE_COURT_OF_APPEAL_CIVIL) {
+      pdfResult = await generateCourtOfAppealCivilDailyCauseListPdf({
+        artefactId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData: jsonData as CourtOfAppealCivilData,
+        provenance
+      });
+    } else if (ADMINISTRATIVE_COURT_LIST_IDS.includes(listTypeId)) {
+      pdfResult = await generateAdministrativeCourtDailyCauseListPdf({
+        artefactId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData: jsonData as AdministrativeCourtHearingList,
+        provenance
+      });
+    } else {
+      return {};
+    }
 
     if (pdfResult.success && pdfResult.pdfPath) {
       return {

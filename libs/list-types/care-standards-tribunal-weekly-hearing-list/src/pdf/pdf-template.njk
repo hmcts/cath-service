@@ -24,6 +24,9 @@
     h2 { font-size: 24px; margin-bottom: 15px; }
     h3 { font-size: 18px; margin-bottom: 10px; }
     p { margin: 0 0 15px 0; }
+    a {
+      color: #1d70b8;
+    }
     .header-section {
       margin-bottom: 30px;
       padding-bottom: 20px;
@@ -31,6 +34,14 @@
     }
     .bold { font-weight: 700; }
     .header-date { margin-bottom: 5px; }
+    .info-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .info-box p:last-child {
+      margin-bottom: 0;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -57,13 +68,34 @@
     .footer p {
       margin-bottom: 10px;
     }
+    .caution-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .caution-box p {
+      margin-bottom: 10px;
+      color: #0b0c0c;
+    }
+    .caution-box p:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
   <div class="header-section">
     <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
     <p class="bold header-date">{{ t.listForWeekCommencing }} {{ header.weekCommencingDate }}</p>
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformationTitle }}</h3>
+    <p>{{ t.importantInformationText }}</p>
+    <p><a href="{{ t.importantInformationLinkUrl }}">{{ t.importantInformationLinkText }}</a></p>
   </div>
 
   {% if hearings.length > 0 %}
@@ -99,6 +131,10 @@
     {% if dataSource %}
     <p>{{ t.dataSource }}: {{ dataSource }}</p>
     {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
   </div>
 </body>
 </html>

@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
+vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
+  generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   generateCauseListPdf: vi.fn()
 }));
@@ -13,17 +17,24 @@ vi.mock("@hmcts/notifications", () => ({
   sendPublicationNotifications: vi.fn()
 }));
 
+vi.mock("../repository/queries.js", () => ({
+  getArtefactById: vi.fn()
+}));
+
 vi.mock("../index.js", () => ({
   mockListTypes: [
     { id: 1, englishFriendlyName: "Daily Cause List" },
-    { id: 8, englishFriendlyName: "Civil And Family Daily Cause List" }
+    { id: 8, englishFriendlyName: "Civil And Family Daily Cause List" },
+    { id: 9, englishFriendlyName: "Care Standards Tribunal Weekly Hearing List" }
   ]
 }));
 
 describe("publication-processor", async () => {
+  const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendPublicationNotifications } = await import("@hmcts/notifications");
+  const { getArtefactById } = await import("../repository/queries.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -118,6 +129,65 @@ describe("publication-processor", async () => {
       await generatePublicationPdf({ ...baseParams, logPrefix: "[Custom]" });
 
       expect(consoleWarnSpy).toHaveBeenCalledWith("[Custom] PDF generation failed:", expect.any(Object));
+
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("should generate PDF for Care Standards Tribunal Weekly Hearing List", async () => {
+      const careStandardsParams = {
+        ...baseParams,
+        listTypeId: 9,
+        jsonData: [{ date: "10/12/2024", caseName: "Test Case" }]
+      };
+
+      vi.mocked(getArtefactById).mockResolvedValue({
+        artefactId: "test-artefact-id",
+        displayFrom: new Date("2025-01-20"),
+        displayTo: new Date("2025-01-30")
+      } as any);
+
+      vi.mocked(generateCareStandardsTribunalWeeklyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/cst-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf(careStandardsParams);
+
+      expect(getArtefactById).toHaveBeenCalledWith("test-artefact-id");
+      expect(generateCareStandardsTribunalWeeklyHearingListPdf).toHaveBeenCalledWith({
+        artefactId: "test-artefact-id",
+        locale: "en",
+        locationId: "123",
+        jsonData: careStandardsParams.jsonData,
+        provenance: "MANUAL_UPLOAD",
+        displayFrom: new Date("2025-01-20"),
+        displayTo: new Date("2025-01-30")
+      });
+      expect(result).toEqual({
+        pdfPath: "/path/to/cst-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+    });
+
+    it("should return empty result when artefact not found for Care Standards", async () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      vi.mocked(getArtefactById).mockResolvedValue(null);
+
+      const result = await generatePublicationPdf({
+        ...baseParams,
+        listTypeId: 9,
+        jsonData: [{ date: "10/12/2024", caseName: "Test Case" }]
+      });
+
+      expect(result).toEqual({});
+      expect(generateCareStandardsTribunalWeeklyHearingListPdf).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Artefact not found for PDF generation:", {
+        artefactId: "test-artefact-id"
+      });
 
       consoleWarnSpy.mockRestore();
     });
