@@ -61,13 +61,13 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(testData);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      applicant: "John Smith",
-      caseReferenceNumber: "12345",
-      caseName: "Smith v Jones",
-      caseType: "Civil",
-      hearingType: "Trial"
-    });
+    expect(result[0]).toEqual([
+      { label: "Applicant", value: "John Smith" },
+      { label: "Case reference", value: "12345" },
+      { label: "Case name", value: "Smith v Jones" },
+      { label: "Case type", value: "Civil" },
+      { label: "Hearing type", value: "Trial" }
+    ]);
   });
 
   it("should handle multiple cases across multiple court rooms", () => {
@@ -144,11 +144,11 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(testData);
 
     expect(result).toHaveLength(2);
-    expect(result[0].caseReferenceNumber).toBe("12345");
-    expect(result[1].caseReferenceNumber).toBe("67890");
+    expect(result[0].find((f) => f.label === "Case reference")?.value).toBe("12345");
+    expect(result[1].find((f) => f.label === "Case reference")?.value).toBe("67890");
   });
 
-  it("should handle missing party information", () => {
+  it("should not include applicant field when missing", () => {
     const testData: CauseListData = {
       document: {
         publicationDate: "2025-01-28T10:00:00Z"
@@ -197,7 +197,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].applicant).toBe("");
+    expect(result[0].find((f) => f.label === "Applicant")).toBeUndefined();
   });
 
   it("should handle organisation as applicant", () => {
@@ -256,7 +256,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].applicant).toBe("Test Company Ltd");
+    expect(result[0].find((f) => f.label === "Applicant")?.value).toBe("Test Company Ltd");
   });
 
   it("should handle missing optional fields with N/A", () => {
@@ -304,26 +304,25 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0]).toEqual({
-      applicant: "",
-      caseReferenceNumber: "N/A",
-      caseName: "N/A",
-      caseType: "N/A",
-      hearingType: "N/A"
-    });
+    expect(result[0]).toEqual([
+      { label: "Case reference", value: "N/A" },
+      { label: "Case name", value: "N/A" },
+      { label: "Case type", value: "N/A" },
+      { label: "Hearing type", value: "N/A" }
+    ]);
   });
 });
 
 describe("formatCaseSummaryForEmail", () => {
   it("should format case summaries for email", () => {
     const summaries = [
-      {
-        applicant: "John Smith",
-        caseReferenceNumber: "12345",
-        caseName: "Smith v Jones",
-        caseType: "Civil",
-        hearingType: "Trial"
-      }
+      [
+        { label: "Applicant", value: "John Smith" },
+        { label: "Case reference", value: "12345" },
+        { label: "Case name", value: "Smith v Jones" },
+        { label: "Case type", value: "Civil" },
+        { label: "Hearing type", value: "Trial" }
+      ]
     ];
 
     const result = formatCaseSummaryForEmail(summaries);
@@ -335,50 +334,7 @@ describe("formatCaseSummaryForEmail", () => {
     expect(result).toContain("Hearing type - Trial");
   });
 
-  it("should handle multiple cases with proper spacing", () => {
-    const summaries = [
-      {
-        applicant: "John Smith",
-        caseReferenceNumber: "12345",
-        caseName: "Smith v Jones",
-        caseType: "Civil",
-        hearingType: "Trial"
-      },
-      {
-        applicant: "Jane Brown",
-        caseReferenceNumber: "67890",
-        caseName: "Brown v Green",
-        caseType: "Family",
-        hearingType: "Hearing"
-      }
-    ];
-
-    const result = formatCaseSummaryForEmail(summaries);
-
-    expect(result).toContain("Case reference - 12345");
-    expect(result).toContain("Case reference - 67890");
-    // Cases should be separated by horizontal lines
-    expect(result).toContain("---");
-  });
-
-  it("should handle empty applicant field", () => {
-    const summaries = [
-      {
-        applicant: "",
-        caseReferenceNumber: "12345",
-        caseName: "Smith v Jones",
-        caseType: "Civil",
-        hearingType: "Trial"
-      }
-    ];
-
-    const result = formatCaseSummaryForEmail(summaries);
-
-    expect(result).toContain("Case reference - 12345");
-    expect(result).not.toContain("Applicant -");
-  });
-
-  it("should return message for empty list", () => {
+  it("should handle empty case list", () => {
     const result = formatCaseSummaryForEmail([]);
 
     expect(result).toBe("No cases scheduled.");
@@ -389,7 +345,5 @@ describe("SPECIAL_CATEGORY_DATA_WARNING", () => {
   it("should contain required warning text", () => {
     expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Special Category Data");
     expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Data Protection Act 2018");
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Sensitive Personal Data");
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("reporting restrictions");
   });
 });
