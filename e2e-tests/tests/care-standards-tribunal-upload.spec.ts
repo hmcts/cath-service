@@ -209,8 +209,9 @@ async function completeCSTUploadFlowAndNavigate(page: Page) {
   await page.waitForTimeout(1000);
 
   // Find the first (most recent) CST publication link
-  const publicationLinks = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list?artefactId="]');
-  await expect(publicationLinks.first()).toBeVisible();
+  // Flat file uploads use /hearing-lists/{locationId}/{artefactId} format
+  const publicationLinks = page.locator('.govuk-list a[href*="/hearing-lists/9001/"]');
+  await expect(publicationLinks.first()).toBeVisible({ timeout: 10000 });
 
   // Click the publication link to navigate to the list page
   await publicationLinks.first().click();
