@@ -31,7 +31,12 @@
       <ul class="govuk-list">
         {% for publication in publications %}
           <li style="margin-bottom: 15px;">
-            {% if publication.urlPath %}
+            {% if publication.isFlatFile %}
+              <a href="/hearing-lists/{{ publication.locationId }}/{{ publication.id }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+              </a>
+              <span> (opens in a new window)</span>
+            {% elif publication.urlPath %}
               <a href="/{{ publication.urlPath }}?artefactId={{ publication.id }}" class="govuk-link">
                 {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
               </a>

@@ -63,14 +63,14 @@ vi.mock("@hmcts/auth/config", () => ({
   pageRoutes: { path: "/mock/auth/pages" }
 }));
 
-vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
-  moduleRoot: "/mock/civil-family",
-  pageRoutes: { path: "/mock/civil-family/pages" }
-}));
-
 vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list/config", () => ({
   moduleRoot: "/mock/care-standards-tribunal",
   pageRoutes: { path: "/mock/care-standards-tribunal/pages" }
+}));
+
+vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/civil-family",
+  pageRoutes: { path: "/mock/civil-family/pages" }
 }));
 
 vi.mock("@hmcts/rcj-standard-daily-cause-list/config", () => ({
@@ -102,6 +102,7 @@ vi.mock("@hmcts/location/config", () => ({
 }));
 
 vi.mock("@hmcts/public-pages/config", () => ({
+  apiRoutes: { path: "/mock/public-pages/routes" },
   fileUploadRoutes: ["/create-media-account"],
   moduleRoot: "/mock/public-pages",
   pageRoutes: { path: "/mock/public-pages/pages" }
@@ -206,17 +207,13 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 14 times: location API routes, system-admin API routes, civil-family-cause-list pages, care-standards-tribunal pages,
-      // rcj-standard pages, london-admin pages, civil-appeal pages, admin-court pages, web pages, auth routes,
-      // public pages, verified pages, system-admin pages, admin routes
-      expect(createSimpleRouter).toHaveBeenCalledTimes(14);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(15);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-
-      expect(calls.length).toBeGreaterThanOrEqual(14);
+      expect(calls.length).toBeGreaterThanOrEqual(15);
     });
 
     it("should configure error handlers at the end", async () => {
