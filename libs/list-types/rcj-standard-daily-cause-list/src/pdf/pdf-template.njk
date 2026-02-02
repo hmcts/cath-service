@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ header.listTitle }}</title>
   <style>
-    /* Basic GOV.UK-like styling for PDF */
     * {
       box-sizing: border-box;
       font-family: "GDS Transport", arial, sans-serif;
@@ -17,14 +16,18 @@
       margin: 0;
       padding: 20px;
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
       margin-top: 0;
       font-weight: 700;
     }
     h1 { font-size: 32px; margin-bottom: 20px; }
-    h2 { font-size: 24px; margin-bottom: 15px; }
+    h2 { font-size: 24px; margin-bottom: 15px; margin-top: 30px; }
     h3 { font-size: 18px; margin-bottom: 10px; }
+    h4 { font-size: 16px; margin-bottom: 8px; margin-top: 15px; }
     p { margin: 0 0 15px 0; }
+    a {
+      color: #1d70b8;
+    }
     .header-section {
       margin-bottom: 30px;
       padding-bottom: 20px;
@@ -32,6 +35,23 @@
     }
     .bold { font-weight: 700; }
     .header-date { margin-bottom: 5px; }
+    .location {
+      margin-bottom: 15px;
+    }
+    .location p {
+      margin-bottom: 0;
+    }
+    .info-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .info-box p:last-child {
+      margin-bottom: 0;
+    }
+    .info-box p {
+      white-space: pre-line;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -58,13 +78,118 @@
     .footer p {
       margin-bottom: 10px;
     }
+    .caution-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .caution-box p {
+      margin-bottom: 10px;
+      color: #0b0c0c;
+    }
+    .caution-box p:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
   <div class="header-section">
     <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.common.factLinkUrl }}">{{ t.common.factLinkText }}</a> {{ t.common.factAdditionalText }}</p>
+
+    {% if court.locationLine1 %}
+    <div class="location">
+      <p class="bold">{{ court.locationLine1 }}</p>
+      {% if court.locationLine2 %}<p>{{ court.locationLine2 }}</p>{% endif %}
+      {% if court.locationLine3 %}<p>{{ court.locationLine3 }}</p>{% endif %}
+      {% if court.locationLine4 %}<p>{{ court.locationLine4 }}</p>{% endif %}
+    </div>
+    {% endif %}
+
     <p class="bold header-date">{{ t.common.listFor }} {{ header.listDate }}</p>
     <p class="header-date">{{ t.common.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.common.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.common.importantInfoTitle }}</h3>
+
+    {# County Court London / Mayor City - hearingsInfoText and mediaAndObserversText #}
+    {% if court.hearingsInfoText %}
+      <p>{{ court.hearingsInfoText }}</p>
+    {% endif %}
+    {% if court.mediaAndObserversText %}
+      <p>{{ court.mediaAndObserversText }}</p>
+    {% endif %}
+
+    {# Civil Courts RCJ - mediaInquiriesText, openJusticeText, courtExclusionText #}
+    {% if court.mediaInquiriesText %}
+      <p>{{ court.mediaInquiriesText }}</p>
+    {% endif %}
+    {% if court.openJusticeText %}
+      <p>{{ court.openJusticeText }}</p>
+    {% endif %}
+    {% if court.courtExclusionText %}
+      <p>{{ court.courtExclusionText }}</p>
+    {% endif %}
+
+    {# Court of Appeal Criminal - importantInfoText, quickGuideText #}
+    {% if court.importantInfoText %}
+      <p>{{ court.importantInfoText }}</p>
+    {% endif %}
+    {% if court.quickGuideText %}
+      <p>{{ court.quickGuideText }} <a href="{{ court.quickGuideLinkUrl }}">{{ court.quickGuideLinkText }}</a>.</p>
+    {% endif %}
+
+    {# Family Division - generalHearingRulesText and subsections #}
+    {% if court.generalHearingRulesText %}
+      <p>{{ court.generalHearingRulesText }}</p>
+    {% endif %}
+    {% if court.courtOfProtectionTitle %}
+      <h4>{{ court.courtOfProtectionTitle }}</h4>
+      <p>{{ court.courtOfProtectionText }}</p>
+    {% endif %}
+    {% if court.tipstaffTitle %}
+      <h4>{{ court.tipstaffTitle }}</h4>
+      <p>{{ court.tipstaffText }}</p>
+    {% endif %}
+    {% if court.judgmentsTitle and court.judgmentsText %}
+      <h4>{{ court.judgmentsTitle }}</h4>
+      <p>{{ court.judgmentsText }}</p>
+    {% endif %}
+
+    {# King's Bench Division - remoteHearingsTitle, remoteJudgmentsTitle, bundlesTitle #}
+    {% if court.remoteHearingsTitle %}
+      <h4>{{ court.remoteHearingsTitle }}</h4>
+      <p>{{ court.remoteHearingsText }}</p>
+    {% endif %}
+    {% if court.remoteJudgmentsTitle %}
+      <h4>{{ court.remoteJudgmentsTitle }}</h4>
+      <p>{{ court.remoteJudgmentsText }}</p>
+    {% endif %}
+    {% if court.bundlesTitle and court.bundleFilingText %}
+      <h4>{{ court.bundlesTitle }}</h4>
+      <p>{{ court.bundleFilingText }}</p>
+    {% endif %}
+    {% if court.bundlesTitle and court.bundlesText %}
+      <h4>{{ court.bundlesTitle }}</h4>
+      <p>{{ court.bundlesText }}</p>
+    {% endif %}
+
+    {# King's Bench Masters - pressAndPublicTitle, inPersonHearingsTitle #}
+    {% if court.pressAndPublicTitle %}
+      <h4>{{ court.pressAndPublicTitle }}</h4>
+      <p>{{ court.pressAndPublicText }}</p>
+    {% endif %}
+    {% if court.inPersonHearingsTitle %}
+      <h4>{{ court.inPersonHearingsTitle }}</h4>
+      <p>{{ court.inPersonHearingsText }}</p>
+    {% endif %}
+
+    {# Senior Courts Costs Office - moreInfoLinkText #}
+    {% if court.moreInfoLinkText %}
+      <p>{{ court.moreInfoLinkText }} <a href="{{ court.moreInfoLinkUrl }}">{{ court.moreInfoLinkUrl }}</a></p>
+    {% endif %}
   </div>
 
   {% if hearings.length > 0 %}
@@ -102,6 +227,10 @@
     {% if dataSource %}
     <p>{{ t.common.dataSource }}: {{ dataSource }}</p>
     {% endif %}
+    <div class="caution-box">
+      <p>{{ t.common.cautionNote }}</p>
+      <p>{{ t.common.cautionReporting }}</p>
+    </div>
   </div>
 </body>
 </html>

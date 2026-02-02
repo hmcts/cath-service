@@ -1,5 +1,10 @@
 import fs from "node:fs/promises";
 import {
+  type AdministrativeCourtHearingList,
+  extractCaseSummary as extractAdminCourtSummary,
+  formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
+} from "@hmcts/administrative-court-daily-cause-list";
+import {
   type CareStandardsTribunalHearingList,
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
@@ -9,6 +14,11 @@ import {
   extractCaseSummary as extractCivilFamilySummary,
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
+import {
+  type CourtOfAppealCivilData,
+  extractCaseSummary as extractCourtOfAppealSummary,
+  formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
+} from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail,
@@ -148,8 +158,9 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string)
   const isCivilFamilyList = listTypeId === CIVIL_AND_FAMILY_DAILY_CAUSE_LIST_ID;
   const isCareStandards = listTypeId === CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST_ID;
   const isLondonAdminCourt = listTypeId === LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST_ID;
-  const isRcjList =
-    listTypeId !== undefined && [...RCJ_STANDARD_LIST_IDS, COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID, ...ADMINISTRATIVE_COURT_LIST_IDS].includes(listTypeId);
+  const isCourtOfAppealCivil = listTypeId === COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST_ID;
+  const isAdminCourt = listTypeId !== undefined && ADMINISTRATIVE_COURT_LIST_IDS.includes(listTypeId);
+  const isRcjList = listTypeId !== undefined && RCJ_STANDARD_LIST_IDS.includes(listTypeId);
 
   if (isCivilFamilyList && event.jsonData) {
     return buildCivilFamilyEmailData(event, userName);
@@ -161,6 +172,14 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string)
 
   if (isLondonAdminCourt && event.jsonData) {
     return buildLondonAdminEmailData(event, userName);
+  }
+
+  if (isCourtOfAppealCivil && event.jsonData) {
+    return buildCourtOfAppealEmailData(event, userName);
+  }
+
+  if (isAdminCourt && event.jsonData) {
+    return buildAdminCourtEmailData(event, userName);
   }
 
   if (isRcjList && event.jsonData) {
@@ -265,6 +284,76 @@ async function buildLondonAdminEmailData(event: PublicationEvent, userName: stri
   try {
     const caseSummaryItems = extractLondonAdminSummary(event.jsonData as LondonAdminCourtData);
     const caseSummary = formatLondonAdminSummaryForEmail(caseSummaryItems);
+
+    const templateParameters = buildEnhancedTemplateParameters({
+      userName,
+      hearingListName: event.hearingListName,
+      publicationDate: event.publicationDate,
+      locationName: event.locationName,
+      caseSummary
+    });
+
+    if (event.pdfFilePath) {
+      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
+    }
+
+    return {
+      templateParameters,
+      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
+    };
+  } catch (error) {
+    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
+    return {
+      templateParameters: buildTemplateParameters({
+        userName,
+        hearingListName: event.hearingListName,
+        publicationDate: event.publicationDate,
+        locationName: event.locationName
+      })
+    };
+  }
+}
+
+async function buildCourtOfAppealEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
+  const listTypeId = event.listTypeId!;
+  try {
+    const caseSummaryItems = extractCourtOfAppealSummary(event.jsonData as CourtOfAppealCivilData);
+    const caseSummary = formatCourtOfAppealSummaryForEmail(caseSummaryItems);
+
+    const templateParameters = buildEnhancedTemplateParameters({
+      userName,
+      hearingListName: event.hearingListName,
+      publicationDate: event.publicationDate,
+      locationName: event.locationName,
+      caseSummary
+    });
+
+    if (event.pdfFilePath) {
+      return buildCivilFamilyWithPdf(event.pdfFilePath, templateParameters, listTypeId);
+    }
+
+    return {
+      templateParameters,
+      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
+    };
+  } catch (error) {
+    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
+    return {
+      templateParameters: buildTemplateParameters({
+        userName,
+        hearingListName: event.hearingListName,
+        publicationDate: event.publicationDate,
+        locationName: event.locationName
+      })
+    };
+  }
+}
+
+async function buildAdminCourtEmailData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
+  const listTypeId = event.listTypeId!;
+  try {
+    const caseSummaryItems = extractAdminCourtSummary(event.jsonData as AdministrativeCourtHearingList);
+    const caseSummary = formatAdminCourtSummaryForEmail(caseSummaryItems);
 
     const templateParameters = buildEnhancedTemplateParameters({
       userName,

@@ -55,7 +55,7 @@ export async function generateCourtOfAppealCivilDailyCauseListPdf(options: PdfGe
       };
     }
 
-    return savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
+    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
   } catch (error) {
     return createPdfErrorResult(error);
   }

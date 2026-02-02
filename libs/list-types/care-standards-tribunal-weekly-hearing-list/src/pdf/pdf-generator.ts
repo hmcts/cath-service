@@ -57,7 +57,7 @@ export async function generateCareStandardsTribunalWeeklyHearingListPdf(options:
       };
     }
 
-    return savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
+    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
   } catch (error) {
     return createPdfErrorResult(error);
   }

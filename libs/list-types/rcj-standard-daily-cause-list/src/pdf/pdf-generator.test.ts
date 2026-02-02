@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn()
-  }
+const { mockSavePdfToStorage, mockCreatePdfErrorResult, mockConfigureNunjucks, mockLoadTranslations } = vi.hoisted(() => ({
+  mockSavePdfToStorage: vi.fn(),
+  mockCreatePdfErrorResult: vi.fn(),
+  mockConfigureNunjucks: vi.fn(),
+  mockLoadTranslations: vi.fn()
+}));
+
+vi.mock("@hmcts/list-types-common", () => ({
+  savePdfToStorage: mockSavePdfToStorage,
+  createPdfErrorResult: mockCreatePdfErrorResult,
+  configureNunjucks: mockConfigureNunjucks,
+  loadTranslations: mockLoadTranslations
 }));
 
 vi.mock("@hmcts/pdf-generation", () => ({
@@ -15,7 +22,13 @@ vi.mock("../rendering/renderer.js", () => ({
   renderStandardDailyCauseList: vi.fn()
 }));
 
-import fs from "node:fs/promises";
+vi.mock("@hmcts/publication", () => ({
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    SNL: "SNL"
+  }
+}));
+
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderStandardDailyCauseList } from "../rendering/renderer.js";
 import { generateRcjStandardDailyCauseListPdf } from "./pdf-generator.js";
@@ -43,12 +56,26 @@ const mockHearingList = [
 ];
 
 describe("generateRcjStandardDailyCauseListPdf", () => {
+  const mockNunjucksEnv = {
+    render: vi.fn().mockReturnValue("<html>PDF HTML</html>")
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+    mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
+    mockLoadTranslations.mockResolvedValue({ pageTitle: "Test Title" });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/test.pdf",
+      sizeBytes: 1024,
+      exceedsMaxSize: false
+    });
+    mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
+      success: false,
+      error: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+    }));
   });
 
   it("should generate PDF successfully", async () => {
@@ -58,21 +85,27 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       pdfBuffer,
       sizeBytes: 1024
     });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/test-artefact-123.pdf",
+      sizeBytes: 1024,
+      exceedsMaxSize: false
+    });
 
     const result = await generateRcjStandardDailyCauseListPdf({
       artefactId: "test-artefact-123",
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
     expect(result.exceedsMaxSize).toBe(false);
-    expect(fs.mkdir).toHaveBeenCalled();
-    expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-artefact-123.pdf"), pdfBuffer);
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("test-artefact-123", pdfBuffer, 1024);
   });
 
   it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
@@ -82,13 +115,20 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       pdfBuffer: largePdfBuffer,
       sizeBytes: 3 * 1024 * 1024
     });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/large-pdf-123.pdf",
+      sizeBytes: 3 * 1024 * 1024,
+      exceedsMaxSize: true
+    });
 
     const result = await generateRcjStandardDailyCauseListPdf({
       artefactId: "large-pdf-123",
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(true);
@@ -103,13 +143,20 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       pdfBuffer: exactPdfBuffer,
       sizeBytes: 2 * 1024 * 1024
     });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "/storage/temp/uploads/exact-size-pdf.pdf",
+      sizeBytes: 2 * 1024 * 1024,
+      exceedsMaxSize: false
+    });
 
     const result = await generateRcjStandardDailyCauseListPdf({
       artefactId: "exact-size-pdf",
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(true);
@@ -127,7 +174,8 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(false);
@@ -145,7 +193,8 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(false);
@@ -164,7 +213,8 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(false);
@@ -181,7 +231,8 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(false);
@@ -198,7 +249,8 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(false);
@@ -211,14 +263,15 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       pdfBuffer: Buffer.from("PDF"),
       sizeBytes: 100
     });
-    vi.mocked(fs.writeFile).mockRejectedValue(new Error("Disk full"));
+    mockSavePdfToStorage.mockRejectedValue(new Error("Disk full"));
 
     const result = await generateRcjStandardDailyCauseListPdf({
       artefactId: "fs-error",
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(false);
@@ -239,13 +292,14 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate,
       locale: "cy",
       locationId: "999",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(renderStandardDailyCauseList).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      listTypeId: 9,
-      listTitle: "RCJ Standard Daily Cause List",
+      listTypeId: 11,
+      listTitle: "County Court at Central London Civil Daily Cause List",
       displayFrom: contentDate,
       displayTo: contentDate,
       lastReceivedDate: expect.any(String)
@@ -265,10 +319,11 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      provenance: "MANUAL_UPLOAD"
+      provenance: "MANUAL_UPLOAD",
+      listTypeId: 11
     });
 
-    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("Manual Upload"));
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Manual Upload" }));
   });
 
   it("should use SNL provenance label", async () => {
@@ -284,10 +339,11 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      provenance: "SNL"
+      provenance: "SNL",
+      listTypeId: 11
     });
 
-    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("SNL"));
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "SNL" }));
   });
 
   it("should use raw provenance value when label not found", async () => {
@@ -303,10 +359,11 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      provenance: "UNKNOWN_SOURCE"
+      provenance: "UNKNOWN_SOURCE",
+      listTypeId: 11
     });
 
-    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("UNKNOWN_SOURCE"));
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "UNKNOWN_SOURCE" }));
   });
 
   it("should handle missing provenance", async () => {
@@ -321,17 +378,19 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(true);
     expect(generatePdfFromHtml).toHaveBeenCalled();
   });
 
-  it("should create storage directory with recursive option", async () => {
+  it("should call savePdfToStorage with correct parameters", async () => {
+    const pdfBuffer = Buffer.from("PDF");
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
-      pdfBuffer: Buffer.from("PDF"),
+      pdfBuffer,
       sizeBytes: 100
     });
 
@@ -340,10 +399,11 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
-    expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining("storage"), { recursive: true });
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("test-mkdir", pdfBuffer, 100);
   });
 
   it("should generate PDF for Welsh locale", async () => {
@@ -358,7 +418,8 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "cy",
       locationId: "240",
-      jsonData: mockHearingList
+      jsonData: mockHearingList,
+      listTypeId: 11
     });
 
     expect(result.success).toBe(true);

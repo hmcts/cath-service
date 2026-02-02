@@ -56,7 +56,7 @@ export async function generateCauseListPdf(options: PdfGenerationOptions): Promi
       };
     }
 
-    return savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
+    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
   } catch (error) {
     return createPdfErrorResult(error);
   }

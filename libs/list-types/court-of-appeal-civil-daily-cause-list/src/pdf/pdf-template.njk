@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ header.listTitle }}</title>
   <style>
-    /* Basic GOV.UK-like styling for PDF */
     * {
       box-sizing: border-box;
       font-family: "GDS Transport", arial, sans-serif;
@@ -17,14 +16,18 @@
       margin: 0;
       padding: 20px;
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
       margin-top: 0;
       font-weight: 700;
     }
     h1 { font-size: 32px; margin-bottom: 20px; }
-    h2 { font-size: 24px; margin-bottom: 15px; }
+    h2 { font-size: 24px; margin-bottom: 15px; margin-top: 30px; }
     h3 { font-size: 18px; margin-bottom: 10px; }
+    h4 { font-size: 16px; margin-bottom: 8px; margin-top: 15px; }
     p { margin: 0 0 15px 0; }
+    a {
+      color: #1d70b8;
+    }
     .header-section {
       margin-bottom: 30px;
       padding-bottom: 20px;
@@ -32,6 +35,20 @@
     }
     .bold { font-weight: 700; }
     .header-date { margin-bottom: 5px; }
+    .location {
+      margin-bottom: 15px;
+    }
+    .location p {
+      margin-bottom: 0;
+    }
+    .info-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .info-box p:last-child {
+      margin-bottom: 0;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -58,30 +75,60 @@
     .footer p {
       margin-bottom: 10px;
     }
+    .caution-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .caution-box p {
+      margin-bottom: 10px;
+      color: #0b0c0c;
+    }
+    .caution-box p:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
   <div class="header-section">
     <h1>{{ header.listTitle }}</h1>
-    <p class="bold header-date">{{ t.common.listFor }} {{ header.listDate }}</p>
-    <p class="header-date">{{ t.common.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.common.at }} {{ header.lastUpdatedTime }}</p>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <div class="location">
+      <p class="bold">{{ t.locationLine1 }}</p>
+      <p>{{ t.locationLine2 }}</p>
+      <p>{{ t.locationLine3 }}</p>
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
   </div>
 
-  {% if hearings.length > 0 %}
+  <div class="info-box">
+    <h3>{{ t.importantInfoTitle }}</h3>
+    <h4>{{ t.liveStreamingTitle }}</h4>
+    <p>{{ t.liveStreamingText1 }} <a href="{{ t.liveStreamingLinkUrl }}">{{ t.liveStreamingLinkText }}</a>.</p>
+    <p>{{ t.liveStreamingText2a }} <a href="{{ t.liveStreamingLinkUrl }}">{{ t.liveStreamingLinkText }}</a>{{ t.liveStreamingText2b }}</p>
+    <h4>{{ t.judgmentsTitle }}</h4>
+    <p>{{ t.judgmentsText }}</p>
+  </div>
+
+  {% if dailyHearings.length > 0 %}
     <table>
       <thead>
         <tr>
-          <th class="no-wrap">{{ t.common.tableHeaders.venue }}</th>
-          <th class="no-wrap">{{ t.common.tableHeaders.judge }}</th>
-          <th class="no-wrap">{{ t.common.tableHeaders.time }}</th>
-          <th class="no-wrap">{{ t.common.tableHeaders.caseNumber }}</th>
-          <th>{{ t.common.tableHeaders.caseDetails }}</th>
-          <th class="no-wrap">{{ t.common.tableHeaders.hearingType }}</th>
-          <th>{{ t.common.tableHeaders.additionalInformation }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
         </tr>
       </thead>
       <tbody>
-        {% for hearing in hearings %}
+        {% for hearing in dailyHearings %}
           <tr>
             <td>{{ hearing.venue }}</td>
             <td>{{ hearing.judge }}</td>
@@ -95,13 +142,51 @@
       </tbody>
     </table>
   {% else %}
-    <p>No hearings scheduled.</p>
+    <p>{{ t.noHearingsMessage }}</p>
+  {% endif %}
+
+  <h2>{{ t.futureJudgmentsTitle }}</h2>
+  {% if futureJudgments.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.date }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for judgment in futureJudgments %}
+          <tr>
+            <td class="no-wrap">{{ judgment.date }}</td>
+            <td>{{ judgment.venue }}</td>
+            <td>{{ judgment.judge }}</td>
+            <td class="no-wrap">{{ judgment.time }}</td>
+            <td class="no-wrap">{{ judgment.caseNumber }}</td>
+            <td>{{ judgment.caseDetails }}</td>
+            <td>{{ judgment.hearingType }}</td>
+            <td>{{ judgment.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noHearingsMessage }}</p>
   {% endif %}
 
   <div class="footer">
     {% if dataSource %}
-    <p>{{ t.common.dataSource }}: {{ dataSource }}</p>
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
     {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
   </div>
 </body>
 </html>

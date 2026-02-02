@@ -73,7 +73,8 @@ export async function generatePublicationPdf(params: GeneratePdfParams): Promise
         locale,
         locationId,
         jsonData: jsonData as StandardHearingList,
-        provenance
+        provenance,
+        listTypeId
       });
     } else if (listTypeId === LIST_TYPE_LONDON_ADMINISTRATIVE_COURT) {
       pdfResult = await generateLondonAdministrativeCourtDailyCauseListPdf({
@@ -100,7 +101,8 @@ export async function generatePublicationPdf(params: GeneratePdfParams): Promise
         locale,
         locationId,
         jsonData: jsonData as AdministrativeCourtHearingList,
-        provenance
+        provenance,
+        listTypeId
       });
     } else {
       return {};
