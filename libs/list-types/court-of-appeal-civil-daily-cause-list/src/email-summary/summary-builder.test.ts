@@ -41,14 +41,14 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
+      time: "10:00",
       caseNumber: "A1/2025/0001",
-      caseDetails: "Smith v Jones",
-      hearingType: "Appeal"
+      caseDetails: "Smith v Jones"
     });
     expect(result[1]).toEqual({
+      time: "14:00",
       caseNumber: "A1/2025/0002",
-      caseDetails: "Brown v Green",
-      hearingType: "Judgment"
+      caseDetails: "Brown v Green"
     });
   });
 
@@ -66,17 +66,17 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format single case summary correctly", () => {
     const items = [
       {
+        time: "10:00",
         caseNumber: "A1/2025/0001",
-        caseDetails: "Smith v Jones",
-        hearingType: "Appeal"
+        caseDetails: "Smith v Jones"
       }
     ];
 
     const result = formatCaseSummaryForEmail(items);
 
+    expect(result).toContain("Time - 10:00");
     expect(result).toContain("Case number - A1/2025/0001");
     expect(result).toContain("Case details - Smith v Jones");
-    expect(result).toContain("Hearing type - Appeal");
   });
 
   it("should handle empty case list", () => {

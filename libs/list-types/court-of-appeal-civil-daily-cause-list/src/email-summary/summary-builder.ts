@@ -5,16 +5,16 @@ export const SPECIAL_CATEGORY_DATA_WARNING = `Note this email contains Special C
 This email contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.`;
 
 export interface CaseSummaryItem {
+  time: string;
   caseNumber: string;
   caseDetails: string;
-  hearingType: string;
 }
 
 function mapHearingToSummary(hearing: StandardHearing): CaseSummaryItem {
   return {
+    time: hearing.time || "N/A",
     caseNumber: hearing.caseNumber || "N/A",
-    caseDetails: hearing.caseDetails || "N/A",
-    hearingType: hearing.hearingType || "N/A"
+    caseDetails: hearing.caseDetails || "N/A"
   };
 }
 
@@ -44,9 +44,9 @@ export function formatCaseSummaryForEmail(items: CaseSummaryItem[]): string {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    lines.push(`Time - ${item.time}`);
     lines.push(`Case number - ${item.caseNumber}`);
     lines.push(`Case details - ${item.caseDetails}`);
-    lines.push(`Hearing type - ${item.hearingType}`);
 
     if (i < items.length - 1) {
       lines.push("");

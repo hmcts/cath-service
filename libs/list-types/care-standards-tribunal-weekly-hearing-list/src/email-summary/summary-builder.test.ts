@@ -34,12 +34,12 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
-      caseName: "Smith v Care Provider Ltd",
-      hearingDate: "01/01/2025"
+      date: "01/01/2025",
+      caseName: "Smith v Care Provider Ltd"
     });
     expect(result[1]).toEqual({
-      caseName: "Brown v Nursing Home",
-      hearingDate: "02/01/2025"
+      date: "02/01/2025",
+      caseName: "Brown v Nursing Home"
     });
   });
 
@@ -67,8 +67,8 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
-      caseName: "N/A",
-      hearingDate: "N/A"
+      date: "N/A",
+      caseName: "N/A"
     });
   });
 });
@@ -77,28 +77,28 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format single case summary correctly", () => {
     const items = [
       {
-        caseName: "Smith v Care Provider Ltd",
-        hearingDate: "01/01/2025"
+        date: "01/01/2025",
+        caseName: "Smith v Care Provider Ltd"
       }
     ];
 
     const result = formatCaseSummaryForEmail(items);
 
     expect(result).toContain("---");
+    expect(result).toContain("Date - 01/01/2025");
     expect(result).toContain("Case name - Smith v Care Provider Ltd");
-    expect(result).toContain("Hearing date - 01/01/2025");
     expect(result).not.toContain("---\n\n---");
   });
 
   it("should format multiple case summaries with separators", () => {
     const items = [
       {
-        caseName: "Smith v Care Provider Ltd",
-        hearingDate: "01/01/2025"
+        date: "01/01/2025",
+        caseName: "Smith v Care Provider Ltd"
       },
       {
-        caseName: "Brown v Nursing Home",
-        hearingDate: "02/01/2025"
+        date: "02/01/2025",
+        caseName: "Brown v Nursing Home"
       }
     ];
 
@@ -106,11 +106,11 @@ describe("formatCaseSummaryForEmail", () => {
 
     const lines = result.split("\n");
     expect(lines[0]).toBe("---");
-    expect(lines[2]).toBe("Case name - Smith v Care Provider Ltd");
-    expect(lines[3]).toBe("Hearing date - 01/01/2025");
+    expect(lines[2]).toBe("Date - 01/01/2025");
+    expect(lines[3]).toBe("Case name - Smith v Care Provider Ltd");
     expect(lines[5]).toBe("---");
-    expect(lines[7]).toBe("Case name - Brown v Nursing Home");
-    expect(lines[8]).toBe("Hearing date - 02/01/2025");
+    expect(lines[7]).toBe("Date - 02/01/2025");
+    expect(lines[8]).toBe("Case name - Brown v Nursing Home");
   });
 
   it("should handle empty case list", () => {
@@ -124,16 +124,16 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format three cases with correct separators", () => {
     const items = [
       {
-        caseName: "Smith v Care Provider Ltd",
-        hearingDate: "01/01/2025"
+        date: "01/01/2025",
+        caseName: "Smith v Care Provider Ltd"
       },
       {
-        caseName: "Brown v Nursing Home",
-        hearingDate: "02/01/2025"
+        date: "02/01/2025",
+        caseName: "Brown v Nursing Home"
       },
       {
-        caseName: "White v Care Home",
-        hearingDate: "03/01/2025"
+        date: "03/01/2025",
+        caseName: "White v Care Home"
       }
     ];
 

@@ -37,14 +37,14 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
+      time: "10:00",
       caseNumber: "T20257890",
-      caseDetails: "Smith v Jones",
-      hearingType: "Trial"
+      caseDetails: "Smith v Jones"
     });
     expect(result[1]).toEqual({
+      time: "14:00",
       caseNumber: "T20257891",
-      caseDetails: "Brown v Green",
-      hearingType: "Case Management Hearing"
+      caseDetails: "Brown v Green"
     });
   });
 
@@ -61,7 +61,7 @@ describe("extractCaseSummary", () => {
       {
         venue: "Royal Courts of Justice",
         judge: "Judge Smith",
-        time: "10:00",
+        time: "",
         caseNumber: "",
         caseDetails: "",
         hearingType: "",
@@ -73,9 +73,9 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
+      time: "N/A",
       caseNumber: "N/A",
-      caseDetails: "N/A",
-      hearingType: "N/A"
+      caseDetails: "N/A"
     });
   });
 });
@@ -84,32 +84,32 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format single case summary correctly", () => {
     const items = [
       {
+        time: "10:00",
         caseNumber: "T20257890",
-        caseDetails: "Smith v Jones",
-        hearingType: "Trial"
+        caseDetails: "Smith v Jones"
       }
     ];
 
     const result = formatCaseSummaryForEmail(items);
 
     expect(result).toContain("---");
+    expect(result).toContain("Time - 10:00");
     expect(result).toContain("Case number - T20257890");
     expect(result).toContain("Case details - Smith v Jones");
-    expect(result).toContain("Hearing type - Trial");
     expect(result).not.toContain("---\n\n---");
   });
 
   it("should format multiple case summaries with separators", () => {
     const items = [
       {
+        time: "10:00",
         caseNumber: "T20257890",
-        caseDetails: "Smith v Jones",
-        hearingType: "Trial"
+        caseDetails: "Smith v Jones"
       },
       {
+        time: "14:00",
         caseNumber: "T20257891",
-        caseDetails: "Brown v Green",
-        hearingType: "Case Management Hearing"
+        caseDetails: "Brown v Green"
       }
     ];
 
@@ -117,13 +117,13 @@ describe("formatCaseSummaryForEmail", () => {
 
     const lines = result.split("\n");
     expect(lines[0]).toBe("---");
-    expect(lines[2]).toBe("Case number - T20257890");
-    expect(lines[3]).toBe("Case details - Smith v Jones");
-    expect(lines[4]).toBe("Hearing type - Trial");
+    expect(lines[2]).toBe("Time - 10:00");
+    expect(lines[3]).toBe("Case number - T20257890");
+    expect(lines[4]).toBe("Case details - Smith v Jones");
     expect(lines[6]).toBe("---");
-    expect(lines[8]).toBe("Case number - T20257891");
-    expect(lines[9]).toBe("Case details - Brown v Green");
-    expect(lines[10]).toBe("Hearing type - Case Management Hearing");
+    expect(lines[8]).toBe("Time - 14:00");
+    expect(lines[9]).toBe("Case number - T20257891");
+    expect(lines[10]).toBe("Case details - Brown v Green");
   });
 
   it("should handle empty case list", () => {
@@ -137,19 +137,19 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format three cases with correct separators", () => {
     const items = [
       {
+        time: "10:00",
         caseNumber: "T20257890",
-        caseDetails: "Smith v Jones",
-        hearingType: "Trial"
+        caseDetails: "Smith v Jones"
       },
       {
+        time: "11:00",
         caseNumber: "T20257891",
-        caseDetails: "Brown v Green",
-        hearingType: "Hearing"
+        caseDetails: "Brown v Green"
       },
       {
+        time: "14:00",
         caseNumber: "T20257892",
-        caseDetails: "White v Black",
-        hearingType: "Directions"
+        caseDetails: "White v Black"
       }
     ];
 

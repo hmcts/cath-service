@@ -5,8 +5,8 @@ export const SPECIAL_CATEGORY_DATA_WARNING = `Note this email contains Special C
 This email contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.`;
 
 export interface CaseSummaryItem {
+  date: string;
   caseName: string;
-  hearingDate: string;
 }
 
 export function extractCaseSummary(jsonData: CareStandardsTribunalHearingList): CaseSummaryItem[] {
@@ -14,8 +14,8 @@ export function extractCaseSummary(jsonData: CareStandardsTribunalHearingList): 
 
   for (const hearing of jsonData) {
     summaries.push({
-      caseName: hearing.caseName || "N/A",
-      hearingDate: hearing.date || "N/A"
+      date: hearing.date || "N/A",
+      caseName: hearing.caseName || "N/A"
     });
   }
 
@@ -34,8 +34,8 @@ export function formatCaseSummaryForEmail(items: CaseSummaryItem[]): string {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    lines.push(`Date - ${item.date}`);
     lines.push(`Case name - ${item.caseName}`);
-    lines.push(`Hearing date - ${item.hearingDate}`);
 
     if (i < items.length - 1) {
       lines.push("");
