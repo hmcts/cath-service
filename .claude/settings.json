@@ -7,9 +7,6 @@
       }
     }
   },
-  "enabledPlugins": {
-    "expressjs-monorepo@hmcts": true
-  },
   "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
