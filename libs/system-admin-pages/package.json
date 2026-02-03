@@ -11,7 +11,8 @@
       "production": "./dist/config.js",
       "default": "./src/config.ts"
     },
-    "./src/assets/css/dashboard.scss": "./src/assets/css/dashboard.scss"
+    "./src/assets/css/dashboard.scss": "./src/assets/css/dashboard.scss",
+    "./src/assets/css/user-management.scss": "./src/assets/css/user-management.scss"
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks && yarn build:assets",
