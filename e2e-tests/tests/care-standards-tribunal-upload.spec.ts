@@ -173,12 +173,19 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
   await page.fill('input[name="hearingStartDate-year"]', "2026");
   await page.selectOption('select[name="sensitivity"]', "PUBLIC");
   await page.selectOption('select[name="language"]', "ENGLISH");
-  await page.fill('input[name="displayFrom-day"]', "15");
-  await page.fill('input[name="displayFrom-month"]', "01");
-  await page.fill('input[name="displayFrom-year"]', "2026");
-  await page.fill('input[name="displayTo-day"]', "31");
-  await page.fill('input[name="displayTo-month"]', "01");
-  await page.fill('input[name="displayTo-year"]', "2026");
+  // Use dates that span the current date to ensure publication is visible
+  const today = new Date();
+  const displayFrom = new Date(today);
+  displayFrom.setDate(displayFrom.getDate() - 7); // 7 days ago
+  const displayTo = new Date(today);
+  displayTo.setDate(displayTo.getDate() + 30); // 30 days from now
+
+  await page.fill('input[name="displayFrom-day"]', String(displayFrom.getDate()).padStart(2, '0'));
+  await page.fill('input[name="displayFrom-month"]', String(displayFrom.getMonth() + 1).padStart(2, '0'));
+  await page.fill('input[name="displayFrom-year"]', String(displayFrom.getFullYear()));
+  await page.fill('input[name="displayTo-day"]', String(displayTo.getDate()).padStart(2, '0'));
+  await page.fill('input[name="displayTo-month"]', String(displayTo.getMonth() + 1).padStart(2, '0'));
+  await page.fill('input[name="displayTo-year"]', String(displayTo.getFullYear()));
 
   const fileInput = page.locator('input[name="file"]');
   await fileInput.setInputFiles({
