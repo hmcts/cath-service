@@ -11,4 +11,3 @@ export function extractCaseSummary(jsonData: AdministrativeCourtHearingList): Ca
     { label: "Case details", value: hearing.caseDetails || "N/A" }
   ]);
 }
-
