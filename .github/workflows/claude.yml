@@ -280,3 +280,99 @@ jobs:
           else
             echo "Issue not found in project 43, skipping status update"
           fi
+
+  claude-spec:
+    if: |
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@spec') &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Parse template type
+        id: parse
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          COMMENT="$COMMENT_BODY"
+          # Extract template name after @spec (default: new-feature)
+          if [[ "$COMMENT" =~ @spec[[:space:]]+([a-zA-Z0-9_-]+) ]]; then
+            TEMPLATE="${BASH_REMATCH[1]}"
+          else
+            TEMPLATE="new-feature"
+          fi
+
+          # Validate template exists
+          if [[ -f "templates/$TEMPLATE.md" ]]; then
+            echo "template=$TEMPLATE" >> $GITHUB_OUTPUT
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "template=$TEMPLATE" >> $GITHUB_OUTPUT
+            echo "valid=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post error if template not found
+        if: steps.parse.outputs.valid == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const templates = fs.readdirSync('templates').join(', ');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `❌ Template \`${{ steps.parse.outputs.template }}\` not found.\n\nAvailable templates: ${templates}\n\nUsage: \`@spec [template-name]\``
+            });
+
+      - name: Run Claude Code for spec generation
+        if: steps.parse.outputs.valid == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          prompt: |
+            Generate a technical specification for this GitHub issue using the specified template.
+
+            ## Template
+            Read the template from: templates/${{ steps.parse.outputs.template }}.md
+
+            ## Issue Details
+            Issue #${{ github.event.issue.number }}
+            Title: ${{ github.event.issue.title }}
+            Body:
+            ${{ github.event.issue.body }}
+
+            ## Instructions
+            1. Read the template file from templates/${{ steps.parse.outputs.template }}.md
+               - Text in round brackets (like this) is template guidance - remove it and do not include it in the output
+            2. Read .claude/rules/design.md for GOV.UK Design System guidance
+            3. Search the codebase for similar implementations to understand existing patterns
+            4. Fill in ALL sections of the template with specific, actionable content based on the issue
+            5. Replace all placeholder text [in brackets] with real content
+            6. For wireframes, use ASCII art diagrams
+            7. Post the completed specification as a comment on issue #${{ github.event.issue.number }} using:
+               gh issue comment ${{ github.event.issue.number }} --body "<specification>"
+
+            Do not create files, make commits, or modify anything.
+          claude_args: |
+            --allowedTools "Read,Glob,Grep,Bash(gh issue comment:*)"
+            --append-system-prompt "You are generating a technical specification. After generating the spec, use 'gh issue comment' to post it to the issue. Do not create files, make commits, or modify anything."
