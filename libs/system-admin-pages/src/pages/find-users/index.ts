@@ -152,18 +152,10 @@ const getHandler = async (req: Request, res: Response) => {
     { html: `<a href="/manage-user/${user.userId}${lngParam}" class="govuk-link">${content.manageLink}</a>` }
   ]);
 
-  // Build pagination items
-  const paginationItems = [];
+  // Build pagination following GOV.UK Design System pattern
   const { currentPage, totalPages } = searchResult;
 
-  if (currentPage > 1) {
-    paginationItems.push({
-      number: currentPage - 1,
-      visuallyHiddenText: content.paginationPrevious,
-      href: `/find-users?page=${currentPage - 1}${lngQueryParam}`
-    });
-  }
-
+  const paginationItems = [];
   for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
     paginationItems.push({
       number: pageNum,
@@ -172,13 +164,19 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  if (currentPage < totalPages) {
-    paginationItems.push({
-      number: currentPage + 1,
-      visuallyHiddenText: content.paginationNext,
-      href: `/find-users?page=${currentPage + 1}${lngQueryParam}`
-    });
-  }
+  const paginationPrevious =
+    currentPage > 1
+      ? {
+          href: `/find-users?page=${currentPage - 1}${lngQueryParam}`
+        }
+      : undefined;
+
+  const paginationNext =
+    currentPage < totalPages
+      ? {
+          href: `/find-users?page=${currentPage + 1}${lngQueryParam}`
+        }
+      : undefined;
 
   res.render("find-users/index", {
     ...content,
@@ -187,6 +185,8 @@ const getHandler = async (req: Request, res: Response) => {
     currentPage: searchResult.currentPage,
     totalPages: searchResult.totalPages,
     paginationItems,
+    paginationPrevious,
+    paginationNext,
     filters,
     selectedFilterGroups,
     hasFilters: selectedFilterGroups.length > 0,

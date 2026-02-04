@@ -279,10 +279,10 @@ describe("find-users page", () => {
 
       // Assert
       const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
-      expect(renderCall.paginationItems).toHaveLength(7); // previous + 5 pages + next
-      expect(renderCall.paginationItems[0].number).toBe(1); // previous
-      expect(renderCall.paginationItems[2].current).toBe(true); // page 2
-      expect(renderCall.paginationItems[6].number).toBe(3); // next
+      expect(renderCall.paginationItems).toHaveLength(5); // 5 numbered pages
+      expect(renderCall.paginationItems[1].current).toBe(true); // page 2 is current
+      expect(renderCall.paginationPrevious).toEqual({ href: "/find-users?page=1" });
+      expect(renderCall.paginationNext).toEqual({ href: "/find-users?page=3" });
     });
 
     it("should build filter tags for all filter types", async () => {
@@ -401,6 +401,49 @@ describe("find-users page", () => {
       // Assert
       const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
       expect(renderCall.paginationItems[0].href).toContain("&lng=cy");
+      expect(renderCall.paginationNext.href).toContain("&lng=cy");
+    });
+
+    it("should not include previous link on first page", async () => {
+      // Arrange
+      const mockSearchResult = {
+        users: [],
+        totalCount: 50,
+        currentPage: 1,
+        totalPages: 5
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.paginationPrevious).toBeUndefined();
+      expect(renderCall.paginationNext).toEqual({ href: "/find-users?page=2" });
+    });
+
+    it("should not include next link on last page", async () => {
+      // Arrange
+      const mockSearchResult = {
+        users: [],
+        totalCount: 50,
+        currentPage: 5,
+        totalPages: 5
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.paginationPrevious).toEqual({ href: "/find-users?page=4" });
+      expect(renderCall.paginationNext).toBeUndefined();
     });
   });
 
