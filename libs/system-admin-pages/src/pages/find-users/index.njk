@@ -36,7 +36,7 @@
             <h4 class="govuk-heading-s">{{ group.heading }}</h4>
             <div class="user-management-filter-tags">
               {% for tag in group.tags %}
-                {% set tagHtml = tag.label + ' <span class="user-management-filter-tag-remove">×</span>' %}
+                {% set tagHtml = (tag.label | escape) + ' <span class="user-management-filter-tag-remove">×</span>' %}
                 <a href="{{ tag.removeUrl }}" class="user-management-filter-tag-link">
                   {{ govukTag({
                     html: tagHtml,
