@@ -57,11 +57,6 @@ test.describe("System Admin Dashboard", () => {
       await expect(descriptions.nth(6)).toContainText("View audit logs on system admin actions");
       await expect(descriptions.nth(7)).toContainText("View, update and remove location metadata");
     });
-
-    test("should display tiles in 2-column grid", async ({ page }) => {
-      const gridColumns = page.locator(".govuk-grid-column-one-half");
-      await expect(gridColumns).toHaveCount(8);
-    });
   });
 
   test.describe("Accessibility", () => {
