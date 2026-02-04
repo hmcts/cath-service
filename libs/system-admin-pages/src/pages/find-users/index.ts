@@ -32,7 +32,8 @@ const getHandler = async (req: Request, res: Response) => {
   try {
     searchResult = await searchUsers(filters, page);
 
-    if (searchResult.totalCount === 0 && Object.keys(filters).length > 0) {
+    const hasActiveFilters = Object.values(filters).some((value) => (Array.isArray(value) ? value.length > 0 : Boolean(value)));
+    if (searchResult.totalCount === 0 && hasActiveFilters) {
       noResultsError = {
         text: content.noResultsError,
         href: "#email"
