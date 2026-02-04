@@ -40,6 +40,9 @@ const getHandler = async (req: Request, res: Response) => {
         delete filters.provenances;
       }
     }
+
+    // Reset page to 1 after removing a filter to avoid out-of-range results
+    session.userManagement.page = 1;
   }
 
   const lngParam = language === "cy" ? "?lng=cy" : "";
