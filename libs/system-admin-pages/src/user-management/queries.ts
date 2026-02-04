@@ -108,10 +108,10 @@ export async function deleteUserById(userId: string): Promise<void> {
     // First, get all subscription IDs for this user
     const userSubscriptions = await tx.subscription.findMany({
       where: { userId },
-      select: { id: true }
+      select: { subscriptionId: true }
     });
 
-    const subscriptionIds = userSubscriptions.map((sub) => sub.id);
+    const subscriptionIds = userSubscriptions.map((sub) => sub.subscriptionId);
 
     // Delete notification audit logs for these subscriptions
     if (subscriptionIds.length > 0) {

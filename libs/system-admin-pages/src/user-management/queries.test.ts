@@ -176,7 +176,7 @@ describe("User Management Queries", () => {
   describe("deleteUserById", () => {
     it("should delete user, subscriptions, and audit logs in transaction", async () => {
       // Arrange
-      const mockSubscriptions = [{ id: "sub1" }, { id: "sub2" }];
+      const mockSubscriptions = [{ subscriptionId: "sub1" }, { subscriptionId: "sub2" }];
       const mockTx = {
         subscription: {
           findMany: vi.fn().mockResolvedValue(mockSubscriptions),
@@ -199,7 +199,7 @@ describe("User Management Queries", () => {
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(mockTx.subscription.findMany).toHaveBeenCalledWith({
         where: { userId: "123" },
-        select: { id: true }
+        select: { subscriptionId: true }
       });
       expect(mockTx.notificationAuditLog.deleteMany).toHaveBeenCalledWith({
         where: { subscriptionId: { in: ["sub1", "sub2"] } }
