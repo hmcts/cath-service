@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
+import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { prisma } from "@hmcts/postgres";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper to validate required environment variables
@@ -16,10 +16,7 @@ function validateEnvVars() {
   }
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}. ` +
-      "Please set these variables before running the tests."
-    );
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}. Please set these variables before running the tests.`);
   }
 }
 
@@ -86,9 +83,7 @@ test.describe("User Management", () => {
     await expect(page.getByRole("heading", { name: "Find, update and delete a user", level: 1 })).toBeVisible();
 
     // Test accessibility on find users page
-    const findUsersAccessibility = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const findUsersAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(findUsersAccessibility.violations).toEqual([]);
 
     // Test filter by email
@@ -152,9 +147,7 @@ test.describe("User Management", () => {
     await expect(page.getByText("CFT_IDAM")).toBeVisible();
 
     // Test accessibility on manage user page
-    const manageUserAccessibility = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const manageUserAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(manageUserAccessibility.violations).toEqual([]);
 
     // Test Welsh translation on manage user page
@@ -172,9 +165,7 @@ test.describe("User Management", () => {
     await expect(page.getByRole("heading", { name: `Are you sure you want to delete ${testEmail}?`, level: 1 })).toBeVisible();
 
     // Test accessibility on delete confirmation page
-    const deleteConfirmAccessibility = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const deleteConfirmAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(deleteConfirmAccessibility.violations).toEqual([]);
 
     // Test validation - submit without selecting an option

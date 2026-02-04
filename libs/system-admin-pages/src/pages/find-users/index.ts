@@ -210,7 +210,7 @@ const postHandler = async (req: Request, res: Response) => {
   const validationErrors = validateSearchFilters(filters);
 
   if (validationErrors.length > 0) {
-    let searchResult;
+    let searchResult: Awaited<ReturnType<typeof searchUsers>>;
     try {
       searchResult = await searchUsers({}, 1);
     } catch (error) {
