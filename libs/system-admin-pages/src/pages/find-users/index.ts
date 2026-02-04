@@ -210,7 +210,23 @@ const postHandler = async (req: Request, res: Response) => {
   const validationErrors = validateSearchFilters(filters);
 
   if (validationErrors.length > 0) {
-    const searchResult = await searchUsers({}, 1);
+    let searchResult;
+    try {
+      searchResult = await searchUsers({}, 1);
+    } catch (error) {
+      console.error("Error searching users during validation error handling:", {
+        error,
+        filters,
+        timestamp: new Date().toISOString()
+      });
+      searchResult = {
+        users: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0
+      };
+    }
+
     return res.render("find-users/index", {
       ...content,
       users: searchResult.users,
