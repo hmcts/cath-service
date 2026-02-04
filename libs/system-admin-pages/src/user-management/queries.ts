@@ -105,7 +105,24 @@ export async function getUserById(userId: string): Promise<User | null> {
 
 export async function deleteUserById(userId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    // Delete user subscriptions first
+    // First, get all subscription IDs for this user
+    const userSubscriptions = await tx.subscription.findMany({
+      where: { userId },
+      select: { id: true }
+    });
+
+    const subscriptionIds = userSubscriptions.map((sub) => sub.id);
+
+    // Delete notification audit logs for these subscriptions
+    if (subscriptionIds.length > 0) {
+      await tx.notificationAuditLog.deleteMany({
+        where: {
+          subscriptionId: { in: subscriptionIds }
+        }
+      });
+    }
+
+    // Delete user subscriptions
     await tx.subscription.deleteMany({
       where: { userId }
     });
