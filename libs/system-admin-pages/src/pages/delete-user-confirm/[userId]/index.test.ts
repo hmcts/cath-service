@@ -8,10 +8,15 @@ vi.mock("../../../user-management/queries.js", () => ({
   deleteUserById: vi.fn()
 }));
 
+interface MockUser {
+  userId: string;
+  email: string;
+}
+
 describe("delete-user-confirm page", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockUser: any;
+  let mockUser: MockUser;
 
   beforeEach(() => {
     vi.clearAllMocks();
