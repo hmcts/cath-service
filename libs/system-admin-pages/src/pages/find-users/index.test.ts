@@ -153,7 +153,7 @@ describe("find-users page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith(
         "find-users/index",
         expect.objectContaining({
-          users: [],
+          userRows: [],
           totalCount: 0,
           currentPage: 1,
           totalPages: 0
