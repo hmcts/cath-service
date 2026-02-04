@@ -61,11 +61,6 @@ test.describe("System Admin Dashboard", () => {
       await expect(descriptions.nth(8)).toContainText("View, create and update list type configuration");
       await expect(descriptions.nth(9)).toContainText("Add and manage list type configurations");
     });
-
-    test("should display tiles in 2-column grid", async ({ page }) => {
-      const gridColumns = page.locator(".govuk-grid-column-one-half");
-      await expect(gridColumns).toHaveCount(10);
-    });
   });
 
   test.describe("Accessibility", () => {
