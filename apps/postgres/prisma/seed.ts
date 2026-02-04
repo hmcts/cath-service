@@ -94,6 +94,9 @@ async function main() {
     });
   }
 
+  let createdCount = 0;
+  let skippedCount = 0;
+
   for (const user of testUsers) {
     const existing = await prisma.user.findUnique({
       where: { userId: user.userId }
@@ -102,12 +105,14 @@ async function main() {
     if (!existing) {
       await prisma.user.create({ data: user });
       console.log(`Created test user: ${user.email}`);
+      createdCount++;
     } else {
       console.log(`User ${user.email} already exists`);
+      skippedCount++;
     }
   }
 
-  console.log(`Seed completed successfully! Created ${testUsers.length} test users.`);
+  console.log(`Seed completed successfully! Created ${createdCount} test users, skipped ${skippedCount} existing users.`);
 }
 
 main()
