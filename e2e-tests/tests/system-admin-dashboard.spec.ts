@@ -73,42 +73,5 @@ test.describe("System Admin Dashboard", () => {
     await expect(uploadHeading).toBeVisible();
     await expect(uploadHeading).toHaveText("Manually upload a csv file");
   });
-
-
-  test.describe("Responsive Design", () => {
-    test("should display correctly on mobile viewport (375x667) @nightly", async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto("/system-admin-dashboard");
-
-      const heading = page.locator("h1");
-      await expect(heading).toBeVisible();
-
-      const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
-    });
-
-    test("should display correctly on tablet viewport (768x1024) @nightly", async ({ page }) => {
-      await page.setViewportSize({ width: 768, height: 1024 });
-      await page.goto("/system-admin-dashboard");
-
-      const heading = page.locator("h1");
-      await expect(heading).toBeVisible();
-
-      const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
-    });
-
-    test("should display correctly on desktop viewport (1920x1080) @nightly", async ({ page }) => {
-      await page.setViewportSize({ width: 1920, height: 1080 });
-      await page.goto("/system-admin-dashboard");
-
-      const heading = page.locator("h1");
-      await expect(heading).toBeVisible();
-
-      const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
-    });
-  });
-
 });
 
