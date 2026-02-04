@@ -130,10 +130,25 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
+  // Create label mappings for table display
+  const roleLabels: Record<string, string> = {
+    VERIFIED: content.roleVerified,
+    INTERNAL_ADMIN_CTSC: content.roleCtscAdmin,
+    INTERNAL_ADMIN_LOCAL: content.roleLocalAdmin,
+    SYSTEM_ADMIN: content.roleSystemAdmin
+  };
+
+  const provenanceLabels: Record<string, string> = {
+    CFT_IDAM: content.provenanceCftIdam,
+    SSO: content.provenanceSso,
+    B2C: content.provenanceB2c,
+    CRIME_IDAM: content.provenanceCrimeIdam
+  };
+
   const userRows = searchResult.users.map((user) => [
     { text: user.email },
-    { text: user.role },
-    { text: user.userProvenance },
+    { text: roleLabels[user.role] || user.role },
+    { text: provenanceLabels[user.userProvenance] || user.userProvenance },
     { html: `<a href="/manage-user/${user.userId}${lngParam}" class="govuk-link">${content.manageLink}</a>` }
   ]);
 
