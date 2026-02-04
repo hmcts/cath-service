@@ -130,6 +130,60 @@ describe("find-users page", () => {
       );
     });
 
+    it("should not show error when no results and no active filters", async () => {
+      // Arrange
+      const mockFilters = { email: undefined, userId: undefined, userProvenanceId: undefined, roles: undefined, provenances: undefined };
+      mockSession.userManagement = { filters: mockFilters, page: 1 };
+
+      const mockSearchResult = {
+        users: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "find-users/index",
+        expect.objectContaining({
+          errors: undefined
+        })
+      );
+    });
+
+    it("should not show error when no results with empty array filters", async () => {
+      // Arrange
+      const mockFilters = { email: undefined, userId: undefined, userProvenanceId: undefined, roles: [], provenances: [] };
+      mockSession.userManagement = { filters: mockFilters, page: 1 };
+
+      const mockSearchResult = {
+        users: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "find-users/index",
+        expect.objectContaining({
+          errors: undefined
+        })
+      );
+    });
+
     it("should handle database errors gracefully", async () => {
       // Arrange
       vi.mocked(queries.searchUsers).mockRejectedValue(new Error("Database connection failed"));
