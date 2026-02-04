@@ -129,6 +129,195 @@ describe("find-users page", () => {
         })
       );
     });
+
+    it("should handle database errors gracefully", async () => {
+      // Arrange
+      vi.mocked(queries.searchUsers).mockRejectedValue(new Error("Database connection failed"));
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error searching users:",
+        expect.objectContaining({
+          error: expect.any(Error),
+          filters: {},
+          page: 1,
+          timestamp: expect.any(String)
+        })
+      );
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "find-users/index",
+        expect.objectContaining({
+          users: [],
+          totalCount: 0,
+          currentPage: 1,
+          totalPages: 0
+        })
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should use page from query string", async () => {
+      // Arrange
+      mockRequest.query = { page: "3" };
+      const mockSearchResult = {
+        users: [],
+        totalCount: 50,
+        currentPage: 3,
+        totalPages: 5
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(queries.searchUsers).toHaveBeenCalledWith({}, 3);
+    });
+
+    it("should render Welsh content when lng=cy", async () => {
+      // Arrange
+      mockRequest.query = { lng: "cy" };
+      const mockSearchResult = {
+        users: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "find-users/index",
+        expect.objectContaining({
+          lng: "cy"
+        })
+      );
+    });
+
+    it("should build pagination with previous and next links", async () => {
+      // Arrange
+      const mockSearchResult = {
+        users: [],
+        totalCount: 50,
+        currentPage: 2,
+        totalPages: 5
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.paginationItems).toHaveLength(7); // previous + 5 pages + next
+      expect(renderCall.paginationItems[0].number).toBe(1); // previous
+      expect(renderCall.paginationItems[2].current).toBe(true); // page 2
+      expect(renderCall.paginationItems[6].number).toBe(3); // next
+    });
+
+    it("should build filter tags for all filter types", async () => {
+      // Arrange
+      const mockFilters = {
+        email: "test@example.com",
+        userId: "user123",
+        userProvenanceId: "prov456",
+        roles: ["VERIFIED", "SYSTEM_ADMIN"],
+        provenances: ["CFT_IDAM", "SSO"]
+      };
+      mockSession.userManagement = { filters: mockFilters, page: 1 };
+
+      const mockSearchResult = {
+        users: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.selectedFilterGroups).toHaveLength(5);
+      expect(renderCall.hasFilters).toBe(true);
+      expect(renderCall.selectedFilterGroups[0].tags[0].label).toBe("test@example.com");
+      expect(renderCall.selectedFilterGroups[1].tags[0].label).toBe("user123");
+      expect(renderCall.selectedFilterGroups[2].tags[0].label).toBe("prov456");
+      expect(renderCall.selectedFilterGroups[3].tags).toHaveLength(2); // roles
+      expect(renderCall.selectedFilterGroups[4].tags).toHaveLength(2); // provenances
+    });
+
+    it("should generate user rows with manage links", async () => {
+      // Arrange
+      const mockSearchResult = {
+        users: [
+          {
+            userId: "123",
+            email: "user@example.com",
+            role: "VERIFIED",
+            userProvenance: "CFT_IDAM"
+          }
+        ],
+        totalCount: 1,
+        currentPage: 1,
+        totalPages: 1
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.userRows).toHaveLength(1);
+      expect(renderCall.userRows[0][0].text).toBe("user@example.com");
+      expect(renderCall.userRows[0][1].text).toBe("VERIFIED");
+      expect(renderCall.userRows[0][2].text).toBe("CFT_IDAM");
+      expect(renderCall.userRows[0][3].html).toContain("/manage-user/123");
+      expect(renderCall.userRows[0][3].html).toContain("govuk-link");
+    });
+
+    it("should include Welsh language parameter in pagination URLs", async () => {
+      // Arrange
+      mockRequest.query = { lng: "cy" };
+      const mockSearchResult = {
+        users: [],
+        totalCount: 30,
+        currentPage: 1,
+        totalPages: 3
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.paginationItems[0].href).toContain("&lng=cy");
+    });
   });
 
   describe("POST handler", () => {
@@ -198,6 +387,104 @@ describe("find-users page", () => {
 
       // Assert
       expect(mockResponse.redirect).toHaveBeenCalledWith("/find-users?lng=cy");
+    });
+
+    it("should trim whitespace from text inputs", async () => {
+      // Arrange
+      mockRequest.body = {
+        email: "  test@example.com  ",
+        userId: "  user123  ",
+        userProvenanceId: "  prov456  "
+      };
+
+      const handler = POST[POST.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockSession.userManagement.filters).toEqual({
+        email: "test@example.com",
+        userId: "user123",
+        userProvenanceId: "prov456",
+        roles: undefined,
+        provenances: undefined
+      });
+    });
+
+    it("should convert single role to array", async () => {
+      // Arrange
+      mockRequest.body = {
+        roles: "VERIFIED" // Single value, not array
+      };
+
+      const handler = POST[POST.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockSession.userManagement.filters.roles).toEqual(["VERIFIED"]);
+    });
+
+    it("should convert single provenance to array", async () => {
+      // Arrange
+      mockRequest.body = {
+        provenances: "CFT_IDAM" // Single value, not array
+      };
+
+      const handler = POST[POST.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockSession.userManagement.filters.provenances).toEqual(["CFT_IDAM"]);
+    });
+
+    it("should initialize session.userManagement if not exists", async () => {
+      // Arrange
+      mockRequest.body = { email: "test@example.com" };
+      mockRequest.session = {}; // No userManagement property
+
+      const handler = POST[POST.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockRequest.session).toHaveProperty("userManagement");
+      expect(mockRequest.session.userManagement).toHaveProperty("filters");
+    });
+
+    it("should render Welsh validation errors when lng=cy", async () => {
+      // Arrange
+      mockRequest.query = { lng: "cy" };
+      mockRequest.body = {
+        userId: "invalid-user-id"
+      };
+
+      const mockSearchResult = {
+        users: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = POST[POST.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "find-users/index",
+        expect.objectContaining({
+          lng: "cy",
+          errors: expect.any(Array)
+        })
+      );
     });
   });
 });
