@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as queries from "../../user-management/queries.js";
+import * as queries from "../../../user-management/queries.js";
 import { GET } from "./index.js";
 
-vi.mock("../../user-management/queries.js", () => ({
+vi.mock("../../../user-management/queries.js", () => ({
   getUserById: vi.fn()
 }));
 
@@ -49,9 +49,16 @@ describe("manage-user page", () => {
       // Assert
       expect(queries.getUserById).toHaveBeenCalledWith("123");
       expect(mockResponse.render).toHaveBeenCalledWith(
-        "manage-user/index",
+        "manage-user/[userId]/index",
         expect.objectContaining({
-          user: mockUser
+          user: expect.objectContaining({
+            userId: mockUser.userId,
+            email: mockUser.email,
+            role: mockUser.role,
+            userProvenance: mockUser.userProvenance,
+            createdDate: expect.any(String),
+            lastSignedInDate: expect.any(String)
+          })
         })
       );
     });
