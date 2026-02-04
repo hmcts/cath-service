@@ -25,11 +25,11 @@ function validateEnvVars() {
 
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {
-  validateEnvVars();
-
   await page.goto("/system-admin-dashboard");
 
+  // Only validate env vars if SSO redirect is detected
   if (page.url().includes("login.microsoftonline.com")) {
+    validateEnvVars();
     const systemAdminEmail = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!;
     const systemAdminPassword = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!;
     await loginWithSSO(page, systemAdminEmail, systemAdminPassword);
