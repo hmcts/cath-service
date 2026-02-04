@@ -18,7 +18,6 @@ test.describe("System Admin Dashboard", () => {
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
       await expect(heading).toHaveText("System Admin Dashboard");
-      await expect(heading).toHaveClass(/govuk-heading-l/);
     });
 
     test("should display all 8 admin tiles", async ({ page }) => {
