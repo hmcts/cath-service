@@ -34,8 +34,12 @@ describe("User Management Validation", () => {
   });
 
   describe("validateUserId", () => {
-    it("should return null for valid user ID", () => {
-      expect(validateUserId("abc123")).toBeNull();
+    it("should return null for valid UUID", () => {
+      expect(validateUserId("123e4567-e89b-12d3-a456-426614174000")).toBeNull();
+    });
+
+    it("should return null for valid UUID with uppercase", () => {
+      expect(validateUserId("123E4567-E89B-12D3-A456-426614174000")).toBeNull();
     });
 
     it("should return null for undefined user ID", () => {
@@ -49,10 +53,22 @@ describe("User Management Validation", () => {
       expect(result?.text).toBe("User ID must be 50 characters or less");
     });
 
-    it("should return error for user ID with special characters", () => {
-      const result = validateUserId("user-id-123");
+    it("should return error for invalid UUID format", () => {
+      const result = validateUserId("not-a-uuid");
       expect(result).not.toBeNull();
-      expect(result?.text).toBe("User ID must contain only letters and numbers");
+      expect(result?.text).toContain("UUID format");
+    });
+
+    it("should return error for alphanumeric without hyphens", () => {
+      const result = validateUserId("abc123");
+      expect(result).not.toBeNull();
+      expect(result?.text).toContain("UUID format");
+    });
+
+    it("should return error for UUID without correct format", () => {
+      const result = validateUserId("123-456-789");
+      expect(result).not.toBeNull();
+      expect(result?.text).toContain("UUID format");
     });
   });
 
@@ -123,7 +139,7 @@ describe("User Management Validation", () => {
     it("should return empty array for valid filters", () => {
       const filters = {
         email: "test@example.com",
-        userId: "user123",
+        userId: "123e4567-e89b-12d3-a456-426614174000",
         roles: ["SYSTEM_ADMIN"]
       };
       const errors = validateSearchFilters(filters);
@@ -133,7 +149,7 @@ describe("User Management Validation", () => {
     it("should return multiple errors for multiple invalid fields", () => {
       const filters = {
         email: "al", // Email format not validated - allows partial search
-        userId: "user-with-dashes",
+        userId: "not-a-valid-uuid",
         roles: ["INVALID_ROLE"]
       };
       const errors = validateSearchFilters(filters);

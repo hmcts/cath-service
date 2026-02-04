@@ -477,7 +477,7 @@ describe("find-users page", () => {
     it("should handle validation errors", async () => {
       // Arrange
       mockRequest.body = {
-        userId: "user-with-dashes" // Invalid: contains special characters
+        userId: "not-a-valid-uuid" // Invalid: not a proper UUID format
       };
 
       const mockSearchResult = {

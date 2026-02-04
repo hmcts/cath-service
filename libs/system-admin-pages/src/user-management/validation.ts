@@ -1,5 +1,6 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALPHANUMERIC_REGEX = /^[a-zA-Z0-9]+$/;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const VALID_ROLES = ["VERIFIED", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL", "SYSTEM_ADMIN"];
 const VALID_PROVENANCES = ["CFT_IDAM", "SSO", "B2C", "CRIME_IDAM"];
@@ -37,9 +38,9 @@ export function validateUserId(userId: string | undefined): ValidationError | nu
     };
   }
 
-  if (!ALPHANUMERIC_REGEX.test(userId)) {
+  if (!UUID_REGEX.test(userId)) {
     return {
-      text: "User ID must contain only letters and numbers",
+      text: "User ID must be a valid UUID format (e.g., 123e4567-e89b-12d3-a456-426614174000)",
       href: "#userId"
     };
   }
