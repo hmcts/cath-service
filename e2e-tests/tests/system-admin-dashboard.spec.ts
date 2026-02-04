@@ -31,7 +31,7 @@ test.describe("System Admin Dashboard", () => {
         { title: "Upload Reference Data", href: "/upload-reference-data" },
         { title: "Delete Court", href: "/delete-court" },
         { title: "Manage Third-Party Users", href: "/third-party-users" },
-        { title: "User Management", href: "/user-management" },
+        { title: "User Management", href: "/find-users" },
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-viewer" },
@@ -52,7 +52,7 @@ test.describe("System Admin Dashboard", () => {
       await expect(descriptions.nth(0)).toContainText("Upload CSV location reference data");
       await expect(descriptions.nth(1)).toContainText("Delete court from reference data");
       await expect(descriptions.nth(2)).toContainText("View, create, update and remove third-party users");
-      await expect(descriptions.nth(3)).toContainText("Search, update and delete users");
+      await expect(descriptions.nth(3)).toContainText("Find, update and delete users");
       await expect(descriptions.nth(4)).toContainText("Discover content uploaded to all locations");
       await expect(descriptions.nth(5)).toContainText("Upload a CSV file for bulk creation of media accounts");
       await expect(descriptions.nth(6)).toContainText("View audit logs on system admin actions");
