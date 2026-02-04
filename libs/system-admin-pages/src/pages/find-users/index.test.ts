@@ -346,10 +346,40 @@ describe("find-users page", () => {
       const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
       expect(renderCall.userRows).toHaveLength(1);
       expect(renderCall.userRows[0][0].text).toBe("user@example.com");
-      expect(renderCall.userRows[0][1].text).toBe("VERIFIED");
-      expect(renderCall.userRows[0][2].text).toBe("CFT_IDAM");
+      expect(renderCall.userRows[0][1].text).toBe("Verified"); // Localized label
+      expect(renderCall.userRows[0][2].text).toBe("CFT IdAM"); // Localized label
       expect(renderCall.userRows[0][3].html).toContain("/manage-user/123");
       expect(renderCall.userRows[0][3].html).toContain("govuk-link");
+    });
+
+    it("should generate user rows with Welsh labels when lng=cy", async () => {
+      // Arrange
+      mockRequest.query = { lng: "cy" };
+      const mockSearchResult = {
+        users: [
+          {
+            userId: "123",
+            email: "user@example.com",
+            role: "SYSTEM_ADMIN",
+            userProvenance: "SSO"
+          }
+        ],
+        totalCount: 1,
+        currentPage: 1,
+        totalPages: 1
+      };
+      vi.mocked(queries.searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.userRows).toHaveLength(1);
+      expect(renderCall.userRows[0][1].text).toBe("Gweinyddwr System"); // Welsh label for SYSTEM_ADMIN
+      expect(renderCall.userRows[0][2].text).toBe("SSO"); // SSO is same in Welsh
     });
 
     it("should include Welsh language parameter in pagination URLs", async () => {
