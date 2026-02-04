@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as queries from "../../user-management/queries.js";
+import * as queries from "../../../user-management/queries.js";
 import { GET, POST } from "./index.js";
 
-vi.mock("../../user-management/queries.js", () => ({
+vi.mock("../../../user-management/queries.js", () => ({
   getUserById: vi.fn(),
   deleteUserById: vi.fn()
 }));
@@ -45,7 +45,7 @@ describe("delete-user-confirm page", () => {
       // Assert
       expect(queries.getUserById).toHaveBeenCalledWith("user123");
       expect(mockResponse.render).toHaveBeenCalledWith(
-        "delete-user-confirm/index",
+        "delete-user-confirm/[userId]/index",
         expect.objectContaining({
           user: mockUser
         })
@@ -130,7 +130,7 @@ describe("delete-user-confirm page", () => {
 
       // Assert
       expect(mockResponse.render).toHaveBeenCalledWith(
-        "delete-user-confirm/index",
+        "delete-user-confirm/[userId]/index",
         expect.objectContaining({
           errors: expect.any(Array),
           user: mockUser
