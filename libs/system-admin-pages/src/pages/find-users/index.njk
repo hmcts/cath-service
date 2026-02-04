@@ -179,6 +179,8 @@
 
       {% if totalPages > 1 %}
         {{ govukPagination({
+          previous: paginationPrevious,
+          next: paginationNext,
           items: paginationItems
         }) }}
       {% endif %}
