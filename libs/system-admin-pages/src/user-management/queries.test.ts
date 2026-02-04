@@ -11,6 +11,10 @@ vi.mock("@hmcts/postgres", () => ({
       delete: vi.fn()
     },
     subscription: {
+      findMany: vi.fn(),
+      deleteMany: vi.fn()
+    },
+    notificationAuditLog: {
       deleteMany: vi.fn()
     },
     $transaction: vi.fn()
@@ -170,10 +174,17 @@ describe("User Management Queries", () => {
   });
 
   describe("deleteUserById", () => {
-    it("should delete user and subscriptions in transaction", async () => {
+    it("should delete user, subscriptions, and audit logs in transaction", async () => {
       // Arrange
+      const mockSubscriptions = [{ id: "sub1" }, { id: "sub2" }];
       const mockTx = {
-        subscription: { deleteMany: vi.fn().mockResolvedValue({ count: 2 }) },
+        subscription: {
+          findMany: vi.fn().mockResolvedValue(mockSubscriptions),
+          deleteMany: vi.fn().mockResolvedValue({ count: 2 })
+        },
+        notificationAuditLog: {
+          deleteMany: vi.fn().mockResolvedValue({ count: 5 })
+        },
         user: { delete: vi.fn().mockResolvedValue({ userId: "123" }) }
       };
 
@@ -186,12 +197,46 @@ describe("User Management Queries", () => {
 
       // Assert
       expect(prisma.$transaction).toHaveBeenCalled();
+      expect(mockTx.subscription.findMany).toHaveBeenCalledWith({
+        where: { userId: "123" },
+        select: { id: true }
+      });
+      expect(mockTx.notificationAuditLog.deleteMany).toHaveBeenCalledWith({
+        where: { subscriptionId: { in: ["sub1", "sub2"] } }
+      });
       expect(mockTx.subscription.deleteMany).toHaveBeenCalledWith({
         where: { userId: "123" }
       });
       expect(mockTx.user.delete).toHaveBeenCalledWith({
         where: { userId: "123" }
       });
+    });
+
+    it("should skip audit log deletion when user has no subscriptions", async () => {
+      // Arrange
+      const mockTx = {
+        subscription: {
+          findMany: vi.fn().mockResolvedValue([]),
+          deleteMany: vi.fn().mockResolvedValue({ count: 0 })
+        },
+        notificationAuditLog: {
+          deleteMany: vi.fn()
+        },
+        user: { delete: vi.fn().mockResolvedValue({ userId: "123" }) }
+      };
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        return await callback(mockTx);
+      });
+
+      // Act
+      await deleteUserById("123");
+
+      // Assert
+      expect(mockTx.subscription.findMany).toHaveBeenCalled();
+      expect(mockTx.notificationAuditLog.deleteMany).not.toHaveBeenCalled();
+      expect(mockTx.subscription.deleteMany).toHaveBeenCalled();
+      expect(mockTx.user.delete).toHaveBeenCalled();
     });
   });
 });
