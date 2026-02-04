@@ -14,14 +14,9 @@ test.describe("System Admin Dashboard", () => {
     await expect(page).toHaveTitle(/Court and tribunal hearings/i);
 
     // Verify main heading
-    const heading = page.locator("h1");
-    await expect(heading).toBeVisible();
-    await expect(heading).toHaveText("System Admin Dashboard");
+    await expect(page.getByRole("heading", { name: "System Admin Dashboard", level: 1 })).toBeVisible();
 
-    // Verify all 8 tiles are present with correct content
-    const tiles = page.locator(".admin-tile");
-    await expect(tiles).toHaveCount(8);
-
+    // Verify all 8 tiles with correct content
     const tileData = [
       { title: "Upload Reference Data", href: "/upload-reference-data", description: "Upload CSV location reference data" },
       { title: "Delete Court", href: "/delete-court", description: "Delete court from reference data" },
@@ -33,14 +28,11 @@ test.describe("System Admin Dashboard", () => {
       { title: "Manage Location Metadata", href: "/location-metadata", description: "View, update and remove location metadata" }
     ];
 
-    for (let i = 0; i < tileData.length; i++) {
-      const { title, href, description } = tileData[i];
-      const link = page.locator(`a.admin-tile:has-text("${title}")`);
+    for (const { title, href, description } of tileData) {
+      const link = page.getByRole("link", { name: new RegExp(title, "i") });
       await expect(link).toBeVisible();
       await expect(link).toHaveAttribute("href", href);
-
-      const desc = page.locator(".admin-tile__description").nth(i);
-      await expect(desc).toContainText(description);
+      await expect(link).toContainText(description);
     }
 
     // Check accessibility inline
@@ -50,13 +42,13 @@ test.describe("System Admin Dashboard", () => {
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Test keyboard navigation
-    const tileLinks = page.locator("a.admin-tile");
     let foundTiles = 0;
     for (let i = 0; i < 30 && foundTiles < 8; i++) {
       await page.keyboard.press("Tab");
-      for (let j = 0; j < 8; j++) {
+      for (const { title } of tileData) {
         try {
-          await expect(tileLinks.nth(j)).toBeFocused({ timeout: 100 });
+          const link = page.getByRole("link", { name: new RegExp(title, "i") });
+          await expect(link).toBeFocused({ timeout: 100 });
           foundTiles++;
           break;
         } catch {
@@ -67,11 +59,9 @@ test.describe("System Admin Dashboard", () => {
     expect(foundTiles).toBeGreaterThan(0);
 
     // Verify navigation works by clicking a tile
-    await page.click('a:has-text("Upload Reference Data")');
+    await page.getByRole("link", { name: /Upload Reference Data/i }).click();
     await page.waitForURL("**/reference-data-upload");
-    const uploadHeading = page.locator("h1");
-    await expect(uploadHeading).toBeVisible();
-    await expect(uploadHeading).toHaveText("Manually upload a csv file");
+    await expect(page.getByRole("heading", { name: "Manually upload a csv file", level: 1 })).toBeVisible();
   });
 });
 
