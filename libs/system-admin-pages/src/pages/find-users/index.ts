@@ -65,7 +65,7 @@ const getHandler = async (req: Request, res: Response) => {
       tags: [
         {
           label: filters.email,
-          removeUrl: `/find-users-remove-filter?filter=email${lngQueryParam}`
+          removeUrl: `/find-users/remove-filter?filter=email${lngQueryParam}`
         }
       ]
     });
@@ -77,7 +77,7 @@ const getHandler = async (req: Request, res: Response) => {
       tags: [
         {
           label: filters.userId,
-          removeUrl: `/find-users-remove-filter?filter=userId${lngQueryParam}`
+          removeUrl: `/find-users/remove-filter?filter=userId${lngQueryParam}`
         }
       ]
     });
@@ -89,7 +89,7 @@ const getHandler = async (req: Request, res: Response) => {
       tags: [
         {
           label: filters.userProvenanceId,
-          removeUrl: `/find-users-remove-filter?filter=userProvenanceId${lngQueryParam}`
+          removeUrl: `/find-users/remove-filter?filter=userProvenanceId${lngQueryParam}`
         }
       ]
     });
@@ -107,7 +107,7 @@ const getHandler = async (req: Request, res: Response) => {
       heading: content.rolesLabel,
       tags: filters.roles.map((role) => ({
         label: roleLabels[role] || role,
-        removeUrl: `/find-users-remove-filter?filter=role&value=${role}${lngQueryParam}`
+        removeUrl: `/find-users/remove-filter?filter=role&value=${role}${lngQueryParam}`
       }))
     });
   }
@@ -124,7 +124,7 @@ const getHandler = async (req: Request, res: Response) => {
       heading: content.provenancesLabel,
       tags: filters.provenances.map((provenance) => ({
         label: provenanceLabels[provenance] || provenance,
-        removeUrl: `/find-users-remove-filter?filter=provenance&value=${provenance}${lngQueryParam}`
+        removeUrl: `/find-users/remove-filter?filter=provenance&value=${provenance}${lngQueryParam}`
       }))
     });
   }
