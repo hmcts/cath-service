@@ -520,7 +520,7 @@ describe("find-users page", () => {
       // Arrange
       mockRequest.body = {
         email: "  test@example.com  ",
-        userId: "  user123  ",
+        userId: "  123e4567-e89b-12d3-a456-426614174000  ",
         userProvenanceId: "  prov456  "
       };
 
@@ -530,9 +530,10 @@ describe("find-users page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       // Assert
-      expect(mockSession.userManagement.filters).toEqual({
+      expect(mockRequest.session).toHaveProperty("userManagement");
+      expect((mockRequest.session as any).userManagement.filters).toEqual({
         email: "test@example.com",
-        userId: "user123",
+        userId: "123e4567-e89b-12d3-a456-426614174000",
         userProvenanceId: "prov456",
         roles: undefined,
         provenances: undefined
