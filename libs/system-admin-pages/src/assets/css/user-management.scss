@@ -1,4 +1,6 @@
 .user-management-filter-wrapper {
+  outline: 1px solid #b1b4b6;
+
   > * {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -6,7 +8,6 @@
 }
 
 .user-management-filter-section {
-  outline: 1px solid #b1b4b6;
   padding: 20px;
   margin-bottom: 0 !important;
 
@@ -35,12 +36,13 @@
 }
 
 .user-management-filter-header {
-  background-color: #b1b4b6 !important;
+  background-color: #f3f2f1 !important;
+  border-bottom: 1px solid #b1b4b6;
   margin-bottom: 0 !important;
 }
 
 .user-management-selected-filters {
-  background-color: #f3f2f1 !important;
+  border-bottom: 1px solid #b1b4b6;
   margin-bottom: 0 !important;
 
   .govuk-heading-s {
