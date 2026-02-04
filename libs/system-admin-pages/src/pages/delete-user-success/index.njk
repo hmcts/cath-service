@@ -12,7 +12,7 @@
     <p class="govuk-body">{{ successMessage }}</p>
 
     <p class="govuk-body">
-      <a href="/find-users{{ lng ? '?lng=' + lng : '' }}" class="govuk-link">{{ returnLink }}</a>
+      <a href="/find-users{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-link">{{ returnLink }}</a>
     </p>
   </div>
 </div>
