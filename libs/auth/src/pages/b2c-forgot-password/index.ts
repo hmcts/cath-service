@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { Request, Response } from "express";
 import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "../../config/b2c-config.js";
 
@@ -33,19 +34,20 @@ export const GET = (req: Request, res: Response) => {
   res.redirect(resetUrl.toString());
 };
 
+/**
+ * Generates a cryptographically secure state parameter for OAuth flow
+ */
 function generateState(req: Request): string {
   const sessionId = req.session.id || "unknown";
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(7);
+  const random = randomBytes(16).toString("hex");
 
   return Buffer.from(`${sessionId}:${timestamp}:${random}`).toString("base64");
 }
 
+/**
+ * Generates a cryptographically secure nonce for OpenID Connect
+ */
 function generateNonce(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
-  let nonce = "";
-  for (let i = 0; i < 32; i++) {
-    nonce += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return nonce;
+  return randomBytes(32).toString("base64url");
 }
