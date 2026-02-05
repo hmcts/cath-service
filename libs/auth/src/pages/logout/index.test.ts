@@ -9,6 +9,16 @@ vi.mock("../../config/sso-config.js", () => ({
   }))
 }));
 
+// Mock b2c-config
+vi.mock("../../config/b2c-config.js", () => ({
+  getB2cConfig: vi.fn(() => ({
+    clientId: "test-client-id",
+    clientSecret: "test-client-secret",
+    policyCath: "B2C_1A_CaTH_SignIn"
+  })),
+  getB2cBaseUrl: vi.fn(() => "https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net")
+}));
+
 describe("Logout handler", () => {
   it("should logout CFT IDAM user and redirect to session-logged-out page", async () => {
     const req = {
@@ -38,6 +48,38 @@ describe("Logout handler", () => {
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
     expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
+  });
+
+  it("should logout B2C user and redirect to B2C logout endpoint", async () => {
+    const req = {
+      user: {
+        id: "user-789",
+        email: "b2c@example.com",
+        displayName: "B2C User",
+        role: "VERIFIED",
+        provenance: "B2C"
+      },
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(req.logout).toHaveBeenCalled();
+    expect(req.session.destroy).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(res.redirect).toHaveBeenCalledWith(
+      "https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/logout?p=B2C_1A_CaTH_SignIn&post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out"
+    );
   });
 
   it("should logout SSO user and redirect to Azure AD logout with tenant ID", async () => {

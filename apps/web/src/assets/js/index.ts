@@ -1,3 +1,4 @@
+import "@hmcts/auth/src/assets/js/session-timeout.js";
 import cookieManager from "@hmcts/cookie-manager";
 import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";

@@ -18,9 +18,19 @@ declare global {
   }
 }
 
-// Augment the session via module declaration
-declare module "express-serve-static-core" {
-  interface Request {
-    session: any;
+// Augment the session to include custom properties
+declare module "express-session" {
+  interface SessionData {
+    user?: UserProfile;
+    lastActivity?: number;
+    returnTo?: string;
+    b2cProvider?: string;
+    b2cLocale?: string;
+    lng?: string;
+    passport?: {
+      user?: UserProfile;
+    };
+    // Allow additional properties from various modules
+    [key: string]: unknown;
   }
 }
