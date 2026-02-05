@@ -1,0 +1,96 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageTitle %}{{ t.pageTitle }} - Admin{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l">{{ t.heading }}</h1>
+
+    {# BUG [MEDIUM]: Error displayed without proper styling/component #}
+    {% if error %}
+      <p style="color: red;">Error: {{ error }}</p>
+    {% endif %}
+
+    {# Statistics Panel #}
+    {% if stats %}
+    <div class="govuk-grid-row govuk-!-margin-bottom-6">
+      <div class="govuk-grid-column-one-quarter">
+        {# BUG [LOW]: Using inline styles instead of GOV.UK classes #}
+        <div style="background: #f3f2f1; padding: 15px;">
+          <p class="govuk-body-s">{{ t.statsTotalLabel }}</p>
+          <p class="govuk-heading-l">{{ stats.totalCount }}</p>
+        </div>
+      </div>
+      <div class="govuk-grid-column-one-quarter">
+        <div style="background: #f3f2f1; padding: 15px;">
+          <p class="govuk-body-s">{{ t.statsAvgRatingLabel }}</p>
+          {# BUG [LOW]: No formatting - could display many decimal places or NaN #}
+          <p class="govuk-heading-l">{{ stats.averageRating }}</p>
+        </div>
+      </div>
+      <div class="govuk-grid-column-one-quarter">
+        <div style="background: #f3f2f1; padding: 15px;">
+          <p class="govuk-body-s">{{ t.statsResolvedLabel }}</p>
+          <p class="govuk-heading-l">{{ stats.resolvedCount }}</p>
+        </div>
+      </div>
+      <div class="govuk-grid-column-one-quarter">
+        <div style="background: #f3f2f1; padding: 15px;">
+          <p class="govuk-body-s">{{ t.statsUnresolvedLabel }}</p>
+          <p class="govuk-heading-l">{{ stats.unresolvedCount }}</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Feedback Table #}
+    {% if feedback and feedback.length > 0 %}
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ t.tableHeadDate }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeadRating }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeadCategory }}</th>
+            {# BUG [LOW]: Missing Email column that might be expected #}
+            <th scope="col" class="govuk-table__header">{{ t.tableHeadStatus }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeadActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for item in feedback %}
+          <tr class="govuk-table__row">
+            {# BUG [MEDIUM]: Date not formatted for locale - shows raw ISO string #}
+            <td class="govuk-table__cell">{{ item.createdAt }}</td>
+            <td class="govuk-table__cell">{{ item.rating }}/5</td>
+            <td class="govuk-table__cell">{{ item.category }}</td>
+            <td class="govuk-table__cell">
+              {% if item.isResolved %}
+                {{ govukTag({ text: t.statusResolved, classes: "govuk-tag--green" }) }}
+              {% else %}
+                {{ govukTag({ text: t.statusPending, classes: "govuk-tag--yellow" }) }}
+              {% endif %}
+            </td>
+            <td class="govuk-table__cell">
+              {# BUG [LOW]: View link not implemented #}
+              <a href="#" class="govuk-link">{{ t.actionView }}</a>
+
+              {# BUG [CRITICAL]: Delete action via GET link - should be POST form #}
+              {# BUG [HIGH]: No confirmation before delete #}
+              <a href="/admin/feedback/delete/{{ item.id }}" class="govuk-link govuk-!-margin-left-2">{{ t.actionDelete }}</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="govuk-body">{{ t.noFeedback }}</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
