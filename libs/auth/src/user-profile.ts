@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-// Augment the session to include custom properties
+// Augment the session to include auth-specific properties
 declare module "express-session" {
   interface SessionData {
     user?: UserProfile;
@@ -30,7 +30,13 @@ declare module "express-session" {
     passport?: {
       user?: UserProfile;
     };
-    // Allow additional properties from various modules
-    [key: string]: unknown;
+  }
+}
+
+// Allow additional session properties from other modules via request augmentation
+// This maintains backwards compatibility with code that uses req.session[key]
+declare module "express-serve-static-core" {
+  interface Request {
+    session: import("express-session").Session & Partial<import("express-session").SessionData> & Record<string, any>;
   }
 }
