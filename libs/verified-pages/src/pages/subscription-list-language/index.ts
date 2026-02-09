@@ -35,7 +35,9 @@ const postHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
   const { language } = req.body;
 
-  if (!language) {
+  const ALLOWED_LANGUAGES = ["ENGLISH", "WELSH", "BOTH"];
+
+  if (!language || !ALLOWED_LANGUAGES.includes(language)) {
     if (!res.locals.navigation) {
       res.locals.navigation = {};
     }

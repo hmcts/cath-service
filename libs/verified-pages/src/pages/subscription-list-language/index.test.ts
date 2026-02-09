@@ -155,6 +155,26 @@ describe("subscription-list-language", () => {
       );
     });
 
+    it("should reject invalid language values", async () => {
+      mockReq.body = { language: "INVALID_LANGUAGE" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-list-language/index",
+        expect.objectContaining({
+          errors: [
+            {
+              text: "Please select version of the list type to continue",
+              href: "#language"
+            }
+          ],
+          data: { language: "INVALID_LANGUAGE" }
+        })
+      );
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
     it("should show error message on session save error", async () => {
       mockReq.body = { language: "ENGLISH" };
       mockReq.session = {} as any;
