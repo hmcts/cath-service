@@ -30,7 +30,7 @@
     <form method="post" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
 
-      <table class="govuk-table">
+      <table class="govuk-table" id="list-types">
         <tbody class="govuk-table__body">
           {% for group in groupedListTypes %}
             {% for item in group.items %}
