@@ -31,7 +31,17 @@ vi.mock("@hmcts/list-types-common", () => ({
       provenance: "CFT_IDAM",
       isNonStrategic: false
     }
-  ]
+  ],
+  convertExcelToJson: vi.fn(),
+  validateDateFormat: vi.fn(),
+  validateNoHtmlTags: vi.fn(),
+  convertExcelForListType: vi.fn(),
+  createConverter: vi.fn(),
+  getConverterForListType: vi.fn(),
+  hasConverterForListType: vi.fn(),
+  registerConverter: vi.fn(),
+  convertListTypeNameToKebabCase: vi.fn(),
+  validateListTypeJson: vi.fn()
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -51,6 +61,7 @@ describe("subscription-confirm", () => {
   beforeEach(() => {
     mockReq = {
       body: {},
+      query: {},
       session: {} as any,
       user: { id: "user123" } as any,
       path: "/subscription-confirm"

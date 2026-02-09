@@ -10,7 +10,7 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-vi.mock("@hmcts/subscriptions", () => ({
+vi.mock("@hmcts/subscription", () => ({
   getAllSubscriptionsByUserId: vi.fn()
 }));
 
@@ -22,7 +22,17 @@ vi.mock("@hmcts/list-types-common", () => ({
   mockListTypes: [
     { id: 1, name: "CIVIL_DAILY_CAUSE_LIST", englishFriendlyName: "Civil Daily Cause List", welshFriendlyName: "Civil Daily Cause List" },
     { id: 2, name: "FAMILY_DAILY_CAUSE_LIST", englishFriendlyName: "Family Daily Cause List", welshFriendlyName: "Family Daily Cause List" }
-  ]
+  ],
+  convertExcelToJson: vi.fn(),
+  validateDateFormat: vi.fn(),
+  validateNoHtmlTags: vi.fn(),
+  convertExcelForListType: vi.fn(),
+  createConverter: vi.fn(),
+  getConverterForListType: vi.fn(),
+  hasConverterForListType: vi.fn(),
+  registerConverter: vi.fn(),
+  convertListTypeNameToKebabCase: vi.fn(),
+  validateListTypeJson: vi.fn()
 }));
 
 describe("subscription-management", () => {
@@ -32,6 +42,7 @@ describe("subscription-management", () => {
   beforeEach(() => {
     mockReq = {
       user: { id: "user123" } as any,
+      query: {},
       path: "/subscription-management",
       session: {} as any
     };

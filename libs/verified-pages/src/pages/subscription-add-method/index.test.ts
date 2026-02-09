@@ -15,6 +15,7 @@ describe("subscription-add-method", () => {
   beforeEach(() => {
     mockReq = {
       body: {},
+      session: {} as any,
       path: "/subscription-add-method"
     };
     mockRes = {
