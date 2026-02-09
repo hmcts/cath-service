@@ -22,13 +22,6 @@
 
 <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
-{% if hasNoSubscriptions %}
-  {{ govukButton({
-    text: addSubscriptionsButton,
-    href: "/subscription-add-method"
-  }) }}
-{% else %}
-
 {% if hasLocations %}
   {{ govukTable({
     head: [
@@ -70,7 +63,5 @@
     disabled: hasNoListTypes
   }) }}
 </form>
-
-{% endif %}
 
 {% endblock %}
