@@ -4,8 +4,7 @@ import { prismaSchemas as locationSchemas } from "@hmcts/location/config";
 import { prismaSchemas as notificationsSchemas } from "@hmcts/notifications/config";
 import { prismaSchemas as subscriptionSchemas } from "@hmcts/subscription/config";
 import { prismaSchemas as subscriptionListTypesSchemas } from "@hmcts/subscription-list-types/config";
-import { prismaSchemas as subscriptionsSchemas } from "@hmcts/subscriptions/config";
 
 export function getPrismaSchemas(): string[] {
-  return [subscriptionSchemas, subscriptionsSchemas, subscriptionListTypesSchemas, locationSchemas, notificationsSchemas, listSearchConfigSchemas];
+  return [subscriptionSchemas, subscriptionListTypesSchemas, locationSchemas, notificationsSchemas, listSearchConfigSchemas];
 }

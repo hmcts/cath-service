@@ -1123,6 +1123,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/list-search-config@workspace:libs/list-search-config":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/list-types-common@workspace:*, @hmcts/list-types-common@workspace:libs/list-types/common":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
@@ -1227,9 +1235,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
+"@hmcts/subscription@workspace:*, @hmcts/subscription@workspace:libs/subscription":
   version: 0.0.0-use.local
-  resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
+  resolution: "@hmcts/subscription@workspace:libs/subscription"
   dependencies:
     "@hmcts/auth": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -1258,7 +1266,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   dependencies:
-    "@hmcts/subscriptions": "workspace:*"
+    "@hmcts/subscription": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -5760,10 +5768,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.11.2, lodash@npm:^4.17.21":
-  version: 4.17.21
-  resolution: "lodash@npm:4.17.21"
-  checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+"lodash@npm:4.17.23":
+  version: 4.17.23
+  resolution: "lodash@npm:4.17.23"
+  checksum: 10c0/1264a90469f5bb95d4739c43eb6277d15b6d9e186df4ac68c3620443160fc669e2f14c11e7d8b2ccf078b81d06147c01a8ccced9aab9f9f63d50dcf8cace6bf6
   languageName: node
   linkType: hard
 

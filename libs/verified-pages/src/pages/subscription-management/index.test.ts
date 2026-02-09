@@ -1,5 +1,5 @@
+import * as subscriptionService from "@hmcts/subscription";
 import * as listTypeSubscriptionService from "@hmcts/subscription-list-types";
-import * as subscriptionService from "@hmcts/subscriptions";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
