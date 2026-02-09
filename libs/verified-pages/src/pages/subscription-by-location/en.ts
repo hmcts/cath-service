@@ -16,6 +16,7 @@ export const en = {
   showFilters: "Show filters",
   jurisdictionHeading: "Jurisdiction",
   regionHeading: "Region",
+  errorSummaryTitle: "There is a problem",
   subJurisdictionLabels: {
     1: "Type of civil court",
     2: "Type of family court",

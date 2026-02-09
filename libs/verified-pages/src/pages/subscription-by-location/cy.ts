@@ -16,6 +16,7 @@ export const cy = {
   showFilters: "Dangos hidlyddion",
   jurisdictionHeading: "Awdurdodaeth",
   regionHeading: "Rhanbarth",
+  errorSummaryTitle: "Mae yna broblem",
   subJurisdictionLabels: {
     1: "Math o lys sifil",
     2: "Math o lys teulu",
