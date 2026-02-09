@@ -9,7 +9,7 @@ export const cy = {
   tableHeaderLocation: "Enw llys neu dribiwnlys",
   tableHeaderCaseName: "Enw'r achos",
   tableHeaderCaseNumber: "Cyfeirnod",
-  tableHeaderDate: "Dyddiad wedi’i ychwanegu",
+  tableHeaderDate: "Dyddiad wedi'i ychwanegu",
   tableHeaderActions: "Camau gweithredu",
   removeLink: "Dad-danysgrifio",
   tabAllLabel: "Pob tanysgrifiad",
@@ -17,5 +17,11 @@ export const cy = {
   tabCourtLabel: "Tanysgrifiadau yn ôl llys neu dribiwnlys",
   courtSubscriptionsHeading: "Tanysgrifiadau llys neu dribiwnlys",
   caseSubscriptionsHeading: "Tanysgrifiadau achos",
-  notAvailable: "Ddim ar gael"
+  notAvailable: "Ddim ar gael",
+  listTypeSubscriptionsHeading: "Tanysgrifiadau math o restr",
+  noListTypeSubscriptions: "Nid oes gennych unrhyw danysgrifiadau math o restr",
+  tableHeaderListType: "Math o restr",
+  tableHeaderLanguage: "Iaith",
+  editListTypeLink: "Golygu",
+  removeListTypeLink: "Dileu"
 };

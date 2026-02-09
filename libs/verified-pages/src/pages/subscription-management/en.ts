@@ -17,5 +17,11 @@ export const en = {
   tabCourtLabel: "Subscriptions by court or tribunal",
   courtSubscriptionsHeading: "Court or tribunal subscriptions",
   caseSubscriptionsHeading: "Case subscriptions",
-  notAvailable: "Not available"
+  notAvailable: "Not available",
+  listTypeSubscriptionsHeading: "List type subscriptions",
+  noListTypeSubscriptions: "You do not have any list type subscriptions",
+  tableHeaderListType: "List type",
+  tableHeaderLanguage: "Language",
+  editListTypeLink: "Edit",
+  removeListTypeLink: "Remove"
 };

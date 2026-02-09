@@ -1,0 +1,55 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block page_content %}
+{{ govukBackLink({
+  text: backLinkText,
+  href: "/subscription-list-types"
+}) }}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukRadios({
+        name: "language",
+        items: [
+          {
+            value: "ENGLISH",
+            text: radioOptionEnglish,
+            checked: data.language == "ENGLISH"
+          },
+          {
+            value: "WELSH",
+            text: radioOptionWelsh,
+            checked: data.language == "WELSH"
+          },
+          {
+            value: "BOTH",
+            text: radioOptionBoth,
+            checked: data.language == "BOTH"
+          }
+        ],
+        errorMessage: errors[0] if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

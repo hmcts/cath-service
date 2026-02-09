@@ -1,0 +1,20 @@
+export const cy = {
+  pageTitle: "Cadarnhewch eich tanysgrifiadau e-bost",
+  locationsHeading: "Enw llys neu dribiwnlys",
+  listTypesHeading: "Mathau o restr",
+  languageHeading: "Fersiwn",
+  actionsHeading: "Camau gweithredu",
+  removeLink: "Dileu",
+  changeLink: "Newid",
+  continueButton: "Cadarnhau tanysgrifiadau",
+  backLinkText: "Yn ôl",
+  errorSummaryTitle: "Mae yna broblem",
+  errorNoListTypes: "Dewiswch fath o restr i barhau",
+  errorNoLocations: "Mae angen o leiaf un tanysgrifiad",
+  selectListTypesLink: "Dewis mathau o restr",
+  selectLocationsLink: "Dewis llysoedd neu dribiwnlysoedd",
+  addSubscriptionsButton: "Ychwanegu tanysgrifiadau",
+  errorMaxSubscriptions: "Rydych chi wedi cyrraedd y nifer uchaf o danysgrifiadau math o restr. Dilëwch rai tanysgrifiadau cyn ychwanegu mwy.",
+  errorDuplicateSubscription: "Rydych chi eisoes wedi tanysgrifio i un neu fwy o'r mathau hyn o restri gyda'r dewis iaith hwn. Gwiriwch eich tanysgrifiadau.",
+  errorGeneric: "Mae'n ddrwg gennym, roedd problem wrth greu eich tanysgrifiadau. Rhowch gynnig arall arni."
+};

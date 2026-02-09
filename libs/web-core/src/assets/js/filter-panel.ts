@@ -40,11 +40,11 @@ export function initFilterPanel() {
       if (isExpanded) {
         target.setAttribute("aria-expanded", "false");
         content.setAttribute("hidden", "");
-        if (icon) icon.textContent = "+";
+        if (icon) icon.textContent = "▶";
       } else {
         target.setAttribute("aria-expanded", "true");
         content.removeAttribute("hidden");
-        if (icon) icon.textContent = "−";
+        if (icon) icon.textContent = "▼";
       }
     });
   });

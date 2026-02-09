@@ -1,5 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { mockListTypes } from "@hmcts/list-types-common";
 import { getAllSubscriptionsByUserId, getCaseSubscriptionsByUserId } from "@hmcts/subscription";
+import { getListTypeSubscriptionsByUserId } from "@hmcts/subscription-list-types";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -7,6 +9,11 @@ import { en } from "./en.js";
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
+
+  // Clear any existing list type subscription session data when returning to management page
+  if (req.session.listTypeSubscription) {
+    delete req.session.listTypeSubscription;
+  }
 
   if (!req.user?.id) {
     return res.redirect("/sign-in");
@@ -16,11 +23,30 @@ const getHandler = async (req: Request, res: Response) => {
   const view = (req.query.view as string) || "all";
 
   try {
-    const [courtSubscriptions, caseSubscriptions] = await Promise.all([getAllSubscriptionsByUserId(userId, locale), getCaseSubscriptionsByUserId(userId)]);
+    const [courtSubscriptions, caseSubscriptions, listTypeSubscriptions] = await Promise.all([
+      getAllSubscriptionsByUserId(userId, locale),
+      getCaseSubscriptionsByUserId(userId),
+      getListTypeSubscriptionsByUserId(userId)
+    ]);
 
     const courtSubscriptionsWithDetails = sortCourtSubscriptions(courtSubscriptions);
     const deduplicatedCaseSubscriptions = deduplicateCaseSubscriptions(caseSubscriptions);
     const sortedCaseSubscriptions = sortCaseSubscriptions(deduplicatedCaseSubscriptions);
+
+    const listTypeSubscriptionsWithDetails = listTypeSubscriptions.map((sub) => {
+      const listType = mockListTypes.find((lt) => lt.id === sub.listTypeId);
+      const languageDisplay = {
+        ENGLISH: locale === "cy" ? "Saesneg" : "English",
+        WELSH: locale === "cy" ? "Cymraeg" : "Welsh",
+        BOTH: locale === "cy" ? "Cymraeg a Saesneg" : "English and Welsh"
+      };
+
+      return {
+        ...sub,
+        listTypeName: listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : "Unknown",
+        languageDisplay: languageDisplay[sub.language as keyof typeof languageDisplay] || sub.language
+      };
+    });
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
@@ -37,6 +63,8 @@ const getHandler = async (req: Request, res: Response) => {
       caseCount: deduplicatedCaseSubscriptions.length,
       totalCount,
       currentView: view,
+      listTypeSubscriptions: listTypeSubscriptionsWithDetails,
+      listTypeCount: listTypeSubscriptions.length,
       csrfToken: (req as any).csrfToken?.() || ""
     });
   } catch (error) {
@@ -55,6 +83,8 @@ const getHandler = async (req: Request, res: Response) => {
       caseCount: 0,
       totalCount: 0,
       currentView: view,
+      listTypeSubscriptions: [],
+      listTypeCount: 0,
       csrfToken: (req as any).csrfToken?.() || ""
     });
   }

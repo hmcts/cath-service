@@ -1,0 +1,94 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+{{ govukBackLink({
+  text: backLinkText,
+  href: "/subscription-list-language"
+}) }}
+{% endblock %}
+
+{% block page_content %}
+<style>
+  .subscription-confirm-table .govuk-table__header {
+    font-size: 1.1875rem;
+  }
+
+  .subscription-confirm-table .govuk-table__cell {
+    font-size: 1.1875rem;
+    font-weight: normal;
+  }
+
+  .subscription-confirm-table .govuk-table__header:first-child {
+    width: 75%;
+  }
+
+  .subscription-confirm-table .govuk-table__header:last-child {
+    width: 25%;
+  }
+</style>
+
+{% if errors %}
+  {{ govukErrorSummary({
+    titleText: errorSummaryTitle,
+    errorList: errors
+  }) }}
+{% endif %}
+
+<h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+{% if hasNoSubscriptions %}
+  {{ govukButton({
+    text: addSubscriptionsButton,
+    href: "/subscription-add-method"
+  }) }}
+{% else %}
+
+{% if hasLocations %}
+  {{ govukTable({
+    head: [
+      { text: locationsHeading },
+      { text: actionsHeading, classes: "govuk-table__header--numeric" }
+    ],
+    rows: locationRows,
+    classes: "subscription-confirm-table"
+  }) }}
+{% endif %}
+
+{{ govukTable({
+  head: [
+    { text: listTypesHeading },
+    { text: actionsHeading, classes: "govuk-table__header--numeric" }
+  ],
+  rows: listTypeRows,
+  classes: "subscription-confirm-table"
+}) }}
+
+{% if hasNoListTypes %}
+  <p class="govuk-body">
+    <a href="/subscription-list-types" class="govuk-link">{{ selectListTypesLink }}</a>
+  </p>
+{% endif %}
+
+{{ govukTable({
+  head: [
+    { text: languageHeading },
+    { text: actionsHeading, classes: "govuk-table__header--numeric" }
+  ],
+  rows: languageRows,
+  classes: "subscription-confirm-table"
+}) }}
+
+<form method="post">
+  {{ govukButton({
+    text: continueButton,
+    disabled: hasNoListTypes
+  }) }}
+</form>
+
+{% endif %}
+
+{% endblock %}
