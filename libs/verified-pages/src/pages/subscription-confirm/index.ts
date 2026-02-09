@@ -134,7 +134,9 @@ const getHandler = async (req: Request, res: Response) => {
 
   if (hasNoLocations) {
     errors.push({ text: t.errorNoLocations, href: "#" });
-  } else if (hasNoListTypes) {
+  }
+
+  if (hasNoListTypes) {
     errors.push({ text: t.errorNoListTypes, href: "#list-types" });
   }
 

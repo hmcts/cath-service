@@ -34,6 +34,16 @@ vi.mock("@hmcts/list-types-common", () => ({
   ]
 }));
 
+vi.mock("@hmcts/location", () => ({
+  getLocationById: vi.fn((id: number) =>
+    Promise.resolve({
+      locationId: id,
+      name: `Location ${id}`,
+      welshName: `Lleoliad ${id}`
+    })
+  )
+}));
+
 describe("subscription-confirm", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
@@ -150,6 +160,31 @@ describe("subscription-confirm", () => {
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-list-language");
+    });
+
+    it("should show error and link when locations exist but all list types removed", async () => {
+      mockReq.session = {
+        listTypeSubscription: {
+          selectedLocationIds: [1, 2],
+          selectedListTypeIds: [],
+          language: "ENGLISH"
+        }
+      } as any;
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirm/index",
+        expect.objectContaining({
+          hasNoListTypes: true,
+          hasLocations: true,
+          errors: expect.arrayContaining([
+            expect.objectContaining({
+              text: expect.stringContaining("list type")
+            })
+          ])
+        })
+      );
     });
   });
 
