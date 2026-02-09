@@ -69,14 +69,14 @@ describe("subscription-list-types", () => {
           groupedListTypes: expect.arrayContaining([
             expect.objectContaining({
               letter: "C",
-              listTypes: expect.arrayContaining([
-                expect.objectContaining({ englishFriendlyName: "Civil Daily Cause List" }),
-                expect.objectContaining({ englishFriendlyName: "Crime Daily List" })
+              items: expect.arrayContaining([
+                expect.objectContaining({ text: "Civil Daily Cause List", value: "1" }),
+                expect.objectContaining({ text: "Crime Daily List", value: "3" })
               ])
             }),
             expect.objectContaining({
               letter: "F",
-              listTypes: expect.arrayContaining([expect.objectContaining({ englishFriendlyName: "Family Daily Cause List" })])
+              items: expect.arrayContaining([expect.objectContaining({ text: "Family Daily Cause List", value: "2" })])
             })
           ])
         })
