@@ -12,24 +12,6 @@
 {% endblock %}
 
 {% block page_content %}
-<style>
-  .subscription-confirm-table .govuk-table__header {
-    font-size: 1.1875rem;
-  }
-
-  .subscription-confirm-table .govuk-table__cell {
-    font-size: 1.1875rem;
-    font-weight: normal;
-  }
-
-  .subscription-confirm-table .govuk-table__header:first-child {
-    width: 75%;
-  }
-
-  .subscription-confirm-table .govuk-table__header:last-child {
-    width: 25%;
-  }
-</style>
 
 {% if errors %}
   {{ govukErrorSummary({
@@ -54,7 +36,7 @@
       { text: actionsHeading, classes: "govuk-table__header--numeric" }
     ],
     rows: locationRows,
-    classes: "subscription-confirm-table"
+    classes: "app-subscription-confirm-table"
   }) }}
 {% endif %}
 
@@ -64,7 +46,7 @@
     { text: actionsHeading, classes: "govuk-table__header--numeric" }
   ],
   rows: listTypeRows,
-  classes: "subscription-confirm-table"
+  classes: "app-subscription-confirm-table"
 }) }}
 
 {% if hasNoListTypes %}
@@ -79,7 +61,7 @@
     { text: actionsHeading, classes: "govuk-table__header--numeric" }
   ],
   rows: languageRows,
-  classes: "subscription-confirm-table"
+  classes: "app-subscription-confirm-table"
 }) }}
 
 <form method="post">

@@ -175,13 +175,6 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/subscription-list-types");
   }
 
-  // Check if locations or list types are empty (no subscriptions)
-  const hasNoLocations = !req.session.listTypeSubscription.selectedLocationIds || req.session.listTypeSubscription.selectedLocationIds.length === 0;
-  const hasNoListTypes = req.session.listTypeSubscription.selectedListTypeIds.length === 0;
-  if (hasNoLocations || hasNoListTypes) {
-    return res.redirect("/subscription-add-method");
-  }
-
   // Validate language is present
   if (!req.session.listTypeSubscription.language) {
     return res.redirect("/subscription-list-language");
