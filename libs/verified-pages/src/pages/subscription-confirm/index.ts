@@ -130,12 +130,9 @@ const getHandler = async (req: Request, res: Response) => {
   const errors = [];
   const hasNoListTypes = selectedListTypes.length === 0;
   const hasNoLocations = locations.length === 0;
-  const hasNoSubscriptions = hasNoLocations || hasNoListTypes;
+  const hasNoSubscriptions = hasNoLocations && hasNoListTypes;
 
-  if (hasNoLocations) {
-    errors.push({ text: t.errorNoLocations, href: "#" });
-  }
-
+  // Only show error if no list types selected (locations are optional)
   if (hasNoListTypes) {
     errors.push({ text: t.errorNoListTypes, href: "#list-types" });
   }

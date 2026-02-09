@@ -186,6 +186,27 @@ describe("subscription-confirm", () => {
         })
       );
     });
+
+    it("should allow list-type-only subscriptions without locations", async () => {
+      mockReq.session = {
+        listTypeSubscription: {
+          selectedListTypeIds: [1, 2],
+          language: "ENGLISH"
+        }
+      } as any;
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirm/index",
+        expect.objectContaining({
+          hasNoListTypes: false,
+          hasLocations: false,
+          hasNoSubscriptions: false,
+          errors: undefined
+        })
+      );
+    });
   });
 
   describe("POST", () => {
