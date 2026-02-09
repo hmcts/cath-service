@@ -28,6 +28,8 @@
     <p class="govuk-body">{{ description }}</p>
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
       <table class="govuk-table">
         <tbody class="govuk-table__body">
           {% for group in groupedListTypes %}

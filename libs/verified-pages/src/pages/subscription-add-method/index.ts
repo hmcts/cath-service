@@ -19,7 +19,8 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("subscription-add-method/index", {
     ...t,
-    data: {}
+    data: {},
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -37,7 +38,8 @@ const postHandler = async (req: Request, res: Response) => {
     return res.render("subscription-add-method/index", {
       ...t,
       errors: [{ text: t.errorRequired, href: "#subscription-method" }],
-      data: req.body
+      data: req.body,
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 

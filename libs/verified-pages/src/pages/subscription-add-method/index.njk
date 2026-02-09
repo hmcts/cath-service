@@ -28,6 +28,8 @@
     <p class="govuk-body">{{ hintText }}</p>
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
       {{ govukRadios({
         name: "subscriptionMethod",
         fieldset: {

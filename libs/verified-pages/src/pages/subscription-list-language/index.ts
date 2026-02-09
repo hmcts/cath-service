@@ -25,7 +25,8 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("subscription-list-language/index", {
     ...t,
-    data: req.session.listTypeSubscription || {}
+    data: req.session.listTypeSubscription || {},
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -43,7 +44,8 @@ const postHandler = async (req: Request, res: Response) => {
     return res.render("subscription-list-language/index", {
       ...t,
       errors: [{ text: t.errorRequired, href: "#language" }],
-      data: req.body
+      data: req.body,
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 
@@ -65,7 +67,8 @@ const postHandler = async (req: Request, res: Response) => {
       return res.render("subscription-list-language/index", {
         ...t,
         errors: [{ text: t.errorSessionSave, href: "#language" }],
-        data: req.body
+        data: req.body,
+        csrfToken: (req as any).csrfToken?.() || ""
       });
     }
     res.redirect("/subscription-confirm");

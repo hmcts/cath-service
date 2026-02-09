@@ -146,7 +146,8 @@ const getHandler = async (req: Request, res: Response) => {
     languageRows,
     hasNoListTypes,
     hasNoSubscriptions,
-    errors: errors.length > 0 ? errors : undefined
+    errors: errors.length > 0 ? errors : undefined,
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -268,7 +269,8 @@ const postHandler = async (req: Request, res: Response) => {
       languageRows,
       hasNoListTypes,
       hasNoSubscriptions,
-      errors: [{ text: errorMessage, href: "#" }]
+      errors: [{ text: errorMessage, href: "#" }],
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 };

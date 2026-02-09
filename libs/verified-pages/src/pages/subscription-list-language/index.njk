@@ -23,6 +23,8 @@
     <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
     <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
       {{ govukRadios({
         name: "language",
         items: [

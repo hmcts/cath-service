@@ -73,7 +73,8 @@ const getHandler = async (req: Request, res: Response) => {
     ...t,
     locale,
     groupedListTypes,
-    data: req.session.listTypeSubscription || {}
+    data: req.session.listTypeSubscription || {},
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -97,7 +98,8 @@ const postHandler = async (req: Request, res: Response) => {
       locale,
       errors: [{ text: t.errorRequired, href: "#list-types" }],
       groupedListTypes,
-      data: req.body
+      data: req.body,
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 
@@ -119,7 +121,8 @@ const postHandler = async (req: Request, res: Response) => {
       locale,
       errors: [{ text: t.errorInvalidListTypes, href: "#list-types" }],
       groupedListTypes,
-      data: req.body
+      data: req.body,
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 
@@ -145,7 +148,8 @@ const postHandler = async (req: Request, res: Response) => {
         locale,
         errors: [{ text: t.errorSessionSave, href: "#list-types" }],
         groupedListTypes,
-        data: req.body
+        data: req.body,
+        csrfToken: (req as any).csrfToken?.() || ""
       });
     }
     res.redirect("/subscription-list-language");
