@@ -92,12 +92,12 @@ describe("subscription-confirm", () => {
         "subscription-confirm/index",
         expect.objectContaining({
           pageTitle: "Confirm your email subscriptions",
-          selectedListTypes: expect.arrayContaining([
-            expect.objectContaining({ englishFriendlyName: "Civil Daily Cause List" }),
-            expect.objectContaining({ englishFriendlyName: "Family Daily Cause List" })
+          listTypeRows: expect.arrayContaining([
+            expect.arrayContaining([expect.objectContaining({ text: "Civil Daily Cause List" })]),
+            expect.arrayContaining([expect.objectContaining({ text: "Family Daily Cause List" })])
           ]),
-          language: "ENGLISH",
-          languageDisplay: "English"
+          languageRows: expect.arrayContaining([expect.arrayContaining([expect.objectContaining({ text: "English" })])]),
+          hasNoListTypes: false
         })
       );
     });
@@ -117,7 +117,7 @@ describe("subscription-confirm", () => {
         "subscription-confirm/index",
         expect.objectContaining({
           pageTitle: "Cadarnhewch eich tanysgrifiadau e-bost",
-          languageDisplay: "Cymraeg"
+          languageRows: expect.arrayContaining([expect.arrayContaining([expect.objectContaining({ text: "Cymraeg" })])])
         })
       );
     });
@@ -135,7 +135,7 @@ describe("subscription-confirm", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-confirm/index",
         expect.objectContaining({
-          languageDisplay: "English and Welsh"
+          languageRows: expect.arrayContaining([expect.arrayContaining([expect.objectContaining({ text: "English and Welsh" })])])
         })
       );
     });

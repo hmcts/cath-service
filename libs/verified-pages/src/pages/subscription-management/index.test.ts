@@ -11,7 +11,8 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 vi.mock("@hmcts/subscription", () => ({
-  getAllSubscriptionsByUserId: vi.fn()
+  getAllSubscriptionsByUserId: vi.fn(),
+  getCaseSubscriptionsByUserId: vi.fn()
 }));
 
 vi.mock("@hmcts/subscription-list-types", () => ({
@@ -49,7 +50,7 @@ describe("subscription-management", () => {
     mockRes = {
       render: vi.fn(),
       redirect: vi.fn(),
-      locals: {}
+      locals: { locale: "en" }
     };
   });
 
@@ -87,6 +88,7 @@ describe("subscription-management", () => {
       ];
 
       vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue(mockSubscriptions);
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
       vi.mocked(listTypeSubscriptionService.getListTypeSubscriptionsByUserId).mockResolvedValue(mockListTypeSubscriptions);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -96,9 +98,10 @@ describe("subscription-management", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-management/index",
         expect.objectContaining({
-          count: 2,
+          courtCount: 2,
+          totalCount: 2,
           listTypeCount: 1,
-          subscriptions: expect.arrayContaining([
+          courtSubscriptions: expect.arrayContaining([
             expect.objectContaining({ locationName: "Birmingham Crown Court" }),
             expect.objectContaining({ locationName: "Manchester Crown Court" })
           ]),
@@ -109,6 +112,7 @@ describe("subscription-management", () => {
 
     it("should render page with no subscriptions", async () => {
       vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
       vi.mocked(listTypeSubscriptionService.getListTypeSubscriptionsByUserId).mockResolvedValue([]);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -116,7 +120,8 @@ describe("subscription-management", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-management/index",
         expect.objectContaining({
-          count: 0,
+          courtCount: 0,
+          totalCount: 0,
           listTypeCount: 0
         })
       );
