@@ -6,6 +6,6 @@ export const cy = {
   continueButton: "Parhau",
   backLinkText: "Yn ôl",
   errorSummaryTitle: "Mae yna broblem",
-  errorRequired: "Dewiswch fersiwn o'r math o restr Dewiswch opsiwn",
+  errorRequired: "Dewiswch fersiwn o'r math o restr i barhau",
   errorSessionSave: "Mae'n ddrwg gennym, roedd problem wrth gadw eich dewis. Rhowch gynnig arall arni."
 };
