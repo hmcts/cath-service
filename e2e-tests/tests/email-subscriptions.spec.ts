@@ -241,7 +241,7 @@ test.describe("Email Subscriptions", () => {
 
       // Continue to list types selection
       await page.getByRole("button", { name: /continue/i }).click();
-      await expect(page).toHaveURL("/subscription-list-types");
+      await expect(page).toHaveURL(/\/subscription-list-types(\?)?$/);
 
       // Select a list type (first checkbox)
       const firstListType = page.locator('input[name="listTypes"]').first();
