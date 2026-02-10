@@ -9,10 +9,8 @@ export async function seedJurisdictions(): Promise<void> {
   ];
 
   for (const jurisdiction of jurisdictions) {
-    await (prisma as any).jurisdiction.upsert({
-      where: { name: jurisdiction.name },
-      create: jurisdiction,
-      update: { welshName: jurisdiction.welshName }
+    await (prisma as any).jurisdiction.create({
+      data: jurisdiction
     });
   }
 
@@ -32,13 +30,8 @@ export async function seedSubJurisdictions(): Promise<void> {
   ];
 
   for (const subJurisdiction of subJurisdictions) {
-    await (prisma as any).subJurisdiction.upsert({
-      where: { name: subJurisdiction.name },
-      create: subJurisdiction,
-      update: {
-        welshName: subJurisdiction.welshName,
-        jurisdictionId: subJurisdiction.jurisdictionId
-      }
+    await (prisma as any).subJurisdiction.create({
+      data: subJurisdiction
     });
   }
 
@@ -56,10 +49,8 @@ export async function seedRegions(): Promise<void> {
   ];
 
   for (const region of regions) {
-    await (prisma as any).region.upsert({
-      where: { name: region.name },
-      create: region,
-      update: { welshName: region.welshName }
+    await (prisma as any).region.create({
+      data: region
     });
   }
 
@@ -68,6 +59,11 @@ export async function seedRegions(): Promise<void> {
 
 export async function seedAllReferenceData(): Promise<void> {
   try {
+    // Delete existing reference data to avoid conflicts
+    await (prisma as any).region.deleteMany({});
+    await (prisma as any).subJurisdiction.deleteMany({});
+    await (prisma as any).jurisdiction.deleteMany({});
+
     await seedJurisdictions();
     await seedSubJurisdictions();
     await seedRegions();
