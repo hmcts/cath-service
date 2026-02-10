@@ -31,6 +31,13 @@ const getHandler = async (req: Request, res: Response) => {
     const locationIdToRemove = Number(removeId);
     if (Number.isFinite(locationIdToRemove) && req.session.listTypeSubscription?.selectedLocationIds) {
       req.session.listTypeSubscription.selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds.filter((id) => id !== locationIdToRemove);
+      // Save session and redirect to remove query parameter
+      return req.session.save((err: Error | null) => {
+        if (err) {
+          console.error("Error saving session", { errorMessage: err.message });
+        }
+        res.redirect("/subscription-locations-review");
+      });
     }
   }
 
