@@ -107,7 +107,7 @@ describe("filter-panel", () => {
       it("should collapse section when toggle button is clicked", async () => {
         document.body.innerHTML = `
           <button class="filter-section-toggle" aria-expanded="true" aria-controls="test-section">
-            <span class="filter-section-icon">−</span>
+            <span class="filter-section-icon">▼</span>
           </button>
           <div id="test-section" class="filter-section-content"></div>
         `;
@@ -123,13 +123,13 @@ describe("filter-panel", () => {
 
         expect(button.getAttribute("aria-expanded")).toBe("false");
         expect(content.hasAttribute("hidden")).toBe(true);
-        expect(icon.textContent).toBe("+");
+        expect(icon.textContent).toBe("▶");
       });
 
       it("should expand section when collapsed toggle button is clicked", async () => {
         document.body.innerHTML = `
           <button class="filter-section-toggle" aria-expanded="false" aria-controls="test-section">
-            <span class="filter-section-icon">+</span>
+            <span class="filter-section-icon">▶</span>
           </button>
           <div id="test-section" class="filter-section-content" hidden></div>
         `;
@@ -145,17 +145,17 @@ describe("filter-panel", () => {
 
         expect(button.getAttribute("aria-expanded")).toBe("true");
         expect(content.hasAttribute("hidden")).toBe(false);
-        expect(icon.textContent).toBe("−");
+        expect(icon.textContent).toBe("▼");
       });
 
       it("should handle multiple collapsible sections independently", async () => {
         document.body.innerHTML = `
           <button class="filter-section-toggle" aria-expanded="true" aria-controls="section-1">
-            <span class="filter-section-icon">−</span>
+            <span class="filter-section-icon">▼</span>
           </button>
           <div id="section-1" class="filter-section-content"></div>
           <button class="filter-section-toggle" aria-expanded="true" aria-controls="section-2">
-            <span class="filter-section-icon">−</span>
+            <span class="filter-section-icon">▼</span>
           </button>
           <div id="section-2" class="filter-section-content"></div>
         `;
@@ -178,7 +178,7 @@ describe("filter-panel", () => {
       it("should do nothing if aria-controls target does not exist", async () => {
         document.body.innerHTML = `
           <button class="filter-section-toggle" aria-expanded="true" aria-controls="non-existent">
-            <span class="filter-section-icon">−</span>
+            <span class="filter-section-icon">▼</span>
           </button>
         `;
 
@@ -194,7 +194,7 @@ describe("filter-panel", () => {
       it("should do nothing if button has no aria-controls", async () => {
         document.body.innerHTML = `
           <button class="filter-section-toggle" aria-expanded="true">
-            <span class="filter-section-icon">−</span>
+            <span class="filter-section-icon">▼</span>
           </button>
         `;
 
