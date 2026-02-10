@@ -23,5 +23,6 @@ export const en = {
   tableHeaderListType: "List type",
   tableHeaderLanguage: "Language",
   editListTypeLink: "Edit",
-  removeListTypeLink: "Remove"
+  removeListTypeLink: "Remove",
+  errorDeleteFailed: "There was a problem removing your subscription. Please try again."
 };

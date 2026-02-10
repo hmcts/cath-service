@@ -23,5 +23,6 @@ export const cy = {
   tableHeaderListType: "Math o restr",
   tableHeaderLanguage: "Iaith",
   editListTypeLink: "Golygu",
-  removeListTypeLink: "Dileu"
+  removeListTypeLink: "Dileu",
+  errorDeleteFailed: "Roedd problem wrth ddileu eich tanysgrifiad. Rhowch gynnig arall arni."
 };

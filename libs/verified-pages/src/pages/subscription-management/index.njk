@@ -1,5 +1,6 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
@@ -9,6 +10,13 @@
 <div class="parent-box">
 
   <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+  {% if errorMessage %}
+    {{ govukNotificationBanner({
+      type: "error",
+      text: errorMessage
+    }) }}
+  {% endif %}
 
   <div class="govuk-button-group">
     {{ govukButton({

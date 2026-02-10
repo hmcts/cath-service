@@ -15,11 +15,11 @@ const postHandler = async (req: Request, res: Response) => {
 
   try {
     await deleteListTypeSubscription(req.user.id, listTypeSubscriptionId);
+    res.redirect("/subscription-management");
   } catch (error) {
     console.error("Error deleting list type subscription", { errorMessage: error instanceof Error ? error.message : "Unknown error" });
+    res.redirect("/subscription-management?error=delete_failed");
   }
-
-  res.redirect("/subscription-management");
 };
 
 export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];

@@ -21,6 +21,13 @@ const getHandler = async (req: Request, res: Response) => {
 
   const userId = req.user.id;
   const view = (req.query.view as string) || "all";
+  const error = req.query.error as string | undefined;
+
+  // Build error message if present
+  let errorMessage: string | undefined;
+  if (error === "delete_failed") {
+    errorMessage = t.errorDeleteFailed;
+  }
 
   try {
     const [courtSubscriptions, caseSubscriptions, listTypeSubscriptions] = await Promise.all([
@@ -65,6 +72,7 @@ const getHandler = async (req: Request, res: Response) => {
       currentView: view,
       listTypeSubscriptions: listTypeSubscriptionsWithDetails,
       listTypeCount: listTypeSubscriptions.length,
+      errorMessage,
       csrfToken: (req as any).csrfToken?.() || ""
     });
   } catch (error) {
