@@ -96,11 +96,14 @@ const getHandler = async (req: Request, res: Response) => {
     BOTH: locale === "cy" ? "Cymraeg a Saesneg" : "English and Welsh"
   };
 
+  // Helper to build URLs with locale parameter
+  const localeParam = locale === "cy" ? "&lng=cy" : "";
+
   // Build table rows
   const locationRows = locations.map((location) => [
     { text: location.name },
     {
-      html: `<a href="/subscription-confirm?removeLocation=${location.locationId}" class="govuk-link">${t.removeLink}<span class="govuk-visually-hidden"> ${location.name}</span></a>`,
+      html: `<a href="/subscription-confirm?removeLocation=${location.locationId}${localeParam}" class="govuk-link">${t.removeLink}<span class="govuk-visually-hidden"> ${location.name}</span></a>`,
       classes: "govuk-table__cell--numeric"
     }
   ]);
@@ -110,7 +113,7 @@ const getHandler = async (req: Request, res: Response) => {
     return [
       { text: listTypeName },
       {
-        html: `<a href="/subscription-confirm?removeListType=${listType.id}" class="govuk-link">${t.removeLink}<span class="govuk-visually-hidden"> ${listTypeName}</span></a>`,
+        html: `<a href="/subscription-confirm?removeListType=${listType.id}${localeParam}" class="govuk-link">${t.removeLink}<span class="govuk-visually-hidden"> ${listTypeName}</span></a>`,
         classes: "govuk-table__cell--numeric"
       }
     ];
@@ -120,7 +123,7 @@ const getHandler = async (req: Request, res: Response) => {
     [
       { text: languageDisplay[req.session.listTypeSubscription.language as keyof typeof languageDisplay] || "" },
       {
-        html: `<a href="/subscription-list-language" class="govuk-link">${t.changeLink}<span class="govuk-visually-hidden"> ${t.languageHeading}</span></a>`,
+        html: `<a href="/subscription-list-language${locale === "cy" ? "?lng=cy" : ""}" class="govuk-link">${t.changeLink}<span class="govuk-visually-hidden"> ${t.languageHeading}</span></a>`,
         classes: "govuk-table__cell--numeric"
       }
     ]
