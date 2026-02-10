@@ -99,7 +99,7 @@ describe("subscription-management", () => {
         "subscription-management/index",
         expect.objectContaining({
           courtCount: 2,
-          totalCount: 2,
+          totalCount: 3,
           listTypeCount: 1,
           courtSubscriptions: expect.arrayContaining([
             expect.objectContaining({ locationName: "Birmingham Crown Court" }),

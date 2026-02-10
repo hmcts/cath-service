@@ -53,7 +53,7 @@ const getHandler = async (req: Request, res: Response) => {
     }
     res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-    const totalCount = courtSubscriptions.length + deduplicatedCaseSubscriptions.length;
+    const totalCount = courtSubscriptions.length + deduplicatedCaseSubscriptions.length + listTypeSubscriptions.length;
 
     res.render("subscription-management/index", {
       ...t,
