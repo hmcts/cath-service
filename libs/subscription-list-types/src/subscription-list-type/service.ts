@@ -1,3 +1,4 @@
+import { prisma } from "@hmcts/postgres";
 import {
   countListTypeSubscriptionsByUserId,
   createListTypeSubscriptionRecord,
@@ -10,22 +11,33 @@ import {
 const MAX_LIST_TYPE_SUBSCRIPTIONS = 50;
 
 export async function createListTypeSubscriptions(userId: string, listTypeIds: number[], language: string) {
-  const currentCount = await countListTypeSubscriptionsByUserId(userId);
+  // De-duplicate input to prevent unique constraint violations
+  const uniqueListTypeIds = Array.from(new Set(listTypeIds));
 
-  if (currentCount + listTypeIds.length > MAX_LIST_TYPE_SUBSCRIPTIONS) {
-    throw new Error(`Maximum ${MAX_LIST_TYPE_SUBSCRIPTIONS} list type subscriptions allowed`);
-  }
+  // Execute all validations and inserts atomically within a transaction
+  return prisma.$transaction(async (tx) => {
+    // Check current subscription count
+    const currentCount = await countListTypeSubscriptionsByUserId(userId, tx);
 
-  for (const listTypeId of listTypeIds) {
-    const duplicate = await findDuplicateListTypeSubscription(userId, listTypeId, language);
-    if (duplicate) {
-      throw new Error(`Already subscribed to list type ${listTypeId} with language ${language}`);
+    if (currentCount + uniqueListTypeIds.length > MAX_LIST_TYPE_SUBSCRIPTIONS) {
+      throw new Error(`Maximum ${MAX_LIST_TYPE_SUBSCRIPTIONS} list type subscriptions allowed`);
     }
-  }
 
-  const subscriptions = await Promise.all(listTypeIds.map((listTypeId) => createListTypeSubscriptionRecord(userId, listTypeId, language)));
+    // Check for duplicates
+    for (const listTypeId of uniqueListTypeIds) {
+      const duplicate = await findDuplicateListTypeSubscription(userId, listTypeId, language, tx);
+      if (duplicate) {
+        throw new Error(`Already subscribed to list type ${listTypeId} with language ${language}`);
+      }
+    }
 
-  return subscriptions;
+    // Create all subscriptions
+    const subscriptions = await Promise.all(
+      uniqueListTypeIds.map((listTypeId) => createListTypeSubscriptionRecord(userId, listTypeId, language, tx))
+    );
+
+    return subscriptions;
+  });
 }
 
 export async function getListTypeSubscriptionsByUserId(userId: string) {

@@ -62,6 +62,26 @@ describe("List Type Subscription Service", () => {
 
       expect(queries.createListTypeSubscriptionRecord).not.toHaveBeenCalled();
     });
+
+    it("should de-duplicate input list type IDs", async () => {
+      const mockSubscription = {
+        listTypeSubscriptionId: "sub1",
+        userId: "user1",
+        listTypeId: 1,
+        language: "ENGLISH",
+        dateAdded: new Date()
+      };
+
+      vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(0);
+      vi.mocked(queries.findDuplicateListTypeSubscription).mockResolvedValue(null);
+      vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(mockSubscription);
+
+      const result = await createListTypeSubscriptions("user1", [1, 2, 1, 3, 2], "ENGLISH");
+
+      expect(result).toHaveLength(3);
+      expect(queries.createListTypeSubscriptionRecord).toHaveBeenCalledTimes(3);
+      expect(queries.findDuplicateListTypeSubscription).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe("getListTypeSubscriptionsByUserId", () => {
