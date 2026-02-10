@@ -15,9 +15,9 @@ export const en = {
   jurisdictionHeading: "Jurisdiction",
   regionHeading: "Region",
   subJurisdictionLabels: {
-    1: "Court type",
-    2: "Tribunal type",
-    3: "Venue type",
-    4: "Service area type"
+    1: "Type of civil court",
+    2: "Type of family court",
+    3: "Type of criminal court",
+    4: "Type of tribunal"
   }
 };

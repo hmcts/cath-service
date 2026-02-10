@@ -1,0 +1,61 @@
+import { prisma } from "@hmcts/postgres";
+
+type TransactionClient = Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+
+export async function findListTypeSubscriptionsByUserId(userId: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.findMany({
+    where: { userId },
+    orderBy: { dateAdded: "desc" }
+  });
+}
+
+export async function findListTypeSubscriptionById(listTypeSubscriptionId: string, userId: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.findFirst({
+    where: {
+      listTypeSubscriptionId,
+      userId
+    }
+  });
+}
+
+export async function createListTypeSubscriptionRecord(userId: string, listTypeId: number, language: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.create({
+    data: {
+      userId,
+      listTypeId,
+      language
+    }
+  });
+}
+
+export async function deleteListTypeSubscriptionRecord(listTypeSubscriptionId: string, userId: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  const result = await client.subscriptionListType.deleteMany({
+    where: {
+      listTypeSubscriptionId,
+      userId
+    }
+  });
+  return result.count;
+}
+
+export async function countListTypeSubscriptionsByUserId(userId: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.count({
+    where: { userId }
+  });
+}
+
+export async function findDuplicateListTypeSubscription(userId: string, listTypeId: number, language: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.findFirst({
+    where: {
+      userId,
+      listTypeId,
+      language
+    }
+  });
+}

@@ -125,3 +125,64 @@
     }
   }
 }
+
+// List types selection table
+.app-list-types-table {
+  &__letter-cell {
+    width: 60px;
+    vertical-align: top;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  &__checkbox-cell {
+    width: 40px;
+    vertical-align: middle;
+  }
+
+  &__label-cell {
+    vertical-align: middle;
+  }
+}
+
+// Compact checkbox styling for list types
+.app-list-types-checkbox {
+  margin-bottom: 0;
+
+  .govuk-checkboxes__item {
+    margin-bottom: 0;
+    min-height: 0;
+  }
+
+  .govuk-checkboxes__label {
+    padding-left: 0;
+    min-height: 0;
+  }
+}
+
+// Selection count box
+.app-selection-count-box {
+  background-color: #f3f2f1;
+  padding: 15px;
+  margin-bottom: 30px;
+}
+
+// Subscription confirmation table
+.app-subscription-confirm-table {
+  .govuk-table__header {
+    font-size: 1.1875rem;
+  }
+
+  .govuk-table__cell {
+    font-size: 1.1875rem;
+    font-weight: normal;
+  }
+
+  .govuk-table__header:first-child {
+    width: 75%;
+  }
+
+  .govuk-table__header:last-child {
+    width: 25%;
+  }
+}

@@ -67,7 +67,7 @@
           <div class="filter-section">
             <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="jurisdiction-section">
               <span class="filter-section-heading">{{ jurisdictionHeading }}</span>
-              <span class="filter-section-icon" aria-hidden="true">−</span>
+              <span class="filter-section-icon" aria-hidden="true">▼</span>
             </button>
             <div id="jurisdiction-section" class="filter-section-content">
               {{ govukCheckboxes({
@@ -82,7 +82,7 @@
                   <div class="sub-jurisdiction-section filter-section" data-parent-jurisdiction="{{ item.value }}" style="display: {% if item.checked %}block{% else %}none{% endif %};">
                     <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="sub-section-{{ item.value }}">
                       <span class="filter-section-heading">{{ item.subJurisdictionLabel }}</span>
-                      <span class="filter-section-icon" aria-hidden="true">−</span>
+                      <span class="filter-section-icon" aria-hidden="true">▼</span>
                     </button>
                     <div id="sub-section-{{ item.value }}" class="filter-section-content">
                       {{ govukCheckboxes({
@@ -100,7 +100,7 @@
           <div class="filter-section">
             <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="region-section">
               <span class="filter-section-heading">{{ regionHeading }}</span>
-              <span class="filter-section-icon" aria-hidden="true">−</span>
+              <span class="filter-section-icon" aria-hidden="true">▼</span>
             </button>
             <div id="region-section" class="filter-section-content">
               {{ govukCheckboxes({

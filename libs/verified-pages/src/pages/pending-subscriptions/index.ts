@@ -2,6 +2,7 @@ import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmct
 import { getLocationById } from "@hmcts/location";
 import { createCaseSubscription, getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -63,7 +64,7 @@ const getHandler = async (req: Request, res: Response) => {
     locations: sortedLocations,
     cases: sortedCases,
     isPlural,
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 
