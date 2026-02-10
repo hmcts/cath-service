@@ -42,14 +42,11 @@
                 <div class="govuk-checkboxes govuk-checkboxes--small app-list-types-checkbox">
                   <div class="govuk-checkboxes__item">
                     <input class="govuk-checkboxes__input" id="listTypes-{{ item.value }}" name="listTypes" type="checkbox" value="{{ item.value }}" {% if item.checked %}checked{% endif %}>
-                    <label class="govuk-label govuk-checkboxes__label" for="listTypes-{{ item.value }}">
-                      <span class="govuk-visually-hidden">{{ item.text }}</span>
-                    </label>
                   </div>
                 </div>
               </td>
               <td class="govuk-table__cell app-list-types-table__label-cell">
-                <label for="listTypes-{{ item.value }}">{{ item.text }}</label>
+                <label class="govuk-label" for="listTypes-{{ item.value }}">{{ item.text }}</label>
               </td>
             </tr>
             {% endfor %}
