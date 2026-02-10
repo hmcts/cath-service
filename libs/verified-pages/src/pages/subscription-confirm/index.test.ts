@@ -341,5 +341,32 @@ describe("subscription-confirm", () => {
         })
       );
     });
+
+    it("should redirect to subscription-confirm when session save fails after creating subscriptions", async () => {
+      mockReq.session = {
+        listTypeSubscription: {
+          selectedListTypeIds: [1],
+          language: "ENGLISH"
+        }
+      } as any;
+      const sessionSave = vi.fn((cb) => cb(new Error("Session save error")));
+      mockReq.session.save = sessionSave;
+
+      vi.mocked(listTypeSubscriptionService.createListTypeSubscriptions).mockResolvedValue([
+        {
+          listTypeSubscriptionId: "sub1",
+          userId: "user123",
+          listTypeId: 1,
+          language: "ENGLISH",
+          dateAdded: new Date()
+        }
+      ]);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(listTypeSubscriptionService.createListTypeSubscriptions).toHaveBeenCalledWith("user123", [1], "ENGLISH");
+      expect(sessionSave).toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirm");
+    });
   });
 });

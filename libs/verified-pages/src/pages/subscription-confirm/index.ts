@@ -189,6 +189,7 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.save((err: Error | null) => {
       if (err) {
         console.error("Error saving session", { errorMessage: err.message });
+        return res.redirect("/subscription-confirm");
       }
       res.redirect("/subscription-confirmed");
     });
