@@ -60,11 +60,6 @@ const getHandler = async (req: Request, res: Response) => {
   const selectedIds = req.session.listTypeSubscription?.selectedListTypeIds || [];
   const groupedListTypes = groupListTypesByLetter(mockListTypes, locale, selectedIds);
 
-  console.log("DEBUG subscription-list-types GET:");
-  console.log("- mockListTypes length:", mockListTypes.length);
-  console.log("- groupedListTypes length:", groupedListTypes.length);
-  console.log("- groupedListTypes:", JSON.stringify(groupedListTypes, null, 2));
-
   res.render("subscription-list-types/index", {
     ...t,
     locale,
