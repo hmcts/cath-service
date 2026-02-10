@@ -1,7 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { searchByCaseName } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
-import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -27,7 +26,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("case-name-search/index", {
     ...t,
-    csrfToken: getCsrfToken(req)
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -53,7 +52,7 @@ const postHandler = async (req: Request, res: Response) => {
         caseName: { text: t.errorRequired }
       },
       data: { caseName },
-      csrfToken: getCsrfToken(req)
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 
@@ -79,7 +78,7 @@ const postHandler = async (req: Request, res: Response) => {
           caseName: { text: t.errorNoResultsField }
         },
         data: { caseName },
-        csrfToken: getCsrfToken(req)
+        csrfToken: (req as any).csrfToken?.() || ""
       });
     }
 
@@ -107,7 +106,7 @@ const postHandler = async (req: Request, res: Response) => {
         errorList: [{ text: "An error occurred while searching", href: "#caseName" }]
       },
       data: { caseName },
-      csrfToken: getCsrfToken(req)
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 };

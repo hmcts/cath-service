@@ -1,6 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -25,7 +24,7 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("case-name-search-results/index", {
     ...t,
     results: sortedResults,
-    csrfToken: getCsrfToken(req)
+    csrfToken: (req as any).csrfToken?.() || ""
   });
 };
 
@@ -50,7 +49,7 @@ const postHandler = async (req: Request, res: Response) => {
         titleText: t.errorSummaryTitle,
         errorList: [{ text: t.errorNoSelection, href: "#selectedCases" }]
       },
-      csrfToken: getCsrfToken(req)
+      csrfToken: (req as any).csrfToken?.() || ""
     });
   }
 
