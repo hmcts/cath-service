@@ -178,14 +178,14 @@ test.describe("Email Subscriptions", () => {
 
       // Step 2: Navigate to subscription method selection
       await page.getByRole("button", { name: /add email subscription/i }).click();
-      await expect(page).toHaveURL("/subscription-add");
+      await expect(page).toHaveURL("/subscription-add-method");
 
       // Select court or tribunal subscription method
       await page.getByRole("radio", { name: /court or tribunal/i }).check();
       await page.getByRole("button", { name: /continue/i }).click();
-      await expect(page).toHaveURL("/location-name-search");
+      await expect(page).toHaveURL("/subscription-by-location");
 
-      // Verify location search page
+      // Verify location selection page
       await expect(page.getByRole("heading", { name: /subscribe by court or tribunal name/i })).toBeVisible();
 
       const jurisdictionLabel = page.getByText(/jurisdiction/i).first();
@@ -193,27 +193,27 @@ test.describe("Email Subscriptions", () => {
       const regionLabel = page.getByText(/region/i).first();
       await expect(regionLabel).toBeVisible();
 
-      // Check accessibility on location search page
+      // Check accessibility on location selection page
       await page.waitForLoadState("networkidle");
       accessibilityScanResults = await new AxeBuilder({ page })
         .disableRules(["region"])
         .analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Test back navigation from location search
+      // Test back navigation from location selection
       await page.locator(".govuk-back-link").click();
-      await expect(page).toHaveURL("/subscription-add");
+      await expect(page).toHaveURL("/subscription-add-method");
 
       // Test back navigation from subscription method selection
       await page.locator(".govuk-back-link").click();
       await expect(page).toHaveURL("/subscription-management");
 
-      // Navigate back to location search
+      // Navigate back to location selection
       await page.getByRole("button", { name: /add email subscription/i }).click();
-      await expect(page).toHaveURL("/subscription-add");
+      await expect(page).toHaveURL("/subscription-add-method");
       await page.getByRole("radio", { name: /court or tribunal/i }).check();
       await page.getByRole("button", { name: /continue/i }).click();
-      await expect(page).toHaveURL("/location-name-search");
+      await expect(page).toHaveURL("/subscription-by-location");
 
       // Step 3: Select the test location and continue
       await page.waitForLoadState("networkidle");
