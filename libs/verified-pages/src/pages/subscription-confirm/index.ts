@@ -263,7 +263,7 @@ const postHandler = async (req: Request, res: Response) => {
     const errorMessage = error instanceof Error ? getUserFriendlyErrorMessage(error, t) : t.errorGeneric;
     const hasNoListTypes = selectedListTypes.length === 0;
     const hasNoLocations = locations.length === 0;
-    const hasNoSubscriptions = hasNoLocations || hasNoListTypes;
+    const hasNoSubscriptions = hasNoLocations && hasNoListTypes;
 
     return res.render("subscription-confirm/index", {
       ...t,
