@@ -4,7 +4,7 @@ import {
   findActiveSubscriptionsByCaseNumbers,
   findActiveSubscriptionsByLocation,
   type SubscriptionWithUser
-} from "@hmcts/subscription";
+} from "@hmcts/subscriptions";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import { buildTemplateParameters } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";

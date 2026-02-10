@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createCaseSubscription, getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscription";
+import { createCaseSubscription, getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
