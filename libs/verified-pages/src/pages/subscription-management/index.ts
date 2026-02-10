@@ -51,7 +51,7 @@ const getHandler = async (req: Request, res: Response) => {
 
       return {
         ...sub,
-        listTypeName: listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : "Unknown",
+        listTypeName: listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : t.notAvailable,
         languageDisplay: languageDisplay[sub.language as keyof typeof languageDisplay] || sub.language
       };
     });
