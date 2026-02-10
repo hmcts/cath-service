@@ -59,7 +59,11 @@ export async function seedRegions(): Promise<void> {
 
 export async function seedAllReferenceData(): Promise<void> {
   try {
-    // Delete existing reference data to avoid conflicts
+    // Delete location relationships first to avoid foreign key constraints
+    await (prisma as any).locationRegion.deleteMany({});
+    await (prisma as any).locationSubJurisdiction.deleteMany({});
+
+    // Now delete reference data
     await (prisma as any).region.deleteMany({});
     await (prisma as any).subJurisdiction.deleteMany({});
     await (prisma as any).jurisdiction.deleteMany({});
