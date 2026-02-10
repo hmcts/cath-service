@@ -1,5 +1,5 @@
 import * as locationService from "@hmcts/location";
-import * as subscriptionService from "@hmcts/subscriptions";
+import * as subscriptionService from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
@@ -20,7 +20,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("@hmcts/subscriptions", () => ({
+vi.mock("@hmcts/subscription", () => ({
   getAllSubscriptionsByUserId: vi.fn(),
   replaceUserSubscriptions: vi.fn(),
   createCaseSubscription: vi.fn()

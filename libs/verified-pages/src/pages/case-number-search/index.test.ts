@@ -1,4 +1,4 @@
-import { searchByCaseReference } from "@hmcts/subscriptions";
+import { searchByCaseReference } from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
@@ -11,7 +11,7 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-vi.mock("@hmcts/subscriptions", () => ({
+vi.mock("@hmcts/subscription", () => ({
   searchByCaseReference: vi.fn()
 }));
 

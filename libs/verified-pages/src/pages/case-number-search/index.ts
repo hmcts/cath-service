@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { searchByCaseReference } from "@hmcts/subscriptions";
+import { searchByCaseReference } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
 import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
