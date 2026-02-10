@@ -1,19 +1,9 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import { getCsrfToken } from "../../utils/csrf.js";
+import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-interface ListTypeSubscriptionSession {
-  selectedListTypeIds?: number[];
-  language?: string;
-}
-
-declare module "express-session" {
-  interface SessionData {
-    listTypeSubscription?: ListTypeSubscriptionSession;
-  }
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";

@@ -4,21 +4,9 @@ import { getLocationById } from "@hmcts/location";
 import { createListTypeSubscriptions } from "@hmcts/subscription-list-types";
 import type { Request, RequestHandler, Response } from "express";
 import { getCsrfToken } from "../../utils/csrf.js";
+import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-interface ListTypeSubscriptionSession {
-  selectedLocationIds?: number[];
-  selectedListTypeIds?: number[];
-  language?: string;
-}
-
-declare module "express-session" {
-  interface SessionData {
-    listTypeSubscription?: ListTypeSubscriptionSession;
-    listTypeSubscriptionConfirmed?: boolean;
-  }
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -41,7 +29,7 @@ const getHandler = async (req: Request, res: Response) => {
       if (!req.session.listTypeSubscription.selectedLocationIds) {
         req.session.listTypeSubscription.selectedLocationIds = [];
       }
-      req.session.listTypeSubscription.selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds.filter((id) => id !== locationId);
+      req.session.listTypeSubscription.selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds.filter((id: number) => id !== locationId);
       // Save session and redirect
       return req.session.save((err: Error | null) => {
         if (err) {
@@ -57,7 +45,7 @@ const getHandler = async (req: Request, res: Response) => {
   if (removeListTypeId) {
     const listTypeId = Number(removeListTypeId);
     if (Number.isFinite(listTypeId) && req.session.listTypeSubscription.selectedListTypeIds) {
-      req.session.listTypeSubscription.selectedListTypeIds = req.session.listTypeSubscription.selectedListTypeIds.filter((id) => id !== listTypeId);
+      req.session.listTypeSubscription.selectedListTypeIds = req.session.listTypeSubscription.selectedListTypeIds.filter((id: number) => id !== listTypeId);
 
       // Save session and redirect to remove query param
       return req.session.save((err: Error | null) => {
@@ -77,7 +65,7 @@ const getHandler = async (req: Request, res: Response) => {
   // Get selected locations
   const selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds || [];
   const selectedLocations = await Promise.all(
-    selectedLocationIds.map(async (id) => {
+    selectedLocationIds.map(async (id: number) => {
       const location = await getLocationById(id);
       return location
         ? {
@@ -210,7 +198,7 @@ const postHandler = async (req: Request, res: Response) => {
     // Get selected locations
     const selectedLocationIds = req.session.listTypeSubscription?.selectedLocationIds || [];
     const selectedLocations = await Promise.all(
-      selectedLocationIds.map(async (id) => {
+      selectedLocationIds.map(async (id: number) => {
         const location = await getLocationById(id);
         return location
           ? {

@@ -1,20 +1,9 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
+import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-interface ListTypeSubscriptionSession {
-  selectedLocationIds?: number[];
-  selectedListTypeIds?: number[];
-  language?: string;
-}
-
-declare module "express-session" {
-  interface SessionData {
-    listTypeSubscription?: ListTypeSubscriptionSession;
-  }
-}
 
 interface LocationRow {
   locationId: number;
@@ -30,7 +19,9 @@ const getHandler = async (req: Request, res: Response) => {
   if (removeId) {
     const locationIdToRemove = Number(removeId);
     if (Number.isFinite(locationIdToRemove) && req.session.listTypeSubscription?.selectedLocationIds) {
-      req.session.listTypeSubscription.selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds.filter((id) => id !== locationIdToRemove);
+      req.session.listTypeSubscription.selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds.filter(
+        (id: number) => id !== locationIdToRemove
+      );
       // Save session and redirect to remove query parameter
       return req.session.save((err: Error | null) => {
         if (err) {

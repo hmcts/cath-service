@@ -1,5 +1,4 @@
 import { prisma } from "@hmcts/postgres";
-import type { Prisma } from "@prisma/client";
 
 type TransactionClient = Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 

@@ -2,19 +2,9 @@ import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmct
 import { type ListType, mockListTypes } from "@hmcts/list-types-common";
 import type { Request, RequestHandler, Response } from "express";
 import { getCsrfToken } from "../../utils/csrf.js";
+import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-interface ListTypeSubscriptionSession {
-  selectedListTypeIds?: number[];
-  language?: string;
-}
-
-declare module "express-session" {
-  interface SessionData {
-    listTypeSubscription?: ListTypeSubscriptionSession;
-  }
-}
 
 interface CheckboxItem {
   value: string;
