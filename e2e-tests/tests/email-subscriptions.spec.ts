@@ -312,6 +312,19 @@ test.describe("Email Subscriptions", () => {
       const testLocationCheckbox = page.locator(`#location-${locationData.locationId}`);
       await testLocationCheckbox.check();
       await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
+      // Navigate through locations review
+      await expect(page).toHaveURL("/subscription-locations-review");
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Select a list type
+      await expect(page).toHaveURL("/subscription-list-types");
+      await page.locator('input[name="listTypes"]').first().check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Select language
+      await expect(page).toHaveURL("/subscription-list-language");
+      await page.getByRole("radio", { name: /english/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Confirm subscription
+      await expect(page).toHaveURL("/subscription-confirm");
       await page.getByRole("button", { name: /confirm/i }).click();
       await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
       await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
