@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getSubscriptionById } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
@@ -52,7 +53,7 @@ const getHandler = async (req: Request, res: Response) => {
     res.render("delete-subscription/index", {
       ...t,
       subscriptionId: subscriptionIds,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error("Error fetching subscription:", error);
@@ -125,7 +126,7 @@ const postHandler = async (req: Request, res: Response) => {
   return res.render("delete-subscription/index", {
     ...t,
     subscriptionId: subscriptionIds,
-    csrfToken: (req as any).csrfToken?.() || "",
+    csrfToken: getCsrfToken(req),
     errors: {
       titleText: t.errorSummaryTitle,
       errorList: [

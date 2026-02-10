@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { searchByCaseReference } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
@@ -15,7 +16,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("case-number-search/index", {
     ...t,
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 
@@ -41,7 +42,7 @@ const postHandler = async (req: Request, res: Response) => {
         referenceNumber: { text: t.errorNoResultsField }
       },
       data: { referenceNumber },
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 
@@ -65,7 +66,7 @@ const postHandler = async (req: Request, res: Response) => {
           referenceNumber: { text: t.errorNoResultsField }
         },
         data: { referenceNumber },
-        csrfToken: (req as any).csrfToken?.() || ""
+        csrfToken: getCsrfToken(req)
       });
     }
 
@@ -92,7 +93,7 @@ const postHandler = async (req: Request, res: Response) => {
         errorList: [{ text: "An error occurred while searching", href: "#referenceNumber" }]
       },
       data: { referenceNumber },
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 };

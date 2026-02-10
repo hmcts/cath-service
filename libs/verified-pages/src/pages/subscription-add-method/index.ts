@@ -1,4 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { getCsrfToken } from "../../utils/csrf.js";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -20,7 +21,7 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("subscription-add-method/index", {
     ...t,
     data: {},
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 
@@ -39,7 +40,7 @@ const postHandler = async (req: Request, res: Response) => {
       ...t,
       errors: [{ text: t.errorRequired, href: "#subscription-method" }],
       data: req.body,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 

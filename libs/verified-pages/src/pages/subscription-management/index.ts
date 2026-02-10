@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { mockListTypes } from "@hmcts/list-types-common";
 import { getListTypeSubscriptionsByUserId } from "@hmcts/subscription-list-types";
@@ -73,7 +74,7 @@ const getHandler = async (req: Request, res: Response) => {
       listTypeSubscriptions: listTypeSubscriptionsWithDetails,
       listTypeCount: listTypeSubscriptions.length,
       errorMessage,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error(`Error retrieving subscriptions for user ${userId}:`, error);
@@ -93,7 +94,7 @@ const getHandler = async (req: Request, res: Response) => {
       currentView: view,
       listTypeSubscriptions: [],
       listTypeCount: 0,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 };

@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { type ListType, mockListTypes } from "@hmcts/list-types-common";
 import type { Request, RequestHandler, Response } from "express";
@@ -74,7 +75,7 @@ const getHandler = async (req: Request, res: Response) => {
     locale,
     groupedListTypes,
     data: req.session.listTypeSubscription || {},
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 
@@ -99,7 +100,7 @@ const postHandler = async (req: Request, res: Response) => {
       errors: [{ text: t.errorRequired, href: "#list-types" }],
       groupedListTypes,
       data: req.body,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 
@@ -122,7 +123,7 @@ const postHandler = async (req: Request, res: Response) => {
       errors: [{ text: t.errorInvalidListTypes, href: "#list-types" }],
       groupedListTypes,
       data: req.body,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 
@@ -149,7 +150,7 @@ const postHandler = async (req: Request, res: Response) => {
         errors: [{ text: t.errorSessionSave, href: "#list-types" }],
         groupedListTypes,
         data: req.body,
-        csrfToken: (req as any).csrfToken?.() || ""
+        csrfToken: getCsrfToken(req)
       });
     }
     res.redirect("/subscription-list-language");

@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import {
   buildJurisdictionItems,
@@ -206,7 +207,7 @@ const getHandler = async (req: Request, res: Response) => {
     availableLetters,
     tableRows,
     previouslySelectedIds,
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 

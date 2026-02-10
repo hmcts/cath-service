@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getCaseSubscriptionsByUserId, getCourtSubscriptionsByUserId } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
@@ -48,7 +49,7 @@ const getHandler = async (req: Request, res: Response) => {
       caseSubscriptionsCount: caseSubscriptions.length,
       courtSubscriptionsCount: courtSubscriptions.length,
       allSubscriptionsCount: caseSubscriptions.length + courtSubscriptions.length,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error(`Error retrieving subscriptions for bulk unsubscribe for user ${userId}:`, error);
@@ -70,7 +71,7 @@ const getHandler = async (req: Request, res: Response) => {
       caseSubscriptionsCount: 0,
       courtSubscriptionsCount: 0,
       allSubscriptionsCount: 0,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 };
@@ -122,7 +123,7 @@ const postHandler = async (req: Request, res: Response) => {
             href: t.errorNoSelectionHref
           }
         ],
-        csrfToken: (req as any).csrfToken?.() || ""
+        csrfToken: getCsrfToken(req)
       });
     } catch (error) {
       console.error("Error rendering validation error:", error);

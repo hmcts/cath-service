@@ -1,4 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { mockListTypes } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { createListTypeSubscriptions } from "@hmcts/subscription-list-types";
@@ -150,7 +151,7 @@ const getHandler = async (req: Request, res: Response) => {
     hasNoListTypes,
     hasNoSubscriptions,
     errors: errors.length > 0 ? errors : undefined,
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 
@@ -274,7 +275,7 @@ const postHandler = async (req: Request, res: Response) => {
       hasNoListTypes,
       hasNoSubscriptions,
       errors: [{ text: errorMessage, href: "#" }],
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
 };

@@ -1,3 +1,4 @@
+import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
@@ -21,7 +22,7 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("case-number-search-results/index", {
     ...t,
     results: searchResults,
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 
