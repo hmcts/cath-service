@@ -1,6 +1,13 @@
+import { prisma } from "@hmcts/postgres";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./queries.js";
 import { createListTypeSubscriptions, deleteListTypeSubscription, getListTypeSubscriptionsByUserId, hasDuplicateSubscription } from "./service.js";
+
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    $transaction: vi.fn()
+  }
+}));
 
 vi.mock("./queries.js", () => ({
   findListTypeSubscriptionsByUserId: vi.fn(),
@@ -14,6 +21,8 @@ vi.mock("./queries.js", () => ({
 describe("List Type Subscription Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock transaction to execute the callback immediately
+    vi.mocked(prisma.$transaction).mockImplementation((callback: any) => callback(prisma));
   });
 
   describe("createListTypeSubscriptions", () => {
@@ -33,7 +42,7 @@ describe("List Type Subscription Service", () => {
       const result = await createListTypeSubscriptions("user1", [1, 2], "ENGLISH");
 
       expect(result).toHaveLength(2);
-      expect(queries.countListTypeSubscriptionsByUserId).toHaveBeenCalledWith("user1");
+      expect(queries.countListTypeSubscriptionsByUserId).toHaveBeenCalledWith("user1", expect.any(Object));
       expect(queries.findDuplicateListTypeSubscription).toHaveBeenCalledTimes(2);
       expect(queries.createListTypeSubscriptionRecord).toHaveBeenCalledTimes(2);
     });
