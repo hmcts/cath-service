@@ -1,7 +1,7 @@
-import { getCsrfToken } from "../../utils/csrf.js";
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { deleteSubscriptionsByIds, getSubscriptionDetailsForConfirmation } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

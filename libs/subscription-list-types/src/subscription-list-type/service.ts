@@ -32,9 +32,7 @@ export async function createListTypeSubscriptions(userId: string, listTypeIds: n
     }
 
     // Create all subscriptions
-    const subscriptions = await Promise.all(
-      uniqueListTypeIds.map((listTypeId) => createListTypeSubscriptionRecord(userId, listTypeId, language, tx))
-    );
+    const subscriptions = await Promise.all(uniqueListTypeIds.map((listTypeId) => createListTypeSubscriptionRecord(userId, listTypeId, language, tx)));
 
     return subscriptions;
   });

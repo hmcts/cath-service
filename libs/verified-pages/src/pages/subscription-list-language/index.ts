@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getCsrfToken } from "../../utils/csrf.js";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

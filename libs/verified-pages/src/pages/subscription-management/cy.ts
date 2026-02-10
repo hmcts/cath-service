@@ -24,5 +24,6 @@ export const cy = {
   tableHeaderLanguage: "Iaith",
   editListTypeLink: "Golygu",
   removeListTypeLink: "Dileu",
+  errorSummaryTitle: "Mae yna broblem",
   errorDeleteFailed: "Roedd problem wrth ddileu eich tanysgrifiad. Rhowch gynnig arall arni."
 };

@@ -1,9 +1,9 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getCsrfToken } from "../../utils/csrf.js";
 import { mockListTypes } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { createListTypeSubscriptions } from "@hmcts/subscription-list-types";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
