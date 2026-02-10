@@ -147,7 +147,7 @@ describe("subscription-list-language", () => {
         expect.objectContaining({
           errors: [
             {
-              text: "Dewiswch fersiwn o'r math o restr Dewiswch opsiwn",
+              text: "Dewiswch fersiwn o'r math o restr i barhau",
               href: "#language"
             }
           ]

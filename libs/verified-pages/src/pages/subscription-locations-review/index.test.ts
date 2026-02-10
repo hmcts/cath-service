@@ -114,20 +114,18 @@ describe("subscription-locations-review", () => {
       mockRequest.session = {
         listTypeSubscription: {
           selectedLocationIds: [1, 2, 3]
-        }
+        },
+        save: vi.fn((callback) => callback(null))
       } as any;
+      mockResponse.redirect = vi.fn();
 
       // Act
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       // Assert
       expect(mockRequest.session.listTypeSubscription?.selectedLocationIds).toEqual([1, 3]);
-      expect(mockResponse.render).toHaveBeenCalledWith(
-        "subscription-locations-review/index",
-        expect.objectContaining({
-          locationRows: expect.arrayContaining([expect.objectContaining({ locationId: 1 }), expect.objectContaining({ locationId: 3 })])
-        })
-      );
+      expect(mockRequest.session.save).toHaveBeenCalled();
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/subscription-locations-review");
     });
 
     it("should sort locations alphabetically by name", async () => {
