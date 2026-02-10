@@ -10,9 +10,9 @@ export async function seedJurisdictions(): Promise<void> {
 
   for (const jurisdiction of jurisdictions) {
     await (prisma as any).jurisdiction.upsert({
-      where: { jurisdictionId: jurisdiction.jurisdictionId },
+      where: { name: jurisdiction.name },
       create: jurisdiction,
-      update: jurisdiction
+      update: { jurisdictionId: jurisdiction.jurisdictionId, welshName: jurisdiction.welshName }
     });
   }
 
@@ -33,9 +33,13 @@ export async function seedSubJurisdictions(): Promise<void> {
 
   for (const subJurisdiction of subJurisdictions) {
     await (prisma as any).subJurisdiction.upsert({
-      where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
+      where: { name: subJurisdiction.name },
       create: subJurisdiction,
-      update: subJurisdiction
+      update: {
+        subJurisdictionId: subJurisdiction.subJurisdictionId,
+        welshName: subJurisdiction.welshName,
+        jurisdictionId: subJurisdiction.jurisdictionId
+      }
     });
   }
 
@@ -54,9 +58,9 @@ export async function seedRegions(): Promise<void> {
 
   for (const region of regions) {
     await (prisma as any).region.upsert({
-      where: { regionId: region.regionId },
+      where: { name: region.name },
       create: region,
-      update: region
+      update: { regionId: region.regionId, welshName: region.welshName }
     });
   }
 
