@@ -1,1 +1,1 @@
-export * from "./subscription-list-type/service.js";
+export * from "./subscription-list-type/repository/service.js";

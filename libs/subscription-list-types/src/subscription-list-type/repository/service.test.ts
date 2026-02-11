@@ -56,7 +56,6 @@ describe("List Type Subscription Service", () => {
       expect(queries.updateListTypeSubscriptionLanguage).not.toHaveBeenCalled();
     });
 
-
     it("should update language when subscription already exists", async () => {
       const existingSubscription = {
         listTypeSubscriptionId: "sub1",
@@ -135,16 +134,11 @@ describe("List Type Subscription Service", () => {
         dateAdded: new Date()
       };
 
-      vi.mocked(queries.findExistingListTypeSubscription)
-        .mockResolvedValueOnce(existingSubscription)
-        .mockResolvedValueOnce(null);
+      vi.mocked(queries.findExistingListTypeSubscription).mockResolvedValueOnce(existingSubscription).mockResolvedValueOnce(null);
       vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(1);
       vi.mocked(queries.updateListTypeSubscriptionLanguage).mockResolvedValue({ count: 1 });
       vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(newSubscription);
-      vi.mocked(queries.findListTypeSubscriptionsByUserId).mockResolvedValue([
-        { ...existingSubscription, language: ["WELSH"] },
-        newSubscription
-      ]);
+      vi.mocked(queries.findListTypeSubscriptionsByUserId).mockResolvedValue([{ ...existingSubscription, language: ["WELSH"] }, newSubscription]);
 
       const result = await createListTypeSubscriptions("user1", [1, 2], ["WELSH"]);
 
