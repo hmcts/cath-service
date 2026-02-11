@@ -83,7 +83,7 @@ describe("subscription-list-language", () => {
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session.listTypeSubscription).toEqual({
-        language: "ENGLISH"
+        language: ["ENGLISH"]
       });
       expect(sessionSave).toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirm");
@@ -98,7 +98,7 @@ describe("subscription-list-language", () => {
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session.listTypeSubscription).toEqual({
-        language: "WELSH"
+        language: ["WELSH"]
       });
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirm");
     });
@@ -112,7 +112,7 @@ describe("subscription-list-language", () => {
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session.listTypeSubscription).toEqual({
-        language: "BOTH"
+        language: ["ENGLISH", "WELSH"]
       });
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirm");
     });

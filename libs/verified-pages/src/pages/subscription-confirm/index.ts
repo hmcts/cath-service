@@ -8,6 +8,18 @@ import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+// Helper to format language array for display
+const formatLanguageDisplay = (languages: string[] | undefined, locale: string) => {
+  if (!languages || languages.length === 0) return "";
+  if (languages.length === 2) {
+    return locale === "cy" ? "Cymraeg a Saesneg" : "English and Welsh";
+  }
+  if (languages[0] === "ENGLISH") {
+    return locale === "cy" ? "Saesneg" : "English";
+  }
+  return locale === "cy" ? "Cymraeg" : "Welsh";
+};
+
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
@@ -79,18 +91,6 @@ const getHandler = async (req: Request, res: Response) => {
 
   const selectedListTypes = mockListTypes.filter((lt) => req.session.listTypeSubscription?.selectedListTypeIds?.includes(lt.id));
 
-  // Helper to format language array for display
-  const formatLanguageDisplay = (languages: string[] | undefined) => {
-    if (!languages || languages.length === 0) return "";
-    if (languages.length === 2) {
-      return locale === "cy" ? "Cymraeg a Saesneg" : "English and Welsh";
-    }
-    if (languages[0] === "ENGLISH") {
-      return locale === "cy" ? "Saesneg" : "English";
-    }
-    return locale === "cy" ? "Cymraeg" : "Welsh";
-  };
-
   // Helper to build URLs with locale parameter
   const localeParam = locale === "cy" ? "&lng=cy" : "";
 
@@ -116,7 +116,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const languageRows = [
     [
-      { text: formatLanguageDisplay(req.session.listTypeSubscription.language) },
+      { text: formatLanguageDisplay(req.session.listTypeSubscription.language, locale) },
       {
         html: `<a href="/subscription-list-language${locale === "cy" ? "?lng=cy" : ""}" class="govuk-link">${t.changeLink}<span class="govuk-visually-hidden"> ${t.languageHeading}</span></a>`,
         classes: "govuk-table__cell--numeric"
@@ -240,7 +240,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     const languageRows = [
       [
-        { text: formatLanguageDisplay(req.session.listTypeSubscription?.language) },
+        { text: formatLanguageDisplay(req.session.listTypeSubscription?.language, locale) },
         {
           html: `<a href="/subscription-list-language" class="govuk-link">${t.changeLink}<span class="govuk-visually-hidden"> ${t.languageHeading}</span></a>`,
           classes: "govuk-table__cell--numeric"

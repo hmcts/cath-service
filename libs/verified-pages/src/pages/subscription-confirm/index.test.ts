@@ -82,7 +82,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1, 2],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -106,7 +106,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1],
-          language: "WELSH"
+          language: ["WELSH"]
         }
       } as any;
       mockRes.locals = { locale: "cy" };
@@ -126,7 +126,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1],
-          language: "BOTH"
+          language: ["ENGLISH", "WELSH"]
         }
       } as any;
 
@@ -152,7 +152,7 @@ describe("subscription-confirm", () => {
     it("should redirect when selectedListTypeIds is missing", async () => {
       mockReq.session = {
         listTypeSubscription: {
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -178,7 +178,7 @@ describe("subscription-confirm", () => {
         listTypeSubscription: {
           selectedLocationIds: [1, 2],
           selectedListTypeIds: [],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -202,7 +202,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1, 2],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -225,7 +225,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1, 2],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
       const sessionSave = vi.fn((cb) => cb(null));
@@ -236,21 +236,21 @@ describe("subscription-confirm", () => {
           listTypeSubscriptionId: "sub1",
           userId: "user123",
           listTypeId: 1,
-          language: "ENGLISH",
+          language: ["ENGLISH"],
           dateAdded: new Date()
         },
         {
           listTypeSubscriptionId: "sub2",
           userId: "user123",
           listTypeId: 2,
-          language: "ENGLISH",
+          language: ["ENGLISH"],
           dateAdded: new Date()
         }
       ]);
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(listTypeSubscriptionService.createListTypeSubscriptions).toHaveBeenCalledWith("user123", [1, 2], "ENGLISH");
+      expect(listTypeSubscriptionService.createListTypeSubscriptions).toHaveBeenCalledWith("user123", [1, 2], ["ENGLISH"]);
       expect(mockReq.session.listTypeSubscription).toBeUndefined();
       expect(mockReq.session.listTypeSubscriptionConfirmed).toBe(true);
       expect(sessionSave).toHaveBeenCalled();
@@ -262,7 +262,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -298,7 +298,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -320,7 +320,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
 
@@ -346,7 +346,7 @@ describe("subscription-confirm", () => {
       mockReq.session = {
         listTypeSubscription: {
           selectedListTypeIds: [1],
-          language: "ENGLISH"
+          language: ["ENGLISH"]
         }
       } as any;
       const sessionSave = vi.fn((cb) => cb(new Error("Session save error")));
@@ -357,14 +357,14 @@ describe("subscription-confirm", () => {
           listTypeSubscriptionId: "sub1",
           userId: "user123",
           listTypeId: 1,
-          language: "ENGLISH",
+          language: ["ENGLISH"],
           dateAdded: new Date()
         }
       ]);
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(listTypeSubscriptionService.createListTypeSubscriptions).toHaveBeenCalledWith("user123", [1], "ENGLISH");
+      expect(listTypeSubscriptionService.createListTypeSubscriptions).toHaveBeenCalledWith("user123", [1], ["ENGLISH"]);
       expect(sessionSave).toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirm");
     });
