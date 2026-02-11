@@ -57,8 +57,8 @@ describe("subscription-add-method", () => {
   });
 
   describe("POST", () => {
-    it("should redirect to subscription-by-location when court option selected", async () => {
-      mockReq.body = { subscriptionMethod: "court" };
+    it("should redirect to subscription-by-location when location option selected", async () => {
+      mockReq.body = { subscriptionMethod: "location" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 

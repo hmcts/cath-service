@@ -44,7 +44,7 @@ const postHandler = async (req: Request, res: Response) => {
     });
   }
 
-  if (subscriptionMethod === "court") {
+  if (subscriptionMethod === "location") {
     return res.redirect("/subscription-by-location");
   }
 
