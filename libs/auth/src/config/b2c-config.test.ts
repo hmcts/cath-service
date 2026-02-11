@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getB2cAuthorityUrl, getB2cConfig, isB2cConfigured } from "./b2c-config.js";
+import { getB2cAuthorityUrl, getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "./b2c-config.js";
 
 describe("B2C Configuration", () => {
   const originalEnv = process.env;
@@ -80,6 +80,27 @@ describe("B2C Configuration", () => {
       process.env.B2C_CLIENT_SECRET = "test-secret";
 
       expect(isB2cConfigured()).toBe(true);
+    });
+  });
+
+  describe("getB2cBaseUrl", () => {
+    it("should return custom domain URL when configured", () => {
+      process.env.B2C_CUSTOM_DOMAIN = "sign-in.platform.hmcts.net";
+      process.env.B2C_CUSTOM_DOMAIN_PATH = "platform.hmcts.net";
+
+      const url = getB2cBaseUrl();
+
+      expect(url).toBe("https://sign-in.platform.hmcts.net/platform.hmcts.net");
+    });
+
+    it("should return b2clogin.com URL when custom domain is not configured", () => {
+      process.env.B2C_TENANT_NAME = "test-tenant";
+      delete process.env.B2C_CUSTOM_DOMAIN;
+      delete process.env.B2C_CUSTOM_DOMAIN_PATH;
+
+      const url = getB2cBaseUrl();
+
+      expect(url).toBe("https://test-tenant.b2clogin.com/test-tenant.onmicrosoft.com");
     });
   });
 

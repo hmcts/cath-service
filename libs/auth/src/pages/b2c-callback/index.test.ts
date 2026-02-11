@@ -375,6 +375,49 @@ describe("B2C Callback Handler", () => {
         expect.any(Function)
       );
     });
+
+    it("should extract email from signInNames.emailAddress", async () => {
+      const idTokenWithSignInNames = createMockIdToken({
+        sub: "user-signin",
+        signInNames: { emailAddress: "signin@example.com" },
+        name: "SignIn User"
+      });
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            access_token: "test-access-token",
+            id_token: idTokenWithSignInNames
+          })
+      });
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockReq.login).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "signin@example.com"
+        }),
+        expect.any(Function)
+      );
+    });
+
+    it("should throw error for invalid ID token format", async () => {
+      const invalidIdToken = "invalid-token-without-three-parts";
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            access_token: "test-access-token",
+            id_token: invalidIdToken
+          })
+      });
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=auth_failed");
+    });
   });
 });
 

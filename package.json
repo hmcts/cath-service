@@ -72,7 +72,8 @@
     "tar": "7.5.7",
     "undici": "6.23.0",
     "@isaacs/brace-expansion": "5.0.1",
-    "lodash": "4.17.23"
+    "lodash": "4.17.23",
+    "axios": "1.13.5"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "3.0.7",
