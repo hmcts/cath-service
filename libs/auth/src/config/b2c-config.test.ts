@@ -19,8 +19,6 @@ describe("B2C Configuration", () => {
       process.env.B2C_TENANT_ID = "test-tenant-id";
       process.env.B2C_CLIENT_ID = "test-client-id";
       process.env.B2C_CLIENT_SECRET = "test-secret";
-      process.env.B2C_POLICY_HMCTS = "B2C_1A_HMCTS";
-      process.env.B2C_POLICY_COMMON_PLATFORM = "B2C_1A_CP";
       process.env.B2C_POLICY_CATH = "B2C_1A_CaTH";
 
       const config = getB2cConfig();
@@ -29,8 +27,6 @@ describe("B2C Configuration", () => {
       expect(config.tenantId).toBe("test-tenant-id");
       expect(config.clientId).toBe("test-client-id");
       expect(config.clientSecret).toBe("test-secret");
-      expect(config.policyHmcts).toBe("B2C_1A_HMCTS");
-      expect(config.policyCommonPlatform).toBe("B2C_1A_CP");
       expect(config.policyCath).toBe("B2C_1A_CaTH");
       expect(config.redirectUri).toBe("https://localhost:8080/login/return");
       expect(config.responseType).toBe("code");
@@ -38,15 +34,13 @@ describe("B2C Configuration", () => {
       expect(config.scope).toEqual(["openid"]);
     });
 
-    it("should use default policy names if not provided", () => {
+    it("should use default policy name if not provided", () => {
       process.env.B2C_TENANT_NAME = "test-tenant";
       process.env.B2C_CLIENT_ID = "test-client-id";
       process.env.B2C_CLIENT_SECRET = "test-secret";
 
       const config = getB2cConfig();
 
-      expect(config.policyHmcts).toBe("B2C_1_SignInUserFlow");
-      expect(config.policyCommonPlatform).toBe("B2C_1_SignInUserFlow");
       expect(config.policyCath).toBe("B2C_1_SignInUserFlow");
     });
   });
@@ -90,25 +84,12 @@ describe("B2C Configuration", () => {
   });
 
   describe("getB2cAuthorityUrl", () => {
-    beforeEach(() => {
+    it("should return correct authority URL for CaTH policy", () => {
       process.env.B2C_TENANT_NAME = "test-tenant";
-      process.env.B2C_POLICY_HMCTS = "B2C_1A_HMCTS";
-      process.env.B2C_POLICY_COMMON_PLATFORM = "B2C_1A_CP";
       process.env.B2C_POLICY_CATH = "B2C_1A_CaTH";
-    });
 
-    it("should return correct authority URL for HMCTS", () => {
-      const url = getB2cAuthorityUrl("hmcts");
-      expect(url).toBe("https://test-tenant.b2clogin.com/test-tenant.onmicrosoft.com/B2C_1A_HMCTS");
-    });
+      const url = getB2cAuthorityUrl();
 
-    it("should return correct authority URL for Common Platform", () => {
-      const url = getB2cAuthorityUrl("common-platform");
-      expect(url).toBe("https://test-tenant.b2clogin.com/test-tenant.onmicrosoft.com/B2C_1A_CP");
-    });
-
-    it("should return correct authority URL for CaTH", () => {
-      const url = getB2cAuthorityUrl("cath");
       expect(url).toBe("https://test-tenant.b2clogin.com/test-tenant.onmicrosoft.com/B2C_1A_CaTH");
     });
   });

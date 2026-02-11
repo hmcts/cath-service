@@ -5,8 +5,6 @@ interface B2cConfig {
   tenantId: string;
   clientId: string;
   clientSecret: string;
-  policyHmcts: string;
-  policyCommonPlatform: string;
   policyCath: string;
   policyPasswordReset: string;
   redirectUri: string;
@@ -47,8 +45,6 @@ export function getB2cConfig(): B2cConfig {
     tenantId: getConfigValue("B2C_TENANT_ID"),
     clientId: getConfigValue("B2C_CLIENT_ID"),
     clientSecret: getConfigValue("B2C_CLIENT_SECRET"),
-    policyHmcts: getConfigValue("B2C_POLICY_HMCTS") || "B2C_1_SignInUserFlow",
-    policyCommonPlatform: getConfigValue("B2C_POLICY_COMMON_PLATFORM") || "B2C_1_SignInUserFlow",
     policyCath: getConfigValue("B2C_POLICY_CATH") || "B2C_1_SignInUserFlow",
     policyPasswordReset: getConfigValue("B2C_POLICY_PASSWORD_RESET") || "B2C_1A_PASSWORD_RESET",
     redirectUri,
@@ -89,25 +85,11 @@ export function getB2cBaseUrl(): string {
 }
 
 /**
- * Gets the B2C authority URL for a specific policy
- * @param policy - The policy name (e.g., 'hmcts', 'common-platform', 'cath')
+ * Gets the B2C authority URL for the CaTH policy
+ * Note: HMCTS uses CFT IDAM, not B2C. B2C is only for CaTH users.
  * @returns The full authority URL
  */
-export function getB2cAuthorityUrl(policy: "hmcts" | "common-platform" | "cath"): string {
+export function getB2cAuthorityUrl(): string {
   const b2cConfig = getB2cConfig();
-  let policyName: string;
-
-  switch (policy) {
-    case "hmcts":
-      policyName = b2cConfig.policyHmcts;
-      break;
-    case "common-platform":
-      policyName = b2cConfig.policyCommonPlatform;
-      break;
-    case "cath":
-      policyName = b2cConfig.policyCath;
-      break;
-  }
-
-  return `${getB2cBaseUrl()}/${policyName}`;
+  return `${getB2cBaseUrl()}/${b2cConfig.policyCath}`;
 }

@@ -82,7 +82,7 @@ async function handleCallback(req: Request, res: Response, params: any) {
     try {
       await createOrUpdateUser({
         email: userProfile.email,
-        userProvenance: "B2C_IDAM",
+        userProvenance: "PI_AAD",
         userProvenanceId: userProfile.id,
         role: "VERIFIED"
       });
@@ -143,21 +143,11 @@ async function handleCallback(req: Request, res: Response, params: any) {
 async function exchangeCodeForTokens(code: string, provider: string): Promise<{ access_token: string; id_token: string }> {
   const b2cConfig = getB2cConfig();
 
-  // Get policy based on provider
-  let policy: string;
-  switch (provider) {
-    case "hmcts":
-      policy = b2cConfig.policyHmcts;
-      break;
-    case "common-platform":
-      policy = b2cConfig.policyCommonPlatform;
-      break;
-    case "cath":
-      policy = b2cConfig.policyCath;
-      break;
-    default:
-      throw new Error(`Invalid provider: ${provider}`);
+  // B2C is only used for CaTH users (HMCTS uses CFT IDAM)
+  if (provider !== "cath") {
+    throw new Error(`Invalid B2C provider: ${provider}. Only 'cath' is supported.`);
   }
+  const policy = b2cConfig.policyCath;
 
   const tokenUrl = `${getB2cBaseUrl()}/oauth2/v2.0/token?p=${policy}`;
 

@@ -54,9 +54,8 @@ describe("B2C Callback Handler", () => {
       tenantId: "test-tenant-id",
       clientId: "test-client-id",
       clientSecret: "test-secret",
-      policyHmcts: "B2C_1_HmctsSignIn",
-      policyCommonPlatform: "B2C_1_CommonPlatformSignIn",
       policyCath: "B2C_1_CathSignIn",
+      policyPasswordReset: "B2C_1A_PASSWORD_RESET",
       redirectUri: "https://localhost:8080/login/return",
       responseType: "code",
       responseMode: "query",
@@ -71,7 +70,7 @@ describe("B2C Callback Handler", () => {
       email: "test@example.com",
       firstName: "Test",
       surname: "User",
-      userProvenance: "B2C_IDAM",
+      userProvenance: "PI_AAD",
       userProvenanceId: "user-123",
       role: "VERIFIED",
       createdDate: new Date(),
@@ -273,7 +272,7 @@ describe("B2C Callback Handler", () => {
   });
 
   describe("token exchange", () => {
-    it("should use correct policy for cath provider", async () => {
+    it("should use CaTH policy for token exchange", async () => {
       mockSession.b2cProvider = "cath";
 
       await GET(mockReq as Request, mockRes as Response);
@@ -281,20 +280,12 @@ describe("B2C Callback Handler", () => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("B2C_1_CathSignIn"), expect.any(Object));
     });
 
-    it("should use correct policy for hmcts provider", async () => {
+    it("should reject non-cath providers", async () => {
       mockSession.b2cProvider = "hmcts";
 
       await GET(mockReq as Request, mockRes as Response);
 
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("B2C_1_HmctsSignIn"), expect.any(Object));
-    });
-
-    it("should use correct policy for common-platform provider", async () => {
-      mockSession.b2cProvider = "common-platform";
-
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("B2C_1_CommonPlatformSignIn"), expect.any(Object));
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=auth_failed");
     });
 
     it("should throw error for invalid provider", async () => {
