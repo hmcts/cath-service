@@ -30,7 +30,8 @@
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
       "@hmcts/subscriptions": ["libs/subscriptions/src"],
       "@hmcts/notification": ["libs/notification/src"],
-      "@hmcts/notifications": ["libs/notifications/src"]
+      "@hmcts/notifications": ["libs/notifications/src"],
+      "@hmcts/proxy": ["apps/proxy/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

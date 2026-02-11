@@ -1,0 +1,9 @@
+{
+  "port": "PROXY_PORT",
+  "newServiceUrl": "NEW_SERVICE_URL",
+  "oldServiceUrl": "OLD_SERVICE_URL",
+  "launchDarklySdkKey": "LAUNCHDARKLY_SDK_KEY",
+  "applicationInsights": {
+    "connectionString": "APPLICATION_INSIGHTS_CONNECTION_STRING"
+  }
+}

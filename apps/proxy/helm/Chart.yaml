@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: '1.0'
+description: A Helm chart for the Court and Tribunal Hearings A/B testing proxy
+name: cath-proxy
+home: https://github.com/hmcts/cath-service
+version: 0.0.1
+dependencies:
+  - name: nodejs
+    version: 3.2.0
+    repository: 'oci://hmctspublic.azurecr.io/helm'

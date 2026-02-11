@@ -1,0 +1,15 @@
+nodejs:
+  applicationPort: 4000
+  aadIdentityName: cath
+  ingressHost: cath-proxy.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctspublic.azurecr.io/cath/cath-proxy:latest'
+  environment:
+    NEW_SERVICE_URL: 'https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net'
+    OLD_SERVICE_URL: 'https://pip-frontend.{{ .Values.global.environment }}.platform.hmcts.net'
+  keyVaults:
+    cath:
+      secrets:
+        - name: app-insights-connection-string
+          alias: APPLICATION_INSIGHTS_CONNECTION_STRING
+        - name: launch-darkly-sdk-key
+          alias: LAUNCHDARKLY_SDK_KEY

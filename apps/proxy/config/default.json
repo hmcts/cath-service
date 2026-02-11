@@ -1,0 +1,9 @@
+{
+  "port": 4000,
+  "newServiceUrl": "http://localhost:8080",
+  "oldServiceUrl": "http://localhost:3000",
+  "applicationInsights": {
+    "connectionString": "",
+    "enabled": false
+  }
+}

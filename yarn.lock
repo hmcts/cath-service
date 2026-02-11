@@ -1177,6 +1177,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/proxy@workspace:apps/proxy":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/proxy@workspace:apps/proxy"
+  dependencies:
+    "@hmcts/cloud-native-platform": "workspace:*"
+    "@launchdarkly/node-server-sdk": "npm:9.10.4"
+    "@types/cookie-parser": "npm:1.4.10"
+    "@types/express": "npm:5.0.5"
+    "@types/supertest": "npm:6.0.3"
+    config: "npm:4.1.1"
+    cookie-parser: "npm:1.4.7"
+    dotenv: "npm:17.2.3"
+    express: "npm:5.2.0"
+    http-proxy-middleware: "npm:3.0.5"
+    nodemon: "npm:3.1.11"
+    supertest: "npm:7.1.4"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/public-pages@workspace:*, @hmcts/public-pages@workspace:libs/public-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
@@ -1403,6 +1422,34 @@ __metadata:
   version: 4.4.2
   resolution: "@js-sdsl/ordered-map@npm:4.4.2"
   checksum: 10c0/cc7e15dc4acf6d9ef663757279600bab70533d847dcc1ab01332e9e680bd30b77cdf9ad885cc774276f51d98b05a013571c940e5b360985af5eb798dc1a2ee2b
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-sdk-common@npm:2.20.0":
+  version: 2.20.0
+  resolution: "@launchdarkly/js-sdk-common@npm:2.20.0"
+  checksum: 10c0/7a986de9b09891afaca7436c47a4590769e1b8704008dc83aa496efd08187b74c76fbf900d8d315432f5470c8ae7a49a9191ddcd8f3ca24b897f976e800fb165
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-server-sdk-common@npm:2.17.0":
+  version: 2.17.0
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.17.0"
+  dependencies:
+    "@launchdarkly/js-sdk-common": "npm:2.20.0"
+    semver: "npm:7.5.4"
+  checksum: 10c0/2a09d301e09949e97eccb636115b48cb8c76b5780e70c2cf58c80012594cec8538070c6a7f87cf11f9514e175fa7e7b6aef599f3502d3b724ae53a386988e231
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/node-server-sdk@npm:9.10.4":
+  version: 9.10.4
+  resolution: "@launchdarkly/node-server-sdk@npm:9.10.4"
+  dependencies:
+    "@launchdarkly/js-server-sdk-common": "npm:2.17.0"
+    https-proxy-agent: "npm:^7.0.6"
+    launchdarkly-eventsource: "npm:2.2.0"
+  checksum: 10c0/7cfc04bb88c6fe74d3c964db0f0a0f6dc3e4838df49f7dccd392b4f96b8ad337ac5ae977ba1864fed6bfed3abda34f226f0380baaadb9186b0a3e5a37d577f54
   languageName: node
   linkType: hard
 
@@ -2806,6 +2853,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/http-proxy@npm:^1.17.15":
+  version: 1.17.17
+  resolution: "@types/http-proxy@npm:1.17.17"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/547e322a5eecf0b50d08f6a46bd89c8c8663d67dbdcd472da5daf968b03e63a82f6b3650443378abe6c10a46475dac52015f30e8c74ba2ea5820dd4e9cdef2d4
+  languageName: node
+  linkType: hard
+
 "@types/js-yaml@npm:^4.0.9":
   version: 4.0.9
   resolution: "@types/js-yaml@npm:4.0.9"
@@ -4168,7 +4224,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^4.4.3":
+"debug@npm:^4.3.6, debug@npm:^4.4.3":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
   dependencies:
@@ -4670,6 +4726,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eventemitter3@npm:^4.0.0":
+  version: 4.0.7
+  resolution: "eventemitter3@npm:4.0.7"
+  checksum: 10c0/5f6d97cbcbac47be798e6355e3a7639a84ee1f7d9b199a07017f1d2f1e2fe236004d14fa5dfaeba661f94ea57805385e326236a6debbc7145c8877fbc0297c6b
+  languageName: node
+  linkType: hard
+
 "exceljs@npm:4.4.0":
   version: 4.4.0
   resolution: "exceljs@npm:4.4.0"
@@ -4856,7 +4919,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.15.6":
   version: 1.15.11
   resolution: "follow-redirects@npm:1.15.11"
   peerDependenciesMeta:
@@ -5192,6 +5255,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"http-proxy-middleware@npm:3.0.5":
+  version: 3.0.5
+  resolution: "http-proxy-middleware@npm:3.0.5"
+  dependencies:
+    "@types/http-proxy": "npm:^1.17.15"
+    debug: "npm:^4.3.6"
+    http-proxy: "npm:^1.18.1"
+    is-glob: "npm:^4.0.3"
+    is-plain-object: "npm:^5.0.0"
+    micromatch: "npm:^4.0.8"
+  checksum: 10c0/89ff3c8fe65b22b8042a6173ae1b8f77c5171f7eecf3c8b5d6dcffe3c9d688acae7bcf498cc08d1525f566dc0781efaec4e2ddc49224b1f16f020de7987a446b
+  languageName: node
+  linkType: hard
+
+"http-proxy@npm:^1.18.1":
+  version: 1.18.1
+  resolution: "http-proxy@npm:1.18.1"
+  dependencies:
+    eventemitter3: "npm:^4.0.0"
+    follow-redirects: "npm:^1.0.0"
+    requires-port: "npm:^1.0.0"
+  checksum: 10c0/148dfa700a03fb421e383aaaf88ac1d94521dfc34072f6c59770528c65250983c2e4ec996f2f03aa9f3fe46cd1270a593126068319311e3e8d9e610a37533e94
+  languageName: node
+  linkType: hard
+
 "https-proxy-agent@npm:^5.0.0":
   version: 5.0.1
   resolution: "https-proxy-agent@npm:5.0.1"
@@ -5202,7 +5290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^7.0.0, https-proxy-agent@npm:^7.0.1":
+"https-proxy-agent@npm:^7.0.0, https-proxy-agent@npm:^7.0.1, https-proxy-agent@npm:^7.0.6":
   version: 7.0.6
   resolution: "https-proxy-agent@npm:7.0.6"
   dependencies:
@@ -5375,6 +5463,13 @@ __metadata:
   version: 7.0.0
   resolution: "is-number@npm:7.0.0"
   checksum: 10c0/b4686d0d3053146095ccd45346461bc8e53b80aeb7671cc52a4de02dbbf7dc0d1d2a986e2fe4ae206984b4d34ef37e8b795ebc4f4295c978373e6575e295d811
+  languageName: node
+  linkType: hard
+
+"is-plain-object@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "is-plain-object@npm:5.0.0"
+  checksum: 10c0/893e42bad832aae3511c71fd61c0bf61aa3a6d853061c62a307261842727d0d25f761ce9379f7ba7226d6179db2a3157efa918e7fe26360f3bf0842d9f28942c
   languageName: node
   linkType: hard
 
@@ -5577,6 +5672,13 @@ __metadata:
     jwa: "npm:^2.0.1"
     safe-buffer: "npm:^5.0.1"
   checksum: 10c0/6be1ed93023aef570ccc5ea8d162b065840f3ef12f0d1bb3114cade844de7a357d5dc558201d9a65101e70885a6fa56b17462f520e6b0d426195510618a154d0
+  languageName: node
+  linkType: hard
+
+"launchdarkly-eventsource@npm:2.2.0":
+  version: 2.2.0
+  resolution: "launchdarkly-eventsource@npm:2.2.0"
+  checksum: 10c0/fce94e58ef5eb560349b2f5405276c01b86d83afc3f7149c6e58ce4fcdf69f1ef8c97c9800bedf0986b41fa7a1f14740aee804d8c74f9fc81b6cf22f4bd5a7f1
   languageName: node
   linkType: hard
 
@@ -5787,7 +5889,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:6.0.0":
+"lru-cache@npm:6.0.0, lru-cache@npm:^6.0.0":
   version: 6.0.0
   resolution: "lru-cache@npm:6.0.0"
   dependencies:
@@ -5910,7 +6012,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"micromatch@npm:^4.0.5":
+"micromatch@npm:^4.0.5, micromatch@npm:^4.0.8":
   version: 4.0.8
   resolution: "micromatch@npm:4.0.8"
   dependencies:
@@ -6962,6 +7064,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"requires-port@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "requires-port@npm:1.0.0"
+  checksum: 10c0/b2bfdd09db16c082c4326e573a82c0771daaf7b53b9ce8ad60ea46aa6e30aaf475fe9b164800b89f93b748d2c234d8abff945d2551ba47bf5698e04cd7713267
+  languageName: node
+  linkType: hard
+
 "resolve-pkg-maps@npm:^1.0.0":
   version: 1.0.0
   resolution: "resolve-pkg-maps@npm:1.0.0"
@@ -7186,6 +7295,17 @@ __metadata:
   dependencies:
     xmlchars: "npm:^2.2.0"
   checksum: 10c0/b7476c41dbe1c3a89907d2546fecfba234de5e66743ef914cde2603f47b19bed09732ab51b528ad0f98b958369d8be72b6f5af5c9cfad69972a73d061f0b3952
+  languageName: node
+  linkType: hard
+
+"semver@npm:7.5.4":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: "npm:^6.0.0"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/5160b06975a38b11c1ab55950cb5b8a23db78df88275d3d8a42ccf1f29e55112ac995b3a26a522c36e3b5f76b0445f1eef70d696b8c7862a2b4303d7b0e7609e
   languageName: node
   linkType: hard
 
