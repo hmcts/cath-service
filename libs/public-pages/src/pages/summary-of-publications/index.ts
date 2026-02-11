@@ -74,7 +74,9 @@ export const GET = async (req: Request, res: Response) => {
       language: artefact.language,
       formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
       languageLabel,
-      urlPath: listType?.url
+      urlPath: listType?.urlPath,
+      isFlatFile: artefact.isFlatFile,
+      locationId: artefact.locationId
     };
   });
 
