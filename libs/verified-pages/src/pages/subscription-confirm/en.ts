@@ -1,0 +1,20 @@
+export const en = {
+  pageTitle: "Confirm your email subscriptions",
+  locationsHeading: "Court or tribunal name",
+  listTypesHeading: "List types",
+  languageHeading: "Version",
+  actionsHeading: "Actions",
+  removeLink: "Remove",
+  changeLink: "Change",
+  continueButton: "Confirm subscriptions",
+  backLinkText: "Back",
+  errorSummaryTitle: "There is a problem",
+  errorNoListTypes: "Please select a list type to continue",
+  errorNoLocations: "At least one subscription is needed",
+  selectListTypesLink: "Select list types",
+  selectLocationsLink: "Select courts or tribunals",
+  addSubscriptionsButton: "Add subscriptions",
+  errorMaxSubscriptions: "You have reached the maximum number of list type subscriptions. Please remove some subscriptions before adding more.",
+  errorDuplicateSubscription: "You are already subscribed to one or more of these list types with this language preference. Please check your subscriptions.",
+  errorGeneric: "Sorry, there was a problem creating your subscriptions. Please try again."
+};

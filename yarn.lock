@@ -1227,6 +1227,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/subscription-list-types@workspace:libs/subscription-list-types":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/subscription-list-types@workspace:libs/subscription-list-types"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/subscription@workspace:*, @hmcts/subscription@workspace:libs/subscription":
   version: 0.0.0-use.local
   resolution: "@hmcts/subscription@workspace:libs/subscription"
