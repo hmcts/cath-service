@@ -6,14 +6,7 @@ vi.mock("@hmcts/publication", () => ({
   getFileBuffer: vi.fn(),
   getFileExtension: vi.fn(),
   getContentType: vi.fn(),
-  getFileName: vi.fn(),
-  mockListTypes: [
-    {
-      id: 1,
-      englishFriendlyName: "Daily Cause List",
-      welshFriendlyName: "Rhestr Achos Dyddiol"
-    }
-  ]
+  getFileName: vi.fn()
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -21,6 +14,14 @@ vi.mock("@hmcts/location", () => ({
     id: 123,
     name: "Test Court",
     welshName: "Llys Prawf"
+  })
+}));
+
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findListTypeById: vi.fn().mockResolvedValue({
+    id: 1,
+    friendlyName: "Daily Cause List",
+    welshFriendlyName: "Rhestr Achos Dyddiol"
   })
 }));
 
