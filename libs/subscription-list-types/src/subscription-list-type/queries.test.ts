@@ -4,9 +4,10 @@ import {
   countListTypeSubscriptionsByUserId,
   createListTypeSubscriptionRecord,
   deleteListTypeSubscriptionRecord,
-  findDuplicateListTypeSubscription,
+  findExistingListTypeSubscription,
   findListTypeSubscriptionById,
-  findListTypeSubscriptionsByUserId
+  findListTypeSubscriptionsByUserId,
+  updateListTypeSubscriptionLanguage
 } from "./queries.js";
 
 vi.mock("@hmcts/postgres", () => ({
@@ -16,6 +17,7 @@ vi.mock("@hmcts/postgres", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       deleteMany: vi.fn(),
+      updateMany: vi.fn(),
       count: vi.fn()
     }
   }
@@ -28,7 +30,7 @@ describe("List Type Subscription Queries", () => {
 
   describe("findListTypeSubscriptionsByUserId", () => {
     it("should return list of subscriptions for user", async () => {
-      const mockSubscriptions = [{ listTypeSubscriptionId: "sub1", userId: "user1", listTypeId: 1, language: "ENGLISH", dateAdded: new Date() }];
+      const mockSubscriptions = [{ listTypeSubscriptionId: "sub1", userId: "user1", listTypeId: 1, language: ["ENGLISH"], dateAdded: new Date() }];
       vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscriptions);
 
       const result = await findListTypeSubscriptionsByUserId("user1");
@@ -47,7 +49,7 @@ describe("List Type Subscription Queries", () => {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
       vi.mocked(prisma.subscriptionListType.findFirst).mockResolvedValue(mockSubscription);
@@ -78,19 +80,19 @@ describe("List Type Subscription Queries", () => {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH", "WELSH"],
         dateAdded: new Date()
       };
       vi.mocked(prisma.subscriptionListType.create).mockResolvedValue(mockSubscription);
 
-      const result = await createListTypeSubscriptionRecord("user1", 1, "ENGLISH");
+      const result = await createListTypeSubscriptionRecord("user1", 1, ["ENGLISH", "WELSH"]);
 
       expect(result).toEqual(mockSubscription);
       expect(prisma.subscriptionListType.create).toHaveBeenCalledWith({
         data: {
           userId: "user1",
           listTypeId: 1,
-          language: "ENGLISH"
+          language: ["ENGLISH", "WELSH"]
         }
       });
     });
@@ -133,35 +135,52 @@ describe("List Type Subscription Queries", () => {
     });
   });
 
-  describe("findDuplicateListTypeSubscription", () => {
-    it("should return subscription when duplicate exists", async () => {
+  describe("findExistingListTypeSubscription", () => {
+    it("should return subscription when it exists", async () => {
       const mockSubscription = {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
       vi.mocked(prisma.subscriptionListType.findFirst).mockResolvedValue(mockSubscription);
 
-      const result = await findDuplicateListTypeSubscription("user1", 1, "ENGLISH");
+      const result = await findExistingListTypeSubscription("user1", 1);
 
       expect(result).toEqual(mockSubscription);
       expect(prisma.subscriptionListType.findFirst).toHaveBeenCalledWith({
         where: {
           userId: "user1",
-          listTypeId: 1,
-          language: "ENGLISH"
+          listTypeId: 1
         }
       });
     });
 
-    it("should return null when no duplicate exists", async () => {
+    it("should return null when subscription does not exist", async () => {
       vi.mocked(prisma.subscriptionListType.findFirst).mockResolvedValue(null);
 
-      const result = await findDuplicateListTypeSubscription("user1", 1, "ENGLISH");
+      const result = await findExistingListTypeSubscription("user1", 1);
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe("updateListTypeSubscriptionLanguage", () => {
+    it("should update language for existing subscription", async () => {
+      vi.mocked(prisma.subscriptionListType.updateMany).mockResolvedValue({ count: 1 });
+
+      await updateListTypeSubscriptionLanguage("user1", 1, ["ENGLISH", "WELSH"]);
+
+      expect(prisma.subscriptionListType.updateMany).toHaveBeenCalledWith({
+        where: {
+          userId: "user1",
+          listTypeId: 1
+        },
+        data: {
+          language: ["ENGLISH", "WELSH"]
+        }
+      });
     });
   });
 });

@@ -30,8 +30,13 @@
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
       "@hmcts/subscription": ["libs/subscription/src"],
       "@hmcts/subscription-list-types": ["libs/subscription-list-types/src"],
+      "@hmcts/subscription-list-types/config": ["libs/subscription-list-types/src/config"],
+      "@hmcts/list-search-config": ["libs/list-search-config/src"],
+      "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
-      "@hmcts/notifications": ["libs/notifications/src"]
+      "@hmcts/notifications": ["libs/notifications/src"],
+      "@hmcts/notifications/config": ["libs/notifications/src/config"],
+      "@hmcts/subscription/config": ["libs/subscription/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -20,7 +20,7 @@ export async function findListTypeSubscriptionById(listTypeSubscriptionId: strin
   });
 }
 
-export async function createListTypeSubscriptionRecord(userId: string, listTypeId: number, language: string, tx?: TransactionClient) {
+export async function createListTypeSubscriptionRecord(userId: string, listTypeId: number, language: string[], tx?: TransactionClient) {
   const client = tx || prisma;
   return client.subscriptionListType.create({
     data: {
@@ -49,12 +49,24 @@ export async function countListTypeSubscriptionsByUserId(userId: string, tx?: Tr
   });
 }
 
-export async function findDuplicateListTypeSubscription(userId: string, listTypeId: number, language: string, tx?: TransactionClient) {
+export async function findExistingListTypeSubscription(userId: string, listTypeId: number, tx?: TransactionClient) {
   const client = tx || prisma;
   return client.subscriptionListType.findFirst({
     where: {
       userId,
-      listTypeId,
+      listTypeId
+    }
+  });
+}
+
+export async function updateListTypeSubscriptionLanguage(userId: string, listTypeId: number, language: string[], tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.updateMany({
+    where: {
+      userId,
+      listTypeId
+    },
+    data: {
       language
     }
   });

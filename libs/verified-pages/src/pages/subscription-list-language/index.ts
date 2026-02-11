@@ -46,7 +46,9 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.listTypeSubscription = {};
   }
 
-  req.session.listTypeSubscription.language = language;
+  // Convert language selection to array
+  const languageArray = language === "BOTH" ? ["ENGLISH", "WELSH"] : [language];
+  req.session.listTypeSubscription.language = languageArray;
 
   req.session.save((err: Error | null) => {
     if (err) {

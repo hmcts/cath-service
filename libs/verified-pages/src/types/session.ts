@@ -1,7 +1,7 @@
 export interface ListTypeSubscriptionSession {
   selectedLocationIds?: number[];
   selectedListTypeIds?: number[];
-  language?: string;
+  language?: string[];
 }
 
 declare module "express-session" {

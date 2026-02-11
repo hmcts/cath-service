@@ -1,7 +1,7 @@
 import { prisma } from "@hmcts/postgres";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./queries.js";
-import { createListTypeSubscriptions, deleteListTypeSubscription, getListTypeSubscriptionsByUserId, hasDuplicateSubscription } from "./service.js";
+import { createListTypeSubscriptions, deleteListTypeSubscription, getListTypeSubscriptionsByUserId, hasExistingSubscription } from "./service.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
@@ -15,7 +15,8 @@ vi.mock("./queries.js", () => ({
   createListTypeSubscriptionRecord: vi.fn(),
   deleteListTypeSubscriptionRecord: vi.fn(),
   countListTypeSubscriptionsByUserId: vi.fn(),
-  findDuplicateListTypeSubscription: vi.fn()
+  findExistingListTypeSubscription: vi.fn(),
+  updateListTypeSubscriptionLanguage: vi.fn()
 }));
 
 describe("List Type Subscription Service", () => {
@@ -27,69 +28,129 @@ describe("List Type Subscription Service", () => {
 
   describe("createListTypeSubscriptions", () => {
     it("should create multiple subscriptions successfully", async () => {
-      const mockSubscription = {
+      const mockSubscription1 = {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
+        dateAdded: new Date()
+      };
+      const mockSubscription2 = {
+        listTypeSubscriptionId: "sub2",
+        userId: "user1",
+        listTypeId: 2,
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
 
+      vi.mocked(queries.findExistingListTypeSubscription).mockResolvedValue(null);
       vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(0);
-      vi.mocked(queries.findDuplicateListTypeSubscription).mockResolvedValue(null);
-      vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(mockSubscription);
+      vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(mockSubscription1);
+      vi.mocked(queries.findListTypeSubscriptionsByUserId).mockResolvedValue([mockSubscription1, mockSubscription2]);
 
-      const result = await createListTypeSubscriptions("user1", [1, 2], "ENGLISH");
+      const result = await createListTypeSubscriptions("user1", [1, 2], ["ENGLISH"]);
 
       expect(result).toHaveLength(2);
-      expect(queries.countListTypeSubscriptionsByUserId).toHaveBeenCalledWith("user1", expect.any(Object));
-      expect(queries.findDuplicateListTypeSubscription).toHaveBeenCalledTimes(2);
+      expect(queries.findExistingListTypeSubscription).toHaveBeenCalledTimes(2);
       expect(queries.createListTypeSubscriptionRecord).toHaveBeenCalledTimes(2);
+      expect(queries.updateListTypeSubscriptionLanguage).not.toHaveBeenCalled();
     });
 
-    it("should throw error when max subscriptions reached", async () => {
-      vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(50);
 
-      await expect(createListTypeSubscriptions("user1", [1], "ENGLISH")).rejects.toThrow("Maximum 50 list type subscriptions allowed");
-
-      expect(queries.createListTypeSubscriptionRecord).not.toHaveBeenCalled();
-    });
-
-    it("should throw error when duplicate subscription exists", async () => {
-      const mockSubscription = {
+    it("should update language when subscription already exists", async () => {
+      const existingSubscription = {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
+      const updatedSubscription = {
+        ...existingSubscription,
+        language: ["ENGLISH", "WELSH"]
+      };
 
-      vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(0);
-      vi.mocked(queries.findDuplicateListTypeSubscription).mockResolvedValue(mockSubscription);
+      vi.mocked(queries.findExistingListTypeSubscription).mockResolvedValue(existingSubscription);
+      vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(1);
+      vi.mocked(queries.updateListTypeSubscriptionLanguage).mockResolvedValue({ count: 1 });
+      vi.mocked(queries.findListTypeSubscriptionsByUserId).mockResolvedValue([updatedSubscription]);
 
-      await expect(createListTypeSubscriptions("user1", [1], "ENGLISH")).rejects.toThrow("Already subscribed to list type 1 with language ENGLISH");
+      const result = await createListTypeSubscriptions("user1", [1], ["ENGLISH", "WELSH"]);
 
+      expect(result).toHaveLength(1);
+      expect(queries.updateListTypeSubscriptionLanguage).toHaveBeenCalledWith("user1", 1, ["ENGLISH", "WELSH"], expect.any(Object));
       expect(queries.createListTypeSubscriptionRecord).not.toHaveBeenCalled();
     });
 
     it("should de-duplicate input list type IDs", async () => {
-      const mockSubscription = {
-        listTypeSubscriptionId: "sub1",
-        userId: "user1",
-        listTypeId: 1,
-        language: "ENGLISH",
-        dateAdded: new Date()
-      };
+      const mockSubscriptions = [
+        {
+          listTypeSubscriptionId: "sub1",
+          userId: "user1",
+          listTypeId: 1,
+          language: ["ENGLISH", "WELSH"],
+          dateAdded: new Date()
+        },
+        {
+          listTypeSubscriptionId: "sub2",
+          userId: "user1",
+          listTypeId: 2,
+          language: ["ENGLISH", "WELSH"],
+          dateAdded: new Date()
+        },
+        {
+          listTypeSubscriptionId: "sub3",
+          userId: "user1",
+          listTypeId: 3,
+          language: ["ENGLISH", "WELSH"],
+          dateAdded: new Date()
+        }
+      ];
 
+      vi.mocked(queries.findExistingListTypeSubscription).mockResolvedValue(null);
       vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(0);
-      vi.mocked(queries.findDuplicateListTypeSubscription).mockResolvedValue(null);
-      vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(mockSubscription);
+      vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(mockSubscriptions[0]);
+      vi.mocked(queries.findListTypeSubscriptionsByUserId).mockResolvedValue(mockSubscriptions);
 
-      const result = await createListTypeSubscriptions("user1", [1, 2, 1, 3, 2], "ENGLISH");
+      const result = await createListTypeSubscriptions("user1", [1, 2, 1, 3, 2], ["ENGLISH", "WELSH"]);
 
       expect(result).toHaveLength(3);
       expect(queries.createListTypeSubscriptionRecord).toHaveBeenCalledTimes(3);
-      expect(queries.findDuplicateListTypeSubscription).toHaveBeenCalledTimes(3);
+      expect(queries.findExistingListTypeSubscription).toHaveBeenCalledTimes(3);
+    });
+
+    it("should update existing and create new subscriptions in same call", async () => {
+      const existingSubscription = {
+        listTypeSubscriptionId: "sub1",
+        userId: "user1",
+        listTypeId: 1,
+        language: ["ENGLISH"],
+        dateAdded: new Date()
+      };
+      const newSubscription = {
+        listTypeSubscriptionId: "sub2",
+        userId: "user1",
+        listTypeId: 2,
+        language: ["WELSH"],
+        dateAdded: new Date()
+      };
+
+      vi.mocked(queries.findExistingListTypeSubscription)
+        .mockResolvedValueOnce(existingSubscription)
+        .mockResolvedValueOnce(null);
+      vi.mocked(queries.countListTypeSubscriptionsByUserId).mockResolvedValue(1);
+      vi.mocked(queries.updateListTypeSubscriptionLanguage).mockResolvedValue({ count: 1 });
+      vi.mocked(queries.createListTypeSubscriptionRecord).mockResolvedValue(newSubscription);
+      vi.mocked(queries.findListTypeSubscriptionsByUserId).mockResolvedValue([
+        { ...existingSubscription, language: ["WELSH"] },
+        newSubscription
+      ]);
+
+      const result = await createListTypeSubscriptions("user1", [1, 2], ["WELSH"]);
+
+      expect(result).toHaveLength(2);
+      expect(queries.updateListTypeSubscriptionLanguage).toHaveBeenCalledWith("user1", 1, ["WELSH"], expect.any(Object));
+      expect(queries.createListTypeSubscriptionRecord).toHaveBeenCalledWith("user1", 2, ["WELSH"], expect.any(Object));
     });
   });
 
@@ -100,7 +161,7 @@ describe("List Type Subscription Service", () => {
           listTypeSubscriptionId: "sub1",
           userId: "user1",
           listTypeId: 1,
-          language: "ENGLISH",
+          language: ["ENGLISH"],
           dateAdded: new Date()
         }
       ];
@@ -120,7 +181,7 @@ describe("List Type Subscription Service", () => {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
 
@@ -147,7 +208,7 @@ describe("List Type Subscription Service", () => {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
 
@@ -158,28 +219,28 @@ describe("List Type Subscription Service", () => {
     });
   });
 
-  describe("hasDuplicateSubscription", () => {
-    it("should return true when duplicate exists", async () => {
+  describe("hasExistingSubscription", () => {
+    it("should return true when subscription exists", async () => {
       const mockSubscription = {
         listTypeSubscriptionId: "sub1",
         userId: "user1",
         listTypeId: 1,
-        language: "ENGLISH",
+        language: ["ENGLISH"],
         dateAdded: new Date()
       };
 
-      vi.mocked(queries.findDuplicateListTypeSubscription).mockResolvedValue(mockSubscription);
+      vi.mocked(queries.findExistingListTypeSubscription).mockResolvedValue(mockSubscription);
 
-      const result = await hasDuplicateSubscription("user1", 1, "ENGLISH");
+      const result = await hasExistingSubscription("user1", 1);
 
       expect(result).toBe(true);
-      expect(queries.findDuplicateListTypeSubscription).toHaveBeenCalledWith("user1", 1, "ENGLISH");
+      expect(queries.findExistingListTypeSubscription).toHaveBeenCalledWith("user1", 1);
     });
 
-    it("should return false when no duplicate exists", async () => {
-      vi.mocked(queries.findDuplicateListTypeSubscription).mockResolvedValue(null);
+    it("should return false when subscription does not exist", async () => {
+      vi.mocked(queries.findExistingListTypeSubscription).mockResolvedValue(null);
 
-      const result = await hasDuplicateSubscription("user1", 1, "ENGLISH");
+      const result = await hasExistingSubscription("user1", 1);
 
       expect(result).toBe(false);
     });

@@ -1,40 +1,41 @@
 import { prisma } from "@hmcts/postgres";
 import {
-  countListTypeSubscriptionsByUserId,
   createListTypeSubscriptionRecord,
   deleteListTypeSubscriptionRecord,
-  findDuplicateListTypeSubscription,
+  findExistingListTypeSubscription,
   findListTypeSubscriptionById,
-  findListTypeSubscriptionsByUserId
+  findListTypeSubscriptionsByUserId,
+  updateListTypeSubscriptionLanguage
 } from "./queries.js";
 
-const MAX_LIST_TYPE_SUBSCRIPTIONS = 50;
-
-export async function createListTypeSubscriptions(userId: string, listTypeIds: number[], language: string) {
+export async function createListTypeSubscriptions(userId: string, listTypeIds: number[], language: string[]) {
   // De-duplicate input to prevent unique constraint violations
   const uniqueListTypeIds = Array.from(new Set(listTypeIds));
 
-  // Execute all validations and inserts atomically within a transaction
+  // Execute all validations and inserts/updates atomically within a transaction
   return prisma.$transaction(async (tx) => {
-    // Check current subscription count
-    const currentCount = await countListTypeSubscriptionsByUserId(userId, tx);
+    // Separate existing and new subscriptions
+    const existingSubscriptions: number[] = [];
+    const newSubscriptions: number[] = [];
 
-    if (currentCount + uniqueListTypeIds.length > MAX_LIST_TYPE_SUBSCRIPTIONS) {
-      throw new Error(`Maximum ${MAX_LIST_TYPE_SUBSCRIPTIONS} list type subscriptions allowed`);
-    }
-
-    // Check for duplicates
     for (const listTypeId of uniqueListTypeIds) {
-      const duplicate = await findDuplicateListTypeSubscription(userId, listTypeId, language, tx);
-      if (duplicate) {
-        throw new Error(`Already subscribed to list type ${listTypeId} with language ${language}`);
+      const existing = await findExistingListTypeSubscription(userId, listTypeId, tx);
+      if (existing) {
+        existingSubscriptions.push(listTypeId);
+      } else {
+        newSubscriptions.push(listTypeId);
       }
     }
 
-    // Create all subscriptions
-    const subscriptions = await Promise.all(uniqueListTypeIds.map((listTypeId) => createListTypeSubscriptionRecord(userId, listTypeId, language, tx)));
+    // Update existing subscriptions with new language preferences
+    await Promise.all(existingSubscriptions.map((listTypeId) => updateListTypeSubscriptionLanguage(userId, listTypeId, language, tx)));
 
-    return subscriptions;
+    // Create new subscriptions
+    await Promise.all(newSubscriptions.map((listTypeId) => createListTypeSubscriptionRecord(userId, listTypeId, language, tx)));
+
+    // Fetch and return all subscriptions (both updated and created)
+    const allSubscriptions = await findListTypeSubscriptionsByUserId(userId, tx);
+    return allSubscriptions.filter((sub: { listTypeId: number }) => uniqueListTypeIds.includes(sub.listTypeId));
   });
 }
 
@@ -58,7 +59,7 @@ export async function deleteListTypeSubscription(userId: string, listTypeSubscri
   return count;
 }
 
-export async function hasDuplicateSubscription(userId: string, listTypeId: number, language: string) {
-  const duplicate = await findDuplicateListTypeSubscription(userId, listTypeId, language);
-  return duplicate !== null;
+export async function hasExistingSubscription(userId: string, listTypeId: number) {
+  const existing = await findExistingListTypeSubscription(userId, listTypeId);
+  return existing !== null;
 }
