@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper to validate required environment variables
@@ -70,9 +71,9 @@ test.afterAll(async () => {
 test.describe("User Management", () => {
   test("system admin can search, filter, view, and delete users @nightly", async ({ page }) => {
     // Create test users for searching
-    const testEmail = `test.user.${Date.now()}@example.com`;
+    const testEmail = `test.user.${randomUUID()}@example.com`;
     const testUserId = await createTestUser(testEmail, "VERIFIED", "CFT_IDAM");
-    await createTestUser(`another.user.${Date.now()}@example.com`, "INTERNAL_ADMIN_CTSC", "SSO");
+    await createTestUser(`another.user.${randomUUID()}@example.com`, "INTERNAL_ADMIN_CTSC", "SSO");
 
     // Authenticate as system admin
     await authenticateSystemAdmin(page);
@@ -200,7 +201,7 @@ test.describe("User Management", () => {
 
   test("system admin can cancel user deletion @nightly", async ({ page }) => {
     // Create test user
-    const testEmail = `cancel.test.${Date.now()}@example.com`;
+    const testEmail = `cancel.test.${randomUUID()}@example.com`;
     const testUserId = await createTestUser(testEmail, "VERIFIED", "B2C");
 
     // Authenticate as system admin
@@ -234,7 +235,7 @@ test.describe("User Management", () => {
 
   test("system admin can filter by user ID @nightly", async ({ page }) => {
     // Create test user
-    const testEmail = `userid.test.${Date.now()}@example.com`;
+    const testEmail = `userid.test.${randomUUID()}@example.com`;
     const testUserId = await createTestUser(testEmail, "SYSTEM_ADMIN", "CRIME_IDAM");
 
     // Authenticate as system admin
