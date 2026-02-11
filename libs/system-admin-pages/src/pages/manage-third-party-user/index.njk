@@ -1,0 +1,62 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    {% if user %}
+      {% set sensitivityText = classified if highestSensitivity == 'CLASSIFIED' else (private if highestSensitivity == 'PRIVATE' else (public if highestSensitivity == 'PUBLIC' else unselected)) %}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: nameLabel
+            },
+            value: {
+              text: user.name
+            }
+          },
+          {
+            key: {
+              text: createdDateLabel
+            },
+            value: {
+              text: user.createdDate | date('DD/MM/YYYY')
+            }
+          },
+          {
+            key: {
+              text: numberOfSubscriptionsLabel
+            },
+            value: {
+              text: user.subscriptions.length
+            }
+          },
+          {
+            key: {
+              text: sensitivityLabel
+            },
+            value: {
+              text: sensitivityText
+            }
+          }
+        ]
+      }) }}
+
+      <a href="/manage-third-party-subscriptions?id={{ user.id }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-button" data-module="govuk-button">
+        {{ manageSubscriptionsButton }}
+      </a>
+
+      <a href="/delete-third-party-user?id={{ user.id }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-button govuk-button--warning" data-module="govuk-button">
+        {{ deleteUserButton }}
+      </a>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
