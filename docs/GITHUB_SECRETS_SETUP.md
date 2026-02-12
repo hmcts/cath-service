@@ -29,7 +29,7 @@ The following secrets must be configured in your GitHub repository settings (`Se
 | `SESSION_SECRET` | Session encryption secret |
 | `SSO_CLIENT_ID` | SSO Client ID |
 | `SSO_CLIENT_SECRET` | SSO Client Secret |
-| `SSO_CONFIG_ENDPOINT` | SSO configuration endpoint |
+| `SSO_ISSUER_URL` | SSO issuer URL (Azure AD v2.0 endpoint) |
 | `SSO_SG_SYSTEM_ADMIN` | SSO System Admin Group ID |
 | `SSO_SG_ADMIN_CTSC` | SSO CTSC Admin Group ID |
 | `SSO_SG_ADMIN_LOCAL` | SSO Local Admin Group ID |
