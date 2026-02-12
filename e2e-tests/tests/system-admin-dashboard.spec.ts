@@ -30,11 +30,11 @@ test.describe("System Admin Dashboard", () => {
       const tileData = [
         { title: "Upload Reference Data", href: "/upload-reference-data" },
         { title: "Delete Court", href: "/delete-court" },
-        { title: "Manage Third-Party Users", href: "/third-party-users" },
+        { title: "Manage Third Party Users", href: "/manage-third-party-users" },
         { title: "User Management", href: "/user-management" },
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
-        { title: "Audit Log Viewer", href: "/audit-log-viewer" },
+        { title: "Audit Log Viewer", href: "/audit-log-list" },
         { title: "Manage Location Metadata", href: "/location-metadata" }
       ];
 

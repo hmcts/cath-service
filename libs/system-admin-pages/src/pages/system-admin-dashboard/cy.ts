@@ -14,7 +14,7 @@ export const cy = {
     {
       title: "Rheoli Defnyddwyr Trydydd Parti",
       description: "Gweld, creu, diweddaru a dileu defnyddwyr a thanysgrifiadau trydydd parti",
-      href: "/third-party-users"
+      href: "/manage-third-party-users"
     },
     {
       title: "Rheoli Defnyddwyr",
@@ -34,7 +34,7 @@ export const cy = {
     {
       title: "Gwyliwr Log Archwilio",
       description: "Gweld logiau archwilio ar gamau gweinyddwr y system",
-      href: "/audit-log-viewer"
+      href: "/audit-log-list"
     },
     {
       title: "Rheoli Metadata Lleoliad",

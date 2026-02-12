@@ -12,9 +12,9 @@ export const en = {
       href: "/delete-court"
     },
     {
-      title: "Manage Third-Party Users",
+      title: "Manage Third Party Users",
       description: "View, create, update and remove third-party users and subscriptions",
-      href: "/third-party-users"
+      href: "/manage-third-party-users"
     },
     {
       title: "User Management",
@@ -34,7 +34,7 @@ export const en = {
     {
       title: "Audit Log Viewer",
       description: "View audit logs on system admin actions",
-      href: "/audit-log-viewer"
+      href: "/audit-log-list"
     },
     {
       title: "Manage Location Metadata",

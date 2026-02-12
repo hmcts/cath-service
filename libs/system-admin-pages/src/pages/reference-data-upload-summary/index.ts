@@ -135,6 +135,13 @@ const postHandler = async (req: Request, res: Response) => {
   delete req.session.uploadData;
   await saveSession(req.session);
 
+  // Set audit log flag
+  req.auditMetadata = {
+    shouldLog: true,
+    action: "REFERENCE_DATA_UPLOAD",
+    entityInfo: `File: ${uploadData.fileName}, Records: ${parseResult.data.length}`
+  };
+
   res.redirect("/reference-data-upload-confirmation");
 };
 

@@ -74,6 +74,13 @@ export const postHandler = async (req: Request, res: Response) => {
   // Store success flag in session
   req.session.subJurisdictionSuccess = true;
 
+  // Set audit log flag
+  req.auditMetadata = {
+    shouldLog: true,
+    action: "ADD_SUB_JURISDICTION",
+    entityInfo: `Name: ${formData.name.trim()}, Welsh Name: ${formData.welshName.trim()}, Jurisdiction ID: ${jurisdictionIdNum}`
+  };
+
   // Redirect to success page
   res.redirect(`/add-sub-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
 };
