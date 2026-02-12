@@ -12,11 +12,11 @@ vi.mock("@hmcts/publication", () => ({
     SJP: "SJP",
     SNL: "SNL",
     COMMON_PLATFORM: "COMMON_PLATFORM"
-  },
-  mockListTypes: [
-    { id: 1, englishFriendlyName: "Daily Cause List", welshFriendlyName: "Rhestr Achosion Dyddiol" },
-    { id: 8, englishFriendlyName: "Civil And Family Daily Cause List", welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu" }
-  ]
+  }
+}));
+
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findListTypeById: vi.fn()
 }));
 
 vi.mock("./queries.js", () => ({
@@ -40,7 +40,8 @@ vi.mock("@hmcts/notifications", () => ({
 }));
 
 describe("processBlobIngestion", async () => {
-  const { createArtefact, mockListTypes } = await import("@hmcts/publication");
+  const { createArtefact } = await import("@hmcts/publication");
+  const { findListTypeById } = await import("@hmcts/system-admin-pages");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
@@ -312,6 +313,11 @@ describe("processBlobIngestion", async () => {
       name: "Test Court",
       welshName: "Llys Prawf"
     });
+    vi.mocked(findListTypeById).mockResolvedValue({
+      id: 8,
+      friendlyName: "Civil And Family Daily Cause List",
+      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
+    });
     vi.mocked(sendPublicationNotifications).mockResolvedValue({
       totalSubscriptions: 5,
       sent: 5,
@@ -367,6 +373,11 @@ describe("processBlobIngestion", async () => {
       id: 123,
       name: "Test Court",
       welshName: "Llys Prawf"
+    });
+    vi.mocked(findListTypeById).mockResolvedValue({
+      id: 8,
+      friendlyName: "Civil And Family Daily Cause List",
+      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
     });
     vi.mocked(sendPublicationNotifications).mockRejectedValue(new Error("Notification service down"));
 
@@ -453,6 +464,7 @@ describe("processBlobIngestion", async () => {
       name: "Test Court",
       welshName: "Llys Prawf"
     });
+    vi.mocked(findListTypeById).mockResolvedValue(null);
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -480,6 +492,11 @@ describe("processBlobIngestion", async () => {
       id: 123,
       name: "Test Court",
       welshName: "Llys Prawf"
+    });
+    vi.mocked(findListTypeById).mockResolvedValue({
+      id: 8,
+      friendlyName: "Civil And Family Daily Cause List",
+      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
     });
     vi.mocked(sendPublicationNotifications).mockResolvedValue({
       totalSubscriptions: 5,

@@ -1,6 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { getArtefactsByLocation, mockListTypes } from "@hmcts/publication";
+import { getArtefactsByLocation } from "@hmcts/publication";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.js";
 import cy from "./cy.js";
@@ -62,9 +63,20 @@ const getHandler = async (req: Request, res: Response) => {
   const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
   const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
 
+  // Fetch list types from database and create a map for quick lookup
+  const listTypes = await findAllListTypes();
+  const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+
   let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-    const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
+    const listType = listTypeMap.get(artefact.listTypeId);
+    let listTypeName = String(artefact.listTypeId);
+    if (listType) {
+      if (locale === "cy") {
+        listTypeName = listType.welshFriendlyName || listType.friendlyName || String(artefact.listTypeId);
+      } else {
+        listTypeName = listType.friendlyName || String(artefact.listTypeId);
+      }
+    }
 
     return {
       artefactId: artefact.artefactId,
@@ -115,11 +127,25 @@ const postHandler = async (req: Request, res: Response) => {
 
     const artefacts = await getArtefactsByLocation(sessionData.locationId);
     const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
-    const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
+    let courtName = sessionData.locationId;
+    if (location) {
+      courtName = locale === "cy" ? location.welshName : location.name;
+    }
+
+    // Fetch list types from database and create a map for quick lookup
+    const listTypes = await findAllListTypes();
+    const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
 
     let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
-      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
+      const listType = listTypeMap.get(artefact.listTypeId);
+      let listTypeName = String(artefact.listTypeId);
+      if (listType) {
+        if (locale === "cy") {
+          listTypeName = listType.welshFriendlyName || listType.friendlyName || String(artefact.listTypeId);
+        } else {
+          listTypeName = listType.friendlyName || String(artefact.listTypeId);
+        }
+      }
 
       return {
         artefactId: artefact.artefactId,

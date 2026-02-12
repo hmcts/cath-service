@@ -11,6 +11,9 @@ vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
     }
   }
 }));
@@ -22,6 +25,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
   let res: Partial<Response>;
   const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
+  const mockListType = {
+    id: 8,
+    allowedProvenance: ["MANUAL_UPLOAD"],
+    isNonStrategic: false
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     req = {
@@ -32,6 +41,8 @@ describe("civil-and-family-daily-cause-list controller", () => {
       status: vi.fn().mockReturnThis(),
       render: vi.fn()
     };
+    // Default mock for listType - tests can override if needed
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType as any);
   });
 
   afterAll(() => {

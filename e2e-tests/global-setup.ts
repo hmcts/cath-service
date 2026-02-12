@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "@hmcts/postgres";
 import { seedAllReferenceData } from "./utils/seed-reference-data.js";
+import { seedListTypes } from "./utils/seed-list-types.js";
 import { seedLocationData } from "./utils/seed-location-data.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
 import type { FullConfig } from "@playwright/test";
@@ -66,11 +67,15 @@ async function globalSetup(config: FullConfig) {
     console.log("Seeding reference data (jurisdictions, sub-jurisdictions, regions)...");
     await seedAllReferenceData();
 
-    // Step 4: Seed location data directly (avoids SSO issues in CI)
+    // Step 4: Seed list types (required for VIBE-309 Configure List Type feature)
+    console.log("Seeding list types...");
+    await seedListTypes();
+
+    // Step 5: Seed location data directly (avoids SSO issues in CI)
     console.log("Seeding test location data...");
     await seedLocationData();
 
-    // Step 5: Verify all seed data is correct
+    // Step 6: Verify all seed data is correct
     console.log("\nVerifying seed data...");
     const verificationResult = await verifySeedData();
 
@@ -82,7 +87,7 @@ async function globalSetup(config: FullConfig) {
       console.warn("Seed data has warnings (non-fatal):", verificationResult.warnings);
     }
 
-    // Step 6: Query all existing artefact IDs before tests run
+    // Step 7: Query all existing artefact IDs before tests run
     const existingArtefacts = await prisma.artefact.findMany({
       select: { artefactId: true }
     });
@@ -93,7 +98,7 @@ async function globalSetup(config: FullConfig) {
     fs.writeFileSync(ARTEFACT_TRACKING_FILE, JSON.stringify(existingIds, null, 2));
     console.log(`Stored ${existingIds.length} existing artefact(s) before E2E tests`);
 
-    // Step 7: Query all existing location IDs before tests run
+    // Step 8: Query all existing location IDs before tests run
     const existingLocations = await (prisma as any).location.findMany({
       select: { locationId: true }
     });
