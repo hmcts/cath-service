@@ -31,6 +31,16 @@ function getConfigValue(key: string): string {
 }
 
 /**
+ * Appends the OpenID Connect discovery endpoint path to a base URL
+ * The passport-azure-ad library requires the full .well-known/openid-configuration URL
+ */
+function appendOpenIdConfigPath(baseUrl: string): string {
+  if (!baseUrl) return "";
+  const trimmed = baseUrl.replace(/\/$/, "");
+  return `${trimmed}/.well-known/openid-configuration`;
+}
+
+/**
  * Loads SSO configuration from config object or environment variables
  * @returns SSO configuration object
  */
@@ -39,7 +49,7 @@ export function getSsoConfig(): SsoConfig {
   const redirectUri = `${baseUrl}/sso/return`;
 
   return {
-    identityMetadata: getConfigValue("SSO_IDENTITY_METADATA"),
+    identityMetadata: appendOpenIdConfigPath(getConfigValue("SSO_IDENTITY_METADATA")),
     clientId: getConfigValue("SSO_CLIENT_ID"),
     clientSecret: getConfigValue("SSO_CLIENT_SECRET"),
     redirectUri,
