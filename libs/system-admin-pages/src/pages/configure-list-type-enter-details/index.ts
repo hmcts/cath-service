@@ -35,14 +35,13 @@ const getHandler = async (req: Request, res: Response) => {
     } else {
       formData = session.configureListType;
     }
-  } else {
-    delete session.configureListType;
-    formData = {};
+  } else if (session.configureListType) {
+    formData = session.configureListType;
   }
 
   const checkedProvenance = {
     CFT_IDAM: formData.allowedProvenance?.includes("CFT_IDAM") || false,
-    B2C: formData.allowedProvenance?.includes("B2C") || false,
+    PI_AAD: formData.allowedProvenance?.includes("PI_AAD") || false,
     COMMON_PLATFORM: formData.allowedProvenance?.includes("COMMON_PLATFORM") || false
   };
 

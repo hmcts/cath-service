@@ -17,6 +17,8 @@ export const configureListType = {
     allowedProvenanceRow: "Tarddiad a ganiateir",
     isNonStrategicRow: "A yw'n answrategol",
     subJurisdictionsRow: "Is-awdurdodaethau",
-    changeLink: "Newid"
+    changeLink: "Newid",
+    yesOption: "Ydy",
+    noOption: "Nac ydy"
   }
 };

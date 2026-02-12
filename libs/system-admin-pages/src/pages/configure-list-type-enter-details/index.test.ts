@@ -60,7 +60,7 @@ describe("enter-details page", () => {
       expect(res.render).toHaveBeenCalled();
     });
 
-    it("should clear session and render empty form when no id provided", async () => {
+    it("should preserve session data and pre-fill form when returning from later step", async () => {
       const sessionData = {
         name: "TEST_LIST",
         friendlyName: "Test",
@@ -78,8 +78,14 @@ describe("enter-details page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(session.configureListType).toBeUndefined();
-      expect(res.render).toHaveBeenCalledWith("configure-list-type-enter-details/index", expect.objectContaining({ data: {}, isEdit: false }));
+      expect(session.configureListType).toEqual(sessionData);
+      expect(res.render).toHaveBeenCalledWith(
+        "configure-list-type-enter-details/index",
+        expect.objectContaining({
+          data: sessionData,
+          checkedProvenance: { CFT_IDAM: true, PI_AAD: false, COMMON_PLATFORM: false }
+        })
+      );
     });
 
     it("should load existing list type when id provided", async () => {
@@ -91,7 +97,7 @@ describe("enter-details page", () => {
         shortenedFriendlyName: "Exist",
         url: "/exist",
         defaultSensitivity: "Private",
-        allowedProvenance: "CFT_IDAM,B2C",
+        allowedProvenance: "CFT_IDAM,PI_AAD",
         isNonStrategic: true,
         subJurisdictions: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
       };
@@ -114,7 +120,7 @@ describe("enter-details page", () => {
         shortenedFriendlyName: "Exist",
         url: "/exist",
         defaultSensitivity: "Private",
-        allowedProvenance: "CFT_IDAM,B2C",
+        allowedProvenance: "CFT_IDAM,PI_AAD",
         isNonStrategic: true,
         subJurisdictions: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
       };
@@ -127,7 +133,7 @@ describe("enter-details page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "configure-list-type-enter-details/index",
         expect.objectContaining({
-          checkedProvenance: { CFT_IDAM: true, B2C: true, COMMON_PLATFORM: false }
+          checkedProvenance: { CFT_IDAM: true, PI_AAD: true, COMMON_PLATFORM: false }
         })
       );
     });

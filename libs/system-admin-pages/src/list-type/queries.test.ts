@@ -145,7 +145,7 @@ describe("list-type-queries", () => {
         shortenedFriendlyName: "New",
         url: "/new-list",
         defaultSensitivity: "Public",
-        allowedProvenance: ["CFT_IDAM", "B2C"],
+        allowedProvenance: ["CFT_IDAM", "PI_AAD"],
         isNonStrategic: false,
         subJurisdictionIds: [1, 2]
       };
@@ -163,7 +163,7 @@ describe("list-type-queries", () => {
           shortenedFriendlyName: "New",
           url: "/new-list",
           defaultSensitivity: "Public",
-          allowedProvenance: "CFT_IDAM,B2C",
+          allowedProvenance: "CFT_IDAM,PI_AAD",
           isNonStrategic: false,
           subJurisdictions: {
             create: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]

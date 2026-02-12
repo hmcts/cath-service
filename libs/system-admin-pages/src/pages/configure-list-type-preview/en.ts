@@ -17,6 +17,8 @@ export const configureListType = {
     allowedProvenanceRow: "Allowed provenance",
     isNonStrategicRow: "Is non-strategic",
     subJurisdictionsRow: "Sub-jurisdictions",
-    changeLink: "Change"
+    changeLink: "Change",
+    yesOption: "Yes",
+    noOption: "No"
   }
 };
