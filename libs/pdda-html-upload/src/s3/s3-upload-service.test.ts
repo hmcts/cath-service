@@ -5,8 +5,7 @@ vi.mock("@aws-sdk/client-s3", () => ({
   S3Client: vi.fn().mockImplementation(() => ({
     send: vi.fn()
   })),
-  PutObjectCommand: vi.fn(),
-  HeadObjectCommand: vi.fn()
+  PutObjectCommand: vi.fn()
 }));
 
 vi.mock("./s3-client.js", () => ({
@@ -52,7 +51,7 @@ describe("uploadHtmlToS3", () => {
     expect(result.success).toBe(true);
     expect(result.bucketName).toBe("test-bucket");
     expect(result.s3Key).toMatch(/^test-prefix\/\d{4}\/\d{2}\/\d{2}\/.+\.html$/);
-    expect(mockS3Send).toHaveBeenCalledTimes(2);
+    expect(mockS3Send).toHaveBeenCalledTimes(1);
   });
 
   it("should generate S3 key with date-based path and UUID", async () => {
