@@ -91,9 +91,9 @@ export function validateUserId(userId: string): boolean {
     return false;
   }
 
-  // Alphanumeric validation with bounded quantifier
-  const alphanumericRegex = /^[a-zA-Z0-9]{1,50}$/;
-  return alphanumericRegex.test(userId);
+  // Alphanumeric and dash validation with bounded quantifier
+  const userIdRegex = /^[a-zA-Z0-9-]{1,50}$/;
+  return userIdRegex.test(userId);
 }
 
 export function parseDate(day: string, month: string, year: string): Date | null {
