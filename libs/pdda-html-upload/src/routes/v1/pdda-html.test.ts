@@ -148,7 +148,7 @@ describe("POST /api/v1/pdda-html", () => {
     expect(mockStatus).toHaveBeenCalledWith(500);
     expect(mockJson).toHaveBeenCalledWith({
       success: false,
-      message: "The file could not be uploaded to storage. Try again.",
+      message: "Internal server error",
       correlation_id: "test-correlation-id"
     });
   });

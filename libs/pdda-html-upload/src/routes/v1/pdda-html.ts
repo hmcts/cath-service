@@ -59,7 +59,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     const response: PddaHtmlUploadResponse = {
       success: false,
-      message: error instanceof Error ? error.message : "Internal server error",
+      message: "Internal server error",
       correlation_id: correlationId
     };
     return res.status(500).json(response);
