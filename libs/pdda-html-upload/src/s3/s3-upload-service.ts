@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import type { S3UploadResult } from "../types.js";
 import { createS3Client } from "./s3-client.js";
 
@@ -35,12 +35,6 @@ export async function uploadHtmlToS3(fileBuffer: Buffer, originalFilename: strin
     });
 
     await s3Client.send(putCommand);
-
-    const headCommand = new HeadObjectCommand({
-      Bucket: bucketName,
-      Key: s3Key
-    });
-    await s3Client.send(headCommand);
 
     return {
       success: true,
