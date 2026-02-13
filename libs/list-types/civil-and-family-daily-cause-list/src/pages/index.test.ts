@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { prisma } from "@hmcts/postgres";
+import { getArtefactById } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderCauseListData } from "../rendering/renderer.js";
@@ -7,11 +7,13 @@ import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
 import { GET } from "./index.js";
 
 vi.mock("node:fs/promises");
-vi.mock("@hmcts/postgres", () => ({
-  prisma: {
-    artefact: {
-      findUnique: vi.fn()
-    }
+vi.mock("@hmcts/publication", () => ({
+  getArtefactById: vi.fn(),
+  canAccessPublicationData: vi.fn(() => true),
+  mockListTypes: [],
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    LIST_ASSIST: "List Assist"
   }
 }));
 vi.mock("../validation/json-validator.js");
@@ -56,13 +58,11 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
     it("should return 404 when artefact is not found", async () => {
       req.query = { artefactId: "nonexistent-id" };
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
-      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-        where: { artefactId: "nonexistent-id" }
-      });
+      expect(getArtefactById).toHaveBeenCalledWith("nonexistent-id");
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
@@ -84,7 +84,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         supersededCount: 0,
         noMatch: false
       } as any;
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
 
       await GET(req as Request, res as Response);
@@ -111,7 +111,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         supersededCount: 0,
         noMatch: false
       } as any;
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify({ invalid: "data" }));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: false,
@@ -155,7 +155,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         },
         courtLists: []
       };
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
@@ -216,7 +216,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         },
         courtLists: []
       };
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
@@ -267,7 +267,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         },
         courtLists: []
       };
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
@@ -290,7 +290,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
     it("should return 500 when an unexpected error occurs", async () => {
       req.query = { artefactId: "test-id" };
-      vi.mocked(prisma.artefact.findUnique).mockRejectedValue(new Error("Database error"));
+      vi.mocked(getArtefactById).mockRejectedValue(new Error("Database error"));
 
       await GET(req as Request, res as Response);
 
@@ -327,7 +327,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         },
         courtLists: []
       };
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
@@ -377,7 +377,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         },
         courtLists: []
       };
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,

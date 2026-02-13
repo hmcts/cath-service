@@ -1,6 +1,11 @@
-import { createConverter, type ExcelConverterConfig, registerConverter, validateDateFormat, validateNoHtmlTags } from "@hmcts/list-types-common";
-
-const DATE_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/;
+import {
+  createConverter,
+  DD_MM_YYYY_PATTERN,
+  type ExcelConverterConfig,
+  registerConverter,
+  validateDateFormat,
+  validateNoHtmlTags
+} from "@hmcts/list-types-common";
 
 // Care Standards Tribunal Weekly Hearing List (listTypeId: 9)
 export const CST_EXCEL_CONFIG: ExcelConverterConfig = {
@@ -9,7 +14,7 @@ export const CST_EXCEL_CONFIG: ExcelConverterConfig = {
       header: "Date",
       fieldName: "date",
       required: true,
-      validators: [validateDateFormat(DATE_PATTERN, "dd/MM/yyyy (e.g., 02/01/2025)")]
+      validators: [validateDateFormat(DD_MM_YYYY_PATTERN, "dd/MM/yyyy (e.g., 02/01/2025)")]
     },
     {
       header: "Case name",
