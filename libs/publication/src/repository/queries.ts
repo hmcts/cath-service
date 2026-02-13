@@ -66,6 +66,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
   const artefact = await prisma.artefact.create({
     data: {
       artefactId: data.artefactId,
+      type: "LIST",
       locationId: data.locationId,
       listTypeId: data.listTypeId,
       contentDate: data.contentDate,
@@ -75,7 +76,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
       displayTo: data.displayTo,
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
-      noMatch: data.noMatch
+      noMatch: data.noMatch ?? false
     }
   });
   return artefact.artefactId;
