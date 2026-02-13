@@ -1,5 +1,8 @@
 export const en = {
   pageTitle: "Care Standards Tribunal Weekly Hearing List",
+  listForWeekCommencing: "List for week commencing",
+  lastUpdated: "Last updated",
+  at: "at",
   factLinkText: "Find contact details and other information about courts and tribunals",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
@@ -18,5 +21,11 @@ export const en = {
     additionalInformation: "Additional information"
   },
   dataSource: "Data source",
-  backToTop: "Back to top"
+  backToTop: "Back to top",
+  provenanceLabels: {
+    MANUAL_UPLOAD: "Manual Upload",
+    XHIBIT: "XHIBIT",
+    SNL: "SNL",
+    COMMON_PLATFORM: "Common Platform"
+  }
 };
