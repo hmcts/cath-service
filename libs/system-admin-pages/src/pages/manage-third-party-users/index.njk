@@ -1,0 +1,44 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <a href="/create-third-party-user{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-button" data-module="govuk-button">
+      {{ createNewUserButton }}
+    </a>
+
+    {% if users and users.length > 0 %}
+      {% set tableRows = [] %}
+      {% for user in users %}
+        {% set sensitivityText = classified if user.highestSensitivity == 'CLASSIFIED' else (private if user.highestSensitivity == 'PRIVATE' else (public if user.highestSensitivity == 'PUBLIC' else unselected)) %}
+        {% set tableRows = (tableRows.push([
+          { text: user.name },
+          { text: user.createdDate | date('DD/MM/YYYY') },
+          { text: user.subscriptions.length },
+          { text: sensitivityText },
+          { html: '<a href="/manage-third-party-user?id=' + user.id + ('&lng=cy' if lng == 'cy' else '') + '" class="govuk-link">' + manageLink + '</a>' }
+        ]), tableRows) %}
+      {% endfor %}
+
+      {{ govukTable({
+        head: [
+          { text: nameColumnHeader },
+          { text: createdDateColumnHeader },
+          { text: numberOfSubscriptionsColumnHeader },
+          { text: sensitivityColumnHeader },
+          { text: actionsColumnHeader }
+        ],
+        rows: tableRows
+      }) }}
+    {% else %}
+      <p class="govuk-body">{{ noUsersMessage }}</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
