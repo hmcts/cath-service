@@ -199,12 +199,12 @@ describe("validateBlobRequest", () => {
   });
 
   it("should reject request exceeding size limit", async () => {
-    const result = await validateBlobRequest(validRequest, 11 * 1024 * 1024);
+    const result = await validateBlobRequest(validRequest, 101 * 1024 * 1024);
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toContainEqual({
       field: "body",
-      message: "Payload too large. Maximum size is 10MB"
+      message: "Payload too large. Maximum size is 100MB"
     });
   });
 
