@@ -63,6 +63,11 @@ vi.mock("@hmcts/auth/config", () => ({
   pageRoutes: { path: "/mock/auth/pages" }
 }));
 
+vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list/config", () => ({
+  moduleRoot: "/mock/care-standards-tribunal",
+  pageRoutes: { path: "/mock/care-standards-tribunal/pages" }
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   moduleRoot: "/mock/civil-family",
   pageRoutes: { path: "/mock/civil-family/pages" }
@@ -77,6 +82,7 @@ vi.mock("@hmcts/location/config", () => ({
 }));
 
 vi.mock("@hmcts/public-pages/config", () => ({
+  apiRoutes: { path: "/mock/public-pages/routes" },
   fileUploadRoutes: ["/create-media-account"],
   moduleRoot: "/mock/public-pages",
   pageRoutes: { path: "/mock/public-pages/pages" }
@@ -199,8 +205,8 @@ describe("Web Application", () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
 
-      // Verify system-admin routes were registered (should have 9 total calls)
-      expect(calls.length).toBeGreaterThanOrEqual(9);
+      // Verify system-admin routes were registered (should have 11 total calls)
+      expect(calls.length).toBeGreaterThanOrEqual(11);
     });
 
     it("should configure error handlers at the end", async () => {
