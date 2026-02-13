@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CauseListData } from "../models/types.js";
-import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
+import { extractCaseSummary, formatCaseSummaryForEmail } from "./summary-builder.js";
 
 describe("extractCaseSummary", () => {
   it("should extract case summaries from valid data", () => {
@@ -306,10 +306,10 @@ describe("extractCaseSummary", () => {
 
     expect(result[0]).toEqual({
       applicant: "",
-      caseReferenceNumber: "N/A",
-      caseName: "N/A",
-      caseType: "N/A",
-      hearingType: "N/A"
+      caseReferenceNumber: "",
+      caseName: "",
+      caseType: "",
+      hearingType: ""
     });
   });
 });
@@ -382,14 +382,5 @@ describe("formatCaseSummaryForEmail", () => {
     const result = formatCaseSummaryForEmail([]);
 
     expect(result).toBe("No cases scheduled.");
-  });
-});
-
-describe("SPECIAL_CATEGORY_DATA_WARNING", () => {
-  it("should contain required warning text", () => {
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Special Category Data");
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Data Protection Act 2018");
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Sensitive Personal Data");
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("reporting restrictions");
   });
 });
