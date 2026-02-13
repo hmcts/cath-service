@@ -99,4 +99,3 @@ export const PDF_CIVIL_FAMILY_STYLES = `
       font-style: italic;
     }
 `;
-
