@@ -5,6 +5,7 @@ import {
   configureNunjucks,
   createPdfErrorResult,
   loadTranslations,
+  PDF_BASE_STYLES,
   type PdfGenerationResult,
   savePdfToStorage
 } from "@hmcts/list-types-common";
@@ -43,7 +44,8 @@ export async function generateLondonAdministrativeCourtDailyCauseListPdf(options
       mainHearings: renderedData.mainHearings,
       planningCourt: renderedData.planningCourt,
       dataSource: provenanceLabel,
-      t: translations
+      t: translations,
+      pdfStyles: PDF_BASE_STYLES
     });
 
     const pdfResult = await generatePdfFromHtml(html);

@@ -35,6 +35,7 @@ export {
   savePdfToStorage,
   TEMP_STORAGE_BASE
 } from "./pdf/pdf-utilities.js";
+export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
 export { convertListTypeNameToKebabCase, validateListTypeJson } from "./validation/list-type-validator.js";

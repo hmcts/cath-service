@@ -11,7 +11,9 @@ vi.mock("@hmcts/list-types-common", () => ({
   savePdfToStorage: mockSavePdfToStorage,
   createPdfErrorResult: mockCreatePdfErrorResult,
   configureNunjucks: mockConfigureNunjucks,
-  loadTranslations: mockLoadTranslations
+  loadTranslations: mockLoadTranslations,
+  PDF_BASE_STYLES: "/* base styles */",
+  PDF_CIVIL_FAMILY_STYLES: "/* civil family styles */"
 }));
 
 vi.mock("@hmcts/pdf-generation", () => ({

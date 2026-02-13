@@ -5,6 +5,8 @@ import {
   configureNunjucks,
   createPdfErrorResult,
   loadTranslations,
+  PDF_BASE_STYLES,
+  PDF_CIVIL_FAMILY_STYLES,
   type PdfGenerationResult,
   savePdfToStorage
 } from "@hmcts/list-types-common";
@@ -44,7 +46,8 @@ export async function generateCauseListPdf(options: PdfGenerationOptions): Promi
       openJustice: renderedData.openJustice,
       listData: renderedData.listData,
       dataSource: provenanceLabel,
-      t: translations
+      t: translations,
+      pdfStyles: PDF_BASE_STYLES + PDF_CIVIL_FAMILY_STYLES
     });
 
     const pdfResult = await generatePdfFromHtml(html);
