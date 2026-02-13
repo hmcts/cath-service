@@ -219,11 +219,12 @@ describe("audit-log service", () => {
       expect(validateUserId("ABC123")).toBe(true);
       expect(validateUserId("123456")).toBe(true);
       expect(validateUserId("a")).toBe(true);
+      expect(validateUserId("user-123")).toBe(true);
+      expect(validateUserId("abc-def-ghi")).toBe(true);
     });
 
     it("should return false for invalid user ID", () => {
       expect(validateUserId("user@123")).toBe(false);
-      expect(validateUserId("user-123")).toBe(false);
       expect(validateUserId("user 123")).toBe(false);
       expect(validateUserId("user_123")).toBe(false);
       expect(validateUserId("")).toBe(false);

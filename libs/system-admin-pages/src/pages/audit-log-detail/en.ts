@@ -27,7 +27,7 @@ export const en = {
   noResults: "There are no audit log entries that match your filters",
   invalidDate: "Enter a valid date",
   invalidEmail: "Enter a valid email address",
-  invalidUserId: "User ID must contain only letters and numbers",
+  invalidUserId: "User ID must contain only letters, numbers and dashes",
   backToTop: "Back to top",
 
   // Audit Log Detail View

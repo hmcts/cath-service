@@ -27,7 +27,7 @@ export const cy = {
   noResults: "Nid oes unrhyw gofnodion log archwilio sy'n cyd-fynd â'ch hidlyddion",
   invalidDate: "Rhowch ddyddiad dilys",
   invalidEmail: "Rhowch gyfeiriad e-bost dilys",
-  invalidUserId: "Rhaid i ID Defnyddiwr gynnwys llythrennau a rhifau yn unig",
+  invalidUserId: "Rhaid i ID Defnyddiwr gynnwys llythrennau, rhifau a llinellau toriad yn unig",
   backToTop: "Yn ôl i'r brig",
 
   // Audit Log Detail View
