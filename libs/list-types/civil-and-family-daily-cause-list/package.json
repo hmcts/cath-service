@@ -13,8 +13,9 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
+    "build": "tsc && yarn build:nunjucks && yarn build:pdf-templates",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -24,14 +25,17 @@
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
+    "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "luxon": "3.7.2"
+    "luxon": "3.7.2",
+    "nunjucks": "3.2.4"
   },
   "devDependencies": {
     "@types/luxon": "3.7.1",
     "@types/node": "24.10.4",
+    "@types/nunjucks": "3.2.6",
     "typescript": "5.9.3",
     "vitest": "4.0.16"
   },
