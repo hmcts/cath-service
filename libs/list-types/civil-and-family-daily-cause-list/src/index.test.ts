@@ -19,6 +19,5 @@ describe("index exports", () => {
     expect(exportKeys).toContain("generateCauseListPdf");
     expect(exportKeys).toContain("extractCaseSummary");
     expect(exportKeys).toContain("formatCaseSummaryForEmail");
-    expect(exportKeys).toContain("SPECIAL_CATEGORY_DATA_WARNING");
   });
 });

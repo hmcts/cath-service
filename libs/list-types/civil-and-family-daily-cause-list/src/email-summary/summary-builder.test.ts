@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CauseListData } from "../models/types.js";
-import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
+import { extractCaseSummary, formatCaseSummaryForEmail } from "./summary-builder.js";
 
 describe("extractCaseSummary", () => {
   it("should extract case summaries from valid data", () => {
@@ -305,10 +305,10 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(testData);
 
     expect(result[0]).toEqual([
-      { label: "Case reference", value: "N/A" },
-      { label: "Case name", value: "N/A" },
-      { label: "Case type", value: "N/A" },
-      { label: "Hearing type", value: "N/A" }
+      { label: "Case reference", value: "" },
+      { label: "Case name", value: "" },
+      { label: "Case type", value: "" },
+      { label: "Hearing type", value: "" }
     ]);
   });
 });

@@ -40,8 +40,10 @@
 [ARIA tags and compliance needs]
 
 ## 13. Test Scenarios
-* [Scenario 1]
-* [Scenario 2]
+(High-level scenario descriptions only - do not include actual test code)
+
+* [Scenario description 1]
+* [Scenario description 2]
 
 ## 14. Assumptions & Open Questions
 * [Item 1]

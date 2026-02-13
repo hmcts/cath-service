@@ -30,7 +30,7 @@ import {
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
-import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
+import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
 const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
 
@@ -157,10 +157,6 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
 async function validateUserEmail(subscription: SubscriptionWithUser, publicationId: string): Promise<UserNotificationResult | null> {
   if (!subscription.user.email) {
     return skipNotification(subscription, publicationId, "No email address");
-  }
-
-  if (!isValidEmail(subscription.user.email)) {
-    return skipNotification(subscription, publicationId, "Invalid email format");
   }
 
   return null;

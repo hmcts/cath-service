@@ -1,7 +1,7 @@
 import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
 import type { CauseListCase, CauseListData, Party } from "../models/types.js";
 
-export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
+export { formatCaseSummaryForEmail };
 
 function convertPartyRole(role: string): string {
   const roleMap: Record<string, string> = {
@@ -67,10 +67,10 @@ export function extractCaseSummary(jsonData: CauseListData): CaseSummary[] {
               if (applicant) {
                 fields.push({ label: "Applicant", value: applicant });
               }
-              fields.push({ label: "Case reference", value: caseItem.caseNumber || "N/A" });
-              fields.push({ label: "Case name", value: caseItem.caseName || "N/A" });
-              fields.push({ label: "Case type", value: caseItem.caseType || "N/A" });
-              fields.push({ label: "Hearing type", value: hearing.hearingType || "N/A" });
+              fields.push({ label: "Case reference", value: caseItem.caseNumber || "" });
+              fields.push({ label: "Case name", value: caseItem.caseName || "" });
+              fields.push({ label: "Case type", value: caseItem.caseType || "" });
+              fields.push({ label: "Hearing type", value: hearing.hearingType || "" });
 
               summaries.push(fields);
             }

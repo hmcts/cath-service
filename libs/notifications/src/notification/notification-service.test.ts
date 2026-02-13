@@ -134,48 +134,6 @@ describe("notification-service", () => {
     expect(result.skipped).toBe(0);
   });
 
-  it("should skip users with invalid email", async () => {
-    const mockSubscriptions = [
-      {
-        subscriptionId: "sub-1",
-        userId: "user-1",
-        locationId: 1,
-        user: {
-          email: "invalid-email",
-          firstName: "John",
-          surname: "Doe"
-        }
-      }
-    ];
-
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
-    const { createNotificationAuditLog } = await import("./notification-queries.js");
-
-    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
-    vi.mocked(createNotificationAuditLog).mockResolvedValue({
-      notificationId: "notif-1",
-      subscriptionId: "sub-1",
-      userId: "user-1",
-      publicationId: "pub-1",
-      status: "Skipped",
-      errorMessage: null,
-      createdAt: new Date(),
-      sentAt: null
-    });
-
-    const result = await sendPublicationNotifications({
-      publicationId: "pub-1",
-      locationId: "1",
-      locationName: "Test Court",
-      hearingListName: "Daily Cause List",
-      publicationDate: new Date("2024-12-01")
-    });
-
-    expect(result.totalSubscriptions).toBe(1);
-    expect(result.skipped).toBe(1);
-    expect(result.sent).toBe(0);
-  });
-
   it("should return empty result when no subscriptions exist", async () => {
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);

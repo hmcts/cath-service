@@ -22,7 +22,7 @@ nodejs:
           alias: SSO_CLIENT_ID
         - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
-        - name: sso-config-endpoint
+        - name: sso-issuer-url
           alias: SSO_IDENTITY_METADATA
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
