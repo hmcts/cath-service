@@ -1,7 +1,7 @@
 import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
 import type { CauseListCase, CauseListData, Party } from "../models/types.js";
 
-export { formatCaseSummaryForEmail };
+export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 
 function convertPartyRole(role: string): string {
   const roleMap: Record<string, string> = {

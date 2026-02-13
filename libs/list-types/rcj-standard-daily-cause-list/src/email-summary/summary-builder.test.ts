@@ -38,7 +38,7 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(0);
   });
 
-  it("should handle missing case details with N/A", () => {
+  it("should handle missing case details with empty string", () => {
     const hearingList: StandardHearingList = [
       {
         venue: "Royal Courts of Justice",
@@ -55,9 +55,9 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Time", value: "N/A" },
-      { label: "Case number", value: "N/A" },
-      { label: "Case details", value: "N/A" }
+      { label: "Time", value: "" },
+      { label: "Case number", value: "" },
+      { label: "Case details", value: "" }
     ]);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CauseListData } from "../models/types.js";
-import { extractCaseSummary, formatCaseSummaryForEmail } from "./summary-builder.js";
+import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
 
 describe("extractCaseSummary", () => {
   it("should extract case summaries from valid data", () => {
@@ -259,7 +259,7 @@ describe("extractCaseSummary", () => {
     expect(result[0].find((f) => f.label === "Applicant")?.value).toBe("Test Company Ltd");
   });
 
-  it("should handle missing optional fields with N/A", () => {
+  it("should handle missing optional fields with empty string", () => {
     const testData: CauseListData = {
       document: {
         publicationDate: "2025-01-28T10:00:00Z"

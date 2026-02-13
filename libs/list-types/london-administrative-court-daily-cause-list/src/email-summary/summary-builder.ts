@@ -5,9 +5,9 @@ export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 
 function mapHearingToSummary(hearing: StandardHearing): CaseSummary {
   return [
-    { label: "Time", value: hearing.time || "N/A" },
-    { label: "Case number", value: hearing.caseNumber || "N/A" },
-    { label: "Case details", value: hearing.caseDetails || "N/A" }
+    { label: "Time", value: hearing.time || "" },
+    { label: "Case number", value: hearing.caseNumber || "" },
+    { label: "Case details", value: hearing.caseDetails || "" }
   ];
 }
 

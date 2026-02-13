@@ -5,7 +5,7 @@ export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 
 export function extractCaseSummary(jsonData: CareStandardsTribunalHearingList): CaseSummary[] {
   return jsonData.map((hearing) => [
-    { label: "Date", value: hearing.date || "N/A" },
-    { label: "Case name", value: hearing.caseName || "N/A" }
+    { label: "Date", value: hearing.date || "" },
+    { label: "Case name", value: hearing.caseName || "" }
   ]);
 }

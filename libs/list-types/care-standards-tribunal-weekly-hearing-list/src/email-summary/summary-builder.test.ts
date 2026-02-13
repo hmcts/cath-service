@@ -51,7 +51,7 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(0);
   });
 
-  it("should handle missing case details with N/A", () => {
+  it("should handle missing case details with empty string", () => {
     const hearingList: CareStandardsTribunalHearingList = [
       {
         date: "",
@@ -67,8 +67,8 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Date", value: "N/A" },
-      { label: "Case name", value: "N/A" }
+      { label: "Date", value: "" },
+      { label: "Case name", value: "" }
     ]);
   });
 });
