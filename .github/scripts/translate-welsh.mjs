@@ -15,6 +15,11 @@ try {
   process.exit(1);
 }
 
+if (typeof catalogue !== "object" || catalogue === null || Array.isArray(catalogue)) {
+  console.error("Welsh translation catalogue must be a JSON object (key-value map).");
+  process.exit(1);
+}
+
 const MARKER_REGEX = /\[TRANSLATE:\s*"([^"]+)"\]/g;
 
 function translateMarkers(content) {

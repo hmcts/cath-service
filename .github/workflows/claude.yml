@@ -390,7 +390,10 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if [ -f /tmp/spec-output.md ]; then
-            node .github/scripts/translate-welsh.js < /tmp/spec-output.md > /tmp/spec-translated.md
+            if ! node .github/scripts/translate-welsh.mjs < /tmp/spec-output.md > /tmp/spec-translated.md; then
+              echo "::error::Welsh translation post-processing failed"
+              exit 1
+            fi
             gh issue comment ${{ github.event.issue.number }} --body-file /tmp/spec-translated.md
           else
             echo "::error::Spec file not generated at /tmp/spec-output.md"
