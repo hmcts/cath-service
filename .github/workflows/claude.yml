@@ -369,10 +369,25 @@ jobs:
             4. Fill in ALL sections of the template with specific, actionable content based on the issue
             5. Replace all placeholder text [in brackets] with real content
             6. For wireframes, use ASCII art diagrams
-            7. Post the completed specification as a comment on issue #${{ github.event.issue.number }} using:
-               gh issue comment ${{ github.event.issue.number }} --body "<specification>"
+            7. For Welsh translations, use markers: [TRANSLATE: "English text here"]
+               - These markers will be processed by a translation script after generation
+               - Use markers for ALL Welsh text - the script handles lookups and missing translations
+            8. Write the completed specification to /tmp/spec-output.md using the Write tool
 
-            Do not create files, make commits, or modify anything.
+            Do not post comments directly. Do not create other files or make commits.
           claude_args: |
-            --allowedTools "Read,Glob,Grep,Bash(gh issue comment:*)"
-            --append-system-prompt "You are generating a technical specification. After generating the spec, use 'gh issue comment' to post it to the issue. Do not create files, make commits, or modify anything."
+            --allowedTools "Read,Glob,Grep,Write"
+            --append-system-prompt "You are generating a technical specification. Use the Write tool to write the spec to /tmp/spec-output.md. Do not post comments directly. For Welsh translations, use [TRANSLATE: \"English text\"] markers - a post-processing script will handle the actual translations."
+
+      - name: Process Welsh translations and post spec
+        if: steps.parse.outputs.valid == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if [ -f /tmp/spec-output.md ]; then
+            node scripts/translate-welsh.js < /tmp/spec-output.md > /tmp/spec-translated.md
+            gh issue comment ${{ github.event.issue.number }} --body-file /tmp/spec-translated.md
+          else
+            echo "::error::Spec file not generated at /tmp/spec-output.md"
+            exit 1
+          fi
