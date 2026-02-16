@@ -28,6 +28,7 @@ export {
   getLocationsWithPublicationCount,
   type LocationWithPublicationCount
 } from "./repository/queries.js";
+export { findByCaseName, findByCaseNumber, findAllArtefactSearchByArtefactId } from "./repository/artefact-search-queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";
 export { type ValidationResult, validateJson } from "./validation/json-validator.js";
