@@ -39,12 +39,7 @@ export const cy = {
     {
       title: "Rheoli Metadata Lleoliad",
       description: "Gweld, diweddaru a dileu metadata lleoliad",
-      href: "/location-metadata"
-    },
-    {
-      title: "Rheoli Mathau Rhestr",
-      description: "Gweld, creu a diweddaru ffurfweddiad math rhestr",
-      href: "/manage-list-types"
+      href: "/location-metadata-search"
     }
   ]
 };

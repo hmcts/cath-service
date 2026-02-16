@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createArtefact,
-  createArtefactSearch,
-  deleteArtefactSearchByArtefactId,
   deleteArtefacts,
-  findArtefactSearchByArtefactId,
+  getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
   getArtefactSummariesByLocation,
@@ -18,15 +16,10 @@ vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       findMany: vi.fn(),
-      findUnique: vi.fn(),
-      deleteMany: vi.fn()
-    },
-    artefactSearch: {
-      create: vi.fn(),
-      findFirst: vi.fn(),
       deleteMany: vi.fn()
     },
     $queryRaw: vi.fn()
@@ -598,6 +591,100 @@ describe("deleteArtefacts", () => {
   });
 });
 
+describe("getArtefactById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return artefact when found", async () => {
+    const mockArtefact = {
+      artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      locationId: "123",
+      listTypeId: 1,
+      contentDate: new Date("2025-10-25"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-20"),
+      displayTo: new Date("2025-10-30"),
+      lastReceivedDate: new Date(),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
+      noMatch: false
+    } as any;
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+
+    const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440000");
+
+    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" }
+    });
+    expect(result).toEqual({
+      artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      locationId: "123",
+      listTypeId: 1,
+      contentDate: mockArtefact.contentDate,
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: mockArtefact.displayFrom,
+      displayTo: mockArtefact.displayTo,
+      lastReceivedDate: mockArtefact.lastReceivedDate,
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      noMatch: false
+    });
+  });
+
+  it("should return null when artefact not found", async () => {
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+
+    const result = await getArtefactById("non-existent-id");
+
+    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+      where: { artefactId: "non-existent-id" }
+    });
+    expect(result).toBeNull();
+  });
+
+  it("should map database fields correctly", async () => {
+    const mockArtefact = {
+      artefactId: "550e8400-e29b-41d4-a716-446655440001",
+      locationId: "456",
+      listTypeId: 2,
+      contentDate: new Date("2025-11-15"),
+      sensitivity: "PRIVATE",
+      language: "WELSH",
+      displayFrom: new Date("2025-11-10"),
+      displayTo: new Date("2025-11-20"),
+      lastReceivedDate: new Date(),
+      isFlatFile: false,
+      provenance: "API",
+      supersededCount: 5,
+      noMatch: true
+    } as any;
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+
+    const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440001");
+
+    expect(result).toEqual({
+      artefactId: "550e8400-e29b-41d4-a716-446655440001",
+      locationId: "456",
+      listTypeId: 2,
+      contentDate: mockArtefact.contentDate,
+      sensitivity: "PRIVATE",
+      language: "WELSH",
+      displayFrom: mockArtefact.displayFrom,
+      displayTo: mockArtefact.displayTo,
+      lastReceivedDate: mockArtefact.lastReceivedDate,
+      isFlatFile: false,
+      provenance: "API",
+      noMatch: true
+    });
+  });
+});
+
 describe("getArtefactSummariesByLocation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1036,206 +1123,5 @@ describe("getArtefactListTypeId", () => {
     const result = await getArtefactListTypeId("another-artefact");
 
     expect(result).toBe(5);
-  });
-});
-
-describe("createArtefactSearch", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("should create artefact search with all fields", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-1",
-      artefactId: "artefact-123",
-      caseNumber: "CASE-456",
-      caseName: "Smith vs Jones"
-    };
-
-    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await createArtefactSearch("artefact-123", "CASE-456", "Smith vs Jones");
-
-    expect(result).toEqual(mockArtefactSearch);
-    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
-      data: {
-        artefactId: "artefact-123",
-        caseNumber: "CASE-456",
-        caseName: "Smith vs Jones"
-      }
-    });
-  });
-
-  it("should create artefact search with null case number", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-2",
-      artefactId: "artefact-456",
-      caseNumber: null,
-      caseName: "Jones vs Smith"
-    };
-
-    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await createArtefactSearch("artefact-456", null, "Jones vs Smith");
-
-    expect(result).toEqual(mockArtefactSearch);
-    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
-      data: {
-        artefactId: "artefact-456",
-        caseNumber: null,
-        caseName: "Jones vs Smith"
-      }
-    });
-  });
-
-  it("should create artefact search with null case name", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-3",
-      artefactId: "artefact-789",
-      caseNumber: "CASE-789",
-      caseName: null
-    };
-
-    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await createArtefactSearch("artefact-789", "CASE-789", null);
-
-    expect(result).toEqual(mockArtefactSearch);
-    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
-      data: {
-        artefactId: "artefact-789",
-        caseNumber: "CASE-789",
-        caseName: null
-      }
-    });
-  });
-
-  it("should create artefact search with both fields null", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-4",
-      artefactId: "artefact-000",
-      caseNumber: null,
-      caseName: null
-    };
-
-    vi.mocked(prisma.artefactSearch.create).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await createArtefactSearch("artefact-000", null, null);
-
-    expect(result).toEqual(mockArtefactSearch);
-    expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
-      data: {
-        artefactId: "artefact-000",
-        caseNumber: null,
-        caseName: null
-      }
-    });
-  });
-});
-
-describe("findArtefactSearchByArtefactId", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("should find artefact search by artefact id", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-1",
-      artefactId: "artefact-123",
-      caseNumber: "CASE-456",
-      caseName: "Smith vs Jones"
-    };
-
-    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await findArtefactSearchByArtefactId("artefact-123");
-
-    expect(result).toEqual(mockArtefactSearch);
-    expect(prisma.artefactSearch.findFirst).toHaveBeenCalledWith({
-      where: { artefactId: "artefact-123" }
-    });
-  });
-
-  it("should return null when artefact search not found", async () => {
-    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(null);
-
-    const result = await findArtefactSearchByArtefactId("non-existent-artefact");
-
-    expect(result).toBeNull();
-    expect(prisma.artefactSearch.findFirst).toHaveBeenCalledWith({
-      where: { artefactId: "non-existent-artefact" }
-    });
-  });
-
-  it("should find artefact search with null fields", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-2",
-      artefactId: "artefact-456",
-      caseNumber: null,
-      caseName: null
-    };
-
-    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await findArtefactSearchByArtefactId("artefact-456");
-
-    expect(result).toEqual(mockArtefactSearch);
-  });
-
-  it("should handle different artefact ids", async () => {
-    const mockArtefactSearch = {
-      artefactSearchId: "search-id-3",
-      artefactId: "artefact-xyz-999",
-      caseNumber: "CASE-XYZ",
-      caseName: "Test Case"
-    };
-
-    vi.mocked(prisma.artefactSearch.findFirst).mockResolvedValue(mockArtefactSearch as any);
-
-    const result = await findArtefactSearchByArtefactId("artefact-xyz-999");
-
-    expect(result).toEqual(mockArtefactSearch);
-    expect(result.artefactId).toBe("artefact-xyz-999");
-  });
-});
-
-describe("deleteArtefactSearchByArtefactId", () => {
-  it("should delete all artefact search entries for given artefact ID", async () => {
-    const mockDeleteResult = { count: 3 };
-
-    vi.mocked(prisma.artefactSearch.deleteMany).mockResolvedValue(mockDeleteResult);
-
-    const result = await deleteArtefactSearchByArtefactId("artefact-123");
-
-    expect(prisma.artefactSearch.deleteMany).toHaveBeenCalledWith({
-      where: { artefactId: "artefact-123" }
-    });
-    expect(result).toEqual(mockDeleteResult);
-  });
-
-  it("should delete single artefact search entry", async () => {
-    const mockDeleteResult = { count: 1 };
-
-    vi.mocked(prisma.artefactSearch.deleteMany).mockResolvedValue(mockDeleteResult);
-
-    const result = await deleteArtefactSearchByArtefactId("artefact-456");
-
-    expect(prisma.artefactSearch.deleteMany).toHaveBeenCalledWith({
-      where: { artefactId: "artefact-456" }
-    });
-    expect(result).toEqual(mockDeleteResult);
-  });
-
-  it("should return zero count when no entries exist for artefact ID", async () => {
-    const mockDeleteResult = { count: 0 };
-
-    vi.mocked(prisma.artefactSearch.deleteMany).mockResolvedValue(mockDeleteResult);
-
-    const result = await deleteArtefactSearchByArtefactId("non-existent-artefact");
-
-    expect(prisma.artefactSearch.deleteMany).toHaveBeenCalledWith({
-      where: { artefactId: "non-existent-artefact" }
-    });
-    expect(result).toEqual(mockDeleteResult);
   });
 });
