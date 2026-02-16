@@ -1,5 +1,11 @@
 export const en = {
   pageTitle: "Care Standards Tribunal Weekly Hearing List",
+  listForWeekCommencing: "List for week commencing",
+  lastUpdated: "Last updated",
+  at: "at",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
   importantInformationText: "Please contact the Care Standards Office at cst@justice.gov.uk for details of how to access video hearings.",
   importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
@@ -15,5 +21,11 @@ export const en = {
     additionalInformation: "Additional information"
   },
   dataSource: "Data source",
-  backToTop: "Back to top"
+  backToTop: "Back to top",
+  provenanceLabels: {
+    MANUAL_UPLOAD: "Manual Upload",
+    XHIBIT: "XHIBIT",
+    SNL: "SNL",
+    COMMON_PLATFORM: "Common Platform"
+  }
 };

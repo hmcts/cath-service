@@ -1,9 +1,9 @@
 import "@hmcts/auth/src/assets/js/session-timeout.js";
 import cookieManager from "@hmcts/cookie-manager";
+import { initTableSearch } from "@hmcts/list-types-common/src/assets/js/table-search.js";
 import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
 import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
-import { initSearchHighlight } from "@hmcts/web-core/src/assets/js/search-highlight.js";
 import { initAll } from "govuk-frontend";
 
 initAll();
@@ -16,7 +16,7 @@ if (document.readyState === "loading") {
     });
     initFilterPanel();
     initBackToTop();
-    initSearchHighlight();
+    initTableSearch();
   });
 } else {
   void initSearchAutocomplete().catch((error) => {
@@ -24,7 +24,7 @@ if (document.readyState === "loading") {
   });
   initFilterPanel();
   initBackToTop();
-  initSearchHighlight();
+  initTableSearch();
 }
 
 const config = {

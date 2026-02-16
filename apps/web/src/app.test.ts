@@ -77,6 +77,26 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   pageRoutes: { path: "/mock/civil-family/pages" }
 }));
 
+vi.mock("@hmcts/rcj-standard-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/rcj-standard",
+  pageRoutes: { path: "/mock/rcj-standard/pages" }
+}));
+
+vi.mock("@hmcts/london-administrative-court-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/london-admin",
+  pageRoutes: { path: "/mock/london-admin/pages" }
+}));
+
+vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/civil-appeal",
+  pageRoutes: { path: "/mock/civil-appeal/pages" }
+}));
+
+vi.mock("@hmcts/administrative-court-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/admin-court",
+  pageRoutes: { path: "/mock/admin-court/pages" }
+}));
+
 vi.mock("@hmcts/list-types-common/config", () => ({
   moduleRoot: "/mock/list-types-common"
 }));
@@ -191,16 +211,13 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      // Should be called 12 times: location API routes, public pages API routes, system-admin API routes, civil-family-cause-list pages, care-standards-tribunal pages, web pages, auth routes, public pages, verified pages, system-admin pages, admin routes
-      expect(createSimpleRouter).toHaveBeenCalledTimes(11);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(15);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-
-      // Verify system-admin routes were registered (should have 11 total calls)
-      expect(calls.length).toBeGreaterThanOrEqual(11);
+      expect(calls.length).toBeGreaterThanOrEqual(15);
     });
 
     it("should configure error handlers at the end", async () => {
