@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CATALOGUE_PATH = join(__dirname, "../templates/tech-spec-references/welsh-translations-catalogue.json");
+const CATALOGUE_PATH = join(__dirname, "../../templates/tech-spec-references/welsh-translations-catalogue.json");
 
 let catalogue;
 try {
