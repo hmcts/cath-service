@@ -5,6 +5,7 @@ import {
   findActiveSubscriptionsByLocation,
   type SubscriptionWithUser
 } from "@hmcts/subscription";
+import { getActiveSubscriptionsByListType } from "@hmcts/subscription-list-types";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import { buildTemplateParameters } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
@@ -40,8 +41,11 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
   // 2. Get case subscriptions from publication artefacts
   const { caseSubscriptions, artefactCases } = await getCaseSubscriptionsForPublication(event.publicationId);
 
-  // 3. Group subscriptions by userId while preserving case vs location information
-  const allSubscriptions = [...locationSubscriptions, ...caseSubscriptions];
+  // 3. Get list type subscriptions
+  const listTypeSubscriptions = await getListTypeSubscriptions(event.listTypeId, event.language);
+
+  // 4. Group subscriptions by userId while preserving case vs location information
+  const allSubscriptions = [...locationSubscriptions, ...caseSubscriptions, ...listTypeSubscriptions];
   const userSubscriptionsMap = groupSubscriptionsByUser(allSubscriptions);
 
   if (userSubscriptionsMap.size === 0) {
@@ -123,6 +127,24 @@ async function getCaseSubscriptionsForPublication(publicationId: string): Promis
   }
 
   return { caseSubscriptions, artefactCases };
+}
+
+async function getListTypeSubscriptions(listTypeId: number | undefined, language: string | undefined): Promise<SubscriptionWithUser[]> {
+  if (!listTypeId || !language) {
+    return [];
+  }
+
+  const listTypeSubscriptions = await getActiveSubscriptionsByListType(listTypeId, language);
+
+  return listTypeSubscriptions.map((sub) => ({
+    subscriptionId: sub.listTypeSubscriptionId,
+    userId: sub.userId,
+    searchType: "LIST_TYPE" as const,
+    searchValue: sub.listTypeId.toString(),
+    caseName: null,
+    caseNumber: null,
+    user: sub.user
+  }));
 }
 
 function groupSubscriptionsByUser(subscriptions: SubscriptionWithUser[]): Map<string, SubscriptionWithUser[]> {

@@ -71,3 +71,32 @@ export async function updateListTypeSubscriptionLanguage(userId: string, listTyp
     }
   });
 }
+
+export async function findActiveSubscriptionsByListType(listTypeId: number, language: string, tx?: TransactionClient) {
+  const client = tx || prisma;
+  return client.subscriptionListType.findMany({
+    where: {
+      listTypeId,
+      language: {
+        has: language
+      },
+      user: {
+        isActive: true,
+        email: {
+          not: null
+        }
+      }
+    },
+    include: {
+      user: {
+        select: {
+          userId: true,
+          email: true,
+          firstName: true,
+          surname: true,
+          isActive: true
+        }
+      }
+    }
+  });
+}

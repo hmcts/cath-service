@@ -14,6 +14,10 @@ vi.mock("@hmcts/subscription", () => ({
   findActiveSubscriptionsByCaseNames: vi.fn().mockResolvedValue([])
 }));
 
+vi.mock("@hmcts/subscription-list-types", () => ({
+  getActiveSubscriptionsByListType: vi.fn().mockResolvedValue([])
+}));
+
 vi.mock("./notification-queries.js", () => ({
   createNotificationAuditLog: vi.fn(),
   updateNotificationStatus: vi.fn()
@@ -293,5 +297,136 @@ describe("notification-service", () => {
     expect(result.failed).toBe(1);
     expect(result.sent).toBe(0);
     expect(result.errors).toContain("User user-1: Database connection error");
+  });
+
+  it("should send notifications to list type subscribers", async () => {
+    const mockListTypeSubscriptions = [
+      {
+        listTypeSubscriptionId: "list-sub-1",
+        userId: "user-3",
+        listTypeId: 5,
+        language: ["ENGLISH"],
+        dateAdded: new Date(),
+        user: {
+          userId: "user-3",
+          email: "user3@example.com",
+          firstName: "Alice",
+          surname: "Johnson",
+          isActive: true
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
+    const { getActiveSubscriptionsByListType } = await import("@hmcts/subscription-list-types");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
+    vi.mocked(getActiveSubscriptionsByListType).mockResolvedValue(mockListTypeSubscriptions);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "list-sub-1",
+      userId: "user-3",
+      publicationId: "pub-1",
+      status: "Pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01"),
+      listTypeId: 5,
+      language: "ENGLISH"
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.sent).toBe(1);
+    expect(result.failed).toBe(0);
+    expect(getActiveSubscriptionsByListType).toHaveBeenCalledWith(5, "ENGLISH");
+  });
+
+  it("should combine location and list type subscriptions", async () => {
+    const mockLocationSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: {
+          email: "user1@example.com",
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const mockListTypeSubscriptions = [
+      {
+        listTypeSubscriptionId: "list-sub-1",
+        userId: "user-2",
+        listTypeId: 5,
+        language: ["ENGLISH"],
+        dateAdded: new Date(),
+        user: {
+          userId: "user-2",
+          email: "user2@example.com",
+          firstName: "Jane",
+          surname: "Smith",
+          isActive: true
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
+    const { getActiveSubscriptionsByListType } = await import("@hmcts/subscription-list-types");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockLocationSubscriptions);
+    vi.mocked(getActiveSubscriptionsByListType).mockResolvedValue(mockListTypeSubscriptions);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      status: "Pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01"),
+      listTypeId: 5,
+      language: "ENGLISH"
+    });
+
+    expect(result.totalSubscriptions).toBe(2);
+    expect(result.sent).toBe(2);
+  });
+
+  it("should not query list type subscriptions when listTypeId is missing", async () => {
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
+    const { getActiveSubscriptionsByListType } = await import("@hmcts/subscription-list-types");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
+
+    await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(getActiveSubscriptionsByListType).not.toHaveBeenCalled();
   });
 });

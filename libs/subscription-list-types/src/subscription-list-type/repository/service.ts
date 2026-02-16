@@ -2,6 +2,7 @@ import { prisma } from "@hmcts/postgres";
 import {
   createListTypeSubscriptionRecord,
   deleteListTypeSubscriptionRecord,
+  findActiveSubscriptionsByListType,
   findExistingListTypeSubscription,
   findListTypeSubscriptionById,
   findListTypeSubscriptionsByUserId,
@@ -62,4 +63,8 @@ export async function deleteListTypeSubscription(userId: string, listTypeSubscri
 export async function hasExistingSubscription(userId: string, listTypeId: number) {
   const existing = await findExistingListTypeSubscription(userId, listTypeId);
   return existing !== null;
+}
+
+export async function getActiveSubscriptionsByListType(listTypeId: number, language: string) {
+  return findActiveSubscriptionsByListType(listTypeId, language);
 }

@@ -4,6 +4,7 @@ import {
   countListTypeSubscriptionsByUserId,
   createListTypeSubscriptionRecord,
   deleteListTypeSubscriptionRecord,
+  findActiveSubscriptionsByListType,
   findExistingListTypeSubscription,
   findListTypeSubscriptionById,
   findListTypeSubscriptionsByUserId,
@@ -181,6 +182,114 @@ describe("List Type Subscription Queries", () => {
           language: ["ENGLISH", "WELSH"]
         }
       });
+    });
+  });
+
+  describe("findActiveSubscriptionsByListType", () => {
+    it("should return active subscriptions for list type and language", async () => {
+      const mockSubscriptions = [
+        {
+          listTypeSubscriptionId: "sub1",
+          userId: "user1",
+          listTypeId: 1,
+          language: ["ENGLISH"],
+          dateAdded: new Date(),
+          user: {
+            userId: "user1",
+            email: "user1@example.com",
+            firstName: "John",
+            surname: "Doe",
+            isActive: true
+          }
+        }
+      ];
+      vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await findActiveSubscriptionsByListType(1, "ENGLISH");
+
+      expect(result).toEqual(mockSubscriptions);
+      expect(prisma.subscriptionListType.findMany).toHaveBeenCalledWith({
+        where: {
+          listTypeId: 1,
+          language: {
+            has: "ENGLISH"
+          },
+          user: {
+            isActive: true,
+            email: {
+              not: null
+            }
+          }
+        },
+        include: {
+          user: {
+            select: {
+              userId: true,
+              email: true,
+              firstName: true,
+              surname: true,
+              isActive: true
+            }
+          }
+        }
+      });
+    });
+
+    it("should return subscriptions for users who want both languages", async () => {
+      const mockSubscriptions = [
+        {
+          listTypeSubscriptionId: "sub2",
+          userId: "user2",
+          listTypeId: 1,
+          language: ["ENGLISH", "WELSH"],
+          dateAdded: new Date(),
+          user: {
+            userId: "user2",
+            email: "user2@example.com",
+            firstName: "Jane",
+            surname: "Smith",
+            isActive: true
+          }
+        }
+      ];
+      vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscriptions);
+
+      const result = await findActiveSubscriptionsByListType(1, "WELSH");
+
+      expect(result).toEqual(mockSubscriptions);
+      expect(prisma.subscriptionListType.findMany).toHaveBeenCalledWith({
+        where: {
+          listTypeId: 1,
+          language: {
+            has: "WELSH"
+          },
+          user: {
+            isActive: true,
+            email: {
+              not: null
+            }
+          }
+        },
+        include: {
+          user: {
+            select: {
+              userId: true,
+              email: true,
+              firstName: true,
+              surname: true,
+              isActive: true
+            }
+          }
+        }
+      });
+    });
+
+    it("should return empty array when no active subscriptions", async () => {
+      vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue([]);
+
+      const result = await findActiveSubscriptionsByListType(1, "ENGLISH");
+
+      expect(result).toEqual([]);
     });
   });
 });
