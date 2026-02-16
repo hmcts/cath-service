@@ -39,7 +39,7 @@ export const cy = {
     {
       title: "Rheoli Metadata Lleoliad",
       description: "Gweld, diweddaru a dileu metadata lleoliad",
-      href: "/location-metadata"
+      href: "/location-metadata-search"
     }
   ]
 };
