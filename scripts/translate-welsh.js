@@ -20,7 +20,7 @@ const MARKER_REGEX = /\[TRANSLATE:\s*"([^"]+)"\]/g;
 function translateMarkers(content) {
   return content.replace(MARKER_REGEX, (_match, englishText) => {
     const welsh = catalogue[englishText];
-    if (welsh !== undefined) {
+    if (welsh !== undefined && welsh !== "") {
       return welsh;
     }
     return `[WELSH TRANSLATION REQUIRED: "${englishText}"]`;
