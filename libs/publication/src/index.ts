@@ -1,4 +1,5 @@
 export { type ListType, mockListTypes } from "@hmcts/list-types-common";
+export { extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {
   canAccessPublication,
@@ -12,6 +13,7 @@ export { findFileByArtefactId, getContentType, getFileBuffer, getFileExtension, 
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
+export { findAllArtefactSearchByArtefactId, findByCaseName, findByCaseNumber } from "./repository/artefact-search-queries.js";
 export type { Artefact } from "./repository/model.js";
 export {
   type ArtefactMetadata,
@@ -28,7 +30,6 @@ export {
   getLocationsWithPublicationCount,
   type LocationWithPublicationCount
 } from "./repository/queries.js";
-export { findByCaseName, findByCaseNumber, findAllArtefactSearchByArtefactId } from "./repository/artefact-search-queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";
 export { type ValidationResult, validateJson } from "./validation/json-validator.js";
