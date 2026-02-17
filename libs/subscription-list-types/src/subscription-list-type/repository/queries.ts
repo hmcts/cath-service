@@ -79,12 +79,6 @@ export async function findActiveSubscriptionsByListType(listTypeId: number, lang
       listTypeId,
       language: {
         has: language
-      },
-      user: {
-        isActive: true,
-        email: {
-          not: null
-        }
       }
     },
     include: {
@@ -93,8 +87,7 @@ export async function findActiveSubscriptionsByListType(listTypeId: number, lang
           userId: true,
           email: true,
           firstName: true,
-          surname: true,
-          isActive: true
+          surname: true
         }
       }
     }

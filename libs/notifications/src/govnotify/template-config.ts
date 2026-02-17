@@ -54,9 +54,9 @@ export function buildTemplateParameters(params: {
     content_date: formatPublicationDate(params.publicationDate),
     start_page_link: getServiceUrl(),
     subscription_page_link: getServiceUrl(),
-    locations: "",
+    locations: params.locationName,
     case: "",
-    display_locations: "",
+    display_locations: "yes",
     display_case: ""
   };
 
@@ -64,12 +64,6 @@ export function buildTemplateParameters(params: {
   if (params.caseInfo) {
     templateParams.case = params.caseInfo;
     templateParams.display_case = "yes";
-  }
-
-  // Add location information only if user has location subscription
-  if (params.hasLocationSubscription) {
-    templateParams.locations = params.locationName;
-    templateParams.display_locations = "yes";
   }
 
   return templateParams;

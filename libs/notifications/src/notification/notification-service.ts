@@ -242,10 +242,14 @@ async function processUserNotification(
   const userId = firstSubscription.userId;
   const user = firstSubscription.user;
 
+  // For list type subscriptions, subscriptionId doesn't exist in the subscription table
+  // so we pass null to avoid foreign key constraint violation
+  const subscriptionIdForAudit = firstSubscription.searchType === "LIST_TYPE" ? null : firstSubscription.subscriptionId;
+
   try {
     if (!user.email) {
       const notification = await createNotificationAuditLog({
-        subscriptionId: firstSubscription.subscriptionId,
+        subscriptionId: subscriptionIdForAudit,
         userId,
         publicationId: event.publicationId,
         status: "Skipped"
@@ -261,7 +265,7 @@ async function processUserNotification(
 
     if (!isValidEmail(user.email)) {
       const notification = await createNotificationAuditLog({
-        subscriptionId: firstSubscription.subscriptionId,
+        subscriptionId: subscriptionIdForAudit,
         userId,
         publicationId: event.publicationId,
         status: "Skipped"
@@ -276,7 +280,7 @@ async function processUserNotification(
     }
 
     const notification = await createNotificationAuditLog({
-      subscriptionId: firstSubscription.subscriptionId,
+      subscriptionId: subscriptionIdForAudit,
       userId,
       publicationId: event.publicationId,
       status: "Pending"

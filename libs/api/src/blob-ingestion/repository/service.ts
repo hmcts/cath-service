@@ -143,7 +143,13 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
   }
 }
 
-async function triggerPublicationNotifications(publicationId: string, courtId: string, listTypeId: number, publicationDate: Date, language: string): Promise<void> {
+async function triggerPublicationNotifications(
+  publicationId: string,
+  courtId: string,
+  listTypeId: number,
+  publicationDate: Date,
+  language: string
+): Promise<void> {
   const locationIdNum = Number.parseInt(courtId, 10);
   if (Number.isNaN(locationIdNum)) {
     console.error("Invalid location ID for notifications:", courtId);

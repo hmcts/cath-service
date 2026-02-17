@@ -1162,6 +1162,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/list-search-config@workspace:libs/list-search-config":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/list-types-common@workspace:*, @hmcts/list-types-common@workspace:libs/list-types/common":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
@@ -1298,9 +1306,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
+"@hmcts/subscription-list-types@workspace:libs/subscription-list-types":
   version: 0.0.0-use.local
-  resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
+  resolution: "@hmcts/subscription-list-types@workspace:libs/subscription-list-types"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/subscription@workspace:*, @hmcts/subscription@workspace:libs/subscription":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/subscription@workspace:libs/subscription"
   dependencies:
     "@hmcts/auth": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -1329,7 +1345,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   dependencies:
-    "@hmcts/subscriptions": "workspace:*"
+    "@hmcts/subscription": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
