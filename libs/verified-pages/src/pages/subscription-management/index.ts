@@ -49,10 +49,13 @@ const getHandler = async (req: Request, res: Response) => {
         BOTH: locale === "cy" ? "Cymraeg a Saesneg" : "English and Welsh"
       };
 
+      // Handle language array - join multiple languages or use single value
+      const languageKey = Array.isArray(sub.language) ? (sub.language.length > 1 ? "BOTH" : sub.language[0]) : sub.language;
+
       return {
         ...sub,
         listTypeName: listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : t.notAvailable,
-        languageDisplay: languageDisplay[sub.language as keyof typeof languageDisplay] || sub.language
+        languageDisplay: languageDisplay[languageKey as keyof typeof languageDisplay] || languageKey
       };
     });
 

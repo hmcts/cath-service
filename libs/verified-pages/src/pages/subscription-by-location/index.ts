@@ -11,21 +11,10 @@ import {
   type Location
 } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
+import type { ListTypeSubscriptionSession } from "../../types/session.js";
 import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-interface ListTypeSubscriptionSession {
-  selectedLocationIds?: number[];
-  selectedListTypeIds?: number[];
-  language?: string;
-}
-
-declare module "express-session" {
-  interface SessionData {
-    listTypeSubscription?: ListTypeSubscriptionSession;
-  }
-}
 
 interface TableRow {
   letter: string;
