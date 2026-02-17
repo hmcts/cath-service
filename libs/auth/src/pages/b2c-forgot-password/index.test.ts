@@ -35,8 +35,6 @@ describe("B2C Forgot Password Page", () => {
       tenantId: "test-tenant-id",
       clientId: "test-client-id",
       clientSecret: "test-secret",
-      policyHmcts: "B2C_1_SignInUserFlow",
-      policyCommonPlatform: "B2C_1_SignInUserFlow",
       policyCath: "B2C_1_SignInUserFlow",
       policyPasswordReset: "B2C_1A_PASSWORD_RESET",
       redirectUri: "https://localhost:8080/login/return",
@@ -79,6 +77,12 @@ describe("B2C Forgot Password Page", () => {
     GET(req as Request, res as Response);
 
     expect(req.session?.b2cLocale).toBe("cy");
+  });
+
+  it("should store password_reset as b2cProvider in session", () => {
+    GET(req as Request, res as Response);
+
+    expect(req.session?.b2cProvider).toBe("password_reset");
   });
 
   it("should return 503 if B2C is not configured", () => {

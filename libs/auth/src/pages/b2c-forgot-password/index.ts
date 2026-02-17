@@ -15,8 +15,9 @@ export const GET = (req: Request, res: Response) => {
   const locale = (req.query.lng as string) || res.locals.locale || "en";
   const uiLocale = locale === "cy" ? "cy-GB" : locale;
 
-  // Store locale in session for redirect after password reset
+  // Store locale and provider in session for redirect after password reset
   req.session.b2cLocale = locale;
+  req.session.b2cProvider = "password_reset";
 
   // Build B2C password reset URL
   const b2cBaseUrl = getB2cBaseUrl();

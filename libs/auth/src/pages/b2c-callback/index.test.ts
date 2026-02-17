@@ -295,6 +295,43 @@ describe("B2C Callback Handler", () => {
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=auth_failed");
     });
+
+    it("should use password reset policy for password_reset provider", async () => {
+      mockSession.b2cProvider = "password_reset";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("B2C_1A_PASSWORD_RESET"), expect.any(Object));
+    });
+
+    it("should redirect to success page after password reset", async () => {
+      mockSession.b2cProvider = "password_reset";
+      mockSession.b2cLocale = "en";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/password-reset-success");
+      expect(mockReq.login).not.toHaveBeenCalled();
+    });
+
+    it("should redirect to success page with Welsh locale after password reset", async () => {
+      mockSession.b2cProvider = "password_reset";
+      mockSession.b2cLocale = "cy";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/password-reset-success?lng=cy");
+    });
+
+    it("should clear session data after password reset", async () => {
+      mockSession.b2cProvider = "password_reset";
+      mockSession.b2cLocale = "cy";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockSession.b2cProvider).toBeUndefined();
+      expect(mockSession.b2cLocale).toBeUndefined();
+    });
   });
 
   describe("user profile extraction", () => {
@@ -324,7 +361,7 @@ describe("B2C Callback Handler", () => {
       );
     });
 
-    it("should use oid as fallback for id when sub is missing", async () => {
+    it("should use oid as fallback for userProvenanceId when sub is missing", async () => {
       const idTokenWithOid = createMockIdToken({
         oid: "oid-user-789",
         email: "oid@example.com",
@@ -342,9 +379,17 @@ describe("B2C Callback Handler", () => {
 
       await GET(mockReq as Request, mockRes as Response);
 
+      // Verify oid is used as userProvenanceId when creating the user
+      expect(accountQuery.createOrUpdateUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userProvenanceId: "oid-user-789"
+        })
+      );
+
+      // Session id should be the database userId, not the B2C oid
       expect(mockReq.login).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: "oid-user-789"
+          id: "user-123" // database userId from mock
         }),
         expect.any(Function)
       );

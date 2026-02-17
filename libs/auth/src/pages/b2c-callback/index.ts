@@ -75,25 +75,40 @@ async function handleCallback(req: Request, res: Response, params: any) {
     // Exchange authorization code for tokens
     const tokens = await exchangeCodeForTokens(code, provider);
 
+    // Handle password reset flow - redirect to success page without logging in
+    if (provider === "password_reset") {
+      const locale = req.session.b2cLocale;
+      delete req.session.b2cProvider;
+      delete req.session.b2cLocale;
+
+      const successUrl = locale === "cy" ? "/password-reset-success?lng=cy" : "/password-reset-success";
+      return res.redirect(successUrl);
+    }
+
     // Extract user profile from ID token
     const userProfile = extractUserProfile(tokens.id_token, provider);
 
-    // Create or update user in database
-    try {
-      await createOrUpdateUser({
-        email: userProfile.email,
-        userProvenance: "PI_AAD",
-        userProvenanceId: userProfile.id,
-        role: "VERIFIED"
-      });
-    } catch (error) {
+    // Create or update user in database and get database userId
+    const dbUser = await createOrUpdateUser({
+      email: userProfile.email,
+      userProvenance: "PI_AAD",
+      userProvenanceId: userProfile.id,
+      role: "VERIFIED"
+    }).catch((error) => {
       trackException(error as Error, {
         area: "B2C callback",
         userEmail: userProfile.email,
         userId: userProfile.id
       });
+      return null;
+    });
+
+    if (!dbUser) {
       return res.redirect("/sign-in?error=db_error");
     }
+
+    // Use database userId for session (required for foreign key relationships)
+    userProfile.id = dbUser.userId;
 
     // Get return URL and locale from session
     const returnTo = req.session.returnTo || "/account-home";
@@ -143,11 +158,15 @@ async function handleCallback(req: Request, res: Response, params: any) {
 async function exchangeCodeForTokens(code: string, provider: string): Promise<{ access_token: string; id_token: string }> {
   const b2cConfig = getB2cConfig();
 
-  // B2C is only used for CaTH users (HMCTS uses CFT IDAM)
-  if (provider !== "cath") {
-    throw new Error(`Invalid B2C provider: ${provider}. Only 'cath' is supported.`);
+  // Determine the correct policy based on the provider/flow
+  let policy: string;
+  if (provider === "cath") {
+    policy = b2cConfig.policyCath;
+  } else if (provider === "password_reset") {
+    policy = b2cConfig.policyPasswordReset;
+  } else {
+    throw new Error(`Invalid B2C provider: ${provider}. Only 'cath' and 'password_reset' are supported.`);
   }
-  const policy = b2cConfig.policyCath;
 
   const tokenUrl = `${getB2cBaseUrl()}/oauth2/v2.0/token?p=${policy}`;
 

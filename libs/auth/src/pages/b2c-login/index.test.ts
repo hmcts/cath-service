@@ -35,9 +35,8 @@ describe("B2C Login Page", () => {
       tenantId: "test-tenant-id",
       clientId: "test-client-id",
       clientSecret: "test-secret",
-      policyHmcts: "B2C_1_SignInUserFlow",
-      policyCommonPlatform: "B2C_1_SignInUserFlow",
       policyCath: "B2C_1_SignInUserFlow",
+      policyPasswordReset: "B2C_1A_PASSWORD_RESET",
       redirectUri: "https://localhost:8080/login/return",
       responseType: "code",
       responseMode: "query",
@@ -97,7 +96,7 @@ describe("B2C Login Page", () => {
 
     GET(req as Request, res as Response);
 
-    expect(req.session.returnTo).toBe("/admin");
+    expect(req.session?.returnTo).toBe("/admin");
   });
 
   it("should return 503 if B2C is not configured", () => {
