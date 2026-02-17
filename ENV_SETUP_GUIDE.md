@@ -3,6 +3,23 @@
 ## Overview
 This guide explains where to find the values for the environment variables in `.env` required for E2E tests.
 
+## Quick Start (TL;DR)
+
+If you have Azure CLI access to `pip-bootstrap-stg-kv`:
+
+```bash
+# Authenticate to Azure
+az login
+
+# Verify access
+az keyvault secret list --vault-name pip-bootstrap-stg-kv
+
+# Run E2E tests (automatically fetches credentials)
+yarn test:e2e
+```
+
+If the above works, you're all set! If not, continue reading for manual configuration.
+
 ## Azure AD / SSO Configuration
 
 ### Required Variables
