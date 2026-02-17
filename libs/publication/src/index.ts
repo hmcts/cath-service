@@ -8,6 +8,8 @@ export {
   filterAccessiblePublications,
   filterPublicationsForSummary
 } from "./authorisation/service.js";
+export { getContentTypeFromExtension } from "./file-storage/content-type.js";
+export { findFileByArtefactId, getContentType, getFileBuffer, getFileExtension, getFileName } from "./file-storage/file-retrieval.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
@@ -22,6 +24,7 @@ export {
   findArtefactSearchByArtefactId,
   findByCaseName,
   findByCaseNumber,
+  getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
   getArtefactSummariesByLocation,

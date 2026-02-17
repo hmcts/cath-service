@@ -5,6 +5,7 @@ import {
   deleteArtefactSearchByArtefactId,
   deleteArtefacts,
   findArtefactSearchByArtefactId,
+  getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
   getArtefactSummariesByLocation,
@@ -18,10 +19,10 @@ vi.mock("@hmcts/postgres", () => ({
   prisma: {
     artefact: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       findMany: vi.fn(),
-      findUnique: vi.fn(),
       deleteMany: vi.fn()
     },
     artefactSearch: {
@@ -594,6 +595,100 @@ describe("deleteArtefacts", () => {
           in: []
         }
       }
+    });
+  });
+});
+
+describe("getArtefactById", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return artefact when found", async () => {
+    const mockArtefact = {
+      artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      locationId: "123",
+      listTypeId: 1,
+      contentDate: new Date("2025-10-25"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-20"),
+      displayTo: new Date("2025-10-30"),
+      lastReceivedDate: new Date(),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
+      noMatch: false
+    } as any;
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+
+    const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440000");
+
+    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" }
+    });
+    expect(result).toEqual({
+      artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      locationId: "123",
+      listTypeId: 1,
+      contentDate: mockArtefact.contentDate,
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: mockArtefact.displayFrom,
+      displayTo: mockArtefact.displayTo,
+      lastReceivedDate: mockArtefact.lastReceivedDate,
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      noMatch: false
+    });
+  });
+
+  it("should return null when artefact not found", async () => {
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+
+    const result = await getArtefactById("non-existent-id");
+
+    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+      where: { artefactId: "non-existent-id" }
+    });
+    expect(result).toBeNull();
+  });
+
+  it("should map database fields correctly", async () => {
+    const mockArtefact = {
+      artefactId: "550e8400-e29b-41d4-a716-446655440001",
+      locationId: "456",
+      listTypeId: 2,
+      contentDate: new Date("2025-11-15"),
+      sensitivity: "PRIVATE",
+      language: "WELSH",
+      displayFrom: new Date("2025-11-10"),
+      displayTo: new Date("2025-11-20"),
+      lastReceivedDate: new Date(),
+      isFlatFile: false,
+      provenance: "API",
+      supersededCount: 5,
+      noMatch: true
+    } as any;
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+
+    const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440001");
+
+    expect(result).toEqual({
+      artefactId: "550e8400-e29b-41d4-a716-446655440001",
+      locationId: "456",
+      listTypeId: 2,
+      contentDate: mockArtefact.contentDate,
+      sensitivity: "PRIVATE",
+      language: "WELSH",
+      displayFrom: mockArtefact.displayFrom,
+      displayTo: mockArtefact.displayTo,
+      lastReceivedDate: mockArtefact.lastReceivedDate,
+      isFlatFile: false,
+      provenance: "API",
+      noMatch: true
     });
   });
 });
