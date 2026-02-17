@@ -198,8 +198,7 @@ describe("List Type Subscription Queries", () => {
             userId: "user1",
             email: "user1@example.com",
             firstName: "John",
-            surname: "Doe",
-            isActive: true
+            surname: "Doe"
           }
         }
       ];
@@ -213,12 +212,6 @@ describe("List Type Subscription Queries", () => {
           listTypeId: 1,
           language: {
             has: "ENGLISH"
-          },
-          user: {
-            isActive: true,
-            email: {
-              not: null
-            }
           }
         },
         include: {
@@ -227,8 +220,7 @@ describe("List Type Subscription Queries", () => {
               userId: true,
               email: true,
               firstName: true,
-              surname: true,
-              isActive: true
+              surname: true
             }
           }
         }
@@ -247,8 +239,7 @@ describe("List Type Subscription Queries", () => {
             userId: "user2",
             email: "user2@example.com",
             firstName: "Jane",
-            surname: "Smith",
-            isActive: true
+            surname: "Smith"
           }
         }
       ];
@@ -262,12 +253,6 @@ describe("List Type Subscription Queries", () => {
           listTypeId: 1,
           language: {
             has: "WELSH"
-          },
-          user: {
-            isActive: true,
-            email: {
-              not: null
-            }
           }
         },
         include: {
@@ -276,8 +261,7 @@ describe("List Type Subscription Queries", () => {
               userId: true,
               email: true,
               firstName: true,
-              surname: true,
-              isActive: true
+              surname: true
             }
           }
         }

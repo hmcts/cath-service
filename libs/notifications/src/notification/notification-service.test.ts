@@ -20,7 +20,7 @@ vi.mock("@hmcts/subscription-list-types", () => ({
 
 vi.mock("./notification-queries.js", () => ({
   createNotificationAuditLog: vi.fn(),
-  updateNotificationStatus: vi.fn()
+  updateNotificationStatus: vi.fn().mockResolvedValue(undefined)
 }));
 
 vi.mock("@hmcts/publication", () => ({
@@ -320,6 +320,7 @@ describe("notification-service", () => {
     const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { getActiveSubscriptionsByListType } = await import("@hmcts/subscription-list-types");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
     vi.mocked(getActiveSubscriptionsByListType).mockResolvedValue(mockListTypeSubscriptions);
@@ -332,6 +333,10 @@ describe("notification-service", () => {
       errorMessage: null,
       createdAt: new Date(),
       sentAt: null
+    });
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: true,
+      notificationId: "notif-123"
     });
 
     const result = await sendPublicationNotifications({
@@ -385,6 +390,7 @@ describe("notification-service", () => {
     const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { getActiveSubscriptionsByListType } = await import("@hmcts/subscription-list-types");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockLocationSubscriptions);
     vi.mocked(getActiveSubscriptionsByListType).mockResolvedValue(mockListTypeSubscriptions);
@@ -397,6 +403,10 @@ describe("notification-service", () => {
       errorMessage: null,
       createdAt: new Date(),
       sentAt: null
+    });
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: true,
+      notificationId: "notif-123"
     });
 
     const result = await sendPublicationNotifications({

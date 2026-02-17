@@ -54,10 +54,13 @@ export function buildTemplateParameters(params: {
     content_date: formatPublicationDate(params.publicationDate),
     start_page_link: getServiceUrl(),
     subscription_page_link: getServiceUrl(),
-    locations: params.locationName,
+    locations: params.hasLocationSubscription ? params.locationName : "",
     case: "",
-    display_locations: "yes",
-    display_case: ""
+    display_locations: params.hasLocationSubscription ? "yes" : "",
+    display_case: "",
+    link_to_file: getServiceUrl(),
+    display_summary: "",
+    summary_of_cases: ""
   };
 
   // Add case information if present
