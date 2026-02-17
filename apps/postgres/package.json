@@ -28,11 +28,11 @@
     "seed": "node ../../node_modules/.bin/tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "6.19.1"
+    "@prisma/client": "6.19.2"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",
     "glob": "13.0.4",
-    "prisma": "6.19.1"
+    "prisma": "6.19.2"
   }
 }
