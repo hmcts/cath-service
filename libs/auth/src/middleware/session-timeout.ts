@@ -21,12 +21,16 @@ export function sessionTimeoutMiddleware(req: Request, res: Response, next: Next
 
   // Check if session has expired
   if (isSessionExpired(req.session)) {
+    // Preserve the locale from cookie before destroying session
+    const locale = req.cookies?.locale;
+    const redirectUrl = locale === "cy" ? "/session-expired?lng=cy" : "/session-expired";
+
     // Destroy session
     req.session.destroy((err: Error | null) => {
       if (err) {
         console.error("Session destruction error:", err);
       }
-      res.redirect("/session-expired");
+      res.redirect(redirectUrl);
     });
     return;
   }

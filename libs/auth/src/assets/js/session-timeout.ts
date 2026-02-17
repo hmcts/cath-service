@@ -7,6 +7,19 @@ const WARNING_THRESHOLD_MS = 1500000; // 25 minutes
 const LOGOUT_THRESHOLD_MS = 1800000; // 30 minutes
 const WARNING_DURATION_MS = LOGOUT_THRESHOLD_MS - WARNING_THRESHOLD_MS; // 5 minutes
 
+const translations = {
+  en: {
+    heading: "You will soon be signed out, due to inactivity",
+    bodyText: "You will be signed out in",
+    continueButton: "Continue"
+  },
+  cy: {
+    heading: "Byddwch yn cael eich allgofnodi yn fuan, oherwydd anweithgarwch",
+    bodyText: "Byddwch yn cael eich allgofnodi mewn",
+    continueButton: "Parhau"
+  }
+};
+
 interface SessionTimeoutState {
   warningTimer: number | null;
   logoutTimer: number | null;
@@ -43,9 +56,33 @@ export function initSessionTimeout(): void {
 }
 
 /**
+ * Gets the current locale from cookie or URL
+ */
+function getCurrentLocale(): "en" | "cy" {
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlLocale = urlParams.get("lng");
+  if (urlLocale === "cy") {
+    return "cy";
+  }
+
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === "locale" && value === "cy") {
+      return "cy";
+    }
+  }
+
+  return "en";
+}
+
+/**
  * Creates the warning modal element
  */
 function createWarningModal(): void {
+  const locale = getCurrentLocale();
+  const t = translations[locale];
+
   const modal = document.createElement("div");
   modal.id = "session-timeout-modal";
   modal.className = "session-timeout-modal";
@@ -53,10 +90,10 @@ function createWarningModal(): void {
   modal.innerHTML = `
     <div class="session-timeout-overlay"></div>
     <div class="session-timeout-content govuk-!-padding-4">
-      <h2 class="govuk-heading-m">You will soon be signed out, due to inactivity</h2>
-      <p class="govuk-body">You will be signed out in <strong id="session-timeout-countdown"></strong>.</p>
+      <h2 class="govuk-heading-m">${t.heading}</h2>
+      <p class="govuk-body">${t.bodyText} <strong id="session-timeout-countdown"></strong>.</p>
       <button id="session-timeout-continue" class="govuk-button" type="button">
-        Continue
+        ${t.continueButton}
       </button>
     </div>
   `;
@@ -178,7 +215,9 @@ function handleContinue(): void {
  * Logs out the user
  */
 function logout(): void {
-  window.location.href = "/session-expired";
+  const locale = getCurrentLocale();
+  const redirectUrl = locale === "cy" ? "/session-expired?lng=cy" : "/session-expired";
+  window.location.href = redirectUrl;
 }
 
 // Initialize on page load

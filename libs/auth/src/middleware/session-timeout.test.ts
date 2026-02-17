@@ -12,6 +12,7 @@ describe("Session Timeout Middleware", () => {
     req = {
       path: "/admin",
       isAuthenticated: () => true,
+      cookies: {},
       session: {
         lastActivity: Date.now(),
         destroy: vi.fn((cb) => cb(null))
@@ -69,6 +70,20 @@ describe("Session Timeout Middleware", () => {
 
     expect(req.session?.destroy).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith("/session-expired");
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should preserve Welsh locale when redirecting to session-expired", () => {
+    // Set last activity to 31 minutes ago
+    if (req.session) {
+      req.session.lastActivity = Date.now() - 1860000;
+    }
+    req.cookies = { locale: "cy" };
+
+    sessionTimeoutMiddleware(req as Request, res as Response, next);
+
+    expect(req.session?.destroy).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=cy");
     expect(next).not.toHaveBeenCalled();
   });
 
