@@ -13,13 +13,17 @@ export { findFileByArtefactId, getContentType, getFileBuffer, getFileExtension, 
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
-export { findAllArtefactSearchByArtefactId, findByCaseName, findByCaseNumber } from "./repository/artefact-search-queries.js";
 export type { Artefact } from "./repository/model.js";
 export {
   type ArtefactMetadata,
   type ArtefactSummary,
   createArtefact,
+  createArtefactSearch,
   deleteArtefacts,
+  findAllArtefactSearchByArtefactId,
+  findArtefactSearchByArtefactId,
+  findByCaseName,
+  findByCaseNumber,
   getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
@@ -32,4 +36,7 @@ export {
 } from "./repository/queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";
-export { type ValidationResult, validateJson } from "./validation/json-validator.js";
+export {
+  type ValidationResult,
+  validateJson
+} from "./validation/json-validator.js";
