@@ -38,7 +38,7 @@
     "dotenv": "17.2.3",
     "express": "5.2.0",
     "express-session": "1.18.2",
-    "glob": "13.0.0",
+    "glob": "13.0.3",
     "govuk-frontend": "5.13.0",
     "helmet": "8.1.0",
     "multer": "2.0.2",
