@@ -89,8 +89,8 @@ describe("manage-list-types page", () => {
       const renderCall = (res.render as any).mock.calls[0];
       const listTypes = renderCall[1].listTypes;
 
-      // We expect 9 list types from mock-list-types.ts
-      expect(listTypes.length).toBe(9);
+      // We expect 23 list types from mock-list-types.ts
+      expect(listTypes.length).toBe(23);
     });
   });
 });
