@@ -9,5 +9,6 @@ export const cy = {
   errorCaseNumberRequired: "Rhowch enw maes JSON rhif yr achos",
   errorCaseNumberInvalid: "Rhaid i enw maes rhif yr achos gynnwys llythrennau, rhifau a thanlinellau yn unig",
   errorCaseNameRequired: "Rhowch enw maes JSON enw'r achos",
-  errorCaseNameInvalid: "Rhaid i enw maes enw'r achos gynnwys llythrennau, rhifau a thanlinellau yn unig"
+  errorCaseNameInvalid: "Rhaid i enw maes enw'r achos gynnwys llythrennau, rhifau a thanlinellau yn unig",
+  errorAtLeastOneFieldRequired: "Rhowch o leiaf un enw maes"
 };

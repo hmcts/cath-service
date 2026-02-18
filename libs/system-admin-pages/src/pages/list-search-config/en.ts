@@ -9,5 +9,6 @@ export const en = {
   errorCaseNumberRequired: "Enter the case number JSON field name",
   errorCaseNumberInvalid: "Case number field name must contain only letters, numbers and underscores",
   errorCaseNameRequired: "Enter the case name JSON field name",
-  errorCaseNameInvalid: "Case name field name must contain only letters, numbers and underscores"
+  errorCaseNameInvalid: "Case name field name must contain only letters, numbers and underscores",
+  errorAtLeastOneFieldRequired: "Enter at least one field name"
 };

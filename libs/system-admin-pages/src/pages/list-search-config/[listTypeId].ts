@@ -45,13 +45,16 @@ export const postHandler = async (req: Request, res: Response) => {
   if (!result.success && result.errors) {
     const errors = result.errors.map((error) => ({
       text: error.message,
-      href: `#${error.field.toLowerCase().replace(/\s+/g, "-")}`
+      href: error.field ? `#${error.field.toLowerCase().replace(/\s+/g, "-")}` : undefined
     }));
 
     const fieldErrors: Record<string, { text: string }> = {};
     for (const error of result.errors) {
-      const fieldId = error.field === "Case number field name" ? "caseNumberFieldName" : "caseNameFieldName";
-      fieldErrors[fieldId] = { text: error.message };
+      if (error.field === "Case number field name") {
+        fieldErrors.caseNumberFieldName = { text: error.message };
+      } else if (error.field === "Case name field name") {
+        fieldErrors.caseNameFieldName = { text: error.message };
+      }
     }
 
     return res.render("list-search-config/index", {
