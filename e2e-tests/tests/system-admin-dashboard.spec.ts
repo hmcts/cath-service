@@ -21,11 +21,11 @@ test.describe("System Admin Dashboard", () => {
       { title: "Upload Reference Data", href: "/upload-reference-data", description: "Upload CSV location reference data" },
       { title: "Delete Court", href: "/delete-court", description: "Delete court from reference data" },
       { title: "Manage Third-Party Users", href: "/third-party-users", description: "View, create, update and remove third-party users" },
-      { title: "User Management", href: "/find-users", description: "Find, update and delete users" },
+      { title: "User Management", href: "/user-management", description: "Find, update and delete users" },
       { title: "Blob Explorer", href: "/blob-explorer-locations", description: "Discover content uploaded to all locations" },
       { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts", description: "Upload a CSV file for bulk creation of media accounts" },
       { title: "Audit Log Viewer", href: "/audit-log-viewer", description: "View audit logs on system admin actions" },
-      { title: "Manage Location Metadata", href: "/location-metadata", description: "View, update and remove location metadata" }
+      { title: "Manage Location Metadata", href: "/location-metadata-search", description: "View, update and remove location metadata" }
     ];
 
     for (const { title, href, description } of tileData) {

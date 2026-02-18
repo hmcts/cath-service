@@ -23,6 +23,7 @@
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
+    "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
@@ -37,7 +38,7 @@
     "dotenv": "17.2.3",
     "express": "5.2.0",
     "express-session": "1.18.2",
-    "glob": "13.0.0",
+    "glob": "13.0.4",
     "govuk-frontend": "5.13.0",
     "helmet": "8.1.0",
     "multer": "2.0.2",
@@ -55,9 +56,9 @@
     "@types/supertest": "6.0.3",
     "concurrently": "9.2.1",
     "nodemon": "3.1.11",
-    "sass": "1.97.1",
+    "sass": "1.97.3",
     "supertest": "7.1.4",
-    "vite": "7.3.0",
+    "vite": "7.3.1",
     "vite-plugin-static-copy": "3.1.4"
   }
 }

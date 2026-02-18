@@ -40,7 +40,7 @@ describe("getSsoConfig", () => {
     const config = getSsoConfig();
 
     expect(config).toEqual({
-      identityMetadata: "https://login.microsoftonline.com/tenant/v2.0",
+      identityMetadata: "https://login.microsoftonline.com/tenant/v2.0/.well-known/openid-configuration",
       clientId: "client-123",
       clientSecret: "secret-456",
       redirectUri: "https://example.com/sso/return",
@@ -72,7 +72,7 @@ describe("getSsoConfig", () => {
     const { getSsoConfig } = await import("./sso-config.js");
     const ssoConfig = getSsoConfig();
 
-    expect(ssoConfig.identityMetadata).toBe("https://config-login.com/tenant/v2.0");
+    expect(ssoConfig.identityMetadata).toBe("https://config-login.com/tenant/v2.0/.well-known/openid-configuration");
     expect(ssoConfig.clientId).toBe("config-client-123");
     expect(ssoConfig.clientSecret).toBe("config-secret-456");
     expect(ssoConfig.redirectUri).toBe("https://config.example.com/sso/return");
