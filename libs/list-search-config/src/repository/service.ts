@@ -51,13 +51,21 @@ export async function saveConfig(
     errors.push(caseNameError);
   }
 
-  if (errors.length > 0) {
-    return { success: false, errors };
-  }
-
   // Normalize empty/whitespace values to empty strings
   const normalizedCaseNumber = caseNumberFieldName ? caseNumberFieldName.trim() : "";
   const normalizedCaseName = caseNameFieldName ? caseNameFieldName.trim() : "";
+
+  // At least one field must be populated
+  if (!normalizedCaseNumber && !normalizedCaseName) {
+    errors.push({
+      field: "",
+      message: "Enter at least one field name"
+    });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
 
   await repository.upsert(listTypeId, {
     caseNumberFieldName: normalizedCaseNumber,
