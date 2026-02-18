@@ -7,6 +7,7 @@
 #### With Other Issues
 
 {{#if ISSUE_CONFLICTS}}
+
 | Conflict Type | This Issue | Conflicts With | Resolution Needed |
 |---------------|------------|----------------|-------------------|
 {{ISSUE_CONFLICTS_TABLE}}
@@ -17,6 +18,7 @@ No conflicts with other issues detected.
 #### With Existing Code
 
 {{#if CODE_CONFLICTS}}
+
 | Conflict Type | Requirement | Current Implementation | Resolution Needed |
 |---------------|-------------|------------------------|-------------------|
 {{CODE_CONFLICTS_TABLE}}
