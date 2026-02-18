@@ -178,7 +178,7 @@ test.describe("Bulk Unsubscribe", () => {
       await page.locator('input[name="listTypes"]').first().check();
       await page.getByRole("button", { name: /continue/i }).click();
       // Language page
-      await page.getByRole("radio", { name: /english/i }).check();
+      await page.getByRole("radio", { name: "English", exact: true }).check();
       await page.getByRole("button", { name: /continue/i }).click();
       // Confirm page
       await page.getByRole("button", { name: /confirm subscriptions/i }).click();
