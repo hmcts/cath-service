@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { DefaultAzureCredential } from "@azure/identity";
+import { AzureCliCredential, DefaultAzureCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 import { load as yamlLoad } from "js-yaml";
 import type { Config } from "./properties.js";
@@ -72,40 +72,37 @@ async function processVault(config: Config, vault: any): Promise<void> {
   // Use vault name as-is from Helm chart (should include environment suffix like -stg, -aat, etc.)
   const vaultUri = `https://${vaultName}.vault.azure.net/`;
 
-  // Use DefaultAzureCredential with a shorter timeout for local development
-  // AZURE_TENANT_ID should be set to prioritize Azure CLI authentication
-  const credential = new DefaultAzureCredential();
+  // In local development, use AzureCliCredential directly to avoid conflicts with
+  // AZURE_CLIENT_ID/AZURE_CLIENT_SECRET env vars that DefaultAzureCredential picks up
+  const isDevelopment = process.env.NODE_ENV === "development" || !process.env.KUBERNETES_SERVICE_HOST;
+  const credential = isDevelopment ? new AzureCliCredential() : new DefaultAzureCredential();
   const client = new SecretClient(vaultUri, credential);
 
   console.log(`Azure Vault: Fetching ${secrets.length} secrets from ${vaultName}...`);
   const secretPromises = secrets.map((secret: StructuredOrUnstructuredSecret) => processSecret(client, secret));
 
-  try {
-    const TIMEOUT_MS = 30000; // 30 second timeout
-    const secretResults = await Promise.race([
-      Promise.all(secretPromises),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms while fetching secrets from ${vaultName}`)), TIMEOUT_MS)
-      )
-    ]);
+  const TIMEOUT_MS = 30000; // 30 second timeout
+  const secretResults = await Promise.race([
+    Promise.allSettled(secretPromises),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms while fetching secrets from ${vaultName}`)), TIMEOUT_MS))
+  ]);
 
-    // Merge all secrets into config
-    const secretsConfig: Config = {};
-    for (const { key, value } of secretResults) {
+  // Merge successful secrets into config, warn about failures
+  const secretsConfig: Config = {};
+  let loadedCount = 0;
+
+  for (const result of secretResults) {
+    if (result.status === "fulfilled") {
+      const { key, value } = result.value;
       secretsConfig[key] = value;
-      // Set environment variable so code reading from process.env gets the Key Vault value
       process.env[key] = value;
+      loadedCount++;
+    } else {
+      console.warn(`Warning: Azure Key Vault: Vault '${vaultName}': ${result.reason?.message || result.reason}`);
     }
-
-    Object.assign(config, deepMerge(config, secretsConfig));
-    console.log(`Azure Vault: Successfully loaded ${secretResults.length} secrets from ${vaultName}`);
-  } catch (error: any) {
-    // Re-throw with vault context if not already included
-    if (error.message && !error.message.includes(vaultName)) {
-      throw new Error(`Vault '${vaultName}': ${error.message}`);
-    }
-    throw error;
   }
+
+  Object.assign(config, deepMerge(config, secretsConfig));
 }
 
 /**
