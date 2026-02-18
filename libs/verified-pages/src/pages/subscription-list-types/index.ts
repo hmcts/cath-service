@@ -31,7 +31,7 @@ function groupListTypesByLetter(listTypes: ListType[], locale: string, selectedI
   }
 
   return Object.keys(grouped)
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .map((letter) => ({
       letter,
       items: grouped[letter]
