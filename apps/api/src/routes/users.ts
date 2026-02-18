@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 
-// GET /api/users
 export const GET = async (_req: Request, res: Response) => {
   // Example endpoint - replace with actual implementation
   res.json({
