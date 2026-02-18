@@ -32,10 +32,12 @@
       "@hmcts/administrative-court-daily-cause-list": ["libs/list-types/administrative-court-daily-cause-list/src"],
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
-      "@hmcts/subscriptions": ["libs/subscriptions/src"],
-      "@hmcts/subscriptions/config": ["libs/subscriptions/src/config"],
+      "@hmcts/subscriptions": ["libs/subscription/src"],
+      "@hmcts/subscriptions/config": ["libs/subscription/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
-      "@hmcts/notifications": ["libs/notifications/src"]
+      "@hmcts/notifications": ["libs/notifications/src"],
+      "@hmcts/list-search-config": ["libs/list-search-config/src"],
+      "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

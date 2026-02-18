@@ -8,13 +8,19 @@ vi.mock("../govnotify/govnotify-client.js", () => ({
   })
 }));
 
-vi.mock("./subscription-queries.js", () => ({
-  findActiveSubscriptionsByLocation: vi.fn()
+vi.mock("@hmcts/subscription", () => ({
+  findActiveSubscriptionsByLocation: vi.fn(),
+  findActiveSubscriptionsByCaseNumbers: vi.fn().mockResolvedValue([]),
+  findActiveSubscriptionsByCaseNames: vi.fn().mockResolvedValue([])
 }));
 
 vi.mock("./notification-queries.js", () => ({
   createNotificationAuditLog: vi.fn(),
   updateNotificationStatus: vi.fn()
+}));
+
+vi.mock("@hmcts/publication", () => ({
+  findAllArtefactSearchByArtefactId: vi.fn().mockResolvedValue([])
 }));
 
 describe("notification-service", () => {
@@ -27,7 +33,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -37,7 +44,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-2",
         userId: "user-2",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user2@example.com",
           firstName: "Jane",
@@ -46,7 +54,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
@@ -80,7 +88,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "invalid-email",
           firstName: "John",
@@ -89,7 +98,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
@@ -118,7 +127,7 @@ describe("notification-service", () => {
   });
 
   it("should return empty result when no subscriptions exist", async () => {
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
 
     const result = await sendPublicationNotifications({
@@ -162,7 +171,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: null,
           firstName: "John",
@@ -171,7 +181,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
@@ -205,7 +215,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -214,7 +225,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
 
@@ -254,7 +265,8 @@ describe("notification-service", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -263,7 +275,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);

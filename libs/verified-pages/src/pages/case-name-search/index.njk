@@ -1,0 +1,41 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errorSummary %}
+      {{ govukErrorSummary(errorSummary) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      {{ govukInput({
+        id: "caseName",
+        name: "caseName",
+        classes: "govuk-!-width-one-half",
+        label: {
+          text: caseNameLabel,
+          classes: "govuk-visually-hidden"
+        },
+        hint: {
+          text: caseNameHint
+        },
+        errorMessage: fieldErrors.caseName if fieldErrors and fieldErrors.caseName,
+        value: data.caseName if data
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

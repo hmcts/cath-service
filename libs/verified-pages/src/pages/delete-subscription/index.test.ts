@@ -1,4 +1,4 @@
-import * as subscriptionService from "@hmcts/subscriptions";
+import * as subscriptionService from "@hmcts/subscription";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
@@ -9,7 +9,7 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-vi.mock("@hmcts/subscriptions", () => ({
+vi.mock("@hmcts/subscription", () => ({
   getSubscriptionById: vi.fn()
 }));
 
@@ -92,6 +92,67 @@ describe("delete-subscription", () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith("Error fetching subscription:", expect.any(Error));
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
     });
+
+    it("should handle comma-separated subscription IDs for deduplicated subscriptions", async () => {
+      const id1 = "550e8400-e29b-41d4-a716-446655440000";
+      const id2 = "550e8400-e29b-41d4-a716-446655440001";
+      mockReq.query = { subscriptionId: `${id1},${id2}` };
+
+      vi.mocked(subscriptionService.getSubscriptionById)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockResolvedValueOnce({
+          subscriptionId: id2,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        });
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(id1, "user123");
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(id2, "user123");
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "delete-subscription/index",
+        expect.objectContaining({
+          subscriptionId: `${id1},${id2}`
+        })
+      );
+    });
+
+    it("should redirect if any of the comma-separated IDs is invalid", async () => {
+      mockReq.query = { subscriptionId: "550e8400-e29b-41d4-a716-446655440000,invalid-id" };
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+      expect(subscriptionService.getSubscriptionById).not.toHaveBeenCalled();
+    });
+
+    it("should redirect if user does not own all comma-separated subscriptions", async () => {
+      const id1 = "550e8400-e29b-41d4-a716-446655440000";
+      const id2 = "550e8400-e29b-41d4-a716-446655440001";
+      mockReq.query = { subscriptionId: `${id1},${id2}` };
+
+      vi.mocked(subscriptionService.getSubscriptionById)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockResolvedValueOnce(null);
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(id1, "user123");
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(id2, "user123");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+    });
   });
 
   describe("POST", () => {
@@ -147,6 +208,87 @@ describe("delete-subscription", () => {
 
     it("should redirect to subscription-management if no subscription provided", async () => {
       mockReq.body = { "unsubscribe-confirm": "yes" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+    });
+
+    it("should handle comma-separated subscription IDs when user confirms", async () => {
+      const id1 = "550e8400-e29b-41d4-a716-446655440000";
+      const id2 = "550e8400-e29b-41d4-a716-446655440001";
+      mockReq.body = { subscription: `${id1},${id2}`, "unsubscribe-confirm": "yes" };
+      mockReq.session = {} as any;
+
+      vi.mocked(subscriptionService.getSubscriptionById)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockResolvedValueOnce({
+          subscriptionId: id2,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        });
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(id1, "user123");
+      expect(subscriptionService.getSubscriptionById).toHaveBeenCalledWith(id2, "user123");
+      expect(mockReq.session.emailSubscriptions?.subscriptionToRemove).toBe(`${id1},${id2}`);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/unsubscribe-confirmation");
+    });
+
+    it("should redirect to GET with comma-separated IDs when no confirmation", async () => {
+      const id1 = "550e8400-e29b-41d4-a716-446655440000";
+      const id2 = "550e8400-e29b-41d4-a716-446655440001";
+      mockReq.body = { subscriptionId: `${id1},${id2}` };
+
+      vi.mocked(subscriptionService.getSubscriptionById)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockResolvedValueOnce({
+          subscriptionId: id2,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        });
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(`/delete-subscription?subscriptionId=${id1},${id2}`);
+    });
+
+    it("should redirect if any comma-separated ID is invalid format", async () => {
+      mockReq.body = { subscription: "550e8400-e29b-41d4-a716-446655440000,invalid-uuid" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+      expect(subscriptionService.getSubscriptionById).not.toHaveBeenCalled();
+    });
+
+    it("should redirect if user does not own all comma-separated subscriptions in POST", async () => {
+      const id1 = "550e8400-e29b-41d4-a716-446655440000";
+      const id2 = "550e8400-e29b-41d4-a716-446655440001";
+      mockReq.body = { subscription: `${id1},${id2}`, "unsubscribe-confirm": "yes" };
+      mockReq.session = {} as any;
+
+      vi.mocked(subscriptionService.getSubscriptionById)
+        .mockResolvedValueOnce({
+          subscriptionId: id1,
+          userId: "user123",
+          locationId: 456,
+          dateAdded: new Date()
+        })
+        .mockResolvedValueOnce(null);
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 

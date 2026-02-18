@@ -2,7 +2,6 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
-{% from "govuk/components/tabs/macro.njk" import govukTabs %}
 
 {% block pageTitle %}
   {{ bulkUnsubscribeTitle }} - {{ serviceName }} - {{ govUk }}
@@ -23,20 +22,33 @@
   {% if showEmptyState %}
     <p class="govuk-body govuk-!-margin-top-6">{{ emptyStateMessage }}</p>
   {% else %}
+    <nav class="moj-sub-navigation" aria-label="Subscription filters">
+      <ul class="moj-sub-navigation__list">
+        <li class="moj-sub-navigation__item">
+          <a class="moj-sub-navigation__link" {% if currentView == 'all' %}aria-current="page"{% endif %} href="/bulk-unsubscribe?view=all">{{ tabAllSubscriptions }} ({{ allSubscriptionsCount }})</a>
+        </li>
+        <li class="moj-sub-navigation__item">
+          <a class="moj-sub-navigation__link" {% if currentView == 'case' %}aria-current="page"{% endif %} href="/bulk-unsubscribe?view=case">{{ tabSubscriptionsByCase }} ({{ caseSubscriptionsCount }})</a>
+        </li>
+        <li class="moj-sub-navigation__item">
+          <a class="moj-sub-navigation__link" {% if currentView == 'location' %}aria-current="page"{% endif %} href="/bulk-unsubscribe?view=location">{{ tabSubscriptionsByCourt }} ({{ courtSubscriptionsCount }})</a>
+        </li>
+      </ul>
+    </nav>
+
     <form method="post" action="/bulk-unsubscribe" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      <input type="hidden" name="view" value="{{ currentView }}">
 
-      {% set allTabHtml %}
+      {% if currentView == 'all' %}
         {% if hasCaseSubscriptions %}
-          <h2 class="govuk-heading-m">{{ tabSubscriptionsByCase }}</h2>
           <table class="govuk-table" id="case-subscriptions-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderCaseName }}</th>
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderReferenceNumber }}</th>
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -54,11 +66,10 @@
             <tbody class="govuk-table__body">
               {% for subscription in caseSubscriptions %}
                 <tr class="govuk-table__row">
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName or notAvailable }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber or notAvailable }}</td>
+                  <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right; vertical-align: middle;">
                     <div class="govuk-checkboxes__item govuk-checkboxes--small">
                       <input
                         class="govuk-checkboxes__input row-checkbox"
@@ -66,10 +77,10 @@
                         name="subscriptions"
                         type="checkbox"
                         value="{{ subscription.subscriptionId }}"
-                        aria-label="Select {{ subscription.caseName }}"
+                        aria-label="Select {{ subscription.caseName or subscription.caseNumber }}"
                         {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
                       <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
-                        <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
+                        <span class="govuk-visually-hidden">Select {{ subscription.caseName or subscription.caseNumber }}</span>
                       </label>
                     </div>
                   </td>
@@ -80,15 +91,12 @@
         {% endif %}
 
         {% if hasCourtSubscriptions %}
-          {% if hasCaseSubscriptions %}
-            <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ tabSubscriptionsByCourt }}</h2>
-          {% endif %}
           <table class="govuk-table" id="court-subscriptions-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 60%;">{{ tableHeaderCourtName }}</th>
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -107,8 +115,8 @@
               {% for subscription in courtSubscriptions %}
                 <tr class="govuk-table__row">
                   <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.courtOrTribunalName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                  <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right; vertical-align: middle;">
                     <div class="govuk-checkboxes__item govuk-checkboxes--small">
                       <input
                         class="govuk-checkboxes__input row-checkbox"
@@ -128,18 +136,17 @@
             </tbody>
           </table>
         {% endif %}
-      {% endset %}
+      {% endif %}
 
-      {% set caseTabHtml %}
+      {% if currentView == 'case' %}
         {% if hasCaseSubscriptions %}
           <table class="govuk-table" id="case-subscriptions-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderCaseName }}</th>
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderReferenceNumber }}</th>
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -157,11 +164,10 @@
             <tbody class="govuk-table__body">
               {% for subscription in caseSubscriptions %}
                 <tr class="govuk-table__row">
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName or notAvailable }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber or notAvailable }}</td>
+                  <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right; vertical-align: middle;">
                     <div class="govuk-checkboxes__item govuk-checkboxes--small">
                       <input
                         class="govuk-checkboxes__input row-checkbox"
@@ -169,10 +175,10 @@
                         name="subscriptions"
                         type="checkbox"
                         value="{{ subscription.subscriptionId }}"
-                        aria-label="Select {{ subscription.caseName }}"
+                        aria-label="Select {{ subscription.caseName or subscription.caseNumber }}"
                         {% if subscription.subscriptionId in previouslySelected %}checked{% endif %}>
                       <label class="govuk-label govuk-checkboxes__label" for="case-{{ subscription.subscriptionId }}">
-                        <span class="govuk-visually-hidden">Select {{ subscription.caseName }}</span>
+                        <span class="govuk-visually-hidden">Select {{ subscription.caseName or subscription.caseNumber }}</span>
                       </label>
                     </div>
                   </td>
@@ -181,18 +187,18 @@
             </tbody>
           </table>
         {% else %}
-          <p class="govuk-body">{{ emptyStateMessage }}</p>
+          <p class="govuk-body">{{ noCaseSubscriptions }}</p>
         {% endif %}
-      {% endset %}
+      {% endif %}
 
-      {% set courtTabHtml %}
+      {% if currentView == 'location' %}
         {% if hasCourtSubscriptions %}
           <table class="govuk-table" id="court-subscriptions-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 60%;">{{ tableHeaderCourtName }}</th>
+                <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 10%; text-align: right;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -211,8 +217,8 @@
               {% for subscription in courtSubscriptions %}
                 <tr class="govuk-table__row">
                   <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.courtOrTribunalName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-                  <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
+                  <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+                  <td class="govuk-table__cell govuk-table__cell--numeric" style="text-align: right; vertical-align: middle;">
                     <div class="govuk-checkboxes__item govuk-checkboxes--small">
                       <input
                         class="govuk-checkboxes__input row-checkbox"
@@ -232,35 +238,9 @@
             </tbody>
           </table>
         {% else %}
-          <p class="govuk-body">{{ emptyStateMessage }}</p>
+          <p class="govuk-body">{{ noCourtSubscriptions }}</p>
         {% endif %}
-      {% endset %}
-
-      {{ govukTabs({
-        items: [
-          {
-            label: tabAllSubscriptions + " (" + allSubscriptionsCount + ")",
-            id: "all-subscriptions",
-            panel: {
-              html: allTabHtml
-            }
-          },
-          {
-            label: tabSubscriptionsByCase + " (" + caseSubscriptionsCount + ")",
-            id: "case-subscriptions",
-            panel: {
-              html: caseTabHtml
-            }
-          },
-          {
-            label: tabSubscriptionsByCourt + " (" + courtSubscriptionsCount + ")",
-            id: "court-subscriptions",
-            panel: {
-              html: courtTabHtml
-            }
-          }
-        ]
-      }) }}
+      {% endif %}
 
       <div class="govuk-button-group govuk-!-margin-top-6">
         {{ govukButton({

@@ -1,12 +1,17 @@
 export const en = {
   title: "Confirm your email subscriptions",
   heading: "Confirm your email subscriptions",
-  confirmButton: "Confirm subscription",
-  confirmButtonPlural: "Confirm subscriptions",
+  confirmButton: "Confirm subscriptions",
   removeLink: "Remove",
-  addAnotherSubscription: "Add another email Subscription",
+  addAnotherSubscription: "Add another email subscription",
   errorSummaryTitle: "There is a problem",
   errorAtLeastOne: "At least one subscription is needed.",
   addSubscriptions: "Add Subscriptions",
-  back: "Back"
+  courtSubscriptionsHeading: "Court or tribunal subscriptions",
+  caseSubscriptionsHeading: "Case subscriptions",
+  courtHeading: "Court or tribunal name",
+  caseNameHeading: "Case name",
+  caseNumberHeading: "Reference number",
+  actionsHeading: "Actions",
+  notAvailable: "Not available"
 };

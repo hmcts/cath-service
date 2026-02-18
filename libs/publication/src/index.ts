@@ -1,4 +1,5 @@
 export { type ListType, mockListTypes } from "@hmcts/list-types-common";
+export { extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {
   canAccessPublication,
@@ -17,7 +18,12 @@ export {
   type ArtefactMetadata,
   type ArtefactSummary,
   createArtefact,
+  createArtefactSearch,
   deleteArtefacts,
+  findAllArtefactSearchByArtefactId,
+  findArtefactSearchByArtefactId,
+  findByCaseName,
+  findByCaseNumber,
   getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
@@ -30,4 +36,7 @@ export {
 } from "./repository/queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";
-export { type ValidationResult, validateJson } from "./validation/json-validator.js";
+export {
+  type ValidationResult,
+  validateJson
+} from "./validation/json-validator.js";
