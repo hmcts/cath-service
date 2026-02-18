@@ -163,47 +163,37 @@ test.describe("Bulk Unsubscribe", () => {
     await emailSubsTile.click();
     await expect(page).toHaveURL("/subscription-management");
 
+    // Helper to create a location subscription through the full flow
+    async function createLocationSubscription(locationId: number) {
+      await page.getByRole("button", { name: /add email subscription/i }).click();
+      await page.waitForLoadState("networkidle");
+      await page.getByRole("radio", { name: /court or tribunal/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForLoadState("networkidle");
+      await page.locator(`#location-${locationId}`).check();
+      await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
+      // Locations review page
+      await page.getByRole("button", { name: /continue/i }).click();
+      // List types page - select first available list type
+      await page.locator('input[name="listTypes"]').first().check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Language page
+      await page.getByRole("radio", { name: /english/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Confirm page
+      await page.getByRole("button", { name: /confirm subscriptions/i }).click();
+      await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
+      await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    }
+
     // Add first subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    // Select court or tribunal subscription method
-    await page.getByRole("radio", { name: /court or tribunal/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location1Checkbox = page.locator(`#location-${testData.locationId1}`);
-    await location1Checkbox.check();
-    await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createLocationSubscription(testData.locationId1);
 
     // Add second subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    // Select court or tribunal subscription method
-    await page.getByRole("radio", { name: /court or tribunal/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location2Checkbox = page.locator(`#location-${testData.locationId2}`);
-    await location2Checkbox.check();
-    await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createLocationSubscription(testData.locationId2);
 
     // Add third subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    // Select court or tribunal subscription method
-    await page.getByRole("radio", { name: /court or tribunal/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location3Checkbox = page.locator(`#location-${testData.locationId3}`);
-    await location3Checkbox.check();
-    await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createLocationSubscription(testData.locationId3);
 
     // STEP 2: Navigate to bulk unsubscribe from subscription management
     await expect(page).toHaveURL("/subscription-management");

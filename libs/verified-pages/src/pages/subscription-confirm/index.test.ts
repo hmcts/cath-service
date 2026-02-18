@@ -252,7 +252,8 @@ describe("subscription-confirm", () => {
 
       expect(listTypeSubscriptionService.createListTypeSubscriptions).toHaveBeenCalledWith("user123", [1, 2], ["ENGLISH"]);
       expect(mockReq.session.listTypeSubscription).toBeUndefined();
-      expect(mockReq.session.listTypeSubscriptionConfirmed).toBe(true);
+      expect(mockReq.session.emailSubscriptions?.confirmationComplete).toBe(true);
+      expect(mockReq.session.emailSubscriptions?.confirmedLocations).toEqual([]);
       expect(sessionSave).toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
     });

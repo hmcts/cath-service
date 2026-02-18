@@ -181,8 +181,14 @@ const postHandler = async (req: Request, res: Response) => {
   try {
     await createListTypeSubscriptions(req.user.id, req.session.listTypeSubscription.selectedListTypeIds, req.session.listTypeSubscription.language);
 
+    const selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds || [];
     delete req.session.listTypeSubscription;
-    req.session.listTypeSubscriptionConfirmed = true;
+
+    if (!req.session.emailSubscriptions) {
+      req.session.emailSubscriptions = {};
+    }
+    req.session.emailSubscriptions.confirmationComplete = true;
+    req.session.emailSubscriptions.confirmedLocations = selectedLocationIds.map(String);
 
     req.session.save((err: Error | null) => {
       if (err) {

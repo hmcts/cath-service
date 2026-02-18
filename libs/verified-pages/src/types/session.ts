@@ -7,6 +7,5 @@ export interface ListTypeSubscriptionSession {
 declare module "express-session" {
   interface SessionData {
     listTypeSubscription?: ListTypeSubscriptionSession;
-    listTypeSubscriptionConfirmed?: boolean;
   }
 }
