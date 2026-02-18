@@ -164,17 +164,19 @@ describe("list-search-config service", () => {
       });
     });
 
-    it("should save config with both fields blank", async () => {
+    it("should return error when both fields are blank", async () => {
       const { upsert } = await import("./queries.js");
-      vi.mocked(upsert).mockResolvedValue({} as any);
 
       const result = await saveConfig(1, "", "");
 
-      expect(result).toEqual({ success: true });
-      expect(upsert).toHaveBeenCalledWith(1, {
-        caseNumberFieldName: "",
-        caseNameFieldName: ""
-      });
+      expect(result.success).toBe(false);
+      expect(result.errors).toEqual([
+        {
+          field: "",
+          message: "Enter at least one field name"
+        }
+      ]);
+      expect(upsert).not.toHaveBeenCalled();
     });
 
     it("should return validation errors for invalid characters in case number field", async () => {
