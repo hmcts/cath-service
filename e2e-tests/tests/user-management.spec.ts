@@ -1,8 +1,8 @@
+import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { randomUUID } from "node:crypto";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper to validate required environment variables
