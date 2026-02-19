@@ -1,0 +1,61 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">{{ pageTitle(user.email) }}</h1>
+
+    {{ govukWarningText({
+      text: warningText,
+      iconFallbackText: "Warning"
+    }) }}
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: { text: userIdLabel },
+          value: { text: user.userId }
+        },
+        {
+          key: { text: emailLabel },
+          value: { text: user.email }
+        },
+        {
+          key: { text: roleLabel },
+          value: { text: user.role }
+        },
+        {
+          key: { text: provenanceLabel },
+          value: { text: user.userProvenance }
+        },
+        {
+          key: { text: provenanceIdLabel },
+          value: { text: user.userProvenanceId }
+        },
+        {
+          key: { text: creationDateLabel },
+          value: { text: user.createdDate }
+        },
+        {
+          key: { text: lastSignInLabel },
+          value: { text: user.lastSignedInDate }
+        }
+      ]
+    }) }}
+
+    <form action="/delete-user-confirm/{{ user.userId }}{% if lng %}?lng={{ lng }}{% endif %}" method="get">
+      {{ govukButton({
+        text: deleteUserButton,
+        classes: "govuk-button--warning"
+      }) }}
+    </form>
+
+    <p class="govuk-body">
+      <a href="/find-users{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-link">{{ backLink }}</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

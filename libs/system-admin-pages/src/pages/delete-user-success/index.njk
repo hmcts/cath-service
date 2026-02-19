@@ -1,0 +1,19 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {{ govukPanel({
+      titleText: panelTitle,
+      classes: "govuk-panel--confirmation"
+    }) }}
+
+    <p class="govuk-body">{{ successMessage }}</p>
+
+    <p class="govuk-body">
+      <a href="/find-users{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-link">{{ returnLink }}</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
