@@ -1,0 +1,106 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% macro getError(errors, fieldId) -%}
+  {%- if errors -%}
+    {%- for error in errors -%}
+      {%- if error.href == fieldId -%}{{ error.text }}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+
+      {{ govukRadios({
+        name: "channel",
+        fieldset: {
+          legend: {
+            text: channelLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        items: [
+          {
+            value: "API",
+            text: channelApiOption,
+            checked: currentChannel == "API"
+          }
+        ]
+      }) }}
+
+      {% set sensitivityErrorText = getError(errors, "#sensitivity") %}
+      {{ govukRadios({
+        name: "sensitivity",
+        fieldset: {
+          legend: {
+            text: sensitivityLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        errorMessage: { text: sensitivityErrorText } if sensitivityErrorText and sensitivityErrorText | length > 0 else undefined,
+        items: [
+          {
+            value: "PUBLIC",
+            text: sensitivityPublicOption,
+            checked: currentSensitivity == "PUBLIC"
+          },
+          {
+            value: "PRIVATE",
+            text: sensitivityPrivateOption,
+            checked: currentSensitivity == "PRIVATE"
+          },
+          {
+            value: "CLASSIFIED",
+            text: sensitivityClassifiedOption,
+            checked: currentSensitivity == "CLASSIFIED"
+          }
+        ]
+      }) }}
+
+      {% if listTypes and listTypes.length > 0 %}
+        {% set checkboxItems = [] %}
+        {% for listType in listTypes %}
+          {% set isChecked = currentListTypeIds and (listType.id in currentListTypeIds) %}
+          {% set checkboxItems = (checkboxItems.push({
+            value: listType.id,
+            text: (listType.welshFriendlyName if lng == 'cy' else listType.englishFriendlyName),
+            checked: isChecked
+          }), checkboxItems) %}
+        {% endfor %}
+
+        {{ govukCheckboxes({
+          name: "listTypes",
+          fieldset: {
+            legend: {
+              text: listTypesLabel,
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: checkboxItems
+        }) }}
+      {% endif %}
+
+      {{ govukButton({
+        text: saveButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}
