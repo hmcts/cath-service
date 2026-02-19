@@ -1,5 +1,11 @@
 # Technical Plan: Replace passport-azure-ad with openid-client
 
+## 0. Branch Strategy
+
+**Base branch:** `feature/VIBE-142-cath-sign-in-b2c` (not `master`)
+
+Ticket #229 contains the Azure B2C authentication functionality on branch `feature/VIBE-142-cath-sign-in-b2c`. This branch must be based off that so B2C support is already present, resolving the B2C acceptance criteria without additional implementation in this ticket.
+
 ## 1. Technical Approach
 
 ### Strategy: Passport Strategy Wrapper (Minimal Risk)
@@ -275,13 +281,14 @@ passport.use(new OpenIdConnectStrategy({
 ### AC 3: Azure B2C working and users can login successfully
 
 **Implementation:**
-- No B2C authentication flow currently exists in codebase
-- B2C_IDAM provenance referenced in code but no actual implementation
-- This ticket does NOT implement B2C support
+- B2C authentication is provided by ticket #229 (base branch `feature/229`)
+- This ticket inherits B2C support by branching from #229
+- No additional B2C implementation required in this ticket
+- The openid-client migration must not break the B2C flow introduced by #229
 
 **Verification:**
-- Confirm with stakeholders that B2C support is out of scope for this ticket
-- If B2C is required, create separate ticket for implementation
+- E2E tests for B2C login journey must pass after migration
+- Manual testing confirms B2C login still works with openid-client changes
 
 ### AC 4: Token refresh and session management
 
@@ -376,13 +383,14 @@ Before deployment to each environment:
 
 **Note:** If `SSO_ISSUER_URL` is already configured (as ticket description states), verify format matches expected base URL (not full .well-known URL).
 
-### Zero-Downtime Deployment
+### Deployment Approach
 
-This migration supports zero-downtime deployment:
-1. Deploy code with new openid-client implementation
-2. Existing authenticated sessions continue to work (session format unchanged)
-3. New login attempts use openid-client strategy
-4. No forced re-login required
+A maintenance window is available for this deployment. This allows for additional validation and testing during rollout:
+1. Deploy code with new openid-client implementation during maintenance window
+2. Verify SSO login, CFT IDAM login, and B2C login in production
+3. Existing authenticated sessions continue to work (session format unchanged)
+4. New login attempts use openid-client strategy
+5. No forced re-login required
 
 ### Rollback Strategy
 
@@ -392,7 +400,7 @@ If issues are discovered in production:
 3. Users with active sessions continue working
 4. New logins use old passport-azure-ad strategy
 
-**Note:** For extra safety, could implement feature flag to toggle between strategies, but adds complexity. Recommend standard deployment rollback instead.
+No feature flag will be used. Standard deployment rollback is sufficient given the maintenance window availability.
 
 ## 7. Performance Considerations
 
@@ -456,68 +464,13 @@ Use state parameter for CSRF protection:
 
 openid-client handles this automatically via `authorizationUrl()` method.
 
-## 9. CLARIFICATIONS NEEDED
+## 9. Resolved Decisions
 
-### 1. Azure B2C Implementation Status
-
-**Question:** Should Azure B2C authentication support be implemented as part of this ticket?
-
-**Context:**
-- Acceptance criteria mentions "Azure B2C is working"
-- Code references B2C_IDAM provenance in several places
-- No actual B2C authentication flow exists in `libs/auth/src/pages/`
-- No B2C configuration exports from `sso-config.ts`
-
-**Recommendation:** Clarify with stakeholders if B2C is:
-- **Option A:** Out of scope (no B2C users exist yet, future implementation)
-- **Option B:** Required for this ticket (need B2C tenant details and configuration)
-
-**Impact:** If B2C required, need additional implementation:
-- Separate B2C configuration in `sso-config.ts`
-- B2C login/callback route handlers
-- B2C-specific role determination logic
-- Additional E2E tests for B2C flow
-
-### 2. SSO_ISSUER_URL Format
-
-**Question:** What is the exact format of `SSO_ISSUER_URL` in Key Vault?
-
-**Context:**
-- Ticket states "SSO_ISSUER_URL will be used from keyvault and Github secrets which has been added already"
-- Need to confirm if it's base URL or full .well-known URL
-
-**Expected format:** `https://login.microsoftonline.com/{tenant}/v2.0`
-
-**Verification needed:** Check Key Vault to confirm current value matches expected format.
-
-### 3. Token Refresh Strategy
-
-**Question:** Should token refresh be implemented as part of this migration?
-
-**Context:**
-- Current passport-azure-ad implementation does not use refresh tokens
-- openid-client supports token refresh out of the box
-- Session-based authentication may be sufficient for admin users
-
-**Recommendation:** Keep session-based auth (no refresh tokens) for this ticket to minimize scope. Consider refresh tokens in future ticket if user experience requires it (e.g., long-lived sessions).
-
-### 4. Deployment Window
-
-**Question:** Is there a maintenance window available for deployment, or must this be zero-downtime?
-
-**Context:**
-- Implementation supports zero-downtime deployment
-- If maintenance window available, could include additional validation/testing
-
-**Recommendation:** Proceed with zero-downtime approach. Session format backward compatibility ensures no forced re-login.
-
-### 5. Feature Flag for Gradual Rollout
-
-**Question:** Should we implement a feature flag to toggle between passport-azure-ad and openid-client?
-
-**Context:**
-- Adds complexity but provides safer rollout
-- Could enable SSO for subset of users first
-- Standard deployment rollback may be sufficient
-
-**Recommendation:** Skip feature flag unless stakeholders require gradual rollout strategy. Standard deployment rollback is simpler and sufficient for this change.
+| Decision | Resolution |
+|----------|------------|
+| **Base branch** | Branch from `feature/VIBE-142-cath-sign-in-b2c` (not `master`) — #229 provides B2C functionality |
+| **Azure B2C** | Handled by ticket #229; this ticket must not break B2C flow |
+| **SSO_ISSUER_URL format** | Verify in Key Vault matches `https://login.microsoftonline.com/{tenant}/v2.0` |
+| **Token refresh** | Session-only approach; no refresh tokens in this ticket |
+| **Deployment window** | Maintenance window available; deploy with additional validation time |
+| **Feature flag** | No feature flag; standard deployment rollback is sufficient |

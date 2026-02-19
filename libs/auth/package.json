@@ -37,7 +37,7 @@
   "dependencies": {
     "@hmcts/account": "*",
     "@microsoft/microsoft-graph-client": "3.0.7",
-    "passport-azure-ad": "4.3.5"
+    "openid-client": "6.3.3"
   },
   "devDependencies": {
     "@types/express": "5.0.5",

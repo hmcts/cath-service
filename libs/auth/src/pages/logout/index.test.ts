@@ -2,14 +2,12 @@ import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-// Mock sso-config
 vi.mock("../../config/sso-config.js", () => ({
   getSsoConfig: vi.fn(() => ({
-    identityMetadata: "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/v2.0/.well-known/openid-configuration"
+    issuerUrl: "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/v2.0"
   }))
 }));
 
-// Mock b2c-config
 vi.mock("../../config/b2c-config.js", () => ({
   getB2cConfig: vi.fn(() => ({
     clientId: "test-client-id",
@@ -142,7 +140,7 @@ describe("Logout handler", () => {
     const { getSsoConfig } = await import("../../config/sso-config.js");
 
     vi.mocked(getSsoConfig).mockReturnValue({
-      identityMetadata: "https://invalid-url.com"
+      issuerUrl: "https://invalid-url.com"
     } as any);
 
     const req = {
@@ -168,7 +166,7 @@ describe("Logout handler", () => {
     const { getSsoConfig } = await import("../../config/sso-config.js");
 
     vi.mocked(getSsoConfig).mockReturnValue({
-      identityMetadata: "https://login.microsoftonline.com/abc-123/v2.0/.well-known/openid-configuration"
+      issuerUrl: "https://login.microsoftonline.com/abc-123/v2.0"
     } as any);
 
     const req = {
@@ -195,7 +193,7 @@ describe("Logout handler", () => {
     const { getSsoConfig } = await import("../../config/sso-config.js");
 
     vi.mocked(getSsoConfig).mockReturnValue({
-      identityMetadata: "https://login.microsoftonline.com/def-456/v2.0/.well-known/openid-configuration"
+      issuerUrl: "https://login.microsoftonline.com/def-456/v2.0"
     } as any);
 
     const req = {
@@ -222,7 +220,7 @@ describe("Logout handler", () => {
     const { getSsoConfig } = await import("../../config/sso-config.js");
 
     vi.mocked(getSsoConfig).mockReturnValue({
-      identityMetadata: "https://login.microsoftonline.com/abcdef12-3456-7890-abcd-ef1234567890/v2.0/.well-known/openid-configuration"
+      issuerUrl: "https://login.microsoftonline.com/abcdef12-3456-7890-abcd-ef1234567890/v2.0"
     } as any);
 
     const req = {

@@ -11,7 +11,6 @@ nodejs:
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
-    SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
     ENABLE_B2C: 'true'
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
@@ -26,7 +25,7 @@ nodejs:
         - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
-          alias: SSO_IDENTITY_METADATA
+          alias: SSO_ISSUER_URL
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
         - name: sso-sg-admin-ctsc

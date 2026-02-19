@@ -56,11 +56,10 @@ jobs:
       # SSO Configuration (using existing GitHub Secrets)
       SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
       SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
-      SSO_IDENTITY_METADATA: ${{ secrets.SSO_ISSUER_URL }}
+      SSO_ISSUER_URL: ${{ secrets.SSO_ISSUER_URL }}
       SSO_SYSTEM_ADMIN_GROUP_ID: ${{ secrets.SSO_SG_SYSTEM_ADMIN }}
       SSO_INTERNAL_ADMIN_CTSC_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_CTSC }}
       SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_LOCAL }}
-      SSO_ALLOW_HTTP_REDIRECT: false
 
       # Test user credentials (using existing GitHub Secrets)
       SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
