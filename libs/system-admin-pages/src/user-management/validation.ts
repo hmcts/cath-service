@@ -1,5 +1,6 @@
 const ALPHANUMERIC_REGEX = /^[a-zA-Z0-9]+$/;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const PROVENANCE_ID_REGEX = /^[a-zA-Z0-9\-_@.]+$/;
 
 const VALID_ROLES = ["VERIFIED", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL", "SYSTEM_ADMIN"];
 const VALID_PROVENANCES = ["CFT_IDAM", "SSO", "B2C", "CRIME_IDAM"];
@@ -52,16 +53,16 @@ export function validateUserProvenanceId(userProvenanceId: string | undefined): 
     return null; // User Provenance ID is optional for search
   }
 
-  if (userProvenanceId.length > 50) {
+  if (userProvenanceId.length > 100) {
     return {
-      text: "User Provenance ID must be 50 characters or less",
+      text: "User Provenance ID must be 100 characters or less",
       href: "#userProvenanceId"
     };
   }
 
-  if (!ALPHANUMERIC_REGEX.test(userProvenanceId)) {
+  if (!PROVENANCE_ID_REGEX.test(userProvenanceId)) {
     return {
-      text: "User Provenance ID must contain only letters and numbers",
+      text: "User Provenance ID must contain only letters, numbers, hyphens, underscores, @ and periods",
       href: "#userProvenanceId"
     };
   }
