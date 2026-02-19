@@ -3,7 +3,7 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
 import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
-import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
+import { formatDate, formatDateRange } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import "../../manual-upload/model.js";
@@ -77,14 +77,12 @@ const postHandler = async (req: Request, res: Response) => {
       return res.status(404).send("Upload not found");
     }
 
-    // Parse date inputs to Date objects
-    const contentDate = parseDate(uploadData.hearingStartDate);
-    const displayFrom = parseDate(uploadData.displayFrom);
-    const displayTo = parseDate(uploadData.displayTo);
+    const toDate = (d: { day: string; month: string; year: string }) =>
+      new Date(Number(d.year), Number(d.month), Number(d.day));
 
-    if (!contentDate || !displayFrom || !displayTo) {
-      throw new Error("Invalid date format");
-    }
+    const contentDate = toDate(uploadData.hearingStartDate);
+    const displayFrom = toDate(uploadData.displayFrom);
+    const displayTo = toDate(uploadData.displayTo);
 
     // Determine if file is flat file based on extension (JSON files are structured, others are flat)
     const listTypeId = Number.parseInt(uploadData.listType, 10);
