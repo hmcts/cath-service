@@ -1,10 +1,18 @@
 // Schema discovery functionality for module integration
-import { prismaSchemas as listSearchConfigSchemas } from "@hmcts/list-search-config/config";
-import { prismaSchemas as locationSchemas } from "@hmcts/location/config";
-import { prismaSchemas as notificationsSchemas } from "@hmcts/notifications/config";
-import { prismaSchemas as subscriptionSchemas } from "@hmcts/subscription/config";
-import { prismaSchemas as subscriptionListTypesSchemas } from "@hmcts/subscription-list-types/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function getPrismaSchemas(): string[] {
-  return [subscriptionSchemas, subscriptionListTypesSchemas, locationSchemas, notificationsSchemas, listSearchConfigSchemas];
+  const libsDir = path.join(__dirname, "../../../libs");
+
+  return [
+    path.join(libsDir, "subscription/prisma"),
+    path.join(libsDir, "subscription-list-types/prisma"),
+    path.join(libsDir, "location/prisma"),
+    path.join(libsDir, "notifications/prisma"),
+    path.join(libsDir, "list-search-config/prisma")
+  ];
 }
