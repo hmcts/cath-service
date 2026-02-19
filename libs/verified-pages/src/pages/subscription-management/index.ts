@@ -1,9 +1,9 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { mockListTypes } from "@hmcts/list-types-common";
 import { getAllSubscriptionsByUserId, getCaseSubscriptionsByUserId } from "@hmcts/subscription";
 import { getListTypeSubscriptionsByUserId } from "@hmcts/subscription-list-types";
 import type { Request, RequestHandler, Response } from "express";
 import { getCsrfToken } from "../../utils/csrf.js";
+import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -31,40 +31,18 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const [courtSubscriptions, caseSubscriptions, listTypeSubscriptions] = await Promise.all([
-      getAllSubscriptionsByUserId(userId, locale),
-      getCaseSubscriptionsByUserId(userId),
-      getListTypeSubscriptionsByUserId(userId)
-    ]);
+    const [courtSubscriptions, caseSubscriptions] = await Promise.all([getAllSubscriptionsByUserId(userId, locale), getCaseSubscriptionsByUserId(userId)]);
 
     const courtSubscriptionsWithDetails = sortCourtSubscriptions(courtSubscriptions);
     const deduplicatedCaseSubscriptions = deduplicateCaseSubscriptions(caseSubscriptions);
     const sortedCaseSubscriptions = sortCaseSubscriptions(deduplicatedCaseSubscriptions);
-
-    const listTypeSubscriptionsWithDetails = listTypeSubscriptions.map((sub) => {
-      const listType = mockListTypes.find((lt) => lt.id === sub.listTypeId);
-      const languageDisplay = {
-        ENGLISH: locale === "cy" ? "Saesneg" : "English",
-        WELSH: locale === "cy" ? "Cymraeg" : "Welsh",
-        BOTH: locale === "cy" ? "Cymraeg a Saesneg" : "English and Welsh"
-      };
-
-      // Handle language array - join multiple languages or use single value
-      const languageKey = Array.isArray(sub.language) ? (sub.language.length > 1 ? "BOTH" : sub.language[0]) : sub.language;
-
-      return {
-        ...sub,
-        listTypeName: listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : t.notAvailable,
-        languageDisplay: languageDisplay[languageKey as keyof typeof languageDisplay] || languageKey
-      };
-    });
 
     if (!res.locals.navigation) {
       res.locals.navigation = {};
     }
     res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-    const totalCount = courtSubscriptions.length + deduplicatedCaseSubscriptions.length + listTypeSubscriptions.length;
+    const totalCount = courtSubscriptions.length + deduplicatedCaseSubscriptions.length;
 
     res.render("subscription-management/index", {
       ...t,
@@ -74,8 +52,6 @@ const getHandler = async (req: Request, res: Response) => {
       caseCount: deduplicatedCaseSubscriptions.length,
       totalCount,
       currentView: view,
-      listTypeSubscriptions: listTypeSubscriptionsWithDetails,
-      listTypeCount: listTypeSubscriptions.length,
       errorMessage,
       csrfToken: getCsrfToken(req)
     });
@@ -95,11 +71,31 @@ const getHandler = async (req: Request, res: Response) => {
       caseCount: 0,
       totalCount: 0,
       currentView: view,
-      listTypeSubscriptions: [],
-      listTypeCount: 0,
       csrfToken: getCsrfToken(req)
     });
   }
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
+
+  const userId = req.user.id;
+  const listTypeSubscriptions = await getListTypeSubscriptionsByUserId(userId);
+  const selectedListTypeIds = listTypeSubscriptions.map((sub) => sub.listTypeId);
+
+  req.session.listTypeSubscription = {
+    selectedListTypeIds,
+    editMode: true
+  };
+
+  req.session.save((err: Error | null) => {
+    if (err) {
+      console.error("Error saving session", { errorMessage: err.message });
+    }
+    res.redirect("/subscription-list-types");
+  });
 };
 
 const sortCourtSubscriptions = (subscriptions: any[]): any[] => {
@@ -135,3 +131,4 @@ const sortCaseSubscriptions = (subscriptions: any[]): any[] => {
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];

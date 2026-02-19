@@ -35,8 +35,7 @@
     {% if totalCount > 0 %}
       {{ govukButton({
         text: bulkUnsubscribeButton,
-        href: '/bulk-unsubscribe',
-        classes: 'govuk-button--secondary'
+        href: '/bulk-unsubscribe'
       }) }}
     {% endif %}
   </div>
@@ -87,6 +86,13 @@
           </tbody>
         </table>
       {% endif %}
+
+      <form method="post" style="display: inline; margin: 0; padding: 0;">
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+        {{ govukButton({
+          text: editListTypesButton
+        }) }}
+      </form>
 
       {% if courtCount > 0 %}
         <table class="govuk-table" id="locations-table">
@@ -154,6 +160,13 @@
     {% endif %}
 
     {% if currentView == 'location' %}
+      <form method="post" style="display: inline; margin: 0; padding: 0;">
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+        {{ govukButton({
+          text: editListTypesButton
+        }) }}
+      </form>
+
       {% if courtCount > 0 %}
         <table class="govuk-table" id="locations-table">
           <thead class="govuk-table__head">
@@ -187,41 +200,13 @@
     {% endif %}
   {% else %}
     <p class="govuk-body">{{ noSubscriptions }}</p>
-  {% endif %}
 
-  <h2 class="govuk-heading-m govuk-!-margin-top-9">{{ listTypeSubscriptionsHeading }}</h2>
-
-  {% if listTypeCount > 0 %}
-    <table class="govuk-table" id="list-types-table">
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">{{ tableHeaderListType }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderLanguage }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
-          <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
-        </tr>
-      </thead>
-      <tbody class="govuk-table__body">
-        {% for subscription in listTypeSubscriptions %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.listTypeName }}</td>
-            <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.languageDisplay }}</td>
-            <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
-            <td class="govuk-table__cell govuk-table__cell--numeric">
-              <form method="post" action="/delete-list-type-subscription" style="display: inline; margin: 0; padding: 0;">
-                <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-                <input type="hidden" name="listTypeSubscriptionId" value="{{ subscription.listTypeSubscriptionId }}">
-                <button type="submit" class="govuk-link govuk-button-as-link" aria-label="Remove subscription for {{ subscription.listTypeName }}">
-                  {{ removeListTypeLink }}
-                </button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p class="govuk-body">{{ noListTypeSubscriptions }}</p>
+    <form method="post" style="display: inline; margin: 0; padding: 0;">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      {{ govukButton({
+        text: editListTypesButton
+      }) }}
+    </form>
   {% endif %}
 
 </div>

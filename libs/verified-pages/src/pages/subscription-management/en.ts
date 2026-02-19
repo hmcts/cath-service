@@ -22,7 +22,7 @@ export const en = {
   noListTypeSubscriptions: "You do not have any list type subscriptions",
   tableHeaderListType: "List type",
   tableHeaderLanguage: "Language",
-  editListTypeLink: "Edit",
+  editListTypesButton: "Edit list types",
   removeListTypeLink: "Remove",
   errorSummaryTitle: "There is a problem",
   errorDeleteFailed: "There was a problem removing your subscription. Please try again."

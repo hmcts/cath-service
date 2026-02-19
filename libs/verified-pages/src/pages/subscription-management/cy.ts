@@ -22,7 +22,7 @@ export const cy = {
   noListTypeSubscriptions: "Nid oes gennych unrhyw danysgrifiadau math o restr",
   tableHeaderListType: "Math o restr",
   tableHeaderLanguage: "Iaith",
-  editListTypeLink: "Golygu",
+  editListTypesButton: "Golygu mathau o restr",
   removeListTypeLink: "Dileu",
   errorSummaryTitle: "Mae yna broblem",
   errorDeleteFailed: "Roedd problem wrth ddileu eich tanysgrifiad. Rhowch gynnig arall arni."

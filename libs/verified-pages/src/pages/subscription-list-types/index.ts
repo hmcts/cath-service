@@ -58,12 +58,14 @@ const getHandler = async (req: Request, res: Response) => {
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
   const selectedIds = req.session.listTypeSubscription?.selectedListTypeIds || [];
+  const editMode = req.session.listTypeSubscription?.editMode || false;
   const groupedListTypes = groupListTypesByLetter(mockListTypes, locale, selectedIds);
 
   res.render("subscription-list-types/index", {
     ...t,
     locale,
     groupedListTypes,
+    backLinkHref: editMode ? "/subscription-management" : "/subscription-locations-review",
     data: req.session.listTypeSubscription || {},
     csrfToken: getCsrfToken(req)
   });
