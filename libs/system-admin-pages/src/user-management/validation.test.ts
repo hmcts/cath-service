@@ -77,21 +77,43 @@ describe("User Management Validation", () => {
       expect(validateUserProvenanceId("prov123")).toBeNull();
     });
 
+    it("should return null for user provenance ID with hyphens", () => {
+      expect(validateUserProvenanceId("prov-123")).toBeNull();
+    });
+
+    it("should return null for user provenance ID with underscores", () => {
+      expect(validateUserProvenanceId("prov_123")).toBeNull();
+    });
+
+    it("should return null for user provenance ID with @ symbol", () => {
+      expect(validateUserProvenanceId("user@domain.com")).toBeNull();
+    });
+
+    it("should return null for user provenance ID with periods", () => {
+      expect(validateUserProvenanceId("user.name")).toBeNull();
+    });
+
     it("should return null for undefined user provenance ID", () => {
       expect(validateUserProvenanceId(undefined)).toBeNull();
     });
 
-    it("should return error for user provenance ID exceeding 50 characters", () => {
-      const longId = "a".repeat(51);
+    it("should return error for user provenance ID exceeding 100 characters", () => {
+      const longId = "a".repeat(101);
       const result = validateUserProvenanceId(longId);
       expect(result).not.toBeNull();
-      expect(result?.text).toBe("User Provenance ID must be 50 characters or less");
+      expect(result?.text).toBe("User Provenance ID must be 100 characters or less");
     });
 
-    it("should return error for user provenance ID with special characters", () => {
-      const result = validateUserProvenanceId("prov-123");
+    it("should return error for user provenance ID with invalid special characters", () => {
+      const result = validateUserProvenanceId("prov#123");
       expect(result).not.toBeNull();
-      expect(result?.text).toBe("User Provenance ID must contain only letters and numbers");
+      expect(result?.text).toBe("User Provenance ID must contain only letters, numbers, hyphens, underscores, @ and periods");
+    });
+
+    it("should return error for user provenance ID with spaces", () => {
+      const result = validateUserProvenanceId("prov 123");
+      expect(result).not.toBeNull();
+      expect(result?.text).toBe("User Provenance ID must contain only letters, numbers, hyphens, underscores, @ and periods");
     });
   });
 
