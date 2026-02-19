@@ -92,7 +92,7 @@
     "@types/pg-format": "1.0.5",
     "connect-redis": "9.0.0",
     "express-session": "1.18.2",
-    "pg": "8.16.3",
+    "pg": "8.18.0",
     "pg-format": "1.0.4"
   }
 }
