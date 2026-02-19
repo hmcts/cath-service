@@ -1,6 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { mockListTypes } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
+import { createMultipleSubscriptions } from "@hmcts/subscription";
 import { createListTypeSubscriptions } from "@hmcts/subscription-list-types";
 import type { Request, RequestHandler, Response } from "express";
 import { getCsrfToken } from "../../utils/csrf.js";
@@ -182,6 +183,11 @@ const postHandler = async (req: Request, res: Response) => {
     await createListTypeSubscriptions(req.user.id, req.session.listTypeSubscription.selectedListTypeIds, req.session.listTypeSubscription.language);
 
     const selectedLocationIds = req.session.listTypeSubscription.selectedLocationIds || [];
+
+    if (selectedLocationIds.length > 0) {
+      await createMultipleSubscriptions(req.user.id, selectedLocationIds.map(String));
+    }
+
     delete req.session.listTypeSubscription;
 
     if (!req.session.emailSubscriptions) {

@@ -1,3 +1,4 @@
+import * as subscriptionService from "@hmcts/subscription";
 import * as listTypeSubscriptionService from "@hmcts/subscription-list-types";
 import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,6 +8,10 @@ vi.mock("@hmcts/auth", () => ({
   buildVerifiedUserNavigation: vi.fn(() => []),
   requireAuth: vi.fn(() => (_req: any, _res: any, next: any) => next()),
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
+}));
+
+vi.mock("@hmcts/subscription", () => ({
+  createMultipleSubscriptions: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0, errors: [] })
 }));
 
 vi.mock("@hmcts/subscription-list-types", () => ({
@@ -255,6 +260,60 @@ describe("subscription-confirm", () => {
       expect(mockReq.session.emailSubscriptions?.confirmationComplete).toBe(true);
       expect(mockReq.session.emailSubscriptions?.confirmedLocations).toEqual([]);
       expect(sessionSave).toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should create location subscriptions when locations are selected", async () => {
+      mockReq.session = {
+        listTypeSubscription: {
+          selectedListTypeIds: [1],
+          selectedLocationIds: [3, 5],
+          language: ["ENGLISH"]
+        }
+      } as any;
+      const sessionSave = vi.fn((cb) => cb(null));
+      mockReq.session.save = sessionSave;
+
+      vi.mocked(listTypeSubscriptionService.createListTypeSubscriptions).mockResolvedValue([
+        {
+          listTypeSubscriptionId: "sub1",
+          userId: "user123",
+          listTypeId: 1,
+          language: ["ENGLISH"],
+          dateAdded: new Date()
+        }
+      ]);
+      vi.mocked(subscriptionService.createMultipleSubscriptions).mockResolvedValue({ succeeded: 2, failed: 0, errors: [] });
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.createMultipleSubscriptions).toHaveBeenCalledWith("user123", ["3", "5"]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should not call createMultipleSubscriptions when no locations selected", async () => {
+      mockReq.session = {
+        listTypeSubscription: {
+          selectedListTypeIds: [1],
+          language: ["ENGLISH"]
+        }
+      } as any;
+      const sessionSave = vi.fn((cb) => cb(null));
+      mockReq.session.save = sessionSave;
+
+      vi.mocked(listTypeSubscriptionService.createListTypeSubscriptions).mockResolvedValue([
+        {
+          listTypeSubscriptionId: "sub1",
+          userId: "user123",
+          listTypeId: 1,
+          language: ["ENGLISH"],
+          dateAdded: new Date()
+        }
+      ]);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionService.createMultipleSubscriptions).not.toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
     });
 
