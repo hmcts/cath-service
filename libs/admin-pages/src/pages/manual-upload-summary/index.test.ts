@@ -596,7 +596,9 @@ describe("manual-upload-summary page", () => {
         locationId: "1",
         locationName: "Test Crown Court",
         hearingListName: "Crown Daily List",
-        publicationDate: expect.any(Date)
+        publicationDate: expect.any(Date),
+        listTypeId: 6,
+        language: "ENGLISH"
       });
     });
 

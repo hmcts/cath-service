@@ -140,7 +140,9 @@ const postHandler = async (req: Request, res: Response) => {
           locationId: uploadData.locationId,
           locationName: location.name,
           hearingListName: listTypeFriendlyName,
-          publicationDate: contentDate
+          publicationDate: contentDate,
+          listTypeId,
+          language: uploadData.language
         });
 
         console.log("[Manual Upload] Notification process completed", {

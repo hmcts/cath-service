@@ -167,7 +167,7 @@ test.describe("Manage List Types End-to-End Flow", () => {
       expect(await errorMessages.count()).toBeGreaterThan(0);
     });
 
-    test("should allow both fields to be blank", async ({ page }) => {
+    test("should show error when both fields are blank", async ({ page }) => {
       await page.goto("/list-search-config/1");
       await page.waitForLoadState("networkidle");
 
@@ -177,9 +177,11 @@ test.describe("Manage List Types End-to-End Flow", () => {
 
       await page.getByRole("button", { name: /confirm/i }).click();
 
-      // Should successfully save with blank values
-      await page.waitForURL("/list-search-config-success", { timeout: 10000 });
-      await expect(page.locator("h1")).toHaveText("List type search configuration updated");
+      // Should show validation error requiring at least one field
+      const errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+      await expect(errorSummary.locator(".govuk-error-summary__title")).toHaveText("There is a problem");
+      await expect(page.getByText("Enter at least one field name")).toBeVisible();
     });
 
     test("should allow only one field to be populated", async ({ page }) => {

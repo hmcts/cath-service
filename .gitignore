@@ -60,3 +60,4 @@ lcov.info
 /apps/postgres/.claude
 /e2e-tests/.claude
 /libs/api/.claude
+e2e-tests/junit-results.xml

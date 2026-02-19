@@ -16,6 +16,8 @@ export interface PublicationEvent {
   locationName: string;
   hearingListName: string;
   publicationDate: Date;
+  listTypeId?: number;
+  language?: string;
 }
 
 export interface ValidationResult {

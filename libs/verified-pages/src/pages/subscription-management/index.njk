@@ -1,5 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
@@ -10,17 +12,30 @@
 
   <h1 class="govuk-heading-l">{{ heading }}</h1>
 
+  {% if errors %}
+    {{ govukErrorSummary({
+      titleText: errorSummaryTitle,
+      errorList: errors
+    }) }}
+  {% endif %}
+
+  {% if errorMessage %}
+    {{ govukNotificationBanner({
+      type: "error",
+      text: errorMessage
+    }) }}
+  {% endif %}
+
   <div class="govuk-button-group">
     {{ govukButton({
       text: addButton,
-      href: '/subscription-add'
+      href: '/subscription-add-method'
     }) }}
 
     {% if totalCount > 0 %}
       {{ govukButton({
         text: bulkUnsubscribeButton,
-        href: '/bulk-unsubscribe',
-        classes: 'govuk-button--secondary'
+        href: '/bulk-unsubscribe'
       }) }}
     {% endif %}
   </div>
@@ -71,6 +86,13 @@
           </tbody>
         </table>
       {% endif %}
+
+      <form method="post" style="display: inline; margin: 0; padding: 0;">
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+        {{ govukButton({
+          text: editListTypesButton
+        }) }}
+      </form>
 
       {% if courtCount > 0 %}
         <table class="govuk-table" id="locations-table">
@@ -138,6 +160,13 @@
     {% endif %}
 
     {% if currentView == 'location' %}
+      <form method="post" style="display: inline; margin: 0; padding: 0;">
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+        {{ govukButton({
+          text: editListTypesButton
+        }) }}
+      </form>
+
       {% if courtCount > 0 %}
         <table class="govuk-table" id="locations-table">
           <thead class="govuk-table__head">
@@ -171,6 +200,13 @@
     {% endif %}
   {% else %}
     <p class="govuk-body">{{ noSubscriptions }}</p>
+
+    <form method="post" style="display: inline; margin: 0; padding: 0;">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      {{ govukButton({
+        text: editListTypesButton
+      }) }}
+    </form>
   {% endif %}
 
 </div>

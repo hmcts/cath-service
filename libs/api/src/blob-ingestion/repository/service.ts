@@ -104,7 +104,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
         listTypeId: validation.listTypeId
       });
 
-      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date)).catch((error) => {
+      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date), request.language).catch((error) => {
         console.error("Failed to trigger publication notifications:", {
           artefactId,
           courtId: request.court_id,
@@ -143,7 +143,13 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
   }
 }
 
-async function triggerPublicationNotifications(publicationId: string, courtId: string, listTypeId: number, publicationDate: Date): Promise<void> {
+async function triggerPublicationNotifications(
+  publicationId: string,
+  courtId: string,
+  listTypeId: number,
+  publicationDate: Date,
+  language: string
+): Promise<void> {
   const locationIdNum = Number.parseInt(courtId, 10);
   if (Number.isNaN(locationIdNum)) {
     console.error("Invalid location ID for notifications:", courtId);
@@ -167,7 +173,9 @@ async function triggerPublicationNotifications(publicationId: string, courtId: s
     locationId: String(locationIdNum),
     locationName: location.name,
     hearingListName: listType.englishFriendlyName,
-    publicationDate
+    publicationDate,
+    listTypeId,
+    language
   });
 
   console.log("Publication notifications sent:", {

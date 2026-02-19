@@ -1,6 +1,9 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getAllSubscriptionsByUserId, getCaseSubscriptionsByUserId } from "@hmcts/subscription";
+import { getListTypeSubscriptionsByUserId } from "@hmcts/subscription-list-types";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
+import "../../types/session.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -8,12 +11,24 @@ const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
 
+  // Clear any existing list type subscription session data when returning to management page
+  if (req.session.listTypeSubscription) {
+    delete req.session.listTypeSubscription;
+  }
+
   if (!req.user?.id) {
     return res.redirect("/sign-in");
   }
 
   const userId = req.user.id;
   const view = (req.query.view as string) || "all";
+  const error = req.query.error as string | undefined;
+
+  // Build error message if present
+  let errorMessage: string | undefined;
+  if (error === "delete_failed") {
+    errorMessage = t.errorDeleteFailed;
+  }
 
   try {
     const [courtSubscriptions, caseSubscriptions] = await Promise.all([getAllSubscriptionsByUserId(userId, locale), getCaseSubscriptionsByUserId(userId)]);
@@ -37,7 +52,8 @@ const getHandler = async (req: Request, res: Response) => {
       caseCount: deduplicatedCaseSubscriptions.length,
       totalCount,
       currentView: view,
-      csrfToken: (req as any).csrfToken?.() || ""
+      errorMessage,
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error(`Error retrieving subscriptions for user ${userId}:`, error);
@@ -55,9 +71,31 @@ const getHandler = async (req: Request, res: Response) => {
       caseCount: 0,
       totalCount: 0,
       currentView: view,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   }
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
+
+  const userId = req.user.id;
+  const listTypeSubscriptions = await getListTypeSubscriptionsByUserId(userId);
+  const selectedListTypeIds = listTypeSubscriptions.map((sub) => sub.listTypeId);
+
+  req.session.listTypeSubscription = {
+    selectedListTypeIds,
+    editMode: true
+  };
+
+  req.session.save((err: Error | null) => {
+    if (err) {
+      console.error("Error saving session", { errorMessage: err.message });
+    }
+    res.redirect("/subscription-list-types");
+  });
 };
 
 const sortCourtSubscriptions = (subscriptions: any[]): any[] => {
@@ -93,3 +131,4 @@ const sortCaseSubscriptions = (subscriptions: any[]): any[] => {
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];

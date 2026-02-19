@@ -128,7 +128,6 @@
   padding: 10px 0;
   background: none;
   border: none;
-  border-bottom: 1px solid #b1b4b6;
   text-align: left;
   cursor: pointer;
   display: flex;
@@ -138,17 +137,31 @@
   font-weight: 400;
 }
 
-.filter-section-toggle:hover {
-  background-color: #f3f2f1;
+.filter-section-heading {
+  font-family: "GDS Transport", arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3157894737;
+  color: #1d70b8;
+  text-decoration: underline;
+  margin-bottom: 0;
+  display: block;
 }
 
-.filter-section-heading {
-  font-weight: 600;
+.filter-section-toggle:hover .filter-section-heading {
+  color: #003078;
+}
+
+.filter-section-toggle:hover .filter-section-icon {
+  color: #003078;
 }
 
 .filter-section-icon {
   font-size: 20px;
   font-weight: bold;
+  color: #1d70b8;
 }
 
 .filter-section-content {

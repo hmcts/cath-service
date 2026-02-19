@@ -15,9 +15,9 @@ export const cy = {
   jurisdictionHeading: "Awdurdodaeth",
   regionHeading: "Rhanbarth",
   subJurisdictionLabels: {
-    1: "Math o lys",
-    2: "Math o dribiwnlys",
-    3: "Math o leoliad",
-    4: "Math o faes gwasanaeth"
+    1: "Math o lys sifil",
+    2: "Math o lys teulu",
+    3: "Math o lys troseddol",
+    4: "Math o dribiwnlys"
   }
 };

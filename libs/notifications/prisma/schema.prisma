@@ -10,7 +10,7 @@ datasource db {
 
 model NotificationAuditLog {
   notificationId String    @id @default(uuid()) @map("notification_id") @db.Uuid
-  subscriptionId String    @map("subscription_id") @db.Uuid
+  subscriptionId String?   @map("subscription_id") @db.Uuid
   userId         String    @map("user_id") @db.Uuid
   publicationId  String    @map("publication_id") @db.Uuid
   govNotifyId    String?   @map("gov_notify_id")
@@ -19,7 +19,7 @@ model NotificationAuditLog {
   createdAt      DateTime  @default(now()) @map("created_at")
   sentAt         DateTime? @map("sent_at")
 
-  subscription Subscription @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
 
   @@index([publicationId])
   @@index([status])

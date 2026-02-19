@@ -332,7 +332,9 @@ describe("processBlobIngestion", async () => {
       locationId: "123",
       locationName: "Test Court",
       hearingListName: "Civil And Family Daily Cause List",
-      publicationDate: expect.any(Date)
+      publicationDate: expect.any(Date),
+      listTypeId: 8,
+      language: "ENGLISH"
     });
   });
 
