@@ -1,11 +1,8 @@
 import type { Request, Response } from "express";
 import { getSsoConfig } from "../../config/sso-config.js";
 
-/**
- * Extracts tenant ID from Azure AD identity metadata URL
- */
-function extractTenantId(identityMetadata: string): string | null {
-  const match = identityMetadata.match(/\/([a-f0-9-]+)\/v2\.0\//);
+function extractTenantId(issuerUrl: string): string | null {
+  const match = issuerUrl.match(/\/([a-f0-9-]+)\/v2\.0/);
   return match ? match[1] : null;
 }
 
@@ -30,7 +27,7 @@ export const GET = async (req: Request, res: Response) => {
 
       // SSO logout flow: Construct Azure AD logout URL
       const ssoConfig = getSsoConfig();
-      const tenantId = extractTenantId(ssoConfig.identityMetadata);
+      const tenantId = extractTenantId(ssoConfig.issuerUrl);
 
       if (tenantId) {
         // Get the base URL for post-logout redirect

@@ -1,16 +1,27 @@
 import type { Express, Request, Response } from "express";
 import express from "express";
 import passport from "passport";
-import { OIDCStrategy } from "passport-azure-ad";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as graphClient from "../graph-api/client.js";
 import * as roleService from "../role-service/index.js";
 import { configurePassport } from "./passport-config.js";
 import * as ssoConfig from "./sso-config.js";
 
-// Mock all dependencies
-vi.mock("passport-azure-ad", () => ({
-  OIDCStrategy: vi.fn()
+const mockDiscovery = vi.fn();
+const mockStrategyConstructor = vi.fn();
+
+vi.mock("openid-client", () => ({
+  discovery: (...args: unknown[]) => mockDiscovery(...args)
+}));
+
+vi.mock("openid-client/passport", () => ({
+  Strategy: class MockStrategy {
+    name: string;
+    constructor(...args: unknown[]) {
+      mockStrategyConstructor(...args);
+      this.name = (args[0] as { name: string }).name;
+    }
+  }
 }));
 
 vi.mock("../graph-api/client.js", () => ({
@@ -40,30 +51,37 @@ const mockFetchUserProfile = vi.mocked(graphClient.fetchUserProfile);
 const mockDetermineSsoUserRole = vi.mocked(roleService.determineSsoUserRole);
 const mockGetSsoConfig = vi.mocked(ssoConfig.getSsoConfig);
 const mockPassport = vi.mocked(passport);
-const mockOIDCStrategy = vi.mocked(OIDCStrategy);
+
+const FULL_SSO_CONFIG = {
+  issuerUrl: "https://login.microsoftonline.com/tenant/v2.0",
+  clientId: "test-client-id",
+  clientSecret: "test-secret",
+  redirectUri: "https://localhost:8080/sso/return",
+  scope: ["openid", "profile", "email"],
+  systemAdminGroupId: "group1",
+  internalAdminCtscGroupId: "group2",
+  internalAdminLocalGroupId: "group3"
+};
 
 describe("passport-config", () => {
   let app: Express;
-  let consoleLogSpy: any;
 
   beforeEach(() => {
     app = express();
-    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    consoleLogSpy.mockRestore();
     delete process.env.NODE_ENV;
     delete process.env.ENABLE_SSO;
   });
 
   describe("when SSO is disabled for development", () => {
-    it("should initialize passport without OIDC strategy when NODE_ENV is development and ENABLE_SSO is not set", () => {
+    it("should initialize passport without OIDC strategy", async () => {
       process.env.NODE_ENV = "development";
       delete process.env.ENABLE_SSO;
 
-      configurePassport(app);
+      await configurePassport(app);
 
       expect(mockPassport.initialize).toHaveBeenCalled();
       expect(mockPassport.session).toHaveBeenCalled();
@@ -74,151 +92,81 @@ describe("passport-config", () => {
   });
 
   describe("when SSO configuration is incomplete", () => {
-    it("should initialize passport without OIDC strategy when identityMetadata is missing", () => {
+    it("should throw when issuerUrl is missing", async () => {
       process.env.NODE_ENV = "production";
-      mockGetSsoConfig.mockReturnValue({
-        identityMetadata: "",
-        clientId: "test-client-id",
-        clientSecret: "test-secret",
-        redirectUri: "https://localhost:8080/sso/return",
-        responseType: "code",
-        responseMode: "query",
-        scope: ["openid", "profile", "email"],
-        systemAdminGroupId: "group1",
-        internalAdminCtscGroupId: "group2",
-        internalAdminLocalGroupId: "group3"
-      });
+      mockGetSsoConfig.mockReturnValue({ ...FULL_SSO_CONFIG, issuerUrl: "" });
 
-      configurePassport(app);
-
-      expect(mockPassport.initialize).toHaveBeenCalled();
-      expect(mockPassport.session).toHaveBeenCalled();
-      expect(mockPassport.use).not.toHaveBeenCalled();
+      await expect(configurePassport(app)).rejects.toThrow("SSO configuration is incomplete");
     });
 
-    it("should initialize passport without OIDC strategy when clientId is missing", () => {
+    it("should throw when clientId is missing", async () => {
       process.env.NODE_ENV = "production";
-      mockGetSsoConfig.mockReturnValue({
-        identityMetadata: "https://test.com/metadata",
-        clientId: "",
-        clientSecret: "test-secret",
-        redirectUri: "https://localhost:8080/sso/return",
-        responseType: "code",
-        responseMode: "query",
-        scope: ["openid", "profile", "email"],
-        systemAdminGroupId: "group1",
-        internalAdminCtscGroupId: "group2",
-        internalAdminLocalGroupId: "group3"
-      });
+      mockGetSsoConfig.mockReturnValue({ ...FULL_SSO_CONFIG, clientId: "" });
 
-      configurePassport(app);
-
-      expect(mockPassport.initialize).toHaveBeenCalled();
-      expect(mockPassport.session).toHaveBeenCalled();
-      expect(mockPassport.use).not.toHaveBeenCalled();
+      await expect(configurePassport(app)).rejects.toThrow("SSO configuration is incomplete");
     });
 
-    it("should initialize passport without OIDC strategy when clientSecret is missing", () => {
+    it("should throw when clientSecret is missing", async () => {
       process.env.NODE_ENV = "production";
-      mockGetSsoConfig.mockReturnValue({
-        identityMetadata: "https://test.com/metadata",
-        clientId: "test-client-id",
-        clientSecret: "",
-        redirectUri: "https://localhost:8080/sso/return",
-        responseType: "code",
-        responseMode: "query",
-        scope: ["openid", "profile", "email"],
-        systemAdminGroupId: "group1",
-        internalAdminCtscGroupId: "group2",
-        internalAdminLocalGroupId: "group3"
-      });
+      mockGetSsoConfig.mockReturnValue({ ...FULL_SSO_CONFIG, clientSecret: "" });
 
-      configurePassport(app);
-
-      expect(mockPassport.initialize).toHaveBeenCalled();
-      expect(mockPassport.session).toHaveBeenCalled();
-      expect(mockPassport.use).not.toHaveBeenCalled();
+      await expect(configurePassport(app)).rejects.toThrow("SSO configuration is incomplete");
     });
   });
 
   describe("when SSO is fully configured", () => {
     beforeEach(() => {
       process.env.NODE_ENV = "production";
-      mockGetSsoConfig.mockReturnValue({
-        identityMetadata: "https://test.com/metadata",
-        clientId: "test-client-id",
-        clientSecret: "test-secret",
-        redirectUri: "https://localhost:8080/sso/return",
-        responseType: "code",
-        responseMode: "query",
-        scope: ["openid", "profile", "email"],
-        systemAdminGroupId: "group1",
-        internalAdminCtscGroupId: "group2",
-        internalAdminLocalGroupId: "group3"
-      });
+      mockGetSsoConfig.mockReturnValue(FULL_SSO_CONFIG);
+      mockDiscovery.mockResolvedValue({ serverMetadata: () => ({ issuer: FULL_SSO_CONFIG.issuerUrl }) });
     });
 
-    it("should initialize passport with OIDC strategy", () => {
-      configurePassport(app);
+    it("should perform OIDC discovery and register strategy", async () => {
+      await configurePassport(app);
 
-      expect(mockPassport.initialize).toHaveBeenCalled();
-      expect(mockPassport.session).toHaveBeenCalled();
-      expect(mockOIDCStrategy).toHaveBeenCalled();
-      expect(mockPassport.use).toHaveBeenCalled();
-      expect(mockPassport.serializeUser).toHaveBeenCalled();
-      expect(mockPassport.deserializeUser).toHaveBeenCalled();
-    });
-
-    it("should configure OIDC strategy with correct options", () => {
-      configurePassport(app);
-
-      expect(mockOIDCStrategy).toHaveBeenCalledWith(
+      expect(mockDiscovery).toHaveBeenCalledWith(new URL(FULL_SSO_CONFIG.issuerUrl), FULL_SSO_CONFIG.clientId, FULL_SSO_CONFIG.clientSecret);
+      expect(mockStrategyConstructor).toHaveBeenCalledWith(
         expect.objectContaining({
-          identityMetadata: "https://test.com/metadata",
-          clientID: "test-client-id",
-          clientSecret: "test-secret",
-          redirectUrl: "https://localhost:8080/sso/return",
-          responseType: "code",
-          responseMode: "query",
-          scope: ["openid", "profile", "email"],
-          passReqToCallback: false,
-          validateIssuer: true,
-          clockSkew: 300
+          name: "azuread-openidconnect",
+          callbackURL: FULL_SSO_CONFIG.redirectUri,
+          scope: "openid profile email"
         }),
         expect.any(Function)
       );
+      expect(mockPassport.use).toHaveBeenCalled();
+    });
+
+    it("should throw when OIDC discovery fails", async () => {
+      // Arrange
+      mockDiscovery.mockRejectedValue(new Error("Network error"));
+
+      // Act & Assert
+      await expect(configurePassport(app)).rejects.toThrow("Network error");
     });
   });
 
-  describe("OIDC strategy verify callback", () => {
-    let verifyCallback: (_iss: any, _sub: any, profile: any, accessToken: any, _refreshToken: any, done: any) => Promise<void>;
+  describe("verify callback", () => {
+    let verifyCallback: (tokens: unknown, done: unknown) => Promise<void>;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       process.env.NODE_ENV = "production";
-      mockGetSsoConfig.mockReturnValue({
-        identityMetadata: "https://test.com/metadata",
-        clientId: "test-client-id",
-        clientSecret: "test-secret",
-        redirectUri: "https://localhost:8080/sso/return",
-        responseType: "code",
-        responseMode: "query",
-        scope: ["openid", "profile", "email"],
-        systemAdminGroupId: "group1",
-        internalAdminCtscGroupId: "group2",
-        internalAdminLocalGroupId: "group3"
-      });
+      mockGetSsoConfig.mockReturnValue(FULL_SSO_CONFIG);
+      mockDiscovery.mockResolvedValue({ serverMetadata: () => ({ issuer: FULL_SSO_CONFIG.issuerUrl }) });
 
-      configurePassport(app);
+      await configurePassport(app);
 
-      // Extract the verify callback from the OIDCStrategy constructor
-      verifyCallback = mockOIDCStrategy.mock.calls[0][1] as any;
+      verifyCallback = mockStrategyConstructor.mock.calls[0][1] as typeof verifyCallback;
     });
 
-    it("should fetch user profile and determine role", async () => {
-      const mockProfile = {
-        oid: "user-123",
-        upn: "test@example.com",
-        name: "Test User"
+    it("should fetch user profile and determine role from token claims", async () => {
+      // Arrange
+      const mockTokens = {
+        access_token: "access-token",
+        claims: () => ({
+          oid: "user-123",
+          preferred_username: "test@example.com",
+          name: "Test User"
+        })
       };
       const mockUserProfile = {
         id: "user-123",
@@ -232,8 +180,10 @@ describe("passport-config", () => {
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
       mockDetermineSsoUserRole.mockReturnValue("SYSTEM_ADMIN");
 
-      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
+      // Act
+      await verifyCallback(mockTokens, mockDone);
 
+      // Assert
       expect(mockFetchUserProfile).toHaveBeenCalledWith("access-token");
       expect(mockDetermineSsoUserRole).toHaveBeenCalledWith(["group1", "group2"]);
       expect(mockDone).toHaveBeenCalledWith(
@@ -248,14 +198,18 @@ describe("passport-config", () => {
       );
     });
 
-    it("should use profile email fallbacks when upn is not available", async () => {
-      const mockProfile = {
-        oid: "user-123",
-        email: "test@example.com",
-        name: "Test User"
+    it("should fall back to sub when oid is not present", async () => {
+      // Arrange
+      const mockTokens = {
+        access_token: "access-token",
+        claims: () => ({
+          sub: "sub-id",
+          email: "test@example.com",
+          name: "Test User"
+        })
       };
       const mockUserProfile = {
-        id: "user-123",
+        id: "graph-id",
         email: "test@example.com",
         displayName: "Test User",
         roles: [],
@@ -266,27 +220,23 @@ describe("passport-config", () => {
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
       mockDetermineSsoUserRole.mockReturnValue("INTERNAL_ADMIN_CTSC");
 
-      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
+      // Act
+      await verifyCallback(mockTokens, mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(
-        null,
-        expect.objectContaining({
-          email: "test@example.com",
-          provenance: "SSO"
-        })
-      );
+      // Assert
+      expect(mockDone).toHaveBeenCalledWith(null, expect.objectContaining({ id: "sub-id" }));
     });
 
-    it("should use _json email fallback when email is not available", async () => {
-      const mockProfile = {
-        oid: "user-123",
-        _json: { email: "json@example.com" },
-        name: "Test User"
+    it("should fall back to Graph API values when claims are missing", async () => {
+      // Arrange
+      const mockTokens = {
+        access_token: "access-token",
+        claims: () => ({ sub: "sub-id" })
       };
       const mockUserProfile = {
-        id: "user-123",
-        email: "json@example.com",
-        displayName: "Test User",
+        id: "graph-id",
+        email: "graph@example.com",
+        displayName: "Graph User",
         roles: [],
         groupIds: []
       };
@@ -295,30 +245,84 @@ describe("passport-config", () => {
       mockFetchUserProfile.mockResolvedValue(mockUserProfile);
       mockDetermineSsoUserRole.mockReturnValue("INTERNAL_ADMIN_LOCAL");
 
-      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
+      // Act
+      await verifyCallback(mockTokens, mockDone);
 
+      // Assert
       expect(mockDone).toHaveBeenCalledWith(
         null,
         expect.objectContaining({
-          email: "json@example.com",
+          email: "graph@example.com",
+          displayName: "Graph User"
+        })
+      );
+    });
+
+    it("should fall back entirely to Graph API when claims() returns undefined", async () => {
+      // Arrange
+      const mockTokens = {
+        access_token: "access-token",
+        claims: () => undefined
+      };
+      const mockUserProfile = {
+        id: "graph-id",
+        email: "graph@example.com",
+        displayName: "Graph User",
+        roles: [],
+        groupIds: ["group1"]
+      };
+      const mockDone = vi.fn();
+
+      mockFetchUserProfile.mockResolvedValue(mockUserProfile);
+      mockDetermineSsoUserRole.mockReturnValue("SYSTEM_ADMIN");
+
+      // Act
+      await verifyCallback(mockTokens, mockDone);
+
+      // Assert
+      expect(mockDone).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({
+          id: "graph-id",
+          email: "graph@example.com",
+          displayName: "Graph User",
+          role: "SYSTEM_ADMIN",
           provenance: "SSO"
         })
       );
     });
 
+    it("should return error when access token is missing", async () => {
+      // Arrange
+      const mockTokens = {
+        access_token: undefined,
+        claims: () => ({ oid: "user-123" })
+      };
+      const mockDone = vi.fn();
+
+      // Act
+      await verifyCallback(mockTokens, mockDone);
+
+      // Assert
+      expect(mockDone).toHaveBeenCalledWith(expect.objectContaining({ message: "No access token received from identity provider" }), false);
+      expect(mockFetchUserProfile).not.toHaveBeenCalled();
+    });
+
     it("should handle errors during user profile fetching", async () => {
-      const mockProfile = {
-        oid: "user-123",
-        upn: "test@example.com",
-        name: "Test User"
+      // Arrange
+      const mockTokens = {
+        access_token: "access-token",
+        claims: () => ({ oid: "user-123" })
       };
       const mockError = new Error("Graph API error");
       const mockDone = vi.fn();
 
       mockFetchUserProfile.mockRejectedValue(mockError);
 
-      await verifyCallback("issuer", "subject", mockProfile, "access-token", "refresh-token", mockDone);
+      // Act
+      await verifyCallback(mockTokens, mockDone);
 
+      // Assert
       expect(mockDone).toHaveBeenCalledWith(mockError, false);
     });
   });

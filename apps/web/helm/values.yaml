@@ -19,7 +19,6 @@ nodejs:
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
-    SSO_ALLOW_HTTP_REDIRECT: 'false'
   keyVaults:
     # Using pip-ss-kv-stg for time being, once pipeline properly setup, stg will be replaced by environment
     pip-ss-kv-stg:
@@ -35,7 +34,7 @@ nodejs:
         - name: sso-client-secret
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
-          alias: SSO_IDENTITY_METADATA
+          alias: SSO_ISSUER_URL
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
         - name: sso-sg-admin-ctsc
