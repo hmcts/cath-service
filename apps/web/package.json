@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -r \"yarn:dev:watch\" \"yarn:build:dev:watch\"",
-    "dev:watch": "mkdir -p dist/assets; nodemon -w yarn.lock -w src -w ../../libs -e 'json,ts' -x tsx src/server.ts",
+    "dev:watch": "mkdir -p dist/assets; nodemon -w yarn.lock -w src -w ../../libs -w dist/assets/.vite/manifest.json -e 'json,ts' -x tsx src/server.ts",
     "dev:nowatch": "yarn build:dev && tsx src/server.ts",
     "build:dev:watch": "yarn build:dev --watch",
     "build:dev": "NODE_OPTIONS='--import tsx' vite build --config vite.build.ts",
