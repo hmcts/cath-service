@@ -31,7 +31,7 @@
   "dependencies": {
     "@hmcts/account": "*",
     "@microsoft/microsoft-graph-client": "3.0.7",
-    "openid-client": "6.3.3"
+    "openid-client": "6.8.2"
   },
   "devDependencies": {
     "@types/express": "5.0.5",

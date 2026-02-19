@@ -1046,7 +1046,7 @@ __metadata:
     "@types/express": "npm:5.0.5"
     "@types/express-session": "npm:1.18.2"
     "@types/passport": "npm:1.0.17"
-    openid-client: "npm:6.3.3"
+    openid-client: "npm:6.8.2"
   peerDependencies:
     express: ^5.2.0
     express-session: ^1.18.2
@@ -5402,7 +5402,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jose@npm:^6.0.6":
+"jose@npm:^6.1.3":
   version: 6.1.3
   resolution: "jose@npm:6.1.3"
   checksum: 10c0/b9577b4a7a5e84131011c23823db9f5951eae3ba796771a6a2401ae5dd50daf71104febc8ded9c38146aa5ebe94a92ac09c725e699e613ef26949b9f5a8bc30f
@@ -6212,7 +6212,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oauth4webapi@npm:^3.3.0":
+"oauth4webapi@npm:^3.8.4":
   version: 3.8.5
   resolution: "oauth4webapi@npm:3.8.5"
   checksum: 10c0/688142b30f2243813721bfa4ab879aa0056636b19a3d7964d46b11b967199ab8f74f3771225f71ec766821d410add950475cf1afcfe26a9640cd1c0a1de8e423
@@ -6284,13 +6284,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openid-client@npm:6.3.3":
-  version: 6.3.3
-  resolution: "openid-client@npm:6.3.3"
+"openid-client@npm:6.8.2":
+  version: 6.8.2
+  resolution: "openid-client@npm:6.8.2"
   dependencies:
-    jose: "npm:^6.0.6"
-    oauth4webapi: "npm:^3.3.0"
-  checksum: 10c0/640f34105494ba27c905a25ff2a78c2a01bf5b1861ef87530db8b049cada6555265f85ffa6080339c78890eca5b462f8a098b9304bd452aaa36aee570ceb8f21
+    jose: "npm:^6.1.3"
+    oauth4webapi: "npm:^3.8.4"
+  checksum: 10c0/98de93a1d1135f7c51b7707258ec0506bc6dc5359acf06f922cd4258635d657d1a80b740ad4a11ae9e79ce6061dd0d19cf5115a9918866f0b46c5486cfbbf22c
   languageName: node
   linkType: hard
 
