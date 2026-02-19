@@ -40,6 +40,10 @@
   }
 }
 
+.app-date-filter-narrow .govuk-date-input__item:last-child {
+  padding-top: 10px;
+}
+
 .admin-tile__description {
   margin-bottom: 0;
   color: #0b0c0c;

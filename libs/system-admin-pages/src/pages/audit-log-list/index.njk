@@ -96,6 +96,9 @@
         {{ govukDateInput({
           id: "date",
           namePrefix: "",
+          formGroup: {
+            classes: "app-date-filter-narrow"
+          },
           fieldset: {
             legend: {
               text: dateLabel,
@@ -139,6 +142,9 @@
           {% endfor %}
           {{ govukCheckboxes({
             name: "actions",
+            formGroup: {
+              classes: "govuk-!-padding-top-4"
+            },
             fieldset: {
               legend: {
                 text: actionsLabel,
