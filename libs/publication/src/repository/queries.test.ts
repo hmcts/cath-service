@@ -631,6 +631,7 @@ describe("getArtefactById", () => {
       language: "ENGLISH",
       displayFrom: mockArtefact.displayFrom,
       displayTo: mockArtefact.displayTo,
+      lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
       noMatch: false
@@ -678,6 +679,7 @@ describe("getArtefactById", () => {
       language: "WELSH",
       displayFrom: mockArtefact.displayFrom,
       displayTo: mockArtefact.displayTo,
+      lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: false,
       provenance: "API",
       noMatch: true

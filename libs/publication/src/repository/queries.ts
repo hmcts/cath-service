@@ -82,6 +82,31 @@ export async function createArtefact(data: Artefact): Promise<string> {
   return artefact.artefactId;
 }
 
+export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
+  const artefact = await prisma.artefact.findUnique({
+    where: { artefactId }
+  });
+
+  if (!artefact) {
+    return null;
+  }
+
+  return {
+    artefactId: artefact.artefactId,
+    locationId: artefact.locationId,
+    listTypeId: artefact.listTypeId,
+    contentDate: artefact.contentDate,
+    sensitivity: artefact.sensitivity,
+    language: artefact.language,
+    displayFrom: artefact.displayFrom,
+    displayTo: artefact.displayTo,
+    lastReceivedDate: artefact.lastReceivedDate,
+    isFlatFile: artefact.isFlatFile,
+    provenance: artefact.provenance,
+    noMatch: artefact.noMatch
+  };
+}
+
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
   const artefacts = await prisma.artefact.findMany({
     where: {
@@ -102,6 +127,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
       language: artefact.language,
       displayFrom: artefact.displayFrom,
       displayTo: artefact.displayTo,
+      lastReceivedDate: artefact.lastReceivedDate,
       isFlatFile: artefact.isFlatFile,
       provenance: artefact.provenance,
       noMatch: artefact.noMatch
@@ -128,35 +154,12 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
       language: artefact.language,
       displayFrom: artefact.displayFrom,
       displayTo: artefact.displayTo,
+      lastReceivedDate: artefact.lastReceivedDate,
       isFlatFile: artefact.isFlatFile,
       provenance: artefact.provenance,
       noMatch: artefact.noMatch
     })
   );
-}
-
-export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
-  const artefact = await prisma.artefact.findUnique({
-    where: { artefactId }
-  });
-
-  if (!artefact) {
-    return null;
-  }
-
-  return {
-    artefactId: artefact.artefactId,
-    locationId: artefact.locationId,
-    listTypeId: artefact.listTypeId,
-    contentDate: artefact.contentDate,
-    sensitivity: artefact.sensitivity,
-    language: artefact.language,
-    displayFrom: artefact.displayFrom,
-    displayTo: artefact.displayTo,
-    isFlatFile: artefact.isFlatFile,
-    provenance: artefact.provenance,
-    noMatch: artefact.noMatch
-  };
 }
 
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
@@ -203,7 +206,7 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
   }
 
   const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-  const location = await getLocationById(Number.parseInt(artefact.locationId));
+  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
 
   return {
     artefactId: artefact.artefactId,

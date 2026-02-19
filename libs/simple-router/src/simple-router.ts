@@ -70,35 +70,46 @@ async function loadModuleRoutes(
   const handlers = extractHandlers(module);
   const routeEntries: RouteEntry[] = [];
 
-  const fullPath = buildFullPath(prefix, route.urlPath);
+  // Check if module exports ROUTES array for multiple path registration
+  const routes = getRoutePaths(module, route.urlPath);
+  const fullPaths = routes.map((r) => buildFullPath(prefix, r));
 
-  // Add method handlers
-  for (const [method, handlerExport] of handlers.entries()) {
-    routeEntries.push({
-      path: fullPath,
-      method,
-      handlers: normalizeHandlers(handlerExport),
-      sourcePath: route.absolutePath,
-      mountSpec
-    });
-  }
+  // Add method handlers for each path
+  for (const fullPath of fullPaths) {
+    for (const [method, handlerExport] of handlers.entries()) {
+      routeEntries.push({
+        path: fullPath,
+        method,
+        handlers: normalizeHandlers(handlerExport),
+        sourcePath: route.absolutePath,
+        mountSpec
+      });
+    }
 
-  // Add error handler if present
-  // Note: Error handlers have 4 params (err, req, res, next) vs regular handlers with 3
-  // Express handles this difference internally based on function arity
-  if (module.onError) {
-    routeEntries.push({
-      path: fullPath,
-      method: "use",
-      // Cast to any[] first to bypass TypeScript's strict checking
-      // Express internally handles both 3-param and 4-param handlers
-      handlers: [module.onError] as any as Handler[],
-      sourcePath: route.absolutePath,
-      mountSpec
-    });
+    // Add error handler if present
+    // Note: Error handlers have 4 params (err, req, res, next) vs regular handlers with 3
+    // Express handles this difference internally based on function arity
+    if (module.onError) {
+      routeEntries.push({
+        path: fullPath,
+        method: "use",
+        // Cast to any[] first to bypass TypeScript's strict checking
+        // Express internally handles both 3-param and 4-param handlers
+        handlers: [module.onError] as any as Handler[],
+        sourcePath: route.absolutePath,
+        mountSpec
+      });
+    }
   }
 
   return routeEntries;
+}
+
+function getRoutePaths(module: RouteModule, defaultPath: string): string[] {
+  if (Array.isArray(module.ROUTES) && module.ROUTES.length > 0 && module.ROUTES.every((r) => typeof r === "string")) {
+    return module.ROUTES as string[];
+  }
+  return [defaultPath];
 }
 
 function buildFullPath(prefix: string, urlPath: string): string {
