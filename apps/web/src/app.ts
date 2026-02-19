@@ -71,7 +71,7 @@ export async function createApp(): Promise<Express> {
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
 
   // Initialize Passport for Azure AD authentication
-  configurePassport(app);
+  await configurePassport(app);
 
   const modulePaths = [
     __dirname,

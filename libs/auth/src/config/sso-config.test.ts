@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock config module
 vi.mock("config", () => ({
   default: {
     get: vi.fn()
@@ -12,9 +11,8 @@ describe("getSsoConfig", () => {
 
   beforeEach(() => {
     originalEnv = { ...process.env };
-    // Clear all environment variables
     delete process.env.BASE_URL;
-    delete process.env.SSO_IDENTITY_METADATA;
+    delete process.env.SSO_ISSUER_URL;
     delete process.env.SSO_CLIENT_ID;
     delete process.env.SSO_CLIENT_SECRET;
     delete process.env.SSO_SYSTEM_ADMIN_GROUP_ID;
@@ -29,7 +27,7 @@ describe("getSsoConfig", () => {
 
   it("should load configuration from environment variables", async () => {
     process.env.BASE_URL = "https://example.com";
-    process.env.SSO_IDENTITY_METADATA = "https://login.microsoftonline.com/tenant/v2.0";
+    process.env.SSO_ISSUER_URL = "https://login.microsoftonline.com/tenant/v2.0";
     process.env.SSO_CLIENT_ID = "client-123";
     process.env.SSO_CLIENT_SECRET = "secret-456";
     process.env.SSO_SYSTEM_ADMIN_GROUP_ID = "group-1";
@@ -40,12 +38,10 @@ describe("getSsoConfig", () => {
     const config = getSsoConfig();
 
     expect(config).toEqual({
-      identityMetadata: "https://login.microsoftonline.com/tenant/v2.0/.well-known/openid-configuration",
+      issuerUrl: "https://login.microsoftonline.com/tenant/v2.0",
       clientId: "client-123",
       clientSecret: "secret-456",
       redirectUri: "https://example.com/sso/return",
-      responseType: "code",
-      responseMode: "query",
       scope: ["openid", "profile", "email"],
       systemAdminGroupId: "group-1",
       internalAdminCtscGroupId: "group-2",
@@ -59,7 +55,7 @@ describe("getSsoConfig", () => {
     vi.mocked(config.default.get).mockImplementation((key: string) => {
       const values: Record<string, string> = {
         BASE_URL: "https://config.example.com",
-        SSO_IDENTITY_METADATA: "https://config-login.com/tenant/v2.0",
+        SSO_ISSUER_URL: "https://config-login.com/tenant/v2.0",
         SSO_CLIENT_ID: "config-client-123",
         SSO_CLIENT_SECRET: "config-secret-456",
         SSO_SYSTEM_ADMIN_GROUP_ID: "config-group-1",
@@ -72,7 +68,7 @@ describe("getSsoConfig", () => {
     const { getSsoConfig } = await import("./sso-config.js");
     const ssoConfig = getSsoConfig();
 
-    expect(ssoConfig.identityMetadata).toBe("https://config-login.com/tenant/v2.0/.well-known/openid-configuration");
+    expect(ssoConfig.issuerUrl).toBe("https://config-login.com/tenant/v2.0");
     expect(ssoConfig.clientId).toBe("config-client-123");
     expect(ssoConfig.clientSecret).toBe("config-secret-456");
     expect(ssoConfig.redirectUri).toBe("https://config.example.com/sso/return");
@@ -114,7 +110,7 @@ describe("getSsoConfig", () => {
     const { getSsoConfig } = await import("./sso-config.js");
     const ssoConfig = getSsoConfig();
 
-    expect(ssoConfig.identityMetadata).toBe("");
+    expect(ssoConfig.issuerUrl).toBe("");
     expect(ssoConfig.clientId).toBe("");
     expect(ssoConfig.clientSecret).toBe("");
   });
@@ -123,8 +119,46 @@ describe("getSsoConfig", () => {
     const { getSsoConfig } = await import("./sso-config.js");
     const ssoConfig = getSsoConfig();
 
-    expect(ssoConfig.responseType).toBe("code");
-    expect(ssoConfig.responseMode).toBe("query");
     expect(ssoConfig.scope).toEqual(["openid", "profile", "email"]);
+  });
+});
+
+describe("isSsoConfigured", () => {
+  let originalEnv: NodeJS.ProcessEnv;
+
+  beforeEach(() => {
+    originalEnv = { ...process.env };
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it("should return false when NODE_ENV is development and ENABLE_SSO is not set", async () => {
+    process.env.NODE_ENV = "development";
+    delete process.env.ENABLE_SSO;
+
+    const { isSsoConfigured } = await import("./sso-config.js");
+    expect(isSsoConfigured()).toBe(false);
+  });
+
+  it("should return false when issuerUrl is missing", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.SSO_CLIENT_ID = "client-123";
+    process.env.SSO_CLIENT_SECRET = "secret-456";
+
+    const { isSsoConfigured } = await import("./sso-config.js");
+    expect(isSsoConfigured()).toBe(false);
+  });
+
+  it("should return true when all required config is present", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.SSO_ISSUER_URL = "https://login.microsoftonline.com/tenant/v2.0";
+    process.env.SSO_CLIENT_ID = "client-123";
+    process.env.SSO_CLIENT_SECRET = "secret-456";
+
+    const { isSsoConfigured } = await import("./sso-config.js");
+    expect(isSsoConfigured()).toBe(true);
   });
 });

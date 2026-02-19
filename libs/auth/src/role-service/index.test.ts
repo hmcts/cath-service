@@ -7,12 +7,10 @@ vi.mock("../config/sso-config.js");
 
 describe("Role Service", () => {
   const mockSsoConfig = {
-    identityMetadata: "https://login.microsoftonline.com/test/v2.0/.well-known/openid-configuration",
+    issuerUrl: "https://login.microsoftonline.com/test/v2.0",
     clientId: "test-client-id",
     clientSecret: "test-client-secret",
     redirectUri: "https://localhost:8080/sso/return",
-    responseType: "code" as const,
-    responseMode: "query" as const,
     scope: ["openid", "profile", "email"],
     systemAdminGroupId: "00000000-0000-0000-0000-000000000001",
     internalAdminCtscGroupId: "00000000-0000-0000-0000-000000000002",
