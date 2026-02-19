@@ -1,0 +1,72 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
+
+    <p class="govuk-body">
+      <a href="{{ common.factLinkUrl }}" class="govuk-link">{{ common.factLinkText }}</a> {{ common.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">{{ listContent.locationLine1 }}</p>
+    <p class="govuk-body govuk-!-margin-bottom-0">{{ listContent.locationLine2 }}</p>
+    <p class="govuk-body">{{ listContent.locationLine3 }}</p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ common.listFor }} {{ header.listDate }}</p>
+    <p class="govuk-body">{{ common.lastUpdated }} {{ header.lastUpdatedDate }} {{ common.at }} {{ header.lastUpdatedTime }}</p>
+
+    {{ govukDetails({
+      summaryText: common.importantInfoTitle,
+      html: '<h3 class="govuk-heading-s govuk-!-margin-bottom-2">' + listContent.pressAndPublicTitle + '</h3><p class="govuk-body">' + listContent.pressAndPublicText.split('\n\n').join('</p><p class="govuk-body">') + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">' + listContent.judgmentsTitle + '</h3><p class="govuk-body">' + listContent.judgmentsText + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">' + listContent.bundlesTitle + '</h3><p class="govuk-body">' + listContent.bundlesText.split('\n\n').join('</p><p class="govuk-body">') + '</p><h3 class="govuk-heading-s govuk-!-margin-top-6 govuk-!-margin-bottom-2">' + listContent.inPersonHearingsTitle + '</h3><p class="govuk-body">' + listContent.inPersonHearingsText + '</p><p class="govuk-body govuk-!-margin-top-6"><a href="' + listContent.kbGuideLinkUrl + '" class="govuk-link">' + listContent.kbGuideLinkText + '</a></p><p class="govuk-body"><a href="' + listContent.trialWindowsLinkUrl + '" class="govuk-link">' + listContent.trialWindowsLinkText + '</a></p>',
+      open: true
+    }) }}
+
+    <div class="govuk-form-group search-container">
+      <h2 class="govuk-heading-s">{{ common.searchCasesTitle }}</h2>
+      <label class="govuk-label govuk-visually-hidden" for="case-search-input">
+        {{ common.searchCasesLabel }}
+      </label>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text" aria-label="{{ common.searchCasesLabel }}">
+    </div>
+
+    <div id="hearings-table-container">
+      <table class="govuk-table" id="hearings-table" role="table" aria-label="{{ header.listTitle }}">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.venue }}</th>
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.judge }}</th>
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.time }}</th>
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.caseNumber }}</th>
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.caseDetails }}</th>
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.hearingType }}</th>
+            <th scope="col" class="govuk-table__header">{{ common.tableHeaders.additionalInformation }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for hearing in hearings %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ hearing.venue }}</td>
+              <td class="govuk-table__cell">{{ hearing.judge }}</td>
+              <td class="govuk-table__cell">{{ hearing.time }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseNumber }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseDetails }}</td>
+              <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
+              <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="govuk-body-s govuk-!-margin-top-6">{{ common.dataSource }}: {{ dataSource }}</p>
+
+    <div class="back-to-top">
+      <a href="#top" class="govuk-link">{{ common.backToTop }}</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

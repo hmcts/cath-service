@@ -111,6 +111,7 @@ const postHandler = async (req: Request, res: Response) => {
       language: uploadData.language,
       displayFrom,
       displayTo,
+      lastReceivedDate: new Date(),
       isFlatFile,
       provenance: Provenance.MANUAL_UPLOAD,
       noMatch: false

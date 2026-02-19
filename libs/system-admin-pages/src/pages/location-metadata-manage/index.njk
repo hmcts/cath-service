@@ -1,0 +1,91 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+
+{% block pageTitle %}
+  {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-three-quarters">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }} {{ locationName }}</h1>
+
+    <form method="post" novalidate>
+
+      {{ govukTextarea({
+        id: "cautionMessage",
+        name: "cautionMessage",
+        label: {
+          text: cautionMessageLabel,
+          classes: "govuk-label--m"
+        },
+        value: cautionMessage
+      }) }}
+
+      {{ govukTextarea({
+        id: "welshCautionMessage",
+        name: "welshCautionMessage",
+        label: {
+          text: welshCautionMessageLabel,
+          classes: "govuk-label--m"
+        },
+        value: welshCautionMessage
+      }) }}
+
+      {{ govukTextarea({
+        id: "noListMessage",
+        name: "noListMessage",
+        label: {
+          text: noListMessageLabel,
+          classes: "govuk-label--m"
+        },
+        value: noListMessage
+      }) }}
+
+      {{ govukTextarea({
+        id: "welshNoListMessage",
+        name: "welshNoListMessage",
+        label: {
+          text: welshNoListMessageLabel,
+          classes: "govuk-label--m"
+        },
+        value: welshNoListMessage
+      }) }}
+
+      <div class="govuk-button-group">
+        {% if hasExistingMetadata %}
+          {{ govukButton({
+            text: updateButtonText,
+            name: "action",
+            value: "update"
+          }) }}
+          {{ govukButton({
+            text: deleteButtonText,
+            classes: "govuk-button--warning",
+            name: "action",
+            value: "delete"
+          }) }}
+        {% else %}
+          {{ govukButton({
+            text: createButtonText,
+            name: "action",
+            value: "create"
+          }) }}
+        {% endif %}
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}
