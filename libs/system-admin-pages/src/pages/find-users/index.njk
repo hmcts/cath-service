@@ -7,8 +7,11 @@
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 
-{% block page_content %}
+{% block backLink %}
 <a href="/system-admin-dashboard{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-back-link">{{ backLink }}</a>
+{% endblock %}
+
+{% block page_content %}
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
