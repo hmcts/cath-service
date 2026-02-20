@@ -103,7 +103,8 @@ async function createFlatFileArtefact(
       displayTo,
       isFlatFile,
       provenance: "MANUAL",
-      supersededCount: 0
+      supersededCount: 0,
+      type: "LIST"
     }
   });
 

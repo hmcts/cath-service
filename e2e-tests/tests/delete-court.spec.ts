@@ -281,7 +281,8 @@ test.describe("Delete Court Journey", () => {
         displayFrom: new Date(),
         displayTo: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
         isFlatFile: false,
-        provenance: "MANUAL_UPLOAD"
+        provenance: "MANUAL_UPLOAD",
+        type: "LIST"
       }
     });
 
