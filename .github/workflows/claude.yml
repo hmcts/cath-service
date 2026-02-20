@@ -484,7 +484,12 @@ jobs:
             - **Medium**: Some existing modules would need changes
             - **High**: Core systems affected, significant refactoring needed
 
-            Provide ONLY the rating and a one-line reason.
+            Provide:
+            1. The rating (Low/Medium/High)
+            2. A one-liner summary (single sentence describing the impact)
+            3. The area impacted (e.g., "Authentication module", "API routes", "Database schema")
+            4. A brief reason explaining your rating
+
             Do NOT list specific files, modules, or patterns — that is @plan's job.
 
             ## PHASE 4: Output
@@ -493,7 +498,7 @@ jobs:
             Include:
             - Conflicts with other issues (if any)
             - Conflicts with existing code (if any)
-            - Impact rating (Low/Medium/High) with one-line reason
+            - Impact rating (Low/Medium/High) with one-liner, area impacted, and reason
 
             Do NOT include:
             - Lists of files to modify
