@@ -43,7 +43,7 @@
     "helmet": "8.1.0",
     "multer": "2.0.2",
     "nunjucks": "3.2.4",
-    "redis": "5.10.0"
+    "redis": "5.11.0"
   },
   "devDependencies": {
     "@types/compression": "1.8.1",
