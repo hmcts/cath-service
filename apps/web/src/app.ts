@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
+import { moduleRoot as adminCourtModuleRoot, pageRoutes as adminCourtRoutes } from "@hmcts/administrative-court-daily-cause-list/config";
 import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import {
@@ -10,14 +11,17 @@ import {
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
+import { moduleRoot as londonAdminModuleRoot, pageRoutes as londonAdminRoutes } from "@hmcts/london-administrative-court-daily-cause-list/config";
 import {
   apiRoutes as publicPagesApiRoutes,
   fileUploadRoutes as publicPagesFileUploadRoutes,
   moduleRoot as publicPagesModuleRoot,
   pageRoutes as publicPagesRoutes
 } from "@hmcts/public-pages/config";
+import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { assets as sjpPressListAssets, moduleRoot as sjpPressListModuleRoot, pageRoutes as sjpPressListRoutes } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot, pageRoutes as sjpPublicListRoutes } from "@hmcts/sjp-public-list/config";
@@ -81,6 +85,10 @@ export async function createApp(): Promise<Express> {
     civilFamilyCauseListModuleRoot,
     sjpPressListModuleRoot,
     sjpPublicListModuleRoot,
+    rcjStandardModuleRoot,
+    londonAdminModuleRoot,
+    civilAppealModuleRoot,
+    adminCourtModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
     verifiedPagesModuleRoot,
@@ -130,6 +138,10 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(careStandardsTribunalRoutes));
   app.use(await createSimpleRouter(sjpPressListRoutes));
   app.use(await createSimpleRouter(sjpPublicListRoutes));
+  app.use(await createSimpleRouter(rcjStandardRoutes));
+  app.use(await createSimpleRouter(londonAdminRoutes));
+  app.use(await createSimpleRouter(civilAppealRoutes));
+  app.use(await createSimpleRouter(adminCourtRoutes));
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));

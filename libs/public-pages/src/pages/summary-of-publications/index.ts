@@ -1,5 +1,5 @@
 import { getLatestSjpLists } from "@hmcts/list-types-common";
-import { getLocationById } from "@hmcts/location";
+import { getLocationById, getLocationMetadataByLocationId } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
 import { filterPublicationsForSummary, mockListTypes, SJP_PUBLIC_LIST_ID } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
@@ -115,11 +115,24 @@ export const GET = async (req: Request, res: Response) => {
     return a.language.localeCompare(b.language);
   });
 
+  // Fetch location metadata for caution and no-list messages
+  const locationMetadata = await getLocationMetadataByLocationId(locationId);
+
+  // Determine which messages to display based on locale
+  const cautionMessage = locale === "cy" ? locationMetadata?.welshCautionMessage : locationMetadata?.cautionMessage;
+  const noListMessage = locale === "cy" ? locationMetadata?.welshNoListMessage : locationMetadata?.noListMessage;
+
   res.render("summary-of-publications/index", {
     en,
     cy,
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
-    publications: allPublications
+    selectListMessage: t.selectListMessage,
+    publications: allPublications,
+    cautionMessage,
+    noListMessage,
+    factLinkText: t.factLinkText,
+    factLinkUrl: t.factLinkUrl,
+    factAdditionalText: t.factAdditionalText
   });
 };

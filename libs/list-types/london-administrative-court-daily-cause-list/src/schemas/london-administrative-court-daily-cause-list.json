@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "London Administrative Court Daily Cause List",
+  "description": "Schema for London Administrative Court with Main hearings and Planning Court tabs",
+  "type": "object",
+  "required": ["mainHearings", "planningCourt"],
+  "properties": {
+    "mainHearings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["venue", "judge", "time", "caseNumber", "caseDetails", "hearingType"],
+        "properties": {
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseDetails": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "hearingType": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "planningCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["venue", "judge", "time", "caseNumber", "caseDetails", "hearingType"],
+        "properties": {
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseDetails": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "hearingType": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    }
+  }
+}

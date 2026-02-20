@@ -24,8 +24,11 @@ vi.mock("@hmcts/location", () => ({
       });
     }
     return Promise.resolve(undefined);
-  })
+  }),
+  getLocationMetadataByLocationId: vi.fn()
 }));
+
+import { getLocationMetadataByLocationId } from "@hmcts/location";
 
 // Mock the postgres module
 vi.mock("@hmcts/postgres", () => ({
@@ -72,6 +75,8 @@ describe("Summary of Publications - GET handler", () => {
   let renderSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getLocationMetadataByLocationId).mockResolvedValue(null);
     renderSpy = vi.fn();
     mockRequest = {
       query: {}
@@ -426,6 +431,175 @@ describe("Summary of Publications - GET handler", () => {
 
       // Should have both publications
       expect(publications.length).toBe(2);
+    });
+  });
+
+  describe("FaCT link", () => {
+    it("should include FaCT link variables in English", async () => {
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.factLinkText).toBe("Find contact details and other information about courts and tribunals");
+      expect(renderCall.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
+      expect(renderCall.factAdditionalText).toBe("in England and Wales, and some non-devolved tribunals in Scotland.");
+    });
+
+    it("should include FaCT link variables in Welsh", async () => {
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.factLinkText).toBe("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
+      expect(renderCall.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
+      expect(renderCall.factAdditionalText).toBe("yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.");
+    });
+  });
+
+  describe("Select list message", () => {
+    it("should include selectListMessage in English", async () => {
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.selectListMessage).toBe("Select the list you want to view from the link(s) below:");
+    });
+
+    it("should include selectListMessage in Welsh", async () => {
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.selectListMessage).toBe("Dewiswch y rhestr rydych chi am ei gweld o'r ddolen(nau) isod:");
+    });
+  });
+
+  describe("Location metadata messages", () => {
+    it("should include cautionMessage when metadata exists in English", async () => {
+      vi.mocked(getLocationMetadataByLocationId).mockResolvedValue({
+        locationMetadataId: "test-id",
+        locationId: 9,
+        cautionMessage: "This is a caution message",
+        welshCautionMessage: "Dyma neges rhybudd",
+        noListMessage: null,
+        welshNoListMessage: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.cautionMessage).toBe("This is a caution message");
+    });
+
+    it("should include Welsh cautionMessage when locale is Welsh", async () => {
+      vi.mocked(getLocationMetadataByLocationId).mockResolvedValue({
+        locationMetadataId: "test-id",
+        locationId: 9,
+        cautionMessage: "This is a caution message",
+        welshCautionMessage: "Dyma neges rhybudd",
+        noListMessage: null,
+        welshNoListMessage: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.cautionMessage).toBe("Dyma neges rhybudd");
+    });
+
+    it("should include noListMessage when metadata exists in English", async () => {
+      vi.mocked(getLocationMetadataByLocationId).mockResolvedValue({
+        locationMetadataId: "test-id",
+        locationId: 9,
+        cautionMessage: null,
+        welshCautionMessage: null,
+        noListMessage: "No lists available",
+        welshNoListMessage: "Dim rhestrau ar gael",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.noListMessage).toBe("No lists available");
+    });
+
+    it("should include Welsh noListMessage when locale is Welsh", async () => {
+      vi.mocked(getLocationMetadataByLocationId).mockResolvedValue({
+        locationMetadataId: "test-id",
+        locationId: 9,
+        cautionMessage: null,
+        welshCautionMessage: null,
+        noListMessage: "No lists available",
+        welshNoListMessage: "Dim rhestrau ar gael",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.noListMessage).toBe("Dim rhestrau ar gael");
+    });
+
+    it("should return undefined for cautionMessage when no metadata exists", async () => {
+      vi.mocked(getLocationMetadataByLocationId).mockResolvedValue(null);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.cautionMessage).toBeUndefined();
+      expect(renderCall.noListMessage).toBeUndefined();
+    });
+
+    it("should include both cautionMessage and noListMessage when both exist", async () => {
+      vi.mocked(getLocationMetadataByLocationId).mockResolvedValue({
+        locationMetadataId: "test-id",
+        locationId: 9,
+        cautionMessage: "Caution message",
+        welshCautionMessage: "Neges rhybudd",
+        noListMessage: "No list message",
+        welshNoListMessage: "Dim neges rhestr",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.cautionMessage).toBe("Caution message");
+      expect(renderCall.noListMessage).toBe("No list message");
     });
   });
 });

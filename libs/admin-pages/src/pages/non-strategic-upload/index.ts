@@ -13,7 +13,10 @@ import { en } from "./en.js";
 
 const LIST_TYPES = [
   { value: "", text: "<Please choose a list type>" },
-  ...mockListTypes.filter((listType) => listType.isNonStrategic).map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
+  ...mockListTypes
+    .filter((listType) => listType.isNonStrategic)
+    .map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
+    .sort((a, b) => a.text.localeCompare(b.text))
 ];
 
 const SENSITIVITY_OPTIONS = [

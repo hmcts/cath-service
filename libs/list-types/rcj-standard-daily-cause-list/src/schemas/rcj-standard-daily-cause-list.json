@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RCJ Standard Daily Cause List",
+  "description": "Schema for RCJ Standard Daily Cause Lists",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["venue", "judge", "time", "caseNumber", "caseDetails", "hearingType"],
+    "properties": {
+      "venue": {
+        "title": "Venue",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Court 1"]
+      },
+      "judge": {
+        "title": "Judge",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Judge Smith"]
+      },
+      "time": {
+        "title": "Time",
+        "type": "string",
+        "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$",
+        "examples": ["10:00am", "2:30pm", "9am"]
+      },
+      "caseNumber": {
+        "title": "Case Number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["T20257890"]
+      },
+      "caseDetails": {
+        "title": "Case Details",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["R v Smith"]
+      },
+      "hearingType": {
+        "title": "Hearing Type",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Trial", "Directions Hearing"]
+      },
+      "additionalInformation": {
+        "title": "Additional Information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": [""]
+      }
+    }
+  }
+}

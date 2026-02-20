@@ -18,7 +18,16 @@
 
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
+    <p class="govuk-body">
+      <a href="{{ factLinkUrl }}" class="govuk-link">{{ factLinkText }}</a> {{ factAdditionalText }}
+    </p>
+
+    {% if cautionMessage %}
+      <div class="govuk-body">{{ cautionMessage | safe }}</div>
+    {% endif %}
+
     {% if publications.length > 0 %}
+      <p class="govuk-body">{{ selectListMessage }}</p>
       <ul class="govuk-list">
         {% for publication in publications %}
           <li style="margin-bottom: 15px;">
@@ -44,7 +53,9 @@
         {% endfor %}
       </ul>
     {% else %}
-      {% if not error %}
+      {% if noListMessage %}
+        <div class="govuk-body">{{ noListMessage | safe }}</div>
+      {% elif not error %}
         <p class="govuk-body">{{ noPublicationsMessage }}</p>
       {% endif %}
     {% endif %}

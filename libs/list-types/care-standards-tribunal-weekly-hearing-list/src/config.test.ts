@@ -78,10 +78,8 @@ describe("care-standards-tribunal-weekly-hearing-list config", () => {
       expect(relativePath).toBe("pages");
     });
 
-    it("assets should be sibling directory to moduleRoot", () => {
-      const moduleRootParent = path.dirname(moduleRoot);
-      const assetsParent = path.dirname(path.resolve(assets));
-      expect(assetsParent).toBe(moduleRootParent);
+    it("assets should be subdirectory of moduleRoot", () => {
+      expect(assets.startsWith(moduleRoot)).toBe(true);
     });
   });
 });
