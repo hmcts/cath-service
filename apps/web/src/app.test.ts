@@ -218,13 +218,13 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalledTimes(15);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(17);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(15);
+      expect(calls.length).toBeGreaterThanOrEqual(17);
     });
 
     it("should configure error handlers at the end", async () => {

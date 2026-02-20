@@ -223,5 +223,5 @@ interface PressCase {
   prosecutor?: string | null;
 }
 
-export const GET: RequestHandler[] = [requireRole([USER_ROLES.VERIFIED]), getHandler];
-export const POST: RequestHandler[] = [requireRole([USER_ROLES.VERIFIED]), postHandler];
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.VERIFIED, USER_ROLES.SYSTEM_ADMIN]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.VERIFIED, USER_ROLES.SYSTEM_ADMIN]), postHandler];

@@ -28,6 +28,8 @@ vi.mock("@hmcts/postgres", () => ({
 }));
 
 vi.mock("@hmcts/list-types-common", () => ({
+  SJP_PRESS_LIST_ID: 10,
+  SJP_PUBLIC_LIST_ID: 11,
   mockListTypes: [
     {
       id: 1,
@@ -1137,7 +1139,7 @@ describe("getLatestSjpArtefacts", () => {
       {
         artefactId: "sjp-1",
         locationId: "123",
-        listTypeId: 9, // SJP_PRESS_LIST
+        listTypeId: 10, // SJP_PRESS_LIST
         contentDate: new Date("2025-10-25"),
         sensitivity: "PRIVATE",
         language: "ENGLISH",
@@ -1152,7 +1154,7 @@ describe("getLatestSjpArtefacts", () => {
       {
         artefactId: "sjp-2",
         locationId: "456",
-        listTypeId: 10, // SJP_PUBLIC_LIST
+        listTypeId: 11, // SJP_PUBLIC_LIST
         contentDate: new Date("2025-10-24"),
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -1172,16 +1174,16 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [9, 10] }
+        listTypeId: { in: [10, 11] }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10
     });
     expect(result).toHaveLength(2);
     expect(result[0].artefactId).toBe("sjp-1");
-    expect(result[0].listTypeId).toBe(9);
+    expect(result[0].listTypeId).toBe(10);
     expect(result[1].artefactId).toBe("sjp-2");
-    expect(result[1].listTypeId).toBe(10);
+    expect(result[1].listTypeId).toBe(11);
   });
 
   it("should return empty array when no SJP artefacts found", async () => {
@@ -1196,7 +1198,7 @@ describe("getLatestSjpArtefacts", () => {
     const mockArtefacts = Array.from({ length: 15 }, (_, i) => ({
       artefactId: `sjp-${i}`,
       locationId: "123",
-      listTypeId: i % 2 === 0 ? 9 : 10,
+      listTypeId: i % 2 === 0 ? 10 : 11,
       contentDate: new Date("2025-10-25"),
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -1215,7 +1217,7 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [9, 10] }
+        listTypeId: { in: [10, 11] }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10

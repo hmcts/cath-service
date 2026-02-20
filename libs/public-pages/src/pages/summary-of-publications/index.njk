@@ -36,10 +36,6 @@
                 {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
               </a>
               <span> (opens in a new window)</span>
-            {% elif publication.isSjp %}
-              <a href="/{{ publication.urlPath }}?listId={{ publication.id }}" class="govuk-link">
-                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
-              </a>
             {% elif publication.urlPath %}
               <a href="/{{ publication.urlPath }}?artefactId={{ publication.id }}" class="govuk-link">
                 {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}

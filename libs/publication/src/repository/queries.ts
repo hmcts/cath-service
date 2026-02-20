@@ -1,4 +1,4 @@
-import { mockListTypes } from "@hmcts/list-types-common";
+import { mockListTypes, SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
 import { PROVENANCE_LABELS } from "../provenance.js";
@@ -275,7 +275,7 @@ export async function getArtefactListTypeId(artefactId: string): Promise<number 
 export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   const artefacts = await prisma.artefact.findMany({
     where: {
-      listTypeId: { in: [9, 10] } // SJP_PRESS_LIST (9), SJP_PUBLIC_LIST (10)
+      listTypeId: { in: [SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID] }
     },
     orderBy: { lastReceivedDate: "desc" },
     take: 10
@@ -291,6 +291,7 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
       language: artefact.language,
       displayFrom: artefact.displayFrom,
       displayTo: artefact.displayTo,
+      lastReceivedDate: artefact.lastReceivedDate,
       isFlatFile: artefact.isFlatFile,
       provenance: artefact.provenance,
       noMatch: artefact.noMatch
