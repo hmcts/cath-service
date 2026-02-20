@@ -513,6 +513,47 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page.locator('input[name="displayTo-month"]')).toHaveValue("06");
       await expect(page.locator('input[name="displayTo-year"]')).toHaveValue("2025");
     });
+
+    test("should auto-select default sensitivity when list type is selected", async ({ page }) => {
+      await page.goto("/manual-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      const listTypeSelect = page.locator('select[name="listType"]');
+      const sensitivitySelect = page.locator('select[name="sensitivity"]');
+
+      // Initially, sensitivity should be empty
+      await expect(sensitivitySelect).toHaveValue("");
+
+      // Select list type 6 (Crown Daily List) which has default sensitivity PUBLIC
+      await listTypeSelect.selectOption("6");
+
+      // Wait a moment for the JavaScript to execute
+      await page.waitForTimeout(100);
+
+      // Sensitivity should now be automatically set to PUBLIC
+      await expect(sensitivitySelect).toHaveValue("PUBLIC");
+
+      // Change to list type 2 (Family Daily Cause List) which has default sensitivity PRIVATE
+      await listTypeSelect.selectOption("2");
+      await page.waitForTimeout(100);
+
+      // Sensitivity should now be automatically set to PRIVATE
+      await expect(sensitivitySelect).toHaveValue("PRIVATE");
+
+      // Clear the list type selection
+      await listTypeSelect.selectOption("");
+      await page.waitForTimeout(100);
+
+      // Sensitivity should be cleared
+      await expect(sensitivitySelect).toHaveValue("");
+
+      // Select list type 1 (Civil Daily Cause List) which has default sensitivity PUBLIC
+      await listTypeSelect.selectOption("1");
+      await page.waitForTimeout(100);
+
+      // Sensitivity should now be automatically set to PUBLIC
+      await expect(sensitivitySelect).toHaveValue("PUBLIC");
+    });
   });
 
   test.describe("Manual Upload Summary Page", () => {
