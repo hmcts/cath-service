@@ -6332,13 +6332,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"notifications-node-client@npm:8.2.1, notifications-node-client@npm:^8.2.1":
+"notifications-node-client@npm:8.2.1":
   version: 8.2.1
   resolution: "notifications-node-client@npm:8.2.1"
   dependencies:
     axios: "npm:^1.7.2"
     jsonwebtoken: "npm:^9.0.2"
   checksum: 10c0/50fe98073d95960417bcf63e8706cf3464c149f5b2b05403d0ca0979c7318aa158113f9aaf3812c290c449ed6a6c38346dc30eea2e8e4a5df146b30a10d35f36
+  languageName: node
+  linkType: hard
+
+"notifications-node-client@npm:^8.2.1":
+  version: 8.3.0
+  resolution: "notifications-node-client@npm:8.3.0"
+  dependencies:
+    axios: "npm:^1.7.2"
+    jsonwebtoken: "npm:^9.0.2"
+  checksum: 10c0/c612c38b952fe1090ff84cd1e6a27dddb3c4e73aae6bad3e89bdeb1413922540f9662b1781a461ce92092f12c35f0b997df3acdff536fb906bab49b68eba59f5
   languageName: node
   linkType: hard
 
