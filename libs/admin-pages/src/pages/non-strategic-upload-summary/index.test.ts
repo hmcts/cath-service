@@ -227,7 +227,7 @@ describe("non-strategic-upload-summary page", () => {
           listTypeId: 6,
           sensitivity: "PUBLIC",
           language: "ENGLISH",
-          isFlatFile: true,
+          isFlatFile: false,
           provenance: "MANUAL_UPLOAD"
         })
       );

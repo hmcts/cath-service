@@ -16,10 +16,14 @@
 
     <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.duration }}</p>
-    <p class="govuk-body">{{ header.lastUpdated }}</p>
+    <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
 
-    <details class="govuk-details govuk-!-margin-top-6" data-module="govuk-details">
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listForWeekCommencing }} {{ header.weekCommencingDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+
+    <details class="govuk-details govuk-!-margin-top-6" data-module="govuk-details" open>
       <summary class="govuk-details__summary">
         <span class="govuk-details__summary-text">
           {{ t.importantInformationTitle }}
@@ -36,7 +40,7 @@
     </details>
 
     <div class="govuk-form-group govuk-!-margin-top-6">
-      <h2 class="govuk-heading-m">{{ t.searchCasesTitle }}</h2>
+      <h2 class="govuk-heading-s">{{ t.searchCasesTitle }}</h2>
       <label class="govuk-label govuk-visually-hidden" for="case-search-input">
         {{ t.searchCasesLabel }}
       </label>
@@ -70,7 +74,7 @@
       </table>
     </div>
 
-    <p class="govuk-body govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
+    <p class="govuk-body-s govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
 
     <div class="back-to-top">
       <a href="#top" class="govuk-link">{{ t.backToTop }}</a>

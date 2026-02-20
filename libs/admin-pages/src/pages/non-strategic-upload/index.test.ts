@@ -233,6 +233,29 @@ describe("non-strategic-upload page", () => {
       );
     });
 
+    it("should display list types in alphabetical order", async () => {
+      const req = {
+        session: {},
+        query: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(GET, req, res);
+
+      expect(res.render).toHaveBeenCalled();
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const listTypes = renderCall[1].listTypes as Array<{ value: string; text: string }>;
+
+      // Filter out the placeholder option
+      const listTypeOptions = listTypes.filter((lt) => lt.value !== "");
+
+      // Verify list types are sorted alphabetically by text
+      const sortedListTypes = [...listTypeOptions].sort((a, b) => a.text.localeCompare(b.text));
+      expect(listTypeOptions).toEqual(sortedListTypes);
+    });
+
     it("should resolve location name from ID", async () => {
       const session = {
         nonStrategicUploadForm: { locationId: "1" },

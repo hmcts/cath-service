@@ -14,13 +14,13 @@ import { en } from "./en.js";
 
 async function getListTypes() {
   const nonStrategicListTypes = await findNonStrategicListTypes();
-  return [
-    { value: "", text: "<Please choose a list type>" },
-    ...nonStrategicListTypes.map((listType) => ({
+  const options = nonStrategicListTypes
+    .map((listType) => ({
       value: listType.id.toString(),
       text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
     }))
-  ];
+    .sort((a, b) => a.text.localeCompare(b.text));
+  return [{ value: "", text: "<Please choose a list type>" }, ...options];
 }
 
 const SENSITIVITY_OPTIONS = [

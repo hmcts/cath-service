@@ -35,8 +35,8 @@ test.describe("System Admin Dashboard", () => {
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-viewer" },
-        { title: "Manage Location Metadata", href: "/location-metadata" },
-        { title: "Configure List Type", href: "/configure-list-type-enter-details" }
+        { title: "Configure List Type", href: "/configure-list-type-enter-details" },
+        { title: "Manage Location Metadata", href: "/location-metadata-search" }
       ];
 
       for (const { title, href } of tileData) {

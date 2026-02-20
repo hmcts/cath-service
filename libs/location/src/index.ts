@@ -9,7 +9,21 @@ export {
 } from "./filtering/service.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { locationData } from "./location-data.js";
-export type { Jurisdiction, LocationDetails, Region, SubJurisdiction } from "./repository/model.js";
+export {
+  createLocationMetadata,
+  deleteLocationMetadata,
+  getLocationMetadataByLocationId,
+  updateLocationMetadata
+} from "./repository/location-metadata-service.js";
+export type {
+  CreateLocationMetadataInput,
+  Jurisdiction,
+  LocationDetails,
+  LocationMetadata,
+  Region,
+  SubJurisdiction,
+  UpdateLocationMetadataInput
+} from "./repository/model.js";
 export {
   getAllJurisdictions,
   getAllLocations,

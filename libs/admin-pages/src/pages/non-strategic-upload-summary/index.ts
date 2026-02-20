@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
+import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
+import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
+import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
+import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, Provenance } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
@@ -93,9 +97,12 @@ const postHandler = async (req: Request, res: Response) => {
       throw new Error("Invalid date format");
     }
 
-    // Determine if file is flat file based on extension (JSON files are structured, others are flat)
+    // Non-strategic publications should always have isFlatFile set to false
     const listTypeId = Number.parseInt(uploadData.listType, 10);
-    const isFlatFile = !uploadData.fileName?.endsWith(".json");
+    const isFlatFile = false;
+
+    // Determine if the uploaded file needs conversion (Excel files need conversion to JSON)
+    const isExcelFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
     const artefactId = await createArtefact({
@@ -107,6 +114,7 @@ const postHandler = async (req: Request, res: Response) => {
       language: uploadData.language,
       displayFrom,
       displayTo,
+      lastReceivedDate: new Date(),
       isFlatFile,
       provenance: Provenance.MANUAL_UPLOAD,
       noMatch: false
