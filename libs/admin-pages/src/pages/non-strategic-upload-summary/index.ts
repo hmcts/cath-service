@@ -126,7 +126,7 @@ const postHandler = async (req: Request, res: Response) => {
     // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
     const selectedListType = listTypeId ? await findListTypeById(listTypeId) : null;
-    if (isFlatFile && selectedListType?.isNonStrategic) {
+    if (isExcelFile && selectedListType?.isNonStrategic) {
       const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
       if (hasConverterForListType(listTypeId)) {
