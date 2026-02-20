@@ -266,7 +266,8 @@ test.describe("Delete Court Journey", () => {
     await prisma.subscription.create({
       data: {
         userId: testUser.userId,
-        locationId: courtLocationId
+        searchType: "LOCATION_ID",
+        searchValue: courtLocationId.toString()
       }
     });
 

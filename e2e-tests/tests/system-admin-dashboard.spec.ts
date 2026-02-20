@@ -21,9 +21,9 @@ test.describe("System Admin Dashboard", () => {
       await expect(heading).toHaveClass(/govuk-heading-l/);
     });
 
-    test("should display all 8 admin tiles", async ({ page }) => {
+    test("should display all 9 admin tiles", async ({ page }) => {
       const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
+      await expect(tiles).toHaveCount(9);
     });
 
     test("should display correct tile titles and links", async ({ page }) => {
@@ -35,7 +35,8 @@ test.describe("System Admin Dashboard", () => {
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-viewer" },
-        { title: "Manage Location Metadata", href: "/location-metadata-search" }
+        { title: "Manage Location Metadata", href: "/location-metadata-search" },
+        { title: "Manage List Types", href: "/manage-list-types" }
       ];
 
       for (const { title, href } of tileData) {
@@ -47,21 +48,22 @@ test.describe("System Admin Dashboard", () => {
 
     test("should display descriptions for all tiles", async ({ page }) => {
       const descriptions = page.locator(".admin-tile__description");
-      await expect(descriptions).toHaveCount(8);
+      await expect(descriptions).toHaveCount(9);
 
       await expect(descriptions.nth(0)).toContainText("Upload CSV location reference data");
       await expect(descriptions.nth(1)).toContainText("Delete court from reference data");
-      await expect(descriptions.nth(2)).toContainText("View, create, update and remove third-party users");
+      await expect(descriptions.nth(2)).toContainText("View, create, update and remove third-party users and subscriptions");
       await expect(descriptions.nth(3)).toContainText("Search, update and delete users");
       await expect(descriptions.nth(4)).toContainText("Discover content uploaded to all locations");
       await expect(descriptions.nth(5)).toContainText("Upload a CSV file for bulk creation of media accounts");
       await expect(descriptions.nth(6)).toContainText("View audit logs on system admin actions");
       await expect(descriptions.nth(7)).toContainText("View, update and remove location metadata");
+      await expect(descriptions.nth(8)).toContainText("View, create and update list type configuration");
     });
 
     test("should display tiles in 2-column grid", async ({ page }) => {
       const gridColumns = page.locator(".govuk-grid-column-one-half");
-      await expect(gridColumns).toHaveCount(8);
+      await expect(gridColumns).toHaveCount(9);
     });
   });
 
@@ -79,9 +81,9 @@ test.describe("System Admin Dashboard", () => {
 
     test("should have accessible links @nightly", async ({ page }) => {
       const links = page.locator("a.admin-tile");
-      await expect(links).toHaveCount(8);
+      await expect(links).toHaveCount(9);
 
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 9; i++) {
         await expect(links.nth(i)).toBeVisible();
       }
     });
@@ -126,8 +128,8 @@ test.describe("System Admin Dashboard", () => {
       const tagName = await firstTile.evaluate((el) => el.tagName.toLowerCase());
       expect(tagName).toBe("a");
 
-      // Verify all 8 tiles are accessible links
-      await expect(tileLinks).toHaveCount(8);
+      // Verify all 9 tiles are accessible links
+      await expect(tileLinks).toHaveCount(9);
     });
   });
 
@@ -140,7 +142,7 @@ test.describe("System Admin Dashboard", () => {
       await expect(heading).toBeVisible();
 
       const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
+      await expect(tiles).toHaveCount(9);
     });
 
     test("should display correctly on tablet viewport (768x1024) @nightly", async ({ page }) => {
@@ -151,7 +153,7 @@ test.describe("System Admin Dashboard", () => {
       await expect(heading).toBeVisible();
 
       const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
+      await expect(tiles).toHaveCount(9);
     });
 
     test("should display correctly on desktop viewport (1920x1080) @nightly", async ({ page }) => {
@@ -162,7 +164,7 @@ test.describe("System Admin Dashboard", () => {
       await expect(heading).toBeVisible();
 
       const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(8);
+      await expect(tiles).toHaveCount(9);
     });
   });
 

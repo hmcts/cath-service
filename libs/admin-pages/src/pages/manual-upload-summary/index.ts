@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -108,6 +108,19 @@ const postHandler = async (req: Request, res: Response) => {
 
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+
+    // Extract and store artefact search data for JSON files
+    if (!isFlatFile) {
+      try {
+        const jsonPayload = JSON.parse(uploadData.file.toString("utf-8"));
+        await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonPayload);
+      } catch (error) {
+        console.error("[Manual Upload] Failed to extract artefact search data", {
+          artefactId,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
 
     // Trigger email notifications for subscribers
     try {
