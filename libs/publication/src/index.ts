@@ -1,4 +1,4 @@
-export { type ListType, mockListTypes } from "@hmcts/list-types-common";
+export { type ListType, mockListTypes, SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "@hmcts/list-types-common";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {
   canAccessPublication,
@@ -25,6 +25,7 @@ export {
   getArtefactsByIds,
   getArtefactsByLocation,
   getArtefactType,
+  getLatestSjpArtefacts,
   getLocationsWithPublicationCount,
   type LocationWithPublicationCount
 } from "./repository/queries.js";

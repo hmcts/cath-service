@@ -79,8 +79,10 @@ export const GET = async (req: Request, res: Response) => {
     return true;
   });
 
+  const allPublications = [...uniquePublications];
+
   // Sort by list name, then by content date descending, then by language
-  uniquePublications.sort((a: (typeof uniquePublications)[number], b: (typeof uniquePublications)[number]) => {
+  allPublications.sort((a: (typeof allPublications)[number], b: (typeof allPublications)[number]) => {
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);
@@ -107,7 +109,7 @@ export const GET = async (req: Request, res: Response) => {
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
     selectListMessage: t.selectListMessage,
-    publications: uniquePublications,
+    publications: allPublications,
     cautionMessage,
     noListMessage,
     factLinkText: t.factLinkText,
