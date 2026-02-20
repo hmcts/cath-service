@@ -49,6 +49,13 @@ export const postHandler = async (req: Request, res: Response) => {
       welshName: formData.welshName.trim()
     };
 
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "ADD_JURISDICTION",
+      entityInfo: `Name: ${formData.name.trim()}, Welsh Name: ${formData.welshName.trim()}`
+    };
+
     // Redirect to success page
     res.redirect(`/add-jurisdiction-success${language === "cy" ? "?lng=cy" : ""}`);
   } catch (error) {

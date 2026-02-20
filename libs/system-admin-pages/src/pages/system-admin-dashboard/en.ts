@@ -34,7 +34,7 @@ export const en = {
     {
       title: "Audit Log Viewer",
       description: "View audit logs on system admin actions",
-      href: "/audit-log-viewer"
+      href: "/audit-log-list"
     },
     {
       title: "Manage Location Metadata",
