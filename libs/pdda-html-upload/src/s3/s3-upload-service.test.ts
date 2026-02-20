@@ -50,18 +50,17 @@ describe("uploadHtmlToS3", () => {
 
     expect(result.success).toBe(true);
     expect(result.bucketName).toBe("test-bucket");
-    expect(result.s3Key).toMatch(/^test-prefix\/\d{4}\/\d{2}\/\d{2}\/.+\.html$/);
+    expect(result.s3Key).toBe("test-prefix/test.html");
     expect(mockS3Send).toHaveBeenCalledTimes(1);
   });
 
-  it("should generate S3 key with date-based path and UUID", async () => {
+  it("should use original filename in S3 key", async () => {
     const fileBuffer = Buffer.from("<html></html>");
     const originalFilename = "test.htm";
 
     const result = await uploadHtmlToS3(fileBuffer, originalFilename);
 
-    const keyPattern = /^test-prefix\/\d{4}\/\d{2}\/\d{2}\/[0-9a-f-]{36}\.htm$/;
-    expect(result.s3Key).toMatch(keyPattern);
+    expect(result.s3Key).toBe("test-prefix/test.htm");
   });
 
   it("should use default prefix when AWS_S3_XHIBIT_PREFIX is not set", async () => {
@@ -93,13 +92,13 @@ describe("uploadHtmlToS3", () => {
     const fileBuffer = Buffer.from("<html></html>");
     const result = await uploadHtmlToS3(fileBuffer, "document.HTML");
 
-    expect(result.s3Key).toMatch(/\.html$/);
+    expect(result.s3Key).toMatch(/\.html$/i);
   });
 
   it("should handle HTM file extension correctly", async () => {
     const fileBuffer = Buffer.from("<html></html>");
     const result = await uploadHtmlToS3(fileBuffer, "document.HTM");
 
-    expect(result.s3Key).toMatch(/\.htm$/);
+    expect(result.s3Key).toMatch(/\.htm$/i);
   });
 });
