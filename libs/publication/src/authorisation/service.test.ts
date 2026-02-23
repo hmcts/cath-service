@@ -1,8 +1,8 @@
 import type { UserProfile } from "@hmcts/auth";
-import type { ListType } from "@hmcts/list-types-common";
 import { describe, expect, it } from "vitest";
 import type { Artefact } from "../repository/model.js";
 import { Sensitivity } from "../sensitivity.js";
+import type { ListType } from "./service.js";
 import {
   canAccessPublication,
   canAccessPublicationData,

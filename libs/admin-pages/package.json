@@ -13,6 +13,10 @@
     },
     "./src/assets/css/index.scss": {
       "default": "./src/assets/css/index.scss"
+    },
+    "./src/assets/js/list-type-sensitivity.js": {
+      "production": "./dist/assets/js/list-type-sensitivity.js",
+      "default": "./src/assets/js/list-type-sensitivity.ts"
     }
   },
   "scripts": {

@@ -1,11 +1,9 @@
 import type { UserProfile } from "@hmcts/auth";
-import type { ListType } from "@hmcts/list-types-common";
-import { mockListTypes } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres";
 import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { Artefact } from "../repository/model.js";
-import { canAccessPublication, canAccessPublicationData } from "./service.js";
+import { canAccessPublication, canAccessPublicationData, type ListType } from "./service.js";
 
 type AccessCheck = (user: UserProfile | undefined, artefact: Artefact, listType: ListType | undefined) => boolean;
 
@@ -84,7 +82,17 @@ function createPublicationAccessMiddleware(checkAccess: AccessCheck, useCustom40
         return renderError(res, 404, locale);
       }
 
-      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+      const dbListType = await prisma.listType.findUnique({
+        where: { id: artefact.listTypeId }
+      });
+
+      const listType: ListType | undefined = dbListType
+        ? {
+            id: dbListType.id,
+            provenance: dbListType.allowedProvenance,
+            isNonStrategic: dbListType.isNonStrategic
+          }
+        : undefined;
 
       if (!checkAccess(req.user, artefact, listType)) {
         return handleAccessDenied(res, locale, useCustom403Message);

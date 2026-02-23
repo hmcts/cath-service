@@ -1,0 +1,25 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block backLink %}
+  {# No back link on success page #}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {{ govukPanel({
+      titleText: t.configureListType.success.title,
+      html: t.configureListType.success.banner
+    }) }}
+
+    <h2 class="govuk-heading-m">{{ t.configureListType.success.description }}</h2>
+
+    <p class="govuk-body">
+      <a href="/system-admin-dashboard" class="govuk-link">{{ t.configureListType.success.returnLink }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

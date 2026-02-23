@@ -1,4 +1,5 @@
-import { mockListTypes, validateListTypeJson } from "@hmcts/list-types-common";
+import { validateListTypeJson } from "@hmcts/list-types-common";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { type DateInput, parseDate } from "@hmcts/web-core";
 import type { en as manualUploadEn } from "../pages/manual-upload/en.js";
 import type { en as nonStrategicUploadEn } from "../pages/non-strategic-upload/en.js";
@@ -39,7 +40,13 @@ async function validateJsonFileSchema(file: Express.Multer.File, listType: strin
   try {
     const fileContent = file.buffer.toString("utf-8");
     const jsonData = JSON.parse(fileContent);
-    const validationResult = await validateListTypeJson(listType, jsonData, mockListTypes);
+    const listTypes = await findAllListTypes();
+    const listTypesInfo = listTypes.map((lt) => ({
+      id: lt.id,
+      name: lt.name,
+      friendlyName: lt.friendlyName
+    }));
+    const validationResult = await validateListTypeJson(listType, jsonData, listTypesInfo);
 
     if (!validationResult.isValid) {
       const firstError = validationResult.errors[0] as { message?: string } | undefined;

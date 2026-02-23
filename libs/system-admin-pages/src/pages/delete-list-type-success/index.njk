@@ -1,0 +1,30 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block backLink %}
+  {# No back link on success page #}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {{ govukPanel({
+      titleText: t.deleteListType.success.title,
+      html: t.deleteListType.success.banner
+    }) }}
+
+    <h2 class="govuk-heading-m">{{ t.deleteListType.success.description }}</h2>
+
+    <ul class="govuk-list">
+      <li>
+        <a href="/view-list-types" class="govuk-link">{{ t.deleteListType.success.viewListTypesLink }}</a>
+      </li>
+      <li>
+        <a href="/system-admin-dashboard" class="govuk-link">{{ t.deleteListType.success.returnLink }}</a>
+      </li>
+    </ul>
+
+  </div>
+</div>
+{% endblock %}

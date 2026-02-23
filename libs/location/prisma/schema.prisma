@@ -36,8 +36,40 @@ model SubJurisdiction {
 
   jurisdiction             Jurisdiction              @relation(fields: [jurisdictionId], references: [jurisdictionId])
   locationSubJurisdictions LocationSubJurisdiction[]
+  listTypes                ListTypeSubJurisdiction[]
 
   @@map("sub_jurisdiction")
+}
+
+model ListTypeSubJurisdiction {
+  id                Int @id @default(autoincrement())
+  listTypeId        Int @map("list_type_id")
+  subJurisdictionId Int @map("sub_jurisdiction_id")
+
+  listType        ListType        @relation(fields: [listTypeId], references: [id], onDelete: Cascade)
+  subJurisdiction SubJurisdiction @relation(fields: [subJurisdictionId], references: [subJurisdictionId])
+
+  @@unique([listTypeId, subJurisdictionId])
+  @@map("list_types_sub_jurisdictions")
+}
+
+model ListType {
+  id                    Int       @id @default(autoincrement())
+  name                  String    @unique @db.VarChar(1000)
+  friendlyName          String?   @map("friendly_name") @db.VarChar(1000)
+  welshFriendlyName     String?   @map("welsh_friendly_name") @db.VarChar(255)
+  shortenedFriendlyName String?   @map("shortened_friendly_name") @db.VarChar(255)
+  url                   String?   @db.VarChar(255)
+  defaultSensitivity    String?   @map("default_sensitivity") @db.VarChar(50)
+  allowedProvenance     String    @map("allowed_provenance") @db.VarChar(50)
+  isNonStrategic        Boolean   @default(false) @map("is_non_strategic")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
+
+  subJurisdictions ListTypeSubJurisdiction[]
+
+  @@map("list_types")
 }
 
 model Location {

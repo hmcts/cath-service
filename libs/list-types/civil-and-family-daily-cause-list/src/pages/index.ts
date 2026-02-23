@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { canAccessPublicationData, getArtefactById, mockListTypes, PROVENANCE_LABELS } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres";
+import { canAccessPublicationData, getArtefactById, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
@@ -43,7 +44,18 @@ export const GET = async (req: Request, res: Response) => {
     }
 
     // Check if user has permission to access the publication data
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+    const dbListType = await prisma.listType.findUnique({
+      where: { id: artefact.listTypeId }
+    });
+
+    const listType: ListType | undefined = dbListType
+      ? {
+          id: dbListType.id,
+          provenance: dbListType.allowedProvenance,
+          isNonStrategic: dbListType.isNonStrategic
+        }
+      : undefined;
+
     if (!canAccessPublicationData(req.user, artefact, listType)) {
       return res.status(403).render("errors/403", {
         en: {

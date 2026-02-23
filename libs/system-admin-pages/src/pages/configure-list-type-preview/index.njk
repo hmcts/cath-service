@@ -1,0 +1,150 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: t.common.errorSummaryTitle,
+        errorList: [{ text: error }]
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ t.configureListType.preview.title }}</h1>
+    <p class="govuk-body">{{ t.configureListType.preview.description }}</p>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: { text: t.configureListType.preview.nameRow },
+          value: { text: data.name },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.nameRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.friendlyNameRow },
+          value: { text: data.friendlyName },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.friendlyNameRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.welshFriendlyNameRow },
+          value: { text: data.welshFriendlyName },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.welshFriendlyNameRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.shortenedFriendlyNameRow },
+          value: { text: data.shortenedFriendlyName },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.shortenedFriendlyNameRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.urlRow },
+          value: { text: data.url },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.urlRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.defaultSensitivityRow },
+          value: { text: data.defaultSensitivity },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.defaultSensitivityRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.allowedProvenanceRow },
+          value: { text: data.allowedProvenance | join(", ") },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.allowedProvenanceRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.isNonStrategicRow },
+          value: { text: t.configureListType.preview.yesOption if data.isNonStrategic else t.configureListType.preview.noOption },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-enter-details",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.isNonStrategicRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.subJurisdictionsRow },
+          value: { text: subJurisdictionsText },
+          actions: {
+            items: [
+              {
+                href: "/configure-list-type-select-sub-jurisdictions",
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.subJurisdictionsRow
+              }
+            ]
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post">
+      {{ govukButton({
+        text: t.common.confirm
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

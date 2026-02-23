@@ -1,4 +1,4 @@
-export interface ListType {
+export interface ListTypeData {
   id: number;
   name: string;
   englishFriendlyName: string;
@@ -6,9 +6,10 @@ export interface ListType {
   provenance: string;
   urlPath?: string;
   isNonStrategic: boolean;
+  defaultSensitivity: string;
 }
 
-export const mockListTypes: ListType[] = [
+export const listTypeData: ListTypeData[] = [
   {
     id: 1,
     name: "CIVIL_DAILY_CAUSE_LIST",
@@ -16,7 +17,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Civil Daily Cause List",
     provenance: "CFT_IDAM",
     urlPath: "civil-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 2,
@@ -25,7 +27,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Family Daily Cause List",
     provenance: "CFT_IDAM",
     urlPath: "family-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Private"
   },
   {
     id: 3,
@@ -34,7 +37,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Crime Daily List",
     provenance: "CRIME_IDAM",
     urlPath: "crime-daily-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 4,
@@ -43,7 +47,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Magistrates Public List",
     provenance: "CFT_IDAM",
     urlPath: "magistrates-public-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 5,
@@ -52,7 +57,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Crown Warned List",
     provenance: "CFT_IDAM",
     urlPath: "crown-warned-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 6,
@@ -61,7 +67,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Crown Daily List",
     provenance: "CFT_IDAM",
     urlPath: "crown-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 7,
@@ -70,7 +77,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Crown Firm List",
     provenance: "CFT_IDAM",
     urlPath: "crown-firm-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 8,
@@ -79,16 +87,18 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list",
-    isNonStrategic: false
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   },
   {
     id: 9,
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
-    welshFriendlyName: "Welsh placeholder",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     provenance: "MANUAL_UPLOAD",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   // RCJ Standard Format
   {
@@ -98,7 +108,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Sifil yn y Llysoedd Barn Brenhinol",
     provenance: "MANUAL_UPLOAD",
     urlPath: "civil-courts-rcj-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 11,
@@ -107,7 +118,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Sifil yn y Llys Sirol yng Nghanol Llundain",
     provenance: "MANUAL_UPLOAD",
     urlPath: "county-court-central-london-civil-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 12,
@@ -116,7 +128,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Troseddol)",
     provenance: "MANUAL_UPLOAD",
     urlPath: "court-of-appeal-criminal-division-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 13,
@@ -125,7 +138,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Adran Deulu yr Uchel Lys",
     provenance: "MANUAL_UPLOAD",
     urlPath: "family-division-high-court-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 14,
@@ -134,7 +148,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Adran Mainc y Brenin",
     provenance: "MANUAL_UPLOAD",
     urlPath: "kings-bench-division-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 15,
@@ -143,7 +158,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Meistri Mainc y Brenin",
     provenance: "MANUAL_UPLOAD",
     urlPath: "kings-bench-masters-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 16,
@@ -152,7 +168,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Sifil y Maer a'r Ddinas",
     provenance: "MANUAL_UPLOAD",
     urlPath: "mayor-city-civil-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 17,
@@ -161,7 +178,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Swyddfa Costau’r Uwchlysoedd",
     provenance: "MANUAL_UPLOAD",
     urlPath: "senior-courts-costs-office-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   // RCJ Special Format - London Administrative Court
   {
@@ -171,7 +189,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Llundain",
     provenance: "MANUAL_UPLOAD",
     urlPath: "london-administrative-court-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   // RCJ Special Format - Court of Appeal Civil
   {
@@ -181,7 +200,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
     provenance: "MANUAL_UPLOAD",
     urlPath: "court-of-appeal-civil-division-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   // Administrative Courts
   {
@@ -191,7 +211,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Birmingham",
     provenance: "MANUAL_UPLOAD",
     urlPath: "birmingham-administrative-court-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 21,
@@ -200,7 +221,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Leeds",
     provenance: "MANUAL_UPLOAD",
     urlPath: "leeds-administrative-court-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 22,
@@ -209,7 +231,8 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Bryste a Chaerdydd",
     provenance: "MANUAL_UPLOAD",
     urlPath: "bristol-cardiff-administrative-court-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   },
   {
     id: 23,
@@ -218,6 +241,7 @@ export const mockListTypes: ListType[] = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Manceinion",
     provenance: "MANUAL_UPLOAD",
     urlPath: "manchester-administrative-court-daily-cause-list",
-    isNonStrategic: true
+    isNonStrategic: true,
+    defaultSensitivity: "Public"
   }
 ];

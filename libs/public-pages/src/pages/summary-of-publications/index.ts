@@ -1,6 +1,7 @@
 import { getLocationById, getLocationMetadataByLocationId } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { filterPublicationsForSummary, mockListTypes } from "@hmcts/publication";
+import { filterPublicationsForSummary, type ListType } from "@hmcts/publication";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
@@ -42,14 +43,25 @@ export const GET = async (req: Request, res: Response) => {
     orderBy: [{ lastReceivedDate: "desc" }]
   });
 
+  // Fetch list types from database and create a map for quick lookup
+  const dbListTypes = await findAllListTypes();
+  const listTypeMap = new Map(dbListTypes.map((lt) => [lt.id, lt]));
+
+  // Map database list types to the ListType interface for authorization
+  const listTypes: ListType[] = dbListTypes.map((lt) => ({
+    id: lt.id,
+    provenance: lt.allowedProvenance,
+    isNonStrategic: lt.isNonStrategic
+  }));
+
   // Filter artefacts based on user metadata access rights
   // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
-  const artefacts = filterPublicationsForSummary(req.user, allArtefacts, mockListTypes);
+  const artefacts = filterPublicationsForSummary(req.user, allArtefacts, listTypes);
 
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+    const listType = listTypeMap.get(artefact.listTypeId);
+    const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.friendlyName || "Unknown";
 
     // Get language label based on publication language
     const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
@@ -62,7 +74,7 @@ export const GET = async (req: Request, res: Response) => {
       language: artefact.language,
       formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
       languageLabel,
-      urlPath: listType?.urlPath,
+      urlPath: listType?.url,
       isFlatFile: artefact.isFlatFile,
       locationId: artefact.locationId
     };

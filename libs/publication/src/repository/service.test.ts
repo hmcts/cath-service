@@ -7,35 +7,17 @@ vi.mock("./queries.js", () => ({
   getArtefactListTypeId: vi.fn()
 }));
 
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      name: "CIVIL_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Civil Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil",
-      provenance: "CFT_IDAM",
-      urlPath: "civil-daily-cause-list"
-    },
-    {
-      id: 2,
-      name: "FAMILY_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Family Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Teulu",
-      provenance: "CFT_IDAM",
-      urlPath: "family-daily-cause-list"
-    },
-    {
-      id: 3,
-      name: "NO_URL_LIST",
-      englishFriendlyName: "No URL List",
-      welshFriendlyName: "Dim Rhestr URL",
-      provenance: "CFT_IDAM"
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn()
     }
-  ]
+  }
 }));
 
 vi.mock("node:fs/promises");
+
+import { prisma } from "@hmcts/postgres";
 
 describe("Publication Service", () => {
   beforeEach(() => {
@@ -127,6 +109,10 @@ describe("Publication Service", () => {
   describe("getRenderedTemplateUrl", () => {
     it("should return rendered template URL for valid artefact with urlPath", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(1);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 1,
+        url: "civil-daily-cause-list"
+      } as any);
 
       const result = await getRenderedTemplateUrl("test-artefact-id");
 
@@ -144,6 +130,7 @@ describe("Publication Service", () => {
 
     it("should return null when list type not found", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(999);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
 
       const result = await getRenderedTemplateUrl("test-artefact-id");
 
@@ -152,6 +139,10 @@ describe("Publication Service", () => {
 
     it("should return null when list type has no urlPath", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(3);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 3,
+        url: null
+      } as any);
 
       const result = await getRenderedTemplateUrl("test-artefact-id");
 
@@ -160,6 +151,10 @@ describe("Publication Service", () => {
 
     it("should work with different list types", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(2);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 2,
+        url: "family-daily-cause-list"
+      } as any);
 
       const result = await getRenderedTemplateUrl("test-artefact-id-2");
 
@@ -168,6 +163,10 @@ describe("Publication Service", () => {
 
     it("should URL-encode artefactId with special characters", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(1);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 1,
+        url: "civil-daily-cause-list"
+      } as any);
 
       const result = await getRenderedTemplateUrl("test&id=malicious");
 
@@ -176,6 +175,10 @@ describe("Publication Service", () => {
 
     it("should URL-encode artefactId with question marks", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(1);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 1,
+        url: "civil-daily-cause-list"
+      } as any);
 
       const result = await getRenderedTemplateUrl("test?query=param");
 
@@ -184,6 +187,10 @@ describe("Publication Service", () => {
 
     it("should URL-encode artefactId with spaces", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(1);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 1,
+        url: "civil-daily-cause-list"
+      } as any);
 
       const result = await getRenderedTemplateUrl("test artefact id");
 
@@ -192,6 +199,10 @@ describe("Publication Service", () => {
 
     it("should URL-encode artefactId with ampersands", async () => {
       vi.mocked(queries.getArtefactListTypeId).mockResolvedValue(1);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        id: 1,
+        url: "civil-daily-cause-list"
+      } as any);
 
       const result = await getRenderedTemplateUrl("test&param=value&other=data");
 
