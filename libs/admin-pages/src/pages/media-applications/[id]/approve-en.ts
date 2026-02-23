@@ -20,6 +20,7 @@ export default {
   errorMessages: {
     selectOption: "An option must be selected",
     notFound: "Application not found.",
-    loadFailed: "Unable to load applicant details. Please try again later."
+    loadFailed: "Unable to load applicant details. Please try again later.",
+    azureAdFailed: "Unable to create user account in Azure AD. Please try again later."
   }
 };

@@ -5,14 +5,19 @@ import { loginWithSSO } from "../utils/sso-helpers.js";
 test.describe("Media Application Management", () => {
   let approvalApplicationId: string;
   let rejectionApplicationId: string;
+  let approvalEmail: string;
+  let rejectionEmail: string;
 
   test.beforeAll(async () => {
     const { prisma } = await import("@hmcts/postgres");
 
+    approvalEmail = `CaTH-Application-Test-${crypto.randomUUID()}@hmcts.net`;
+    rejectionEmail = `CaTH-Application-Test-${crypto.randomUUID()}@hmcts.net`;
+
     const approvalApp = await prisma.mediaApplication.create({
       data: {
         name: "Test Media User",
-        email: "test-media@example.com",
+        email: approvalEmail,
         employer: "Test News Corp",
         status: "PENDING",
         proofOfIdPath: null
@@ -22,7 +27,7 @@ test.describe("Media Application Management", () => {
     const rejectionApp = await prisma.mediaApplication.create({
       data: {
         name: "Test Rejection User",
-        email: "test-rejection@example.com",
+        email: rejectionEmail,
         employer: "Test Media Corp",
         status: "PENDING",
         proofOfIdPath: null
@@ -87,7 +92,7 @@ test.describe("Media Application Management", () => {
       await page.waitForURL(new RegExp(`/media-applications/${approvalApplicationId}`));
       await expect(page.locator("h1")).toContainText("Applicant's details");
       await expect(page.getByText("Test Media User")).toBeVisible();
-      await expect(page.getByText("test-media@example.com")).toBeVisible();
+      await expect(page.getByText(approvalEmail)).toBeVisible();
       await expect(page.getByText("Test News Corp")).toBeVisible();
 
       // Navigate to approval confirmation page
@@ -138,7 +143,7 @@ test.describe("Media Application Management", () => {
       const testApp = await prisma.mediaApplication.create({
         data: {
           name: "Test User For Approval",
-          email: "approval-test@example.com",
+          email: `CaTH-Application-Test-${crypto.randomUUID()}@hmcts.net`,
           employer: "Test News Corp",
           status: "PENDING"
         }

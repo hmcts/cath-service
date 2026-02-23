@@ -9,8 +9,7 @@ export async function createUser(input: User) {
       surname: input.surname,
       userProvenance: input.userProvenance,
       userProvenanceId: input.userProvenanceId,
-      role: input.role,
-      lastSignedInDate: new Date()
+      role: input.role
     }
   });
 }

@@ -2,6 +2,7 @@ export { USER_ROLES } from "@hmcts/account";
 export { getCftIdamConfig, isCftIdamConfigured } from "./config/cft-idam-config.js";
 export { configurePassport } from "./config/passport-config.js";
 export { isSsoConfigured } from "./config/sso-config.js";
+export { checkUserExists, createMediaUser, getGraphApiAccessToken } from "./graph-api/client.js";
 export { requireAuth } from "./middleware/authenticate.js";
 export { blockUserAccess, requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";
