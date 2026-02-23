@@ -1,7 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export const apiRoutes = { path: path.join(__dirname, "routes") };
+// This module no longer provides API routes
+// All functionality is now exposed via exported functions in index.ts
+// and consumed by the /api/v1/publication endpoint
