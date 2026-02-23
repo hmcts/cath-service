@@ -37,7 +37,7 @@
     "@types/node": "24.10.4",
     "@types/nunjucks": "3.2.6",
     "typescript": "5.9.3",
-    "vitest": "4.0.16"
+    "vitest": "4.0.18"
   },
   "peerDependencies": {
     "express": "^5.2.0"
