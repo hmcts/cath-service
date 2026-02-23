@@ -4,10 +4,7 @@ import { findAllThirdPartyUsers, getHighestSensitivity } from "../../third-party
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-
+const getHandler = async (_req: Request, res: Response) => {
   const users = await findAllThirdPartyUsers();
 
   const usersWithSensitivity = users.map((user) => ({
@@ -16,7 +13,8 @@ const getHandler = async (req: Request, res: Response) => {
   }));
 
   res.render("manage-third-party-users/index", {
-    ...content,
+    en,
+    cy,
     users: usersWithSensitivity
   });
 };

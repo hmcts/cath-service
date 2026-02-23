@@ -7,5 +7,5 @@
   text: successMessage
 }) }}
 
-<p class="govuk-body">{{ furtherInfoText }} <a href="/manage-third-party-users{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-link">{{ manageThirdPartyUsersLink }}</a></p>
+<p class="govuk-body">{{ furtherInfoText }} <a href="/manage-third-party-users{{ '?lng=cy' if locale == 'cy' else '' }}" class="govuk-link">{{ manageThirdPartyUsersLink }}</a></p>
 {% endblock %}

@@ -26,7 +26,7 @@ describe("manage-third-party-users page", () => {
   });
 
   describe("GET", () => {
-    it("should render page with users in English", async () => {
+    it("should render page with en and cy content and users", async () => {
       const mockUsers = [
         { id: "1", name: "User One", subscriptions: [] },
         { id: "2", name: "User Two", subscriptions: [{ listTypeId: 1 }] }
@@ -41,26 +41,12 @@ describe("manage-third-party-users page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-users/index",
         expect.objectContaining({
+          en: expect.objectContaining({ pageTitle: "Manage third party users" }),
+          cy: expect.objectContaining({ pageTitle: "Rheoli defnyddiwr trydydd parti" }),
           users: expect.arrayContaining([
             expect.objectContaining({ id: "1", name: "User One", highestSensitivity: "PUBLIC" }),
             expect.objectContaining({ id: "2", name: "User Two", highestSensitivity: "PUBLIC" })
           ])
-        })
-      );
-    });
-
-    it("should render page in Welsh", async () => {
-      req.query = { lng: "cy" };
-      (findAllThirdPartyUsers as any).mockResolvedValue([]);
-      (getHighestSensitivity as any).mockReturnValue(null);
-
-      const handler = GET[GET.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(res.render).toHaveBeenCalledWith(
-        "manage-third-party-users/index",
-        expect.objectContaining({
-          users: []
         })
       );
     });
@@ -74,6 +60,8 @@ describe("manage-third-party-users page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-users/index",
         expect.objectContaining({
+          en: expect.any(Object),
+          cy: expect.any(Object),
           users: []
         })
       );

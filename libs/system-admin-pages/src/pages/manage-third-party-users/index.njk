@@ -8,7 +8,7 @@
 
     <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
 
-    <a href="/create-third-party-user{{ '?lng=cy' if lng == 'cy' else '' }}" class="govuk-button" data-module="govuk-button">
+    <a href="/create-third-party-user{{ '?lng=cy' if locale == 'cy' else '' }}" class="govuk-button" data-module="govuk-button">
       {{ createNewUserButton }}
     </a>
 
@@ -21,7 +21,7 @@
           { text: user.createdDate | date('DD/MM/YYYY') },
           { text: user.subscriptions.length },
           { text: sensitivityText },
-          { html: '<a href="/manage-third-party-user?id=' + user.id + ('&lng=cy' if lng == 'cy' else '') + '" class="govuk-link">' + manageLink + '</a>' }
+          { html: '<a href="/manage-third-party-user?id=' + user.id + ('&lng=cy' if locale == 'cy' else '') + '" class="govuk-link">' + manageLink + '</a>' }
         ]), tableRows) %}
       {% endfor %}
 
