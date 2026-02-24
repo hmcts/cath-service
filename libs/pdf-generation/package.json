@@ -18,7 +18,7 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
-    "puppeteer": "24.36.1"
+    "puppeteer": "24.37.5"
   },
   "devDependencies": {
     "@types/node": "22.19.11",
