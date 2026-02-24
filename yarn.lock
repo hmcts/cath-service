@@ -1249,6 +1249,7 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/subscription": "workspace:*"
     notifications-node-client: "npm:8.2.1"
   peerDependencies:
     express: ^5.2.0

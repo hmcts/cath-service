@@ -21,7 +21,7 @@ import {
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
-import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "@hmcts/subscriptions";
+import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "@hmcts/subscription";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
