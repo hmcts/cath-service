@@ -22,6 +22,10 @@ export const cy = {
   },
   dataSource: "Ffynhonnell data",
   backToTop: "Yn ôl i frig y dudalen",
+  cautionNote:
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
+  cautionReporting:
+    "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
   provenanceLabels: {
     MANUAL_UPLOAD: "Llwytho â Llaw",
     XHIBIT: "XHIBIT",

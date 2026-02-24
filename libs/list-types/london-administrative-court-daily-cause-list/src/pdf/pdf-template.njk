@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <div class="location">
+      <p class="bold">{{ t.locationLine1 }}</p>
+      <p>{{ t.locationLine2 }}</p>
+      <p>{{ t.locationLine3 }}</p>
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInfoTitle }}</h3>
+    <p>{{ t.importantInfoText }}</p>
+    <h4>{{ t.judgmentsTitle }}</h4>
+    <p>{{ t.judgmentsText }}</p>
+  </div>
+
+  {% if mainHearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in mainHearings %}
+          <tr>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.judge }}</td>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td class="no-wrap">{{ hearing.caseNumber }}</td>
+            <td>{{ hearing.caseDetails }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noHearingsMessage }}</p>
+  {% endif %}
+
+  <h2>{{ t.planningCourtTitle }}</h2>
+  {% if planningCourt.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in planningCourt %}
+          <tr>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.judge }}</td>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td class="no-wrap">{{ hearing.caseNumber }}</td>
+            <td>{{ hearing.caseDetails }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noHearingsMessage }}</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>
