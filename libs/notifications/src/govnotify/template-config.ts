@@ -1,4 +1,4 @@
-const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
+const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_TEST_API_KEY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
@@ -11,7 +11,7 @@ export function getTemplateId(): string {
 
 export function getApiKey(): string {
   if (!GOVUK_NOTIFY_API_KEY) {
-    throw new Error("GOVUK_NOTIFY_API_KEY environment variable is not set");
+    throw new Error("GOVUK_NOTIFY_TEST_API_KEY environment variable is not set");
   }
   return GOVUK_NOTIFY_API_KEY;
 }

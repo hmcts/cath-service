@@ -35,6 +35,6 @@ nodejs:
           alias: CFT_IDAM_CLIENT_SECRET
         # GOV.UK Notify secrets
         - name: govuk-notify-api-key
-          alias: GOVUK_NOTIFY_API_KEY
+          alias: GOVUK_NOTIFY_TEST_API_KEY
         - name: govuk-notify-subscription-template-id
           alias: GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION

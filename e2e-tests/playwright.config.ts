@@ -38,8 +38,8 @@ export default defineConfig({
     // In CI: use dev:ci (skips docker-compose, service containers are used instead)
     // Locally: use dev:nowatch (starts docker-compose and runs migrations)
     command: process.env.CI
-      ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ''}" yarn dev:ci`
-      : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ''}" yarn dev:nowatch`,
+      ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_TEST_API_KEY="${process.env.GOVUK_NOTIFY_TEST_API_KEY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ''}" yarn dev:ci`
+      : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_TEST_API_KEY="${process.env.GOVUK_NOTIFY_TEST_API_KEY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ''}" yarn dev:nowatch`,
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
     reuseExistingServer: !process.env.CI,
