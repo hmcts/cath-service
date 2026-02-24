@@ -40,7 +40,7 @@ vi.mock("../govnotify/template-config.js", () => ({
   getSubscriptionTemplateIdForListType: vi.fn().mockReturnValue("template-id-123")
 }));
 
-vi.mock("./subscription-queries.js", () => ({
+vi.mock("@hmcts/subscription", () => ({
   findActiveSubscriptionsByLocation: vi.fn()
 }));
 
@@ -105,7 +105,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
@@ -135,7 +135,7 @@ describe("notification-service", () => {
   });
 
   it("should return empty result when no subscriptions exist", async () => {
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
 
     const result = await sendPublicationNotifications({
@@ -188,7 +188,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
@@ -231,7 +231,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
 
@@ -280,7 +280,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
@@ -314,7 +314,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
     const { getSubscriptionTemplateIdForListType, buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
@@ -371,7 +371,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
     const { getSubscriptionTemplateIdForListType } = await import("../govnotify/template-config.js");
@@ -423,7 +423,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
     const { getSubscriptionTemplateIdForListType } = await import("../govnotify/template-config.js");
@@ -478,7 +478,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
     const { buildTemplateParameters } = await import("../govnotify/template-config.js");
@@ -538,7 +538,7 @@ describe("notification-service", () => {
       }
     ];
 
-    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { findActiveSubscriptionsByLocation } = await import("@hmcts/subscription");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { sendEmail } = await import("../govnotify/govnotify-client.js");
     const { buildTemplateParameters, buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
