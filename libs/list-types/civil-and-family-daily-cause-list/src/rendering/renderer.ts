@@ -38,15 +38,37 @@ function formatPublicationDateTime(isoDateTime: string, locale: string): string 
 }
 
 function formatAddress(address: CauseListData["venue"]["venueAddress"]): string[] {
-  const parts = [...address.line];
-  parts.push(address.postCode);
+  const parts: string[] = [];
+
+  // Add address lines
+  for (const line of address.line) {
+    if (line && line.length > 0) {
+      parts.push(line);
+    }
+  }
+
+  // Add town
+  if (address.town && address.town.length > 0) {
+    parts.push(address.town);
+  }
+
+  // Add county
+  if (address.county && address.county.length > 0) {
+    parts.push(address.county);
+  }
+
+  // Add postcode
+  if (address.postCode && address.postCode.length > 0) {
+    parts.push(address.postCode);
+  }
+
   return parts;
 }
 
 function formatJudiciaries(session: Session): string {
   const judiciaries: string[] = [];
 
-  session.judiciary?.forEach((judiciary) => {
+  for (const judiciary of session.judiciary ?? []) {
     const name = judiciary.johKnownAs?.trim();
     if (name) {
       if (judiciary.isPresiding) {
@@ -55,7 +77,7 @@ function formatJudiciaries(session: Session): string {
         judiciaries.push(name);
       }
     }
-  });
+  }
 
   return judiciaries.join(", ");
 }
@@ -130,11 +152,11 @@ function processParties(caseItem: CauseListCase): void {
   let applicantRepresentative = "";
   let respondentRepresentative = "";
 
-  caseItem.party?.forEach((party) => {
+  for (const party of caseItem.party ?? []) {
     const role = convertPartyRole(party.partyRole);
     const details = createPartyDetails(party).trim();
 
-    if (!details) return;
+    if (!details) continue;
 
     switch (role) {
       case "APPLICANT_PETITIONER":
@@ -154,7 +176,7 @@ function processParties(caseItem: CauseListCase): void {
         respondentRepresentative += details;
         break;
     }
-  });
+  }
 
   (caseItem as any).applicant = applicant.replace(/,\s*$/, "").trim();
   (caseItem as any).applicantRepresentative = applicantRepresentative.replace(/,\s*$/, "").trim();
@@ -163,7 +185,7 @@ function processParties(caseItem: CauseListCase): void {
 }
 
 function formatReportingRestrictions(caseItem: CauseListCase): void {
-  const restrictions = caseItem.reportingRestrictionDetail?.filter((r) => r.length > 0) || [];
+  const restrictions = caseItem.reportingRestrictionDetail?.filter((r: string) => r.length > 0) || [];
   (caseItem as any).formattedReportingRestriction = restrictions.join(", ");
 }
 
