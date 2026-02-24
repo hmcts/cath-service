@@ -1,15 +1,80 @@
-import { findAllArtefactSearchByArtefactId } from "@hmcts/publication";
+import fs from "node:fs/promises";
 import {
-  findActiveSubscriptionsByCaseNames,
-  findActiveSubscriptionsByCaseNumbers,
-  findActiveSubscriptionsByLocation,
-  type SubscriptionWithUser
-} from "@hmcts/subscription";
-import { getActiveSubscriptionsByListType } from "@hmcts/subscription-list-types";
+  extractCaseSummary as extractAdminCourtSummary,
+  formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
+} from "@hmcts/administrative-court-daily-cause-list";
+import {
+  extractCaseSummary as extractCareStandardsSummary,
+  formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
+} from "@hmcts/care-standards-tribunal-weekly-hearing-list";
+import {
+  extractCaseSummary as extractCivilFamilySummary,
+  formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
+} from "@hmcts/civil-and-family-daily-cause-list";
+import {
+  extractCaseSummary as extractCourtOfAppealSummary,
+  formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
+} from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { type CaseSummary, getListTypeName, type ListTypeName } from "@hmcts/list-types-common";
+import {
+  extractCaseSummary as extractLondonAdminSummary,
+  formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
+} from "@hmcts/london-administrative-court-daily-cause-list";
+import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
-import { buildTemplateParameters } from "../govnotify/template-config.js";
+import {
+  buildEnhancedTemplateParameters,
+  buildTemplateParameters,
+  getSubscriptionTemplateIdForListType,
+  type TemplateParameters
+} from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
-import { isValidEmail, type PublicationEvent, validatePublicationEvent } from "./validation.js";
+import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
+import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
+
+const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+
+type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
+type SummaryFormatter = (items: CaseSummary[]) => string;
+
+interface EmailBuilderConfig {
+  extract: SummaryExtractor;
+  format: SummaryFormatter;
+}
+
+const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
+const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
+
+const EMAIL_BUILDER_REGISTRY: Partial<Record<ListTypeName, EmailBuilderConfig>> = {
+  CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
+    extract: extractCivilFamilySummary as SummaryExtractor,
+    format: formatCivilFamilySummaryForEmail
+  },
+  CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
+    extract: extractCareStandardsSummary as SummaryExtractor,
+    format: formatCareStandardsSummaryForEmail
+  },
+  CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardConfig,
+  COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: rcjStandardConfig,
+  KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: rcjStandardConfig,
+  KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: rcjStandardConfig,
+  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardConfig,
+  LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
+    extract: extractLondonAdminSummary as SummaryExtractor,
+    format: formatLondonAdminSummaryForEmail
+  },
+  COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
+    extract: extractCourtOfAppealSummary as SummaryExtractor,
+    format: formatCourtOfAppealSummaryForEmail
+  },
+  BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+};
 
 export interface NotificationResult {
   totalSubscriptions: number;
@@ -24,6 +89,12 @@ interface UserNotificationResult {
   error?: string;
 }
 
+interface EmailTemplateData {
+  templateParameters: TemplateParameters;
+  templateId?: string;
+  pdfBuffer?: Buffer;
+}
+
 export async function sendPublicationNotifications(event: PublicationEvent): Promise<NotificationResult> {
   const validation = validatePublicationEvent(event);
   if (!validation.valid) {
@@ -35,36 +106,143 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
     throw new Error(`Invalid location ID: ${event.locationId}`);
   }
 
-  // 1. Get location subscriptions
-  const locationSubscriptions = await findActiveSubscriptionsByLocation(locationIdNum);
+  const subscriptions = await findActiveSubscriptionsByLocation(locationIdNum);
 
-  // 2. Get case subscriptions from publication artefacts
-  const { caseSubscriptions, artefactCases } = await getCaseSubscriptionsForPublication(event.publicationId);
-
-  // 3. Get list type subscriptions
-  const listTypeSubscriptions = await getListTypeSubscriptions(event.listTypeId, event.language);
-
-  // 4. Group subscriptions by userId while preserving case vs location information
-  const allSubscriptions = [...locationSubscriptions, ...caseSubscriptions, ...listTypeSubscriptions];
-  const userSubscriptionsMap = groupSubscriptionsByUser(allSubscriptions);
-
-  if (userSubscriptionsMap.size === 0) {
-    return {
-      totalSubscriptions: 0,
-      sent: 0,
-      failed: 0,
-      skipped: 0,
-      errors: []
-    };
+  if (subscriptions.length === 0) {
+    return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [] };
   }
 
-  // 5. Process all subscriptions
-  const results = await Promise.allSettled(
-    Array.from(userSubscriptionsMap.entries()).map(([userId, subscriptions]) => processUserNotification(subscriptions, event, artefactCases))
-  );
+  const results = await Promise.allSettled(subscriptions.map((subscription) => processUserNotification(subscription, event)));
 
+  return aggregateResults(results, subscriptions.length);
+}
+
+async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent): Promise<UserNotificationResult> {
+  try {
+    const validationResult = await validateUserEmail(subscription, event.publicationId);
+    if (validationResult) {
+      return validationResult;
+    }
+
+    const notification = await createNotificationAuditLog({
+      subscriptionId: subscription.subscriptionId,
+      userId: subscription.userId,
+      publicationId: event.publicationId,
+      status: "Pending"
+    });
+
+    const userName = buildUserName(subscription.user.firstName, subscription.user.surname);
+    const emailData = await buildEmailTemplateData(event, userName);
+
+    const emailResult = await sendEmail({
+      emailAddress: subscription.user.email!,
+      templateParameters: emailData.templateParameters,
+      templateId: emailData.templateId,
+      pdfBuffer: emailData.pdfBuffer
+    });
+
+    if (emailResult.success) {
+      await updateNotificationStatus(notification.notificationId, "Sent", new Date(), undefined, emailResult.notificationId);
+      return { status: "sent" };
+    }
+
+    await updateNotificationStatus(notification.notificationId, "Failed", undefined, emailResult.error);
+    return { status: "failed", error: `User ${subscription.userId}: ${emailResult.error}` };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { status: "failed", error: `User ${subscription.userId}: ${errorMessage}` };
+  }
+}
+
+async function validateUserEmail(subscription: SubscriptionWithUser, publicationId: string): Promise<UserNotificationResult | null> {
+  if (!subscription.user.email) {
+    return skipNotification(subscription, publicationId, "No email address");
+  }
+
+  return null;
+}
+
+async function skipNotification(subscription: SubscriptionWithUser, publicationId: string, reason: string): Promise<UserNotificationResult> {
+  const notification = await createNotificationAuditLog({
+    subscriptionId: subscription.subscriptionId,
+    userId: subscription.userId,
+    publicationId,
+    status: "Skipped"
+  });
+
+  await updateNotificationStatus(notification.notificationId, "Skipped", undefined, reason);
+
+  return { status: "skipped", error: `User ${subscription.userId}: ${reason}` };
+}
+
+async function buildEmailTemplateData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
+  const listTypeName = event.listTypeId !== undefined ? getListTypeName(event.listTypeId) : undefined;
+  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
+
+  if (config && event.jsonData) {
+    return buildEnhancedEmailData(event, userName, config);
+  }
+
+  return buildFallbackEmailData(event, userName);
+}
+
+async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig): Promise<EmailTemplateData> {
+  const listTypeId = event.listTypeId!;
+
+  try {
+    const caseSummaryItems = config.extract(event.jsonData);
+    const caseSummary = config.format(caseSummaryItems);
+
+    const templateParameters = buildEnhancedTemplateParameters({
+      userName,
+      hearingListName: event.hearingListName,
+      publicationDate: event.publicationDate,
+      locationName: event.locationName,
+      caseSummary
+    });
+
+    if (event.pdfFilePath) {
+      return buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
+    }
+
+    return {
+      templateParameters,
+      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
+    };
+  } catch (error) {
+    console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
+    return buildFallbackEmailData(event, userName);
+  }
+}
+
+async function buildEmailDataWithPdf(pdfFilePath: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
+  const pdfStats = await fs.stat(pdfFilePath);
+  const pdfUnder2MB = pdfStats.size < MAX_PDF_SIZE_BYTES;
+
+  const templateId = getSubscriptionTemplateIdForListType(listTypeId, true, pdfUnder2MB);
+
+  if (pdfUnder2MB) {
+    const pdfBuffer = await fs.readFile(pdfFilePath);
+    return { templateParameters, templateId, pdfBuffer };
+  }
+
+  return { templateParameters, templateId };
+}
+
+function buildFallbackEmailData(event: PublicationEvent, userName: string): EmailTemplateData {
+  return {
+    templateParameters: buildTemplateParameters({
+      userName,
+      hearingListName: event.hearingListName,
+      publicationDate: event.publicationDate,
+      locationName: event.locationName
+    })
+  };
+}
+
+function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {
   const result: NotificationResult = {
-    totalSubscriptions: userSubscriptionsMap.size,
+    totalSubscriptions,
     sent: 0,
     failed: 0,
     skipped: 0,
@@ -74,22 +252,9 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
   for (const settledResult of results) {
     if (settledResult.status === "fulfilled") {
       const userResult = settledResult.value;
-      switch (userResult.status) {
-        case "sent":
-          result.sent++;
-          break;
-        case "failed":
-          result.failed++;
-          if (userResult.error) {
-            result.errors.push(userResult.error);
-          }
-          break;
-        case "skipped":
-          result.skipped++;
-          if (userResult.error) {
-            result.errors.push(userResult.error);
-          }
-          break;
+      result[userResult.status]++;
+      if (userResult.error) {
+        result.errors.push(userResult.error);
       }
     } else {
       result.failed++;
@@ -98,231 +263,6 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
   }
 
   return result;
-}
-
-interface ArtefactCase {
-  caseNumber: string | null;
-  caseName: string | null;
-}
-
-async function getCaseSubscriptionsForPublication(publicationId: string): Promise<{
-  caseSubscriptions: SubscriptionWithUser[];
-  artefactCases: ArtefactCase[];
-}> {
-  const artefactCases = await findAllArtefactSearchByArtefactId(publicationId);
-  const caseNumbers = artefactCases.map((ac) => ac.caseNumber).filter((cn): cn is string => cn !== null);
-  const caseNames = artefactCases.map((ac) => ac.caseName).filter((cn): cn is string => cn !== null);
-
-  const caseNumberSubscriptions = caseNumbers.length > 0 ? await findActiveSubscriptionsByCaseNumbers(caseNumbers) : [];
-  const caseNameSubscriptions = caseNames.length > 0 ? await findActiveSubscriptionsByCaseNames(caseNames) : [];
-
-  const seenSubscriptionIds = new Set<string>();
-  const caseSubscriptions: SubscriptionWithUser[] = [];
-
-  for (const sub of [...caseNumberSubscriptions, ...caseNameSubscriptions]) {
-    if (!seenSubscriptionIds.has(sub.subscriptionId)) {
-      seenSubscriptionIds.add(sub.subscriptionId);
-      caseSubscriptions.push(sub);
-    }
-  }
-
-  return { caseSubscriptions, artefactCases };
-}
-
-async function getListTypeSubscriptions(listTypeId: number | undefined, language: string | undefined): Promise<SubscriptionWithUser[]> {
-  if (!listTypeId || !language) {
-    return [];
-  }
-
-  const listTypeSubscriptions = await getActiveSubscriptionsByListType(listTypeId, language);
-
-  return listTypeSubscriptions.map((sub) => ({
-    subscriptionId: sub.listTypeSubscriptionId,
-    userId: sub.userId,
-    searchType: "LIST_TYPE" as const,
-    searchValue: sub.listTypeId.toString(),
-    caseName: null,
-    caseNumber: null,
-    user: sub.user
-  }));
-}
-
-function groupSubscriptionsByUser(subscriptions: SubscriptionWithUser[]): Map<string, SubscriptionWithUser[]> {
-  const grouped = new Map<string, SubscriptionWithUser[]>();
-
-  for (const subscription of subscriptions) {
-    const existing = grouped.get(subscription.userId) || [];
-    existing.push(subscription);
-    grouped.set(subscription.userId, existing);
-  }
-
-  return grouped;
-}
-
-function formatCaseInfo(subscriptions: SubscriptionWithUser[], artefactCases: ArtefactCase[]): string | undefined {
-  const caseSubscriptions = subscriptions.filter((sub) => sub.searchType === "CASE_NUMBER" || sub.searchType === "CASE_NAME");
-
-  if (caseSubscriptions.length === 0) {
-    return undefined;
-  }
-
-  const artefactByCaseNumber = createArtefactMapByCaseNumber(artefactCases);
-  const artefactByCaseName = createArtefactMapByCaseName(artefactCases);
-
-  const displayedCases = collectDisplayValuesForSubscriptions(caseSubscriptions, artefactByCaseNumber, artefactByCaseName);
-
-  const caseInfo = Array.from(displayedCases).join(", ");
-  return caseInfo || undefined;
-}
-
-function createArtefactMapByCaseNumber(artefactCases: ArtefactCase[]): Map<string, ArtefactCase> {
-  const map = new Map<string, ArtefactCase>();
-
-  for (const artefactCase of artefactCases) {
-    if (artefactCase.caseNumber) {
-      map.set(artefactCase.caseNumber.toLowerCase(), artefactCase);
-    }
-  }
-
-  return map;
-}
-
-function createArtefactMapByCaseName(artefactCases: ArtefactCase[]): Map<string, ArtefactCase> {
-  const map = new Map<string, ArtefactCase>();
-
-  for (const artefactCase of artefactCases) {
-    if (artefactCase.caseName) {
-      map.set(artefactCase.caseName.toLowerCase(), artefactCase);
-    }
-  }
-
-  return map;
-}
-
-function collectDisplayValuesForSubscriptions(
-  caseSubscriptions: SubscriptionWithUser[],
-  artefactByCaseNumber: Map<string, ArtefactCase>,
-  artefactByCaseName: Map<string, ArtefactCase>
-): Set<string> {
-  const displayedCases = new Set<string>();
-
-  for (const sub of caseSubscriptions) {
-    const searchValue = sub.searchValue;
-
-    const matchedByCaseNumber = artefactByCaseNumber.get(searchValue.toLowerCase());
-    if (matchedByCaseNumber) {
-      if (matchedByCaseNumber.caseNumber) {
-        displayedCases.add(matchedByCaseNumber.caseNumber);
-      }
-      continue;
-    }
-
-    const matchedByCaseName = artefactByCaseName.get(searchValue.toLowerCase());
-    if (matchedByCaseName) {
-      if (matchedByCaseName.caseName) {
-        displayedCases.add(matchedByCaseName.caseName);
-      }
-    }
-  }
-
-  return displayedCases;
-}
-
-function hasLocationSubscription(subscriptions: SubscriptionWithUser[]): boolean {
-  return subscriptions.some((sub) => sub.searchType === "LOCATION_ID");
-}
-
-async function processUserNotification(
-  subscriptions: SubscriptionWithUser[],
-  event: PublicationEvent,
-  artefactCases: ArtefactCase[]
-): Promise<UserNotificationResult> {
-  // Use the first subscription to get user info (all subscriptions have the same user)
-  const firstSubscription = subscriptions[0];
-  const userId = firstSubscription.userId;
-  const user = firstSubscription.user;
-
-  // For list type subscriptions, subscriptionId doesn't exist in the subscription table
-  // so we pass null to avoid foreign key constraint violation
-  const subscriptionIdForAudit = firstSubscription.searchType === "LIST_TYPE" ? null : firstSubscription.subscriptionId;
-
-  try {
-    if (!user.email) {
-      const notification = await createNotificationAuditLog({
-        subscriptionId: subscriptionIdForAudit,
-        userId,
-        publicationId: event.publicationId,
-        status: "Skipped"
-      });
-
-      await updateNotificationStatus(notification.notificationId, "Skipped", undefined, "No email address");
-
-      return {
-        status: "skipped",
-        error: `User ${userId}: No email address`
-      };
-    }
-
-    if (!isValidEmail(user.email)) {
-      const notification = await createNotificationAuditLog({
-        subscriptionId: subscriptionIdForAudit,
-        userId,
-        publicationId: event.publicationId,
-        status: "Skipped"
-      });
-
-      await updateNotificationStatus(notification.notificationId, "Skipped", undefined, "Invalid email format");
-
-      return {
-        status: "skipped",
-        error: `User ${userId}: Invalid email format`
-      };
-    }
-
-    const notification = await createNotificationAuditLog({
-      subscriptionId: subscriptionIdForAudit,
-      userId,
-      publicationId: event.publicationId,
-      status: "Pending"
-    });
-
-    const userName = buildUserName(user.firstName, user.surname);
-    const caseInfo = formatCaseInfo(subscriptions, artefactCases);
-    const hasLocation = hasLocationSubscription(subscriptions);
-
-    const templateParameters = buildTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseInfo,
-      hasLocationSubscription: hasLocation
-    });
-
-    const emailResult = await sendEmail({
-      emailAddress: user.email,
-      templateParameters
-    });
-
-    if (emailResult.success) {
-      await updateNotificationStatus(notification.notificationId, "Sent", new Date(), undefined, emailResult.notificationId);
-      return {
-        status: "sent"
-      };
-    }
-
-    await updateNotificationStatus(notification.notificationId, "Failed", undefined, emailResult.error);
-    return {
-      status: "failed",
-      error: `User ${userId}: ${emailResult.error}`
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      status: "failed",
-      error: `User ${userId}: ${errorMessage}`
-    };
-  }
 }
 
 function buildUserName(firstName: string | null, surname: string | null): string {

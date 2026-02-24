@@ -598,7 +598,9 @@ describe("manual-upload-summary page", () => {
         hearingListName: "Crown Daily List",
         publicationDate: expect.any(Date),
         listTypeId: 6,
-        language: "ENGLISH"
+        language: "ENGLISH",
+        jsonData: undefined,
+        pdfFilePath: undefined
       });
     });
 
@@ -627,7 +629,7 @@ describe("manual-upload-summary page", () => {
       await callHandler(POST, req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-      expect(consoleWarnSpy).toHaveBeenCalledWith("[Manual Upload] Location not found for notifications", {
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Manual Upload] Location not found for notifications:", {
         locationId: "1"
       });
       expect(sendPublicationNotifications).not.toHaveBeenCalled();
@@ -666,7 +668,7 @@ describe("manual-upload-summary page", () => {
 
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[Manual Upload] Failed to send notifications",
+        "[Manual Upload] Failed to send notifications:",
         expect.objectContaining({
           artefactId: "test-artefact-id-123"
         })

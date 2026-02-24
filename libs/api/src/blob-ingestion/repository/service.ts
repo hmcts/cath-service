@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { getLocationById } from "@hmcts/location";
-import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance } from "@hmcts/publication";
+import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
+import { createArtefact, Provenance, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -83,9 +82,6 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
     await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
 
-    // Extract and store artefact search data for case number/name search
-    await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
-
     // Log successful ingestion
     await createIngestionLog({
       id: randomUUID(),
@@ -96,24 +92,26 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       artefactId
     });
 
-    // Trigger notification for subscribed users (fire-and-forget pattern)
+    // Generate PDF and send notifications using common processor (fire-and-forget for notifications)
     if (!noMatch) {
-      console.log("[blob-ingestion] Triggering notifications for publication:", {
+      processPublication({
         artefactId,
-        courtId: request.court_id,
-        listTypeId: validation.listTypeId
-      });
-
-      triggerPublicationNotifications(artefactId, request.court_id, validation.listTypeId, new Date(request.content_date), request.language).catch((error) => {
-        console.error("Failed to trigger publication notifications:", {
+        locationId: request.court_id,
+        listTypeId: validation.listTypeId,
+        contentDate: new Date(request.content_date),
+        locale: request.language === "WELSH" ? "cy" : "en",
+        jsonData: request.hearing_list as CauseListData,
+        provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
+        logPrefix: "[blob-ingestion]"
+      }).catch((error) => {
+        console.error("[blob-ingestion] Failed to process publication:", {
           artefactId,
           courtId: request.court_id,
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
+          error: error instanceof Error ? error.message : String(error)
         });
       });
     } else {
-      console.log("[blob-ingestion] Skipping notifications (no_match=true):", {
+      console.log("[blob-ingestion] Skipping PDF/notifications (no_match=true):", {
         artefactId,
         courtId: request.court_id
       });
@@ -140,58 +138,5 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       success: false,
       message: "Internal server error during ingestion"
     };
-  }
-}
-
-async function triggerPublicationNotifications(
-  publicationId: string,
-  courtId: string,
-  listTypeId: number,
-  publicationDate: Date,
-  language: string
-): Promise<void> {
-  const locationIdNum = Number.parseInt(courtId, 10);
-  if (Number.isNaN(locationIdNum)) {
-    console.error("Invalid location ID for notifications:", courtId);
-    return;
-  }
-
-  const location = await getLocationById(locationIdNum);
-  if (!location) {
-    console.error("Location not found for notifications:", courtId);
-    return;
-  }
-
-  const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-  if (!listType) {
-    console.error("List type not found for notifications:", listTypeId);
-    return;
-  }
-
-  const result = await sendPublicationNotifications({
-    publicationId,
-    locationId: String(locationIdNum),
-    locationName: location.name,
-    hearingListName: listType.englishFriendlyName,
-    publicationDate,
-    listTypeId,
-    language
-  });
-
-  console.log("Publication notifications sent:", {
-    publicationId,
-    totalSubscriptions: result.totalSubscriptions,
-    sent: result.sent,
-    failed: result.failed,
-    skipped: result.skipped
-  });
-
-  if (result.errors.length > 0) {
-    // Sanitize errors to redact email addresses (PII)
-    const sanitizedErrors = result.errors.map((error) => {
-      const errorStr = typeof error === "string" ? error : JSON.stringify(error);
-      return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
-    });
-    console.error("Notification errors:", { count: result.errors.length, errors: sanitizedErrors });
   }
 }

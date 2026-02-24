@@ -17,7 +17,8 @@ export interface PublicationEvent {
   hearingListName: string;
   publicationDate: Date;
   listTypeId?: number;
-  language?: string;
+  pdfFilePath?: string;
+  jsonData?: unknown;
 }
 
 export interface ValidationResult {

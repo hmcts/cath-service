@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -109,57 +108,29 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
-    // Extract and store artefact search data for JSON files
+    // Parse JSON data for structured files
+    let jsonData: unknown;
     if (!isFlatFile) {
       try {
-        const jsonPayload = JSON.parse(uploadData.file.toString("utf-8"));
-        await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonPayload);
-      } catch (error) {
-        console.error("[Manual Upload] Failed to extract artefact search data", {
-          artefactId,
-          error: error instanceof Error ? error.message : String(error)
-        });
+        jsonData = JSON.parse(uploadData.file.toString("utf8"));
+      } catch {
+        // Not valid JSON, treat as flat file
       }
     }
 
-    // Trigger email notifications for subscribers
-    try {
-      // Get location name
-      const location = await getLocationById(Number(uploadData.locationId));
-      if (!location) {
-        console.warn("[Manual Upload] Location not found for notifications", {
-          locationId: uploadData.locationId
-        });
-      } else {
-        // Get list type details for notification
-        const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-        const listTypeFriendlyName = listType?.englishFriendlyName || `LIST_TYPE_${listTypeId}`;
-
-        const notificationResult = await sendPublicationNotifications({
-          publicationId: artefactId,
-          locationId: uploadData.locationId,
-          locationName: location.name,
-          hearingListName: listTypeFriendlyName,
-          publicationDate: contentDate,
-          listTypeId,
-          language: uploadData.language
-        });
-
-        console.log("[Manual Upload] Notification process completed", {
-          artefactId,
-          locationId: uploadData.locationId,
-          notificationResult,
-          timestamp: new Date().toISOString()
-        });
-      }
-    } catch (notificationError) {
-      // Log error but don't fail the upload
-      console.error("[Manual Upload] Failed to send notifications", {
-        artefactId,
-        error: notificationError,
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Generate PDF and send notifications using common processor
+    await processPublication({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      locale: uploadData.language === "WELSH" ? "cy" : "en",
+      jsonData,
+      provenance: Provenance.MANUAL_UPLOAD,
+      displayFrom,
+      displayTo,
+      logPrefix: "[Manual Upload]"
+    });
 
     // Clear session data
     delete req.session.manualUploadForm;
