@@ -94,6 +94,10 @@ jobs:
       AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
       APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
 
+      # Azure B2C Configuration (mocked in CI until delete endpoint is deployed)
+      MOCK_AZURE_B2C: "true"
+      MEDIA_FORGOT_PASSWORD_LINK: "https://localhost:8080/forgot-password"
+
       # GOV.UK Notify Configuration (for notification E2E tests)
       GOVUK_NOTIFY_API_KEY: ${{ secrets.GOVUK_NOTIFY_API_KEY }}
       GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION }}

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserProfile } from "../user-profile.js";
 
 // Mock the Microsoft Graph Client
@@ -223,6 +223,47 @@ describe("fetchUserProfile", () => {
 
     expect(result.roles).toEqual([]);
     expect(result.groupIds).toEqual([]);
+  });
+});
+
+describe("MOCK_AZURE_B2C", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.MOCK_AZURE_B2C = "true";
+  });
+
+  afterEach(() => {
+    delete process.env.MOCK_AZURE_B2C;
+  });
+
+  it("should return mock access token when MOCK_AZURE_B2C is true", async () => {
+    const { getGraphApiAccessToken } = await import("./client.js");
+
+    const token = await getGraphApiAccessToken();
+
+    expect(token).toBe("mock-access-token");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("should return false for checkUserExists when MOCK_AZURE_B2C is true", async () => {
+    const { checkUserExists } = await import("./client.js");
+
+    const result = await checkUserExists("any-token", "user@example.com");
+
+    expect(result).toBe(false);
+  });
+
+  it("should return mock user ID for createMediaUser when MOCK_AZURE_B2C is true", async () => {
+    const { createMediaUser } = await import("./client.js");
+
+    const result = await createMediaUser("any-token", {
+      email: "test@example.com",
+      displayName: "Test User",
+      givenName: "Test",
+      surname: "User"
+    });
+
+    expect(result.azureAdUserId).toMatch(/^mock-azure-ad-/);
   });
 });
 

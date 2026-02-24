@@ -88,6 +88,10 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
       APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
 
+      # Azure B2C Configuration (mocked in CI until delete endpoint is deployed)
+      MOCK_AZURE_B2C: "true"
+      MEDIA_FORGOT_PASSWORD_LINK: "https://localhost:8080/forgot-password"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6

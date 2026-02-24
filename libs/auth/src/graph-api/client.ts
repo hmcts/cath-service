@@ -4,6 +4,10 @@ import type { UserProfile } from "../user-profile.js";
 
 const GRAPH_API_SCOPE = "https://graph.microsoft.com/.default";
 
+function isB2CMocked(): boolean {
+  return process.env.MOCK_AZURE_B2C === "true";
+}
+
 interface GraphUser {
   id: string;
   mail?: string;
@@ -67,8 +71,14 @@ export async function fetchUserProfile(accessToken: string): Promise<UserProfile
 /**
  * Obtains an access token using OAuth2 client credentials flow.
  * Requires AZURE_B2C_TENANT_ID, AZURE_B2C_CLIENT_ID, AZURE_B2C_CLIENT_SECRET env vars.
+ * When MOCK_AZURE_B2C=true, returns a mock token without calling Azure.
  */
 export async function getGraphApiAccessToken(): Promise<string> {
+  if (isB2CMocked()) {
+    console.log("MOCK_AZURE_B2C: Returning mock access token");
+    return "mock-access-token";
+  }
+
   const tenantId = process.env.AZURE_B2C_TENANT_ID;
   const clientId = process.env.AZURE_B2C_CLIENT_ID;
   const clientSecret = process.env.AZURE_B2C_CLIENT_SECRET;
@@ -103,8 +113,14 @@ export async function getGraphApiAccessToken(): Promise<string> {
 
 /**
  * Checks if a user exists in Azure AD B2C by email address.
+ * When MOCK_AZURE_B2C=true, returns false without calling Azure.
  */
 export async function checkUserExists(accessToken: string, email: string): Promise<boolean> {
+  if (isB2CMocked()) {
+    console.log(`MOCK_AZURE_B2C: Returning false for checkUserExists`);
+    return false;
+  }
+
   const client = Client.init({
     authProvider: (done) => {
       done(null, accessToken);
@@ -127,6 +143,7 @@ export async function checkUserExists(accessToken: string, email: string): Promi
  * Creates a new media user in Azure AD B2C.
  * Sets displayName, givenName, surname. Does NOT store employer.
  * Forces password change on first login.
+ * When MOCK_AZURE_B2C=true, returns a mock user ID without calling Azure.
  */
 export async function createMediaUser(
   accessToken: string,
@@ -137,6 +154,11 @@ export async function createMediaUser(
     surname: string;
   }
 ): Promise<{ azureAdUserId: string }> {
+  if (isB2CMocked()) {
+    const mockId = `mock-azure-ad-${crypto.randomUUID()}`;
+    return { azureAdUserId: mockId };
+  }
+
   const b2cDomain = process.env.AZURE_B2C_DOMAIN;
   if (!b2cDomain) {
     throw new Error("Azure B2C domain not configured: AZURE_B2C_DOMAIN is required");
