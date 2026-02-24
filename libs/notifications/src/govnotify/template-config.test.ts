@@ -57,22 +57,20 @@ describe("template-config", () => {
       expect(getSubscriptionTemplateIdForListType(1, true, true)).toBe("pdf-summary-template");
     });
 
-    it("should throw error when PDF_AND_SUMMARY template is not set", async () => {
+    it("should fall back to base template when PDF_AND_SUMMARY template is not set", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "";
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "base-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateIdForListType(1, true, true)).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set"
-      );
+      expect(getSubscriptionTemplateIdForListType(1, true, true)).toBe("base-template");
     });
 
-    it("should throw error when SUMMARY_ONLY template is not set", async () => {
+    it("should fall back to base template when SUMMARY_ONLY template is not set", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "";
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "base-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateIdForListType(1, false, false)).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set"
-      );
+      expect(getSubscriptionTemplateIdForListType(1, false, false)).toBe("base-template");
     });
   });
 
