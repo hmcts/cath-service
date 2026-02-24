@@ -301,6 +301,10 @@ describe("notification-service", () => {
   });
 
   it("should use enhanced template for Civil and Family list with JSON data and PDF", async () => {
+    // Set environment variables for enhanced templates
+    process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-template";
+    process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-template";
+
     const mockSubscriptions = [
       {
         subscriptionId: "sub-1",
@@ -358,6 +362,10 @@ describe("notification-service", () => {
   });
 
   it("should use summary-only template for Civil and Family list without PDF", async () => {
+    // Set environment variables for enhanced templates
+    process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-template";
+    process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-template";
+
     const mockSubscriptions = [
       {
         subscriptionId: "sub-1",
@@ -410,6 +418,10 @@ describe("notification-service", () => {
   });
 
   it("should not include PDF buffer when file exceeds 2MB", async () => {
+    // Set environment variables for enhanced templates
+    process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-template";
+    process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-template";
+
     const mockSubscriptions = [
       {
         subscriptionId: "sub-1",
