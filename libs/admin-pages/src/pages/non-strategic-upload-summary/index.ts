@@ -6,7 +6,7 @@ import "@hmcts/london-administrative-court-daily-cause-list"; // Register London
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -119,6 +119,8 @@ const postHandler = async (req: Request, res: Response) => {
     // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
     const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
+    let jsonData: unknown;
+
     if (isExcelFile && selectedListType?.isNonStrategic) {
       const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
@@ -136,7 +138,28 @@ const postHandler = async (req: Request, res: Response) => {
           });
         }
       }
+    } else {
+      // Parse JSON data for JSON files
+      try {
+        jsonData = JSON.parse(uploadData.file.toString("utf8"));
+      } catch {
+        // Not valid JSON
+      }
     }
+
+    // Generate PDF and send notifications using common processor
+    await processPublication({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      locale: uploadData.language === "WELSH" ? "cy" : "en",
+      jsonData,
+      provenance: Provenance.MANUAL_UPLOAD,
+      displayFrom,
+      displayTo,
+      logPrefix: "[Non-Strategic Upload]"
+    });
 
     // Clear session data
     delete req.session.nonStrategicUploadForm;
