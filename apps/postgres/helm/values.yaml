@@ -1,0 +1,19 @@
+nodejs:
+  releaseNameOverride: "{{ .Release.Name }}-postgres"
+  applicationPort: 5555
+  aadIdentityName: cath
+  ingressHost: cath-postgres.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctspublic.azurecr.io/cath/cath-postgres:latest'
+  environment:
+    POSTGRES_DATABASE: cath
+  keyVaults:
+    pip-ss-kv:
+      secrets:
+        - name: postgres-host
+          alias: POSTGRES_HOST
+        - name: postgres-user
+          alias: POSTGRES_USER
+        - name: postgres-password
+          alias: POSTGRES_PASSWORD
+        - name: postgres-port
+          alias: POSTGRES_PORT
