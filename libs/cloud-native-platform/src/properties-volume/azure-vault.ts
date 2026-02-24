@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { AzureCliCredential, DefaultAzureCredential } from "@azure/identity";
+import { DefaultAzureCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 import { load as yamlLoad } from "js-yaml";
 import type { Config } from "./properties.js";
@@ -72,10 +72,11 @@ async function processVault(config: Config, vault: any): Promise<void> {
   // Use vault name as-is from Helm chart (should include environment suffix like -stg, -aat, etc.)
   const vaultUri = `https://${vaultName}.vault.azure.net/`;
 
-  // In local development, use AzureCliCredential directly to avoid conflicts with
-  // AZURE_CLIENT_ID/AZURE_CLIENT_SECRET env vars that DefaultAzureCredential picks up
-  const isDevelopment = process.env.NODE_ENV === "development" || !process.env.KUBERNETES_SERVICE_HOST;
-  const credential = isDevelopment ? new AzureCliCredential() : new DefaultAzureCredential();
+  // Use DefaultAzureCredential which tries multiple auth methods in order:
+  // 1. Environment variables (AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID)
+  // 2. Managed Identity (in Azure)
+  // 3. Azure CLI (local development with `az login`)
+  const credential = new DefaultAzureCredential();
   const client = new SecretClient(vaultUri, credential);
 
   console.log(`Azure Vault: Fetching ${secrets.length} secrets from ${vaultName}...`);

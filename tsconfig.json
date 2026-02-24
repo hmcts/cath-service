@@ -35,7 +35,8 @@
       "@hmcts/subscriptions": ["libs/subscription/src"],
       "@hmcts/subscriptions/config": ["libs/subscription/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
-      "@hmcts/notifications": ["libs/notifications/src"]
+      "@hmcts/notifications": ["libs/notifications/src"],
+      "@hmcts/list-search-config": ["libs/list-search-config/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

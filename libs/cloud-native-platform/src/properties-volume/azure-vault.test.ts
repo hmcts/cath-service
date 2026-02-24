@@ -8,7 +8,6 @@ const mockGetSecret = vi.fn();
 
 // Mock all external dependencies using class syntax for Vitest 4 constructor mocks
 vi.mock("@azure/identity", () => ({
-  AzureCliCredential: class MockAzureCliCredential {},
   DefaultAzureCredential: class MockDefaultAzureCredential {}
 }));
 
