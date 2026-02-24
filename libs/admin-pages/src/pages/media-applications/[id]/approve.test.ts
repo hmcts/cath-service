@@ -227,6 +227,28 @@ describe("media-application approve page", () => {
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
     });
 
+    it("should show error when MEDIA_FORGOT_PASSWORD_LINK is not configured", async () => {
+      // Arrange
+      delete process.env.MEDIA_FORGOT_PASSWORD_LINK;
+      vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(approveApplication).mockResolvedValue({ isNewUser: true });
+      mockRequest.body = { confirm: "yes" };
+
+      // Act
+      const handler = POST[1];
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(renderSpy).toHaveBeenCalledWith(
+        "media-applications/[id]/approve",
+        expect.objectContaining({
+          error: "Unable to create user account in Azure AD. Please try again later."
+        })
+      );
+      expect(mockSendMediaNewAccountEmail).not.toHaveBeenCalled();
+      expect(redirectSpy).not.toHaveBeenCalled();
+    });
+
     it("should show Azure AD error and keep PENDING status when approval fails", async () => {
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
       vi.mocked(approveApplication).mockRejectedValue(new Error("Graph API unavailable"));

@@ -84,10 +84,15 @@ const postHandler = async (req: Request, res: Response) => {
     const accessToken = await getGraphApiAccessToken();
     const { isNewUser } = await approveApplication(id, accessToken);
 
+    const signInPageLink = process.env.MEDIA_FORGOT_PASSWORD_LINK;
+    if (!signInPageLink) {
+      throw new Error("MEDIA_FORGOT_PASSWORD_LINK environment variable is not configured");
+    }
+
     const emailData = {
       email: application.email,
       fullName: application.name,
-      signInPageLink: process.env.MEDIA_FORGOT_PASSWORD_LINK || ""
+      signInPageLink
     };
 
     try {
