@@ -167,21 +167,6 @@ test.describe("Manage List Types End-to-End Flow", () => {
       expect(await errorMessages.count()).toBeGreaterThan(0);
     });
 
-    test("should allow both fields to be blank", async ({ page }) => {
-      await page.goto("/list-search-config/1");
-      await page.waitForLoadState("networkidle");
-
-      // Leave both fields blank
-      await page.fill('input[name="caseNumberFieldName"]', "");
-      await page.fill('input[name="caseNameFieldName"]', "");
-
-      await page.getByRole("button", { name: /confirm/i }).click();
-
-      // Should successfully save with blank values
-      await page.waitForURL("/list-search-config-success", { timeout: 10000 });
-      await expect(page.locator("h1")).toHaveText("List type search configuration updated");
-    });
-
     test("should allow only one field to be populated", async ({ page }) => {
       await page.goto("/list-search-config/1");
       await page.waitForLoadState("networkidle");

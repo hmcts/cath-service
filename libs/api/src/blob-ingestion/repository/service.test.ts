@@ -34,7 +34,7 @@ vi.mock("../file-storage.js", () => ({
 }));
 
 describe("processBlobIngestion", async () => {
-  const { createArtefact, extractAndStoreArtefactSearc, processPublication } = await import("@hmcts/publication");
+  const { createArtefact, extractAndStoreArtefactSearch, processPublication } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
