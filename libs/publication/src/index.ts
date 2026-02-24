@@ -11,6 +11,7 @@ export { getContentTypeFromExtension } from "./file-storage/content-type.js";
 export { findFileByArtefactId, getContentType, getFileBuffer, getFileExtension, getFileName } from "./file-storage/file-retrieval.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
+export { generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./processing/service.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
 export type { Artefact } from "./repository/model.js";
 export {

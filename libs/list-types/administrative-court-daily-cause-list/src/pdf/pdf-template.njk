@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.common.factLinkUrl }}">{{ t.common.factLinkText }}</a> {{ t.common.factAdditionalText }}</p>
+
+    <p class="bold header-date">{{ t.common.listFor }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.common.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.common.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.common.importantInfoTitle }}</h3>
+    <p>{{ court.importantInfoText }}</p>
+    <h4>{{ court.judgmentsTitle }}</h4>
+    <p>{{ court.judgmentsText }}</p>
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.common.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.caseNumber }}</th>
+          <th>{{ t.common.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.hearingType }}</th>
+          <th>{{ t.common.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.judge }}</td>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td class="no-wrap">{{ hearing.caseNumber }}</td>
+            <td>{{ hearing.caseDetails }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hearings scheduled.</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.common.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.common.cautionNote }}</p>
+      <p>{{ t.common.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>
