@@ -22,7 +22,6 @@ describe("POST /v1/publication", () => {
   let statusMock: ReturnType<typeof vi.fn>;
   let jsonMock: ReturnType<typeof vi.fn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-  let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,7 +52,7 @@ describe("POST /v1/publication", () => {
     };
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
   });
 
   it("should return 201 and artefact_id when blob ingestion is successful", async () => {

@@ -1,9 +1,9 @@
+import { type PddaHtmlUploadResponse, uploadHtmlToS3, validatePddaHtmlUpload } from "@hmcts/pdda-html-upload";
 import type { Request, Response } from "express";
+import multer from "multer";
 import type { BlobIngestionRequest } from "../../blob-ingestion/repository/model.js";
 import { processBlobIngestion } from "../../blob-ingestion/repository/service.js";
 import { authenticateApi } from "../../middleware/oauth-middleware.js";
-import multer from "multer";
-import { uploadHtmlToS3, validatePddaHtmlUpload, type PddaHtmlUploadResponse } from "@hmcts/pdda-html-upload";
 
 const upload = multer({
   storage: multer.memoryStorage(),
