@@ -65,8 +65,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     cwd: '..',
-    stdout: 'pipe',
-    stderr: 'pipe',
+    stdout: 'inherit',
+    stderr: 'inherit',
   },
   // Longer timeout for SSO tests (Azure AD redirects)
   timeout: 60 * 1000,

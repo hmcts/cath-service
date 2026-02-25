@@ -231,7 +231,8 @@ describe("template-config", () => {
         caseSummary: "Case 123 - Smith v Jones"
       });
 
-      expect(result.locations).toBe("");
+      expect(result.locations).toBe("Birmingham Court");
+      expect(result.display_locations).toBe("yes");
       expect(result.ListType).toBe("Civil And Family Daily Cause List");
       expect(result.content_date).toBe("10 February 2025");
       expect(result.start_page_link).toBe("https://test-service.gov.uk");
