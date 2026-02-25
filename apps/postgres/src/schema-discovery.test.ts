@@ -14,7 +14,7 @@ describe("Schema Discovery", () => {
 
     it("should return array with subscriptions, location, notifications, list-search-config schemas and audit-log schemas", () => {
       const result = getPrismaSchemas();
-      expect(result.length).toBe(4);
+      expect(result.length).toBe(5);
       expect(result.some((path) => path.includes("subscriptions"))).toBe(true);
       expect(result.some((path) => path.includes("location"))).toBe(true);
       expect(result.some((path) => path.includes("notifications"))).toBe(true);
