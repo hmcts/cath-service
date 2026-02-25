@@ -1175,6 +1175,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/list-search-config@workspace:libs/list-search-config":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/list-types-common@workspace:*, @hmcts/list-types-common@workspace:libs/list-types/common":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
