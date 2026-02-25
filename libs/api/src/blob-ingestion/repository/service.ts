@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
-import { createArtefact, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";

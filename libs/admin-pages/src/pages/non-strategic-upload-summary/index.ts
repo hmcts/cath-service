@@ -6,7 +6,7 @@ import "@hmcts/london-administrative-court-daily-cause-list"; // Register London
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -125,8 +125,18 @@ const postHandler = async (req: Request, res: Response) => {
       const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
       if (hasConverterForListType(listTypeId)) {
-        jsonData = await convertExcelForListType(listTypeId, uploadData.file);
-        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
+        const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
+        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+
+        // Extract and store artefact search data from converted JSON
+        try {
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, hearingsData);
+        } catch (error) {
+          console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
+            artefactId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
       }
     } else {
       // Parse JSON data for JSON files
