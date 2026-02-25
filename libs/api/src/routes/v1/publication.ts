@@ -72,10 +72,10 @@ async function handleJsonBlobIngestion(req: Request, res: Response) {
 async function handleHtmlFileUpload(req: Request, res: Response) {
   const correlationId = req.headers["x-correlation-id"] as string | undefined;
 
-  const { artefact_type } = req.body;
+  const { type } = req.body;
   const file = req.file;
 
-  const validation = validatePddaHtmlUpload(artefact_type, file);
+  const validation = validatePddaHtmlUpload(type, file);
   if (!validation.valid) {
     const response: PddaHtmlUploadResponse = {
       success: false,
