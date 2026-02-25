@@ -11,6 +11,17 @@ import { getManualUpload } from "../../manual-upload/storage.js";
 import cy from "./cy.js";
 import en from "./en.js";
 
+declare module "express-serve-static-core" {
+  interface Request {
+    auditMetadata?: {
+      shouldLog?: boolean;
+      action?: string;
+      entityInfo?: string;
+      [key: string]: string | number | boolean | undefined;
+    };
+  }
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
   const uploadId = req.query.uploadId as string;
@@ -149,6 +160,17 @@ const postHandler = async (req: Request, res: Response) => {
         else resolve();
       });
     });
+
+    // Get location and list type for audit log
+    const location = await getLocationById(Number(uploadData.locationId));
+    const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "MANUAL_UPLOAD",
+      entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.englishFriendlyName || listTypeId}, File: ${uploadData.fileName}`
+    };
 
     // Redirect to success page with language parameter
     const lng = req.query.lng === "cy" ? "?lng=cy" : "";

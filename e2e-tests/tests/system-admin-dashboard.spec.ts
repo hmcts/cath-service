@@ -34,7 +34,7 @@ test.describe("System Admin Dashboard", () => {
         { title: "User Management", href: "/user-management" },
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
-        { title: "Audit Log Viewer", href: "/audit-log-viewer" },
+        { title: "Audit Log Viewer", href: "/audit-log-list" },
         { title: "Manage Location Metadata", href: "/location-metadata-search" },
         { title: "Manage List Types", href: "/manage-list-types" }
       ];
