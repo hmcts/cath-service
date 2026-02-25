@@ -30,7 +30,7 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/subscription": "workspace:*",
-    "notifications-node-client": "8.2.1"
+    "notifications-node-client": "8.3.0"
   },
   "peerDependencies": {
     "express": "^5.2.0"
