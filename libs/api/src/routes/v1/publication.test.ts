@@ -195,7 +195,7 @@ describe("POST /v1/publication", () => {
           "x-correlation-id": "test-correlation-id"
         },
         body: {
-          artefact_type: "LCSU"
+          type: "LCSU"
         },
         file: {
           fieldname: "file",
@@ -257,8 +257,8 @@ describe("POST /v1/publication", () => {
       });
     });
 
-    it("should return 400 when artefact_type is not LCSU", async () => {
-      mockMultipartRequest.body = { artefact_type: "JSON" };
+    it("should return 400 when type is not LCSU", async () => {
+      mockMultipartRequest.body = { type: "JSON" };
 
       const { validatePddaHtmlUpload } = await import("@hmcts/pdda-html-upload");
 
