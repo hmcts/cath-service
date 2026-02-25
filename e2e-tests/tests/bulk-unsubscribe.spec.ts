@@ -94,8 +94,13 @@ async function deleteTestData(testData: TestData): Promise<void> {
   try {
     await prisma.subscription.deleteMany({
       where: {
-        locationId: {
-          in: [testData.locationId1, testData.locationId2, testData.locationId3],
+        searchType: "LOCATION_ID",
+        searchValue: {
+          in: [
+            testData.locationId1.toString(),
+            testData.locationId2.toString(),
+            testData.locationId3.toString()
+          ],
         },
       },
     });
@@ -361,8 +366,9 @@ test.describe("Bulk Unsubscribe", () => {
     // STEP 21: Verify subscriptions were actually deleted from database
     const remainingSubscriptions = await prisma.subscription.findMany({
       where: {
-        locationId: {
-          in: [testData.locationId1, testData.locationId2],
+        searchType: "LOCATION_ID",
+        searchValue: {
+          in: [testData.locationId1.toString(), testData.locationId2.toString()],
         },
       },
     });
@@ -372,7 +378,8 @@ test.describe("Bulk Unsubscribe", () => {
     // STEP 22: Verify non-deleted subscription still exists
     const subscription3 = await prisma.subscription.findFirst({
       where: {
-        locationId: testData.locationId3,
+        searchType: "LOCATION_ID",
+        searchValue: testData.locationId3.toString(),
       },
     });
 
