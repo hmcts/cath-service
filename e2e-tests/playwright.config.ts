@@ -8,6 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Load environment variables from parent directory's .env file
 config({ path: path.resolve(__dirname, '../.env') });
 
+// Debug: Log env vars to verify they're loaded
+console.log('GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION loaded:', !!process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION);
+console.log('GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION value:', process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION);
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -45,9 +49,17 @@ export default defineConfig({
     // GOVUK_NOTIFY_* required for notification tests
     // In CI: use dev:ci (skips docker-compose, service containers are used instead)
     // Locally: use dev:nowatch (starts docker-compose and runs migrations)
-    command: process.env.CI
-      ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_TEST_API_KEY="${process.env.GOVUK_NOTIFY_TEST_API_KEY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY || ''}" yarn dev:ci`
-      : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_TEST_API_KEY="${process.env.GOVUK_NOTIFY_TEST_API_KEY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY || ''}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY || ''}" yarn dev:nowatch`,
+    command: process.env.CI ? 'yarn dev:ci' : 'yarn dev:nowatch',
+    env: {
+      ...process.env,
+      NODE_ENV: 'development',
+      ENABLE_SSO: 'true',
+      ENABLE_CFT_IDAM: 'true',
+      GOVUK_NOTIFY_TEST_API_KEY: process.env.GOVUK_NOTIFY_TEST_API_KEY || '',
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || '',
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY: process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY || '',
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY: process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY || '',
+    },
     // Check port instead of URL to avoid HTTPS certificate issues
     port: 8080,
     reuseExistingServer: !process.env.CI,

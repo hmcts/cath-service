@@ -846,14 +846,22 @@ test.describe("Manual Upload End-to-End Flow", () => {
       // Poll for notifications with retry logic
       let notifications1 = [];
       let notifications2 = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
         notifications1 = await getNotificationsBySubscriptionId(sub1.subscriptionId);
         notifications2 = await getNotificationsBySubscriptionId(sub2.subscriptionId);
-        if (notifications1.length > 0 && notifications2.length > 0) break;
+        if (notifications1.length > 0 && notifications2.length > 0 &&
+            notifications1[0].status === "Sent" && notifications2[0].status === "Sent") break;
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       expect(notifications1.length).toBeGreaterThan(0);
+
+      // Debug: Log notification details if failed
+      if (notifications1[0].status !== "Sent") {
+        console.log("Notification 1 status:", notifications1[0].status);
+        console.log("Notification 1 error:", notifications1[0].errorMessage);
+      }
+
       expect(notifications1[0].status).toBe("Sent");
       expect(notifications1[0].govNotifyId).toBeDefined();
 
