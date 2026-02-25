@@ -860,14 +860,22 @@ test.describe("Manual Upload End-to-End Flow", () => {
 
       // Debug: Log notification details if failed
       if (notifications1[0].status !== "Sent") {
-        console.log("Notification 1 status:", notifications1[0].status);
-        console.log("Notification 1 error:", notifications1[0].errorMessage);
+        console.error("Notification 1 status:", notifications1[0].status);
+        console.error("Notification 1 error:", notifications1[0].errorMessage);
+        console.error("Full notification 1:", JSON.stringify(notifications1[0], null, 2));
       }
 
       expect(notifications1[0].status).toBe("Sent");
       expect(notifications1[0].govNotifyId).toBeDefined();
 
       expect(notifications2.length).toBeGreaterThan(0);
+
+      if (notifications2[0].status !== "Sent") {
+        console.error("Notification 2 status:", notifications2[0].status);
+        console.error("Notification 2 error:", notifications2[0].errorMessage);
+        console.error("Full notification 2:", JSON.stringify(notifications2[0], null, 2));
+      }
+
       expect(notifications2[0].status).toBe("Sent");
       expect(notifications2[0].govNotifyId).toBeDefined();
 
