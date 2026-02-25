@@ -38,6 +38,7 @@
       "@hmcts/notifications": ["libs/notifications/src"],
       "@hmcts/list-search-config": ["libs/list-search-config/src"],
       "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
+      "@hmcts/audit-log/config": ["libs/audit-log/src/config"],
       "@hmcts/pdf-generation": ["libs/pdf-generation/src"]
     },
     "esModuleInterop": true,
