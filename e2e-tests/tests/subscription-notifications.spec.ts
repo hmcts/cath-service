@@ -205,21 +205,7 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
 
     // Verify notification was successfully sent
     const sentNotification = notifications.find((n) => n.govNotifyId !== null);
-
-    // Debug logging for CI
-    if (!sentNotification) {
-      console.error("No notification with govNotifyId found. All notifications:");
-      console.error(JSON.stringify(notifications, null, 2));
-    }
-
     expect(sentNotification).toBeDefined();
-
-    // More detailed error logging
-    if (sentNotification && sentNotification.status !== "Sent") {
-      console.error(`Notification status: ${sentNotification.status}`);
-      console.error(`Notification error: ${sentNotification.errorMessage}`);
-    }
-
     expect(sentNotification.status).toBe("Sent");
 
     // Verify GOV.UK Notify email content
@@ -290,16 +276,6 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
 
     expect(sub1Notification).toBeDefined();
     expect(sub2Notification).toBeDefined();
-
-    // Debug logging for CI
-    if (sub1Notification?.status !== "Sent") {
-      console.error(`Subscriber 1 notification status: ${sub1Notification?.status}`);
-      console.error(`Subscriber 1 notification error: ${sub1Notification?.errorMessage}`);
-    }
-    if (sub2Notification?.status !== "Sent") {
-      console.error(`Subscriber 2 notification status: ${sub2Notification?.status}`);
-      console.error(`Subscriber 2 notification error: ${sub2Notification?.errorMessage}`);
-    }
 
     // Verify notifications were sent successfully
     expect(sub1Notification?.status).toBe("Sent");
