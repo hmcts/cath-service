@@ -173,6 +173,8 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
   });
 
   test("should send email notification with case summary to subscribers", async ({ request }) => {
+    test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
+
     // Create test user and subscription
     const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser.userId);
@@ -232,6 +234,8 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
   });
 
   test("should send notifications to multiple subscribers for same publication", async ({ request }) => {
+    test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
+
     // Create multiple test users and subscriptions
     const testUser1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     const testUser2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);

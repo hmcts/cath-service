@@ -800,6 +800,8 @@ test.describe("Manual Upload End-to-End Flow", () => {
     });
 
     test("should send notifications to subscribers after manual upload confirmation", async ({ page }) => {
+      test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
+
       // Create multiple subscribers to test notification delivery
       const user1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
       const user2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
