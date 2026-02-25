@@ -60,6 +60,13 @@ const postHandler = async (req: Request, res: Response) => {
     // Clear session data
     delete req.session.resubmissionArtefactId;
 
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "BLOB_EXPLORER_RESUBMISSION",
+      entityInfo: `Artefact ID: ${artefactId}`
+    };
+
     return res.redirect("/blob-explorer-resubmission-success");
   } catch (error) {
     console.error("Error triggering resubmission:", error);
