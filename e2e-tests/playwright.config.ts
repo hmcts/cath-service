@@ -8,10 +8,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Load environment variables from parent directory's .env file
 config({ path: path.resolve(__dirname, '../.env') });
 
-// Debug: Log env vars to verify they're loaded
-console.log('GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION loaded:', !!process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION);
-console.log('GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION value:', process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION);
-
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
