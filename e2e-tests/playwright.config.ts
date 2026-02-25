@@ -6,15 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables from parent directory's .env file
-const dotenvPath = path.resolve(__dirname, '../.env');
-const result = config({ path: dotenvPath });
-
-// Debug: Check if template IDs are loaded
-if (!process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION) {
-  console.error('WARNING: GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION not loaded from .env');
-  console.error('Dotenv path:', dotenvPath);
-  console.error('Dotenv result:', result.error || 'loaded successfully');
-}
+config({ path: path.resolve(__dirname, '../.env') });
 
 export default defineConfig({
   testDir: './tests',
