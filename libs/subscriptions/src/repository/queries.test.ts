@@ -44,13 +44,15 @@ describe("Subscription Queries", () => {
         {
           subscriptionId: "sub1",
           userId,
-          locationId: 456,
+          searchType: "LOCATION_ID",
+          searchValue: "456",
           dateAdded: new Date()
         },
         {
           subscriptionId: "sub2",
           userId,
-          locationId: 789,
+          searchType: "LOCATION_ID",
+          searchValue: "789",
           dateAdded: new Date()
         }
       ];
@@ -88,13 +90,15 @@ describe("Subscription Queries", () => {
         {
           subscriptionId: "sub1",
           userId: "user123",
-          locationId,
+          searchType: "LOCATION_ID",
+          searchValue: "456",
           dateAdded: new Date()
         },
         {
           subscriptionId: "sub2",
           userId: "user456",
-          locationId,
+          searchType: "LOCATION_ID",
+          searchValue: "456",
           dateAdded: new Date()
         }
       ];
@@ -106,7 +110,8 @@ describe("Subscription Queries", () => {
       expect(result).toEqual(mockSubscriptions);
       expect(prisma.subscription.findMany).toHaveBeenCalledWith({
         where: {
-          locationId
+          searchType: "LOCATION_ID",
+          searchValue: "456"
         },
         orderBy: {
           dateAdded: "desc"
@@ -132,7 +137,8 @@ describe("Subscription Queries", () => {
       const mockSubscription = {
         subscriptionId: "sub1",
         userId,
-        locationId,
+        searchType: "LOCATION_ID",
+        searchValue: "456",
         dateAdded: new Date()
       };
 
@@ -143,9 +149,10 @@ describe("Subscription Queries", () => {
       expect(result).toEqual(mockSubscription);
       expect(prisma.subscription.findUnique).toHaveBeenCalledWith({
         where: {
-          unique_user_location: {
+          unique_user_subscription: {
             userId,
-            locationId
+            searchType: "LOCATION_ID",
+            searchValue: "456"
           }
         }
       });
@@ -170,7 +177,8 @@ describe("Subscription Queries", () => {
       const mockSubscription = {
         subscriptionId,
         userId: "user123",
-        locationId: 456,
+        searchType: "LOCATION_ID",
+        searchValue: "456",
         dateAdded: new Date()
       };
 
@@ -230,7 +238,8 @@ describe("Subscription Queries", () => {
       const mockSubscription = {
         subscriptionId: "sub1",
         userId,
-        locationId,
+        searchType: "LOCATION_ID",
+        searchValue: "456",
         dateAdded: new Date()
       };
 
@@ -242,7 +251,8 @@ describe("Subscription Queries", () => {
       expect(prisma.subscription.create).toHaveBeenCalledWith({
         data: {
           userId,
-          locationId
+          searchType: "LOCATION_ID",
+          searchValue: "456"
         }
       });
     });
@@ -282,24 +292,16 @@ describe("Subscription Queries", () => {
         {
           subscriptionId: "sub1",
           userId,
-          locationId: 1,
-          dateAdded: new Date("2024-01-01"),
-          location: {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          }
+          searchType: "LOCATION_ID",
+          searchValue: "1",
+          dateAdded: new Date("2024-01-01")
         },
         {
           subscriptionId: "sub2",
           userId,
-          locationId: 2,
-          dateAdded: new Date("2024-01-02"),
-          location: {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          }
+          searchType: "LOCATION_ID",
+          searchValue: "2",
+          dateAdded: new Date("2024-01-02")
         }
       ];
 
@@ -309,9 +311,11 @@ describe("Subscription Queries", () => {
 
       expect(result).toEqual(mockSubscriptions);
       expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-        where: { userId },
-        orderBy: { dateAdded: "desc" },
-        include: { location: true }
+        where: {
+          userId,
+          searchType: "LOCATION_ID"
+        },
+        orderBy: { dateAdded: "desc" }
       });
     });
 
@@ -334,24 +338,16 @@ describe("Subscription Queries", () => {
         {
           subscriptionId: "sub-1",
           userId: "user123",
-          locationId: 1,
-          dateAdded: new Date("2024-01-01"),
-          location: {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          }
+          searchType: "LOCATION_ID",
+          searchValue: "1",
+          dateAdded: new Date("2024-01-01")
         },
         {
           subscriptionId: "sub-2",
           userId: "user123",
-          locationId: 2,
-          dateAdded: new Date("2024-01-02"),
-          location: {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          }
+          searchType: "LOCATION_ID",
+          searchValue: "2",
+          dateAdded: new Date("2024-01-02")
         }
       ];
 
@@ -361,9 +357,12 @@ describe("Subscription Queries", () => {
 
       expect(result).toEqual(mockSubscriptions);
       expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-        where: { subscriptionId: { in: subscriptionIds }, userId },
-        orderBy: { dateAdded: "desc" },
-        include: { location: true }
+        where: {
+          subscriptionId: { in: subscriptionIds },
+          userId,
+          searchType: "LOCATION_ID"
+        },
+        orderBy: { dateAdded: "desc" }
       });
     });
 
