@@ -14,7 +14,8 @@ export async function findSubscriptionsByUserId(userId: string) {
 export async function findSubscriptionsByLocationId(locationId: number) {
   return prisma.subscription.findMany({
     where: {
-      locationId
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
     },
     orderBy: {
       dateAdded: "desc"
@@ -25,9 +26,10 @@ export async function findSubscriptionsByLocationId(locationId: number) {
 export async function findSubscriptionByUserAndLocation(userId: string, locationId: number) {
   return prisma.subscription.findUnique({
     where: {
-      unique_user_location: {
+      unique_user_subscription: {
         userId,
-        locationId
+        searchType: "LOCATION_ID",
+        searchValue: locationId.toString()
       }
     }
   });
@@ -45,7 +47,8 @@ export async function createSubscriptionRecord(userId: string, locationId: numbe
   return prisma.subscription.create({
     data: {
       userId,
-      locationId
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
     }
   });
 }
@@ -65,11 +68,11 @@ export async function deleteSubscriptionRecord(subscriptionId: string, userId: s
 
 export async function findSubscriptionsWithLocationByUserId(userId: string) {
   return prisma.subscription.findMany({
-    where: { userId },
-    orderBy: { dateAdded: "desc" },
-    include: {
-      location: true
-    }
+    where: {
+      userId,
+      searchType: "LOCATION_ID"
+    },
+    orderBy: { dateAdded: "desc" }
   });
 }
 
@@ -77,12 +80,10 @@ export async function findSubscriptionsWithLocationByIds(subscriptionIds: string
   return prisma.subscription.findMany({
     where: {
       subscriptionId: { in: subscriptionIds },
-      userId
+      userId,
+      searchType: "LOCATION_ID"
     },
-    orderBy: { dateAdded: "desc" },
-    include: {
-      location: true
-    }
+    orderBy: { dateAdded: "desc" }
   });
 }
 

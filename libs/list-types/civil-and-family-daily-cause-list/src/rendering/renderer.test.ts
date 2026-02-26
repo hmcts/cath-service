@@ -44,7 +44,7 @@ describe("renderCauseListData", () => {
     });
 
     expect(result.header.locationName).toBe("Oxford Combined Court Centre");
-    expect(result.header.addressLines).toEqual(["St Aldate's", "OX1 1TL"]);
+    expect(result.header.addressLines).toEqual(["St Aldate's", "Oxford", "Oxfordshire", "OX1 1TL"]);
     expect(result.header.contentDate).toBe("01 January 2025");
     expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
   });

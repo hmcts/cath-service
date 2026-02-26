@@ -1,8 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
+import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
+import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
+import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
+import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes, Provenance } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -97,9 +101,12 @@ const postHandler = async (req: Request, res: Response) => {
       throw new Error("Invalid date format");
     }
 
-    // Determine if file is flat file based on extension (JSON files are structured, others are flat)
+    // Non-strategic publications should always have isFlatFile set to false
     const listTypeId = Number.parseInt(uploadData.listType, 10);
-    const isFlatFile = !uploadData.fileName?.endsWith(".json");
+    const isFlatFile = false;
+
+    // Determine if the uploaded file needs conversion (Excel files need conversion to JSON)
+    const isExcelFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
     const artefactId = await createArtefact({
@@ -111,6 +118,7 @@ const postHandler = async (req: Request, res: Response) => {
       language: uploadData.language,
       displayFrom,
       displayTo,
+      lastReceivedDate: new Date(),
       isFlatFile,
       provenance: Provenance.MANUAL_UPLOAD,
       noMatch: false
@@ -122,14 +130,47 @@ const postHandler = async (req: Request, res: Response) => {
     // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
     const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
-    if (isFlatFile && selectedListType?.isNonStrategic) {
+    let jsonData: unknown;
+
+    if (isExcelFile && selectedListType?.isNonStrategic) {
       const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
       if (hasConverterForListType(listTypeId)) {
         const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
         await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+
+        // Extract and store artefact search data from converted JSON
+        try {
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, hearingsData);
+        } catch (error) {
+          console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
+            artefactId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+    } else {
+      // Parse JSON data for JSON files
+      try {
+        jsonData = JSON.parse(uploadData.file.toString("utf8"));
+      } catch {
+        // Not valid JSON
       }
     }
+
+    // Generate PDF and send notifications using common processor
+    await processPublication({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      locale: uploadData.language === "WELSH" ? "cy" : "en",
+      jsonData,
+      provenance: Provenance.MANUAL_UPLOAD,
+      displayFrom,
+      displayTo,
+      logPrefix: "[Non-Strategic Upload]"
+    });
 
     // Clear session data
     delete req.session.nonStrategicUploadForm;

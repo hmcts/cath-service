@@ -19,7 +19,8 @@ describe("subscription-queries", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -29,7 +30,8 @@ describe("subscription-queries", () => {
       {
         subscriptionId: "sub-2",
         userId: "user-2",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user2@example.com",
           firstName: "Jane",
@@ -46,7 +48,10 @@ describe("subscription-queries", () => {
     expect(result).toHaveLength(2);
     expect(result[0].user.email).toBe("user1@example.com");
     expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-      where: { locationId: 1 },
+      where: {
+        searchType: "LOCATION_ID",
+        searchValue: "1"
+      },
       include: {
         user: {
           select: {

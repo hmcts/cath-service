@@ -20,6 +20,14 @@ test.describe("Summary of Publications Page", () => {
       await expect(heading).toBeVisible();
       await expect(heading).toContainText("What do you want to view from");
 
+      // Check for FaCT link
+      const factLink = page.locator('a[href="https://www.find-court-tribunal.service.gov.uk/"]');
+      await expect(factLink).toBeVisible();
+      await expect(factLink).toContainText("Find contact details and other information about courts and tribunals");
+
+      // Check for select list message when publications exist
+      await expect(page.getByText("Select the list you want to view from the link(s) below:")).toBeVisible();
+
       // Check for back link
       const backLink = page.locator(".govuk-back-link");
       await expect(backLink).toBeVisible();
@@ -91,8 +99,15 @@ test.describe("Summary of Publications Page", () => {
       // Using locationId=9002 which exists but has no publications
       await page.goto("/summary-of-publications?locationId=9002");
 
+      // Check for FaCT link (should still be visible)
+      const factLink = page.locator('a[href="https://www.find-court-tribunal.service.gov.uk/"]');
+      await expect(factLink).toBeVisible();
+
       // Check for empty state message using getByText for specificity
       await expect(page.getByText(/sorry, no lists found for this court/i)).toBeVisible();
+
+      // Verify select list message is NOT displayed when no publications
+      await expect(page.getByText("Select the list you want to view from the link(s) below:")).not.toBeVisible();
 
       // Verify no publication links are displayed
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
@@ -194,6 +209,13 @@ test.describe("Summary of Publications Page", () => {
       // Check that heading is in Welsh
       const heading = page.locator("h1.govuk-heading-l");
       await expect(heading).toContainText("Beth ydych chi eisiau edrych arno gan");
+
+      // Check for Welsh FaCT link text
+      const factLink = page.locator('a[href="https://www.find-court-tribunal.service.gov.uk/"]');
+      await expect(factLink).toContainText("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
+
+      // Check for Welsh select list message
+      await expect(page.getByText("Dewiswch y rhestr rydych chi am ei gweld o'r ddolen(nau) isod:")).toBeVisible();
 
       // Run accessibility checks in Welsh
       const accessibilityScanResults = await new AxeBuilder({ page })

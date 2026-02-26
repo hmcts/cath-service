@@ -50,7 +50,7 @@ model Location {
 
   locationRegions          LocationRegion[]
   locationSubJurisdictions LocationSubJurisdiction[]
-  subscriptions            Subscription[]
+  locationMetadata         LocationMetadata?
 
   @@map("location")
 }
@@ -75,4 +75,19 @@ model LocationSubJurisdiction {
 
   @@id([locationId, subJurisdictionId])
   @@map("location_sub_jurisdiction")
+}
+
+model LocationMetadata {
+  locationMetadataId  String    @id @default(uuid()) @map("location_metadata_id")
+  locationId          Int       @unique @map("location_id")
+  cautionMessage      String?   @map("caution_message") @db.Text
+  welshCautionMessage String?   @map("welsh_caution_message") @db.Text
+  noListMessage       String?   @map("no_list_message") @db.Text
+  welshNoListMessage  String?   @map("welsh_no_list_message") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  location Location @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+
+  @@map("location_metadata")
 }

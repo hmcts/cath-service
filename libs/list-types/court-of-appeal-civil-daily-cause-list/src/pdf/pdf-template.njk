@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <div class="location">
+      <p class="bold">{{ t.locationLine1 }}</p>
+      <p>{{ t.locationLine2 }}</p>
+      <p>{{ t.locationLine3 }}</p>
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInfoTitle }}</h3>
+    <h4>{{ t.liveStreamingTitle }}</h4>
+    <p>{{ t.liveStreamingText1 }} <a href="{{ t.liveStreamingLinkUrl }}">{{ t.liveStreamingLinkText }}</a>.</p>
+    <p>{{ t.liveStreamingText2a }} <a href="{{ t.liveStreamingLinkUrl }}">{{ t.liveStreamingLinkText }}</a>{{ t.liveStreamingText2b }}</p>
+    <h4>{{ t.judgmentsTitle }}</h4>
+    <p>{{ t.judgmentsText }}</p>
+  </div>
+
+  {% if dailyHearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in dailyHearings %}
+          <tr>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.judge }}</td>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td class="no-wrap">{{ hearing.caseNumber }}</td>
+            <td>{{ hearing.caseDetails }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noHearingsMessage }}</p>
+  {% endif %}
+
+  <h2>{{ t.futureJudgmentsTitle }}</h2>
+  {% if futureJudgments.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.date }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for judgment in futureJudgments %}
+          <tr>
+            <td class="no-wrap">{{ judgment.date }}</td>
+            <td>{{ judgment.venue }}</td>
+            <td>{{ judgment.judge }}</td>
+            <td class="no-wrap">{{ judgment.time }}</td>
+            <td class="no-wrap">{{ judgment.caseNumber }}</td>
+            <td>{{ judgment.caseDetails }}</td>
+            <td>{{ judgment.hearingType }}</td>
+            <td>{{ judgment.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noHearingsMessage }}</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>

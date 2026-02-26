@@ -1,5 +1,9 @@
 export const en = {
+  title: "Civil and Family Daily Cause List",
   pageTitle: "Civil and Family Daily Cause List for",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   listFor: "List for",
   lastUpdated: "Last updated",
   publicationDate: "Publication date",
@@ -33,6 +37,10 @@ export const en = {
   reportingRestrictions: "Reporting Restriction",
   searchCases: "Search Cases",
   dataSource: "Data Source",
+  cautionNote:
+    "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
+  cautionReporting:
+    "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
   errorTitle: "Publication not available",
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
