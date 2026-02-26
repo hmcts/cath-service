@@ -68,7 +68,7 @@ async function main() {
   // Create test users for pagination testing
   const testUsers = [];
   const roles = ["VERIFIED", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL", "SYSTEM_ADMIN"];
-  const provenances = ["CFT_IDAM", "SSO", "B2C", "CRIME_IDAM"];
+  const provenances = ["CFT_IDAM", "SSO", "B2C_IDAM", "CRIME_IDAM"];
 
   // Create 50 test users to test pagination (25 per page = 2 pages)
   // Using fixed UUIDs with pattern: 10000000-0000-0000-0000-000000000001 to 10000000-0000-0000-0000-000000000050
