@@ -42,11 +42,6 @@ describe("index template", () => {
       expect(en.signInText).toBe("Legal and media professionals can");
       expect(en.signInLink).toBe("sign in");
     });
-
-    it("should have Welsh available text", () => {
-      expect(en.welshAvailableText).toBe("This service is also available in");
-      expect(en.welshAvailableLink).toBe("Welsh (Cymraeg)");
-    });
   });
 
   describe("Welsh locale", () => {
@@ -75,11 +70,6 @@ describe("index template", () => {
       expect(cy.signInText).toBe("Gall gweithwyr proffesiynol ym maes y gyfraith a'r cyfryngau");
       expect(cy.signInLink).toBe("mewngofnodi");
     });
-
-    it("should have Welsh available text", () => {
-      expect(cy.welshAvailableText).toBe("Mae'r gwasanaeth hwn hefyd ar gael yn");
-      expect(cy.welshAvailableLink).toBe("Saesneg (English)");
-    });
   });
 
   describe("Locale consistency", () => {
@@ -92,7 +82,7 @@ describe("index template", () => {
     });
 
     it("should have all required properties", () => {
-      const requiredProperties = ["hearingsList", "additionalInfo", "signInText", "signInLink", "welshAvailableText", "welshAvailableLink", "continueButton"];
+      const requiredProperties = ["hearingsList", "additionalInfo", "signInText", "signInLink", "continueButton"];
 
       requiredProperties.forEach((prop) => {
         expect(en).toHaveProperty(prop);

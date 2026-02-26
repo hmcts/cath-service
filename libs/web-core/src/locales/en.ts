@@ -33,7 +33,8 @@ export const en = {
     }
   },
   language: {
-    switchPhaseBanner: "Cymraeg"
+    switch: "Cymraeg",
+    switchAriaLabel: "Change language to Welsh"
   },
   feedback: {
     part1: "This is a new service – your ",

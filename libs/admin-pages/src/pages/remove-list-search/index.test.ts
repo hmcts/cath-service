@@ -40,8 +40,7 @@ describe("remove-list-search page", () => {
         searchHint: expect.any(String),
         continueButton: expect.any(String),
         locationId: "",
-        locationName: "",
-        hideLanguageToggle: true
+        locationName: ""
       });
     });
   });

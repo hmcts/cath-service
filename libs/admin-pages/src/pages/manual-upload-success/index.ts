@@ -30,8 +30,7 @@ const getHandler = async (req: Request, res: Response) => {
   req.session.successPageViewed = true;
 
   res.render("manual-upload-success/index", {
-    ...t,
-    hideLanguageToggle: true
+    ...t
   });
 };
 

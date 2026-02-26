@@ -66,9 +66,8 @@ describe("admin dashboard page", () => {
               heading: "Remove",
               description: expect.any(String)
             })
-          ]),
+          ])
           // navigation is not passed explicitly - it comes from res.locals via renderInterceptorMiddleware
-          hideLanguageToggle: true
         })
       );
     });
@@ -116,9 +115,8 @@ describe("admin dashboard page", () => {
               heading: "Remove",
               description: expect.any(String)
             })
-          ]),
+          ])
           // navigation is not passed explicitly - it comes from res.locals via renderInterceptorMiddleware
-          hideLanguageToggle: true
         })
       );
     });

@@ -66,8 +66,7 @@ describe("non-strategic-upload-success page", () => {
           nextStepsHeading: "What do you want to do next?",
           uploadAnotherLink: "Upload another file",
           removeFileLink: "Remove file",
-          homeLink: "Home",
-          hideLanguageToggle: true
+          homeLink: "Home"
         })
       );
       expect(req.session.nonStrategicUploadConfirmed).toBe(true);
@@ -100,8 +99,7 @@ describe("non-strategic-upload-success page", () => {
           nextStepsHeading: "Beth yr ydych eisiau ei wneud nesaf?",
           uploadAnotherLink: "uwchlwytho ffeil arall",
           removeFileLink: "Dileu ffeil",
-          homeLink: "Tudalen hafan",
-          hideLanguageToggle: true
+          homeLink: "Tudalen hafan"
         })
       );
     });
@@ -206,7 +204,6 @@ describe("non-strategic-upload-success page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.render).toHaveBeenCalledWith("non-strategic-upload-success/index", expect.objectContaining({ hideLanguageToggle: true }));
       expect(res.redirect).not.toHaveBeenCalled();
     });
   });

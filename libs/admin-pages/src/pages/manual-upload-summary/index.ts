@@ -66,8 +66,7 @@ const getHandler = async (req: Request, res: Response) => {
       sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
       language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
       displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
-    },
-    hideLanguageToggle: true
+    }
   });
 };
 
@@ -215,8 +214,7 @@ const postHandler = async (req: Request, res: Response) => {
         language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
         displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
       },
-      errors: [{ text: "We could not process your upload. Please try again.", href: "#" }],
-      hideLanguageToggle: true
+      errors: [{ text: "We could not process your upload. Please try again.", href: "#" }]
     });
   }
 };

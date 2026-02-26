@@ -68,8 +68,7 @@ describe("media-application approved confirmation page", () => {
         whatHappensNextText:
           "This account has been created and the applicant will be notified to confirm their details. If an account already exists, the applicant will be asked to sign in, or choose forgot password.",
         returnLink: "Return to applications list",
-        application: mockApplication,
-        hideLanguageToggle: true
+        application: mockApplication
       });
     });
 
@@ -106,8 +105,7 @@ describe("media-application approved confirmation page", () => {
         whatHappensNextText:
           "Mae'r cyfrif wedi'i greu ac fe fydd yr ymgeisydd yn cael gwybod i gadarnhau ei fanylion. Os oes cyfrif eisoes yn bodoli, fe ofynnir i'r ymgeisydd fewngofnodi, neu ddewis 'wedi anghofio cyfrinair'.",
         returnLink: "Dychwelyd i'r rhestr ceisiadau",
-        application: mockApplication,
-        hideLanguageToggle: true
+        application: mockApplication
       });
     });
 
@@ -132,8 +130,7 @@ describe("media-application approved confirmation page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approved", {
         pageTitle: "Application has been approved",
         error: "Unable to load application details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
 

@@ -71,8 +71,7 @@ describe("media-application reject-reasons page", () => {
         },
         continueButton: "Continue",
         id: "app-123",
-        selectedReasons: {},
-        hideLanguageToggle: true
+        selectedReasons: {}
       });
     });
 
@@ -106,8 +105,7 @@ describe("media-application reject-reasons page", () => {
         },
         continueButton: "Parhau",
         id: "app-123",
-        selectedReasons: {},
-        hideLanguageToggle: true
+        selectedReasons: {}
       });
     });
 
@@ -151,8 +149,7 @@ describe("media-application reject-reasons page", () => {
           notAccredited: "on",
           invalidId: "on",
           selectedReasons: ["notAccredited", "invalidId"]
-        },
-        hideLanguageToggle: true
+        }
       });
     });
 
@@ -176,8 +173,7 @@ describe("media-application reject-reasons page", () => {
 
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject-reasons", {
         pageTitle: "Why are you rejecting this application?",
-        error: "Unable to load applicant details. Please try again later.",
-        hideLanguageToggle: true
+        error: "Unable to load applicant details. Please try again later."
       });
     });
   });
@@ -201,8 +197,7 @@ describe("media-application reject-reasons page", () => {
         continueButton: "Continue",
         id: "app-123",
         selectedReasons: {},
-        errors: [{ text: "An option must be selected", href: "#notAccredited" }],
-        hideLanguageToggle: true
+        errors: [{ text: "An option must be selected", href: "#notAccredited" }]
       });
     });
 
@@ -225,8 +220,7 @@ describe("media-application reject-reasons page", () => {
         continueButton: "Parhau",
         id: "app-123",
         selectedReasons: {},
-        errors: [{ text: "Rhaid dewis opsiwn", href: "#notAccredited" }],
-        hideLanguageToggle: true
+        errors: [{ text: "Rhaid dewis opsiwn", href: "#notAccredited" }]
       });
     });
 

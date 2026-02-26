@@ -28,14 +28,12 @@ const getHandler = async (req: Request, res: Response) => {
       reasons: lang.reasons,
       continueButton: lang.continueButton,
       id,
-      selectedReasons,
-      hideLanguageToggle: true
+      selectedReasons
     });
   } catch (_error) {
     res.render("media-applications/[id]/reject-reasons", {
       pageTitle: lang.pageTitle,
-      error: lang.errorMessages.loadFailed,
-      hideLanguageToggle: true
+      error: lang.errorMessages.loadFailed
     });
   }
 };
@@ -60,8 +58,7 @@ const postHandler = async (req: Request, res: Response) => {
       continueButton: lang.continueButton,
       id,
       selectedReasons: req.body,
-      errors: [{ text: lang.errorMessages.selectAtLeast, href: "#notAccredited" }],
-      hideLanguageToggle: true
+      errors: [{ text: lang.errorMessages.selectAtLeast, href: "#notAccredited" }]
     });
   }
 
