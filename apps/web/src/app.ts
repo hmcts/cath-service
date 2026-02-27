@@ -23,6 +23,7 @@ import {
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
@@ -145,6 +146,9 @@ export async function createApp(): Promise<Express> {
   }
   app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
+
+  // Register audit log middleware to capture all system admin actions
+  app.use(auditLogMiddleware());
 
   // Register file upload middleware for system admin pages
   const fileUploadMiddleware = createFileUploadMiddleware();

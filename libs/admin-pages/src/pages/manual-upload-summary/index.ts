@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -10,6 +10,17 @@ import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.j
 import { getManualUpload } from "../../manual-upload/storage.js";
 import cy from "./cy.js";
 import en from "./en.js";
+
+declare module "express-serve-static-core" {
+  interface Request {
+    auditMetadata?: {
+      shouldLog?: boolean;
+      action?: string;
+      entityInfo?: string;
+      [key: string]: string | number | boolean | undefined;
+    };
+  }
+}
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
@@ -108,13 +119,17 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
-    // Parse JSON data for structured files
+    // Extract and store artefact search data for JSON files
     let jsonData: unknown;
     if (!isFlatFile) {
       try {
-        jsonData = JSON.parse(uploadData.file.toString("utf8"));
-      } catch {
-        // Not valid JSON, treat as flat file
+        const jsonData = JSON.parse(uploadData.file.toString("utf-8"));
+        await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+      } catch (error) {
+        console.error("[Manual Upload] Failed to extract artefact search data", {
+          artefactId,
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
 
@@ -145,6 +160,17 @@ const postHandler = async (req: Request, res: Response) => {
         else resolve();
       });
     });
+
+    // Get location and list type for audit log
+    const location = await getLocationById(Number(uploadData.locationId));
+    const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "MANUAL_UPLOAD",
+      entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.englishFriendlyName || listTypeId}, File: ${uploadData.fileName}`
+    };
 
     // Redirect to success page with language parameter
     const lng = req.query.lng === "cy" ? "?lng=cy" : "";

@@ -3,7 +3,8 @@ import { prisma } from "@hmcts/postgres";
 export interface SubscriptionWithUser {
   subscriptionId: string;
   userId: string;
-  locationId: number;
+  searchType: string;
+  searchValue: string;
   user: {
     email: string;
     firstName: string | null;
@@ -14,7 +15,8 @@ export interface SubscriptionWithUser {
 export async function findActiveSubscriptionsByLocation(locationId: number): Promise<SubscriptionWithUser[]> {
   const subscriptions = await prisma.subscription.findMany({
     where: {
-      locationId
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
     },
     include: {
       user: {

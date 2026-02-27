@@ -448,7 +448,10 @@ describe("hasActiveSubscriptions", () => {
 
     expect(result).toBe(true);
     expect(prisma.subscription.count).toHaveBeenCalledWith({
-      where: { locationId: 1 }
+      where: {
+        searchType: "LOCATION_ID",
+        searchValue: "1"
+      }
     });
   });
 
