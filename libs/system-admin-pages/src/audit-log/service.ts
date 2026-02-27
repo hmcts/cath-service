@@ -1,4 +1,4 @@
-import type { AuditLog } from "@prisma/client";
+import type { AuditLog } from "@hmcts/postgres";
 import type { AuditLogFilters } from "./repository.js";
 import * as repository from "./repository.js";
 
