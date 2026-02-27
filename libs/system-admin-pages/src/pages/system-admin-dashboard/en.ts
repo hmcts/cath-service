@@ -18,8 +18,8 @@ export const en = {
     },
     {
       title: "User Management",
-      description: "Search, update and delete users",
-      href: "/user-management"
+      description: "Find, update and delete users",
+      href: "/find-users"
     },
     {
       title: "Blob Explorer",
