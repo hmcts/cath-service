@@ -14,13 +14,13 @@
 
     <ul class="govuk-list">
       <li>
-        <a href="/delete-court{% if lng == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ removeAnotherCourtLink }}</a>
+        <a href="/delete-court{% if locale == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ removeAnotherCourtLink }}</a>
       </li>
       <li>
-        <a href="/reference-data-upload{% if lng == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ uploadReferenceDataLink }}</a>
+        <a href="/reference-data-upload{% if locale == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ uploadReferenceDataLink }}</a>
       </li>
       <li>
-        <a href="/system-admin-dashboard{% if lng == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ homeLink }}</a>
+        <a href="/system-admin-dashboard{% if locale == 'cy' %}?lng=cy{% endif %}" class="govuk-link">{{ homeLink }}</a>
       </li>
     </ul>
 

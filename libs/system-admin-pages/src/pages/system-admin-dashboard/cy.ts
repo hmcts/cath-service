@@ -14,7 +14,7 @@ export const cy = {
     {
       title: "Rheoli Defnyddwyr Trydydd Parti",
       description: "Gweld, creu, diweddaru a dileu defnyddwyr a thanysgrifiadau trydydd parti",
-      href: "/third-party-users"
+      href: "/manage-third-party-users"
     },
     {
       title: "Rheoli Defnyddwyr",
