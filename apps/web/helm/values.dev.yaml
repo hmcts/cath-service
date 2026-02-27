@@ -13,6 +13,10 @@ nodejs:
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
+    MEDIA_FORGOT_PASSWORD_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=form_post'
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: '1988bbdd-d223-49bf-912f-ed34cb43e35e'
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT: '689c0183-0461-423e-a542-de513a93a5b7'
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_EXISTING_USER: '13b058a5-82da-4331-98ff-97d3ebf66f51'
   keyVaults:
     # Local development uses pip-ss-kv-stg with -dev suffixed secrets
     pip-ss-kv-stg:
@@ -33,3 +37,17 @@ nodejs:
         # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
+
+        # GOV.UK Notify
+        - name: gov-uk-notify-test-api-key
+          alias: GOVUK_NOTIFY_API_KEY
+
+        # Azure AD B2C secrets (media user account management)
+        - name: b2c-tenant-id
+          alias: AZURE_B2C_TENANT_ID
+        - name: auto-pip-stg-pip-account-management-stg-id
+          alias: AZURE_B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-account-management-stg-pwd
+          alias: AZURE_B2C_CLIENT_SECRET
+        - name: b2c-ad-url
+          alias: AZURE_B2C_DOMAIN

@@ -56,8 +56,7 @@ describe("User Repository", () => {
           surname: input.surname,
           userProvenance: input.userProvenance,
           userProvenanceId: input.userProvenanceId,
-          role: input.role,
-          lastSignedInDate: expect.any(Date)
+          role: input.role
         }
       });
       expect(result).toEqual(mockUser);
