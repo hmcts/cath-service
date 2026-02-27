@@ -6,7 +6,9 @@ vi.mock("@prisma/adapter-pg", () => ({
 }));
 
 vi.mock("pg", () => ({
-  Pool: vi.fn()
+  default: {
+    Pool: vi.fn()
+  }
 }));
 
 vi.mock("../generated/prisma/client.js", () => {
