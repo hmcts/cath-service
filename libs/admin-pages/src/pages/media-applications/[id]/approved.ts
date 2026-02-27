@@ -23,15 +23,13 @@ const getHandler = async (req: Request, res: Response) => {
       whatHappensNextHeading: lang.whatHappensNextHeading,
       whatHappensNextText: lang.whatHappensNextText,
       returnLink: lang.returnLink,
-      application,
-      hideLanguageToggle: true
+      application
     });
   } catch (_error) {
     res.render("media-applications/[id]/approved", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };

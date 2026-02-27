@@ -44,7 +44,8 @@ describe("English Locale", () => {
 
   it("should have language switcher", () => {
     expect(en.language).toBeDefined();
-    expect(en.language.switchPhaseBanner).toBe("Cymraeg");
+    expect(en.language.switch).toBe("Cymraeg");
+    expect(en.language.switchAriaLabel).toBe("Change language to Welsh");
   });
 
   it("should have feedback section", () => {

@@ -70,8 +70,7 @@ describe("media-application rejected page", () => {
           "The applicant {applicantEmail} will now be emailed to notify them why their application cannot be progressed and invited to reapply once the issue(s) are rectified.",
         returnLink: "Return to applications list",
         application: mockApplication,
-        reasonsList: [],
-        hideLanguageToggle: true
+        reasonsList: []
       });
     });
 
@@ -109,8 +108,7 @@ describe("media-application rejected page", () => {
           "Bydd yr ymgeisydd {applicantEmail} nawr yn cael e-bost i'w hysbysu pam na ellir bwrw ymlaen â'i gais a'i wahodd i ail-wneud cais unwaith y bydd y mater/materion wedi'u cywiro.",
         returnLink: "Dychwelyd i'r rhestr ceisiadau",
         application: mockApplication,
-        reasonsList: [],
-        hideLanguageToggle: true
+        reasonsList: []
       });
     });
 
@@ -135,8 +133,7 @@ describe("media-application rejected page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/rejected", {
         pageTitle: "Application has been rejected",
         error: "Unable to load application details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
   });

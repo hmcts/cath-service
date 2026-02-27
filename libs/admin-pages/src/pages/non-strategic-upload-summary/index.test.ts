@@ -145,8 +145,7 @@ describe("non-strategic-upload-summary page", () => {
         "non-strategic-upload-summary/index",
         expect.objectContaining({
           heading: "File upload summary",
-          confirmButton: "Confirm",
-          hideLanguageToggle: true
+          confirmButton: "Confirm"
         })
       );
     });

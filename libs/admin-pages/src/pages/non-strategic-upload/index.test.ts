@@ -83,7 +83,6 @@ describe("non-strategic-upload page", () => {
           pageTitle: "Upload - Upload Excel file",
           warningTitle: "Warning",
           continueButton: "Continue",
-          hideLanguageToggle: true,
           locale: "en"
         })
       );

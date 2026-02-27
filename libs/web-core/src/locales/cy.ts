@@ -33,7 +33,8 @@ export const cy = {
     }
   },
   language: {
-    switchPhaseBanner: "English"
+    switch: "English",
+    switchAriaLabel: "Newid iaith i Saesneg"
   },
   feedback: {
     part1: "Mae hwn yn wasanaeth newydd – bydd eich ",

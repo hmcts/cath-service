@@ -71,8 +71,7 @@ const getHandler = async (req: Request, res: Response) => {
       sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
       language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
       displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
-    },
-    hideLanguageToggle: true
+    }
   });
 };
 
@@ -243,8 +242,7 @@ const postHandler = async (req: Request, res: Response) => {
         language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
         displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
       },
-      errors: [{ text: errorMessage, href: "#" }],
-      hideLanguageToggle: true
+      errors: [{ text: errorMessage, href: "#" }]
     });
   }
 };
