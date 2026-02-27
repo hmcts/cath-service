@@ -24,7 +24,7 @@ jobs:
     uses: ./.github/workflows/job.terraform.yml
     with:
       environment: stg
-      subscription: DTS-SHAREDSERVICES-DEV
+      subscription: DTS-SHAREDSERVICES-STG
       aks-subscription: DTS-SHAREDSERVICES-STG
       storage-account: nonprod
       plan-only: ${{ inputs.plan-only }}

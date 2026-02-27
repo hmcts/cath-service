@@ -10,7 +10,7 @@
 #     uses: ./.github/workflows/job.terraform.yml
 #     with:
 #       environment: stg
-#       subscription: DTS-SHAREDSERVICES-DEV
+#       subscription: DTS-SHAREDSERVICES-STG
 #       aks-subscription: DTS-SHAREDSERVICES-STG
 #       storage-account: nonprod
 #       plan-only: true
@@ -32,7 +32,7 @@ on:
       subscription:
         required: true
         type: string
-        description: "Azure subscription name (e.g. DTS-SHAREDSERVICES-DEV)"
+        description: "Azure subscription name (e.g. DTS-SHAREDSERVICES-STG)"
       aks-subscription:
         required: true
         type: string
@@ -64,4 +64,4 @@ jobs:
       plan-only: ${{ inputs.plan-only }}
       helm-chart-path: helm/cath-service/Chart.yaml
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_DEV }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
