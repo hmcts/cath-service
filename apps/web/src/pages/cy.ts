@@ -8,6 +8,8 @@ export const cy = {
   additionalInfo: "Bydd mwy o lysoedd a thribiwnlysoedd ar gael gydag amser.",
   signInText: "Gall gweithwyr proffesiynol ym maes y gyfraith a'r cyfryngau",
   signInLink: "mewngofnodi",
+  welshAvailableText: "Mae'r gwasanaeth hwn hefyd ar gael yn",
+  welshAvailableLink: "Saesneg (English)",
   continueButton: "Parhau",
   factSectionTitle: "Dod o hyd i lys neu dribiwnlys",
   factSectionText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",

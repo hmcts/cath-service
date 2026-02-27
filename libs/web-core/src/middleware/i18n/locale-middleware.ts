@@ -60,15 +60,21 @@ export function translationMiddleware(translations: Translations) {
 
     Object.assign(res.locals, currentTranslations);
 
-    // Preserve existing query parameters and update/add lng parameter
-    const queryParams = new URLSearchParams(req.query as Record<string, string>);
-    queryParams.set("lng", otherLocale);
-    const queryString = queryParams.toString();
+    // Check if user is an admin (system admin or internal admin)
+    const isAdmin = req.isAuthenticated() && req.user?.role && ["SYSTEM_ADMIN", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"].includes(req.user.role);
 
-    res.locals.languageToggle = {
-      link: `?${queryString}`,
-      text: currentTranslations.language?.switch || otherLocale.toUpperCase()
-    };
+    // Only set language toggle for non-admin users
+    if (!isAdmin) {
+      // Preserve existing query parameters and update/add lng parameter
+      const queryParams = new URLSearchParams(req.query as Record<string, string>);
+      queryParams.set("lng", otherLocale);
+      const queryString = queryParams.toString();
+
+      res.locals.languageToggle = {
+        link: `?${queryString}`,
+        text: currentTranslations.language?.switch || otherLocale.toUpperCase()
+      };
+    }
 
     next();
   };
