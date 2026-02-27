@@ -3,18 +3,19 @@ global:
   enableKeyVaults: true
   tenantId: "531ff96d-0ae9-462a-8d2d-bec7c0b42082"
 job:
+  releaseNameOverride: "{{ .Release.Name }}-crons"
   disableActiveClusterCheck: true
-  image: hmctspublic.azurecr.io/nfdiv/case-api:latest
-  aadIdentityName: nfdiv
+  image: hmctspublic.azurecr.io/cath/cath-crons:latest
+  aadIdentityName: cath
   environment:
     NODE_ENV: 'production'
-    DATABASE_URL: 'postgresql://user:password@postgres:5433/database'
     SCRIPT_NAME: 'example'
   keyVaults:
-    cath:
+    pip-ss-kv:
       secrets:
-        - app-insights-connection-string
-        - dynatrace-url
+        - name: app-insights-connection-string
+          alias: APPLICATION_INSIGHTS_CONNECTION_STRING
+        - name: postgres-url
+          alias: DATABASE_URL
   schedule: "0 0/10 * * *" # this is just a placeholder, configure in your flux
   concurrencyPolicy: Forbid
-

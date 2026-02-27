@@ -11,6 +11,10 @@ nodejs:
         - redis-access-key
         - app-insights-connection-string
         - dynatrace-url
+    pip-ss-kv:
+      secrets:
+        - name: postgres-url
+          alias: DATABASE_URL
     pip-ss-kv-stg:
       secrets:
         - name: app-tenant-id

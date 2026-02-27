@@ -1,0 +1,67 @@
+# Terraform Job
+#
+# Runs Terraform plan and optionally apply for infrastructure changes.
+# This is a thin wrapper around the cnp-githubactions-library terraform-deploy workflow.
+#
+# Usage:
+#   terraform:
+#     needs: [detect-infra-changes]
+#     if: needs.detect-infra-changes.outputs.has-changes == 'true'
+#     uses: ./.github/workflows/job.terraform.yml
+#     with:
+#       environment: stg
+#       subscription: DTS-SHAREDSERVICES-STG
+#       aks-subscription: DTS-SHAREDSERVICES-STG
+#       storage-account: nonprod
+#       plan-only: true
+#     secrets: inherit
+
+name: Terraform
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Target environment (e.g., stg)"
+      storage-account:
+        required: true
+        type: string
+        description: "Storage account postfix (e.g. nonprod, prod) to make mgmtstatestore{nonprod|prod}"
+      subscription:
+        required: true
+        type: string
+        description: "Azure subscription name (e.g. DTS-SHAREDSERVICES-STG)"
+      aks-subscription:
+        required: true
+        type: string
+        description: "Azure subscription name for AKS cluster (e.g. DTS-SHAREDSERVICES-STG)"
+      plan-only:
+        required: false
+        type: boolean
+        default: false
+        description: "Run plan only, skip apply"
+      working-directory:
+        required: false
+        type: string
+        default: "infrastructure"
+    outputs:
+      plan-exitcode:
+        description: "Terraform plan exit code (0=no changes, 2=changes)"
+        value: ${{ jobs.terraform.outputs.plan-exitcode }}
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.plan-only && 'Plan' || 'Apply' }}
+    uses: hmcts/cnp-githubactions-library/.github/workflows/terraform-deploy.yaml@main
+    with:
+      environment: ${{ inputs.environment }}
+      subscription: ${{ inputs.subscription }}
+      aks-subscription: ${{ inputs.aks-subscription }}
+      storage-account: ${{ inputs.storage-account }}
+      working-directory: ${{ inputs.working-directory }}
+      plan-only: ${{ inputs.plan-only }}
+      helm-chart-path: helm/cath-service/Chart.yaml
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
