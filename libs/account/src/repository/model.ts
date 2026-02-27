@@ -2,7 +2,7 @@ export interface User {
   email: string;
   firstName?: string;
   surname?: string;
-  userProvenance: "SSO" | "CFT_IDAM" | "CRIME_IDAM" | "B2C_IDAM";
+  userProvenance: "SSO" | "CFT_IDAM" | "CRIME_IDAM" | "B2C_IDAM" | "PI_AAD";
   userProvenanceId: string;
   role: "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN";
 }

@@ -18,9 +18,25 @@ declare global {
   }
 }
 
-// Augment the session via module declaration
+// Augment the session to include auth-specific properties
+declare module "express-session" {
+  interface SessionData {
+    user?: UserProfile;
+    lastActivity?: number;
+    returnTo?: string;
+    b2cProvider?: string;
+    b2cLocale?: string;
+    lng?: string;
+    passport?: {
+      user?: UserProfile;
+    };
+  }
+}
+
+// Allow additional session properties from other modules via request augmentation
+// This maintains backwards compatibility with code that uses req.session[key]
 declare module "express-serve-static-core" {
   interface Request {
-    session: any;
+    session: import("express-session").Session & Partial<import("express-session").SessionData> & Record<string, any>;
   }
 }

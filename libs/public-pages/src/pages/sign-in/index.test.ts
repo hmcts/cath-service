@@ -107,12 +107,22 @@ describe("select-account page", () => {
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 
-      it("should redirect to / for cath account", async () => {
+      it("should redirect to B2C login for cath account", async () => {
         req.body = { accountType: "cath" };
 
         await POST(req as Request, res as Response);
 
-        expect(res.redirect).toHaveBeenCalledWith("/");
+        expect(res.redirect).toHaveBeenCalledWith("/b2c-login?lng=en");
+        expect(res.redirect).toHaveBeenCalledTimes(1);
+      });
+
+      it("should redirect to B2C login with Welsh locale for cath account", async () => {
+        req.body = { accountType: "cath" };
+        res.locals = { locale: "cy" };
+
+        await POST(req as Request, res as Response);
+
+        expect(res.redirect).toHaveBeenCalledWith("/b2c-login?lng=cy");
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
     });

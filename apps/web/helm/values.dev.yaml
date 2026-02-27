@@ -13,6 +13,9 @@ nodejs:
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
+    ENABLE_B2C: 'true'
+    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
+    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
     # Local development uses pip-ss-kv-stg with -dev suffixed secrets
     pip-ss-kv-stg:
@@ -33,3 +36,8 @@ nodejs:
         # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
+        # B2C secrets for verified user sign-in (using PIP staging frontend app registration)
+        - name: auto-pip-stg-pip-frontend-stg-id
+          alias: B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-frontend-stg-pwd
+          alias: B2C_CLIENT_SECRET
