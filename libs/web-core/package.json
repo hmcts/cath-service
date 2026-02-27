@@ -59,7 +59,7 @@
     "connect-redis": "^9.0.0",
     "express": "^5.2.0",
     "express-session": "^1.18.2",
-    "govuk-frontend": "^5.2.0",
+    "govuk-frontend": "^5.2.0 || ^6.0.0",
     "helmet": "^8.0.0",
     "multer": "^2.0.2",
     "nunjucks": "^3.2.4",
