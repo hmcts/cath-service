@@ -7,6 +7,14 @@ declare module "express-session" {
   }
 }
 
+declare global {
+  namespace Express {
+    interface User {
+      role?: string;
+    }
+  }
+}
+
 export interface LocaleMiddlewareOptions {
   supportedLocales?: string[];
   defaultLocale?: string;
