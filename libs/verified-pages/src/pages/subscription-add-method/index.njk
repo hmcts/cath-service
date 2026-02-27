@@ -1,0 +1,69 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+{{ govukBackLink({
+  text: backLinkText,
+  href: "/subscription-management"
+}) }}
+{% endblock %}
+
+{% block page_content %}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <p class="govuk-body">{{ hintText }}</p>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      {{ govukRadios({
+        name: "subscriptionMethod",
+        fieldset: {
+          legend: {
+            text: pageTitle,
+            isPageHeading: false,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        items: [
+          {
+            value: "location",
+            text: radioOptionCourt,
+            checked: data.subscriptionMethod == "location"
+          },
+          {
+            value: "case",
+            text: radioOptionCase,
+            checked: data.subscriptionMethod == "case"
+          },
+          {
+            value: "reference",
+            text: radioOptionReference,
+            checked: data.subscriptionMethod == "reference"
+          }
+        ],
+        errorMessage: errors[0] if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

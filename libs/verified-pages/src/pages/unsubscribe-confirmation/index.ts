@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { removeSubscription } from "@hmcts/subscriptions";
+import { removeSubscription } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -13,14 +13,20 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const userId = req.user.id;
-  const subscriptionId = req.session.emailSubscriptions?.subscriptionToRemove;
+  const subscriptionIds = req.session.emailSubscriptions?.subscriptionToRemove;
 
-  if (!subscriptionId) {
+  if (!subscriptionIds) {
     return res.redirect("/subscription-management");
   }
 
+  // Split comma-separated IDs if present
+  const idsArray = subscriptionIds.split(",").map((id: string) => id.trim());
+
   try {
-    await removeSubscription(subscriptionId, userId);
+    // Delete all subscriptions
+    for (const id of idsArray) {
+      await removeSubscription(id, userId);
+    }
 
     if (req.session.emailSubscriptions) {
       delete req.session.emailSubscriptions.subscriptionToRemove;

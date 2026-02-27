@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables before importing the module
-process.env.GOVUK_NOTIFY_API_KEY = "test-api-key-12345";
+process.env.GOVUK_NOTIFY_TEST_API_KEY = "test-api-key-12345";
 process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL = "test-template-id-approval";
 process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION = "test-template-id-rejection";
 
@@ -26,8 +26,8 @@ describe("GOV Notify Service", () => {
 
   describe("sendMediaApprovalEmail", () => {
     it("should throw error when API key not configured", async () => {
-      const originalApiKey = process.env.GOVUK_NOTIFY_API_KEY;
-      delete process.env.GOVUK_NOTIFY_API_KEY;
+      const originalApiKey = process.env.GOVUK_NOTIFY_TEST_API_KEY;
+      delete process.env.GOVUK_NOTIFY_TEST_API_KEY;
 
       const testData = {
         name: "John Smith",
@@ -41,7 +41,7 @@ describe("GOV Notify Service", () => {
 
       await expect(testFunc(testData)).rejects.toThrow("GOV Notify API key not configured");
 
-      process.env.GOVUK_NOTIFY_API_KEY = originalApiKey;
+      process.env.GOVUK_NOTIFY_TEST_API_KEY = originalApiKey;
     });
 
     it("should throw error when approval template ID not configured", async () => {
@@ -145,8 +145,8 @@ describe("GOV Notify Service", () => {
 
   describe("sendMediaRejectionEmail", () => {
     it("should throw error when API key not configured", async () => {
-      const originalApiKey = process.env.GOVUK_NOTIFY_API_KEY;
-      delete process.env.GOVUK_NOTIFY_API_KEY;
+      const originalApiKey = process.env.GOVUK_NOTIFY_TEST_API_KEY;
+      delete process.env.GOVUK_NOTIFY_TEST_API_KEY;
 
       const testData = {
         fullName: "John Smith",
@@ -161,7 +161,7 @@ describe("GOV Notify Service", () => {
 
       await expect(testFunc(testData)).rejects.toThrow("GOV Notify API key not configured");
 
-      process.env.GOVUK_NOTIFY_API_KEY = originalApiKey;
+      process.env.GOVUK_NOTIFY_TEST_API_KEY = originalApiKey;
     });
 
     it("should throw error when rejection template ID not configured", async () => {

@@ -21,6 +21,7 @@ import {
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
+import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "@hmcts/subscription";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
@@ -29,10 +30,13 @@ import {
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
-import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
 const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+
+function checkEnhancedTemplatesConfigured(): boolean {
+  return !!(process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY && process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY);
+}
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -192,6 +196,14 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
   try {
     const caseSummaryItems = config.extract(event.jsonData);
     const caseSummary = config.format(caseSummaryItems);
+
+    // Check if enhanced templates are configured
+    const hasEnhancedTemplates = checkEnhancedTemplatesConfigured();
+
+    if (!hasEnhancedTemplates) {
+      console.warn("Enhanced template IDs not configured, falling back to standard template");
+      return buildFallbackEmailData(event, userName);
+    }
 
     const templateParameters = buildEnhancedTemplateParameters({
       userName,

@@ -123,7 +123,7 @@ const postHandler = async (req: Request, res: Response) => {
     let jsonData: unknown;
     if (!isFlatFile) {
       try {
-        const jsonData = JSON.parse(uploadData.file.toString("utf-8"));
+        jsonData = JSON.parse(uploadData.file.toString("utf-8"));
         await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
       } catch (error) {
         console.error("[Manual Upload] Failed to extract artefact search data", {

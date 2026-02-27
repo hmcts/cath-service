@@ -11,6 +11,7 @@ import {
   type Location
 } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -190,7 +191,7 @@ const getHandler = async (req: Request, res: Response) => {
     subJurisdictionItemsByJurisdiction,
     availableLetters,
     tableRows,
-    csrfToken: (req as any).csrfToken?.() || ""
+    csrfToken: getCsrfToken(req)
   });
 };
 

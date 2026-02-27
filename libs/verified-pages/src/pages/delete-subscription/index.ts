@@ -1,6 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getSubscriptionById } from "@hmcts/subscriptions";
+import { getSubscriptionById } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -19,23 +20,29 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const rawSubscriptionId = req.query.subscriptionId as string;
-  const subscriptionId = rawSubscriptionId?.trim();
+  const subscriptionIds = rawSubscriptionId?.trim();
 
-  if (!subscriptionId) {
+  if (!subscriptionIds) {
     return res.redirect("/subscription-management");
   }
 
-  if (!isValidUUID(subscriptionId)) {
-    return res.redirect("/subscription-management");
+  // Split comma-separated IDs and validate each one
+  const idsArray = subscriptionIds.split(",").map((id: string) => id.trim());
+  for (const id of idsArray) {
+    if (!isValidUUID(id)) {
+      return res.redirect("/subscription-management");
+    }
   }
 
   const userId = req.user.id;
 
   try {
-    const subscription = await getSubscriptionById(subscriptionId, userId);
-
-    if (!subscription) {
-      return res.redirect("/subscription-management");
+    // Verify user owns all subscriptions
+    for (const id of idsArray) {
+      const subscription = await getSubscriptionById(id, userId);
+      if (!subscription) {
+        return res.redirect("/subscription-management");
+      }
     }
 
     if (!res.locals.navigation) {
@@ -45,8 +52,8 @@ const getHandler = async (req: Request, res: Response) => {
 
     res.render("delete-subscription/index", {
       ...t,
-      subscriptionId,
-      csrfToken: (req as any).csrfToken?.() || ""
+      subscriptionId: subscriptionIds,
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error("Error fetching subscription:", error);
@@ -63,25 +70,30 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const { subscription, subscriptionId: bodySubscriptionId, "unsubscribe-confirm": unsubscribeConfirm } = req.body;
-  const subscriptionId = subscription || bodySubscriptionId;
+  const subscriptionIds = subscription || bodySubscriptionId;
 
   // If no subscriptionId in body, redirect to subscription management
-  if (!subscriptionId) {
+  if (!subscriptionIds) {
     return res.redirect("/subscription-management");
   }
 
-  // Validate UUID format
-  if (!isValidUUID(subscriptionId)) {
-    return res.redirect("/subscription-management");
+  // Split comma-separated IDs and validate each one
+  const idsArray = subscriptionIds.split(",").map((id: string) => id.trim());
+  for (const id of idsArray) {
+    if (!isValidUUID(id)) {
+      return res.redirect("/subscription-management");
+    }
   }
 
   const userId = req.user.id;
 
-  // Verify user owns the subscription
+  // Verify user owns all subscriptions
   try {
-    const sub = await getSubscriptionById(subscriptionId, userId);
-    if (!sub) {
-      return res.redirect("/subscription-management");
+    for (const id of idsArray) {
+      const sub = await getSubscriptionById(id, userId);
+      if (!sub) {
+        return res.redirect("/subscription-management");
+      }
     }
   } catch (error) {
     console.error("Error validating subscription ownership:", error);
@@ -91,7 +103,7 @@ const postHandler = async (req: Request, res: Response) => {
   // If this is a direct POST from subscription-management (no confirmation yet)
   if (!unsubscribeConfirm) {
     // Redirect to GET to show confirmation page
-    return res.redirect(`/delete-subscription?subscriptionId=${subscriptionId}`);
+    return res.redirect(`/delete-subscription?subscriptionId=${subscriptionIds}`);
   }
 
   // Handle confirmation page submission
@@ -101,7 +113,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (unsubscribeConfirm === "yes") {
     req.session.emailSubscriptions = req.session.emailSubscriptions || {};
-    req.session.emailSubscriptions.subscriptionToRemove = subscriptionId;
+    req.session.emailSubscriptions.subscriptionToRemove = subscriptionIds;
     return res.redirect("/unsubscribe-confirmation");
   }
 
@@ -113,8 +125,8 @@ const postHandler = async (req: Request, res: Response) => {
 
   return res.render("delete-subscription/index", {
     ...t,
-    subscriptionId,
-    csrfToken: (req as any).csrfToken?.() || "",
+    subscriptionId: subscriptionIds,
+    csrfToken: getCsrfToken(req),
     errors: {
       titleText: t.errorSummaryTitle,
       errorList: [

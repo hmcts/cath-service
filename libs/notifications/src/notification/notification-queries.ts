@@ -1,7 +1,7 @@
 import { prisma } from "@hmcts/postgres";
 
 export interface CreateNotificationData {
-  subscriptionId: string;
+  subscriptionId: string | null;
   userId: string;
   publicationId: string;
   status?: string;
@@ -10,7 +10,7 @@ export interface CreateNotificationData {
 
 export interface NotificationAuditLog {
   notificationId: string;
-  subscriptionId: string;
+  subscriptionId: string | null;
   userId: string;
   publicationId: string;
   govNotifyId: string | null;

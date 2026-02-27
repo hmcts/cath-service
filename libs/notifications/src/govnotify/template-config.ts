@@ -1,35 +1,43 @@
-const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY || "";
+// Read environment variables at runtime instead of module load time
+// This prevents issues where env vars are set after module initialization
+function getEnvVar(key: string, defaultValue = ""): string {
+  return process.env[key] || defaultValue;
+}
+
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
 export function getTemplateId(): string {
-  if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION) {
+  const templateId = getEnvVar("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION");
+  if (!templateId) {
     throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION environment variable is not set");
   }
-  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION;
+  return templateId;
 }
 
 export function getSubscriptionTemplateIdForListType(_listTypeId: number, hasPdf: boolean, pdfUnder2MB: boolean): string {
   if (hasPdf && pdfUnder2MB) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set");
+    const templateId = getEnvVar("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY");
+    if (!templateId) {
+      console.warn("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY not set, falling back to base template");
+      return getTemplateId();
     }
-    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY;
+    return templateId;
   }
 
-  if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY) {
-    throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set");
+  const templateId = getEnvVar("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY");
+  if (!templateId) {
+    console.warn("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY not set, falling back to base template");
+    return getTemplateId();
   }
-  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY;
+  return templateId;
 }
 
 export function getApiKey(): string {
-  if (!GOVUK_NOTIFY_API_KEY) {
-    throw new Error("GOVUK_NOTIFY_API_KEY environment variable is not set");
+  const apiKey = getEnvVar("GOVUK_NOTIFY_TEST_API_KEY");
+  if (!apiKey) {
+    throw new Error("GOVUK_NOTIFY_TEST_API_KEY environment variable is not set");
   }
-  return GOVUK_NOTIFY_API_KEY;
+  return apiKey;
 }
 
 export function getServiceUrl(): string {
@@ -47,6 +55,9 @@ export function formatPublicationDate(date: Date): string {
 
 export interface TemplateParameters {
   locations: string;
+  case: string;
+  display_locations: string;
+  display_case: string;
   ListType: string;
   content_date: string;
   start_page_link: string;
@@ -63,14 +74,30 @@ export function buildTemplateParameters(params: {
   hearingListName: string;
   publicationDate: Date;
   locationName: string;
+  caseInfo?: string;
+  hasLocationSubscription?: boolean;
 }): TemplateParameters {
-  return {
-    locations: params.locationName,
+  const templateParams: TemplateParameters = {
     ListType: params.hearingListName,
     content_date: formatPublicationDate(params.publicationDate),
     start_page_link: getServiceUrl(),
-    subscription_page_link: getServiceUrl()
+    subscription_page_link: getServiceUrl(),
+    locations: params.hasLocationSubscription ? params.locationName : "",
+    case: "",
+    display_locations: params.hasLocationSubscription ? "yes" : "",
+    display_case: "",
+    link_to_file: getServiceUrl(),
+    display_summary: "",
+    summary_of_cases: ""
   };
+
+  // Add case information if present
+  if (params.caseInfo) {
+    templateParams.case = params.caseInfo;
+    templateParams.display_case = "yes";
+  }
+
+  return templateParams;
 }
 
 export function buildEnhancedTemplateParameters(params: {
@@ -84,7 +111,8 @@ export function buildEnhancedTemplateParameters(params: {
     userName: params.userName,
     hearingListName: params.hearingListName,
     publicationDate: params.publicationDate,
-    locationName: params.locationName
+    locationName: params.locationName,
+    hasLocationSubscription: true
   });
 
   return {

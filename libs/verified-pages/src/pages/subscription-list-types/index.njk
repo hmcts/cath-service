@@ -1,0 +1,86 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+{{ govukBackLink({
+  text: backLinkText,
+  href: backLinkHref
+}) }}
+{% endblock %}
+
+{% block page_content %}
+
+{% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <p class="govuk-body">{{ description }}</p>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      <table class="govuk-table" id="list-types">
+        <tbody class="govuk-table__body">
+          {% for group in groupedListTypes %}
+            {% for item in group.items %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell app-list-types-table__letter-cell">
+                {% if loop.first %}{{ group.letter }}{% endif %}
+              </td>
+              <td class="govuk-table__cell app-list-types-table__checkbox-cell">
+                <div class="govuk-checkboxes govuk-checkboxes--small app-list-types-checkbox">
+                  <div class="govuk-checkboxes__item">
+                    <input class="govuk-checkboxes__input" id="listTypes-{{ item.value }}" name="listTypes" type="checkbox" value="{{ item.value }}" {% if item.checked %}checked{% endif %}>
+                    <label class="govuk-label govuk-checkboxes__label" for="listTypes-{{ item.value }}">
+                      <span class="govuk-visually-hidden">{{ item.text }}</span>
+                    </label>
+                  </div>
+                </div>
+              </td>
+              <td class="govuk-table__cell app-list-types-table__label-cell">
+                <label class="govuk-label" for="listTypes-{{ item.value }}">{{ item.text }}</label>
+              </td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h2 class="govuk-heading-m">{{ totalSelected }}</h2>
+      <div class="app-selection-count-box">
+        <p class="govuk-body"><span id="selectionCount">0</span> {{ selected }}</p>
+      </div>
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+    <script nonce="{{ cspNonce }}">
+      (function() {
+        const checkboxes = document.querySelectorAll('input[name="listTypes"]');
+        const countElement = document.getElementById('selectionCount');
+
+        function updateCount() {
+          const checkedCount = document.querySelectorAll('input[name="listTypes"]:checked').length;
+          countElement.textContent = checkedCount;
+        }
+
+        checkboxes.forEach(function(checkbox) {
+          checkbox.addEventListener('change', updateCount);
+        });
+
+        // Initial count
+        updateCount();
+      })();
+    </script>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SubscriptionListType {
+  listTypeSubscriptionId String   @id @default(uuid()) @map("list_type_subscription_id") @db.Uuid
+  userId                 String   @map("user_id") @db.Uuid
+  listTypeId             Int      @map("list_type_id") @db.Integer
+  language               String[]
+  dateAdded              DateTime @default(now()) @map("date_added")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, listTypeId], name: "unique_user_list_type")
+  @@index([userId], name: "idx_subscription_list_type_user")
+  @@index([listTypeId], name: "idx_subscription_list_type_list_type")
+  @@map("subscription_list_type")
+}

@@ -29,6 +29,7 @@
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/subscription": "workspace:*",
     "notifications-node-client": "8.3.0"
   },
   "peerDependencies": {

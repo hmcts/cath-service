@@ -24,19 +24,17 @@
     <table class="govuk-table">
       <thead class="govuk-table__head">
         <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderPartyName }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderDateAdded }}</th>
+          <th scope="col" class="govuk-table__header" style="width: 40%;">{{ tableHeaderCaseName }}</th>
+          <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderReferenceNumber }}</th>
+          <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDateAdded }}</th>
         </tr>
       </thead>
       <tbody class="govuk-table__body">
         {% for subscription in caseSubscriptions %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell">{{ subscription.caseName }}</td>
-            <td class="govuk-table__cell">{{ subscription.partyName }}</td>
-            <td class="govuk-table__cell">{{ subscription.referenceNumber }}</td>
-            <td class="govuk-table__cell">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+            <td class="govuk-table__cell">{{ subscription.caseName or notAvailable }}</td>
+            <td class="govuk-table__cell">{{ subscription.referenceNumber or notAvailable }}</td>
+            <td class="govuk-table__cell" style="white-space: nowrap;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -50,15 +48,15 @@
     <table class="govuk-table">
       <thead class="govuk-table__head">
         <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">{{ tableHeaderCourtName }}</th>
-          <th scope="col" class="govuk-table__header">{{ tableHeaderDateAdded }}</th>
+          <th scope="col" class="govuk-table__header" style="width: 70%;">{{ tableHeaderCourtName }}</th>
+          <th scope="col" class="govuk-table__header" style="width: 30%;">{{ tableHeaderDateAdded }}</th>
         </tr>
       </thead>
       <tbody class="govuk-table__body">
         {% for subscription in courtSubscriptions %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">{{ subscription.courtOrTribunalName }}</td>
-            <td class="govuk-table__cell">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+            <td class="govuk-table__cell" style="white-space: nowrap;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
           </tr>
         {% endfor %}
       </tbody>

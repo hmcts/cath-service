@@ -800,6 +800,8 @@ test.describe("Manual Upload End-to-End Flow", () => {
     });
 
     test("should send notifications to subscribers after manual upload confirmation", async ({ page }) => {
+      test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
+
       // Create multiple subscribers to test notification delivery
       const user1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
       const user2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
@@ -846,10 +848,11 @@ test.describe("Manual Upload End-to-End Flow", () => {
       // Poll for notifications with retry logic
       let notifications1 = [];
       let notifications2 = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 20; i++) {
         notifications1 = await getNotificationsBySubscriptionId(sub1.subscriptionId);
         notifications2 = await getNotificationsBySubscriptionId(sub2.subscriptionId);
-        if (notifications1.length > 0 && notifications2.length > 0) break;
+        if (notifications1.length > 0 && notifications2.length > 0 &&
+            notifications1[0].status === "Sent" && notifications2[0].status === "Sent") break;
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
 

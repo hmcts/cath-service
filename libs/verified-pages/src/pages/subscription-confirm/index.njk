@@ -1,0 +1,69 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+{{ govukBackLink({
+  text: backLinkText,
+  href: "/subscription-list-language"
+}) }}
+{% endblock %}
+
+{% block page_content %}
+
+{% if errors %}
+  {{ govukErrorSummary({
+    titleText: errorSummaryTitle,
+    errorList: errors
+  }) }}
+{% endif %}
+
+<h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+{% if hasLocations %}
+  {{ govukTable({
+    head: [
+      { text: locationsHeading },
+      { text: actionsHeading, classes: "govuk-table__header--numeric" }
+    ],
+    rows: locationRows,
+    classes: "app-subscription-confirm-table"
+  }) }}
+{% endif %}
+
+{{ govukTable({
+  head: [
+    { text: listTypesHeading },
+    { text: actionsHeading, classes: "govuk-table__header--numeric" }
+  ],
+  rows: listTypeRows,
+  classes: "app-subscription-confirm-table"
+}) }}
+
+{% if hasNoListTypes %}
+  <p class="govuk-body">
+    <a href="/subscription-list-types" class="govuk-link">{{ selectListTypesLink }}</a>
+  </p>
+{% endif %}
+
+{{ govukTable({
+  head: [
+    { text: languageHeading },
+    { text: actionsHeading, classes: "govuk-table__header--numeric" }
+  ],
+  rows: languageRows,
+  classes: "app-subscription-confirm-table"
+}) }}
+
+<form method="post">
+  <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+  {{ govukButton({
+    text: continueButton,
+    disabled: hasNoListTypes
+  }) }}
+</form>
+
+{% endblock %}

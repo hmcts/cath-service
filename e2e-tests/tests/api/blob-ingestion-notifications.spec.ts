@@ -66,7 +66,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
   });
 
   test("should verify GOV.UK Notify email content", async ({ request }) => {
-    test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
+    test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
 
     const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser.userId);

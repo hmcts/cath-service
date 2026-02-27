@@ -119,6 +119,14 @@ async function deleteTestData(testData: TestData): Promise<void> {
 
 test.describe("Bulk Unsubscribe", () => {
   test.beforeEach(async ({ page }, testInfo) => {
+    // Validate required environment variables
+    if (!process.env.CFT_VALID_TEST_ACCOUNT || !process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD) {
+      throw new Error(
+        'Missing required environment variables: CFT_VALID_TEST_ACCOUNT and CFT_VALID_TEST_ACCOUNT_PASSWORD. ' +
+        'Please run E2E tests using: node e2e-tests/run-with-credentials.js test bulk-unsubscribe.spec.ts'
+      );
+    }
+
     const testData = await createTestData();
     testDataMap.set(testInfo.testId, testData);
 
@@ -130,8 +138,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     await loginWithCftIdam(
       page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
+      process.env.CFT_VALID_TEST_ACCOUNT,
+      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD
     );
 
     await expect(page).toHaveURL(/\/account-home/);
@@ -155,35 +163,37 @@ test.describe("Bulk Unsubscribe", () => {
     await emailSubsTile.click();
     await expect(page).toHaveURL("/subscription-management");
 
+    // Helper to create a location subscription through the full flow
+    async function createLocationSubscription(locationId: number) {
+      await page.getByRole("button", { name: /add email subscription/i }).click();
+      await page.waitForLoadState("networkidle");
+      await page.getByRole("radio", { name: /court or tribunal/i }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForLoadState("networkidle");
+      await page.locator(`#location-${locationId}`).check();
+      await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
+      // Locations review page
+      await page.getByRole("button", { name: /continue/i }).click();
+      // List types page - select first available list type
+      await page.locator('input[name="listTypes"]').first().check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Language page
+      await page.getByRole("radio", { name: "English", exact: true }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+      // Confirm page
+      await page.getByRole("button", { name: /confirm subscriptions/i }).click();
+      await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
+      await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    }
+
     // Add first subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location1Checkbox = page.locator(`#location-${testData.locationId1}`);
-    await location1Checkbox.check();
-    await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createLocationSubscription(testData.locationId1);
 
     // Add second subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location2Checkbox = page.locator(`#location-${testData.locationId2}`);
-    await location2Checkbox.check();
-    await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createLocationSubscription(testData.locationId2);
 
     // Add third subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location3Checkbox = page.locator(`#location-${testData.locationId3}`);
-    await location3Checkbox.check();
-    await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createLocationSubscription(testData.locationId3);
 
     // STEP 2: Navigate to bulk unsubscribe from subscription management
     await expect(page).toHaveURL("/subscription-management");
@@ -201,38 +211,30 @@ test.describe("Bulk Unsubscribe", () => {
       .analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // STEP 4: Test "All subscriptions" tab displays both tables
-    const allTab = page.getByRole("tab", { name: /all subscriptions/i });
-    const caseTab = page.getByRole("tab", { name: /subscriptions by case/i });
-    const courtTab = page.getByRole("tab", { name: /subscriptions by court or tribunal/i });
+    // STEP 4: Test "All subscriptions" view displays both tables
+    const allLink = page.getByRole("link", { name: /all subscriptions/i });
+    const caseLink = page.getByRole("link", { name: /subscriptions by case/i });
+    const courtLink = page.getByRole("link", { name: /subscriptions by court or tribunal/i });
 
-    await expect(allTab).toBeVisible();
-    await expect(caseTab).toBeVisible();
-    await expect(courtTab).toBeVisible();
+    await expect(allLink).toBeVisible();
+    await expect(caseLink).toBeVisible();
+    await expect(courtLink).toBeVisible();
 
-    // All subscriptions tab should be active by default
-    await expect(allTab).toHaveAttribute("aria-selected", "true");
+    // Verify both tables are displayed (all subscriptions view shows both)
+    await expect(page.getByRole('cell', { name: testData.locationName1 }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: testData.locationName2 }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: testData.locationName3 }).first()).toBeVisible();
 
-    // Verify subscriptions are displayed in the active tab panel
-    const activeTabPanel = page.locator('[role="tabpanel"]:visible');
-    await expect(activeTabPanel.getByRole('cell', { name: testData.locationName1 }).first()).toBeVisible();
-    await expect(activeTabPanel.getByRole('cell', { name: testData.locationName2 }).first()).toBeVisible();
-    await expect(activeTabPanel.getByRole('cell', { name: testData.locationName3 }).first()).toBeVisible();
+    // STEP 5: Test "Subscriptions by court or tribunal" view
+    await courtLink.click();
+    await expect(page).toHaveURL(/view=location/);
+    await expect(page.getByRole('cell', { name: testData.locationName1 }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: testData.locationName2 }).first()).toBeVisible();
+    await expect(page.getByRole('cell', { name: testData.locationName3 }).first()).toBeVisible();
 
-    // STEP 5: Test keyboard navigation for tabs
-    await allTab.focus();
-    await page.keyboard.press("ArrowRight");
-    await expect(caseTab).toBeFocused();
-    await page.keyboard.press("ArrowRight");
-    await expect(courtTab).toBeFocused();
-
-    // STEP 6: Test "Subscriptions by court or tribunal" tab
-    await courtTab.click();
-    await expect(courtTab).toHaveAttribute("aria-selected", "true");
-    const courtTabPanel = page.locator('[role="tabpanel"]:visible');
-    await expect(courtTabPanel.getByRole('cell', { name: testData.locationName1 }).first()).toBeVisible();
-    await expect(courtTabPanel.getByRole('cell', { name: testData.locationName2 }).first()).toBeVisible();
-    await expect(courtTabPanel.getByRole('cell', { name: testData.locationName3 }).first()).toBeVisible();
+    // STEP 6: Navigate back to all subscriptions
+    await allLink.click();
+    await expect(page).toHaveURL(/view=all/);
 
     // STEP 7: Test Welsh translation
     await page.goto("/bulk-unsubscribe?lng=cy");
@@ -251,11 +253,11 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(errorSummary).toBeVisible();
     await expect(page.getByText(/at least one subscription must be selected/i)).toBeVisible();
 
-    // STEP 9: Test select-all functionality
-    const selectAllCheckbox = page.getByRole('checkbox', { name: /select all/i }).first();
-    await selectAllCheckbox.check();
+    // STEP 9: Test select-all functionality for court subscriptions
+    const selectAllCourtCheckbox = page.getByRole('checkbox', { name: /select all court subscriptions/i });
+    await selectAllCourtCheckbox.check();
 
-    // Verify all individual checkboxes are checked
+    // Verify all court subscription checkboxes are checked
     const checkbox1 = page.getByRole('checkbox', { name: new RegExp(`Select ${testData.locationName1}`) }).first();
     const checkbox2 = page.getByRole('checkbox', { name: new RegExp(`Select ${testData.locationName2}`) }).first();
     const checkbox3 = page.getByRole('checkbox', { name: new RegExp(`Select ${testData.locationName3}`) }).first();
@@ -265,7 +267,7 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(checkbox3).toBeChecked();
 
     // Uncheck select-all
-    await selectAllCheckbox.uncheck();
+    await selectAllCourtCheckbox.uncheck();
     await expect(checkbox1).not.toBeChecked();
     await expect(checkbox2).not.toBeChecked();
     await expect(checkbox3).not.toBeChecked();
@@ -274,11 +276,11 @@ test.describe("Bulk Unsubscribe", () => {
     await checkbox1.check();
     await checkbox2.check();
 
-    // STEP 11: Test tab switching
-    // Note: Checkbox selections are not currently synchronized across tabs
-    // Each tab maintains independent checkbox state
-    await courtTab.click();
-    await allTab.click();
+    // STEP 11: Test view switching
+    // Note: Checkbox selections are not currently synchronized across views
+    // Each view maintains independent checkbox state
+    await courtLink.click();
+    await allLink.click();
 
     // STEP 12: Navigate back to subscription management
     await page.goto("/subscription-management");

@@ -11,8 +11,11 @@ import { createApp } from "./app.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root (two levels up from src/)
-dotenv.config({ path: path.join(__dirname, "../../../.env") });
+// Load .env from project root (three levels up from src/)
+// Only load if GOVUK_NOTIFY_TEST_API_KEY is not already set (e.g., by Playwright)
+if (!process.env.GOVUK_NOTIFY_TEST_API_KEY) {
+  dotenv.config({ path: path.join(__dirname, "../../../.env") });
+}
 
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";

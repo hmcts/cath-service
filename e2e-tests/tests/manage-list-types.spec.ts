@@ -167,6 +167,23 @@ test.describe("Manage List Types End-to-End Flow", () => {
       expect(await errorMessages.count()).toBeGreaterThan(0);
     });
 
+    test("should show error when both fields are blank", async ({ page }) => {
+      await page.goto("/list-search-config/1");
+      await page.waitForLoadState("networkidle");
+
+      // Leave both fields blank
+      await page.fill('input[name="caseNumberFieldName"]', "");
+      await page.fill('input[name="caseNameFieldName"]', "");
+
+      await page.getByRole("button", { name: /confirm/i }).click();
+
+      // Should show validation error requiring at least one field
+      const errorSummary = page.locator(".govuk-error-summary");
+      await expect(errorSummary).toBeVisible();
+      await expect(errorSummary.locator(".govuk-error-summary__title")).toHaveText("There is a problem");
+      await expect(page.getByText("Enter at least one field name")).toBeVisible();
+    });
+
     test("should allow only one field to be populated", async ({ page }) => {
       await page.goto("/list-search-config/1");
       await page.waitForLoadState("networkidle");

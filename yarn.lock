@@ -1257,6 +1257,7 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/subscription": "workspace:*"
     notifications-node-client: "npm:8.3.0"
   peerDependencies:
     express: ^5.2.0
@@ -1347,9 +1348,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
+"@hmcts/subscription-list-types@workspace:libs/subscription-list-types":
   version: 0.0.0-use.local
-  resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
+  resolution: "@hmcts/subscription-list-types@workspace:libs/subscription-list-types"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/subscription@workspace:*, @hmcts/subscription@workspace:libs/subscription":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/subscription@workspace:libs/subscription"
   dependencies:
     "@hmcts/auth": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -1378,7 +1387,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   dependencies:
-    "@hmcts/subscriptions": "workspace:*"
+    "@hmcts/subscription": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown

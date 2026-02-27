@@ -96,9 +96,9 @@ export async function getNotificationsBySubscriptionId(subscriptionId: string) {
 }
 
 export async function getGovNotifyEmail(notificationId: string, maxRetries = 5, delayMs = 2000) {
-  const apiKey = process.env.GOVUK_NOTIFY_API_KEY;
+  const apiKey = process.env.GOVUK_NOTIFY_TEST_API_KEY;
   if (!apiKey) {
-    throw new Error("GOVUK_NOTIFY_API_KEY not set");
+    throw new Error("GOVUK_NOTIFY_TEST_API_KEY not set");
   }
 
   const notifyClient = new NotifyClient(apiKey);
