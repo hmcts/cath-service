@@ -1,5 +1,5 @@
+import type { PrismaClient } from "@hmcts/postgres";
 import { prisma } from "@hmcts/postgres";
-import type { PrismaClient } from "@prisma/client";
 
 export interface JurisdictionOption {
   jurisdictionId: number;

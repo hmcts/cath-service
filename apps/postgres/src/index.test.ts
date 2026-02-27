@@ -1,7 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock PrismaClient before importing
-vi.mock("@prisma/client", () => {
+// Mock dependencies before importing
+vi.mock("@prisma/adapter-pg", () => ({
+  PrismaPg: vi.fn()
+}));
+
+vi.mock("pg", () => ({
+  default: {
+    Pool: vi.fn()
+  }
+}));
+
+vi.mock("../generated/prisma/client.js", () => {
   const mockPrismaClient = vi.fn(() => ({
     $connect: vi.fn(),
     $disconnect: vi.fn()
@@ -13,7 +23,7 @@ vi.mock("@prisma/client", () => {
 });
 
 /**
- * These tests verify Prisma client exports and require @prisma/client to be generated.
+ * These tests verify Prisma client exports and require the generated client.
  * They are integration tests, not unit tests, so they are skipped in the standard test run.
  * Run them manually with: yarn generate && yarn test
  */

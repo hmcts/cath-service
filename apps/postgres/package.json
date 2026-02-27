@@ -16,7 +16,7 @@
     "migrate": "yarn collate && prisma migrate deploy",
     "migrate:dev": "yarn collate && prisma migrate dev",
     "migrate:reset": "yarn collate && prisma migrate reset",
-    "seed": "node ../../node_modules/.bin/tsx prisma/seed.ts",
+    "seed": "psql $DATABASE_URL -f prisma/seed.sql",
     "studio": "yarn collate && prisma studio",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -25,14 +25,17 @@
     "lint:fix": "biome check --write ."
   },
   "prisma": {
-    "seed": "node ../../node_modules/.bin/tsx prisma/seed.ts"
+    "seed": "psql $DATABASE_URL -f prisma/seed.sql"
   },
   "dependencies": {
-    "@prisma/client": "6.19.2"
+    "@prisma/adapter-pg": "7.2.0",
+    "@prisma/client": "7.2.0",
+    "pg": "8.19.0"
   },
   "devDependencies": {
+    "@types/pg": "8.11.11",
     "dotenv": "^17.2.3",
     "glob": "13.0.6",
-    "prisma": "6.19.2"
+    "prisma": "7.2.0"
   }
 }

@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!**/*.js", "scripts/**/*.js", "!**/coverage/**", "!**/dist/**", "!**/build/**", "!**/node_modules/**", "!**/.turbo/**", "!**/storage/**"]
+    "includes": ["**", "!**/*.js", "scripts/**/*.js", "!**/coverage/**", "!**/dist/**", "!**/build/**", "!**/node_modules/**", "!**/.turbo/**", "!**/storage/**", "!**/generated/**"]
   },
   "formatter": {
     "enabled": true,

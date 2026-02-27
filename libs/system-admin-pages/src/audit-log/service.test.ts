@@ -1,4 +1,4 @@
-import type { AuditLog } from "@prisma/client";
+import type { AuditLog } from "@hmcts/postgres";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuditLogFilters } from "./repository.js";
 import { getAuditLogById, getAuditLogs, getAvailableActions, parseDate, validateEmail, validateUserId } from "./service.js";
