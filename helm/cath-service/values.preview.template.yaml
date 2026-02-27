@@ -21,6 +21,11 @@ cath-web:
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.preview.platform.hmcts.net"
     environment:
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
+    keyVaults:
+      pip-ss-kv:
+        secrets:
+          - name: db-url
+            alias: DATABASE_URL
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
@@ -40,6 +45,11 @@ cath-api:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.preview.platform.hmcts.net"
+    keyVaults:
+      pip-ss-kv:
+        secrets:
+          - name: db-url
+            alias: DATABASE_URL
 
 # Crons application configuration
 cath-crons:
@@ -48,12 +58,22 @@ cath-crons:
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
+    keyVaults:
+      pip-ss-kv:
+        secrets:
+          - name: db-url
+            alias: DATABASE_URL
 
 # Postgres Prisma Studio service configuration
 cath-postgres:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.preview.platform.hmcts.net"
+    keyVaults:
+      pip-ss-kv:
+        secrets:
+          - name: db-url
+            alias: DATABASE_URL
     secrets:
       POSTGRES_HOST:
         secretRef: postgres

@@ -17,3 +17,5 @@ nodejs:
           alias: POSTGRES_PASSWORD
         - name: postgres-port
           alias: POSTGRES_PORT
+        - name: postgres-url
+          alias: DATABASE_URL
