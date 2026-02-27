@@ -167,6 +167,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "CRIME_IDAM",
+        type: "LIST",
       },
       {
         locationId: sjpLocationId,
@@ -178,6 +179,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "CRIME_IDAM",
+        type: "LIST",
       },
       {
         locationId: sjpLocationId,
@@ -189,6 +191,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "CFT_IDAM",
+        type: "LIST",
       },
       {
         artefactId: "00000000-0000-0000-0000-000000000001", // Known ID for E2E testing
@@ -201,6 +204,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayTo: oneWeekFromNow,
         isFlatFile: false,
         provenance: "CFT_IDAM",
+        type: "LIST",
       },
     ];
 

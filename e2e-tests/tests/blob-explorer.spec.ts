@@ -33,6 +33,7 @@ async function createTestPublication(): Promise<TestPublicationData> {
       sensitivity: "PUBLIC",
       contentDate: new Date("2024-06-01"),
       isFlatFile: false,
+      type: "LIST",
     },
   });
 
