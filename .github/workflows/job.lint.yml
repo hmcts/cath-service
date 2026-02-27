@@ -41,7 +41,7 @@ jobs:
         run: yarn db:generate
 
       - name: Validate Prisma schema
-        run: yarn workspace @hmcts/postgres-prisma exec prisma validate
+        run: yarn workspace @hmcts/postgres exec prisma validate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
