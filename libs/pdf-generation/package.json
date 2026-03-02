@@ -21,7 +21,7 @@
     "puppeteer": "24.37.5"
   },
   "devDependencies": {
-    "@types/node": "22.19.11",
+    "@types/node": "22.19.13",
     "typescript": "5.7.3"
   }
 }
