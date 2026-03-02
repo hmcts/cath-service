@@ -23,7 +23,8 @@ async function main() {
       displayTo: new Date("2026-01-01"),
       lastReceivedDate: new Date("2025-01-15T10:00:00Z"),
       provenance: "MANUAL_UPLOAD",
-      isFlatFile: false
+      isFlatFile: false,
+      type: "LIST"
     },
     {
       artefactId: "22222222-2222-2222-2222-222222222222",
@@ -36,7 +37,8 @@ async function main() {
       displayTo: new Date("2026-01-01"),
       lastReceivedDate: new Date("2025-01-16T10:00:00Z"),
       provenance: "MANUAL_UPLOAD",
-      isFlatFile: true
+      isFlatFile: true,
+      type: "LIST"
     },
     {
       artefactId: "33333333-3333-3333-3333-333333333333",
@@ -49,7 +51,8 @@ async function main() {
       displayTo: new Date("2026-01-01"),
       lastReceivedDate: new Date("2025-01-17T10:00:00Z"),
       provenance: "MANUAL_UPLOAD",
-      isFlatFile: true
+      isFlatFile: true,
+      type: "LIST"
     }
   ];
 
