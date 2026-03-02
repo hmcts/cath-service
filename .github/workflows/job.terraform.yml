@@ -60,6 +60,9 @@ jobs:
       subscription: ${{ inputs.subscription }}
       aks-subscription: ${{ inputs.aks-subscription }}
       storage-account: ${{ inputs.storage-account }}
+      state-store-resource-group: jenkins-state
+      state-store-account-name: sdsstate${{ inputs.storage-account }}
+      state-store-container-name: tfstate-${{ inputs.environment }}
       working-directory: ${{ inputs.working-directory }}
       plan-only: ${{ inputs.plan-only }}
       helm-chart-path: helm/cath-service/Chart.yaml
