@@ -6,13 +6,19 @@ variable "env" {
 variable "product" {
   description = "Product name"
   type        = string
-  default     = "pip-ss-kv"
+  default     = "cath"
 }
 
 variable "component" {
-  description = "Component name for resource group naming"
+  description = "Component name"
   type        = string
   default     = "cath"
+}
+
+variable "key_vault_product" {
+  description = "Product name for the shared Key Vault (borrowed from PIP)"
+  type        = string
+  default     = "pip-ss-kv"
 }
 
 variable "subscription" {

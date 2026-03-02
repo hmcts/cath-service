@@ -65,7 +65,6 @@ jobs:
       state-store-container-name: tfstate-${{ inputs.environment }}
       working-directory: ${{ inputs.working-directory }}
       plan-only: ${{ inputs.plan-only }}
-      product: pip-ss-kv
       helm-chart-path: helm/cath-service/Chart.yaml
       business-area: Cross-Cutting
     secrets:
