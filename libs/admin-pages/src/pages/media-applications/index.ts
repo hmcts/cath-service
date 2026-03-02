@@ -15,15 +15,13 @@ const getHandler = async (req: Request, res: Response) => {
       tableHeaders: lang.tableHeaders,
       viewLink: lang.viewLink,
       noApplications: lang.noApplications,
-      applications,
-      hideLanguageToggle: true
+      applications
     });
   } catch (_error) {
     res.render("media-applications/index", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      applications: [],
-      hideLanguageToggle: true
+      applications: []
     });
   }
 };

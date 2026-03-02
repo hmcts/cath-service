@@ -90,8 +90,7 @@ describe("media-application approve page", () => {
         },
         continueButton: "Continue",
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
-        hideLanguageToggle: true
+        proofOfIdFilename: "IACListPublishPreviewed.pdf"
       });
     });
 
@@ -135,8 +134,7 @@ describe("media-application approve page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
-        hideLanguageToggle: true
+        proofOfIdFilename: "IACListPublishPreviewed.pdf"
       });
     });
 
@@ -161,8 +159,7 @@ describe("media-application approve page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
         pageTitle: "Are you sure you want to approve this application?",
         error: "Unable to load applicant details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
   });
@@ -208,8 +205,7 @@ describe("media-application approve page", () => {
         continueButton: "Continue",
         application: mockApplication,
         proofOfIdFilename: "IACListPublishPreviewed.pdf",
-        errors: [{ text: "An option must be selected", href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: "An option must be selected", href: "#confirm" }]
       });
     });
 
@@ -253,8 +249,7 @@ describe("media-application approve page", () => {
         },
         continueButton: "Parhau",
         application: mockApplication,
-        errors: [{ text: "Rhaid dewis opsiwn", href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: "Rhaid dewis opsiwn", href: "#confirm" }]
       });
     });
 
@@ -359,8 +354,7 @@ describe("media-application approve page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/approve", {
         pageTitle: "Are you sure you want to approve this application?",
         error: "Unable to load applicant details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
   });

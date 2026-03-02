@@ -43,7 +43,7 @@ describe("index template", () => {
       expect(en.signInLink).toBe("sign in");
     });
 
-    it("should have Welsh available text", () => {
+    it("should have Welsh availability text", () => {
       expect(en.welshAvailableText).toBe("This service is also available in");
       expect(en.welshAvailableLink).toBe("Welsh (Cymraeg)");
     });
@@ -76,7 +76,7 @@ describe("index template", () => {
       expect(cy.signInLink).toBe("mewngofnodi");
     });
 
-    it("should have Welsh available text", () => {
+    it("should have English availability text", () => {
       expect(cy.welshAvailableText).toBe("Mae'r gwasanaeth hwn hefyd ar gael yn");
       expect(cy.welshAvailableLink).toBe("Saesneg (English)");
     });

@@ -43,7 +43,8 @@ describe("Welsh Locale", () => {
 
   it("should have language switcher pointing to English", () => {
     expect(cy.language).toBeDefined();
-    expect(cy.language.switchPhaseBanner).toBe("English");
+    expect(cy.language.switch).toBe("English");
+    expect(cy.language.switchAriaLabel).toBe("Newid iaith i Saesneg");
   });
 
   it("should have feedback section with Welsh text", () => {

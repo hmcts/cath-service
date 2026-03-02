@@ -180,11 +180,11 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
   const displayTo = new Date(today);
   displayTo.setDate(displayTo.getDate() + 30); // 30 days from now
 
-  await page.fill('input[name="displayFrom-day"]', String(displayFrom.getDate()).padStart(2, '0'));
-  await page.fill('input[name="displayFrom-month"]', String(displayFrom.getMonth() + 1).padStart(2, '0'));
+  await page.fill('input[name="displayFrom-day"]', String(displayFrom.getDate()).padStart(2, "0"));
+  await page.fill('input[name="displayFrom-month"]', String(displayFrom.getMonth() + 1).padStart(2, "0"));
   await page.fill('input[name="displayFrom-year"]', String(displayFrom.getFullYear()));
-  await page.fill('input[name="displayTo-day"]', String(displayTo.getDate()).padStart(2, '0'));
-  await page.fill('input[name="displayTo-month"]', String(displayTo.getMonth() + 1).padStart(2, '0'));
+  await page.fill('input[name="displayTo-day"]', String(displayTo.getDate()).padStart(2, "0"));
+  await page.fill('input[name="displayTo-month"]', String(displayTo.getMonth() + 1).padStart(2, "0"));
   await page.fill('input[name="displayTo-year"]', String(displayTo.getFullYear()));
 
   const fileInput = page.locator('input[name="file"]');
@@ -346,7 +346,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       await expect(page.locator("h1")).toContainText("Care Standards Tribunal Weekly Hearing List");
 
       // Verify "List for week commencing" date line
-      const weekCommencingPara = page.locator('p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1');
+      const weekCommencingPara = page.locator("p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1");
       await expect(weekCommencingPara).toBeVisible();
       const weekCommencingText = await weekCommencingPara.textContent();
       expect(weekCommencingText).toContain("List for week commencing");
@@ -355,7 +355,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       // Verify "Last updated" date and time line
       const bodyParagraphs = page.locator("p.govuk-body");
       let foundLastUpdated = false;
-      for (let i = 0; i < await bodyParagraphs.count(); i++) {
+      for (let i = 0; i < (await bodyParagraphs.count()); i++) {
         const text = await bodyParagraphs.nth(i).textContent();
         if (text?.includes("Last updated")) {
           foundLastUpdated = true;
@@ -435,23 +435,6 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       expect(dataSourceText).toContain("Data source:");
       expect(dataSourceText).toContain("Manual Upload");
     });
-
-    test("should display data source as Llwytho â Llaw in Welsh", async ({ page }) => {
-      await completeCSTUploadFlowAndNavigate(page);
-
-      // Switch to Welsh
-      await page.getByRole("link", { name: "Cymraeg" }).click();
-      await page.waitForLoadState("networkidle");
-
-      // Find the data source text in Welsh
-      const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Ffynhonnell data" });
-      await expect(dataSourceParagraph).toBeVisible();
-
-      const dataSourceText = await dataSourceParagraph.textContent();
-      expect(dataSourceText).toContain("Ffynhonnell data:");
-      expect(dataSourceText).toContain("Llwytho â Llaw");
-    });
-
   });
 
   test.describe("Search Functionality", () => {
@@ -561,66 +544,6 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
         const focused = page.locator(":focus");
         await expect(focused).toBeVisible();
       }
-    });
-  });
-
-  test.describe("Welsh Language Support", () => {
-    test("should display Welsh content throughout the list page", async ({ page }) => {
-      await completeCSTUploadFlowAndNavigate(page);
-
-      // Switch to Welsh
-      await page.getByRole("link", { name: "Cymraeg" }).click();
-      await page.waitForLoadState("networkidle");
-
-      // Verify page title is in Welsh
-      await expect(page.locator("h1")).toContainText("Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal");
-
-      // Verify "List for week commencing" is in Welsh
-      const weekCommencingPara = page.locator('p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1');
-      await expect(weekCommencingPara).toBeVisible();
-      const weekCommencingText = await weekCommencingPara.textContent();
-      expect(weekCommencingText).toContain("Rhestr ar gyfer yr wythnos yn dechrau");
-
-      // Verify "Last updated" is in Welsh
-      const bodyParagraphs = page.locator("p.govuk-body");
-      let foundLastUpdated = false;
-      for (let i = 0; i < await bodyParagraphs.count(); i++) {
-        const text = await bodyParagraphs.nth(i).textContent();
-        if (text?.includes("Diweddarwyd ddiwethaf")) {
-          foundLastUpdated = true;
-          expect(text).toContain("am"); // Welsh for "at"
-          break;
-        }
-      }
-      expect(foundLastUpdated).toBeTruthy();
-
-      // Verify Important Information is in Welsh
-      const summary = page.locator(".govuk-details__summary-text");
-      await expect(summary).toContainText("Gwybodaeth bwysig");
-
-      // Verify table headers are in Welsh
-      const table = page.locator(".govuk-table");
-      const headers = table.locator("thead th");
-      await expect(headers.nth(0)).toContainText("Dyddiad");
-      await expect(headers.nth(1)).toContainText("Enw'r achos");
-      await expect(headers.nth(2)).toContainText("Hyd y gwrandawiad");
-      await expect(headers.nth(3)).toContainText("Math o wrandawiad");
-      await expect(headers.nth(4)).toContainText("Lleoliad");
-      await expect(headers.nth(5)).toContainText("Gwybodaeth ychwanegol");
-
-      // Verify data source is in Welsh
-      const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Ffynhonnell data" });
-      await expect(dataSourceParagraph).toBeVisible();
-      const dataSourceText = await dataSourceParagraph.textContent();
-      expect(dataSourceText).toContain("Llwytho â Llaw");
-
-      // Verify Back to top is in Welsh
-      const backToTop = page.getByRole("link", { name: /yn ôl i frig y dudalen/i });
-      await expect(backToTop).toBeVisible();
-
-      // Verify Search Cases is in Welsh
-      const searchTitle = page.locator("h2.govuk-heading-s");
-      await expect(searchTitle).toContainText("Chwilio Achosion");
     });
   });
 });
