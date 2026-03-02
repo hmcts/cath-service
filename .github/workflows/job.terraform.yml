@@ -60,8 +60,8 @@ jobs:
       subscription: ${{ inputs.subscription }}
       aks-subscription: ${{ inputs.aks-subscription }}
       storage-account: ${{ inputs.storage-account }}
-      state-store-resource-group: jenkins-state
-      state-store-account-name: sdsstate${{ inputs.storage-account }}
+      state-store-resource-group: jenkins-state-${{ inputs.environment }}
+      state-store-account-name: sdsstate${{ inputs.environment }}
       state-store-container-name: tfstate-${{ inputs.environment }}
       working-directory: ${{ inputs.working-directory }}
       plan-only: ${{ inputs.plan-only }}
