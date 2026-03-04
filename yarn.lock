@@ -1429,6 +1429,9 @@ __metadata:
   resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
   dependencies:
     "@hmcts/auth": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.18.2"

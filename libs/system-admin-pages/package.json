@@ -29,6 +29,9 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "papaparse": "5.5.3"
   },
