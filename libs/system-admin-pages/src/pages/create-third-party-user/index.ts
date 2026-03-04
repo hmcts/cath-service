@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
 import { validateThirdPartyUserName } from "../../third-party-user/validation.js";
@@ -42,7 +43,7 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const session = req.session as CreateThirdPartyUserSession;
-  const idempotencyToken = Math.random().toString(36).substring(7);
+  const idempotencyToken = crypto.randomUUID();
 
   session.createThirdPartyUser = {
     name: name!.trim(),
