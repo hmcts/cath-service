@@ -65,6 +65,8 @@ const postHandler = async (req: Request, res: Response) => {
     allowedProvenance = [req.body.allowedProvenance];
   }
 
+  const isNonStrategic = req.body.isNonStrategic === "true" ? true : req.body.isNonStrategic === "false" ? false : null;
+
   const formData = {
     name: req.body.name || "",
     friendlyName: req.body.friendlyName || "",
@@ -73,7 +75,7 @@ const postHandler = async (req: Request, res: Response) => {
     url: req.body.url || "",
     defaultSensitivity: req.body.defaultSensitivity || "",
     allowedProvenance,
-    isNonStrategic: req.body.isNonStrategic === "true"
+    isNonStrategic
   };
 
   const errors = validateListTypeDetails(formData);

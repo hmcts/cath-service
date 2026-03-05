@@ -8,7 +8,7 @@ export interface ListTypeFormData {
   url: string;
   defaultSensitivity: string;
   allowedProvenance: string[];
-  isNonStrategic: boolean;
+  isNonStrategic: boolean | null;
   subJurisdictionIds: number[];
   editId?: number;
 }

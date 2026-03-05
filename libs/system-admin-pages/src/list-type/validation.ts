@@ -85,6 +85,18 @@ function validateProvenance(provenanceList: string[]): ValidationError | null {
   return null;
 }
 
+function validateIsNonStrategic(isNonStrategic: boolean | undefined | null): ValidationError | null {
+  if (isNonStrategic === undefined || isNonStrategic === null) {
+    return {
+      field: "isNonStrategic",
+      message: "Select whether this list type is non-strategic",
+      href: "#isNonStrategic"
+    };
+  }
+
+  return null;
+}
+
 export function validateListTypeDetails(data: ListTypeDetailsInput) {
   const errors: ValidationError[] = [];
 
@@ -109,13 +121,8 @@ export function validateListTypeDetails(data: ListTypeDetailsInput) {
   const provenanceError = validateProvenance(data.allowedProvenance);
   if (provenanceError) errors.push(provenanceError);
 
-  if (data.isNonStrategic === undefined || data.isNonStrategic === null) {
-    errors.push({
-      field: "isNonStrategic",
-      message: "Select whether this list type is non-strategic",
-      href: "#isNonStrategic"
-    });
-  }
+  const isNonStrategicError = validateIsNonStrategic(data.isNonStrategic);
+  if (isNonStrategicError) errors.push(isNonStrategicError);
 
   return errors;
 }

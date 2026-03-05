@@ -151,7 +151,7 @@ describe("validateListTypeDetails", () => {
     expect(errors[0].message).toBe("Select valid provenance options");
   });
 
-  it("should return error when isNonStrategic is not set", () => {
+  it("should return error when isNonStrategic is undefined", () => {
     const input: ListTypeDetailsInput = {
       name: "TEST_LIST",
       friendlyName: "Test List",
@@ -161,6 +161,25 @@ describe("validateListTypeDetails", () => {
       defaultSensitivity: "Public",
       allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: undefined
+    };
+
+    const errors = validateListTypeDetails(input);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0].field).toBe("isNonStrategic");
+    expect(errors[0].message).toBe("Select whether this list type is non-strategic");
+  });
+
+  it("should return error when isNonStrategic is null", () => {
+    const input: ListTypeDetailsInput = {
+      name: "TEST_LIST",
+      friendlyName: "Test List",
+      welshFriendlyName: "Rhestr Prawf",
+      shortenedFriendlyName: "Test",
+      url: "/test-list",
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM"],
+      isNonStrategic: null
     };
 
     const errors = validateListTypeDetails(input);
