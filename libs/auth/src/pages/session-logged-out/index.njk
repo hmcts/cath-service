@@ -1,6 +1,10 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/panel/macro.njk" import govukPanel %}
 
+{% block backLink %}
+  {# No back link on logged out page #}
+{% endblock %}
+
 {% block page_content %}
 <div class="govuk-grid-row">
   <div>
