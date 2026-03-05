@@ -10,6 +10,12 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
+    },
+    "./src/assets/js/session-timeout.js": {
+      "default": "./src/assets/js/session-timeout.ts"
+    },
+    "./src/assets/css/session-timeout.scss": {
+      "default": "./src/assets/css/session-timeout.scss"
     }
   },
   "types": "./dist/index.d.ts",
