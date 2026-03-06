@@ -42,7 +42,6 @@ import {
   notFoundHandler
 } from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
-import compression from "compression";
 import config from "config";
 import cookieParser from "cookie-parser";
 import type { Express } from "express";
@@ -58,7 +57,6 @@ export async function createApp(): Promise<Express> {
 
   const app = express();
 
-  app.use(compression());
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(healthcheck());
@@ -67,6 +65,14 @@ export async function createApp(): Promise<Express> {
   app.use(
     configureHelmet({
       cftIdamUrl: process.env.CFT_IDAM_URL
+    })
+  );
+  app.use(
+    "/assets",
+    express.static(path.join(__dirname, "../dist/assets"), {
+      setHeaders: (res) => {
+        res.removeHeader("Content-Length");
+      }
     })
   );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
