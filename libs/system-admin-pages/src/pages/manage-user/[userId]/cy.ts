@@ -7,10 +7,10 @@ export const cy = {
   provenanceLabel: "Tarddiad",
   provenanceIdLabel: "ID Tarddiad",
   creationDateLabel: "Dyddiad Creu",
-  lastSignInLabel: "Dilyswyd diwethaf",
+  lastSignInLabel: "Mewngofnodi diwethaf",
   deleteUserButton: "Dileu defnyddiwr",
   backLink: "Yn ôl i'r rhestr defnyddwyr",
-  neverSignedIn: "Heb ei ddilysu erioed",
+  neverSignedIn: "Heb fewngofnodi erioed",
   formatDate: (date: Date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");

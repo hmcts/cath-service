@@ -7,10 +7,10 @@ export const en = {
   provenanceLabel: "Provenance",
   provenanceIdLabel: "Provenance ID",
   creationDateLabel: "Creation Date",
-  lastSignInLabel: "Last verified",
+  lastSignInLabel: "Last sign in",
   deleteUserButton: "Delete user",
   backLink: "Back to user list",
-  neverSignedIn: "Never verified",
+  neverSignedIn: "Never signed in",
   formatDate: (date: Date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
