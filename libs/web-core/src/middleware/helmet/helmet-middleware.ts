@@ -6,6 +6,7 @@ export interface SecurityOptions {
   enableGoogleTagManager?: boolean;
   isDevelopment?: boolean;
   cftIdamUrl?: string;
+  crimeIdamUrl?: string;
 }
 
 export function configureNonce() {
@@ -16,7 +17,7 @@ export function configureNonce() {
 }
 
 export function configureHelmet(options: SecurityOptions = {}) {
-  const { enableGoogleTagManager = true, isDevelopment = process.env.NODE_ENV !== "production", cftIdamUrl } = options;
+  const { enableGoogleTagManager = true, isDevelopment = process.env.NODE_ENV !== "production", cftIdamUrl, crimeIdamUrl } = options;
 
   const scriptSources = [
     "'self'",
@@ -35,7 +36,7 @@ export function configureHelmet(options: SecurityOptions = {}) {
 
   const frameSources = ["'self'", ...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
 
-  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : [])];
+  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : []), ...(crimeIdamUrl ? [crimeIdamUrl] : [])];
 
   return helmet({
     contentSecurityPolicy: {

@@ -3,6 +3,7 @@ export const cy = {
   errorSummaryTitle: "Mae yna broblem",
   errorMessage: "Rhaid dewis opsiwn",
   hmctsLabel: "Gyda chyfrif MyHMCTS",
+  crimeLabel: "Gyda chyfrif Crime IDAM",
   commonPlatformLabel: "Gyda chyfrif Common Platform",
   cathLabel: "Gyda chyfrif gwrandawiadau Llys a thribiwnlys",
   continueButton: "Parhau",

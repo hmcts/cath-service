@@ -34,6 +34,11 @@
             checked: data.accountType == "hmcts" if data else false
           },
           {
+            value: "crime",
+            text: crimeLabel,
+            checked: data.accountType == "crime" if data else false
+          },
+          {
             value: "common-platform",
             text: commonPlatformLabel,
             checked: data.accountType == "common-platform" if data else false

@@ -52,6 +52,7 @@ describe("select-account page", () => {
         expect.objectContaining({
           en: expect.objectContaining({
             hmctsLabel: "With a MyHMCTS account",
+            crimeLabel: "With a Crime IDAM account",
             commonPlatformLabel: "With a Common Platform account",
             cathLabel: "With a Court and tribunal hearings account",
             continueButton: "Continue"
@@ -68,6 +69,7 @@ describe("select-account page", () => {
         expect.objectContaining({
           cy: expect.objectContaining({
             hmctsLabel: "Gyda chyfrif MyHMCTS",
+            crimeLabel: "Gyda chyfrif Crime IDAM",
             commonPlatformLabel: "Gyda chyfrif Common Platform",
             cathLabel: "Gyda chyfrif gwrandawiadau Llys a thribiwnlys",
             continueButton: "Parhau"
@@ -95,6 +97,25 @@ describe("select-account page", () => {
         await POST(req as Request, res as Response);
 
         expect(res.redirect).toHaveBeenCalledWith("/cft-login?lng=cy");
+        expect(res.redirect).toHaveBeenCalledTimes(1);
+      });
+
+      it("should redirect to Crime IDAM login for crime account", async () => {
+        req.body = { accountType: "crime" };
+
+        await POST(req as Request, res as Response);
+
+        expect(res.redirect).toHaveBeenCalledWith("/crime-login?lng=en");
+        expect(res.redirect).toHaveBeenCalledTimes(1);
+      });
+
+      it("should redirect to Crime IDAM login with Welsh locale", async () => {
+        req.body = { accountType: "crime" };
+        res.locals = { locale: "cy" };
+
+        await POST(req as Request, res as Response);
+
+        expect(res.redirect).toHaveBeenCalledWith("/crime-login?lng=cy");
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 

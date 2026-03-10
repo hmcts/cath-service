@@ -39,6 +39,8 @@ export const POST = async (req: Request, res: Response) => {
   switch (selectedAccount) {
     case "hmcts":
       return res.redirect(`/cft-login?lng=${locale}`);
+    case "crime":
+      return res.redirect(`/crime-login?lng=${locale}`);
     case "common-platform":
       return res.redirect("/");
     case "cath":
