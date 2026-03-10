@@ -34,12 +34,17 @@ export const cy = {
     {
       title: "Gwyliwr Log Archwilio",
       description: "Gweld logiau archwilio ar gamau gweinyddwr y system",
-      href: "/audit-log-viewer"
+      href: "/audit-log-list"
     },
     {
       title: "Rheoli Metadata Lleoliad",
       description: "Gweld, diweddaru a dileu metadata lleoliad",
       href: "/location-metadata-search"
+    },
+    {
+      title: "Rheoli Mathau Rhestr",
+      description: "Gweld, creu a diweddaru ffurfweddiad math rhestr",
+      href: "/manage-list-types"
     }
   ]
 };

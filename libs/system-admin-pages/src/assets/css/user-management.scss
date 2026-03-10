@@ -86,6 +86,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .user-management-filter-tag-remove {

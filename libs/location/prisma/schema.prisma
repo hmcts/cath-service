@@ -50,7 +50,6 @@ model Location {
 
   locationRegions          LocationRegion[]
   locationSubJurisdictions LocationSubJurisdiction[]
-  subscriptions            Subscription[]
   locationMetadata         LocationMetadata?
 
   @@map("location")

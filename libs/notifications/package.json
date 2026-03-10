@@ -29,7 +29,7 @@
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
-    "notifications-node-client": "8.2.1"
+    "notifications-node-client": "8.3.0"
   },
   "peerDependencies": {
     "express": "^5.2.0"

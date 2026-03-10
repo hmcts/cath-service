@@ -9,22 +9,36 @@ datasource db {
 }
 
 model Artefact {
-  artefactId        String          @id @default(uuid()) @map("artefact_id") @db.Uuid
-  locationId        String          @map("location_id")
-  listTypeId        Int             @map("list_type_id")
-  contentDate       DateTime        @map("content_date") @db.Date
+  artefactId        String            @id @default(uuid()) @map("artefact_id") @db.Uuid
+  locationId        String            @map("location_id")
+  listTypeId        Int               @map("list_type_id")
+  contentDate       DateTime          @map("content_date") @db.Date
   sensitivity       String
   language          String
-  displayFrom       DateTime        @map("display_from")
-  displayTo         DateTime        @map("display_to")
-  lastReceivedDate  DateTime        @default(now()) @map("last_received_date")
-  isFlatFile        Boolean         @map("is_flat_file")
+  displayFrom       DateTime          @map("display_from")
+  displayTo         DateTime          @map("display_to")
+  lastReceivedDate  DateTime          @default(now()) @map("last_received_date")
+  isFlatFile        Boolean           @map("is_flat_file")
   provenance        String
-  supersededCount   Int             @default(0) @map("superseded_count")
-  noMatch           Boolean         @default(false) @map("no_match")
+  supersededCount   Int               @default(0) @map("superseded_count")
+  noMatch           Boolean           @default(false) @map("no_match")
   ingestionLogs     IngestionLog[]
+  artefactSearches  ArtefactSearch[]
 
   @@map("artefact")
+}
+
+model ArtefactSearch {
+  id         String    @id @default(uuid())
+  artefactId String    @map("artefact_id") @db.Uuid
+  caseNumber String?   @map("case_number")
+  caseName   String?   @map("case_name")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  artefact Artefact @relation(fields: [artefactId], references: [artefactId], onDelete: Cascade)
+
+  @@index([artefactId])
+  @@map("artefact_search")
 }
 
 model User {

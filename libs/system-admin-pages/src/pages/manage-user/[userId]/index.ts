@@ -20,8 +20,11 @@ const getHandler = async (req: Request, res: Response) => {
       return res.status(404).render("errors/404");
     }
 
+    const PROVENANCE_DISPLAY: Record<string, string> = { B2C_IDAM: "B2C" };
+
     const formattedUser = {
       ...user,
+      userProvenance: PROVENANCE_DISPLAY[user.userProvenance] || user.userProvenance,
       createdDate: content.formatDate(user.createdDate),
       lastSignedInDate: user.lastSignedInDate ? content.formatDate(user.lastSignedInDate) : content.neverSignedIn
     };

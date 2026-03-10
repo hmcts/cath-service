@@ -3,7 +3,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const PROVENANCE_ID_REGEX = /^[a-zA-Z0-9\-_@.]+$/;
 
 const VALID_ROLES = ["VERIFIED", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL", "SYSTEM_ADMIN"];
-const VALID_PROVENANCES = ["CFT_IDAM", "SSO", "B2C", "CRIME_IDAM"];
+const VALID_PROVENANCES = ["CFT_IDAM", "SSO", "B2C_IDAM", "CRIME_IDAM"];
 
 export interface ValidationError {
   text: string;
