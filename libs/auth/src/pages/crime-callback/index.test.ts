@@ -18,6 +18,7 @@ describe("crime-callback", () => {
 
     mockSession = {
       lng: "en",
+      crimeOauthState: "test-state-token",
       regenerate: vi.fn((callback) => callback(null)),
       save: vi.fn((callback) => callback(null)),
       cookie: {},
@@ -50,13 +51,35 @@ describe("crime-callback", () => {
       expect(mockResponse.redirect).toHaveBeenCalledWith("/sign-in?error=no_code&lng=en");
     });
 
+    it("should redirect to sign-in with invalid_state when state does not match", async () => {
+      // Arrange
+      mockRequest.query = { code: "test-auth-code", state: "wrong-state" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/sign-in?error=invalid_state&lng=en");
+    });
+
+    it("should redirect to sign-in with invalid_state when state is absent", async () => {
+      // Arrange
+      mockRequest.query = { code: "test-auth-code" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.redirect).toHaveBeenCalledWith("/sign-in?error=invalid_state&lng=en");
+    });
+
     it("should redirect to crime-rejected when user has rejected role", async () => {
       // Arrange
       const { exchangeCodeForToken, extractUserInfoFromToken } = await import("../../crime-idam/token-client.js");
       const { getCrimeIdamConfig } = await import("../../config/crime-idam-config.js");
       const { isRejectedCrimeRole } = await import("../../role-service/index.js");
 
-      mockRequest.query = { code: "test-auth-code" };
+      mockRequest.query = { code: "test-auth-code", state: "test-state-token" };
 
       vi.mocked(getCrimeIdamConfig).mockReturnValue({
         crimeIdamUrl: "https://idam.crime.hmcts.net",
@@ -100,7 +123,7 @@ describe("crime-callback", () => {
       const { isRejectedCrimeRole } = await import("../../role-service/index.js");
       const { createOrUpdateUser } = await import("@hmcts/account/repository/query");
 
-      mockRequest.query = { code: "test-auth-code" };
+      mockRequest.query = { code: "test-auth-code", state: "test-state-token" };
       mockSession.lng = "cy";
 
       vi.mocked(getCrimeIdamConfig).mockReturnValue({
@@ -173,7 +196,7 @@ describe("crime-callback", () => {
       const { createOrUpdateUser } = await import("@hmcts/account/repository/query");
       const { trackException } = await import("@hmcts/cloud-native-platform");
 
-      mockRequest.query = { code: "test-auth-code" };
+      mockRequest.query = { code: "test-auth-code", state: "test-state-token" };
 
       vi.mocked(getCrimeIdamConfig).mockReturnValue({
         crimeIdamUrl: "https://idam.crime.hmcts.net",
@@ -222,7 +245,7 @@ describe("crime-callback", () => {
       const { isRejectedCrimeRole } = await import("../../role-service/index.js");
       const { createOrUpdateUser } = await import("@hmcts/account/repository/query");
 
-      mockRequest.query = { code: "test-auth-code" };
+      mockRequest.query = { code: "test-auth-code", state: "test-state-token" };
       mockSession.regenerate = vi.fn((callback) => callback(new Error("Regeneration failed")));
 
       vi.mocked(getCrimeIdamConfig).mockReturnValue({
@@ -264,7 +287,7 @@ describe("crime-callback", () => {
       const { exchangeCodeForToken } = await import("../../crime-idam/token-client.js");
       const { getCrimeIdamConfig } = await import("../../config/crime-idam-config.js");
 
-      mockRequest.query = { code: "invalid-code" };
+      mockRequest.query = { code: "invalid-code", state: "test-state-token" };
 
       vi.mocked(getCrimeIdamConfig).mockReturnValue({
         crimeIdamUrl: "https://idam.crime.hmcts.net",
@@ -292,7 +315,7 @@ describe("crime-callback", () => {
       const { isRejectedCrimeRole } = await import("../../role-service/index.js");
       const { createOrUpdateUser } = await import("@hmcts/account/repository/query");
 
-      mockRequest.query = { code: "test-auth-code" };
+      mockRequest.query = { code: "test-auth-code", state: "test-state-token" };
       mockSession.lng = "cy";
 
       vi.mocked(getCrimeIdamConfig).mockReturnValue({

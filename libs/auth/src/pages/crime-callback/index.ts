@@ -15,6 +15,15 @@ export const GET = async (req: Request, res: Response) => {
     return res.redirect(`/sign-in?error=no_code&lng=${lng}`);
   }
 
+  const state = req.query.state as string;
+  const expectedState = req.session.crimeOauthState as string | undefined;
+  delete req.session.crimeOauthState;
+
+  if (!state || state !== expectedState) {
+    console.error("Crime IDAM callback: OAuth state mismatch");
+    return res.redirect(`/sign-in?error=invalid_state&lng=${lng}`);
+  }
+
   try {
     const config = getCrimeIdamConfig();
 

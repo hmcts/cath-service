@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as crimeIdamConfigModule from "../../config/crime-idam-config.js";
 import { GET } from "./index.js";
 
+vi.mock("node:crypto", () => ({ randomUUID: vi.fn(() => "test-state-uuid") }));
 vi.mock("../../config/crime-idam-config.js");
 
 describe("crime-login", () => {
@@ -81,7 +82,30 @@ describe("crime-login", () => {
       expect(redirectUrl).toContain("response_type=code");
       expect(redirectUrl).toContain("redirect_uri=https%3A%2F%2Fexample.com%2Fcrime-login%2Freturn");
       expect(redirectUrl).toContain("scope=openid+profile+roles");
+      expect(redirectUrl).toContain("state=test-state-uuid");
       expect(redirectUrl).toContain("ui_locales=en");
+    });
+
+    it("should store OAuth state in session and include it in the authorization URL", () => {
+      // Arrange
+      vi.mocked(crimeIdamConfigModule.isCrimeIdamConfigured).mockReturnValue(true);
+      vi.mocked(crimeIdamConfigModule.getCrimeIdamConfig).mockReturnValue({
+        crimeIdamUrl: "https://idam.crime.hmcts.net",
+        clientId: "test-client-id",
+        clientSecret: "test-secret",
+        redirectUri: "https://example.com/crime-login/return",
+        scope: "openid profile roles",
+        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
+        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+      });
+
+      // Act
+      GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockSession.crimeOauthState).toBe("test-state-uuid");
+      const redirectUrl = (mockResponse.redirect as any).mock.calls[0][0];
+      expect(redirectUrl).toContain("state=test-state-uuid");
     });
 
     it("should store language in session from query parameter", () => {

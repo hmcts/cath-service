@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Request, Response } from "express";
 import { getCrimeIdamConfig, isCrimeIdamConfigured } from "../../config/crime-idam-config.js";
 
@@ -13,11 +14,15 @@ export const GET = (req: Request, res: Response) => {
   // Store language preference in session to preserve it after Crime IDAM redirect
   req.session.lng = locale;
 
+  const state = randomUUID();
+  req.session.crimeOauthState = state;
+
   const params = new URLSearchParams({
     client_id: config.clientId,
     response_type: "code",
     redirect_uri: config.redirectUri,
     scope: config.scope,
+    state,
     ui_locales: locale
   });
 
