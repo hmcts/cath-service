@@ -231,10 +231,7 @@ describe("crime-callback", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(trackException).toHaveBeenCalledWith(dbError, {
-        area: "Crime IDAM callback",
-        userId: "user-123"
-      });
+      expect(trackException).toHaveBeenCalledWith(dbError, { area: "Crime IDAM callback" });
       expect(mockResponse.redirect).toHaveBeenCalledWith("/sign-in?error=db_error&lng=en");
     });
 

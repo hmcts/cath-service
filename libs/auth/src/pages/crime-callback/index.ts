@@ -31,7 +31,6 @@ export const GET = async (req: Request, res: Response) => {
     const userInfo = extractUserInfoFromToken(tokenResponse);
 
     if (isRejectedCrimeRole(userInfo.roles)) {
-      console.log(`Crime IDAM user ${userInfo.id} rejected due to role: ${userInfo.roles.join(", ")}`);
       return res.redirect(`/crime-rejected?lng=${lng}`);
     }
 
@@ -47,10 +46,7 @@ export const GET = async (req: Request, res: Response) => {
         role: "VERIFIED"
       });
     } catch (error) {
-      trackException(error as Error, {
-        area: "Crime IDAM callback",
-        userId: userInfo.id
-      });
+      trackException(error as Error, { area: "Crime IDAM callback" });
       return res.redirect(`/sign-in?error=db_error&lng=${lng}`);
     }
 
@@ -62,39 +58,23 @@ export const GET = async (req: Request, res: Response) => {
       provenance: "CRIME_IDAM"
     };
 
-    console.log("Crime IDAM: Creating user session with:", {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      role: user.role,
-      provenance: user.provenance
-    });
-
     req.session.regenerate((err: Error | null) => {
       if (err) {
-        console.error("Crime IDAM callback: Session regeneration failed", err);
+        console.error("Crime IDAM callback: Session regeneration failed");
         return res.redirect(`/sign-in?error=session_failed&lng=${lng}`);
       }
 
       req.login(user, (loginErr: Error | null) => {
         if (loginErr) {
-          console.error("Crime IDAM callback: Login failed", loginErr);
+          console.error("Crime IDAM callback: Login failed");
           return res.redirect(`/sign-in?error=login_failed&lng=${lng}`);
         }
 
         req.session.save((saveErr: Error | null) => {
           if (saveErr) {
-            console.error("Crime IDAM callback: Session save failed", saveErr);
+            console.error("Crime IDAM callback: Session save failed");
             return res.redirect(`/sign-in?error=session_save_failed&lng=${lng}`);
           }
-
-          console.log("Crime IDAM: Session saved successfully");
-          console.log("Crime IDAM: Session ID:", req.sessionID);
-          console.log("Crime IDAM: User in session:", req.user);
-          console.log("Crime IDAM: Full session data:", {
-            cookie: req.session.cookie,
-            passport: req.session.passport
-          });
 
           // Clean up language from session and redirect with language parameter
           delete req.session.lng;
@@ -103,7 +83,7 @@ export const GET = async (req: Request, res: Response) => {
       });
     });
   } catch (error) {
-    console.error("Crime IDAM callback error:", error);
+    console.error("Crime IDAM callback: Authentication failed");
     const lng = req.session.lng || "en";
     return res.redirect(`/sign-in?error=auth_failed&lng=${lng}`);
   }
