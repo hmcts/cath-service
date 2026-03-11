@@ -40,7 +40,6 @@ export const GET = async (req: Request, res: Response) => {
     } catch (error) {
       trackException(error as Error, {
         area: "Crime IDAM callback",
-        userEmail: userInfo.email,
         userId: userInfo.id
       });
       return res.redirect(`/sign-in?error=db_error&lng=${lng}`);
