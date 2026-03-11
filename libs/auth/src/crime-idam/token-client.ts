@@ -76,7 +76,7 @@ export function extractUserInfoFromToken(tokenResponse: TokenResponse): CrimeIda
 
   return {
     id: claims.uid || claims.sub,
-    email: claims.sub || claims.email || "",
+    email: claims.email || claims.sub || "",
     displayName: claims.name || claims.given_name || claims.email || "",
     firstName: claims.given_name,
     surname: claims.family_name,

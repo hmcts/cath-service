@@ -295,6 +295,76 @@ describe("crime-idam/token-client", () => {
       // Act & Assert
       expect(() => extractUserInfoFromToken(tokenResponse)).toThrow("Failed to parse JWT");
     });
+
+    it("should prioritize email claim over sub claim for email field", () => {
+      // Arrange - sub is a UUID, email is an actual email
+      const claims = {
+        uid: "user-123",
+        sub: "550e8400-e29b-41d4-a716-446655440000",
+        email: "user@example.com",
+        name: "Test User",
+        roles: []
+      };
+      const idToken = createMockJwt(claims);
+      const tokenResponse = {
+        access_token: "access-token",
+        id_token: idToken,
+        token_type: "Bearer",
+        expires_in: 3600
+      };
+
+      // Act
+      const result = extractUserInfoFromToken(tokenResponse);
+
+      // Assert
+      expect(result.email).toBe("user@example.com");
+      expect(result.email).not.toBe("550e8400-e29b-41d4-a716-446655440000");
+    });
+
+    it("should fall back to sub claim when email claim not present", () => {
+      // Arrange - no email claim, only sub
+      const claims = {
+        uid: "user-456",
+        sub: "fallback@example.com",
+        name: "Fallback User",
+        roles: []
+      };
+      const idToken = createMockJwt(claims);
+      const tokenResponse = {
+        access_token: "access-token",
+        id_token: idToken,
+        token_type: "Bearer",
+        expires_in: 3600
+      };
+
+      // Act
+      const result = extractUserInfoFromToken(tokenResponse);
+
+      // Assert
+      expect(result.email).toBe("fallback@example.com");
+    });
+
+    it("should use empty string when neither email nor sub present", () => {
+      // Arrange - no email or sub
+      const claims = {
+        uid: "user-789",
+        name: "No Email User",
+        roles: []
+      };
+      const idToken = createMockJwt(claims);
+      const tokenResponse = {
+        access_token: "access-token",
+        id_token: idToken,
+        token_type: "Bearer",
+        expires_in: 3600
+      };
+
+      // Act
+      const result = extractUserInfoFromToken(tokenResponse);
+
+      // Assert
+      expect(result.email).toBe("");
+    });
   });
 });
 
