@@ -42,7 +42,7 @@ export const GET = async (req: Request, res: Response) => {
         firstName: userInfo.firstName,
         surname: userInfo.surname,
         userProvenance: "CRIME_IDAM",
-        userProvenanceId: userInfo.id,
+        userProvenanceId: `CRIME_IDAM:${userInfo.id}`,
         role: "VERIFIED"
       });
     } catch (error) {

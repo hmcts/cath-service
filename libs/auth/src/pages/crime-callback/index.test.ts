@@ -170,7 +170,7 @@ describe("crime-callback", () => {
         firstName: "Test",
         surname: "User",
         userProvenance: "CRIME_IDAM",
-        userProvenanceId: "user-123",
+        userProvenanceId: "CRIME_IDAM:user-123",
         role: "VERIFIED"
       });
       expect(mockSession.regenerate).toHaveBeenCalled();
