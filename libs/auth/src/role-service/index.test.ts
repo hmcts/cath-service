@@ -205,10 +205,10 @@ describe("Role Service", () => {
       expect(isRejectedCrimeRole(["former-letter-holder"])).toBe(false);
     });
 
-    it("should be case-sensitive", () => {
-      expect(isRejectedCrimeRole(["Citizen"])).toBe(false);
-      expect(isRejectedCrimeRole(["CITIZEN"])).toBe(false);
-      expect(isRejectedCrimeRole(["Letter-Holder"])).toBe(false);
+    it("should reject mixed-case rejected roles", () => {
+      expect(isRejectedCrimeRole(["Citizen"])).toBe(true);
+      expect(isRejectedCrimeRole(["CITIZEN"])).toBe(true);
+      expect(isRejectedCrimeRole(["Letter-Holder"])).toBe(true);
     });
   });
 });

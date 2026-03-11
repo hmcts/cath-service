@@ -74,5 +74,5 @@ export function isRejectedCrimeRole(roles: string[]): boolean {
     return false;
   }
 
-  return roles.some((role) => REJECTED_CRIME_ROLE_PATTERN.test(role));
+  return roles.some((role) => REJECTED_CRIME_ROLE_PATTERN.test(role.toLowerCase()));
 }
