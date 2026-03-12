@@ -42,7 +42,7 @@ export const POST = async (req: Request, res: Response) => {
     case "common-platform":
       return res.redirect("/");
     case "cath":
-      return res.redirect("/");
+      return res.redirect(`/b2c-login?lng=${locale}`);
     default: {
       const errors: AccountSelectionError[] = [
         {
