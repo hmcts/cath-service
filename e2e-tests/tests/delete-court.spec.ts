@@ -239,8 +239,8 @@ test.describe("Delete Court Journey", () => {
 
     // Step 16: Verify navigation links work
     await page.click('a:has-text("Hafan")'); // Home in Welsh
-    await page.waitForURL("**/system-admin-dashboard");
-    await expect(page.locator("h1")).toContainText("System Admin");
+    await page.waitForURL(/system-admin-dashboard/);
+    await expect(page.locator("h1")).toContainText("Dangosfwrdd Gweinyddwr y System");
   });
 
   test("should block deletion of court with active subscriptions", async ({ page }) => {
