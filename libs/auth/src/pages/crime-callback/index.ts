@@ -83,7 +83,7 @@ export const GET = async (req: Request, res: Response) => {
       });
     });
   } catch (error) {
-    console.error("Crime IDAM callback: Authentication failed");
+    console.error("Crime IDAM callback: Authentication failed", error instanceof Error ? error.message : error);
     const lng = req.session.lng || "en";
     return res.redirect(`/sign-in?error=auth_failed&lng=${lng}`);
   }

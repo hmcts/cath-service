@@ -49,15 +49,15 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       // Act
       GET(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(mockResponse.redirect).toHaveBeenCalledWith(expect.stringContaining("https://idam.crime.hmcts.net/oauth2/authorise"));
+      expect(mockResponse.redirect).toHaveBeenCalledWith(expect.stringContaining("https://idam.crime.hmcts.net/idp/oauth2/authorize"));
     });
 
     it("should include correct query parameters in authorization URL", () => {
@@ -69,8 +69,8 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       // Act
@@ -95,8 +95,8 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       // Act
@@ -117,8 +117,8 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
       mockRequest.query = { lng: "cy" };
 
@@ -138,8 +138,8 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
       mockRequest.query = { lng: "cy" };
 
@@ -160,8 +160,8 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
       mockResponse.locals = { locale: "cy" };
 
@@ -183,8 +183,8 @@ describe("crime-login", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
       mockResponse.locals = {};
 

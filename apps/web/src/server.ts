@@ -6,13 +6,15 @@ import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root (two levels up from src/)
+// Load .env before importing app so that modules (e.g. @hmcts/postgres) that
+// read env vars at initialisation time see the correct values.
 dotenv.config({ path: path.join(__dirname, "../../../.env") });
+
+const { createApp } = await import("./app.js");
 
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";

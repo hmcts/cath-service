@@ -13,8 +13,8 @@ describe("crime-idam/token-client", () => {
       clientSecret: "test-secret",
       redirectUri: "https://example.com/crime-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-      tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+      authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+      tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
     };
   });
 
@@ -39,7 +39,7 @@ describe("crime-idam/token-client", () => {
       // Assert
       expect(result).toEqual(mockTokenResponse);
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://idam.crime.hmcts.net/oauth2/token",
+        "https://idam.crime.hmcts.net/idp/oauth2/access_token",
         expect.objectContaining({
           method: "POST",
           headers: {

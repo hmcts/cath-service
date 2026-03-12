@@ -87,8 +87,8 @@ describe("crime-callback", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       vi.mocked(exchangeCodeForToken).mockResolvedValue({
@@ -132,8 +132,8 @@ describe("crime-callback", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       vi.mocked(exchangeCodeForToken).mockResolvedValue({
@@ -204,8 +204,8 @@ describe("crime-callback", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       vi.mocked(exchangeCodeForToken).mockResolvedValue({
@@ -251,8 +251,8 @@ describe("crime-callback", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       vi.mocked(exchangeCodeForToken).mockResolvedValue({
@@ -292,8 +292,8 @@ describe("crime-callback", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       vi.mocked(exchangeCodeForToken).mockRejectedValue(new Error("Token exchange failed"));
@@ -321,8 +321,8 @@ describe("crime-callback", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
 
       vi.mocked(exchangeCodeForToken).mockResolvedValue({

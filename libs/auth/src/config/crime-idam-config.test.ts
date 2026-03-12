@@ -32,8 +32,8 @@ describe("crime-idam-config", () => {
         clientSecret: "test-secret",
         redirectUri: "https://example.com/crime-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam.crime.hmcts.net/oauth2/authorise",
-        tokenEndpoint: "https://idam.crime.hmcts.net/oauth2/token"
+        authorizationEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/authorize",
+        tokenEndpoint: "https://idam.crime.hmcts.net/idp/oauth2/access_token"
       });
     });
 
@@ -71,8 +71,8 @@ describe("crime-idam-config", () => {
       const config = getCrimeIdamConfig();
 
       // Assert
-      expect(config.authorizationEndpoint).toBe("https://idam.crime.hmcts.net/oauth2/authorise");
-      expect(config.tokenEndpoint).toBe("https://idam.crime.hmcts.net/oauth2/token");
+      expect(config.authorizationEndpoint).toBe("https://idam.crime.hmcts.net/idp/oauth2/authorize");
+      expect(config.tokenEndpoint).toBe("https://idam.crime.hmcts.net/idp/oauth2/access_token");
     });
   });
 
