@@ -27,7 +27,7 @@ export function getCrimeIdamConfig(): CrimeIdamConfig {
   const crimeIdamUrl = getConfigValue("CRIME_IDAM_BASE_URL");
   const baseUrl = getConfigValue("BASE_URL") || "https://localhost:8080";
   const redirectUri = `${baseUrl}/crime-login/return`;
-  const scope = getConfigValue("CRIME_IDAM_SCOPE") || "openid profile email";
+  const scope = getConfigValue("CRIME_IDAM_SCOPE") || "openid profile roles";
 
   return {
     crimeIdamUrl,
