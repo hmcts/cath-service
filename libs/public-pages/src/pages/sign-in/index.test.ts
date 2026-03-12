@@ -52,7 +52,6 @@ describe("select-account page", () => {
         expect.objectContaining({
           en: expect.objectContaining({
             hmctsLabel: "With a MyHMCTS account",
-            crimeLabel: "With a Crime IDAM account",
             commonPlatformLabel: "With a Common Platform account",
             cathLabel: "With a Court and tribunal hearings account",
             continueButton: "Continue"
@@ -69,7 +68,6 @@ describe("select-account page", () => {
         expect.objectContaining({
           cy: expect.objectContaining({
             hmctsLabel: "Gyda chyfrif MyHMCTS",
-            crimeLabel: "Gyda chyfrif Crime IDAM",
             commonPlatformLabel: "Gyda chyfrif Common Platform",
             cathLabel: "Gyda chyfrif gwrandawiadau Llys a thribiwnlys",
             continueButton: "Parhau"
@@ -100,8 +98,8 @@ describe("select-account page", () => {
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 
-      it("should redirect to Crime IDAM login for crime account", async () => {
-        req.body = { accountType: "crime" };
+      it("should redirect to Crime IDAM login for common-platform account", async () => {
+        req.body = { accountType: "common-platform" };
 
         await POST(req as Request, res as Response);
 
@@ -109,22 +107,13 @@ describe("select-account page", () => {
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 
-      it("should redirect to Crime IDAM login with Welsh locale", async () => {
-        req.body = { accountType: "crime" };
+      it("should redirect to Crime IDAM login for common-platform account with Welsh locale", async () => {
+        req.body = { accountType: "common-platform" };
         res.locals = { locale: "cy" };
 
         await POST(req as Request, res as Response);
 
         expect(res.redirect).toHaveBeenCalledWith("/crime-login?lng=cy");
-        expect(res.redirect).toHaveBeenCalledTimes(1);
-      });
-
-      it("should redirect to / for common-platform account", async () => {
-        req.body = { accountType: "common-platform" };
-
-        await POST(req as Request, res as Response);
-
-        expect(res.redirect).toHaveBeenCalledWith("/");
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 

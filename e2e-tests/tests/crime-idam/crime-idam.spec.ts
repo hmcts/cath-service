@@ -5,8 +5,8 @@ test.describe("Crime IDAM", () => {
   test("valid user can sign in via Crime IDAM @nightly", async ({ page }) => {
     await page.goto("/sign-in");
 
-    // Select Crime IDAM option
-    await page.getByRole("radio", { name: /with a crime idam account/i }).check();
+    // Select Common Platform option
+    await page.getByRole("radio", { name: /with a common platform account/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
 
     // Should redirect to Crime IDAM login
@@ -74,7 +74,7 @@ test.describe("Crime IDAM", () => {
 
     await expect(page.getByRole("heading", { name: /sut hoffech chi fewngofnodi/i })).toBeVisible();
 
-    await page.getByRole("radio", { name: /gyda chyfrif crime idam/i }).check();
+    await page.getByRole("radio", { name: /gyda chyfrif common platform/i }).check();
     await page.getByRole("button", { name: /parhau/i }).click();
 
     // Language parameter should be passed to Crime IDAM
