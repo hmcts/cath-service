@@ -403,6 +403,7 @@ jobs:
         with:
           show_full_output: ${{ runner.debug == '1' }}
           use_bedrock: "true"
+          max_turns: 50
           github_token: ${{ steps.app-token.outputs.token }}
           prompt: |
             Generate a technical specification for this GitHub issue using the specified template.
