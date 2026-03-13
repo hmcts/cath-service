@@ -21,6 +21,10 @@ nodejs:
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
   keyVaults:
+    pip-ss-kv:
+      secrets:
+        - name: postgres-url
+          alias: DATABASE_URL
     # Using pip-ss-kv-stg for time being, once pipeline properly setup, stg will be replaced by environment
     pip-ss-kv-stg:
       secrets:
