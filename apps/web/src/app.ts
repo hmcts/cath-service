@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot, pageRoutes as adminCourtRoutes } from "@hmcts/administrative-court-daily-cause-list/config";
-import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
+import { authNavigationMiddleware, cftCallbackHandler, configurePassport, crimeCallbackHandler, ssoCallbackHandler } from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import {
   moduleRoot as careStandardsTribunalModuleRoot,
@@ -66,7 +66,8 @@ export async function createApp(): Promise<Express> {
   app.use(configureNonce());
   app.use(
     configureHelmet({
-      cftIdamUrl: process.env.CFT_IDAM_URL
+      cftIdamUrl: process.env.CFT_IDAM_URL,
+      crimeIdamUrl: process.env.CRIME_IDAM_BASE_URL
     })
   );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
@@ -119,6 +120,9 @@ export async function createApp(): Promise<Express> {
 
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
+
+  // Manual route registration for Crime IDAM callback (maintains /crime-login/return URL for external Crime IDAM config)
+  app.get("/crime-login/return", crimeCallbackHandler);
 
   // Register location autocomplete routes (no prefix - frontend expects /locations)
   app.use(await createSimpleRouter(locationApiRoutes));

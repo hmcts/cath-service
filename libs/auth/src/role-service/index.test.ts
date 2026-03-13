@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ssoConfigModule from "../config/sso-config.js";
-import { determineSsoUserRole, hasRole, isRejectedCFTRole } from "./index.js";
+import { determineSsoUserRole, hasRole, isRejectedCFTRole, isRejectedCrimeRole } from "./index.js";
 
 vi.mock("../config/sso-config.js");
 
@@ -153,6 +153,62 @@ describe("Role Service", () => {
       expect(isRejectedCFTRole(["Citizen"])).toBe(false);
       expect(isRejectedCFTRole(["CITIZEN"])).toBe(false);
       expect(isRejectedCFTRole(["Letter-Holder"])).toBe(false);
+    });
+  });
+
+  describe("isRejectedCrimeRole", () => {
+    it("should reject citizen role", () => {
+      expect(isRejectedCrimeRole(["citizen"])).toBe(true);
+    });
+
+    it("should reject citizen with suffix roles", () => {
+      expect(isRejectedCrimeRole(["citizen-pro"])).toBe(true);
+      expect(isRejectedCrimeRole(["citizen-basic"])).toBe(true);
+      expect(isRejectedCrimeRole(["citizen-advanced"])).toBe(true);
+    });
+
+    it("should reject letter-holder role", () => {
+      expect(isRejectedCrimeRole(["letter-holder"])).toBe(true);
+    });
+
+    it("should reject when citizen is among multiple roles", () => {
+      expect(isRejectedCrimeRole(["caseworker", "citizen", "admin"])).toBe(true);
+    });
+
+    it("should reject when letter-holder is among multiple roles", () => {
+      expect(isRejectedCrimeRole(["viewer", "letter-holder"])).toBe(true);
+    });
+
+    it("should accept caseworker role", () => {
+      expect(isRejectedCrimeRole(["caseworker"])).toBe(false);
+    });
+
+    it("should accept admin role", () => {
+      expect(isRejectedCrimeRole(["admin"])).toBe(false);
+    });
+
+    it("should accept multiple valid roles", () => {
+      expect(isRejectedCrimeRole(["caseworker", "admin", "viewer"])).toBe(false);
+    });
+
+    it("should accept empty roles array", () => {
+      expect(isRejectedCrimeRole([])).toBe(false);
+    });
+
+    it("should handle roles that contain citizen but dont match pattern", () => {
+      expect(isRejectedCrimeRole(["non-citizen"])).toBe(false);
+      expect(isRejectedCrimeRole(["citizenry"])).toBe(false);
+    });
+
+    it("should handle roles that contain letter-holder but dont match pattern", () => {
+      expect(isRejectedCrimeRole(["letter-holder-admin"])).toBe(false);
+      expect(isRejectedCrimeRole(["former-letter-holder"])).toBe(false);
+    });
+
+    it("should reject mixed-case rejected roles", () => {
+      expect(isRejectedCrimeRole(["Citizen"])).toBe(true);
+      expect(isRejectedCrimeRole(["CITIZEN"])).toBe(true);
+      expect(isRejectedCrimeRole(["Letter-Holder"])).toBe(true);
     });
   });
 });

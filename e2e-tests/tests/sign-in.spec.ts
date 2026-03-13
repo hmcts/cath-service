@@ -61,7 +61,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user selects Common Platform account", () => {
-    test("should redirect to home page when continue is clicked", async ({ page }) => {
+    test("should redirect to Crime IDAM login when continue is clicked", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Select the Common Platform account radio option
@@ -75,8 +75,10 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify navigation to home page
-      await expect(page).toHaveURL("/");
+      // Verify navigation to Crime IDAM login (external OAuth flow)
+      await page.waitForTimeout(1000); // Wait for redirect
+      const currentUrl = page.url();
+      expect(currentUrl).toMatch(/cjscp\.org\.uk|crime-login/);
     });
   });
 
