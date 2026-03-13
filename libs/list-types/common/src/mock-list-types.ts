@@ -8,6 +8,9 @@ export interface ListType {
   isNonStrategic: boolean;
 }
 
+export const SJP_PRESS_LIST_ID = 10;
+export const SJP_PUBLIC_LIST_ID = 11;
+
 export const mockListTypes: ListType[] = [
   {
     id: 1,
@@ -90,9 +93,27 @@ export const mockListTypes: ListType[] = [
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true
   },
-  // RCJ Standard Format
   {
     id: 10,
+    name: "SJP_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
+    provenance: "CFT_IDAM",
+    urlPath: "sjp-press-list",
+    isNonStrategic: false
+  },
+  {
+    id: 11,
+    name: "SJP_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
+    provenance: "CFT_IDAM",
+    urlPath: "sjp-public-list",
+    isNonStrategic: false
+  },
+  // RCJ Standard Format
+  {
+    id: 12,
     name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
     englishFriendlyName: "Civil Courts at the RCJ Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Sifil yn y Llysoedd Barn Brenhinol",
@@ -101,7 +122,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 11,
+    id: 13,
     name: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "County Court at Central London Civil Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Sifil yn y Llys Sirol yng Nghanol Llundain",
@@ -110,7 +131,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 12,
+    id: 14,
     name: "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Court of Appeal (Criminal Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Troseddol)",
@@ -119,7 +140,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 13,
+    id: 15,
     name: "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Family Division of the High Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Adran Deulu yr Uchel Lys",
@@ -128,7 +149,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 14,
+    id: 16,
     name: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
     englishFriendlyName: "King's Bench Division Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Adran Mainc y Brenin",
@@ -137,7 +158,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 15,
+    id: 17,
     name: "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
     englishFriendlyName: "King's Bench Masters Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Meistri Mainc y Brenin",
@@ -146,7 +167,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 16,
+    id: 18,
     name: "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Mayor & City Civil Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Sifil y Maer a'r Ddinas",
@@ -155,7 +176,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 17,
+    id: 19,
     name: "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST",
     englishFriendlyName: "Senior Courts Costs Office Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Swyddfa Costau’r Uwchlysoedd",
@@ -165,7 +186,7 @@ export const mockListTypes: ListType[] = [
   },
   // RCJ Special Format - London Administrative Court
   {
-    id: 18,
+    id: 20,
     name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "London Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Llundain",
@@ -175,7 +196,7 @@ export const mockListTypes: ListType[] = [
   },
   // RCJ Special Format - Court of Appeal Civil
   {
-    id: 19,
+    id: 21,
     name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Court of Appeal (Civil Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
@@ -185,7 +206,7 @@ export const mockListTypes: ListType[] = [
   },
   // Administrative Courts
   {
-    id: 20,
+    id: 22,
     name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Birmingham Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Birmingham",
@@ -194,7 +215,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 21,
+    id: 23,
     name: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Leeds Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Leeds",
@@ -203,7 +224,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 22,
+    id: 24,
     name: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Bristol and Cardiff Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Bryste a Chaerdydd",
@@ -212,7 +233,7 @@ export const mockListTypes: ListType[] = [
     isNonStrategic: true
   },
   {
-    id: 23,
+    id: 25,
     name: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Manchester Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Manceinion",

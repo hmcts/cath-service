@@ -90,7 +90,7 @@ describe("manage-list-types page", () => {
       const listTypes = renderCall[1].listTypes;
 
       // We expect 23 list types from mock-list-types.ts
-      expect(listTypes.length).toBe(23);
+      expect(listTypes.length).toBe(25);
     });
   });
 });

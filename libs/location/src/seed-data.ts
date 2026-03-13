@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { prisma } from "@hmcts/postgres";
 import { locationData } from "./location-data.js";
 

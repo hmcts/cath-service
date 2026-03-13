@@ -28,10 +28,6 @@ export const GET = async (req: Request, res: Response) => {
     return res.redirect("/400");
   }
 
-  // Get location name based on locale
-  const locationName = locale === "cy" ? location.welshName : location.name;
-  const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
-
   // Query real artefacts from database, ordered by lastReceivedDate desc to get latest first
   const allArtefacts = await prisma.artefact.findMany({
     where: {
@@ -45,6 +41,9 @@ export const GET = async (req: Request, res: Response) => {
   // Filter artefacts based on user metadata access rights
   // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
   const artefacts = filterPublicationsForSummary(req.user, allArtefacts, mockListTypes);
+
+  const locationName = locationId === 9 ? t.sjpName : locale === "cy" ? location.welshName : location.name;
+  const pageTitle = `${t.titlePrefix} ${locationName}${t.titleSuffix}`;
 
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {
@@ -79,8 +78,10 @@ export const GET = async (req: Request, res: Response) => {
     return true;
   });
 
+  const allPublications = [...uniquePublications];
+
   // Sort by list name, then by content date descending, then by language
-  uniquePublications.sort((a: (typeof uniquePublications)[number], b: (typeof uniquePublications)[number]) => {
+  allPublications.sort((a: (typeof allPublications)[number], b: (typeof allPublications)[number]) => {
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);
@@ -107,7 +108,7 @@ export const GET = async (req: Request, res: Response) => {
     title: pageTitle,
     noPublicationsMessage: t.noPublicationsMessage,
     selectListMessage: t.selectListMessage,
-    publications: uniquePublications,
+    publications: allPublications,
     cautionMessage,
     noListMessage,
     factLinkText: t.factLinkText,
