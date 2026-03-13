@@ -39,7 +39,10 @@
       "@hmcts/sjp-public-list/config": ["libs/list-types/sjp-public-list/src/config"],
       "@hmcts/subscriptions/config": ["libs/subscriptions/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
-      "@hmcts/notifications": ["libs/notifications/src"]
+      "@hmcts/notifications": ["libs/notifications/src"],
+      "@hmcts/list-search-config": ["libs/list-search-config/src"],
+      "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
+      "@hmcts/pdf-generation": ["libs/pdf-generation/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
