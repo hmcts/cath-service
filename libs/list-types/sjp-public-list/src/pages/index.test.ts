@@ -2,7 +2,15 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
-vi.mock("@hmcts/list-types-common");
+vi.mock("@hmcts/list-types-common", () => ({
+  calculatePagination: vi.fn(),
+  getSjpListById: vi.fn(),
+  getSjpPublicCases: vi.fn(),
+  getUniquePostcodes: vi.fn(),
+  getUniqueProsecutors: vi.fn(),
+  createConverter: vi.fn(),
+  registerConverter: vi.fn()
+}));
 
 import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
 
