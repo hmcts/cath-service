@@ -320,4 +320,3 @@ export async function deleteArtefactSearchByArtefactId(artefactId: string) {
     where: { artefactId }
   });
 }
-}
