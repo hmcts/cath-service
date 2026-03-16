@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, extractAndStoreArtefactSearch, mockListTypes, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -45,7 +46,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   // Find list type by ID
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
-  const listType = listTypeId ? mockListTypes.find((lt) => lt.id === listTypeId) : null;
+  const listType = listTypeId ? await findListTypeById(listTypeId) : null;
   let listTypeName = uploadData.listType;
   if (listType) {
     listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
@@ -169,13 +170,13 @@ const postHandler = async (req: Request, res: Response) => {
 
     // Get location and list type for audit log
     const location = await getLocationById(Number(uploadData.locationId));
-    const listType = mockListTypes.find((lt) => lt.id === listTypeId);
+    const listType = await findListTypeById(listTypeId);
 
     // Set audit log flag
     req.auditMetadata = {
       shouldLog: true,
       action: "MANUAL_UPLOAD",
-      entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.englishFriendlyName || listTypeId}, File: ${uploadData.fileName}`
+      entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.friendlyName || listTypeId}, File: ${uploadData.fileName}`
     };
 
     // Redirect to success page with language parameter
@@ -199,7 +200,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     // Find list type by ID
     const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
-    const listType = listTypeId ? mockListTypes.find((lt) => lt.id === listTypeId) : null;
+    const listType = listTypeId ? await findListTypeById(listTypeId) : null;
     let listTypeName = uploadData.listType;
     if (listType) {
       listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
