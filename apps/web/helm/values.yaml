@@ -7,15 +7,6 @@ nodejs:
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
-
-  # Single pod deployment required due to ephemeral filesystem storage
-  # Files are stored in container storage at storage/temp/uploads/
-  # Multiple pods would have isolated filesystems causing file access issues
-  # TODO: Enable autoscaling after Azure Blob Storage implementation (follow-up ticket)
-  replicas: 1
-  autoscaling:
-    enabled: false
-
   environment:
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
@@ -43,3 +34,5 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
         - name: sso-sg-admin-local
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
+        - name: cft-idam-client-secret
+          alias: CFT_IDAM_CLIENT_SECRET
