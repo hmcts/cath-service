@@ -46,6 +46,7 @@ variable "product_group_name" {
 variable "jenkins_AAD_objectId" {
   description = "Object ID of the Jenkins/CI service principal for Key Vault access"
   type        = string
+  default     = ""
 }
 
 # Optional variables - auto-derived from Azure credentials in CI
