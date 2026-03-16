@@ -10,8 +10,9 @@ job:
   environment:
     NODE_ENV: 'production'
     SCRIPT_NAME: 'example'
+    POSTGRES_DATABASE: cath
   keyVaults:
-    pip-ss-kv:
+    cath:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING

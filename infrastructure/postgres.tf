@@ -30,29 +30,29 @@ module "postgresql" {
 resource "azurerm_key_vault_secret" "postgres_host" {
   name         = "postgres-host"
   value        = module.postgresql.fqdn
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_user" {
   name         = "postgres-user"
   value        = module.postgresql.username
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_password" {
   name         = "postgres-password"
   value        = module.postgresql.password
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_port" {
   name         = "postgres-port"
   value        = "5432"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_url" {
   name         = "postgres-url"
   value        = "postgresql://${module.postgresql.username}:${module.postgresql.password}@${module.postgresql.fqdn}:5432/cath?sslmode=require"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }

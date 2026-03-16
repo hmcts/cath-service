@@ -15,12 +15,6 @@ variable "component" {
   default     = "cath"
 }
 
-variable "key_vault_product" {
-  description = "Product name for the shared Key Vault (borrowed from PIP)"
-  type        = string
-  default     = "pip-ss-kv"
-}
-
 variable "subscription" {
   description = "Azure subscription name"
   type        = string
@@ -41,6 +35,18 @@ variable "common_tags" {
   description = "Common tags for resources"
   type        = map(string)
   default     = {}
+}
+
+variable "product_group_name" {
+  description = "AD group name for Key Vault access"
+  type        = string
+  default     = "DTS SDS Developers"
+}
+
+variable "jenkins_object_id" {
+  description = "Object ID of the Jenkins/CI service principal for Key Vault access"
+  type        = string
+  default     = ""
 }
 
 # Optional variables - auto-derived from Azure credentials in CI

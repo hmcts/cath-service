@@ -1,6 +1,6 @@
 # Global values shared by all subcharts
 global:
-  environment: preview
+  environment: dev
   security:
     allowInsecureImages: true
 
@@ -18,14 +18,10 @@ crons:
 cath-web:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.preview.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.dev.platform.hmcts.net"
     environment:
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
-    keyVaults:
-      pip-ss-kv:
-        secrets:
-          - name: db-url
-            alias: DATABASE_URL
+      POSTGRES_DATABASE: "{{ .Release.Name }}"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
@@ -44,12 +40,22 @@ cath-web:
 cath-api:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.preview.platform.hmcts.net"
-    keyVaults:
-      pip-ss-kv:
-        secrets:
-          - name: db-url
-            alias: DATABASE_URL
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.dev.platform.hmcts.net"
+    environment:
+      POSTGRES_DATABASE: "{{ .Release.Name }}"
+    secrets:
+      POSTGRES_HOST:
+        secretRef: postgres
+        key: HOST
+      POSTGRES_USER:
+        secretRef: postgres
+        key: USER
+      POSTGRES_PASSWORD:
+        secretRef: postgres
+        key: PASSWORD
+      POSTGRES_PORT:
+        secretRef: postgres
+        key: PORT
 
 # Crons application configuration
 cath-crons:
@@ -58,22 +64,29 @@ cath-crons:
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
-    keyVaults:
-      pip-ss-kv:
-        secrets:
-          - name: db-url
-            alias: DATABASE_URL
+    environment:
+      POSTGRES_DATABASE: "{{ .Release.Name }}"
+    secrets:
+      POSTGRES_HOST:
+        secretRef: postgres
+        key: HOST
+      POSTGRES_USER:
+        secretRef: postgres
+        key: USER
+      POSTGRES_PASSWORD:
+        secretRef: postgres
+        key: PASSWORD
+      POSTGRES_PORT:
+        secretRef: postgres
+        key: PORT
 
 # Postgres Prisma Studio service configuration
 cath-postgres:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.preview.platform.hmcts.net"
-    keyVaults:
-      pip-ss-kv:
-        secrets:
-          - name: db-url
-            alias: DATABASE_URL
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.dev.platform.hmcts.net"
+    environment:
+      POSTGRES_DATABASE: "{{ .Release.Name }}"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres

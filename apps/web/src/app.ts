@@ -10,7 +10,7 @@ import {
   pageRoutes as careStandardsTribunalRoutes
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
-import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
@@ -42,7 +42,6 @@ import {
   notFoundHandler
 } from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
-import config from "config";
 import cookieParser from "cookie-parser";
 import type { Express } from "express";
 import express from "express";
@@ -53,7 +52,8 @@ const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
 
 export async function createApp(): Promise<Express> {
-  await configurePropertiesVolume(config, { chartPath });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
+  const { default: config } = await import("config");
 
   const app = express();
 
@@ -75,7 +75,7 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
+  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -175,7 +175,7 @@ export async function createApp(): Promise<Express> {
   return app;
 }
 
-const getRedisClient = async () => {
+const getRedisClient = async (config: { get: (key: string) => any }) => {
   const redisClient = createClient({ url: config.get("redis.url") });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));
 

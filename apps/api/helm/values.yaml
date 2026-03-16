@@ -4,18 +4,17 @@ nodejs:
   ingressHost: cath-api.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-api:latest'
   environment:
-    REDIS_HOST: 'cath-redis-{{ .Values.global.environment }}.redis.cache.windows.net'
+    POSTGRES_DATABASE: cath
   keyVaults:
     cath:
       secrets:
-        - redis-access-key
-        - app-insights-connection-string
-        - dynatrace-url
-    pip-ss-kv:
-      secrets:
+        - name: app-insights-connection-string
+          alias: APPLICATION_INSIGHTS_CONNECTION_STRING
+        - name: redis-url
+          alias: REDIS_URL
         - name: postgres-url
           alias: DATABASE_URL
-    pip-ss-kv-stg:
+    pip-ss-kv:
       secrets:
         - name: app-tenant-id
           alias: AZURE_TENANT_ID
