@@ -6,11 +6,13 @@ process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "test-template-id";
 process.env.CATH_SERVICE_URL = "https://www.court-tribunal-hearings.service.gov.uk";
 
 const mockSendEmail = vi.fn();
+const mockPrepareUpload = vi.fn();
 
 vi.mock("notifications-node-client", () => ({
   NotifyClient: vi.fn(function NotifyClient() {
     return {
-      sendEmail: mockSendEmail
+      sendEmail: mockSendEmail,
+      prepareUpload: mockPrepareUpload
     };
   })
 }));
@@ -215,5 +217,85 @@ describe("govnotify-client", () => {
     expect(delays[0]).toBe(1000); // Default NOTIFICATION_RETRY_DELAY_MS
 
     vi.restoreAllMocks();
+  });
+
+  it("should use custom templateId when provided", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "custom-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockSendEmail).toHaveBeenCalledWith("custom-template-id", "user@example.com", expect.any(Object));
+  });
+
+  it("should upload PDF and include link_to_file when pdfBuffer is provided", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const pdfBuffer = Buffer.from("PDF content");
+    mockPrepareUpload.mockReturnValue({ file: "uploaded-file-reference" });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      pdfBuffer
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(pdfBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week"
+    });
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.objectContaining({
+          link_to_file: { file: "uploaded-file-reference" }
+        })
+      })
+    );
+  });
+
+  it("should send email without link_to_file when pdfBuffer is not provided", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).not.toHaveBeenCalled();
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.not.objectContaining({
+          link_to_file: expect.anything()
+        })
+      })
+    );
   });
 });

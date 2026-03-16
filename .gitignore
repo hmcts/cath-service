@@ -1,6 +1,9 @@
 # Dependency directories
 node_modules/
 
+# Prisma generated client
+apps/postgres/generated/
+
 # Build output
 dist/
 build/

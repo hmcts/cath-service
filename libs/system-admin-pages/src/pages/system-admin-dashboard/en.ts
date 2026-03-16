@@ -34,7 +34,7 @@ export const en = {
     {
       title: "Audit Log Viewer",
       description: "View audit logs on system admin actions",
-      href: "/audit-log-viewer"
+      href: "/audit-log-list"
     },
     {
       title: "Manage Location Metadata",
@@ -42,9 +42,9 @@ export const en = {
       href: "/location-metadata-search"
     },
     {
-      title: "Configure List Type",
-      description: "Add and manage list type configurations",
-      href: "/configure-list-type-enter-details"
+      title: "Manage List Types",
+      description: "View, create and update list type configuration",
+      href: "/manage-list-types"
     }
   ]
 };

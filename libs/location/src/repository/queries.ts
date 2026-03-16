@@ -169,7 +169,8 @@ export async function getLocationWithDetails(locationId: number): Promise<import
 export async function hasActiveSubscriptions(locationId: number): Promise<boolean> {
   const count = await prisma.subscription.count({
     where: {
-      locationId
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
     }
   });
 

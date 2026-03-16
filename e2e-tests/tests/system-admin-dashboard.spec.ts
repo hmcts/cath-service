@@ -34,9 +34,9 @@ test.describe("System Admin Dashboard", () => {
         { title: "User Management", href: "/user-management" },
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
-        { title: "Audit Log Viewer", href: "/audit-log-viewer" },
-        { title: "Configure List Type", href: "/configure-list-type-enter-details" },
-        { title: "Manage Location Metadata", href: "/location-metadata-search" }
+        { title: "Audit Log Viewer", href: "/audit-log-list" },
+        { title: "Manage Location Metadata", href: "/location-metadata-search" },
+        { title: "Manage List Types", href: "/manage-list-types" }
       ];
 
       for (const { title, href } of tileData) {
@@ -52,13 +52,13 @@ test.describe("System Admin Dashboard", () => {
 
       await expect(descriptions.nth(0)).toContainText("Upload CSV location reference data");
       await expect(descriptions.nth(1)).toContainText("Delete court from reference data");
-      await expect(descriptions.nth(2)).toContainText("View, create, update and remove third-party users");
+      await expect(descriptions.nth(2)).toContainText("View, create, update and remove third-party users and subscriptions");
       await expect(descriptions.nth(3)).toContainText("Search, update and delete users");
       await expect(descriptions.nth(4)).toContainText("Discover content uploaded to all locations");
       await expect(descriptions.nth(5)).toContainText("Upload a CSV file for bulk creation of media accounts");
       await expect(descriptions.nth(6)).toContainText("View audit logs on system admin actions");
       await expect(descriptions.nth(7)).toContainText("View, update and remove location metadata");
-      await expect(descriptions.nth(8)).toContainText("Add and manage list type configurations");
+      await expect(descriptions.nth(8)).toContainText("View, create and update list type configuration");
     });
 
     test("should display tiles in 2-column grid", async ({ page }) => {

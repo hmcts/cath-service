@@ -610,7 +610,10 @@ describe("manual-upload-summary page", () => {
         locationId: "1",
         locationName: "Test Crown Court",
         hearingListName: "Crown Daily List",
-        publicationDate: expect.any(Date)
+        publicationDate: expect.any(Date),
+        listTypeId: 6,
+        jsonData: undefined, // Not a JSON upload in this test
+        pdfFilePath: undefined // PDF generation not triggered for this list type
       });
     });
 
@@ -639,7 +642,7 @@ describe("manual-upload-summary page", () => {
       await callHandler(POST, req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-      expect(consoleWarnSpy).toHaveBeenCalledWith("[Manual Upload] Location not found for notifications", {
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Manual Upload] Location not found for notifications:", {
         locationId: "1"
       });
       expect(sendPublicationNotifications).not.toHaveBeenCalled();
@@ -678,7 +681,7 @@ describe("manual-upload-summary page", () => {
 
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[Manual Upload] Failed to send notifications",
+        "[Manual Upload] Failed to send notifications:",
         expect.objectContaining({
           artefactId: "test-artefact-id-123"
         })
