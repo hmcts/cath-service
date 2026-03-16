@@ -19,7 +19,7 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
     "compression": "1.8.1",
-    "config": "4.4.0",
+    "config": "4.4.1",
     "cors": "2.8.6",
     "express": "5.2.1"
   },
@@ -27,7 +27,7 @@
     "@types/compression": "1.8.1",
     "@types/cors": "2.8.19",
     "@types/express": "5.0.6",
-    "@types/supertest": "^6.0.3",
+    "@types/supertest": "^7.0.0",
     "nodemon": "3.1.14",
     "supertest": "^7.1.4"
   }
