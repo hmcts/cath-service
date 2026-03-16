@@ -3,7 +3,7 @@
 # The managed identity (cath-{env}-mi) is created by pip-shared-infrastructures
 
 module "key_vault" {
-  source = "git@github.com:hmcts/cnp-module-key-vault?ref=master"
+  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
 
   name                    = "${var.product}-${var.env}"
   product                 = var.product
