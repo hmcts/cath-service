@@ -3,6 +3,7 @@
 # For local development, see values.dev.yaml
 
 nodejs:
+  releaseNameOverride: "{{ .Release.Name }}-web"
   applicationPort: 8080
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net

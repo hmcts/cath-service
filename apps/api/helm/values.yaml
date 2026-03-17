@@ -1,4 +1,5 @@
 nodejs:
+  releaseNameOverride: "{{ .Release.Name }}-api"
   applicationPort: 3001
   aadIdentityName: cath
   ingressHost: cath-api.{{ .Values.global.environment }}.platform.hmcts.net
