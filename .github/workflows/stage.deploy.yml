@@ -26,8 +26,8 @@ on:
       environment:
         required: false
         type: string
-        description: "Deployment environment (preview or stg)"
-        default: "preview"
+        description: "Deployment environment (dev or stg)"
+        default: "dev"
     outputs:
       urls:
         description: "Base64-encoded JSON of deployment URLs"

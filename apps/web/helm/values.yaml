@@ -8,8 +8,6 @@ nodejs:
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
-    BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
-    SSO_ALLOW_HTTP_REDIRECT: 'false'
     POSTGRES_DATABASE: cath
   keyVaults:
     cath:

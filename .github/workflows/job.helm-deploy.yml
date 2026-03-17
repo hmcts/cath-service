@@ -26,8 +26,8 @@ on:
       environment:
         required: false
         type: string
-        description: "Deployment environment (preview or stg)"
-        default: "preview"
+        description: "Deployment environment (dev or stg)"
+        default: "dev"
     outputs:
       urls:
         description: "Base64-encoded JSON of deployment URLs"
@@ -84,9 +84,9 @@ jobs:
             '${{ inputs.timestamp }}' \
             "${APPLICATION_NAME}"
 
-      - name: Deploy to preview
-        if: inputs.environment == 'preview'
-        id: deploy-preview
+      - name: Deploy to DEV
+        if: inputs.environment == 'dev'
+        id: deploy-dev
         uses: hmcts/cnp-githubactions-library/helm-deploy@main
         with:
           environment: ss-dev-00
@@ -98,6 +98,8 @@ jobs:
           chart: helm/${{ env.APPLICATION_NAME }}
           values-template: helm/${{ env.APPLICATION_NAME }}/values.preview.template.yaml
           subchart-paths: apps/*/helm
+          global-environment: dev
+          business-area: Cross-Cutting
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
@@ -116,6 +118,8 @@ jobs:
           chart: helm/${{ env.APPLICATION_NAME }}
           values-template: helm/${{ env.APPLICATION_NAME }}/values.template.yaml
           subchart-paths: apps/*/helm
+          global-environment: stg
+          business-area: Cross-Cutting
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
