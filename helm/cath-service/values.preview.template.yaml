@@ -107,7 +107,7 @@ cath-postgres:
 # PostgreSQL database configuration
 postgresql:
   enabled: true
-  flexibleserver: cath-preview
+  flexibleserver: cath-dev
   setup:
     databases:
       - name: "{{ .Release.Name }}"
