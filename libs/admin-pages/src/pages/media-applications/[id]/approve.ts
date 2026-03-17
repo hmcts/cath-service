@@ -32,15 +32,13 @@ const getHandler = async (req: Request, res: Response) => {
       radioOptions: lang.radioOptions,
       continueButton: lang.continueButton,
       application,
-      proofOfIdFilename: application.proofOfIdOriginalName,
-      hideLanguageToggle: true
+      proofOfIdFilename: application.proofOfIdOriginalName
     });
   } catch (_error) {
     res.render("media-applications/[id]/approve", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };
@@ -72,8 +70,7 @@ const postHandler = async (req: Request, res: Response) => {
         continueButton: lang.continueButton,
         application,
         proofOfIdFilename: application.proofOfIdOriginalName,
-        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }]
       });
     }
 
@@ -100,8 +97,7 @@ const postHandler = async (req: Request, res: Response) => {
     res.render("media-applications/[id]/approve", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };

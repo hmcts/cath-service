@@ -13,6 +13,16 @@
   {% else %}
     <li class="govuk-service-navigation__item govuk-service-navigation__navigation-end"><a class="govuk-service-navigation__link" href="/sign-in">{{ navigation.signIn }}</a></li>
   {% endif %}
+  {% if languageToggle and language %}
+    <li class="govuk-service-navigation__item govuk-service-navigation__navigation-end app-language-toggle">
+      <a class="govuk-service-navigation__link"
+         href="{{ languageToggle.link }}"
+         lang="{{ otherLocale }}"
+         aria-label="{{ language.switchAriaLabel }}">
+        {{ language.switch }}
+      </a>
+    </li>
+  {% endif %}
 {% endset %}
 
 {{ govukServiceNavigation({
