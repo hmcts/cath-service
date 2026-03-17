@@ -1,6 +1,7 @@
 # Global values shared by all subcharts
 global:
   environment: dev
+  enableKeyVaults: false
   security:
     allowInsecureImages: true
 

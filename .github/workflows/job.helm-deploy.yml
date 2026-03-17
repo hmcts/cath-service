@@ -100,6 +100,8 @@ jobs:
           subchart-paths: apps/*/helm
           global-environment: dev
           business-area: Cross-Cutting
+          set: |
+            global.enableKeyVaults=false
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
