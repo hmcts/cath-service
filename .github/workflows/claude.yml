@@ -100,7 +100,7 @@ jobs:
           claude_args: |
             --dangerously-skip-permissions
             --append-system-prompt "You are running in a GitHub Action. The environment has been set up and yarn install has been run. You can use bash and yarn commands. Read @CLAUDE.md. Run yarn format, yarn lint and yarn test before committing changes. IMPORTANT: After committing, you MUST push the changes using 'git push'."
-            --allowedTools "Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
 
   claude-plan:
     if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '@plan')
@@ -183,7 +183,7 @@ jobs:
           claude_args: |
             --dangerously-skip-permissions
             --append-system-prompt "You are running in a GitHub Action for planning. Read @CLAUDE.md. Create a technical plan for the issue. Create a feature branch, commit plan files to docs/tickets/<issue-number>/, and push. Post clarifying questions as issue comments."
-            --allowedTools "Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
 
   claude-ready:
     if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '@ready')
@@ -268,7 +268,7 @@ jobs:
           claude_args: |
             --dangerously-skip-permissions
             --append-system-prompt "You are running in a GitHub Action for finalizing plans. Read @CLAUDE.md. Review and update the technical plan based on issue comments. Commit and push any updates."
-            --allowedTools "Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*)"
 
       - name: Update GitHub Project Status
         env:
@@ -420,15 +420,14 @@ jobs:
             ## Instructions
             1. Read the template file from templates/${{ steps.parse.outputs.template }}.md
                - Text in round brackets (like this) is template guidance - remove it and do not include it in the output
-            2. GOV.UK Design System guidance is already in your system prompt — do not read .claude/rules/design.md again
-            3. Search the codebase for similar implementations (limit to 2-3 targeted searches in libs/*/src/pages/ and libs/*/src/routes/)
-            4. Fill in ALL sections of the template with specific, actionable content based on the issue
-            5. Replace all placeholder text [in brackets] with real content
-            6. For wireframes, use ASCII art diagrams
-            7. For Welsh translations, use markers: [TRANSLATE: "English text here"]
+            2. Search the codebase for similar implementations (limit to 2-3 targeted searches in libs/*/src/pages/ and libs/*/src/routes/)
+            3. Fill in ALL sections of the template with specific, actionable content based on the issue
+            3. Replace all placeholder text [in brackets] with real content
+            4. For wireframes, use ASCII art diagrams
+            5. For Welsh translations, use markers: [TRANSLATE: "English text here"]
                - These markers will be processed by a translation script after generation
                - Use markers for ALL Welsh text - the script handles lookups and missing translations
-            8. Write the spec in TWO steps to stay within output limits:
+            7. Write the spec in TWO steps to stay within output limits:
                a. Use Write to create /tmp/spec-output.md with sections 1-7 (User Story through Content)
                b. Use Edit to append sections 8-14 (URL through Assumptions) to /tmp/spec-output.md
 
@@ -578,7 +577,7 @@ jobs:
 
             Write the completed analysis to /tmp/analysis-output.md using the Write tool.
           claude_args: |
-            --allowedTools "Read,Glob,Grep,Bash(gh:*),Write"
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(gh:*)"
             --append-system-prompt "You are detecting CONFLICTS and providing an IMPACT RATING only. Do not list files to modify, patterns to follow, or implementation guidance — that is @plan's job. Always provide output with conflicts (if any) and impact rating. Be specific with issue numbers when reporting conflicts."
 
       - name: Post analysis to issue
