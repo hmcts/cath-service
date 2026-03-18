@@ -37,7 +37,9 @@ export async function updateUser(userProvenanceId: string, input: UpdateUserInpu
     where: { userProvenanceId },
     data: {
       ...(input.role && { role: input.role }),
-      ...(input.lastSignedInDate && { lastSignedInDate: input.lastSignedInDate })
+      ...(input.lastSignedInDate && { lastSignedInDate: input.lastSignedInDate }),
+      ...(input.firstName && { firstName: input.firstName }),
+      ...(input.surname && { surname: input.surname })
     }
   });
 }

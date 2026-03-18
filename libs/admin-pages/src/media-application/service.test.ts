@@ -7,18 +7,22 @@ import { approveApplication, deleteProofOfIdFile, rejectApplication, splitName }
 vi.mock("node:fs/promises");
 vi.mock("./queries.js");
 
-const mockCheckUserExists = vi.fn();
+const mockFindUserByEmail = vi.fn();
 const mockCreateMediaUser = vi.fn();
+const mockUpdateMediaUser = vi.fn();
 
 vi.mock("@hmcts/auth", () => ({
-  checkUserExists: (...args: unknown[]) => mockCheckUserExists(...args),
-  createMediaUser: (...args: unknown[]) => mockCreateMediaUser(...args)
+  findUserByEmail: (...args: unknown[]) => mockFindUserByEmail(...args),
+  createMediaUser: (...args: unknown[]) => mockCreateMediaUser(...args),
+  updateMediaUser: (...args: unknown[]) => mockUpdateMediaUser(...args)
 }));
 
 const mockCreateUser = vi.fn();
+const mockUpdateUser = vi.fn();
 
 vi.mock("@hmcts/account/repository/query", () => ({
-  createUser: (...args: unknown[]) => mockCreateUser(...args)
+  createUser: (...args: unknown[]) => mockCreateUser(...args),
+  updateUser: (...args: unknown[]) => mockUpdateUser(...args)
 }));
 
 const MOCK_ACCESS_TOKEN = "test-access-token";
@@ -48,7 +52,7 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.APPROVED
       });
-      mockCheckUserExists.mockResolvedValue(false);
+      mockFindUserByEmail.mockResolvedValue(null);
       mockCreateMediaUser.mockResolvedValue({ azureAdUserId: "azure-user-123" });
       vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
@@ -57,7 +61,7 @@ describe("media-application service", () => {
 
       // Assert
       expect(result).toEqual({ isNewUser: true });
-      expect(mockCheckUserExists).toHaveBeenCalledWith(MOCK_ACCESS_TOKEN, "john@example.com");
+      expect(mockFindUserByEmail).toHaveBeenCalledWith(MOCK_ACCESS_TOKEN, "john@example.com");
       expect(mockCreateMediaUser).toHaveBeenCalledWith(MOCK_ACCESS_TOKEN, {
         email: "john@example.com",
         displayName: "John Doe",
@@ -68,7 +72,7 @@ describe("media-application service", () => {
       expect(fs.unlink).toHaveBeenCalledWith("/tmp/file.pdf");
     });
 
-    it("should NOT call createMediaUser or createUser when user already exists", async () => {
+    it("should update existing Azure AD user and not create new user when user already exists", async () => {
       // Arrange
       const mockApplication = {
         id: "1",
@@ -86,7 +90,7 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.APPROVED
       });
-      mockCheckUserExists.mockResolvedValue(true);
+      mockFindUserByEmail.mockResolvedValue("existing-azure-id");
       vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
       // Act
@@ -94,6 +98,15 @@ describe("media-application service", () => {
 
       // Assert
       expect(result).toEqual({ isNewUser: false });
+      expect(mockUpdateMediaUser).toHaveBeenCalledWith(MOCK_ACCESS_TOKEN, "existing-azure-id", {
+        displayName: "Jane Smith",
+        givenName: "Jane",
+        surname: "Smith"
+      });
+      expect(mockUpdateUser).toHaveBeenCalledWith("existing-azure-id", {
+        firstName: "Jane",
+        surname: "Smith"
+      });
       expect(mockCreateMediaUser).not.toHaveBeenCalled();
       expect(mockCreateUser).not.toHaveBeenCalled();
     });
@@ -116,7 +129,7 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.APPROVED
       });
-      mockCheckUserExists.mockResolvedValue(false);
+      mockFindUserByEmail.mockResolvedValue(null);
       mockCreateMediaUser.mockResolvedValue({ azureAdUserId: "new-azure-id" });
 
       // Act
@@ -144,7 +157,7 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.APPROVED
       });
-      mockCheckUserExists.mockResolvedValue(true);
+      mockFindUserByEmail.mockResolvedValue("existing-azure-id");
 
       // Act
       const result = await approveApplication("1", MOCK_ACCESS_TOKEN);
@@ -171,7 +184,7 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.APPROVED
       });
-      mockCheckUserExists.mockResolvedValue(false);
+      mockFindUserByEmail.mockResolvedValue(null);
       mockCreateMediaUser.mockResolvedValue({ azureAdUserId: "azure-123" });
 
       // Act
@@ -201,7 +214,7 @@ describe("media-application service", () => {
       };
 
       vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
-      mockCheckUserExists.mockResolvedValue(false);
+      mockFindUserByEmail.mockResolvedValue(null);
       mockCreateMediaUser.mockRejectedValue(new Error("Graph API unavailable"));
 
       // Act & Assert
@@ -223,7 +236,7 @@ describe("media-application service", () => {
       };
 
       vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
-      mockCheckUserExists.mockResolvedValue(false);
+      mockFindUserByEmail.mockResolvedValue(null);
       mockCreateMediaUser.mockRejectedValue(new Error("Azure AD error"));
 
       // Act & Assert
@@ -249,7 +262,7 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.APPROVED
       });
-      mockCheckUserExists.mockResolvedValue(true);
+      mockFindUserByEmail.mockResolvedValue("existing-azure-id");
 
       // Act
       await approveApplication("1", MOCK_ACCESS_TOKEN);

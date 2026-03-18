@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createUser } from "@hmcts/account/repository/query";
-import { checkUserExists, createMediaUser } from "@hmcts/auth";
+import { createUser, updateUser } from "@hmcts/account/repository/query";
+import { createMediaUser, findUserByEmail, updateMediaUser } from "@hmcts/auth";
 import { APPLICATION_STATUS } from "./model.js";
 import { getApplicationById, updateApplicationStatus } from "./queries.js";
 
@@ -16,11 +16,17 @@ export async function approveApplication(id: string, accessToken: string): Promi
     throw new Error("Application has already been reviewed");
   }
 
-  const userExists = await checkUserExists(accessToken, application.email);
+  const existingUserId = await findUserByEmail(accessToken, application.email);
+  const { givenName, surname } = splitName(application.name);
 
-  if (!userExists) {
-    const { givenName, surname } = splitName(application.name);
-
+  if (existingUserId) {
+    await updateMediaUser(accessToken, existingUserId, {
+      displayName: application.name,
+      givenName,
+      surname
+    });
+    await updateLocalMediaUser(existingUserId, givenName, surname);
+  } else {
     const { azureAdUserId } = await createMediaUser(accessToken, {
       email: application.email,
       displayName: application.name,
@@ -37,7 +43,7 @@ export async function approveApplication(id: string, accessToken: string): Promi
     await deleteProofOfIdFile(application.proofOfIdPath);
   }
 
-  return { isNewUser: !userExists };
+  return { isNewUser: !existingUserId };
 }
 
 export async function rejectApplication(id: string): Promise<void> {
@@ -81,6 +87,14 @@ export function splitName(fullName: string): { givenName: string; surname: strin
     givenName: trimmed.substring(0, lastSpaceIndex),
     surname: trimmed.substring(lastSpaceIndex + 1)
   };
+}
+
+async function updateLocalMediaUser(azureAdUserId: string, firstName: string, surname: string): Promise<void> {
+  try {
+    await updateUser(azureAdUserId, { firstName, surname });
+  } catch (error) {
+    console.error("Failed to update local media user:", error);
+  }
 }
 
 async function createLocalMediaUser(email: string, name: string, azureAdUserId: string): Promise<void> {

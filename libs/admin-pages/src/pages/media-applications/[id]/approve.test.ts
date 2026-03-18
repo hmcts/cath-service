@@ -191,7 +191,9 @@ describe("media-application approve page", () => {
       expect(mockSendMediaNewAccountEmail).toHaveBeenCalledWith({
         email: "test@example.com",
         fullName: "Test User",
-        signInPageLink: "https://example.com/reset"
+        signInPageLink: "https://example.com/reset",
+        subscriptionPageLink: "",
+        startPageLink: ""
       });
       expect(mockSendMediaExistingUserEmail).not.toHaveBeenCalled();
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
@@ -209,7 +211,9 @@ describe("media-application approve page", () => {
       expect(mockSendMediaExistingUserEmail).toHaveBeenCalledWith({
         email: "test@example.com",
         fullName: "Test User",
-        signInPageLink: "https://example.com/reset"
+        signInPageLink: "https://example.com/reset",
+        subscriptionPageLink: "",
+        startPageLink: ""
       });
       expect(mockSendMediaNewAccountEmail).not.toHaveBeenCalled();
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");

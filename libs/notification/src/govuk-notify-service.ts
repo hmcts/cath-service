@@ -28,6 +28,8 @@ interface MediaAccountEmailData {
   email: string;
   fullName: string;
   signInPageLink: string;
+  subscriptionPageLink?: string;
+  startPageLink?: string;
 }
 
 export async function sendMediaRejectionEmail(data: MediaApplicationRejectionEmailData): Promise<void> {
@@ -85,7 +87,10 @@ export async function sendMediaExistingUserEmail(data: MediaAccountEmailData): P
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_EXISTING_USER, data.email, {
     personalisation: {
       "Full name": data.fullName,
-      "sign in page link": data.signInPageLink
+      "sign in page link": data.signInPageLink,
+      forgot_password_process_link: data.signInPageLink,
+      "subscription page link": data.subscriptionPageLink ?? "",
+      "start page link": data.startPageLink ?? ""
     },
     reference: `media-existing-user-${Date.now()}`
   });

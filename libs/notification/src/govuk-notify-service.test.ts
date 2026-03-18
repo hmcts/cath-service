@@ -232,13 +232,18 @@ describe("GOV Notify Service", () => {
       await sendMediaExistingUserEmail({
         email: "test@example.com",
         fullName: "Existing Reporter",
-        signInPageLink: "https://example.com/sign-in"
+        signInPageLink: "https://example.com/sign-in",
+        subscriptionPageLink: "https://example.com/subscriptions",
+        startPageLink: "https://example.com/"
       });
 
       expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-existing-user", "test@example.com", {
         personalisation: {
           "Full name": "Existing Reporter",
-          "sign in page link": "https://example.com/sign-in"
+          "sign in page link": "https://example.com/sign-in",
+          forgot_password_process_link: "https://example.com/sign-in",
+          "subscription page link": "https://example.com/subscriptions",
+          "start page link": "https://example.com/"
         },
         reference: expect.stringContaining("media-existing-user-")
       });

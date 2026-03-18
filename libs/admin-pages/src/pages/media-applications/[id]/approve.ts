@@ -92,7 +92,9 @@ const postHandler = async (req: Request, res: Response) => {
     const emailData = {
       email: application.email,
       fullName: application.name,
-      signInPageLink
+      signInPageLink,
+      subscriptionPageLink: process.env.MEDIA_SUBSCRIPTION_PAGE_LINK ?? "",
+      startPageLink: process.env.MEDIA_START_PAGE_LINK ?? ""
     };
 
     try {

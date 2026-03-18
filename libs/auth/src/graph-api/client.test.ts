@@ -245,12 +245,18 @@ describe("MOCK_AZURE_B2C", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("should return false for checkUserExists when MOCK_AZURE_B2C is true", async () => {
-    const { checkUserExists } = await import("./client.js");
+  it("should return null for findUserByEmail when MOCK_AZURE_B2C is true", async () => {
+    const { findUserByEmail } = await import("./client.js");
 
-    const result = await checkUserExists("any-token", "user@example.com");
+    const result = await findUserByEmail("any-token", "user@example.com");
 
-    expect(result).toBe(false);
+    expect(result).toBeNull();
+  });
+
+  it("should skip updateMediaUser when MOCK_AZURE_B2C is true", async () => {
+    const { updateMediaUser } = await import("./client.js");
+
+    await expect(updateMediaUser("any-token", "user-123", { displayName: "Test", givenName: "Test", surname: "User" })).resolves.toBeUndefined();
   });
 
   it("should return mock user ID for createMediaUser when MOCK_AZURE_B2C is true", async () => {
@@ -316,14 +322,14 @@ describe("getGraphApiAccessToken", () => {
   });
 });
 
-describe("checkUserExists", () => {
+describe("findUserByEmail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should return true when user is found", async () => {
+  it("should return user ID when user is found", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { checkUserExists } = await import("./client.js");
+    const { findUserByEmail } = await import("./client.js");
 
     const mockGet = vi.fn().mockResolvedValue({
       value: [{ id: "user-123" }]
@@ -334,16 +340,16 @@ describe("checkUserExists", () => {
 
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
-    const result = await checkUserExists("test-token", "user@example.com");
+    const result = await findUserByEmail("test-token", "user@example.com");
 
-    expect(result).toBe(true);
+    expect(result).toBe("user-123");
     expect(mockApi).toHaveBeenCalledWith("/users");
     expect(mockFilter).toHaveBeenCalledWith("mail eq 'user@example.com'");
   });
 
-  it("should return false when user is not found", async () => {
+  it("should return null when user is not found", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { checkUserExists } = await import("./client.js");
+    const { findUserByEmail } = await import("./client.js");
 
     const mockGet = vi.fn().mockResolvedValue({ value: [] });
     const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
@@ -352,14 +358,14 @@ describe("checkUserExists", () => {
 
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
-    const result = await checkUserExists("test-token", "nobody@example.com");
+    const result = await findUserByEmail("test-token", "nobody@example.com");
 
-    expect(result).toBe(false);
+    expect(result).toBeNull();
   });
 
   it("should sanitise single quotes in email to prevent OData injection", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { checkUserExists } = await import("./client.js");
+    const { findUserByEmail } = await import("./client.js");
 
     const mockGet = vi.fn().mockResolvedValue({ value: [] });
     const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
@@ -368,14 +374,14 @@ describe("checkUserExists", () => {
 
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
-    await checkUserExists("test-token", "test'user@example.com");
+    await findUserByEmail("test-token", "test'user@example.com");
 
     expect(mockFilter).toHaveBeenCalledWith("mail eq 'test''user@example.com'");
   });
 
   it("should throw error when Graph API fails", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
-    const { checkUserExists } = await import("./client.js");
+    const { findUserByEmail } = await import("./client.js");
 
     const mockGet = vi.fn().mockRejectedValue({ message: "Service unavailable" });
     const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
@@ -384,7 +390,50 @@ describe("checkUserExists", () => {
 
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
-    await expect(checkUserExists("test-token", "user@example.com")).rejects.toThrow("Failed to check user existence: Service unavailable");
+    await expect(findUserByEmail("test-token", "user@example.com")).rejects.toThrow("Failed to find user by email: Service unavailable");
+  });
+});
+
+describe("updateMediaUser", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should patch user with displayName, givenName, surname", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { updateMediaUser } = await import("./client.js");
+
+    const mockPatch = vi.fn().mockResolvedValue(undefined);
+    const mockApi = vi.fn().mockReturnValue({ patch: mockPatch });
+
+    vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
+
+    await updateMediaUser("test-token", "user-456", {
+      displayName: "Jane Smith",
+      givenName: "Jane",
+      surname: "Smith"
+    });
+
+    expect(mockApi).toHaveBeenCalledWith("/users/user-456");
+    expect(mockPatch).toHaveBeenCalledWith({
+      displayName: "Jane Smith",
+      givenName: "Jane",
+      surname: "Smith"
+    });
+  });
+
+  it("should throw error when Graph API fails", async () => {
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { updateMediaUser } = await import("./client.js");
+
+    const mockPatch = vi.fn().mockRejectedValue({ message: "Forbidden" });
+    const mockApi = vi.fn().mockReturnValue({ patch: mockPatch });
+
+    vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
+
+    await expect(updateMediaUser("test-token", "user-456", { displayName: "Test", givenName: "Test", surname: "User" })).rejects.toThrow(
+      "Failed to update media user in Azure AD: Forbidden"
+    );
   });
 });
 

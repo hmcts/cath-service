@@ -112,13 +112,14 @@ export async function getGraphApiAccessToken(): Promise<string> {
 }
 
 /**
- * Checks if a user exists in Azure AD B2C by email address.
- * When MOCK_AZURE_B2C=true, returns false without calling Azure.
+ * Finds a user in Azure AD B2C by email address.
+ * Returns the Azure AD user ID if found, or null if not found.
+ * When MOCK_AZURE_B2C=true, returns null without calling Azure.
  */
-export async function checkUserExists(accessToken: string, email: string): Promise<boolean> {
+export async function findUserByEmail(accessToken: string, email: string): Promise<string | null> {
   if (isB2CMocked()) {
-    console.log(`MOCK_AZURE_B2C: Returning false for checkUserExists`);
-    return false;
+    console.log(`MOCK_AZURE_B2C: Returning null for findUserByEmail`);
+    return null;
   }
 
   const client = Client.init({
@@ -131,11 +132,48 @@ export async function checkUserExists(accessToken: string, email: string): Promi
     const sanitisedEmail = email.replace(/'/g, "''");
     const result = await client.api("/users").filter(`mail eq '${sanitisedEmail}'`).select("id").get();
 
-    return result?.value?.length > 0;
+    return result?.value?.[0]?.id ?? null;
   } catch (error) {
     const graphError = error as GraphError;
-    console.error("Graph API checkUserExists error:", { statusCode: graphError.statusCode, code: graphError.code, message: graphError.message });
-    throw new Error(`Failed to check user existence: ${graphError.message || "Unknown error"}`);
+    console.error("Graph API findUserByEmail error:", { statusCode: graphError.statusCode, code: graphError.code, message: graphError.message });
+    throw new Error(`Failed to find user by email: ${graphError.message || "Unknown error"}`);
+  }
+}
+
+/**
+ * Updates an existing media user's name in Azure AD B2C.
+ * When MOCK_AZURE_B2C=true, does nothing.
+ */
+export async function updateMediaUser(
+  accessToken: string,
+  userId: string,
+  userData: {
+    displayName: string;
+    givenName: string;
+    surname: string;
+  }
+): Promise<void> {
+  if (isB2CMocked()) {
+    console.log(`MOCK_AZURE_B2C: Skipping updateMediaUser for ${userId}`);
+    return;
+  }
+
+  const client = Client.init({
+    authProvider: (done) => {
+      done(null, accessToken);
+    }
+  });
+
+  try {
+    await client.api(`/users/${userId}`).patch({
+      displayName: userData.displayName,
+      givenName: userData.givenName,
+      surname: userData.surname
+    });
+  } catch (error) {
+    const graphError = error as GraphError;
+    console.error("Graph API updateMediaUser error:", { statusCode: graphError.statusCode, code: graphError.code, message: graphError.message });
+    throw new Error(`Failed to update media user in Azure AD: ${graphError.message || "Unknown error"}`);
   }
 }
 
