@@ -20,6 +20,7 @@ export default {
   errorMessages: {
     selectOption: "Rhaid dewis opsiwn",
     notFound: "Cais heb ei ddarganfod.",
-    loadFailed: "Methu llwytho manylion yr ymgeisydd. Ceisiwch eto'n hwyrach."
+    loadFailed: "Methu llwytho manylion yr ymgeisydd. Ceisiwch eto'n hwyrach.",
+    azureAdFailed: "Methu creu cyfrif defnyddiwr yn Azure AD. Ceisiwch eto'n hwyrach."
   }
 };
