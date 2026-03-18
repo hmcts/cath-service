@@ -231,7 +231,6 @@ describe("media-application approve page", () => {
       // Arrange
       delete process.env.MEDIA_FORGOT_PASSWORD_LINK;
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      vi.mocked(approveApplication).mockResolvedValue({ isNewUser: true });
       mockRequest.body = { confirm: "yes" };
 
       // Act
@@ -239,6 +238,7 @@ describe("media-application approve page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       // Assert
+      expect(approveApplication).not.toHaveBeenCalled();
       expect(renderSpy).toHaveBeenCalledWith(
         "media-applications/[id]/approve",
         expect.objectContaining({
