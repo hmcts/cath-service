@@ -46,7 +46,6 @@
     "redis": "5.11.0"
   },
   "devDependencies": {
-    "@types/compression": "1.8.1",
     "@types/config": "3.3.5",
     "@types/cookie-parser": "1.4.10",
     "@types/express": "5.0.6",
