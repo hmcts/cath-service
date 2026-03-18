@@ -40,7 +40,7 @@ export const POST = async (req: Request, res: Response) => {
     case "hmcts":
       return res.redirect(`/cft-login?lng=${locale}`);
     case "common-platform":
-      return res.redirect("/");
+      return res.redirect(`/crime-login?lng=${locale}`);
     case "cath":
       return res.redirect("/");
     default: {
