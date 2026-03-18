@@ -1,13 +1,18 @@
+// NOTE: dotenv.config() must run before app.ts is imported because app.ts
+// transitively imports @hmcts/postgres which creates pg.Pool at module load time.
+// Using a dynamic import for app.ts ensures DATABASE_URL is set first.
+
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root (three levels up from src/)
+// Load .env from project root (three levels up from src/) BEFORE importing app
 dotenv.config({ path: path.join(__dirname, "../../../.env") });
+
+const { createApp } = await import("./app.js");
 
 const PORT = process.env.API_PORT || 3001;
 
