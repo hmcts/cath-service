@@ -1,0 +1,18 @@
+{
+  "name": "@hmcts/audit-log",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}

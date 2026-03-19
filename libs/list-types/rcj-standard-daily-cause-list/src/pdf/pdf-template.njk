@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.common.factLinkUrl }}">{{ t.common.factLinkText }}</a> {{ t.common.factAdditionalText }}</p>
+
+    {% if court.locationLine1 %}
+    <div class="location">
+      <p class="bold">{{ court.locationLine1 }}</p>
+      {% if court.locationLine2 %}<p>{{ court.locationLine2 }}</p>{% endif %}
+      {% if court.locationLine3 %}<p>{{ court.locationLine3 }}</p>{% endif %}
+      {% if court.locationLine4 %}<p>{{ court.locationLine4 }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <p class="bold header-date">{{ t.common.listFor }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.common.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.common.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.common.importantInfoTitle }}</h3>
+
+    {# County Court London / Mayor City - hearingsInfoText and mediaAndObserversText #}
+    {% if court.hearingsInfoText %}
+      <p>{{ court.hearingsInfoText }}</p>
+    {% endif %}
+    {% if court.mediaAndObserversText %}
+      <p>{{ court.mediaAndObserversText }}</p>
+    {% endif %}
+
+    {# Civil Courts RCJ - mediaInquiriesText, openJusticeText, courtExclusionText #}
+    {% if court.mediaInquiriesText %}
+      <p>{{ court.mediaInquiriesText }}</p>
+    {% endif %}
+    {% if court.openJusticeText %}
+      <p>{{ court.openJusticeText }}</p>
+    {% endif %}
+    {% if court.courtExclusionText %}
+      <p>{{ court.courtExclusionText }}</p>
+    {% endif %}
+
+    {# Court of Appeal Criminal - importantInfoText, quickGuideText #}
+    {% if court.importantInfoText %}
+      <p>{{ court.importantInfoText }}</p>
+    {% endif %}
+    {% if court.quickGuideText %}
+      <p>{{ court.quickGuideText }} <a href="{{ court.quickGuideLinkUrl }}">{{ court.quickGuideLinkText }}</a>.</p>
+    {% endif %}
+
+    {# Family Division - generalHearingRulesText and subsections #}
+    {% if court.generalHearingRulesText %}
+      <p>{{ court.generalHearingRulesText }}</p>
+    {% endif %}
+    {% if court.courtOfProtectionTitle %}
+      <h4>{{ court.courtOfProtectionTitle }}</h4>
+      <p>{{ court.courtOfProtectionText }}</p>
+    {% endif %}
+    {% if court.tipstaffTitle %}
+      <h4>{{ court.tipstaffTitle }}</h4>
+      <p>{{ court.tipstaffText }}</p>
+    {% endif %}
+    {% if court.judgmentsTitle and court.judgmentsText %}
+      <h4>{{ court.judgmentsTitle }}</h4>
+      <p>{{ court.judgmentsText }}</p>
+    {% endif %}
+
+    {# King's Bench Division - remoteHearingsTitle, remoteJudgmentsTitle, bundlesTitle #}
+    {% if court.remoteHearingsTitle %}
+      <h4>{{ court.remoteHearingsTitle }}</h4>
+      <p>{{ court.remoteHearingsText }}</p>
+    {% endif %}
+    {% if court.remoteJudgmentsTitle %}
+      <h4>{{ court.remoteJudgmentsTitle }}</h4>
+      <p>{{ court.remoteJudgmentsText }}</p>
+    {% endif %}
+    {% if court.bundlesTitle and court.bundleFilingText %}
+      <h4>{{ court.bundlesTitle }}</h4>
+      <p>{{ court.bundleFilingText }}</p>
+    {% endif %}
+    {% if court.bundlesTitle and court.bundlesText %}
+      <h4>{{ court.bundlesTitle }}</h4>
+      <p>{{ court.bundlesText }}</p>
+    {% endif %}
+
+    {# King's Bench Masters - pressAndPublicTitle, inPersonHearingsTitle #}
+    {% if court.pressAndPublicTitle %}
+      <h4>{{ court.pressAndPublicTitle }}</h4>
+      <p>{{ court.pressAndPublicText }}</p>
+    {% endif %}
+    {% if court.inPersonHearingsTitle %}
+      <h4>{{ court.inPersonHearingsTitle }}</h4>
+      <p>{{ court.inPersonHearingsText }}</p>
+    {% endif %}
+
+    {# Senior Courts Costs Office - moreInfoLinkText #}
+    {% if court.moreInfoLinkText %}
+      <p>{{ court.moreInfoLinkText }} <a href="{{ court.moreInfoLinkUrl }}">{{ court.moreInfoLinkUrl }}</a></p>
+    {% endif %}
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.common.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.caseNumber }}</th>
+          <th>{{ t.common.tableHeaders.caseDetails }}</th>
+          <th class="no-wrap">{{ t.common.tableHeaders.hearingType }}</th>
+          <th>{{ t.common.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.judge }}</td>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td class="no-wrap">{{ hearing.caseNumber }}</td>
+            <td>{{ hearing.caseDetails }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hearings scheduled.</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.common.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.common.cautionNote }}</p>
+      <p>{{ t.common.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>

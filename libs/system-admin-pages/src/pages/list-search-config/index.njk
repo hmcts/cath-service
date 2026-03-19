@@ -1,0 +1,51 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ heading }}</h1>
+
+    <p class="govuk-body">{{ body }}</p>
+
+    <form method="post" action="" novalidate>
+      {{ govukInput({
+        id: "caseNumberFieldName",
+        name: "caseNumberFieldName",
+        type: "text",
+        label: {
+          text: caseNumberFieldLabel
+        },
+        errorMessage: fieldErrors.caseNumberFieldName if fieldErrors and fieldErrors.caseNumberFieldName,
+        value: data.caseNumberFieldName
+      }) }}
+
+      {{ govukInput({
+        id: "caseNameFieldName",
+        name: "caseNameFieldName",
+        type: "text",
+        label: {
+          text: caseNameFieldLabel
+        },
+        errorMessage: fieldErrors.caseNameFieldName if fieldErrors and fieldErrors.caseNameFieldName,
+        value: data.caseNameFieldName
+      }) }}
+
+      {{ govukButton({
+        text: saveButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}
