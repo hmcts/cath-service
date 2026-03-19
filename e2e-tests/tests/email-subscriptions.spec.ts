@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 import { prisma } from "@hmcts/postgres";
+import { expect, test } from "@playwright/test";
+import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 
 // Store test location data per test to avoid parallel test conflicts
 interface TestLocationData {
@@ -45,14 +45,14 @@ async function createTestLocation(): Promise<TestLocationData> {
       contactNo: "01234567890",
       locationSubJurisdictions: {
         create: {
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-        },
+          subJurisdictionId: subJurisdiction.subJurisdictionId
+        }
       },
       locationRegions: {
         create: {
-          regionId: region.regionId,
-        },
-      },
+          regionId: region.regionId
+        }
+      }
     },
     update: {
       name: testLocationName,
@@ -62,22 +62,22 @@ async function createTestLocation(): Promise<TestLocationData> {
       locationSubJurisdictions: {
         deleteMany: {},
         create: {
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-        },
+          subJurisdictionId: subJurisdiction.subJurisdictionId
+        }
       },
       locationRegions: {
         deleteMany: {},
         create: {
-          regionId: region.regionId,
-        },
-      },
-    },
+          regionId: region.regionId
+        }
+      }
+    }
   });
 
   return {
     locationId: testLocationId,
     name: testLocationName,
-    welshName: testLocationWelshName,
+    welshName: testLocationWelshName
   };
 }
 
@@ -87,12 +87,12 @@ async function deleteTestLocation(locationData: TestLocationData): Promise<void>
 
     // Delete subscriptions first (if any)
     await prisma.subscription.deleteMany({
-      where: { locationId: locationData.locationId },
+      where: { locationId: locationData.locationId }
     });
 
     // Delete location (cascade will handle relationships)
     await prisma.location.delete({
-      where: { locationId: locationData.locationId },
+      where: { locationId: locationData.locationId }
     });
   } catch (error) {
     // Ignore if location doesn't exist
@@ -119,18 +119,14 @@ test.describe("Email Subscriptions", () => {
     await continueButton.click();
 
     // Perform CFT IDAM login
-    await loginWithCftIdam(
-      page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-    );
+    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
     // Should be redirected to account-home after successful login
     await expect(page).toHaveURL(/\/account-home/);
   });
 
   // Clean up test location after each test
-  test.afterEach(async ({}, testInfo) => {
+  test.afterEach(async (_fixtures, testInfo) => {
     const locationData = testLocationMap.get(testInfo.testId);
     if (locationData) {
       await deleteTestLocation(locationData);
@@ -159,9 +155,7 @@ test.describe("Email Subscriptions", () => {
       await expect(page.getByRole("button", { name: /add email subscription/i })).toBeVisible();
 
       // Check accessibility on subscription management page
-      let accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Step 2: Navigate to location search
@@ -178,9 +172,7 @@ test.describe("Email Subscriptions", () => {
 
       // Check accessibility on location search page
       await page.waitForLoadState("networkidle");
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Test back navigation from location search
@@ -216,9 +208,7 @@ test.describe("Email Subscriptions", () => {
       await expect(removeButtons.first()).toBeVisible();
 
       // Check accessibility on pending subscriptions page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Step 5: Confirm subscription
@@ -234,9 +224,7 @@ test.describe("Email Subscriptions", () => {
       await expect(manageLink).toBeVisible();
 
       // Check accessibility on confirmation page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Navigate back to subscription management
@@ -259,7 +247,10 @@ test.describe("Email Subscriptions", () => {
       await page.waitForLoadState("networkidle");
       const testLocationCheckbox = page.locator(`#location-${locationData.locationId}`);
       await testLocationCheckbox.check();
-      await page.locator("form[method='post']").getByRole("button", { name: /continue/i }).click();
+      await page
+        .locator("form[method='post']")
+        .getByRole("button", { name: /continue/i })
+        .click();
       await page.getByRole("button", { name: /confirm/i }).click();
       await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
       await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
@@ -311,9 +302,7 @@ test.describe("Email Subscriptions", () => {
       await expect(manageLink).toBeVisible();
 
       // Check accessibility on confirmation page
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Navigate back to subscription management
@@ -333,7 +322,7 @@ test.describe("Email Subscriptions", () => {
         "/pending-subscriptions",
         "/subscription-confirmed",
         "/delete-subscription?subscriptionId=550e8400-e29b-41d4-a716-446655440000",
-        "/unsubscribe-confirmation",
+        "/unsubscribe-confirmation"
       ];
 
       for (const url of protectedPages) {

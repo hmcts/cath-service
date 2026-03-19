@@ -1,10 +1,10 @@
-import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-import { expect, test } from "@playwright/test";
-import { prisma } from "@hmcts/postgres";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import AxeBuilder from "@axe-core/playwright";
+import { prisma } from "@hmcts/postgres";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -126,12 +126,12 @@ async function createFlatFileArtefact(
 }
 
 // Helper function to create a flat file link in the summary of publications page
-async function navigateToSummaryPage(page: Page, locationId: string) {
+async function _navigateToSummaryPage(page: Page, locationId: string) {
   await page.goto(`/summary-of-publications?locationId=${locationId}`);
   await page.waitForLoadState("domcontentloaded");
 }
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: "serial" });
 
 test.describe("Flat File Viewing", () => {
   const testLocationId = "9"; // SJP location from seed data
@@ -164,7 +164,7 @@ test.describe("Flat File Viewing", () => {
     try {
       const files = await fs.promises.readdir(STORAGE_PATH);
       for (const file of files) {
-        if (file.endsWith('.pdf')) {
+        if (file.endsWith(".pdf")) {
           await fs.promises.unlink(path.join(STORAGE_PATH, file));
         }
       }
@@ -177,11 +177,14 @@ test.describe("Flat File Viewing", () => {
     test("should open flat file in new tab and display PDF inline with accessibility compliance (TS1, TS2, TS9)", async ({ page, context }) => {
       // Arrange: Create test artefact and file
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Test Hearing List for Happy Path"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Test Hearing List for Happy Path"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate directly to the flat file viewer page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -248,11 +251,14 @@ test.describe("Flat File Viewing", () => {
     test("should serve PDF with correct Content-Type and Content-Disposition headers (TS2, TS8)", async ({ page }) => {
       // Arrange: Create test artefact and file
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Test PDF for Headers"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Test PDF for Headers"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Make request to download endpoint
       const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
@@ -273,14 +279,17 @@ test.describe("Flat File Viewing", () => {
       expect(cacheControl).toBe("private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
-    test("should allow downloading PDF file (TS3)", async ({ page, context }) => {
+    test("should allow downloading PDF file (TS3)", async ({ page: _page, context }) => {
       // Arrange: Create test artefact and file
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Test PDF for Download"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Test PDF for Download"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to flat file viewer page
       const viewerPage = await context.newPage();
@@ -312,13 +321,16 @@ test.describe("Flat File Viewing", () => {
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        displayFrom: twoDaysAgo,
-        displayTo: yesterday, // Expired
-        fileContent: "Expired File"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          displayFrom: twoDaysAgo,
+          displayTo: yesterday, // Expired
+          fileContent: "Expired File"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -338,7 +350,7 @@ test.describe("Flat File Viewing", () => {
       await expect(errorMessage).toContainText(/not available or has expired/i);
 
       // Verify back button is present
-      const backButton = page.locator('a.govuk-button', { hasText: /back/i });
+      const backButton = page.locator("a.govuk-button", { hasText: /back/i });
       await expect(backButton).toBeVisible();
     });
 
@@ -348,13 +360,16 @@ test.describe("Flat File Viewing", () => {
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        displayFrom: tomorrow, // Not yet available
-        displayTo: nextWeek,
-        fileContent: "Future File"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          displayFrom: tomorrow, // Not yet available
+          displayTo: nextWeek,
+          fileContent: "Future File"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -374,11 +389,14 @@ test.describe("Flat File Viewing", () => {
     test("should show error message when file missing from storage (TS5)", async ({ page }) => {
       // Arrange: Create artefact without file
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        createFile: false // Don't create file in storage
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          createFile: false // Don't create file in storage
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -398,7 +416,7 @@ test.describe("Flat File Viewing", () => {
       await expect(errorSummaryList).toContainText(/could not load the hearing list file/i);
 
       // Verify back button is present
-      const backButton = page.locator('a.govuk-button', { hasText: /back/i });
+      const backButton = page.locator("a.govuk-button", { hasText: /back/i });
       await expect(backButton).toBeVisible();
     });
 
@@ -422,11 +440,14 @@ test.describe("Flat File Viewing", () => {
     test("should show error message when locationId does not match artefact", async ({ page }) => {
       // Arrange: Create artefact with one location
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Location Mismatch Test"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Location Mismatch Test"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Try to access with different locationId
       const wrongLocationId = "9001";
@@ -447,12 +468,15 @@ test.describe("Flat File Viewing", () => {
     test("should show error message when artefact is not a flat file", async ({ page }) => {
       // Arrange: Create artefact with isFlatFile=false
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        isFlatFile: false, // Not a flat file
-        createFile: false
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          isFlatFile: false, // Not a flat file
+          createFile: false
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to flat file URL
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -473,11 +497,14 @@ test.describe("Flat File Viewing", () => {
     test("should return to previous page when back button is clicked (TS6)", async ({ page }) => {
       // Arrange: Create missing file scenario
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        createFile: false // Don't create file to trigger error
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          createFile: false // Don't create file to trigger error
+        },
+        trackedArtefactIds
+      );
 
       // Act: First establish session by visiting summary page
       await page.goto("/view-option");
@@ -495,10 +522,10 @@ test.describe("Flat File Viewing", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify error page is shown
-      await expect(page.locator('h1')).toContainText(/not available|error/i);
+      await expect(page.locator("h1")).toContainText(/not available|error/i);
 
       // Find and verify back button (more specific selector to avoid matching "feedback")
-      const backButton = page.locator('a.govuk-button').filter({ hasText: /^back/i });
+      const backButton = page.locator("a.govuk-button").filter({ hasText: /^back/i });
       await expect(backButton).toBeVisible();
 
       // Verify back button links to summary of publications with locationId parameter
@@ -515,11 +542,14 @@ test.describe("Flat File Viewing", () => {
     test("should display Welsh error messages when lng=cy is set (TS7)", async ({ page }) => {
       // Arrange: Create missing file scenario
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        createFile: false // Don't create file to trigger error
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          createFile: false // Don't create file to trigger error
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to flat file URL with Welsh language parameter
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
@@ -535,18 +565,21 @@ test.describe("Flat File Viewing", () => {
       await expect(errorSummaryList).toBeVisible();
       await expect(errorSummaryList).toContainText(/ni allwn lwytho/i);
 
-      const backButton = page.locator('a.govuk-button', { hasText: /ôl/i });
+      const backButton = page.locator("a.govuk-button", { hasText: /ôl/i });
       await expect(backButton).toBeVisible();
     });
 
     test("should display Welsh content in viewer page when file exists", async ({ page }) => {
       // Arrange: Create test artefact and file
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Test Welsh Viewer"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Test Welsh Viewer"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to viewer page with Welsh language
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
@@ -563,11 +596,14 @@ test.describe("Flat File Viewing", () => {
     test("should meet WCAG 2.2 AA standards on error page (TS9)", async ({ page }) => {
       // Arrange: Create missing file scenario
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        createFile: false
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          createFile: false
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to error page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -599,11 +635,14 @@ test.describe("Flat File Viewing", () => {
     test("should support keyboard navigation on error page (TS10)", async ({ page }) => {
       // Arrange: Create missing file scenario
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        createFile: false
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          createFile: false
+        },
+        trackedArtefactIds
+      );
 
       // Act: First establish session by visiting summary page
       await page.goto("/view-option");
@@ -621,7 +660,7 @@ test.describe("Flat File Viewing", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify error page elements are keyboard accessible (specific selector to avoid matching "feedback")
-      const backButton = page.locator('a.govuk-button').filter({ hasText: /^back/i });
+      const backButton = page.locator("a.govuk-button").filter({ hasText: /^back/i });
       await expect(backButton).toBeVisible();
 
       // Test Tab navigation to back button
@@ -646,11 +685,14 @@ test.describe("Flat File Viewing", () => {
     test("should support keyboard navigation on viewer page", async ({ page }) => {
       // Arrange: Create test artefact and file
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Test Keyboard Viewer"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Test Keyboard Viewer"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Navigate to viewer page
       await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
@@ -694,11 +736,14 @@ test.describe("Flat File Viewing", () => {
     test("should serve PDF with application/pdf Content-Type (TS8)", async ({ page }) => {
       // Arrange: Create test PDF
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "PDF Content Type Test"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "PDF Content Type Test"
+        },
+        trackedArtefactIds
+      );
 
       // Act: Request file
       const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
@@ -715,11 +760,14 @@ test.describe("Flat File Viewing", () => {
     test("should complete full journey from landing page to viewing flat file", async ({ page }) => {
       // Arrange: Create test flat file artefact
       const artefactId = randomUUID();
-      await createFlatFileArtefact({
-        artefactId,
-        locationId: testLocationId,
-        fileContent: "Full Journey Test"
-      }, trackedArtefactIds);
+      await createFlatFileArtefact(
+        {
+          artefactId,
+          locationId: testLocationId,
+          fileContent: "Full Journey Test"
+        },
+        trackedArtefactIds
+      );
 
       // Step 1: Start at landing page
       await page.goto("/");

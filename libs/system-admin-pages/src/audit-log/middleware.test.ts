@@ -1,4 +1,3 @@
-import type { UserProfile } from "@hmcts/auth";
 import type { NextFunction, Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogMiddleware } from "./middleware.js";
@@ -555,7 +554,7 @@ describe("auditLogMiddleware", () => {
     });
 
     it("should handle render with callback", async () => {
-      const originalRender = mockResponse.render;
+      const _originalRender = mockResponse.render;
 
       const middleware = auditLogMiddleware();
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);
@@ -568,7 +567,7 @@ describe("auditLogMiddleware", () => {
     });
 
     it("should handle render with options only", async () => {
-      const originalRender = mockResponse.render;
+      const _originalRender = mockResponse.render;
 
       const middleware = auditLogMiddleware();
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);
@@ -580,7 +579,7 @@ describe("auditLogMiddleware", () => {
     });
 
     it("should handle render with view only", async () => {
-      const originalRender = mockResponse.render;
+      const _originalRender = mockResponse.render;
 
       const middleware = auditLogMiddleware();
       await middleware(mockRequest as Request, mockResponse as Response, mockNext);

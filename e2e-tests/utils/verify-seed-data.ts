@@ -48,8 +48,8 @@ export async function verifySeedData(): Promise<VerificationResult> {
     const locations = await (prisma as any).location.findMany({
       include: {
         locationRegions: true,
-        locationSubJurisdictions: true,
-      },
+        locationSubJurisdictions: true
+      }
     });
     console.log(`✓ Found ${locations.length} locations`);
 
@@ -105,20 +105,24 @@ export async function verifySeedData(): Promise<VerificationResult> {
         subJurisdictions: subJurisdictions.length,
         regions: regions.length,
         locations: locations.length,
-        artefacts: artefacts.length,
-      },
+        artefacts: artefacts.length
+      }
     };
 
     if (result.success) {
       console.log("\n✓ All seed data verification checks passed!");
     } else {
       console.error("\n✗ Seed data verification failed:");
-      errors.forEach((error) => console.error(`  - ${error}`));
+      for (const error of errors) {
+        console.error(`  - ${error}`);
+      }
     }
 
     if (warnings.length > 0) {
       console.warn("\n⚠ Warnings:");
-      warnings.forEach((warning) => console.warn(`  - ${warning}`));
+      for (const warning of warnings) {
+        console.warn(`  - ${warning}`);
+      }
     }
 
     console.log("\nSummary:", result.summary);
@@ -135,8 +139,8 @@ export async function verifySeedData(): Promise<VerificationResult> {
         subJurisdictions: 0,
         regions: 0,
         locations: 0,
-        artefacts: 0,
-      },
+        artefacts: 0
+      }
     };
   }
 }

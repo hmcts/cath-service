@@ -64,12 +64,7 @@ export async function getNotificationsByPublicationId(publicationId: string) {
   });
 }
 
-export async function waitForNotifications(
-  publicationId: string,
-  maxRetries = 15,
-  delayMs = 1000,
-  waitForGovNotifyId = false
-): Promise<any[]> {
+export async function waitForNotifications(publicationId: string, maxRetries = 15, delayMs = 1000, waitForGovNotifyId = false): Promise<any[]> {
   let notifications = [];
   for (let i = 0; i < maxRetries; i++) {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -104,7 +99,7 @@ export async function getGovNotifyEmail(notificationId: string, maxRetries = 5, 
   const notifyClient = new NotifyClient(apiKey);
 
   // Retry fetching the notification as it might not be immediately available
-  let lastError;
+  let lastError: unknown;
   for (let i = 0; i < maxRetries; i++) {
     try {
       await new Promise((resolve) => setTimeout(resolve, delayMs));

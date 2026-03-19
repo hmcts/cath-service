@@ -73,7 +73,10 @@ describe("upsertLocations", () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       }),
-      update: {}
+      update: expect.objectContaining({
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      })
     });
 
     expect(mockTx.locationSubJurisdiction.deleteMany).toHaveBeenCalled();

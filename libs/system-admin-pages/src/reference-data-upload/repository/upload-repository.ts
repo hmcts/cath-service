@@ -45,7 +45,12 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
           email: row.email || null,
           contactNo: row.contactNo || null
         },
-        update: {}
+        update: {
+          name: row.locationName,
+          welshName: row.welshLocationName,
+          email: row.email || null,
+          contactNo: row.contactNo || null
+        }
       });
 
       // Delete existing junction records
