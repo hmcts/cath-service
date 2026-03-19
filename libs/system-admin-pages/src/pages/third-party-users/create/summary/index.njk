@@ -1,0 +1,50 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+  <a href="/third-party-users/create{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: { text: nameLabel },
+          value: { text: name },
+          actions: {
+            items: [
+              {
+                href: "/third-party-users/create" + lngParam,
+                text: changeLink,
+                visuallyHiddenText: name
+              }
+            ]
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: confirmButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

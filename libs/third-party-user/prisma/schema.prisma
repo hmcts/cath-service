@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../apps/postgres/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ThirdPartyUser {
+  id            String                   @id @default(cuid())
+  name          String                   @db.VarChar(255)
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  subscriptions ThirdPartySubscription[]
+
+  @@map("third_party_user")
+}
+
+model ThirdPartySubscription {
+  id               String         @id @default(cuid())
+  thirdPartyUserId String         @map("third_party_user_id")
+  listType         String         @map("list_type") @db.VarChar(100)
+  sensitivity      String         @db.VarChar(20)
+
+  thirdPartyUser ThirdPartyUser @relation(fields: [thirdPartyUserId], references: [id], onDelete: Cascade)
+
+  @@unique([thirdPartyUserId, listType])
+  @@map("third_party_subscription")
+}

@@ -1,0 +1,19 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {{ govukPanel({
+      titleText: panelTitle,
+      html: panelBody
+    }) }}
+
+    <p class="govuk-body">
+      <a href="/third-party-users{{ lngParam }}" class="govuk-link">{{ manageUsersLink }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
