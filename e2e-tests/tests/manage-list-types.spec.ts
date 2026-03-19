@@ -111,9 +111,7 @@ test.describe("Manage List Types End-to-End Flow", () => {
     test("should meet WCAG 2.2 AA standards", async ({ page }) => {
       await page.goto("/manage-list-types");
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
@@ -216,9 +214,7 @@ test.describe("Manage List Types End-to-End Flow", () => {
       await page.goto("/list-search-config/1");
       await page.waitForLoadState("networkidle");
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
@@ -231,9 +227,7 @@ test.describe("Manage List Types End-to-End Flow", () => {
       await page.fill('input[name="caseNumberFieldName"]', "invalid!");
       await page.getByRole("button", { name: /confirm/i }).click();
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
@@ -325,9 +319,7 @@ test.describe("Manage List Types End-to-End Flow", () => {
 
       await page.waitForURL("/list-search-config-success");
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });

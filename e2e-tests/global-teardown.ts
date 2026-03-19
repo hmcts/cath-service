@@ -22,9 +22,7 @@ async function globalTeardown() {
     });
 
     // Find artefacts created during tests (not in existing list)
-    const newArtefactIds = currentArtefacts
-      .map((a) => a.artefactId)
-      .filter((id) => !existingIds.includes(id));
+    const newArtefactIds = currentArtefacts.map((a) => a.artefactId).filter((id) => !existingIds.includes(id));
 
     // Clean up database records
     if (newArtefactIds.length > 0) {
@@ -81,9 +79,7 @@ async function globalTeardown() {
       });
 
       // Find locations created during tests (not in existing list)
-      const newLocationIds = currentLocations
-        .map((l: any) => l.locationId)
-        .filter((id: number) => !existingLocationIds.includes(id));
+      const newLocationIds = currentLocations.map((l: any) => l.locationId).filter((id: number) => !existingLocationIds.includes(id));
 
       // Clean up location records (CASCADE will handle junction tables)
       if (newLocationIds.length > 0) {

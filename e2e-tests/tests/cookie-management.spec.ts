@@ -165,7 +165,7 @@ test.describe("Cookie Management", () => {
       const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
 
       if (!cookiePolicy || !cookiePolicy.value) {
-        throw new Error(`cookie_policy not found or has no value. Available cookies: ${cookies.map(c => c.name).join(", ")}`);
+        throw new Error(`cookie_policy not found or has no value. Available cookies: ${cookies.map((c) => c.name).join(", ")}`);
       }
 
       // Cookie value may be double-encoded, decode until we get valid JSON
@@ -190,7 +190,9 @@ test.describe("Cookie Management", () => {
             }
           } else {
             // Last attempt failed
-            throw new Error(`Failed to parse cookie as JSON after ${MAX_DECODE_ATTEMPTS} attempts. Final decoded value: ${decodedValue}, Raw value: ${cookiePolicy.value}`);
+            throw new Error(
+              `Failed to parse cookie as JSON after ${MAX_DECODE_ATTEMPTS} attempts. Final decoded value: ${decodedValue}, Raw value: ${cookiePolicy.value}`
+            );
           }
         }
       }

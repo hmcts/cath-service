@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nodemon --watch src --exec npx tsx src/server.ts",
+    "dev": "nodemon --watch src --exec 'npx tsx --env-file ../../.env src/server.ts'",
+    "dev:debug": "nodemon --watch src --exec 'npx tsx --inspect=9230 --env-file ../../.env src/server.ts'",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest run",

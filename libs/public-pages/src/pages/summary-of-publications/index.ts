@@ -42,6 +42,7 @@ export const GET = async (req: Request, res: Response) => {
     orderBy: [{ lastReceivedDate: "desc" }]
   });
 
+  console.log("***length: " + allArtefacts.length);
   // Filter artefacts based on user metadata access rights
   // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
   const artefacts = filterPublicationsForSummary(req.user, allArtefacts, mockListTypes);

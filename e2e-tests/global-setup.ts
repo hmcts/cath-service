@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { prisma } from "@hmcts/postgres";
-import { seedAllReferenceData } from "./utils/seed-reference-data.js";
-import { seedLocationData } from "./utils/seed-location-data.js";
-import { verifySeedData } from "./utils/verify-seed-data.js";
-import type { FullConfig } from "@playwright/test";
 import { fileURLToPath } from "node:url";
+import { prisma } from "@hmcts/postgres";
+import type { FullConfig } from "@playwright/test";
+import { seedLocationData } from "./utils/seed-location-data.js";
+import { seedAllReferenceData } from "./utils/seed-reference-data.js";
+import { verifySeedData } from "./utils/verify-seed-data.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
