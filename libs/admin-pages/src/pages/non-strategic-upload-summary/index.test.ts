@@ -64,11 +64,12 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn(() => Promise.resolve("artefact-id-123"))
+    createArtefact: vi.fn(() => Promise.resolve("artefact-id-123")),
+    processPublication: vi.fn(() => Promise.resolve())
   };
 });
 
-import { createArtefact } from "@hmcts/publication";
+import { createArtefact, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import { getNonStrategicUpload } from "../../manual-upload/storage.js";
 
@@ -223,7 +224,54 @@ describe("non-strategic-upload-summary page", () => {
         })
       );
       expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "test.xlsx", mockUploadData.file);
+      expect(processPublication).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artefactId: "artefact-id-123",
+          locationId: "123",
+          listTypeId: 6,
+          locale: "en",
+          provenance: "MANUAL_UPLOAD",
+          logPrefix: "[Non-Strategic Upload]"
+        })
+      );
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+    });
+
+    it("should call processPublication with Welsh locale when language is WELSH", async () => {
+      const mockUploadData = {
+        file: Buffer.from("test file content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "6",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "WELSH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(processPublication).toHaveBeenCalledWith(
+        expect.objectContaining({
+          locale: "cy"
+        })
+      );
     });
 
     it("should clear session data after successful submission", async () => {

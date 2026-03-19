@@ -1,0 +1,31 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-xl">{{ heading }}</h1>
+
+    <table class="govuk-table">
+      <caption class="govuk-table__caption govuk-visually-hidden">{{ tableCaption }}</caption>
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">{{ nameColumnHeading }}</th>
+          <th scope="col" class="govuk-table__header"></th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for listType in listTypes %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">{{ listType.name }}</td>
+          <td class="govuk-table__cell govuk-table__cell--numeric">
+            <a href="{{ listType.configureUrl }}" class="govuk-link">{{ configureLink }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+</div>
+{% endblock %}
