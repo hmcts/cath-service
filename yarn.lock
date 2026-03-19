@@ -1436,11 +1436,24 @@ __metadata:
   resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
   dependencies:
     "@hmcts/auth": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/third-party-user": "workspace:*"
     "@hmcts/web-core": "workspace:*"
+    "@launchdarkly/node-server-sdk": "npm:^9.7.0"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.18.2"
     "@types/papaparse": "npm:5.5.2"
     papaparse: "npm:5.5.3"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/third-party-user@workspace:*, @hmcts/third-party-user@workspace:libs/third-party-user":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/third-party-user@workspace:libs/third-party-user"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1587,6 +1600,34 @@ __metadata:
   version: 4.4.2
   resolution: "@js-sdsl/ordered-map@npm:4.4.2"
   checksum: 10c0/cc7e15dc4acf6d9ef663757279600bab70533d847dcc1ab01332e9e680bd30b77cdf9ad885cc774276f51d98b05a013571c940e5b360985af5eb798dc1a2ee2b
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-sdk-common@npm:2.23.0":
+  version: 2.23.0
+  resolution: "@launchdarkly/js-sdk-common@npm:2.23.0"
+  checksum: 10c0/96391408e8840db79d0ca4af38a0e90be9a383b899250c13eea88f4a2e47b084e06b82f3201ec533b8459f1fdb83edad3204de64c14a79aaf8542e63b65bdd0a
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-server-sdk-common@npm:2.18.2":
+  version: 2.18.2
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.18.2"
+  dependencies:
+    "@launchdarkly/js-sdk-common": "npm:2.23.0"
+    semver: "npm:7.5.4"
+  checksum: 10c0/910b49007e76dca93662777360528ca62cd06a738723b1edb16a3074a8bc8c7da8795c6f27f6646970921ee55b5f2e0a4a4545a16cf22d37731e3fea82efbc07
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/node-server-sdk@npm:^9.7.0":
+  version: 9.10.9
+  resolution: "@launchdarkly/node-server-sdk@npm:9.10.9"
+  dependencies:
+    "@launchdarkly/js-server-sdk-common": "npm:2.18.2"
+    https-proxy-agent: "npm:^7.0.6"
+    launchdarkly-eventsource: "npm:2.2.0"
+  checksum: 10c0/ebe593f576bb9fbf4f2c8e6183922c1114223b7037cc7bbf9dfe8b78d01c168b588011e37136ace78b481ad458c389378e5691e3f82ef6fe0a8e0c8803b0671a
   languageName: node
   linkType: hard
 
@@ -6271,6 +6312,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"launchdarkly-eventsource@npm:2.2.0":
+  version: 2.2.0
+  resolution: "launchdarkly-eventsource@npm:2.2.0"
+  checksum: 10c0/fce94e58ef5eb560349b2f5405276c01b86d83afc3f7149c6e58ce4fcdf69f1ef8c97c9800bedf0986b41fa7a1f14740aee804d8c74f9fc81b6cf22f4bd5a7f1
+  languageName: node
+  linkType: hard
+
 "lazystream@npm:^1.0.0":
   version: 1.0.1
   resolution: "lazystream@npm:1.0.1"
@@ -6492,7 +6540,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:6.0.0":
+"lru-cache@npm:6.0.0, lru-cache@npm:^6.0.0":
   version: 6.0.0
   resolution: "lru-cache@npm:6.0.0"
   dependencies:
@@ -8243,6 +8291,17 @@ __metadata:
   dependencies:
     xmlchars: "npm:^2.2.0"
   checksum: 10c0/b7476c41dbe1c3a89907d2546fecfba234de5e66743ef914cde2603f47b19bed09732ab51b528ad0f98b958369d8be72b6f5af5c9cfad69972a73d061f0b3952
+  languageName: node
+  linkType: hard
+
+"semver@npm:7.5.4":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: "npm:^6.0.0"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/5160b06975a38b11c1ab55950cb5b8a23db78df88275d3d8a42ccf1f29e55112ac995b3a26a522c36e3b5f76b0445f1eef70d696b8c7862a2b4303d7b0e7609e
   languageName: node
   linkType: hard
 

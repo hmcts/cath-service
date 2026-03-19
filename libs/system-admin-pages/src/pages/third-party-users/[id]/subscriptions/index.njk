@@ -1,0 +1,87 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+  <a href="/third-party-users/{{ userId }}{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+    <p class="govuk-body govuk-!-margin-bottom-4">{{ pageOf }}</p>
+
+    <form method="post" novalidate>
+
+      {% if useDropdown %}
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.listType }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.sensitivity }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for listType in listTypes %}
+              {% set currentValue = currentSubscriptions[listType.name] or "UNSELECTED" %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ listType.englishFriendlyName }}</td>
+                <td class="govuk-table__cell">
+                  <select class="govuk-select" id="{{ listType.name }}" name="{{ listType.name }}" aria-label="{{ tableHeadings.sensitivity }} for {{ listType.englishFriendlyName }}">
+                    <option value="UNSELECTED" {{ "selected" if currentValue == "UNSELECTED" else "" }}>{{ sensitivityOptions.unselected }}</option>
+                    <option value="PUBLIC" {{ "selected" if currentValue == "PUBLIC" else "" }}>{{ sensitivityOptions.public }}</option>
+                    <option value="PRIVATE" {{ "selected" if currentValue == "PRIVATE" else "" }}>{{ sensitivityOptions.private }}</option>
+                    <option value="CLASSIFIED" {{ "selected" if currentValue == "CLASSIFIED" else "" }}>{{ sensitivityOptions.classified }}</option>
+                  </select>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.listType }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.public }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.private }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.classified }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeadings.unselected }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for listType in listTypes %}
+              {% set currentValue = currentSubscriptions[listType.name] or "UNSELECTED" %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ listType.englishFriendlyName }}</td>
+                <td class="govuk-table__cell">
+                  <input class="govuk-radios__input" id="{{ listType.name }}-public" name="{{ listType.name }}" type="radio" value="PUBLIC" {{ "checked" if currentValue == "PUBLIC" else "" }} aria-label="{{ sensitivityOptions.public }} for {{ listType.englishFriendlyName }}">
+                </td>
+                <td class="govuk-table__cell">
+                  <input class="govuk-radios__input" id="{{ listType.name }}-private" name="{{ listType.name }}" type="radio" value="PRIVATE" {{ "checked" if currentValue == "PRIVATE" else "" }} aria-label="{{ sensitivityOptions.private }} for {{ listType.englishFriendlyName }}">
+                </td>
+                <td class="govuk-table__cell">
+                  <input class="govuk-radios__input" id="{{ listType.name }}-classified" name="{{ listType.name }}" type="radio" value="CLASSIFIED" {{ "checked" if currentValue == "CLASSIFIED" else "" }} aria-label="{{ sensitivityOptions.classified }} for {{ listType.englishFriendlyName }}">
+                </td>
+                <td class="govuk-table__cell">
+                  <input class="govuk-radios__input" id="{{ listType.name }}-unselected" name="{{ listType.name }}" type="radio" value="UNSELECTED" {{ "checked" if currentValue == "UNSELECTED" else "" }} aria-label="{{ sensitivityOptions.unselected }} for {{ listType.englishFriendlyName }}">
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      {% if isLastPage %}
+        {{ govukButton({ text: saveButton }) }}
+      {% else %}
+        {{ govukButton({ text: nextButton }) }}
+      {% endif %}
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}
