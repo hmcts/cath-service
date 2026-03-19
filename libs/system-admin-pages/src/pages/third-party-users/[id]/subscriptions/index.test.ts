@@ -93,6 +93,50 @@ describe("third-party-users subscriptions page", () => {
       // Assert
       expect(res.render).toHaveBeenCalledWith("third-party-users/[id]/subscriptions/index", expect.objectContaining({ useDropdown: true }));
     });
+
+    it("should render subscriptions page in Welsh", async () => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
+      req.query = { lng: "cy" };
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "third-party-users/[id]/subscriptions/index",
+        expect.objectContaining({ lngParam: "?lng=cy", pageTitle: "Rheoli tanysgrifiadau" })
+      );
+    });
+
+    it("should indicate last page when on final page", async () => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
+      req.query = { page: "1" };
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "third-party-users/[id]/subscriptions/index",
+        expect.objectContaining({ isLastPage: true, currentPage: 1, totalPages: 1 })
+      );
+    });
+
+    it("should initialise session with existing user subscriptions", async () => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "third-party-users/[id]/subscriptions/index",
+        expect.objectContaining({ currentSubscriptions: { CIVIL_DAILY_CAUSE_LIST: "PUBLIC" } })
+      );
+    });
   });
 
   describe("postHandler", () => {
