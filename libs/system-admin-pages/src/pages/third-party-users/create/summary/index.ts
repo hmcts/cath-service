@@ -35,7 +35,6 @@ export const getHandler = async (req: Request, res: Response) => {
 
 export const postHandler = async (req: Request, res: Response) => {
   const language: Language = req.query.lng === "cy" ? "cy" : "en";
-  const t = language === "cy" ? cy : en;
   const session = req.session as ThirdPartyCreateSession;
   const lngParam = language === "cy" ? "?lng=cy" : "";
 
