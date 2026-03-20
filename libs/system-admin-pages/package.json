@@ -29,7 +29,10 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
+    "@launchdarkly/node-server-sdk": "^9.7.0",
     "papaparse": "5.5.3"
   },
   "devDependencies": {

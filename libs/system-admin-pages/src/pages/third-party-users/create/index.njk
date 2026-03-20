@@ -1,0 +1,52 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+  <a href="/third-party-users{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+      {% set nameError = null %}
+      {% if errors %}
+        {% for error in errors %}
+          {% if error.href == "#name" %}
+            {% set nameError = { text: error.text } %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {{ govukInput({
+        id: "name",
+        name: "name",
+        label: {
+          text: nameLabel,
+          classes: "govuk-label--m"
+        },
+        value: data.name,
+        errorMessage: nameError
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}
