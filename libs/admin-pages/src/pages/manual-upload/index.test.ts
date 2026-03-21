@@ -52,6 +52,40 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findStrategicListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 1,
+        name: "CIVIL_DAILY_CAUSE_LIST",
+        friendlyName: "Civil Daily Cause List",
+        shortenedFriendlyName: "Civil Daily Cause List",
+        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil",
+        isNonStrategic: false,
+        defaultSensitivity: "PUBLIC"
+      },
+      {
+        id: 2,
+        name: "FAMILY_DAILY_CAUSE_LIST",
+        friendlyName: "Family Daily Cause List",
+        shortenedFriendlyName: "Family Daily Cause List",
+        welshFriendlyName: "Rhestr Achosion Dyddiol Teulu",
+        isNonStrategic: false,
+        defaultSensitivity: "PRIVATE"
+      },
+      {
+        id: 6,
+        name: "CROWN_DAILY_LIST",
+        friendlyName: "Crown Daily List",
+        shortenedFriendlyName: "Crown Daily List",
+        welshFriendlyName: "Rhestr Ddyddiol y Goron",
+        isNonStrategic: false,
+        defaultSensitivity: "PUBLIC"
+      }
+    ])
+  )
+}));
+
 vi.mock("../../manual-upload/validation.js", () => ({
   validateManualUploadForm: vi.fn(() => [])
 }));
@@ -164,6 +198,27 @@ describe("manual-upload page", () => {
 
       expect(renderData.languageOptions).toBeDefined();
       expect(Array.isArray(renderData.languageOptions)).toBe(true);
+    });
+
+    it("should include list type sensitivity mapping as JSON", async () => {
+      const req = {
+        session: {},
+        query: {}
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(GET, req, res);
+
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderData = renderCall?.[1] as any;
+
+      expect(renderData.listTypeSensitivityMap).toBeDefined();
+      const parsedMap = JSON.parse(renderData.listTypeSensitivityMap);
+      expect(parsedMap["1"]).toBe("PUBLIC");
+      expect(parsedMap["2"]).toBe("PRIVATE");
+      expect(parsedMap["6"]).toBe("PUBLIC");
     });
 
     it("should include all location data", async () => {
