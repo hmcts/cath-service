@@ -68,3 +68,4 @@ lcov.info
 **/Chart.lock
 **/charts/*.tgz
 values.preview.yaml
+libs/postgres-prisma/generated/

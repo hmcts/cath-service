@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { FullConfig } from "@playwright/test";
 import { seedLocationData } from "./utils/seed-location-data.js";
 import { seedAllReferenceData } from "./utils/seed-reference-data.js";

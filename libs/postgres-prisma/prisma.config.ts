@@ -6,7 +6,7 @@ if (process.env.POSTGRES_HOST && process.env.POSTGRES_USER && process.env.POSTGR
   process.env.DATABASE_URL = `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=require`;
 }
 
-process.env.DATABASE_URL ??= "postgresql://hmcts@localhost:5432/postgres";
+process.env.DATABASE_URL ??= "postgresql://hmcts@localhost:5433/postgres";
 
 export default defineConfig({
   schema: path.join("dist", "schema.prisma"),
