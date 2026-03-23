@@ -19,6 +19,7 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
+    "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "ajv": "8.18.0"

@@ -1263,7 +1263,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/list-search-config@workspace:libs/list-search-config":
+"@hmcts/list-search-config@workspace:*, @hmcts/list-search-config@workspace:libs/list-search-config":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
   peerDependencies:
@@ -1384,6 +1384,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/publication@workspace:libs/publication"
   dependencies:
+    "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     ajv: "npm:8.18.0"
