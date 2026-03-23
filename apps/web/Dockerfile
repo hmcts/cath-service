@@ -14,6 +14,7 @@ RUN yarn build
 # ---- Runtime image ----
 FROM base AS runtime
 COPY --from=build /opt/app/apps/web/dist ./apps/web/dist
+COPY --from=build /opt/app/apps/postgres/dist ./apps/postgres/dist
 COPY --from=build /opt/app/libs ./libs
 
 RUN yarn workspaces focus @hmcts/web --production
