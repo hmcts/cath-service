@@ -40,7 +40,7 @@ jobs:
     if: needs.detect-infra-changes.outputs.has-changes == 'true'
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
-      plan-only: true
+      plan-only: false # TEMPORARY: apply terraform from branch to create Key Vault before merge
     secrets: inherit
 
   deploy-stage:
