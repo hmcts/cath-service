@@ -22,7 +22,6 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
-    "@hmcts/auth": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*"
   },

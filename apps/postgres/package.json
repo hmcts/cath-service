@@ -20,7 +20,6 @@
     "seed": "psql $DATABASE_URL -f prisma/seed.sql"
   },
   "dependencies": {
-    "@hmcts/postgres-prisma": "workspace:*",
     "http-proxy": "1.18.1"
   },
   "devDependencies": {

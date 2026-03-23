@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
-    "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/notification": "workspace:*",

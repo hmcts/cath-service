@@ -25,10 +25,7 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/location": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
-    "@hmcts/postgres-prisma": "workspace:*",
-    "@hmcts/web-core": "workspace:*",
     "exceljs": "4.4.0",
     "luxon": "3.7.2",
     "nunjucks": "3.2.4"
