@@ -27,7 +27,7 @@ export async function seedLocationData(): Promise<void> {
     const locations = parseResult.data;
 
     console.log(`✓ Parsed ${locations.length} locations from CSV`);
-    console.log(`Location IDs: ${locations.map(l => l.locationId).join(", ")}`);
+    console.log(`Location IDs: ${locations.map((l) => l.locationId).join(", ")}`);
 
     for (const location of locations) {
       try {
@@ -41,14 +41,14 @@ export async function seedLocationData(): Promise<void> {
             name: location.locationName,
             welshName: location.welshLocationName,
             email: location.email || null,
-            contactNo: location.contactNo || null,
+            contactNo: location.contactNo || null
           },
           update: {
             name: location.locationName,
             welshName: location.welshLocationName,
             email: location.email || null,
-            contactNo: location.contactNo || null,
-          },
+            contactNo: location.contactNo || null
+          }
         });
         console.log(`  ✓ Created location record`);
 
@@ -56,10 +56,10 @@ export async function seedLocationData(): Promise<void> {
         const subJurisdictions = await (prisma as any).subJurisdiction.findMany({
           where: {
             name: {
-              in: location.subJurisdictionNames,
-            },
+              in: location.subJurisdictionNames
+            }
           },
-          select: { subJurisdictionId: true, name: true },
+          select: { subJurisdictionId: true, name: true }
         });
         console.log(`  ✓ Found ${subJurisdictions.length} sub-jurisdictions: ${subJurisdictions.map((sj: any) => sj.name).join(", ")}`);
 
@@ -73,14 +73,14 @@ export async function seedLocationData(): Promise<void> {
             where: {
               locationId_subJurisdictionId: {
                 locationId: location.locationId,
-                subJurisdictionId: subJurisdiction.subJurisdictionId,
-              },
+                subJurisdictionId: subJurisdiction.subJurisdictionId
+              }
             },
             create: {
               locationId: location.locationId,
-              subJurisdictionId: subJurisdiction.subJurisdictionId,
+              subJurisdictionId: subJurisdiction.subJurisdictionId
             },
-            update: {},
+            update: {}
           });
         }
         console.log(`  ✓ Created ${subJurisdictions.length} sub-jurisdiction relationships`);
@@ -89,10 +89,10 @@ export async function seedLocationData(): Promise<void> {
         const regions = await (prisma as any).region.findMany({
           where: {
             name: {
-              in: location.regionNames,
-            },
+              in: location.regionNames
+            }
           },
-          select: { regionId: true, name: true },
+          select: { regionId: true, name: true }
         });
         console.log(`  ✓ Found ${regions.length} regions: ${regions.map((r: any) => r.name).join(", ")}`);
 
@@ -106,14 +106,14 @@ export async function seedLocationData(): Promise<void> {
             where: {
               locationId_regionId: {
                 locationId: location.locationId,
-                regionId: region.regionId,
-              },
+                regionId: region.regionId
+              }
             },
             create: {
               locationId: location.locationId,
-              regionId: region.regionId,
+              regionId: region.regionId
             },
-            update: {},
+            update: {}
           });
         }
         console.log(`  ✓ Created ${regions.length} region relationships`);
@@ -166,7 +166,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "CRIME_IDAM",
+        provenance: "CRIME_IDAM"
       },
       {
         locationId: sjpLocationId,
@@ -177,7 +177,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "CRIME_IDAM",
+        provenance: "CRIME_IDAM"
       },
       {
         locationId: sjpLocationId,
@@ -188,7 +188,7 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "CFT_IDAM",
+        provenance: "CFT_IDAM"
       },
       {
         artefactId: "00000000-0000-0000-0000-000000000001", // Known ID for E2E testing
@@ -200,8 +200,8 @@ async function seedSjpArtefacts(): Promise<void> {
         displayFrom: oneWeekAgo,
         displayTo: oneWeekFromNow,
         isFlatFile: false,
-        provenance: "CFT_IDAM",
-      },
+        provenance: "CFT_IDAM"
+      }
     ];
 
     console.log(`Creating ${testArtefacts.length} artefacts...`);
@@ -212,9 +212,9 @@ async function seedSjpArtefacts(): Promise<void> {
       const created = await prisma.artefact.upsert({
         where: { artefactId },
         create: { ...artefact, artefactId },
-        update: artefact,
+        update: artefact
       });
-      console.log(`  ✓ Created artefact ${created.artefactId}: listType=${artefact.listTypeId}, date=${artefact.contentDate.toISOString().split('T')[0]}`);
+      console.log(`  ✓ Created artefact ${created.artefactId}: listType=${artefact.listTypeId}, date=${artefact.contentDate.toISOString().split("T")[0]}`);
     }
 
     console.log(`✓ Successfully seeded ${testArtefacts.length} artefacts for locationId ${sjpLocationId}`);

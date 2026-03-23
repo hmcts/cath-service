@@ -39,10 +39,7 @@
       "settings": {
         "files.autoSave": "onFocusChange"
       },
-      "extensions": [
-        "ms-azuretools.vscode-docker",
-        "ms-playwright.playwright"
-      ]
+      "extensions": ["ms-azuretools.vscode-docker", "ms-playwright.playwright"]
     }
   }
 }
