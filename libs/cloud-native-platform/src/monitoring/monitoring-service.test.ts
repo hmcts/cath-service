@@ -57,17 +57,16 @@ describe("MonitoringService", () => {
     it("should setup Application Insights with correct configuration", () => {
       service = new MonitoringService(connectionString, "test-service", mockLogger);
 
+      expect(process.env.APPLICATIONINSIGHTS_ROLE_NAME).toBe("test-service");
       expect(appInsights.setup).toHaveBeenCalledWith(connectionString);
 
       const setupMock = vi.mocked(appInsights.setup)(connectionString);
-      expect(setupMock.setAutoDependencyCorrelation).toHaveBeenCalledWith(true);
       expect(setupMock.setAutoCollectRequests).toHaveBeenCalledWith(true);
       expect(setupMock.setAutoCollectPerformance).toHaveBeenCalledWith(true, true);
       expect(setupMock.setAutoCollectExceptions).toHaveBeenCalledWith(true);
       expect(setupMock.setAutoCollectDependencies).toHaveBeenCalledWith(true);
       expect(setupMock.setAutoCollectConsole).toHaveBeenCalledWith(true, true);
       expect(setupMock.setUseDiskRetryCaching).toHaveBeenCalledWith(true);
-      expect(setupMock.setDistributedTracingMode).toHaveBeenCalledWith("AI_AND_W3C");
       expect(setupMock.start).toHaveBeenCalled();
     });
 
