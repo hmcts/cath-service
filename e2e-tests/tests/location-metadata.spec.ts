@@ -22,9 +22,7 @@ test.describe("Location Metadata Management", () => {
       await expect(heading).toContainText("Find the location metadata to manage");
 
       // Accessibility check
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
@@ -56,9 +54,7 @@ test.describe("Location Metadata Management", () => {
       await expect(heading).toContainText("Dod o hyd i'r metadata lleoliad i'w reoli");
 
       // Accessibility check in Welsh
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
@@ -116,9 +112,7 @@ test.describe("Location Metadata Management", () => {
       await expect(searchLink).toBeVisible();
 
       // Accessibility check
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
@@ -154,9 +148,7 @@ test.describe("Location Metadata Management", () => {
       await expect(searchInput).toBeVisible();
 
       // Run accessibility check on the full journey
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
