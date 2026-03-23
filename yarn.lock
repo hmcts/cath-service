@@ -1052,6 +1052,8 @@ __metadata:
 "@hmcts/account@npm:*, @hmcts/account@workspace:libs/account":
   version: 0.0.0-use.local
   resolution: "@hmcts/account@workspace:libs/account"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
   languageName: unknown
   linkType: soft
 
