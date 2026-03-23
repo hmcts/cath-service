@@ -10,6 +10,7 @@
       "@hmcts/postgres": ["apps/database/src"],
       "@hmcts/web": ["apps/web/src"],
       "@hmcts/web-core": ["libs/web-core/src"],
+      "@hmcts/web-core/vite": ["libs/web-core/src/assets/vite-config"],
       "@hmcts/account": ["libs/account/src"],
       "@hmcts/account/repository/query": ["libs/account/src/repository/query"],
       "@hmcts/admin-pages": ["libs/admin-pages/src"],

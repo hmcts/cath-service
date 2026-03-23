@@ -4,8 +4,8 @@ import { assets as adminPagesAssets } from "@hmcts/admin-pages/config";
 import { assets as listTypesCommonAssets } from "@hmcts/list-types-common/config";
 import { assets as systemAdminAssets } from "@hmcts/system-admin-pages/config";
 import { assets as verifiedPagesAssets } from "@hmcts/verified-pages/config";
-import { createBaseViteConfig } from "@hmcts/web-core";
 import { assets as webCoreAssets } from "@hmcts/web-core/config";
+import { createBaseViteConfig } from "@hmcts/web-core/vite";
 import { defineConfig, mergeConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
