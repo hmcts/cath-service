@@ -28,8 +28,6 @@ nodejs:
           alias: DATABASE_URL
         - name: govuk-notify-api-key
           alias: GOVUK_NOTIFY_API_KEY
-    pip-ss-kv:
-      secrets:
         - name: sso-client-id
           alias: SSO_CLIENT_ID
         - name: sso-client-secret
