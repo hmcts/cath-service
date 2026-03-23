@@ -28,7 +28,6 @@
     "@hmcts/location": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
-    "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "exceljs": "4.4.0",
     "luxon": "3.7.2",
