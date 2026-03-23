@@ -7,7 +7,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { prisma } from "@hmcts/postgres-prisma";
+import { prisma } from "@hmcts/postgres";
 
 const STORAGE_PATH = path.join(process.cwd(), "storage", "temp", "files");
 

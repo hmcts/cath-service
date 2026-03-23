@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres-prisma";
+import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
@@ -34,7 +34,7 @@ async function authenticateSystemAdmin(page: Page) {
 }
 
 // Helper to wait for autocomplete to complete and select option
-async function selectAutocompleteOption(page: Page, searchText: string) {
+async function selectAutocompleteOption(page: Page, _searchText: string) {
   // Wait for the autocomplete API request to complete
   const responsePromise = page.waitForResponse((response) => response.url().includes("/locations?q=") && response.status() === 200, { timeout: 10000 });
 

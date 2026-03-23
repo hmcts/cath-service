@@ -147,7 +147,7 @@ test.describe("Create Media Account", () => {
   });
 
   test("should verify database record created after successful submission @nightly", async ({ page }) => {
-    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { prisma } = await import("@hmcts/postgres");
 
     await page.goto("/create-media-account");
 

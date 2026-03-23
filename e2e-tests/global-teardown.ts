@@ -94,7 +94,7 @@ async function globalTeardown() {
       } else {
         console.log("No test locations to delete from database");
       }
-    } catch (error) {
+    } catch (_error) {
       console.log("Could not clean up locations (table may not exist)");
     }
 

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres-prisma";
+import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
@@ -126,7 +126,7 @@ async function createFlatFileArtefact(
 }
 
 // Helper function to create a flat file link in the summary of publications page
-async function navigateToSummaryPage(page: Page, locationId: string) {
+async function _navigateToSummaryPage(page: Page, locationId: string) {
   await page.goto(`/summary-of-publications?locationId=${locationId}`);
   await page.waitForLoadState("domcontentloaded");
 }

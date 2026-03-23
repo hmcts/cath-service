@@ -7,7 +7,6 @@ import {
   cleanupTestUsers,
   createTestSubscription,
   createTestUser,
-  getNotificationsByPublicationId,
   getNotificationsBySubscriptionId
 } from "../utils/notification-helpers.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";

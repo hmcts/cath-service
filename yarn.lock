@@ -221,9 +221,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/identity@npm:4.13.0, @azure/identity@npm:^4.2.1, @azure/identity@npm:^4.6.0":
-  version: 4.13.0
-  resolution: "@azure/identity@npm:4.13.0"
+"@azure/identity@npm:4.13.1, @azure/identity@npm:^4.2.1, @azure/identity@npm:^4.6.0":
+  version: 4.13.1
+  resolution: "@azure/identity@npm:4.13.1"
   dependencies:
     "@azure/abort-controller": "npm:^2.0.0"
     "@azure/core-auth": "npm:^1.9.0"
@@ -232,11 +232,11 @@ __metadata:
     "@azure/core-tracing": "npm:^1.0.0"
     "@azure/core-util": "npm:^1.11.0"
     "@azure/logger": "npm:^1.0.0"
-    "@azure/msal-browser": "npm:^4.2.0"
-    "@azure/msal-node": "npm:^3.5.0"
+    "@azure/msal-browser": "npm:^5.5.0"
+    "@azure/msal-node": "npm:^5.1.0"
     open: "npm:^10.1.0"
     tslib: "npm:^2.2.0"
-  checksum: 10c0/d49b4d22a0ab4e2fa4688a357970806af57d1ecab302e0f321d986b83e4ef78604c592f8f3fd120e156531adaae4a5f94d032875b63d7e09259dd75547d90d31
+  checksum: 10c0/924b3b545cbffd1b22a5f28593b2024075f0aa3fc52ed6a96aa4e33f358c2f112da0cdd4d90d1a47cbcfc13a5ccfb8854d511dfed2330e1c463b642b6a362d70
   languageName: node
   linkType: hard
 
@@ -362,30 +362,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/msal-browser@npm:^4.2.0":
-  version: 4.21.1
-  resolution: "@azure/msal-browser@npm:4.21.1"
+"@azure/msal-browser@npm:^5.5.0":
+  version: 5.6.1
+  resolution: "@azure/msal-browser@npm:5.6.1"
   dependencies:
-    "@azure/msal-common": "npm:15.12.0"
-  checksum: 10c0/a5b99afea08cf8472a32ff6d9d22dc8f01a0e4af9ace60b143749f4f0d71206f4c3288416008714774a5e0eed13dd632bc5b11e660485fda74b4aa071e3cef1f
+    "@azure/msal-common": "npm:16.4.0"
+  checksum: 10c0/29a6ec35bec5e17bd3199d8327ae6372b96f1578ded6bcd6d61e6633b668a82c527633fe5052e8a62d52fb9f776d225138d956a2ae22427dc194fa4d8a0a08e8
   languageName: node
   linkType: hard
 
-"@azure/msal-common@npm:15.12.0":
-  version: 15.12.0
-  resolution: "@azure/msal-common@npm:15.12.0"
-  checksum: 10c0/0e41bfd7f9baa76014d9de254d7136c664fcb9cfbc0d1017140d8b460541911fe9d3bb13a3ec8c11af02df6e0cc2794d2a1d3a91243bc476e7d2e67b0bf5007c
+"@azure/msal-common@npm:16.4.0":
+  version: 16.4.0
+  resolution: "@azure/msal-common@npm:16.4.0"
+  checksum: 10c0/754ecee054769551db9f9407de981998944f6e7caa4de31c4aaafc6f7412e23b3f4e494abfe737e77f0a995e339e19142d2fd53d7427c340132e1e6d229077e1
   languageName: node
   linkType: hard
 
-"@azure/msal-node@npm:^3.5.0":
-  version: 3.7.3
-  resolution: "@azure/msal-node@npm:3.7.3"
+"@azure/msal-node@npm:^5.1.0":
+  version: 5.1.1
+  resolution: "@azure/msal-node@npm:5.1.1"
   dependencies:
-    "@azure/msal-common": "npm:15.12.0"
+    "@azure/msal-common": "npm:16.4.0"
     jsonwebtoken: "npm:^9.0.0"
     uuid: "npm:^8.3.0"
-  checksum: 10c0/13fdfe0ba49008a8d9dfe47dd131d66c75ec33017d7d56ebddcc3ad2d063c24848c9c3cf3efc50865226fcc0322b6ec7da85877ac009ec2a242d859e17435c40
+  checksum: 10c0/89b3dc3ba665470c2b397bc740b70152884cb0d81c0fc38f866dda30c9739f850bbc388dc173273f8afa9ca779ea12c9d538506d10d1f94d74a81724eeec4bb4
   languageName: node
   linkType: hard
 
@@ -4879,7 +4879,7 @@ __metadata:
   resolution: "e2e-tests@workspace:e2e-tests"
   dependencies:
     "@axe-core/playwright": "npm:4.11.1"
-    "@azure/identity": "npm:4.13.0"
+    "@azure/identity": "npm:4.13.1"
     "@azure/keyvault-secrets": "npm:4.10.0"
     "@hmcts/postgres-prisma": "npm:*"
     "@playwright/test": "npm:1.57.0"
@@ -8798,16 +8798,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:7.5.11":
-  version: 7.5.11
-  resolution: "tar@npm:7.5.11"
+"tar@npm:7.5.13":
+  version: 7.5.13
+  resolution: "tar@npm:7.5.13"
   dependencies:
     "@isaacs/fs-minipass": "npm:^4.0.0"
     chownr: "npm:^3.0.0"
     minipass: "npm:^7.1.2"
     minizlib: "npm:^3.1.0"
     yallist: "npm:^5.0.0"
-  checksum: 10c0/b6bb420550ef50ef23356018155e956cd83282c97b6128d8d5cfe5740c57582d806a244b2ef0bf686a74ce526babe8b8b9061527623e935e850008d86d838929
+  checksum: 10c0/5c65b8084799bde7a791593a1c1a45d3d6ee98182e3700b24c247b7b8f8654df4191642abbdb07ff25043d45dcff35620827c3997b88ae6c12040f64bed5076b
   languageName: node
   linkType: hard
 

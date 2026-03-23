@@ -245,7 +245,7 @@ test.describe("Account Home Page", () => {
       const fontWeight = await heading.evaluate((el) => window.getComputedStyle(el).fontWeight);
 
       // Bold is typically 700
-      expect(Number.parseInt(fontWeight)).toBeGreaterThanOrEqual(700);
+      expect(Number.parseInt(fontWeight, 10)).toBeGreaterThanOrEqual(700);
     });
 
     test("should have blue color on section headings @nightly", async ({ page }) => {

@@ -11,7 +11,7 @@ export async function loginWithSSO(page: Page, email: string, password: string):
   // Wait for Azure AD login page
   try {
     await page.waitForURL(/login.microsoftonline.com/, { timeout: 10000 });
-  } catch (error) {
+  } catch (_error) {
     const currentUrl = page.url();
     throw new Error(
       `Failed to redirect to Azure AD login page. Current URL: ${currentUrl}. ` +

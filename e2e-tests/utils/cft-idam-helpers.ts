@@ -11,7 +11,7 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   // Wait for CFT IDAM login page
   try {
     await page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net/, { timeout: 10000 });
-  } catch (error) {
+  } catch (_error) {
     const currentUrl = page.url();
     throw new Error(
       `Failed to redirect to CFT IDAM login page. Current URL: ${currentUrl}. ` +

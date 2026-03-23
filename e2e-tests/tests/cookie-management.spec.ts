@@ -177,7 +177,7 @@ test.describe("Cookie Management", () => {
         try {
           policyValue = JSON.parse(decodedValue);
           break; // Successfully parsed, exit loop
-        } catch (jsonError) {
+        } catch (_jsonError) {
           // If JSON parsing fails, try to decode URI component
           if (attempt < MAX_DECODE_ATTEMPTS - 1) {
             try {
