@@ -26,6 +26,7 @@
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",

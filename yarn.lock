@@ -1061,7 +1061,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
   dependencies:
+    "@hmcts/auth": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/notification": "workspace:*"
     "@hmcts/postgres": "workspace:*"
@@ -1123,7 +1125,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/audit-log@workspace:libs/audit-log":
+"@hmcts/audit-log@workspace:*, @hmcts/audit-log@workspace:libs/audit-log":
   version: 0.0.0-use.local
   resolution: "@hmcts/audit-log@workspace:libs/audit-log"
   dependencies:
@@ -1152,6 +1154,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/blob-ingestion@workspace:libs/api"
   dependencies:
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
@@ -1266,6 +1269,8 @@ __metadata:
 "@hmcts/list-search-config@workspace:*, @hmcts/list-search-config@workspace:libs/list-search-config":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
+  dependencies:
+    "@hmcts/postgres": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1326,7 +1331,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/notifications@workspace:libs/notifications":
+"@hmcts/notifications@workspace:*, @hmcts/notifications@workspace:libs/notifications":
   version: 0.0.0-use.local
   resolution: "@hmcts/notifications@workspace:libs/notifications"
   dependencies:
@@ -1334,6 +1339,7 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
@@ -1357,6 +1363,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:
+    "@hmcts/audit-log": "workspace:*"
+    "@hmcts/list-search-config": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/notifications": "workspace:*"
+    "@hmcts/subscriptions": "workspace:*"
     "@prisma/adapter-pg": "npm:7.2.0"
     "@prisma/client": "npm:7.2.0"
     "@types/pg": "npm:8.11.11"
@@ -1373,6 +1384,7 @@ __metadata:
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
   dependencies:
     "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
   peerDependencies:
@@ -1384,9 +1396,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/publication@workspace:libs/publication"
   dependencies:
+    "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres": "workspace:*"
+    "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.18.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.0"
@@ -1449,6 +1471,11 @@ __metadata:
   resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
   dependencies:
     "@hmcts/auth": "workspace:*"
+    "@hmcts/list-search-config": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.18.2"
@@ -1463,6 +1490,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   dependencies:
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/location": "workspace:*"
     "@hmcts/subscriptions": "workspace:*"
   peerDependencies:
     express: ^5.2.0
