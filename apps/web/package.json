@@ -49,6 +49,8 @@
     "helmet": "8.1.0",
     "multer": "2.0.2",
     "nunjucks": "3.2.4",
+    "pg": "8.19.0",
+    "pg-format": "1.0.4",
     "redis": "5.11.0"
   },
   "devDependencies": {
