@@ -4,14 +4,10 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**"]
-    },
-    "@hmcts/postgres-prisma#build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", "../../node_modules/.prisma/**"]
+      "outputs": ["dist/**", "build/**"],
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.prisma", "package.json"]
     },
     "test": {
-      "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
       "inputs": ["package.json", "**/*.ts", "**/*.tsx", "**/*.prisma"],
       "cache": false
