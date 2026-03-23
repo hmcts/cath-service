@@ -98,10 +98,8 @@ jobs:
           chart: helm/${{ env.APPLICATION_NAME }}
           values-template: helm/${{ env.APPLICATION_NAME }}/values.preview.template.yaml
           subchart-paths: apps/*/helm
-          global-environment: dev
+          global-environment: stg
           business-area: Cross-Cutting
-          set: |
-            global.enableKeyVaults=false
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
