@@ -1053,7 +1053,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/account@workspace:libs/account"
   dependencies:
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -1066,7 +1066,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/notification": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
     "@hmcts/web-core": "workspace:*"
@@ -1087,7 +1087,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -1108,7 +1108,7 @@ __metadata:
     "@hmcts/blob-ingestion": "workspace:*"
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
     "@types/compression": "npm:1.8.1"
@@ -1125,7 +1125,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/audit-log@workspace:*, @hmcts/audit-log@workspace:libs/audit-log":
+"@hmcts/audit-log@workspace:libs/audit-log":
   version: 0.0.0-use.local
   resolution: "@hmcts/audit-log@workspace:libs/audit-log"
   dependencies:
@@ -1157,7 +1157,7 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@types/express": "npm:5.0.6"
     typescript: "npm:5.9.3"
@@ -1174,7 +1174,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -1194,7 +1194,7 @@ __metadata:
   dependencies:
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -1239,7 +1239,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -1259,7 +1259,7 @@ __metadata:
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
     "@hmcts/cloud-native-platform": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/config": "npm:3.3.5"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.1"
@@ -1270,7 +1270,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
   dependencies:
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1292,7 +1292,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/location@workspace:libs/location"
   dependencies:
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     "@prisma/client": "*"
   languageName: unknown
@@ -1305,7 +1305,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -1341,7 +1341,7 @@ __metadata:
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     notifications-node-client: "npm:8.3.0"
   peerDependencies:
@@ -1359,22 +1359,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/postgres@npm:*, @hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
+"@hmcts/postgres-prisma@npm:*, @hmcts/postgres-prisma@workspace:*, @hmcts/postgres-prisma@workspace:libs/postgres-prisma":
   version: 0.0.0-use.local
-  resolution: "@hmcts/postgres@workspace:apps/postgres"
+  resolution: "@hmcts/postgres-prisma@workspace:libs/postgres-prisma"
   dependencies:
-    "@hmcts/audit-log": "workspace:*"
-    "@hmcts/list-search-config": "workspace:*"
-    "@hmcts/location": "workspace:*"
-    "@hmcts/notifications": "workspace:*"
-    "@hmcts/subscriptions": "workspace:*"
     "@prisma/adapter-pg": "npm:7.2.0"
     "@prisma/client": "npm:7.2.0"
     "@types/pg": "npm:8.11.11"
-    dotenv: "npm:^17.2.3"
     glob: "npm:13.0.6"
-    http-proxy: "npm:1.18.1"
     pg: "npm:8.19.0"
+    prisma: "npm:7.2.0"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/postgres@workspace:apps/postgres":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/postgres@workspace:apps/postgres"
+  dependencies:
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@prisma/client": "npm:7.2.0"
+    http-proxy: "npm:1.18.1"
     prisma: "npm:7.2.0"
   languageName: unknown
   linkType: soft
@@ -1384,7 +1388,7 @@ __metadata:
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
   dependencies:
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
   peerDependencies:
@@ -1406,7 +1410,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/notifications": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.18.0"
@@ -1422,7 +1426,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -1460,7 +1464,7 @@ __metadata:
   dependencies:
     "@hmcts/auth": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1474,7 +1478,7 @@ __metadata:
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/express": "npm:5.0.6"
@@ -1550,7 +1554,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
@@ -4907,7 +4911,7 @@ __metadata:
     "@axe-core/playwright": "npm:4.11.1"
     "@azure/identity": "npm:4.13.0"
     "@azure/keyvault-secrets": "npm:4.10.0"
-    "@hmcts/postgres": "npm:*"
+    "@hmcts/postgres-prisma": "npm:*"
     "@playwright/test": "npm:1.57.0"
     dotenv: "npm:^17.2.3"
     exceljs: "npm:4.4.0"

@@ -76,8 +76,8 @@ test.describe("Summary of Publications Page", () => {
       expect(firstLinkText?.trim()).toMatch(/.+\d{1,2}\s\w+\s\d{4}\s-\s.+/); // Matches "List Type DD Month YYYY - Language" format
     });
 
-    test('should generate direct links to list type pages with artefactId parameter', async ({ page }) => {
-      await page.goto('/summary-of-publications?locationId=9');
+    test("should generate direct links to list type pages with artefactId parameter", async ({ page }) => {
+      await page.goto("/summary-of-publications?locationId=9");
 
       // Get publication links
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
@@ -85,12 +85,12 @@ test.describe("Summary of Publications Page", () => {
       expect(count).toBeGreaterThan(0);
 
       // Verify first link has correct URL structure (direct to list type page with artefactId)
-      const firstLinkHref = await publicationLinks.first().getAttribute('href');
+      const firstLinkHref = await publicationLinks.first().getAttribute("href");
       expect(firstLinkHref).toBeTruthy();
       expect(firstLinkHref).toMatch(/^\/[a-z-]+\?artefactId=[a-zA-Z0-9-]+$/);
 
       // Verify it's NOT using the old /publication/ route
-      expect(firstLinkHref).not.toContain('/publication/');
+      expect(firstLinkHref).not.toContain("/publication/");
     });
   });
 

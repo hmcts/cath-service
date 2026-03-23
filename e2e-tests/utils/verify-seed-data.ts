@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 export interface VerificationResult {
   success: boolean;
@@ -48,8 +48,8 @@ export async function verifySeedData(): Promise<VerificationResult> {
     const locations = await (prisma as any).location.findMany({
       include: {
         locationRegions: true,
-        locationSubJurisdictions: true,
-      },
+        locationSubJurisdictions: true
+      }
     });
     console.log(`✓ Found ${locations.length} locations`);
 
@@ -105,8 +105,8 @@ export async function verifySeedData(): Promise<VerificationResult> {
         subJurisdictions: subJurisdictions.length,
         regions: regions.length,
         locations: locations.length,
-        artefacts: artefacts.length,
-      },
+        artefacts: artefacts.length
+      }
     };
 
     if (result.success) {
@@ -135,8 +135,8 @@ export async function verifySeedData(): Promise<VerificationResult> {
         subJurisdictions: 0,
         regions: 0,
         locations: 0,
-        artefacts: 0,
-      },
+        artefacts: 0
+      }
     };
   }
 }

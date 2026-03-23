@@ -10,9 +10,6 @@ process.env.DATABASE_URL ??= "postgresql://hmcts@localhost:5432/postgres";
 
 export default defineConfig({
   schema: path.join("dist", "schema.prisma"),
-  migrations: {
-    path: path.join("prisma", "migrations")
-  },
   datasource: {
     url: env("DATABASE_URL")
   }

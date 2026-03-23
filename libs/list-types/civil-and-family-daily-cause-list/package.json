@@ -26,7 +26,7 @@
   "dependencies": {
     "@hmcts/location": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "luxon": "3.7.2",

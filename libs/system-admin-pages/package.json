@@ -32,7 +32,7 @@
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "papaparse": "5.5.3"

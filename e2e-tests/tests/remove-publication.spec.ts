@@ -1,16 +1,12 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("Remove Publication Flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/admin-dashboard");
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
     }
     await page.waitForURL("/admin-dashboard");
   });
@@ -22,39 +18,35 @@ test.describe("Remove Publication Flow", () => {
     // Login first
     await page.goto("/admin-dashboard");
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
     }
 
     // Upload a test publication for locationId=9001 (Test Court Alpha)
-    await page.goto('/manual-upload?locationId=9001');
+    await page.goto("/manual-upload?locationId=9001");
     await page.waitForTimeout(1000); // Wait for autocomplete to initialize
 
     await page.locator('input[name="file"]').setInputFiles({
-      name: 'e2e-test-publication.pdf',
-      mimeType: 'application/pdf',
-      buffer: Buffer.from('E2E test content for remove-publication tests')
+      name: "e2e-test-publication.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("E2E test content for remove-publication tests")
     });
 
-    await page.selectOption('select[name="listType"]', '1'); // Civil Daily Cause List
-    await page.fill('input[name="hearingStartDate-day"]', '15');
-    await page.fill('input[name="hearingStartDate-month"]', '06');
-    await page.fill('input[name="hearingStartDate-year"]', '2025');
-    await page.selectOption('select[name="sensitivity"]', 'PUBLIC');
-    await page.selectOption('select[name="language"]', 'ENGLISH');
-    await page.fill('input[name="displayFrom-day"]', '10');
-    await page.fill('input[name="displayFrom-month"]', '06');
-    await page.fill('input[name="displayFrom-year"]', '2025');
-    await page.fill('input[name="displayTo-day"]', '31');
-    await page.fill('input[name="displayTo-month"]', '12');
-    await page.fill('input[name="displayTo-year"]', '2030');
+    await page.selectOption('select[name="listType"]', "1"); // Civil Daily Cause List
+    await page.fill('input[name="hearingStartDate-day"]', "15");
+    await page.fill('input[name="hearingStartDate-month"]', "06");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+    await page.selectOption('select[name="language"]', "ENGLISH");
+    await page.fill('input[name="displayFrom-day"]', "10");
+    await page.fill('input[name="displayFrom-month"]', "06");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "31");
+    await page.fill('input[name="displayTo-month"]', "12");
+    await page.fill('input[name="displayTo-year"]', "2030");
 
-    await page.getByRole('button', { name: /continue/i }).click();
+    await page.getByRole("button", { name: /continue/i }).click();
     await page.waitForURL(/manual-upload-summary/);
-    await page.getByRole('button', { name: /confirm/i }).click();
+    await page.getByRole("button", { name: /confirm/i }).click();
     await page.waitForURL(/manual-upload-success/);
 
     await page.close();
@@ -74,11 +66,7 @@ test.describe("Remove Publication Flow", () => {
 
     // Handle auth redirect if needed
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
       await page.goto("/remove-list-search");
     }
@@ -86,8 +74,8 @@ test.describe("Remove Publication Flow", () => {
     await expect(page.locator("h1")).toContainText("Find content to remove");
 
     // The page uses accessible-autocomplete which creates a combobox, not a visible input
-    const autocompleteInput = page.getByRole('combobox', { name: /search by court or tribunal name/i });
-    await autocompleteInput.waitFor({ state: 'visible', timeout: 10000 });
+    const autocompleteInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });
+    await autocompleteInput.waitFor({ state: "visible", timeout: 10000 });
     await expect(autocompleteInput).toBeVisible();
 
     await expect(page.locator('button:has-text("Continue")')).toBeVisible();
@@ -98,11 +86,7 @@ test.describe("Remove Publication Flow", () => {
 
     // Handle auth redirect if needed
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
       await page.goto("/remove-list-search");
     }
@@ -118,24 +102,20 @@ test.describe("Remove Publication Flow", () => {
 
     // Handle auth redirect if needed
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
       await page.goto("/remove-list-search");
     }
 
     // Use the autocomplete widget to select a location
-    const courtInput = page.getByRole('combobox', { name: /search by court or tribunal name/i });
-    await courtInput.waitFor({ state: 'visible', timeout: 10000 });
-    await courtInput.fill('Test Court Alpha');
+    const courtInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });
+    await courtInput.waitFor({ state: "visible", timeout: 10000 });
+    await courtInput.fill("Test Court Alpha");
     await page.waitForTimeout(500); // Wait for autocomplete suggestions
 
     // Select the first suggestion
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
 
     await page.click('button:has-text("Continue")');
 
@@ -208,7 +188,7 @@ test.describe("Remove Publication Flow", () => {
     await page.goto("/remove-list-search?lng=cy");
 
     // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("h1")).toContainText("Canfod cynnwys i'w dynnu");
     await expect(page.locator('button:has-text("Parhau")')).toBeVisible();
@@ -219,20 +199,16 @@ test.describe("Remove Publication Flow", () => {
 
     // Handle auth redirect if needed
     if (page.url().includes("login.microsoftonline.com")) {
-      await loginWithSSO(
-        page,
-        process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!,
-        process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!
-      );
+      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
       await page.waitForURL("/admin-dashboard");
       await page.goto("/remove-list-search");
     }
 
     // Wait for page to be fully loaded
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     const accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(['region']) // Disable region rule (skip link/phase banner/back link not in landmarks is a known site-wide issue)
+      .disableRules(["region"]) // Disable region rule (skip link/phase banner/back link not in landmarks is a known site-wide issue)
       .analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);

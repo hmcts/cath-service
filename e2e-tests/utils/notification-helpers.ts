@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { NotifyClient } from "notifications-node-client";
 
 export interface TestSubscription {
@@ -64,12 +64,7 @@ export async function getNotificationsByPublicationId(publicationId: string) {
   });
 }
 
-export async function waitForNotifications(
-  publicationId: string,
-  maxRetries = 15,
-  delayMs = 1000,
-  waitForGovNotifyId = false
-): Promise<any[]> {
+export async function waitForNotifications(publicationId: string, maxRetries = 15, delayMs = 1000, waitForGovNotifyId = false): Promise<any[]> {
   let notifications = [];
   for (let i = 0; i < maxRetries; i++) {
     await new Promise((resolve) => setTimeout(resolve, delayMs));

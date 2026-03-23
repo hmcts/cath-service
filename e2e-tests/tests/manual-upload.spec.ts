@@ -1,7 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { loginWithSSO } from "../utils/sso-helpers.js";
 import {
   cleanupTestNotifications,
   cleanupTestSubscriptions,
@@ -11,6 +10,7 @@ import {
   getNotificationsByPublicationId,
   getNotificationsBySubscriptionId
 } from "../utils/notification-helpers.js";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)

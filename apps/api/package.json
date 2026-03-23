@@ -17,7 +17,7 @@
     "@hmcts/blob-ingestion": "workspace:*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/location": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
     "compression": "1.8.1",

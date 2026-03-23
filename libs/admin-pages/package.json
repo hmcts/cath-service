@@ -35,7 +35,7 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/notification": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
     "@hmcts/web-core": "workspace:*"

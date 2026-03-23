@@ -7,7 +7,7 @@
     "paths": {
       "@hmcts/api": ["apps/api/src"],
       "@hmcts/crons": ["apps/crons/src"],
-      "@hmcts/postgres": ["apps/database/src"],
+      "@hmcts/postgres-prisma": ["libs/postgres-prisma/src"],
       "@hmcts/web": ["apps/web/src"],
       "@hmcts/web-core": ["libs/web-core/src"],
       "@hmcts/web-core/vite": ["libs/web-core/src/assets/vite-config"],
