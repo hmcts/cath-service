@@ -22,6 +22,10 @@
       "a11y": {
         "noSvgWithoutTitle": "off"
       },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedFunctionParameters": "error"
+      },
       "suspicious": {
         "noExplicitAny": "off"
       },
