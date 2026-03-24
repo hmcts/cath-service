@@ -18,9 +18,9 @@ crons:
 cath-web:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.dev.platform.hmcts.net"
+    ingressHost: "{{ .Release.Name }}-web.dev.platform.hmcts.net"
     environment:
-      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.dev.platform.hmcts.net"
+      BASE_URL: "https://{{ .Release.Name }}-web.dev.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
@@ -42,7 +42,7 @@ cath-web:
 cath-api:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.dev.platform.hmcts.net"
+    ingressHost: "{{ .Release.Name }}-api.dev.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
     secrets:
@@ -86,7 +86,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.dev.platform.hmcts.net"
+    ingressHost: "{{ .Release.Name }}-postgres.dev.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
     secrets:
