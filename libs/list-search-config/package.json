@@ -19,7 +19,8 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write --unsafe ."
+    "lint:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "express": "^5.2.0"
