@@ -36,7 +36,14 @@ export default defineConfig(
       viteStaticCopy({
         targets: [
           {
-            // Copy app-specific images
+            src: "src/pages/**/*.{njk,html}",
+            dest: "../pages",
+            rename: (_fileName, _fileExtension, fullPath) => {
+              const relativePath = fullPath.split("src/pages/")[1];
+              return relativePath;
+            }
+          },
+          {
             src: "src/assets/images/**/*",
             dest: "images"
           }
