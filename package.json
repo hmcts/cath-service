@@ -48,7 +48,7 @@
     "@biomejs/biome": "2.4.6",
     "@biomejs/cli-linux-arm64": "^2.3.6",
     "@types/jsonwebtoken": "9.0.10",
-    "@types/node": "24.10.4",
+    "@types/node": "24.12.0",
     "@types/passport-azure-ad": "4.3.6",
     "@types/supertest": "7.2.0",
     "@vitest/coverage-v8": "4.1.0",
