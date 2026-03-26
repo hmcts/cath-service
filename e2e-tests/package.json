@@ -19,7 +19,7 @@
     "playwright:install": "npx playwright install"
   },
   "dependencies": {
-    "@hmcts/postgres": "*",
+    "@hmcts/postgres-prisma": "*",
     "dotenv": "^17.2.3"
   },
   "devDependencies": {

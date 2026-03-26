@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 const ARTEFACT_TRACKING_FILE = path.join(process.cwd(), ".test-artefacts.json");
 const LOCATION_TRACKING_FILE = path.join(process.cwd(), ".test-locations.json");

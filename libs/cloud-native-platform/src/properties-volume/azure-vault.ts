@@ -58,6 +58,7 @@ export async function addFromAzureVault(config: Config, options: AzureVaultOptio
 
 /**
  * Process a single vault configuration
+ * Uses the full vault name from the Helm chart (e.g. "cath-stg")
  */
 async function processVault(config: Config, vault: any): Promise<void> {
   const { name: vaultName, secrets } = vault;
@@ -67,38 +68,21 @@ async function processVault(config: Config, vault: any): Promise<void> {
     return;
   }
 
-  console.log(`Azure Vault: Connecting to ${vaultName}...`);
-
-  // Use vault name as-is from Helm chart (should include environment suffix like -stg, -aat, etc.)
   const vaultUri = `https://${vaultName}.vault.azure.net/`;
-
-  // Use DefaultAzureCredential with a shorter timeout for local development
-  // AZURE_TENANT_ID should be set to prioritize Azure CLI authentication
   const credential = new DefaultAzureCredential();
   const client = new SecretClient(vaultUri, credential);
-
-  console.log(`Azure Vault: Fetching ${secrets.length} secrets from ${vaultName}...`);
   const secretPromises = secrets.map((secret: StructuredOrUnstructuredSecret) => processSecret(client, secret));
 
   try {
-    const TIMEOUT_MS = 30000; // 30 second timeout
-    const secretResults = await Promise.race([
-      Promise.all(secretPromises),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms while fetching secrets from ${vaultName}`)), TIMEOUT_MS)
-      )
-    ]);
+    const secretResults = await Promise.all(secretPromises);
 
     // Merge all secrets into config
     const secretsConfig: Config = {};
     for (const { key, value } of secretResults) {
       secretsConfig[key] = value;
-      // Set environment variable so code reading from process.env gets the Key Vault value
-      process.env[key] = value;
     }
 
     Object.assign(config, deepMerge(config, secretsConfig));
-    console.log(`Azure Vault: Successfully loaded ${secretResults.length} secrets from ${vaultName}`);
   } catch (error: any) {
     // Re-throw with vault context if not already included
     if (error.message && !error.message.includes(vaultName)) {
@@ -135,12 +119,9 @@ async function processSecret(client: SecretClient, secret: StructuredOrUnstructu
       value: secretResponse.value
     };
   } catch (error: any) {
-    // Extract cleaner error message for common Azure Key Vault issues
+    // Extract cleaner error message for common Azure Key Vault permission issues
     if (error?.statusCode === 403 || error?.message?.includes("does not have secrets get permission")) {
       throw new Error(`Could not load secret '${secretName}'. Check it exists and you have access to it.`);
-    }
-    if (error?.code === "SecretNotFound" || error?.message?.includes("was not found")) {
-      throw new Error(`Secret '${secretName}' does not exist in the vault`);
     }
     throw new Error(`Failed to retrieve secret ${secretName}: ${error.message || error}`);
   }

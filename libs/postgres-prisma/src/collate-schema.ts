@@ -14,7 +14,7 @@ export async function collateSchemas(
     globSync
   }
 ) {
-  const baseSchemaPath = path.join(__dirname, "../prisma/schema.prisma");
+  const baseSchemaPath = path.join(__dirname, "../../../apps/postgres/prisma/schema.prisma");
   const baseSchema = await deps.readFile(baseSchemaPath, "utf-8");
   const libs = getPrismaSchemas();
   const schemaPaths = libs.flatMap((lib) =>
@@ -56,14 +56,11 @@ export async function collateSchemas(
   await deps.mkdir(distDir, { recursive: true });
   await deps.writeFile(path.join(distDir, "schema.prisma"), combinedSchema);
 
-  console.log(`✅ Prisma schema collated successfully!`);
-  console.log(`📊 Total: ${definedModels.size} models, ${definedEnums.size} enums`);
+  console.log(`Prisma schema collated successfully!`);
+  console.log(`Total: ${definedModels.size} models, ${definedEnums.size} enums`);
 }
 
-// Only run when executed directly, not during tests
-if (import.meta.url === `file://${process.argv[1]}`) {
-  collateSchemas().catch((error) => {
-    console.error("❌ Error collating schemas:", error);
-    process.exit(1);
-  });
-}
+collateSchemas().catch((error) => {
+  console.error("Error collating schemas:", error);
+  process.exit(1);
+});

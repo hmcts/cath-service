@@ -363,7 +363,7 @@ describe("addFromAzureVault", () => {
     );
   });
 
-  it("should handle SecretNotFound error code", async () => {
+  it("should handle SecretNotFound error with generic message", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -379,25 +379,7 @@ describe("addFromAzureVault", () => {
     mockGetSecret.mockRejectedValue(notFoundError);
 
     await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
-    );
-  });
-
-  it("should handle error message containing 'was not found'", async () => {
-    const helmChart = {
-      keyVaults: {
-        "test-vault": {
-          secrets: ["missing-secret"]
-        }
-      }
-    };
-
-    mockReadFileSync.mockReturnValue("helm-chart-content");
-    mockYamlLoad.mockReturnValue(helmChart);
-    mockGetSecret.mockRejectedValue(new Error("The secret was not found in the vault"));
-
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
+      "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret missing-secret: Secret was not found"
     );
   });
 });

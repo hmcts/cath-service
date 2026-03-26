@@ -27,7 +27,7 @@ const mockPrisma = {
   }
 };
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: mockPrisma
 }));
 
