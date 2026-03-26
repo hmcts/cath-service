@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
 test.describe("Cookie Policy Page", () => {
   test("should complete full cookie policy user journey", async ({ page, context }) => {
@@ -157,9 +157,7 @@ test.describe("Cookie Policy Page", () => {
     await page.keyboard.press("Space");
     await expect(analyticsOnRadio).toBeChecked();
   });
-
 });
-
 
 test.describe("Cookie Policy Page - Accessibility", () => {
   test("should be fully accessible and meet WCAG standards", async ({ page }) => {
@@ -201,5 +199,4 @@ test.describe("Cookie Policy Page - Accessibility", () => {
       await expect(firstHeader).toBeVisible();
     }
   });
-
 });

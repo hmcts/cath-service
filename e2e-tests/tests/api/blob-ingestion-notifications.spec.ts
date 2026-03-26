@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 import {
   cleanupTestNotifications,
   cleanupTestSubscriptions,
@@ -9,7 +10,6 @@ import {
   getNotificationsByPublicationId,
   waitForNotifications
 } from "../../utils/notification-helpers.js";
-import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 
 const API_BASE_URL = "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
@@ -148,5 +148,4 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     const notifications = await getNotificationsByPublicationId(result.artefact_id);
     expect(notifications).toHaveLength(0);
   });
-
 });
