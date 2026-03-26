@@ -36,11 +36,9 @@ jobs:
 
   infrastructure-stage:
     name: Infrastructure
-    needs: [detect-infra-changes]
-    if: needs.detect-infra-changes.outputs.has-changes == 'true'
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
-      plan-only: true
+      plan-only: false
     secrets: inherit
 
   deploy-stage:
