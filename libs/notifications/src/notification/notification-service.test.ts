@@ -307,6 +307,53 @@ describe("notification-service", () => {
     expect(result.errors).toContain("User user-1: Database connection error");
   });
 
+  it("should update notification status to Failed when error is thrown after audit log creation", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: {
+          email: "user1@example.com",
+          firstName: "John",
+          surname: "Doe"
+        }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      govNotifyId: null,
+      status: "Pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+    vi.mocked(sendEmail).mockRejectedValue(new Error("Unexpected network failure"));
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(updateNotificationStatus).toHaveBeenCalledWith("notif-1", "Failed", undefined, "Unexpected network failure");
+  });
+
   it("should use enhanced template for Civil and Family list with JSON data and PDF", async () => {
     const mockSubscriptions = [
       {

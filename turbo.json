@@ -25,7 +25,7 @@
     "format": {
       "outputs": []
     },
-    "type-check": {
+    "typecheck": {
       "dependsOn": ["^build"],
       "outputs": []
     },
