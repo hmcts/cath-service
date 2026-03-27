@@ -29,18 +29,77 @@ const VALID_PAYLOAD = {
       version: "1.0"
     },
     venue: {
-      venueName: "Oxford Combined Court Centre",
+      venueName: "Test Court Alpha",
       venueAddress: {
-        line: ["St Aldates"],
-        town: "Oxford",
-        postCode: "OX1 1TL"
+        line: ["1 Test Street"],
+        town: "Test City",
+        postCode: "TC1 1TC"
       },
       venueContact: {
-        venueTelephone: "01865000000",
-        venueEmail: "court@test.hmcts.net"
+        venueTelephone: "01234567890",
+        venueEmail: "test.alpha@test.hmcts.net"
       }
     },
-    courtLists: []
+    courtLists: [
+      {
+        courtHouse: {
+          courtHouseName: "Test Court Alpha",
+          courtHouseAddress: {
+            line: ["1 Test Street"],
+            town: "Test City",
+            postCode: "TC1 1TC"
+          },
+          courtRoom: [
+            {
+              courtRoomName: "Court Room 1",
+              session: [
+                {
+                  judiciary: [{ johKnownAs: "Judge Smith", isPresiding: true }],
+                  sittings: [
+                    {
+                      sittingStart: "2024-12-01T10:00:00Z",
+                      sittingEnd: "2024-12-01T12:00:00Z",
+                      channel: ["In Person"],
+                      hearing: [
+                        {
+                          hearingType: "Trial",
+                          case: [
+                            {
+                              caseNumber: "BLOB-TEST-001",
+                              caseName: "Smith v Jones",
+                              caseType: "Civil",
+                              caseSequenceIndicator: "1 of 1",
+                              party: [
+                                {
+                                  partyRole: "APPLICANT_PETITIONER",
+                                  individualDetails: {
+                                    title: "Mr",
+                                    individualForenames: "John",
+                                    individualSurname: "Smith"
+                                  }
+                                },
+                                {
+                                  partyRole: "RESPONDENT",
+                                  individualDetails: {
+                                    title: "Ms",
+                                    individualForenames: "Jane",
+                                    individualSurname: "Jones"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
   }
 };
 
