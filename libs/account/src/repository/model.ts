@@ -10,4 +10,6 @@ export interface User {
 export interface UpdateUserInput {
   role?: "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN";
   lastSignedInDate?: Date;
+  firstName?: string;
+  surname?: string;
 }

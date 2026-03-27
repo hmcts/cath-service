@@ -1,5 +1,5 @@
-import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { sendMediaApprovalEmail } from "@hmcts/notification";
+import { getGraphApiAccessToken, requireRole, USER_ROLES } from "@hmcts/auth";
+import { extractNotifyError, sendMediaExistingUserEmail, sendMediaNewAccountEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../../media-application/model.js";
@@ -81,26 +81,51 @@ const postHandler = async (req: Request, res: Response) => {
       return res.redirect(`/media-applications/${id}`);
     }
 
-    await approveApplication(id);
+    const signInPageLink = process.env.MEDIA_FORGOT_PASSWORD_LINK;
+    if (!signInPageLink) {
+      throw new Error("MEDIA_FORGOT_PASSWORD_LINK environment variable is not configured");
+    }
 
-    // Send approval email notification
+    const accessToken = await getGraphApiAccessToken();
+    const { isNewUser } = await approveApplication(id, accessToken);
+
+    const emailData = {
+      email: application.email,
+      fullName: application.name,
+      signInPageLink,
+      subscriptionPageLink: process.env.MEDIA_SUBSCRIPTION_PAGE_LINK ?? "",
+      startPageLink: process.env.MEDIA_START_PAGE_LINK ?? ""
+    };
+
     try {
-      await sendMediaApprovalEmail({
-        name: application.name,
-        email: application.email,
-        employer: application.employer
-      });
+      if (isNewUser) {
+        await sendMediaNewAccountEmail(emailData);
+      } else {
+        await sendMediaExistingUserEmail(emailData);
+      }
     } catch (error) {
-      console.error("❌ Failed to send approval email:", error);
-      // Don't fail the approval if email fails
+      const { status, message } = extractNotifyError(error);
+      console.error(`Failed to send confirmation email: ${status} ${message}`);
     }
 
     res.redirect(`/media-applications/${id}/approved`);
-  } catch (_error) {
+  } catch (error) {
+    console.error("Failed to approve media application:", error);
+    const application = await getApplicationById(id).catch(() => null);
+
     res.render("media-applications/[id]/approve", {
       pageTitle: lang.pageTitle,
-      error: lang.errorMessages.loadFailed,
-      application: null,
+      error: lang.errorMessages.azureAdFailed,
+      subheading: lang.subheading,
+      tableHeaders: lang.tableHeaders,
+      proofOfIdText: lang.proofOfIdText,
+      viewProofOfId: lang.viewProofOfId,
+      fileNotAvailable: lang.fileNotAvailable,
+      radioLegend: lang.radioLegend,
+      radioOptions: lang.radioOptions,
+      continueButton: lang.continueButton,
+      application,
+      proofOfIdFilename: application?.proofOfIdOriginalName,
       hideLanguageToggle: true
     });
   }
