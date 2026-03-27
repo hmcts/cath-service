@@ -1,0 +1,11 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block content %}
+{{ govukPanel({
+  titleText: pageTitle,
+  text: successMessage
+}) }}
+
+<p class="govuk-body">{{ furtherInfoText }} <a href="/manage-third-party-users{{ '?lng=cy' if locale == 'cy' else '' }}" class="govuk-link">{{ manageThirdPartyUsersLink }}</a></p>
+{% endblock %}
