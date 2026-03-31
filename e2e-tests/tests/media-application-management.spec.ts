@@ -7,7 +7,7 @@ test.describe("Media Application Management", () => {
   let rejectionApplicationId: string;
 
   test.beforeAll(async () => {
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     const approvalApp = await prisma.mediaApplication.create({
       data: {
@@ -34,7 +34,7 @@ test.describe("Media Application Management", () => {
   });
 
   test.afterAll(async () => {
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     if (approvalApplicationId) {
       await prisma.mediaApplication
@@ -128,7 +128,7 @@ test.describe("Media Application Management", () => {
       await expect(page.locator(".govuk-panel__title")).toContainText("Application has been approved");
 
       // Verify database update
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       const updatedApplication = await prisma.mediaApplication.findUnique({
         where: { id: approvalApplicationId }
       });
@@ -227,7 +227,7 @@ test.describe("Media Application Management", () => {
       await expect(page.locator(".govuk-panel__title")).toContainText("Application has been rejected");
 
       // Verify database update
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       const updatedApplication = await prisma.mediaApplication.findUnique({
         where: { id: rejectionApplicationId }
       });

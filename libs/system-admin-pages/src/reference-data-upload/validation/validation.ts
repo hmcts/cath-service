@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { ParsedLocationData, ValidationError } from "../model.js";
 
 const HTML_TAG_REGEX = /<[^<>]*>/;

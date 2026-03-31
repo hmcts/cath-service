@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MediaApplicationCreateData } from "./model.js";
 import { createMediaApplication, updateProofOfIdPath } from "./query.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     mediaApplication: {
       create: vi.fn(),
@@ -11,7 +11,7 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
-const { prisma } = await import("@hmcts/postgres");
+const { prisma } = await import("@hmcts/postgres-prisma");
 
 describe("createMediaApplication", () => {
   beforeEach(() => {

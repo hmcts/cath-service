@@ -1,8 +1,8 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { describe, expect, it, vi } from "vitest";
 import { generateReferenceDataCsv } from "./download-service.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     location: {
       findMany: vi.fn()

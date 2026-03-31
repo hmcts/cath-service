@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getAllJurisdictions, getAllLocations, getAllRegions, getAllSubJurisdictions, getLocationById, getSubJurisdictionsByJurisdiction } from "./queries.js";
 
 // Mock Prisma
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     location: {
       findMany: vi.fn(),
@@ -154,7 +154,7 @@ const mockSubJurisdictions = [
 ];
 
 // Import mocked prisma
-const { prisma } = await import("@hmcts/postgres");
+const { prisma } = await import("@hmcts/postgres-prisma");
 
 beforeEach(() => {
   vi.clearAllMocks();

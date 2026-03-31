@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { parseCsv as parseProductionCsv } from "../../libs/system-admin-pages/src/reference-data-upload/parsers/csv-parser.js";
 
 const __filename = fileURLToPath(import.meta.url);
