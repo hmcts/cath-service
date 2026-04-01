@@ -49,6 +49,10 @@ vi.mock("./notification-queries.js", () => ({
   updateNotificationStatus: vi.fn()
 }));
 
+vi.mock("../rate-limiting/email-rate-limiter.js", () => ({
+  checkEmailRateLimit: vi.fn()
+}));
+
 describe("notification-service", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -60,6 +64,9 @@ describe("notification-service", () => {
     const { extractCaseSummary, formatCaseSummaryForEmail } = await import("@hmcts/civil-and-family-daily-cause-list");
     vi.mocked(extractCaseSummary).mockReturnValue([{ caseReference: "123", parties: "Smith v Jones" }] as any);
     vi.mocked(formatCaseSummaryForEmail).mockReturnValue("Case 123 - Smith v Jones");
+
+    const { checkEmailRateLimit } = await import("../rate-limiting/email-rate-limiter.js");
+    vi.mocked(checkEmailRateLimit).mockResolvedValue(undefined);
 
     const { buildTemplateParameters, buildEnhancedTemplateParameters, getSubscriptionTemplateIdForListType } = await import("../govnotify/template-config.js");
     vi.mocked(buildTemplateParameters).mockReturnValue({
@@ -119,6 +126,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -137,7 +145,7 @@ describe("notification-service", () => {
     expect(result.skipped).toBe(0);
   });
 
-  it("should skip users with invalid email", async () => {
+  it("should send email to users with a non-null email address regardless of format", async () => {
     const mockSubscriptions = [
       {
         subscriptionId: "sub-1",
@@ -164,6 +172,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Skipped",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -249,6 +258,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -336,6 +346,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -392,6 +403,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -445,6 +457,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -500,6 +513,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -559,6 +573,7 @@ describe("notification-service", () => {
       govNotifyId: null,
       status: "Pending",
       errorMessage: null,
+      emailType: "SUBSCRIPTION",
       createdAt: new Date(),
       sentAt: null
     });
@@ -580,5 +595,112 @@ describe("notification-service", () => {
         templateId: undefined
       })
     );
+  });
+
+  it("should send email when rate limit is not exceeded", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { checkEmailRateLimit } = await import("../rate-limiting/email-rate-limiter.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      govNotifyId: null,
+      status: "Pending",
+      errorMessage: null,
+      emailType: "SUBSCRIPTION",
+      createdAt: new Date(),
+      sentAt: null
+    });
+    vi.mocked(checkEmailRateLimit).mockResolvedValue(undefined);
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.sent).toBe(1);
+    expect(result.skipped).toBe(0);
+    expect(sendEmail).toHaveBeenCalled();
+  });
+
+  it("should skip and not send email when non-critical rate limit is exceeded", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { checkEmailRateLimit } = await import("../rate-limiting/email-rate-limiter.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(checkEmailRateLimit).mockRejectedValue(new Error("Rate limit exceeded: SUBSCRIPTION emails to u***@example.com"));
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("should fail and not send email when critical rate limit is exceeded", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { checkEmailRateLimit } = await import("../rate-limiting/email-rate-limiter.js");
+    const { TooManyEmailsException } = await import("../rate-limiting/too-many-emails-exception.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(checkEmailRateLimit).mockRejectedValue(new TooManyEmailsException("u***@example.com", "MEDIA_APPROVAL"));
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 });

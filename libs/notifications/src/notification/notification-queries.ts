@@ -6,6 +6,7 @@ export interface CreateNotificationData {
   publicationId: string;
   status?: string;
   errorMessage?: string;
+  emailType?: string;
 }
 
 export interface NotificationAuditLog {
@@ -16,6 +17,7 @@ export interface NotificationAuditLog {
   govNotifyId: string | null;
   status: string;
   errorMessage: string | null;
+  emailType: string;
   createdAt: Date;
   sentAt: Date | null;
 }
@@ -27,7 +29,8 @@ export async function createNotificationAuditLog(data: CreateNotificationData): 
       userId: data.userId,
       publicationId: data.publicationId,
       status: data.status || "Pending",
-      errorMessage: data.errorMessage
+      errorMessage: data.errorMessage,
+      emailType: data.emailType || "SUBSCRIPTION"
     }
   });
 
@@ -61,5 +64,18 @@ export async function getNotificationByGovNotifyId(govNotifyId: string): Promise
 export async function getNotificationsByPublicationId(publicationId: string): Promise<NotificationAuditLog[]> {
   return await prisma.notificationAuditLog.findMany({
     where: { publicationId }
+  });
+}
+
+export async function countEmailsSentInWindow(userId: string, emailType: string, windowStart: Date): Promise<number> {
+  return prisma.notificationAuditLog.count({
+    where: {
+      userId,
+      emailType,
+      status: "Sent",
+      createdAt: {
+        gte: windowStart
+      }
+    }
   });
 }
