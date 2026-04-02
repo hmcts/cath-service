@@ -1,27 +1,5 @@
 import { prisma } from "@hmcts/postgres";
 
-export interface CreateNotificationData {
-  subscriptionId: string;
-  userId: string;
-  publicationId: string;
-  status?: string;
-  errorMessage?: string;
-  emailType?: string;
-}
-
-export interface NotificationAuditLog {
-  notificationId: string;
-  subscriptionId: string;
-  userId: string;
-  publicationId: string;
-  govNotifyId: string | null;
-  status: string;
-  errorMessage: string | null;
-  emailType: string;
-  createdAt: Date;
-  sentAt: Date | null;
-}
-
 export async function createNotificationAuditLog(data: CreateNotificationData): Promise<NotificationAuditLog> {
   const notification = await prisma.notificationAuditLog.create({
     data: {
@@ -78,4 +56,26 @@ export async function countEmailsSentInWindow(userId: string, emailType: string,
       }
     }
   });
+}
+
+export interface CreateNotificationData {
+  subscriptionId: string;
+  userId: string;
+  publicationId: string;
+  status?: string;
+  errorMessage?: string;
+  emailType?: string;
+}
+
+export interface NotificationAuditLog {
+  notificationId: string;
+  subscriptionId: string;
+  userId: string;
+  publicationId: string;
+  govNotifyId: string | null;
+  status: string;
+  errorMessage: string | null;
+  emailType: string;
+  createdAt: Date;
+  sentAt: Date | null;
 }
