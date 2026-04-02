@@ -53,8 +53,8 @@ export async function checkEmailRateLimit(userId: string, email: string, emailTy
 }
 
 function resolveConfig(defaults: RateLimitDefaults): RateLimitConfig {
-  const maxParsed = parseInt(process.env[defaults.maxEnvVar] ?? "", 10);
-  const windowParsed = parseInt(process.env[defaults.windowEnvVar] ?? "", 10);
+  const maxParsed = Number.parseInt(process.env[defaults.maxEnvVar] ?? "", 10);
+  const windowParsed = Number.parseInt(process.env[defaults.windowEnvVar] ?? "", 10);
   return {
     maxEmails: Number.isNaN(maxParsed) ? defaults.defaultMax : maxParsed,
     windowMs: Number.isNaN(windowParsed) ? defaults.defaultWindowMs : windowParsed,

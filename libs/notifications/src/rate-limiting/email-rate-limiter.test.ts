@@ -121,4 +121,11 @@ describe("checkEmailRateLimit", () => {
 
     await expect(checkEmailRateLimit("user-1", "nodomain", "SUBSCRIPTION")).rejects.toThrow("***@***");
   });
+
+  it("should return without checking the database for an unknown email type", async () => {
+    const { countEmailsSentInWindow } = await import("../notification/notification-queries.js");
+
+    await expect(checkEmailRateLimit("user-1", "user@example.com", "UNKNOWN_TYPE")).resolves.toBeUndefined();
+    expect(countEmailsSentInWindow).not.toHaveBeenCalled();
+  });
 });

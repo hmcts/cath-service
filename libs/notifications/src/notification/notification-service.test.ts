@@ -672,6 +672,60 @@ describe("notification-service", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
+  it("should only skip the rate-limited user and still send to others in the same batch", async () => {
+    const mockSubscriptions = [
+      {
+        subscriptionId: "sub-1",
+        userId: "user-1",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+      },
+      {
+        subscriptionId: "sub-2",
+        userId: "user-2",
+        searchType: "LOCATION_ID",
+        searchValue: "1",
+        user: { email: "user2@example.com", firstName: "Jane", surname: "Smith" }
+      }
+    ];
+
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { checkEmailRateLimit } = await import("../rate-limiting/email-rate-limiter.js");
+
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue(mockSubscriptions);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-2",
+      userId: "user-2",
+      publicationId: "pub-1",
+      govNotifyId: null,
+      status: "Pending",
+      errorMessage: null,
+      emailType: "SUBSCRIPTION",
+      createdAt: new Date(),
+      sentAt: null
+    });
+    vi.mocked(checkEmailRateLimit).mockImplementation(async (userId) => {
+      if (userId === "user-1") throw new Error("Rate limit exceeded");
+    });
+
+    const result = await sendPublicationNotifications({
+      publicationId: "pub-1",
+      locationId: "1",
+      locationName: "Test Court",
+      hearingListName: "Daily Cause List",
+      publicationDate: new Date("2024-12-01")
+    });
+
+    expect(result.totalSubscriptions).toBe(2);
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(1);
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+
   it("should fail and not send email when critical rate limit is exceeded", async () => {
     const mockSubscriptions = [
       {
