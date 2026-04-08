@@ -41,7 +41,8 @@ export async function createTestSubscription(userId: string, locationId: number)
     data: {
       subscriptionId,
       userId,
-      locationId,
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString(),
       dateAdded: new Date()
     }
   });

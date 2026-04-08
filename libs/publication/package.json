@@ -21,10 +21,10 @@
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/postgres": "workspace:*",
-    "ajv": "8.17.1"
+    "ajv": "8.18.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "vitest": "4.0.16"
+    "vitest": "4.0.18"
   }
 }

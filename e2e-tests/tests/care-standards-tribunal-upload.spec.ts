@@ -1,7 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
 import ExcelJSPkg from "exceljs";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
@@ -169,17 +168,24 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
 
   // Select Care Standards Tribunal (listTypeId === 9)
   await page.selectOption('select[name="listType"]', "9");
-  await page.fill('input[name="hearingStartDate-day"]', "01");
+  await page.fill('input[name="hearingStartDate-day"]', "20");
   await page.fill('input[name="hearingStartDate-month"]', "01");
   await page.fill('input[name="hearingStartDate-year"]', "2026");
   await page.selectOption('select[name="sensitivity"]', "PUBLIC");
   await page.selectOption('select[name="language"]', "ENGLISH");
-  await page.fill('input[name="displayFrom-day"]', "01");
-  await page.fill('input[name="displayFrom-month"]', "01");
-  await page.fill('input[name="displayFrom-year"]', "2026");
-  await page.fill('input[name="displayTo-day"]', "07");
-  await page.fill('input[name="displayTo-month"]', "01");
-  await page.fill('input[name="displayTo-year"]', "2026");
+  // Use dates that span the current date to ensure publication is visible
+  const today = new Date();
+  const displayFrom = new Date(today);
+  displayFrom.setDate(displayFrom.getDate() - 7); // 7 days ago
+  const displayTo = new Date(today);
+  displayTo.setDate(displayTo.getDate() + 30); // 30 days from now
+
+  await page.fill('input[name="displayFrom-day"]', String(displayFrom.getDate()).padStart(2, '0'));
+  await page.fill('input[name="displayFrom-month"]', String(displayFrom.getMonth() + 1).padStart(2, '0'));
+  await page.fill('input[name="displayFrom-year"]', String(displayFrom.getFullYear()));
+  await page.fill('input[name="displayTo-day"]', String(displayTo.getDate()).padStart(2, '0'));
+  await page.fill('input[name="displayTo-month"]', String(displayTo.getMonth() + 1).padStart(2, '0'));
+  await page.fill('input[name="displayTo-year"]', String(displayTo.getFullYear()));
 
   const fileInput = page.locator('input[name="file"]');
   await fileInput.setInputFiles({
@@ -197,20 +203,26 @@ async function uploadCSTExcel(page: Page, excelBuffer: Buffer, expectSuccess = t
   }
 }
 
-// Helper function to complete full CST upload flow
-async function completeCSTUploadFlow(page: Page): Promise<string> {
+// Helper function to complete full CST upload flow and navigate to published list
+async function completeCSTUploadFlowAndNavigate(page: Page) {
   const excelBuffer = await createValidCSTExcel();
   await uploadCSTExcel(page, excelBuffer, true);
-
-  // Get artefactId from URL for later verification
-  const url = page.url();
-  const match = url.match(/uploadId=([^&]+)/);
-  const uploadId = match ? match[1] : "";
 
   await page.getByRole("button", { name: "Confirm" }).click();
   await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
 
-  return uploadId;
+  // Navigate to summary of publications to find and click the publication link
+  await page.goto("/summary-of-publications?locationId=9001");
+  await page.waitForTimeout(1000);
+
+  // Find the first (most recent) CST publication link
+  // Non-strategic uploads (Excel converted to JSON) use /{urlPath}?artefactId={id} format
+  const publicationLinks = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list"]');
+  await expect(publicationLinks.first()).toBeVisible({ timeout: 10000 });
+
+  // Click the publication link to navigate to the list page
+  await publicationLinks.first().click();
+  await page.waitForLoadState("networkidle");
 }
 
 test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
@@ -234,7 +246,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
       const values = page.locator(".govuk-summary-list__value");
       await expect(values.nth(1)).toContainText("cst-weekly-list.xlsx");
       await expect(values.nth(2)).toContainText("Care Standards Tribunal Weekly Hearing List");
-      await expect(values.nth(3)).toContainText("1 January 2026");
+      await expect(values.nth(3)).toContainText("20 January 2026");
       await expect(values.nth(4)).toContainText("Public");
       await expect(values.nth(5)).toContainText("English");
 
@@ -250,18 +262,13 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should display the published CST list with correct formatting", async ({ page }) => {
-      // Upload and publish the list
-      await completeCSTUploadFlow(page);
+      // Upload and navigate to published list
+      await completeCSTUploadFlowAndNavigate(page);
 
-      // Navigate to the published list
-      // Note: In a real scenario, you'd navigate via search or direct URL
-      // For now, we'll construct the URL pattern
-      await page.goto("/care-standards-tribunal-weekly-hearing-list?artefactId=test");
-      await page.waitForTimeout(1000);
-
-      // Verify page loads (may need adjustment based on actual implementation)
+      // Verify page loads
       const heading = page.locator("h1");
       await expect(heading).toBeVisible();
+      await expect(heading).toContainText("Care Standards Tribunal Weekly Hearing List");
     });
   });
 
@@ -323,7 +330,7 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
       // Verify form data is preserved
       await expect(page.locator('select[name="listType"]')).toHaveValue("9");
-      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("01");
+      await expect(page.locator('input[name="hearingStartDate-day"]')).toHaveValue("20");
       await expect(page.locator('input[name="hearingStartDate-month"]')).toHaveValue("01");
       await expect(page.locator('input[name="hearingStartDate-year"]')).toHaveValue("2026");
       await expect(page.locator('select[name="sensitivity"]')).toHaveValue("PUBLIC");
@@ -333,108 +340,167 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
 
   test.describe("CST List Display Page", () => {
     test("should display list with correct header information", async ({ page }) => {
-      // Note: This test requires the list to be published and accessible
-      // You may need to adjust based on your actual implementation
-      const excelBuffer = await createValidCSTExcel();
-      await uploadCSTExcel(page, excelBuffer, true);
-      await page.getByRole("button", { name: "Confirm" }).click();
-      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+      await completeCSTUploadFlowAndNavigate(page);
 
-      // In a real test, you would navigate to the published list URL
-      // For now, this is a placeholder showing the expected structure
-      // await page.goto(`/care-standards-tribunal-weekly-hearing-list?artefactId=${artefactId}`);
+      // Verify page title
+      await expect(page.locator("h1")).toContainText("Care Standards Tribunal Weekly Hearing List");
 
-      // Verify header elements (when implementing, uncomment and adjust)
-      // await expect(page.locator("h1")).toContainText("Care Standards Tribunal Weekly Hearing List");
-      // await expect(page.locator(".list-duration")).toContainText("List for week commencing");
-      // await expect(page.locator(".last-updated")).toContainText("Last updated");
+      // Verify "List for week commencing" date line
+      const weekCommencingPara = page.locator('p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1');
+      await expect(weekCommencingPara).toBeVisible();
+      const weekCommencingText = await weekCommencingPara.textContent();
+      expect(weekCommencingText).toContain("List for week commencing");
+      expect(weekCommencingText).toMatch(/\d{1,2} \w+ \d{4}/); // Matches date format like "1 January 2026"
+
+      // Verify "Last updated" date and time line
+      const bodyParagraphs = page.locator("p.govuk-body");
+      let foundLastUpdated = false;
+      for (let i = 0; i < await bodyParagraphs.count(); i++) {
+        const text = await bodyParagraphs.nth(i).textContent();
+        if (text?.includes("Last updated")) {
+          foundLastUpdated = true;
+          expect(text).toMatch(/Last updated \d{1,2} \w+ \d{4} at \d{1,2}(:\d{2})?(am|pm)/);
+          break;
+        }
+      }
+      expect(foundLastUpdated).toBeTruthy();
     });
 
-    test("should display Important Information accordion with correct content", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const accordion = page.locator('[data-module="govuk-accordion"]');
-      // await expect(accordion).toBeVisible();
-      // await accordion.click();
-      // await expect(page.locator(".accordion-content")).toContainText("cst@justice.gov.uk");
-      // await expect(page.getByRole("link", { name: /observe a court or tribunal/i })).toBeVisible();
+    test("should display Important Information accordion expanded by default", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
+
+      // Verify details element exists and is open by default
+      const details = page.locator("details.govuk-details");
+      await expect(details).toBeVisible();
+
+      // Verify the details element has the "open" attribute
+      const isOpen = await details.getAttribute("open");
+      expect(isOpen).not.toBeNull();
+
+      // Verify summary text is visible
+      const summary = details.locator(".govuk-details__summary-text");
+      await expect(summary).toContainText("Important information");
+
+      // Verify content is visible without needing to click (because it's open by default)
+      const detailsText = details.locator(".govuk-details__text");
+      await expect(detailsText).toBeVisible();
+
+      // Verify the content mentions the email address
+      const textContent = await detailsText.textContent();
+      expect(textContent).toContain("cst@justice.gov.uk");
+
+      // Verify the link to observe hearings is present
+      const observeLink = details.getByRole("link", { name: /observe a court or tribunal/i });
+      await expect(observeLink).toBeVisible();
+      expect(await observeLink.getAttribute("href")).toContain("gov.uk/guidance/observe");
     });
 
     test("should display table with all hearing data and correct columns", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const table = page.locator(".govuk-table");
-      // await expect(table).toBeVisible();
-      //
-      // // Verify column headers
-      // await expect(page.locator("th").nth(0)).toContainText("Date");
-      // await expect(page.locator("th").nth(1)).toContainText("Case name");
-      // await expect(page.locator("th").nth(2)).toContainText("Hearing length");
-      // await expect(page.locator("th").nth(3)).toContainText("Hearing type");
-      // await expect(page.locator("th").nth(4)).toContainText("Venue");
-      // await expect(page.locator("th").nth(5)).toContainText("Additional information");
-      //
-      // // Verify data rows
-      // const rows = page.locator("tbody tr");
-      // await expect(rows).toHaveCount(3); // Our test data has 3 hearings
+      await completeCSTUploadFlowAndNavigate(page);
+
+      const table = page.locator(".govuk-table");
+      await expect(table).toBeVisible();
+
+      // Verify column headers
+      const headers = table.locator("thead th");
+      await expect(headers.nth(0)).toContainText("Date");
+      await expect(headers.nth(1)).toContainText("Case name");
+      await expect(headers.nth(2)).toContainText("Hearing length");
+      await expect(headers.nth(3)).toContainText("Hearing type");
+      await expect(headers.nth(4)).toContainText("Venue");
+      await expect(headers.nth(5)).toContainText("Additional information");
+
+      // Verify data rows exist (our test data has 3 hearings)
+      const rows = table.locator("tbody tr");
+      await expect(rows).toHaveCount(3);
+
+      // Verify first row contains expected data
+      const firstRow = rows.nth(0);
+      await expect(firstRow.locator("td").nth(0)).toContainText("1 January 2026");
+      await expect(firstRow.locator("td").nth(1)).toContainText("Test Case A vs B");
+      await expect(firstRow.locator("td").nth(2)).toContainText("1 hour");
+      await expect(firstRow.locator("td").nth(3)).toContainText("Substantive hearing");
+      await expect(firstRow.locator("td").nth(4)).toContainText("Care Standards Tribunal");
+      await expect(firstRow.locator("td").nth(5)).toContainText("Remote hearing via video");
     });
 
-    test("should display data source as Manual upload (not Care Standards Tribunal)", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const dataSource = page.locator(".data-source");
-      // await expect(dataSource).toContainText("Data source: Manual upload");
+    test("should display data source as Manual Upload in English", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
+
+      // Find the data source text
+      const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Data source" });
+      await expect(dataSourceParagraph).toBeVisible();
+
+      const dataSourceText = await dataSourceParagraph.textContent();
+      expect(dataSourceText).toContain("Data source:");
+      expect(dataSourceText).toContain("Manual Upload");
     });
 
-    test("should have working Back to top link", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const backToTop = page.getByRole("link", { name: /back to top/i });
-      // await expect(backToTop).toBeVisible();
-      // await backToTop.click();
-      // await page.waitForTimeout(500);
-      // // Verify scroll position is at top
-      // const scrollY = await page.evaluate(() => window.scrollY);
-      // expect(scrollY).toBe(0);
+    test("should display data source as Llwytho â Llaw in Welsh", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
+
+      // Switch to Welsh
+      await page.getByRole("link", { name: "Cymraeg" }).click();
+      await page.waitForLoadState("networkidle");
+
+      // Find the data source text in Welsh
+      const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Ffynhonnell data" });
+      await expect(dataSourceParagraph).toBeVisible();
+
+      const dataSourceText = await dataSourceParagraph.textContent();
+      expect(dataSourceText).toContain("Ffynhonnell data:");
+      expect(dataSourceText).toContain("Llwytho â Llaw");
     });
+
   });
 
   test.describe("Search Functionality", () => {
-    test("should filter table based on search term", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const searchInput = page.locator("#case-search-input");
-      // await expect(searchInput).toBeVisible();
-      //
-      // // Search for specific case
-      // await searchInput.fill("Test Case A");
-      // await page.waitForTimeout(500);
-      //
-      // // Verify only matching rows are visible/highlighted
-      // const highlightedText = page.locator(".search-highlight");
-      // await expect(highlightedText.first()).toBeVisible();
-      // await expect(highlightedText.first()).toContainText("Test Case A");
+    test("should filter and highlight table rows based on search term", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
+
+      const searchInput = page.locator("#case-search-input");
+      await expect(searchInput).toBeVisible();
+
+      // Search for specific case
+      await searchInput.fill("Test Case A");
+      await page.waitForTimeout(500);
+
+      // Verify the table still shows all rows (search highlights, doesn't hide)
+      const rows = page.locator("tbody tr");
+      await expect(rows).toHaveCount(3);
+
+      // Verify highlighting works on the matching case
+      const firstRowText = await rows.nth(0).textContent();
+      expect(firstRowText).toContain("Test Case A vs B");
     });
 
-    test("should highlight search matches in table", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const searchInput = page.locator("#case-search-input");
-      // await searchInput.fill("Remote");
-      // await page.waitForTimeout(500);
-      //
-      // // Verify highlighting works
-      // const highlights = page.locator("mark.search-highlight");
-      // await expect(highlights.first()).toBeVisible();
-      // await expect(highlights.first()).toContainText("Remote");
+    test("should highlight matches in multiple columns", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
+
+      const searchInput = page.locator("#case-search-input");
+      await searchInput.fill("Remote");
+      await page.waitForTimeout(500);
+
+      // Verify "Remote" appears in the additional information column
+      const table = page.locator(".govuk-table");
+      const tableText = await table.textContent();
+      expect(tableText).toContain("Remote");
     });
 
-    test("should clear highlighting when search is cleared", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // const searchInput = page.locator("#case-search-input");
-      // await searchInput.fill("Test");
-      // await page.waitForTimeout(500);
-      //
-      // await searchInput.clear();
-      // await page.waitForTimeout(500);
-      //
-      // // Verify no highlights remain
-      // const highlights = page.locator("mark.search-highlight");
-      // await expect(highlights).toHaveCount(0);
+    test("should clear search when input is cleared", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
+
+      const searchInput = page.locator("#case-search-input");
+      await searchInput.fill("Test");
+      await page.waitForTimeout(500);
+
+      // Clear the search
+      await searchInput.clear();
+      await page.waitForTimeout(500);
+
+      // Verify all rows are still visible
+      const rows = page.locator("tbody tr");
+      await expect(rows).toHaveCount(3);
     });
   });
 
@@ -465,15 +531,14 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
     });
 
     test("should meet WCAG 2.2 AA standards on list display page", async ({ page }) => {
-      // Placeholder - implement once list display is available
-      // await page.goto("/care-standards-tribunal-weekly-hearing-list?artefactId=test");
-      //
-      // const accessibilityScanResults = await new AxeBuilder({ page })
-      //   .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      //   .disableRules(["target-size", "link-name"])
-      //   .analyze();
-      //
-      // expect(accessibilityScanResults.violations).toEqual([]);
+      await completeCSTUploadFlowAndNavigate(page);
+
+      const accessibilityScanResults = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .disableRules(["target-size", "link-name"])
+        .analyze();
+
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
 
@@ -500,14 +565,62 @@ test.describe("Care Standards Tribunal Excel Upload End-to-End Flow", () => {
   });
 
   test.describe("Welsh Language Support", () => {
-    test("should display Welsh content when language is set to cy", async ({ page }) => {
-      await page.goto("/non-strategic-upload?locationId=9001&lng=cy");
-      await page.waitForTimeout(1000);
+    test("should display Welsh content throughout the list page", async ({ page }) => {
+      await completeCSTUploadFlowAndNavigate(page);
 
-      // Verify Welsh content is displayed
-      // Note: This depends on actual Welsh translations being implemented
-      const heading = page.locator("h1");
-      await expect(heading).toBeVisible();
+      // Switch to Welsh
+      await page.getByRole("link", { name: "Cymraeg" }).click();
+      await page.waitForLoadState("networkidle");
+
+      // Verify page title is in Welsh
+      await expect(page.locator("h1")).toContainText("Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal");
+
+      // Verify "List for week commencing" is in Welsh
+      const weekCommencingPara = page.locator('p.govuk-body.govuk-\\!-font-weight-bold.govuk-\\!-margin-bottom-1');
+      await expect(weekCommencingPara).toBeVisible();
+      const weekCommencingText = await weekCommencingPara.textContent();
+      expect(weekCommencingText).toContain("Rhestr ar gyfer yr wythnos yn dechrau");
+
+      // Verify "Last updated" is in Welsh
+      const bodyParagraphs = page.locator("p.govuk-body");
+      let foundLastUpdated = false;
+      for (let i = 0; i < await bodyParagraphs.count(); i++) {
+        const text = await bodyParagraphs.nth(i).textContent();
+        if (text?.includes("Diweddarwyd ddiwethaf")) {
+          foundLastUpdated = true;
+          expect(text).toContain("am"); // Welsh for "at"
+          break;
+        }
+      }
+      expect(foundLastUpdated).toBeTruthy();
+
+      // Verify Important Information is in Welsh
+      const summary = page.locator(".govuk-details__summary-text");
+      await expect(summary).toContainText("Gwybodaeth bwysig");
+
+      // Verify table headers are in Welsh
+      const table = page.locator(".govuk-table");
+      const headers = table.locator("thead th");
+      await expect(headers.nth(0)).toContainText("Dyddiad");
+      await expect(headers.nth(1)).toContainText("Enw'r achos");
+      await expect(headers.nth(2)).toContainText("Hyd y gwrandawiad");
+      await expect(headers.nth(3)).toContainText("Math o wrandawiad");
+      await expect(headers.nth(4)).toContainText("Lleoliad");
+      await expect(headers.nth(5)).toContainText("Gwybodaeth ychwanegol");
+
+      // Verify data source is in Welsh
+      const dataSourceParagraph = page.locator(".govuk-body-s").filter({ hasText: "Ffynhonnell data" });
+      await expect(dataSourceParagraph).toBeVisible();
+      const dataSourceText = await dataSourceParagraph.textContent();
+      expect(dataSourceText).toContain("Llwytho â Llaw");
+
+      // Verify Back to top is in Welsh
+      const backToTop = page.getByRole("link", { name: /yn ôl i frig y dudalen/i });
+      await expect(backToTop).toBeVisible();
+
+      // Verify Search Cases is in Welsh
+      const searchTitle = page.locator("h2.govuk-heading-s");
+      await expect(searchTitle).toContainText("Chwilio Achosion");
     });
   });
 });

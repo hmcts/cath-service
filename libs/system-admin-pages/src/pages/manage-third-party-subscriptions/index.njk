@@ -79,7 +79,7 @@
           {% set isChecked = currentListTypeIds and (listType.id in currentListTypeIds) %}
           {% set checkboxItems = (checkboxItems.push({
             value: listType.id,
-            text: (listType.welshFriendlyName if lng == 'cy' else listType.englishFriendlyName),
+            text: (listType.welshFriendlyName if locale == 'cy' else listType.englishFriendlyName),
             checked: isChecked
           }), checkboxItems) %}
         {% endfor %}

@@ -48,11 +48,11 @@
         ]
       }) }}
 
-      <a href="/manage-third-party-subscriptions?id={{ user.id }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-button" data-module="govuk-button">
+      <a href="/manage-third-party-subscriptions?id={{ user.id }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-button" data-module="govuk-button">
         {{ manageSubscriptionsButton }}
       </a>
 
-      <a href="/delete-third-party-user?id={{ user.id }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-button govuk-button--warning" data-module="govuk-button">
+      <a href="/delete-third-party-user?id={{ user.id }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-button govuk-button--warning" data-module="govuk-button">
         {{ deleteUserButton }}
       </a>
     {% endif %}
