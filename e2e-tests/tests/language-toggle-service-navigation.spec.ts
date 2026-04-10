@@ -3,16 +3,14 @@ import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("Language Toggle in Service Navigation - Issue 292", () => {
-  test("public user can switch language using service navigation toggle @nightly", async ({ page }) => {
-    // 1. Navigate to public page and verify English language toggle
+  test("public user can use language toggle across the service @nightly", async ({ page }) => {
+    const serviceNav = page.locator(".govuk-service-navigation");
+
+    // 1. Navigate to home page and verify language toggle is in service navigation
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Verify service navigation is visible
-    const serviceNav = page.locator(".govuk-service-navigation");
     await expect(serviceNav).toBeVisible();
-
-    // Verify language toggle is present in service navigation for public users
     const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toHaveAttribute("href", /\?lng=cy/);
@@ -26,11 +24,9 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
     await page.waitForURL(/.*\?lng=cy/);
     await page.waitForLoadState("networkidle");
 
-    // Verify Welsh heading
     const heading = page.locator("h1");
     await expect(heading).toHaveText("Gwrandawiadau llys a thribiwnlys");
 
-    // Verify English language toggle is now shown
     const englishToggle = serviceNav.locator('a:has-text("English")');
     await expect(englishToggle).toBeVisible();
     await expect(englishToggle).toHaveAttribute("href", /\?lng=en/);
@@ -40,19 +36,17 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
     await expect(serviceName).toHaveText("Gwrandawiadau llys a thribiwnlys");
 
     // 3. Test accessibility in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page })
+    const welshAccessibilityResults = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .disableRules(["link-name", "target-size"]) // Known GOV.UK Design System footer issues
       .analyze();
-
-    expect(accessibilityScanResults.violations).toEqual([]);
+    expect(welshAccessibilityResults.violations).toEqual([]);
 
     // 4. Switch back to English
     await englishToggle.click();
     await page.waitForURL(/.*\?lng=en/);
     await page.waitForLoadState("networkidle");
 
-    // Verify English content is restored
     await expect(heading).toHaveText("Court and tribunal hearings");
     await expect(languageToggle).toBeVisible();
 
@@ -75,39 +69,66 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .disableRules(["link-name", "target-size"])
       .analyze();
-
     expect(englishAccessibilityResults.violations).toEqual([]);
-  });
 
-  test("language toggle preserves query parameters when switching languages @nightly", async ({ page }) => {
-    // Navigate to page with existing query parameters
+    // 7. Test query parameter preservation on a different page
     await page.goto("/view-option?test=value&another=param");
     await page.waitForLoadState("networkidle");
 
-    const serviceNav = page.locator(".govuk-service-navigation");
-    const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
-    await expect(languageToggle).toBeVisible();
+    const welshToggle = serviceNav.locator('a:has-text("Cymraeg")');
+    await welshToggle.click();
+    await page.waitForURL(/.*\?.*lng=cy/);
 
-    // Click language toggle
-    await languageToggle.click();
-
-    // Verify query parameters are preserved
-    await page.waitForURL(/.*\?.*test=value.*another=param.*lng=cy/);
     const url = page.url();
     expect(url).toContain("test=value");
     expect(url).toContain("another=param");
     expect(url).toContain("lng=cy");
 
-    // Switch back to English
-    const englishToggle = serviceNav.locator('a:has-text("English")');
-    await englishToggle.click();
+    // Switch back and verify params still preserved
+    await serviceNav.locator('a:has-text("English")').click();
+    await page.waitForURL(/.*\?.*lng=en/);
 
-    // Verify query parameters are still preserved
-    await page.waitForURL(/.*\?.*test=value.*another=param.*lng=en/);
     const englishUrl = page.url();
     expect(englishUrl).toContain("test=value");
     expect(englishUrl).toContain("another=param");
     expect(englishUrl).toContain("lng=en");
+
+    // 8. Verify language toggle works across different public pages
+    const publicPages = ["/", "/view-option", "/cookie-policy"];
+    for (const pagePath of publicPages) {
+      await page.goto(pagePath);
+      await page.waitForLoadState("networkidle");
+
+      const pageWelshToggle = serviceNav.locator('a:has-text("Cymraeg")');
+      await expect(pageWelshToggle, `Language toggle should be visible on ${pagePath}`).toBeVisible();
+
+      await pageWelshToggle.click();
+      await page.waitForURL(new RegExp(`.*\\?.*lng=cy`));
+
+      const pageEnglishToggle = serviceNav.locator('a:has-text("English")');
+      await expect(pageEnglishToggle, `English toggle should be visible on ${pagePath} in Welsh`).toBeVisible();
+
+      await pageEnglishToggle.click();
+      await page.waitForURL(new RegExp(`.*\\?.*lng=en`));
+    }
+
+    // 9. Test language preference persists across navigation
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    await serviceNav.locator('a:has-text("Cymraeg")').click();
+    await page.waitForURL(/.*\?lng=cy/);
+
+    // Navigate to another page without lng parameter
+    await page.goto("/view-option");
+    await page.waitForLoadState("networkidle");
+
+    // Language should persist from cookie/session - one of the toggles should be visible
+    const persistedEnglishToggle = serviceNav.locator('a:has-text("English")');
+    const persistedWelshToggle = serviceNav.locator('a:has-text("Cymraeg")');
+    const englishVisible = await persistedEnglishToggle.isVisible();
+    const welshVisible = await persistedWelshToggle.isVisible();
+    expect(englishVisible || welshVisible).toBe(true);
   });
 
   test("admin users do not see language toggle in service navigation @nightly", async ({ page }) => {
@@ -177,60 +198,4 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
     await expect(serviceName).toBeVisible();
   });
 
-  test("language toggle works across different public pages @nightly", async ({ page }) => {
-    // Test language toggle on multiple public pages to ensure consistency
-    const publicPages = ["/", "/view-option", "/cookie-policy"];
-
-    for (const pagePath of publicPages) {
-      await page.goto(pagePath);
-      await page.waitForLoadState("networkidle");
-
-      const serviceNav = page.locator(".govuk-service-navigation");
-
-      // Verify language toggle is visible on each page
-      const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
-      await expect(languageToggle, `Language toggle should be visible on ${pagePath}`).toBeVisible();
-
-      // Switch to Welsh
-      await languageToggle.click();
-      await page.waitForURL(new RegExp(`.*${pagePath}.*\\?.*lng=cy`));
-
-      // Verify English toggle appears
-      const englishToggle = serviceNav.locator('a:has-text("English")');
-      await expect(englishToggle, `English toggle should be visible on ${pagePath} in Welsh`).toBeVisible();
-
-      // Switch back to English for next iteration
-      await englishToggle.click();
-      await page.waitForURL(new RegExp(`.*${pagePath}.*\\?.*lng=en`));
-    }
-  });
-
-  test("language preference persists across page navigation @nightly", async ({ page }) => {
-    // 1. Start on home page and switch to Welsh
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    const serviceNav = page.locator(".govuk-service-navigation");
-    const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
-    await languageToggle.click();
-    await page.waitForURL(/.*\?lng=cy/);
-
-    // 2. Navigate to another page without lng parameter
-    await page.goto("/view-option");
-    await page.waitForLoadState("networkidle");
-
-    // 3. Verify Welsh is still active (session/cookie persistence)
-    const heading = page.locator("h1");
-    const headingText = await heading.textContent();
-
-    // Language should persist from cookie/session
-    // Either Welsh content or English toggle should be visible
-    const englishToggle = serviceNav.locator('a:has-text("English")');
-    const welshToggle = serviceNav.locator('a:has-text("Cymraeg")');
-
-    // One of the toggles should be visible
-    const englishVisible = await englishToggle.isVisible();
-    const welshVisible = await welshToggle.isVisible();
-    expect(englishVisible || welshVisible).toBe(true);
-  });
 });
