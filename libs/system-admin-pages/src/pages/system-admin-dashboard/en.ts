@@ -12,9 +12,9 @@ export const en = {
       href: "/delete-court"
     },
     {
-      title: "Manage Third-Party Users",
+      title: "Manage Third Party Users",
       description: "View, create, update and remove third-party users and subscriptions",
-      href: "/third-party-users"
+      href: "/manage-third-party-users"
     },
     {
       title: "User Management",
