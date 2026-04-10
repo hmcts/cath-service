@@ -1,0 +1,193 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+
+{% block backLink %}
+<a href="/system-admin-dashboard{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-back-link">{{ backLink }}</a>
+{% endblock %}
+
+{% block page_content %}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-third">
+    <div class="user-management-filter-wrapper">
+      <div class="user-management-filter-section user-management-filter-header">
+        <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ filterHeading }}</h2>
+      </div>
+      {% if hasFilters %}
+        <div class="user-management-filter-section user-management-selected-filters">
+          <h3 class="govuk-heading-m">{{ selectedFiltersHeading }}</h3>
+          {% for group in selectedFilterGroups %}
+            <h4 class="govuk-heading-s">{{ group.heading }}</h4>
+            <div class="user-management-filter-tags">
+              {% for tag in group.tags %}
+                {% set tagHtml = (tag.label | escape) + ' <span class="user-management-filter-tag-remove">×</span>' %}
+                <a href="{{ tag.removeUrl }}" class="user-management-filter-tag-link">
+                  {{ govukTag({
+                    html: tagHtml,
+                    classes: "user-management-filter-tag"
+                  }) }}
+                  <span class="govuk-visually-hidden">Remove filter: {{ tag.label }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <p class="govuk-!-margin-top-3">
+            <a href="/find-users/clear-filters{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-link">{{ clearFiltersButton }}</a>
+          </p>
+        </div>
+      {% endif %}
+      <div class="user-management-filter-section">
+        <form method="post" novalidate>
+      {{ govukInput({
+        label: {
+          text: emailLabel,
+          classes: "govuk-label--m"
+        },
+        id: "email",
+        name: "email",
+        type: "email",
+        value: filters.email
+      }) }}
+
+      {{ govukInput({
+        label: {
+          text: userIdLabel,
+          classes: "govuk-label--m"
+        },
+        hint: {
+          text: userIdHint
+        },
+        id: "userId",
+        name: "userId",
+        value: filters.userId
+      }) }}
+
+      {{ govukInput({
+        label: {
+          text: userProvenanceIdLabel,
+          classes: "govuk-label--m"
+        },
+        hint: {
+          text: userProvenanceIdHint
+        },
+        id: "userProvenanceId",
+        name: "userProvenanceId",
+        value: filters.userProvenanceId
+      }) }}
+
+      {{ govukCheckboxes({
+        name: "roles",
+        fieldset: {
+          legend: {
+            text: rolesLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        items: [
+          {
+            value: "VERIFIED",
+            text: roleVerified,
+            checked: filters.roles and "VERIFIED" in filters.roles
+          },
+          {
+            value: "INTERNAL_ADMIN_CTSC",
+            text: roleCtscAdmin,
+            checked: filters.roles and "INTERNAL_ADMIN_CTSC" in filters.roles
+          },
+          {
+            value: "INTERNAL_ADMIN_LOCAL",
+            text: roleLocalAdmin,
+            checked: filters.roles and "INTERNAL_ADMIN_LOCAL" in filters.roles
+          },
+          {
+            value: "SYSTEM_ADMIN",
+            text: roleSystemAdmin,
+            checked: filters.roles and "SYSTEM_ADMIN" in filters.roles
+          }
+        ]
+      }) }}
+
+      {{ govukCheckboxes({
+        name: "provenances",
+        fieldset: {
+          legend: {
+            text: provenanceLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        items: [
+          {
+            value: "CFT_IDAM",
+            text: provenanceCftIdam,
+            checked: filters.provenances and "CFT_IDAM" in filters.provenances
+          },
+          {
+            value: "SSO",
+            text: provenanceSso,
+            checked: filters.provenances and "SSO" in filters.provenances
+          },
+          {
+            value: "B2C_IDAM",
+            text: provenanceB2c,
+            checked: filters.provenances and "B2C_IDAM" in filters.provenances
+          },
+          {
+            value: "CRIME_IDAM",
+            text: provenanceCrimeIdam,
+            checked: filters.provenances and "CRIME_IDAM" in filters.provenances
+          }
+        ]
+      }) }}
+
+        {{ govukButton({
+          text: applyFiltersButton
+        }) }}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="govuk-grid-column-two-thirds">
+    {% if totalCount > 0 %}
+      <p class="govuk-body">{{ resultsCount(totalCount) }}</p>
+
+      {{ govukTable({
+        head: [
+          { text: tableHeadEmail },
+          { text: tableHeadRole },
+          { text: tableHeadProvenance },
+          { text: tableHeadManage }
+        ],
+        rows: userRows
+      }) }}
+
+      {% if totalPages > 1 %}
+        {{ govukPagination({
+          previous: paginationPrevious,
+          next: paginationNext,
+          items: paginationItems
+        }) }}
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

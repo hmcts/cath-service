@@ -69,7 +69,50 @@ async function main() {
     }
   }
 
-  console.log("Seed completed successfully!");
+  // Create test users for pagination testing
+  const testUsers = [];
+  const roles = ["VERIFIED", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL", "SYSTEM_ADMIN"];
+  const provenances = ["CFT_IDAM", "SSO", "B2C_IDAM", "CRIME_IDAM"];
+
+  // Create 50 test users to test pagination (25 per page = 2 pages)
+  // Using fixed UUIDs with pattern: 10000000-0000-0000-0000-000000000001 to 10000000-0000-0000-0000-000000000050
+  for (let i = 1; i <= 50; i++) {
+    const role = roles[i % roles.length];
+    const provenance = provenances[i % provenances.length];
+    const paddedNumber = i.toString().padStart(12, "0");
+
+    testUsers.push({
+      userId: `10000000-0000-0000-0000-${paddedNumber}`,
+      email: `test.user.${i}@example.com`,
+      firstName: `Test${i}`,
+      surname: `User`,
+      userProvenance: provenance,
+      userProvenanceId: `prov-${i.toString().padStart(3, "0")}`,
+      role: role,
+      createdDate: new Date(Date.now() - i * 24 * 60 * 60 * 1000), // Stagger creation dates
+      lastSignedInDate: i % 3 === 0 ? null : new Date(Date.now() - i * 60 * 60 * 1000) // Some never signed in
+    });
+  }
+
+  let createdCount = 0;
+  let skippedCount = 0;
+
+  for (const user of testUsers) {
+    const existing = await prisma.user.findUnique({
+      where: { userId: user.userId }
+    });
+
+    if (!existing) {
+      await prisma.user.create({ data: user });
+      console.log(`Created test user: ${user.email}`);
+      createdCount++;
+    } else {
+      console.log(`User ${user.email} already exists`);
+      skippedCount++;
+    }
+  }
+
+  console.log(`Seed completed successfully! Created ${createdCount} test users, skipped ${skippedCount} existing users.`);
 }
 
 main()
