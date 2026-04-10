@@ -1,5 +1,5 @@
 import { getLocationById, getLocationMetadataByLocationId } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { filterPublicationsForSummary, mockListTypes } from "@hmcts/publication";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";

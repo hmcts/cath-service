@@ -19,8 +19,19 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/auth": "workspace:*",
+    "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
+    "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
+    "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/notifications": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
+    "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/web-core": "workspace:*",
     "ajv": "8.18.0"
   },
   "devDependencies": {

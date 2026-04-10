@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 async function migrateSubscriptions() {
   console.log("Starting subscription data migration...");

@@ -1,9 +1,9 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { APPLICATION_STATUS } from "./model.js";
 import { getApplicationById, getPendingApplications, getPendingCount, updateApplicationStatus } from "./queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     mediaApplication: {
       findMany: vi.fn(),

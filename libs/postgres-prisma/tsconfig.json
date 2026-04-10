@@ -5,6 +5,6 @@
     "rootDir": "./src",
     "composite": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "generated", "**/*.test.ts", "prisma/**/*"]
+  "include": ["src/**/*", "prisma/**/*"],
+  "exclude": ["node_modules", "dist", "generated", "**/*.test.ts"]
 }

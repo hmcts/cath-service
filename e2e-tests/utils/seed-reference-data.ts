@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 export async function seedJurisdictions(): Promise<void> {
   const jurisdictions = [
