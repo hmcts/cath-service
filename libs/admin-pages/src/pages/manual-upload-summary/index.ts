@@ -101,7 +101,7 @@ const postHandler = async (req: Request, res: Response) => {
     const isFlatFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
-    const artefactId = await createArtefact({
+    const { artefactId, isUpdate } = await createArtefact({
       artefactId: randomUUID(),
       locationId: uploadData.locationId,
       listTypeId,
@@ -144,6 +144,7 @@ const postHandler = async (req: Request, res: Response) => {
       provenance: Provenance.MANUAL_UPLOAD,
       displayFrom,
       displayTo,
+      isUpdate,
       logPrefix: "[Manual Upload]"
     });
 

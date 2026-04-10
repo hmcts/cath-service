@@ -42,3 +42,8 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
         - name: sso-sg-admin-local
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
+        # Third-party push secrets
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE

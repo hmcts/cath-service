@@ -1,16 +1,19 @@
 {
-  "name": "@hmcts/publication",
+  "name": "@hmcts/third-party-fulfilment",
   "version": "1.0.0",
   "type": "module",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "production": "./dist/index.js",
       "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -20,12 +23,11 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
-    "@hmcts/third-party-fulfilment": "workspace:*",
-    "ajv": "8.18.0"
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*"
   },
-  "devDependencies": {
-    "typescript": "5.9.3",
-    "vitest": "4.0.18"
+  "peerDependencies": {
+    "@prisma/client": "*",
+    "express": "^5.2.0"
   }
 }

@@ -64,7 +64,7 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn(() => Promise.resolve("artefact-id-123")),
+    createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
     processPublication: vi.fn(() => Promise.resolve())
   };
 });
@@ -393,7 +393,7 @@ describe("non-strategic-upload-summary page", () => {
       };
 
       vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(createArtefact).mockResolvedValue("artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
 
       const session = {
         save: (callback: (err?: any) => void) => callback()

@@ -2,90 +2,61 @@
 
 ## Overview
 
-This ticket implements the mechanism to fulfil third-party subscriptions by pushing publications to external third-party systems via HTTP POST with custom headers and certificate-based authentication. When publications are uploaded (via manual upload or API endpoint), the system identifies subscribed third parties and sends the publication data with metadata headers.
+When a publication is processed (via manual upload or API blob ingestion), the system must identify third-party users subscribed to that list type and push the publication JSON (and PDF if available) to their registered API endpoint using certificate-based authentication.
+
+The `LegacyThirdPartyUser` and `LegacyThirdPartySubscription` tables already exist from ticket #322. This ticket adds the fulfilment logic: the HTTP push itself.
+
+---
 
 ## Technical Approach
 
 ### High-Level Strategy
 
-1. **New Module**: Create `libs/third-party-fulfilment` to handle all third-party push logic
-2. **Integration Point**: Hook into existing publication creation flow (both manual upload and API ingestion)
-3. **Configuration**: Use Azure Key Vault for third-party URL and certificate retrieval
-4. **Retry Mechanism**: Implement 3-retry pattern for failed requests
-5. **Audit Trail**: Track all push attempts in database
+1. **New module**: Create `libs/third-party-fulfilment` containing HTTP push logic, header building, and retry
+2. **Integration point**: Extend `processPublication` in `libs/publication/src/processing/service.ts` — the same function used for email notifications and PDF generation
+3. **No schema changes**: The existing `LegacyThirdPartyUser` table from #322 is used as-is; endpoint URL and certificate are read from fixed env vars (`COURTEL_API_URL`, `COURTEL_CERTIFICATE`) loaded from Azure Key Vault at startup
+4. **Deletion push**: Trigger empty-body push from the remove-list page
 
 ### Architecture Decisions
 
-**Why a new module instead of extending notifications?**
-- Third-party push is fundamentally different from email notifications (GOV.UK Notify)
-- Different authentication mechanism (certificate-based)
-- Different payload format (JSON/PDF with custom headers)
-- Different retry and error handling requirements
-- Cleaner separation of concerns
+**Why extend `processPublication` rather than hooking individual upload handlers?**
 
-**Push vs Pull Pattern**
-- Implementation uses push pattern as specified ("P&I push")
-- Third parties receive publications via POST to their API
-- Alternative subscription mechanism to user email notifications
+`processPublication` in `libs/publication/src/processing/service.ts` is already called from both manual upload (`libs/admin-pages`) and blob ingestion (`libs/api`). Adding the third-party push here means all upload paths are covered automatically, consistent with how email notifications are handled.
+
+**Why no database changes?**
+
+The endpoint URL and certificate are fixed — there is one third-party push destination (Courtel). The push code reads `process.env.COURTEL_API_URL` and `process.env.COURTEL_CERTIFICATE` directly. No per-user configuration is required in the database.
+
+**Subscription matching by list type only**
+
+`LegacyThirdPartySubscription` stores `listTypeId` with no location field. The push subscription is "I want all publications of list type X" regardless of court. This matches the existing data model.
+
+**CREATE vs UPDATE detection**
+
+The `Artefact` table has a `supersededCount` field (already incremented by `createArtefact` when an artefact is replaced). At push time, check if `supersededCount > 0` — if so, it's an update.
+
+**Key Vault secrets**
+
+Both the endpoint URL and the client certificate (trust store) are retrieved from Azure Key Vault (`pip-ss-kv-stg`). The existing `configurePropertiesVolume` / `addFromAzureVault` pattern in `libs/cloud-native-platform` loads secrets into `process.env` **once at startup** by reading all secrets listed under `keyVaults` in `apps/api/helm/values.yaml`.
+
+The Courtel secrets already exist in `pip-ss-kv-stg` (and `pip-ss-kv-stg` is already a referenced vault in the API Helm chart):
+
+| KV Secret Name | Alias (env var) |
+|---|---|
+| `auto-pip-stg-courtel-api` | `COURTEL_API_URL` |
+| `courtel-certificate` | `COURTEL_CERTIFICATE` |
+
+The push code reads these env vars directly as constants. The certificate value is base64-encoded and must be decoded (`Buffer.from(value, 'base64').toString('utf-8')`) before being passed to `https.Agent`.
+
+**Important constraint**: secrets are not fetched dynamically at push time. They are pre-loaded at startup from the Helm chart. Adding a new third-party user requires adding their secrets to `apps/api/helm/values.yaml` and redeploying the API.
+
+---
 
 ## Implementation Details
 
 ### 1. Database Schema Changes
 
-**New Table: `third_party_subscription`**
-```prisma
-model ThirdPartySubscription {
-  id             String   @id @default(uuid()) @db.Uuid
-  thirdPartyId   String   @map("third_party_id")
-  locationId     Int      @map("location_id")
-  listTypeId     Int?     @map("list_type_id")  // null = all list types for location
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  @@unique([thirdPartyId, locationId, listTypeId])
-  @@index([thirdPartyId])
-  @@index([locationId])
-  @@map("third_party_subscription")
-}
-```
-
-**New Table: `third_party_push_log`**
-```prisma
-model ThirdPartyPushLog {
-  id             String    @id @default(uuid()) @db.Uuid
-  subscriptionId String    @map("subscription_id") @db.Uuid
-  artefactId     String    @map("artefact_id") @db.Uuid
-  thirdPartyId   String    @map("third_party_id")
-  status         String    // "Pending", "Sent", "Failed", "Deleted"
-  httpStatus     Int?      @map("http_status")
-  attemptCount   Int       @default(0) @map("attempt_count")
-  errorMessage   String?   @map("error_message")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  lastAttemptAt  DateTime? @map("last_attempt_at")
-  sentAt         DateTime? @map("sent_at")
-
-  @@index([artefactId])
-  @@index([status])
-  @@index([thirdPartyId])
-  @@map("third_party_push_log")
-}
-```
-
-**New Table: `third_party_config`**
-```prisma
-model ThirdPartyConfig {
-  id              String    @id @default(uuid()) @db.Uuid
-  thirdPartyId    String    @unique @map("third_party_id")
-  name            String
-  endpoint        String    // Retrieved from Key Vault
-  certificateRef  String?   @map("certificate_ref")  // Key Vault reference
-  isActive        Boolean   @default(true) @map("is_active")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  @@map("third_party_config")
-}
-```
+None. The `LegacyThirdPartyUser` table from #322 is used as-is. No migration is required.
 
 ### 2. Module Structure
 
@@ -93,452 +64,236 @@ model ThirdPartyConfig {
 libs/third-party-fulfilment/
 ├── package.json
 ├── tsconfig.json
-├── prisma/
-│   └── schema.prisma           # Third party tables
 └── src/
-    ├── config.ts               # Module configuration exports
-    ├── index.ts                # Public API exports
-    ├── subscription/
-    │   ├── queries.ts          # DB queries for third-party subscriptions
-    │   ├── queries.test.ts
-    │   ├── service.ts          # Subscription management logic
-    │   └── service.test.ts
+    ├── config.ts               # Module config (no pages/routes, no prismaSchemas needed)
+    ├── index.ts                # Public API: sendThirdPartyPublications
     ├── push/
-    │   ├── http-client.ts      # HTTP push with certificate auth
-    │   ├── http-client.test.ts
-    │   ├── retry.ts            # Retry logic (3 attempts)
-    │   ├── retry.test.ts
-    │   ├── headers.ts          # Build custom headers
+    │   ├── headers.ts          # Build custom x-* headers from artefact + location
     │   ├── headers.test.ts
-    │   ├── service.ts          # Main push orchestration
-    │   └── service.test.ts
-    ├── certificate/
-    │   ├── keyvault.ts         # Retrieve cert from Key Vault
-    │   └── keyvault.test.ts
-    └── audit/
-        ├── queries.ts          # Push log queries
-        ├── queries.test.ts
-        ├── service.ts          # Audit logging
-        └── service.test.ts
+    │   ├── http-client.ts      # HTTPS POST with client certificate from process.env
+    │   ├── http-client.test.ts
+    │   ├── retry.ts            # Retry up to 3 times with exponential backoff
+    │   └── retry.test.ts
+    ├── queries.ts              # Find subscribed third-party users by listTypeId
+    ├── queries.test.ts
+    └── service.ts              # Orchestration: find subscribers → build headers → push
+    └── service.test.ts
 ```
 
-### 3. Integration Points
+No Prisma schema in this module — queries go directly to `@hmcts/postgres` (same pattern as `libs/location`).
 
-**A. Manual Upload Flow**
+### 3. Core Service
+
+**`libs/third-party-fulfilment/src/service.ts`**
+
 ```typescript
-// libs/admin-pages/src/pages/manual-upload-success/index.ts
-// After successful upload, trigger third-party push
-
-import { triggerThirdPartyPush } from "@hmcts/third-party-fulfilment";
-
-// In manual upload confirmation handler
-await triggerThirdPartyPush({
-  artefactId,
-  action: "CREATE"
-}).catch(error => {
-  console.error("Third-party push failed:", error);
-  // Don't block user flow
-});
-```
-
-**B. API Blob Ingestion Flow**
-```typescript
-// libs/api/src/blob-ingestion/repository/service.ts
-// Already has notification trigger pattern, add third-party push
-
-import { triggerThirdPartyPush } from "@hmcts/third-party-fulfilment";
-
-// After artefact creation, alongside notification trigger
-if (!noMatch) {
-  triggerThirdPartyPush({
-    artefactId,
-    action: "CREATE"
-  }).catch(error => {
-    console.error("Third-party push failed:", error);
-  });
-}
-```
-
-**C. Manual Deletion Flow**
-```typescript
-// When publication is manually deleted
-await triggerThirdPartyPush({
-  artefactId,
-  action: "DELETE"
-});
-```
-
-### 4. Core Service Implementation
-
-**Push Service (`libs/third-party-fulfilment/src/push/service.ts`)**
-```typescript
-export interface ThirdPartyPushRequest {
+export interface ThirdPartyPushParams {
   artefactId: string;
-  action: "CREATE" | "UPDATE" | "DELETE";
+  locationId: string;
+  listTypeId: number;
+  contentDate: Date;
+  sensitivity: string;
+  language: string;
+  displayFrom: Date;
+  displayTo: Date;
+  provenance: string;
+  jsonData?: unknown;
+  pdfFilePath?: string;
+  isUpdate: boolean;
+  logPrefix?: string;
 }
 
-export async function triggerThirdPartyPush(request: ThirdPartyPushRequest): Promise<void> {
-  // 1. Get artefact metadata
-  const artefact = await getArtefactMetadata(request.artefactId);
+export async function sendThirdPartyPublications(params: ThirdPartyPushParams): Promise<void> {
+  const subscribers = await findActiveThirdPartySubscribersByListType(params.listTypeId);
 
-  // 2. Find subscribed third parties for this location/list type
-  const subscriptions = await findActiveThirdPartySubscriptions(
-    artefact.locationId,
-    artefact.listTypeId
-  );
+  if (subscribers.length === 0) return;
 
-  if (subscriptions.length === 0) {
-    console.log("No third-party subscriptions for this publication");
-    return;
-  }
+  const location = await getLocationWithDetails(Number.parseInt(params.locationId, 10));
+  const headers = buildPushHeaders({ ...params, location });
 
-  // 3. Push to each third party (fire-and-forget with audit)
-  await Promise.allSettled(
-    subscriptions.map(sub => pushToThirdParty(sub, artefact, request.action))
-  );
-}
-
-async function pushToThirdParty(
-  subscription: ThirdPartySubscription,
-  artefact: ArtefactMetadata,
-  action: "CREATE" | "UPDATE" | "DELETE"
-): Promise<void> {
-  // 1. Create audit log entry
-  const logId = await createPushLog({
-    subscriptionId: subscription.id,
-    artefactId: artefact.artefactId,
-    thirdPartyId: subscription.thirdPartyId,
-    status: "Pending"
-  });
-
-  try {
-    // 2. Get third-party config (endpoint, certificate)
-    const config = await getThirdPartyConfig(subscription.thirdPartyId);
-
-    // 3. Build headers
-    const headers = buildPushHeaders(artefact);
-
-    // 4. Build payload (empty for DELETE)
-    const payload = action === "DELETE" ? null : await buildPushPayload(artefact);
-
-    // 5. Execute push with retry
-    const result = await pushWithRetry({
-      url: config.endpoint,
-      certificate: config.certificate,
-      headers,
-      payload,
-      maxRetries: 3
-    });
-
-    // 6. Update audit log
-    await updatePushLog(logId, {
-      status: "Sent",
-      httpStatus: result.statusCode,
-      sentAt: new Date(),
-      attemptCount: result.attemptCount
-    });
-
-  } catch (error) {
-    await updatePushLog(logId, {
-      status: "Failed",
-      errorMessage: error.message,
-      attemptCount: 3
-    });
-    throw error;
-  }
+  // Subscribers exist — push once to Courtel (URL and cert are fixed constants from Key Vault)
+  await pushToCourtel(headers, params);
 }
 ```
 
-**Headers Builder (`libs/third-party-fulfilment/src/push/headers.ts`)**
+**Deletion push** (called from remove-list page):
+
 ```typescript
-export interface PushHeaders {
-  "x-provenance": string;
-  "x-source-artefact-id": string;
-  "x-type": string;  // List type
-  "x-list-type": string;
-  "x-content-date": string;
-  "x-sensitivity": string;
-  "x-language": string;
-  "x-display-from": string;
-  "x-display-to": string;
-  "x-location-name": string;
-  "x-location-jurisdiction": string;
-  "x-location-region": string;
-  "Content-Type": string;
-}
+export async function sendThirdPartyDeletion(params: Omit<ThirdPartyPushParams, "jsonData" | "pdfFilePath" | "isUpdate">): Promise<void> {
+  const subscribers = await findActiveThirdPartySubscribersByListType(params.listTypeId);
+  if (subscribers.length === 0) return;
 
-export async function buildPushHeaders(artefact: ArtefactMetadata): Promise<PushHeaders> {
-  // Get location details for jurisdiction and region
-  const location = await getLocationWithDetails(artefact.locationId);
+  const location = await getLocationWithDetails(Number.parseInt(params.locationId, 10));
+  const headers = buildPushHeaders({ ...params, location });
 
-  return {
-    "x-provenance": artefact.provenance,
-    "x-source-artefact-id": artefact.artefactId,
-    "x-type": artefact.listType,
-    "x-list-type": artefact.listType,
-    "x-content-date": artefact.contentDate.toISOString(),
-    "x-sensitivity": artefact.sensitivity,
-    "x-language": artefact.language,
-    "x-display-from": artefact.displayFrom.toISOString(),
-    "x-display-to": artefact.displayTo.toISOString(),
-    "x-location-name": location.name,
-    "x-location-jurisdiction": location.jurisdiction,
-    "x-location-region": location.region,
-    "Content-Type": "application/json"
-  };
+  // Push empty body once to Courtel
+  await pushToCourtel(headers, { ...params, jsonData: undefined, pdfFilePath: undefined });
 }
 ```
 
-**HTTP Client with Certificate Auth (`libs/third-party-fulfilment/src/push/http-client.ts`)**
+### 4. Headers Builder
+
+**`libs/third-party-fulfilment/src/push/headers.ts`**
+
+Required headers from the ticket spec:
+
+| Header | Source |
+|--------|--------|
+| `x-provenance` | `artefact.provenance` |
+| `x-source-artefact-id` | `artefact.artefactId` |
+| `x-type` | list type name (from list type ID) |
+| `x-list-type` | list type name |
+| `x-content-date` | `artefact.contentDate.toISOString()` |
+| `x-sensitivity` | `artefact.sensitivity` |
+| `x-language` | `artefact.language` |
+| `x-display-from` | `artefact.displayFrom.toISOString()` |
+| `x-display-to` | `artefact.displayTo.toISOString()` |
+| `x-location-name` | `location.name` |
+| `x-location-jurisdiction` | `location.subJurisdictions[0]?.jurisdictionName ?? ""` |
+| `x-location-region` | `location.regions[0]?.name ?? ""` |
+
+Location details come from `getLocationWithDetails` in `@hmcts/location` which already returns region names and jurisdiction names via `LocationDetails`.
+
+### 5. HTTP Client with Certificate Auth
+
+**`libs/third-party-fulfilment/src/push/http-client.ts`**
+
 ```typescript
 import https from "node:https";
 
-export interface PushRequest {
-  url: string;
-  certificate: string;  // PEM format from Key Vault
-  headers: Record<string, string>;
-  payload: string | null;
+export async function executePush(url: string, certPem: string, headers: Record<string, string>, body: string | null): Promise<{ statusCode: number; success: boolean }> {
+  // url and certPem are both loaded from process.env at push time
+  const agent = new https.Agent({ cert: certPem, key: certPem, rejectUnauthorized: true });
+  // ... fetch with agent
 }
+```
 
-export interface PushResponse {
-  success: boolean;
-  statusCode: number;
-  error?: string;
-}
+Key Vault retrieval at push time — fixed env vars loaded at startup:
 
-export async function executePush(request: PushRequest): Promise<PushResponse> {
-  return new Promise((resolve) => {
-    const options = {
-      method: "POST",
-      headers: request.headers,
-      cert: request.certificate,
-      key: request.certificate  // Assuming cert includes key
-    };
+```typescript
+const url = process.env.COURTEL_API_URL;
+const certPem = Buffer.from(process.env.COURTEL_CERTIFICATE, 'base64').toString('utf-8');
+```
 
-    const req = https.request(request.url, options, (res) => {
-      let data = "";
-      res.on("data", chunk => data += chunk);
-      res.on("end", () => {
-        const statusCode = res.statusCode || 500;
-        const success = statusCode >= 200 && statusCode < 300;
+Both values are pre-loaded into `process.env` at app startup by `configurePropertiesVolume` reading `apps/api/helm/values.yaml` and fetching from `pip-ss-kv-stg`. If either env var is absent, the push is skipped with a clear error log.
 
-        resolve({
-          success,
-          statusCode,
-          error: success ? undefined : `HTTP ${statusCode}: ${data}`
-        });
-      });
-    });
+### 6. Retry Logic
 
-    req.on("error", (error) => {
-      resolve({
-        success: false,
-        statusCode: 0,
-        error: error.message
-      });
-    });
+**`libs/third-party-fulfilment/src/push/retry.ts`**
 
-    if (request.payload) {
-      req.write(request.payload);
-    }
+- Up to 3 attempts
+- Exponential backoff: 1s, 2s (skipped after final attempt)
+- Do not retry on 4xx (except 429 rate-limit)
+- Accept 200, 201, 202, 204 as success
 
-    req.end();
+### 7. Subscription Queries
+
+**`libs/third-party-fulfilment/src/queries.ts`**
+
+```typescript
+import { prisma } from "@hmcts/postgres";
+
+export async function findActiveThirdPartySubscribersByListType(listTypeId: number) {
+  return prisma.legacyThirdPartySubscription.findMany({
+    where: { listTypeId },
+    include: { user: true }
   });
 }
 ```
 
-**Retry Logic (`libs/third-party-fulfilment/src/push/retry.ts`)**
+### 8. Integration with `processPublication`
+
+Add to `libs/publication/src/processing/service.ts`:
+
 ```typescript
-export interface RetryConfig {
-  maxRetries: number;
-  initialDelayMs: number;
-  backoffMultiplier: number;
-}
+import { sendThirdPartyPublications } from "@hmcts/third-party-fulfilment";
 
-const DEFAULT_RETRY_CONFIG: RetryConfig = {
-  maxRetries: 3,
-  initialDelayMs: 1000,
-  backoffMultiplier: 2
-};
+// In processPublication, after PDF generation:
+if (!skipThirdPartyPush) {
+  const artefact = await getArtefactById(artefactId);
+  const isUpdate = (artefact?.supersededCount ?? 0) > 0; // supersededCount > 0 means replaced before
 
-export async function pushWithRetry(
-  request: PushRequest,
-  config: RetryConfig = DEFAULT_RETRY_CONFIG
-): Promise<PushResponse & { attemptCount: number }> {
-  let lastError: string | undefined;
-  let attemptCount = 0;
-
-  for (let attempt = 1; attempt <= config.maxRetries; attempt++) {
-    attemptCount = attempt;
-
-    const response = await executePush(request);
-
-    if (response.success) {
-      return { ...response, attemptCount };
-    }
-
-    lastError = response.error;
-
-    // Don't retry on 4xx errors (except 429)
-    if (response.statusCode >= 400 && response.statusCode < 500 && response.statusCode !== 429) {
-      break;
-    }
-
-    // Don't delay after last attempt
-    if (attempt < config.maxRetries) {
-      const delayMs = config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1);
-      await sleep(delayMs);
-    }
-  }
-
-  return {
-    success: false,
-    statusCode: 0,
-    error: lastError || "All retry attempts failed",
-    attemptCount
-  };
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  sendThirdPartyPublications({
+    artefactId,
+    locationId,
+    listTypeId,
+    contentDate,
+    sensitivity: artefact?.sensitivity ?? "",
+    language: artefact?.language ?? "",
+    displayFrom: displayFrom ?? new Date(),
+    displayTo: displayTo ?? new Date(),
+    provenance: provenance ?? "",
+    jsonData,
+    pdfFilePath: result.pdfPath,
+    isUpdate,
+    logPrefix
+  }).catch((error) => {
+    console.error(`${logPrefix} Third-party push failed:`, error);
+  });
 }
 ```
 
-**Key Vault Integration (`libs/third-party-fulfilment/src/certificate/keyvault.ts`)**
+Add `skipThirdPartyPush?: boolean` to `ProcessPublicationParams`.
+
+This is fire-and-forget (`.catch()` to absorb errors) matching the notification pattern.
+
+### 9. Deletion Push Integration
+
+Find the remove-list page (likely in `libs/admin-pages` or `libs/system-admin-pages`) and add a call to `sendThirdPartyDeletion` after the artefact is deleted, passing artefact metadata retrieved before deletion.
+
+### 10. Module Registration
+
 ```typescript
-import { getSecret } from "@hmcts/cloud-native-platform";
+// tsconfig.json — add path:
+"@hmcts/third-party-fulfilment": ["libs/third-party-fulfilment/src"]
 
-export interface ThirdPartyCredentials {
-  endpoint: string;
-  certificate: string;
-}
-
-export async function getThirdPartyCredentials(thirdPartyId: string): Promise<ThirdPartyCredentials> {
-  // Key Vault secret names follow pattern: third-party-{id}-endpoint, third-party-{id}-cert
-  const endpointKey = `third-party-${thirdPartyId}-endpoint`;
-  const certKey = `third-party-${thirdPartyId}-cert`;
-
-  const [endpoint, certificate] = await Promise.all([
-    getSecret(endpointKey),
-    getSecret(certKey)
-  ]);
-
-  if (!endpoint || !certificate) {
-    throw new Error(`Third party credentials not found for ${thirdPartyId}`);
-  }
-
-  return { endpoint, certificate };
-}
+// libs/publication/package.json — add workspace dependency:
+"@hmcts/third-party-fulfilment": "*"
 ```
 
-### 5. Configuration and Registration
+No Prisma schema to register — the module queries `@hmcts/postgres` directly.
 
-**Prisma Schema Registration**
-```typescript
-// apps/postgres/src/schema-discovery.ts
-import { prismaSchemas as thirdPartySchemas } from "@hmcts/third-party-fulfilment/config";
-
-const schemaPaths = [
-  // ... existing schemas
-  thirdPartySchemas
-];
-```
-
-**Module Configuration**
-```typescript
-// libs/third-party-fulfilment/src/config.ts
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export const prismaSchemas = path.join(__dirname, "../prisma");
-export const moduleRoot = __dirname;
-```
-
-**Root tsconfig.json**
-```json
-{
-  "compilerOptions": {
-    "paths": {
-      "@hmcts/third-party-fulfilment": ["libs/third-party-fulfilment/src"]
-    }
-  }
-}
-```
+---
 
 ## Error Handling & Edge Cases
 
-### Error Scenarios
+| Scenario | Handling |
+|----------|----------|
+| No subscribers for list type | Silent return — expected case |
+| `COURTEL_API_URL` or `COURTEL_CERTIFICATE` not in `process.env` | Skip push, log error (Helm chart entry missing) |
+| Third-party endpoint returns 4xx | No retry (except 429), log HTTP status |
+| Third-party endpoint returns 5xx | Retry up to 3 times |
+| Network timeout / connection refused | Retry up to 3 times |
+| Location not found | Use empty strings for location headers, log warning |
+| Deletion of flat-file publication | Send empty body with same headers |
 
-1. **Third-party endpoint unavailable**: Retry 3 times, log failure
-2. **Certificate invalid/expired**: Fail immediately, log error
-3. **Invalid artefact ID**: Skip push, log error
-4. **No subscriptions found**: Silent success (expected case)
-5. **Key Vault unavailable**: Fail push, log error
-6. **Malformed location data**: Use fallback values or skip
-
-### Validation Requirements
-
-**Input Validation**
-- Artefact must exist
-- Third-party config must exist and be active
-- Location metadata must be available
-- Certificate must be valid PEM format
-
-**Header Validation**
-- All required headers present
-- Dates in ISO 8601 format
-- Provenance is valid enum value
-
-### Edge Cases
-
-1. **Duplicate push attempts**: Check audit log before pushing
-2. **Concurrent uploads**: Each push is independent, race conditions acceptable
-3. **Partial failures**: Log each failure independently, don't block others
-4. **Large payloads**: No size limit specified, handle memory efficiently
-5. **Manual deletion before push completes**: DELETE action will send empty body
+---
 
 ## Acceptance Criteria Mapping
 
 | Criterion | Implementation |
 |-----------|----------------|
-| System identifies Third Party User ID subscribed to publication | `findActiveThirdPartySubscriptions(locationId, listTypeId)` in subscription service |
-| Retrieves publication metadata from artefact table | `getArtefactMetadata(artefactId)` with joins to location/list type tables |
-| Sends file in JSON format to Third Party POST endpoint | `executePush()` with Content-Type: application/json |
-| Uses third party authorization certificate | Certificate from Key Vault passed to HTTPS client |
-| Issues acknowledgment receipt (HTTP status return) | `PushResponse` contains statusCode, logged in audit table |
-| Notifies on upload/update/delete with correct status | Action parameter drives empty body for DELETE, normal payload for CREATE/UPDATE |
-| Generates 200/201/202/204 for successful POST | Third-party API responsibility, our system logs whatever status received |
-| Validation prevents send without trigger | Push only triggered from upload/ingestion flows, not independently |
-| Differentiates new vs updated publication | Based on artefact creation (new) vs superseding (update) - future enhancement |
-| Integration and unit tests | All services, queries, and utilities have co-located .test.ts files |
+| Identify Third Party User ID subscribed to publication | `findActiveThirdPartySubscribersByListType(listTypeId)` |
+| Retrieve publication metadata from artefact table | `getArtefactById(artefactId)` — fields passed through `processPublication` params |
+| Send file in JSON format via POST | `executePush` with `Content-Type: application/json`, JSON body |
+| Use third party authorisation certificate | cert PEM from `process.env.COURTEL_CERTIFICATE`; URL from `process.env.COURTEL_API_URL` — both loaded from Azure Key Vault (`pip-ss-kv-stg`) at startup |
+| Acknowledgment receipt via HTTP status | `executePush` returns statusCode — success if 2xx |
+| Notify on upload/update/delete | `isUpdate` flag from `supersededCount`; deletion via `sendThirdPartyDeletion` with empty body |
+| Accept 200/201/202/204 as success | Checked in retry logic |
+| Validate no send without trigger | `sendThirdPartyPublications` only called from `processPublication` |
+| Differentiate new vs updated | `artefact.supersededCount === 0` → CREATE, `> 0` → UPDATE |
+| Integration and unit tests | All service/query/client files have co-located `.test.ts` files |
 
-## Open Questions / CLARIFICATIONS NEEDED
+---
 
-1. **Third-party subscription management**: How are third-party subscriptions created? Is there an admin interface needed, or are these configured via database scripts?
+## Open Questions
 
-2. **PDF generation**: Ticket mentions "PDF generated for that list" in headers. Current implementation only handles JSON. Should we:
-   - Generate PDF from JSON and send both?
-   - Send PDF URL reference?
-   - Skip PDF for now (JSON only)?
+1. **PDF payload format**: The spec says "It also includes PDF generated for that list." Should the PDF binary be included in the POST body as multipart/form-data, or is JSON-only sufficient? Current plan sends JSON only; PDF path is available if needed.
 
-3. **Certificate format**: Are certificates client certificates (mutual TLS) or just trust certificates? Implementation assumes client certificate in PEM format.
+2. **Key Vault secrets** ✅ Resolved: Courtel secrets already exist in `pip-ss-kv-stg` — `auto-pip-stg-courtel-api` (endpoint URL) and `courtel-certificate` (base64-encoded PEM cert chain). These will be added to `apps/api/helm/values.yaml` under `pip-ss-kv-stg` with aliases `COURTEL_API_URL` and `COURTEL_CERTIFICATE`.
 
-4. **"Updated publication" detection**: How do we differentiate between CREATE and UPDATE? Current artefact creation doesn't track if it supersedes another. Should we:
-   - Check for existing artefact with same location/listType/contentDate?
-   - Add superseded_by field to artefact table?
-   - Always send CREATE action?
+3. **Multiple regions/jurisdictions**: A location may have multiple regions and sub-jurisdictions. The current plan uses the first value. Confirm whether all values should be sent (e.g., comma-separated) or just the first.
 
-5. **Third-party ID format**: What format will third-party IDs take? UUIDs, slugs (e.g., "solicitors-portal"), or numeric IDs?
+4. **Remove-list page location**: Need to identify the exact page/handler where publications are manually deleted to add the deletion push trigger.
 
-6. **Multiple subscriptions per third party**: Can a single third party subscribe to multiple locations/list types, or is it one subscription = all publications?
-
-7. **HTTP status code expectations**: Should 202 (Accepted) be treated as success even though processing isn't complete? Should we track async completion?
-
-8. **Retry backoff strategy**: Is exponential backoff acceptable (1s, 2s, 4s) or should all retries be immediate?
-
-9. **Location reference data**: Do locations already have jurisdiction and region fields, or do we need to join through location_sub_jurisdiction and location_region tables?
-
-10. **Manual deletion scope**: Does this apply to all publications or only those uploaded manually? Should API-ingested publications also support deletion push?
+5. **Sensitivity filtering**: `LegacyThirdPartySubscription` has a `sensitivity` field. Should the push be filtered by `artefact.sensitivity <= subscription.sensitivity`? Or push regardless?

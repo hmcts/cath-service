@@ -67,3 +67,12 @@ Third Party users can subscribe to receive publications from CaTH. This ticket c
 
 ### Comment by OgechiOkelu on 2026-02-11T12:28:00Z
 Note: Initial requirements may have been updated during the tech-refinement which need to be included in the technical plan and may require changes to the initially generated technical specifications during the development of the technical plan. @plan
+
+### Comment by hmctsclaudecode on 2026-04-08T (updated)
+Technical plan updated in `docs/tickets/323/plan.md` and `docs/tickets/323/tasks.md` following the merge of feature/322-third-party-user-management. Key changes from the previous plan:
+- Integration point updated to `processPublication` in `libs/publication/src/processing/service.ts`
+- Reuses existing `LegacyThirdPartyUser` / `LegacyThirdPartySubscription` tables from #322 instead of new tables
+- DB migration adds only `endpointUrlSecretName` and `certSecretName` to the existing user table — both are Key Vault secret name references, not the actual values
+- Both endpoint URL and certificate (trust store) are retrieved from Azure Key Vault via `process.env` at push time; no UI fields for these
+- CREATE vs UPDATE detection uses existing `supersededCount` field on `Artefact`
+- No new Prisma schema file needed (module queries `@hmcts/postgres` directly)

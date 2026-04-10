@@ -1,74 +1,59 @@
 # Implementation Tasks - Third Party Subscription Fulfilment
 
 ## Prerequisites
-- [ ] Clarify open questions in plan.md with stakeholders
+- [x] Resolve open questions in plan.md (especially PDF format and sensitivity filtering)
 
-## Module Setup
-- [ ] Create `libs/third-party-fulfilment` directory structure
-- [ ] Add `package.json` with module configuration
-- [ ] Add `tsconfig.json` with proper compiler options
-- [ ] Register module in root `tsconfig.json` paths as `@hmcts/third-party-fulfilment`
-- [ ] Create `src/config.ts` with prismaSchemas export
-- [ ] Create `src/index.ts` for business logic exports
+## New Module Setup
+- [x] Create `libs/third-party-fulfilment/` directory structure
+- [x] Create `package.json` with `@hmcts/third-party-fulfilment` name and workspace dependencies
+- [x] Create `tsconfig.json`
+- [x] Register `@hmcts/third-party-fulfilment` path in root `tsconfig.json`
+- [x] Add `@hmcts/third-party-fulfilment` as dependency in `libs/publication/package.json`
+- [x] Create `src/config.ts` (minimal, no pages or API routes)
+- [x] Create `src/index.ts` exporting `sendThirdPartyPublications` and `sendThirdPartyDeletion`
 
-## Database Schema
-- [ ] Create `libs/third-party-fulfilment/prisma/schema.prisma`
-- [ ] Define `ThirdPartySubscription` model
-- [ ] Define `ThirdPartyPushLog` model
-- [ ] Define `ThirdPartyConfig` model
-- [ ] Register schema in `apps/postgres/src/schema-discovery.ts`
-- [ ] Run `yarn db:generate` to generate Prisma client
-- [ ] Create and apply migration with `yarn db:migrate:dev`
-
-## Subscription Management
-- [ ] Implement `src/subscription/queries.ts` with Prisma queries
-- [ ] Write unit tests for `queries.ts`
-- [ ] Implement `src/subscription/service.ts` with business logic
-- [ ] Write unit tests for `service.ts`
+## Subscription Queries
+- [x] Implement `src/queries.ts` — `findSubscribersByListType(listTypeId)` querying `legacyThirdPartySubscription` with user included
+- [x] Write unit tests for `queries.ts`
 
 ## Push Infrastructure
-- [ ] Implement `src/push/headers.ts` to build custom headers
-- [ ] Write unit tests for `headers.ts`
-- [ ] Implement `src/push/http-client.ts` with HTTPS client and certificate auth
-- [ ] Write unit tests for `http-client.ts`
-- [ ] Implement `src/push/retry.ts` with exponential backoff
-- [ ] Write unit tests for `retry.ts`
-- [ ] Implement `src/push/service.ts` as main orchestration layer
-- [ ] Write unit tests for `service.ts`
+- [x] Implement `src/push/headers.ts` — build all 12 required x-* headers using artefact params + `LocationDetails`
+- [x] Write unit tests for `headers.ts` covering all header fields and fallback for missing location data
+- [x] Implement `src/push/http-client.ts` — HTTPS POST using `https.Agent` with cert/key from PEM string, returns `{ statusCode, success }`
+- [x] Write unit tests for `http-client.ts` (mock `https.request`)
+- [x] Implement `src/push/retry.ts` — up to 3 attempts, exponential backoff (1s, 2s), skip retry on 4xx (except 429)
+- [x] Write unit tests for `retry.ts` covering success on first attempt, retry on 5xx, no retry on 4xx, all retries exhausted
 
-## Certificate Management
-- [ ] Implement `src/certificate/keyvault.ts` to retrieve credentials from Key Vault
-- [ ] Write unit tests for `keyvault.ts` with mocked Key Vault client
+## Core Service
+- [x] Implement `src/service.ts` — `sendThirdPartyPublications`: find subscribers, get location details, build headers, push once to Courtel with `pushWithRetry`
+- [x] Implement `src/service.ts` — `sendThirdPartyDeletion`: same as above but with null body
+- [x] Read `process.env.COURTEL_API_URL` and `process.env.COURTEL_CERTIFICATE`; skip gracefully with error log if either is absent
+- [x] Decode certificate from base64 before passing to HTTP client
+- [x] Write unit tests for `service.ts` covering: no subscribers, missing env vars, push to multiple subscribers, partial failure
 
-## Audit Logging
-- [ ] Implement `src/audit/queries.ts` for push log database operations
-- [ ] Write unit tests for `queries.ts`
-- [ ] Implement `src/audit/service.ts` for audit trail management
-- [ ] Write unit tests for `service.ts`
+## Integration with processPublication
+- [x] Add `skipThirdPartyPush?: boolean` to `ProcessPublicationParams` in `libs/publication/src/processing/service.ts`
+- [x] Import and call `sendThirdPartyPublications` in `processPublication` (after PDF, fire-and-forget with `.catch()`)
+- [x] Update unit tests in `libs/publication/src/processing/service.test.ts`
 
-## Integration Points
-- [ ] Update `libs/api/src/blob-ingestion/repository/service.ts` to trigger third-party push
-- [ ] Update manual upload success handler to trigger third-party push
-- [ ] Add third-party push trigger to publication deletion flow (if applicable)
-- [ ] Ensure all triggers use fire-and-forget pattern with error logging
+## Deletion Push
+- [x] Locate the remove-list/delete publication handler (`libs/admin-pages/src/pages/remove-list-confirmation/index.ts`)
+- [x] Read artefact metadata before deletion using `getArtefactsByIds`
+- [x] Call `sendThirdPartyDeletion` after successful deletion (fire-and-forget)
+- [x] Add `@hmcts/third-party-fulfilment` dependency to `libs/admin-pages/package.json`
 
-## Location Metadata
-- [ ] Extend location queries to include jurisdiction and region data
-- [ ] Add helper function to retrieve location with all required metadata
-- [ ] Write unit tests for location metadata retrieval
+## Helm Chart / Infrastructure
+- [x] Add Courtel secrets to `apps/api/helm/values.yaml` under the existing `pip-ss-kv-stg` vault:
+  ```yaml
+  - name: auto-pip-stg-courtel-api
+    alias: COURTEL_API_URL
+  - name: courtel-certificate
+    alias: COURTEL_CERTIFICATE
+  ```
 
 ## Testing
-- [ ] Run all unit tests: `yarn test libs/third-party-fulfilment`
-- [ ] Verify test coverage >80% for business logic
-- [ ] Manual testing with mock third-party endpoint
-- [ ] Test retry logic with simulated failures
-- [ ] Test certificate authentication with test certificate
-- [ ] Verify audit logs are created correctly
-- [ ] Test DELETE action sends empty body
-- [ ] Test multiple subscriptions for same publication
-
-## Documentation
-- [ ] Add inline code documentation for public functions
-- [ ] Document third-party credential Key Vault naming convention
-- [ ] Document expected HTTP status codes from third parties
-- [ ] Update main README if needed with third-party fulfilment overview
+- [x] Run `yarn test` across all modified packages — all tests pass
+- [x] Verify test coverage >80% for `libs/third-party-fulfilment` (36 tests, 5 files)
+- [ ] Manual test: upload a publication for a list type with a subscribed third-party user → check push was sent
+- [ ] Manual test: delete a publication → check empty-body push was sent
+- [ ] Manual test: upload for list type with no subscribers → no push attempt
