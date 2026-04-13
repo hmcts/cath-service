@@ -28,7 +28,8 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write --unsafe ."
+    "lint:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "ajv": "8.18.0",
