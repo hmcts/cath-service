@@ -1,27 +1,49 @@
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import https from "node:https";
 
 const REQUEST_TIMEOUT_MS = 30_000;
+
+async function buildMultipartBody(boundary: string, jsonBody: string | null, pdfPath: string): Promise<Buffer> {
+  const pdfBuffer = await fs.readFile(pdfPath);
+  const parts: Buffer[] = [];
+
+  if (jsonBody !== null) {
+    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="json"\r\nContent-Type: application/json\r\n\r\n${jsonBody}\r\n`));
+  }
+
+  parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="pdf"; filename="publication.pdf"\r\nContent-Type: application/pdf\r\n\r\n`));
+  parts.push(pdfBuffer);
+  parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
+
+  return Buffer.concat(parts);
+}
 
 export async function executePush(
   url: string,
   certPem: string,
   headers: Record<string, string>,
-  body: string | null
+  body: string | null,
+  pdfPath?: string
 ): Promise<{ statusCode: number; success: boolean }> {
   const agent = new https.Agent({ ca: certPem, rejectUnauthorized: true });
-
-  const bodyBuffer = body !== null ? Buffer.from(body, "utf-8") : Buffer.alloc(0);
-
   const parsedUrl = new URL(url);
 
-  const requestHeaders: Record<string, string | number> = {
-    ...headers,
-    "Content-Length": bodyBuffer.byteLength
-  };
+  let bodyBuffer: Buffer;
+  const requestHeaders: Record<string, string | number> = { ...headers };
 
-  if (body !== null) {
-    requestHeaders["Content-Type"] = "application/json";
+  if (pdfPath) {
+    const boundary = `----FormBoundary${crypto.randomBytes(8).toString("hex")}`;
+    bodyBuffer = await buildMultipartBody(boundary, body, pdfPath);
+    requestHeaders["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
+  } else {
+    bodyBuffer = body !== null ? Buffer.from(body, "utf-8") : Buffer.alloc(0);
+    if (body !== null) {
+      requestHeaders["Content-Type"] = "application/json";
+    }
   }
+
+  requestHeaders["Content-Length"] = bodyBuffer.byteLength;
 
   const options: https.RequestOptions = {
     hostname: parsedUrl.hostname,

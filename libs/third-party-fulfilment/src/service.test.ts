@@ -100,6 +100,19 @@ describe("sendThirdPartyPublications", () => {
     await sendThirdPartyPublications({ ...BASE_PARAMS, isUpdate: true });
     expect(mockPushLogCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ type: "UPDATE" }) }));
   });
+
+  it("forwards pdfPath to pushWithRetry when provided", async () => {
+    const pdfPath = "/tmp/publication.pdf";
+    await sendThirdPartyPublications({ ...BASE_PARAMS, pdfPath });
+    const [, , , , , forwardedPdfPath] = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(forwardedPdfPath).toBe(pdfPath);
+  });
+
+  it("forwards undefined pdfPath to pushWithRetry when not provided", async () => {
+    await sendThirdPartyPublications(BASE_PARAMS);
+    const [, , , , , forwardedPdfPath] = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(forwardedPdfPath).toBeUndefined();
+  });
 });
 
 describe("sendThirdPartyDeletion", () => {

@@ -113,6 +113,15 @@ describe("pushWithRetry", () => {
     const result = await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, null);
 
     expect(result).toEqual({ statusCode: 204, success: true });
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null);
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined);
+  });
+
+  it("forwards pdfPath to executePush", async () => {
+    mockExecutePush.mockResolvedValue({ statusCode: 200, success: true });
+    const pdfPath = "/tmp/publication.pdf";
+
+    await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, "[ThirdParty]", pdfPath);
+
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, pdfPath);
   });
 });

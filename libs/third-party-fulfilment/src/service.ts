@@ -19,10 +19,11 @@ export interface ThirdPartyPushParams {
   provenance: string;
   isUpdate: boolean;
   jsonData?: unknown;
+  pdfPath?: string;
   logPrefix?: string;
 }
 
-export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "isUpdate">;
+export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "pdfPath" | "isUpdate">;
 
 function resolveCourtelSecrets(logPrefix: string): { url: string; certPem: string } | null {
   const url = process.env[COURTEL_API_URL_ENV];
@@ -55,6 +56,7 @@ export async function sendThirdPartyPublications(params: ThirdPartyPushParams): 
     provenance,
     isUpdate,
     jsonData,
+    pdfPath,
     logPrefix = "[ThirdParty]"
   } = params;
 
@@ -72,7 +74,7 @@ export async function sendThirdPartyPublications(params: ThirdPartyPushParams): 
   const body = jsonData != null ? JSON.stringify(jsonData) : null;
 
   console.info(`${logPrefix} Sending third-party push for artefactId ${artefactId} to ${secrets.url}`);
-  const result = await pushWithRetry(secrets.url, secrets.certPem, headers, body, logPrefix);
+  const result = await pushWithRetry(secrets.url, secrets.certPem, headers, body, logPrefix, pdfPath);
   writePushLog(artefactId, listTypeId, isUpdate ? "UPDATE" : "CREATE", result).catch((err) => {
     console.warn(`${logPrefix} Failed to write push log:`, err instanceof Error ? err.message : String(err));
   });

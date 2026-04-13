@@ -262,6 +262,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       provenance: provenance ?? "",
       isUpdate,
       jsonData,
+      pdfPath: result.pdfPath,
       logPrefix
     }).catch((error) => {
       console.error(`${logPrefix} Third-party push failed:`, error);

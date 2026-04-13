@@ -21,7 +21,8 @@ export async function pushWithRetry(
   certPem: string,
   headers: Record<string, string>,
   body: string | null,
-  logPrefix = "[ThirdParty]"
+  logPrefix = "[ThirdParty]",
+  pdfPath?: string
 ): Promise<{ statusCode: number; success: boolean }> {
   let lastResult = { statusCode: 0, success: false };
 
@@ -33,7 +34,7 @@ export async function pushWithRetry(
     }
 
     try {
-      lastResult = await executePush(url, certPem, headers, body);
+      lastResult = await executePush(url, certPem, headers, body, pdfPath);
     } catch {
       // Network-level error — treat as statusCode 0 and retry
       lastResult = { statusCode: 0, success: false };

@@ -451,5 +451,24 @@ describe("publication-processor", async () => {
 
       expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
     });
+
+    it("passes generated pdfPath to sendThirdPartyPublications", async () => {
+      vi.mocked(generateCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/generated/publication.pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      await processPublication({ ...baseParams, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: "/generated/publication.pdf" }));
+    });
+
+    it("passes undefined pdfPath to sendThirdPartyPublications when PDF generation is skipped", async () => {
+      await processPublication({ ...baseParams, jsonData: undefined, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: undefined }));
+    });
   });
 });
