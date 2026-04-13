@@ -103,8 +103,7 @@ describe("Care Standards Tribunal page controller", () => {
       expect(renderCareStandardsTribunalData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
         courtName: "Care Standards Tribunal",
-        displayFrom: mockArtefact.displayFrom,
-        displayTo: mockArtefact.displayTo,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Care Standards Tribunal Weekly Hearing List"
       });

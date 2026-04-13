@@ -5,8 +5,7 @@ export interface RenderOptions {
   locale: string;
   listTypeId: number;
   listTitle: string;
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
   lastReceivedDate: string;
 }
 
@@ -21,7 +20,7 @@ export interface RenderedData {
 }
 
 export function renderAdminCourt(hearingList: AdministrativeCourtHearingList, options: RenderOptions): RenderedData {
-  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   const renderedHearings = hearingList.map((hearing) => ({

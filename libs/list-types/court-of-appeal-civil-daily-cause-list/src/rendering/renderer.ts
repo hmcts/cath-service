@@ -3,8 +3,7 @@ import type { CourtOfAppealCivilData, FutureJudgment, StandardHearing } from "..
 
 export interface RenderOptions {
   locale: string;
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
   lastReceivedDate: string;
 }
 
@@ -45,7 +44,7 @@ function renderFutureJudgments(judgments: FutureJudgment[], locale: string): Fut
 }
 
 export function renderCourtOfAppealCivil(data: CourtOfAppealCivilData, options: RenderOptions): RenderedData {
-  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   return {

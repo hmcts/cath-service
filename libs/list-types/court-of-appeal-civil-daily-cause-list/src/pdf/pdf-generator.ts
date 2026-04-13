@@ -25,8 +25,7 @@ export async function generateCourtOfAppealCivilDailyCauseListPdf(options: PdfGe
   try {
     const renderedData = renderCourtOfAppealCivil(options.jsonData, {
       locale: options.locale,
-      displayFrom: options.contentDate,
-      displayTo: options.contentDate,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString()
     });
 

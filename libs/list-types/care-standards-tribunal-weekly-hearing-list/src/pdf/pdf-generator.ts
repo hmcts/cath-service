@@ -18,8 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<CareStandardsTribunalHearingList> {
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
 }
 
 export async function generateCareStandardsTribunalWeeklyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
@@ -27,8 +26,7 @@ export async function generateCareStandardsTribunalWeeklyHearingListPdf(options:
     const renderedData = renderCareStandardsTribunalData(options.jsonData, {
       locale: options.locale,
       courtName: "Care Standards Tribunal",
-      displayFrom: options.displayFrom,
-      displayTo: options.displayTo,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     });

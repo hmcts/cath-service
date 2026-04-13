@@ -135,8 +135,7 @@ describe("generateCourtOfAppealCivilDailyCauseListPdf", () => {
 
     expect(renderCourtOfAppealCivil).toHaveBeenCalledWith(mockHearingList, {
       locale: "en",
-      displayFrom: contentDate,
-      displayTo: contentDate,
+      contentDate: contentDate,
       lastReceivedDate: expect.any(String)
     });
   });

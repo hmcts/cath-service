@@ -5,8 +5,7 @@ import { en } from "../pages/en.js";
 
 export interface RenderOptions {
   locale: string;
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
   lastReceivedDate: string;
 }
 
@@ -34,7 +33,7 @@ function renderHearings(hearings: StandardHearing[]): StandardHearing[] {
 }
 
 export function renderLondonAdminCourt(data: LondonAdminCourtData, options: RenderOptions): RenderedData {
-  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
   const t = options.locale === "cy" ? cy : en;
 
