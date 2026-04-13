@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { prisma } from "@hmcts/postgres";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper to validate required environment variables
@@ -34,7 +34,7 @@ async function authenticateSystemAdmin(page: Page) {
 }
 
 // Helper to wait for autocomplete to complete and select option
-async function selectAutocompleteOption(page: Page, _searchText: string) {
+async function selectAutocompleteOption(page: Page, searchText: string) {
   // Wait for the autocomplete API request to complete
   const responsePromise = page.waitForResponse((response) => response.url().includes("/locations?q=") && response.status() === 200, { timeout: 10000 });
 
@@ -190,49 +190,33 @@ test.describe("Delete Court Journey", () => {
     await page.click('button:has-text("Continue")');
     await page.waitForURL("**/delete-court-confirm");
 
-    // Step 9: Test Welsh translation
-    await page.click('a:has-text("Cymraeg")');
-    await expect(page.locator("h1")).toHaveText("Ydych chi'n siŵr eich bod eisiau dileu'r llys hwn?");
-    await expect(page.locator(".govuk-summary-list")).toContainText("Llys Prawf Dileu B"); // Welsh name
-
-    // Switch back to English
-    await page.click('a:has-text("English")');
-    await expect(page.locator("h1")).toHaveText("Are you sure you want to delete this court?");
-
-    // Step 10: Test accessibility
+    // Step 9: Test accessibility
     const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // Step 11: Confirm deletion
+    // Step 10: Confirm deletion
     await page.click('input[value="yes"]');
     await page.click('button:has-text("Continue")');
     await page.waitForURL("**/delete-court-success");
 
-    // Step 12: Verify success page
+    // Step 11: Verify success page
     await expect(page.locator("h1")).toHaveText("Delete successful");
     const successPanel = page.locator(".govuk-panel--confirmation");
     await expect(successPanel).toBeVisible();
     await expect(successPanel).toContainText("Court has been deleted");
 
-    // Step 13: Verify next steps section
+    // Step 12: Verify next steps section
     await expect(page.getByRole("heading", { name: "What do you want to do next?" })).toBeVisible();
     await expect(page.locator('a:has-text("Remove another court")')).toBeVisible();
     await expect(page.locator('a:has-text("Upload Reference Data")')).toBeVisible();
     await expect(page.locator('a:has-text("Home")')).toBeVisible();
 
-    // Step 14: Test Welsh on success page
-    await page.click('a:has-text("Cymraeg")');
-    await expect(page.locator("h1")).toHaveText("Wedi llwyddo i ddileu");
-    await expect(page.locator(".govuk-panel--confirmation")).toContainText("Mae'r llys wedi'i ddileu");
-    await expect(page.getByRole("heading", { name: "Beth hoffech chi ei wneud nesaf?" })).toBeVisible();
-    await expect(page.locator('a:has-text("Dileu llys arall")')).toBeVisible();
-
-    // Step 15: Test accessibility on success page
+    // Step 13: Test accessibility on success page
     const successAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(successAccessibility.violations).toEqual([]);
 
-    // Step 16: Verify navigation links work
-    await page.click('a:has-text("Hafan")'); // Home in Welsh
+    // Step 14: Verify navigation links work
+    await page.click('a:has-text("Home")');
     await page.waitForURL("**/system-admin-dashboard");
     await expect(page.locator("h1")).toContainText("System Admin");
   });

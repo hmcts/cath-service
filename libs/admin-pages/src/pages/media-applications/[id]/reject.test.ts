@@ -102,8 +102,7 @@ describe("media-application reject page", () => {
             'You can sign in with an existing MyHMCTS account. Or you can register your organisation at <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link" target="_blank" rel="noopener noreferrer">https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals</a> (opens in a new window)'
           ],
           ["<strong>ID provided has expired or is not a Press ID.</strong>", "Please provide a valid Press ID."]
-        ],
-        hideLanguageToggle: true
+        ]
       });
     });
 
@@ -154,8 +153,7 @@ describe("media-application reject page", () => {
             'Gallwch fewngofnodi gyda chyfrif MyHMCTS presennol. Neu gallwch gofrestru eich sefydliad yn <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link" target="_blank" rel="noopener noreferrer">https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals</a> (yn agor mewn ffenestr newydd)'
           ],
           ["<strong>Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.</strong>", "Darparwch ID Gwasg dilys."]
-        ],
-        hideLanguageToggle: true
+        ]
       });
     });
 
@@ -180,8 +178,7 @@ describe("media-application reject page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
         pageTitle: "Are you sure you want to reject this application?",
         error: "Unable to load applicant details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
   });
@@ -234,8 +231,7 @@ describe("media-application reject page", () => {
           ],
           ["<strong>ID provided has expired or is not a Press ID.</strong>", "Please provide a valid Press ID."]
         ],
-        errors: [{ text: "An option must be selected", href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: "An option must be selected", href: "#confirm" }]
       });
     });
 
@@ -287,8 +283,7 @@ describe("media-application reject page", () => {
           ],
           ["<strong>Mae'r ID a ddarparwyd wedi dod i ben neu nid yw'n ID i'r Wasg.</strong>", "Darparwch ID Gwasg dilys."]
         ],
-        errors: [{ text: "Rhaid dewis opsiwn", href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: "Rhaid dewis opsiwn", href: "#confirm" }]
       });
     });
 
@@ -392,8 +387,7 @@ describe("media-application reject page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject", {
         pageTitle: "Are you sure you want to reject this application?",
         error: "Unable to load applicant details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
   });

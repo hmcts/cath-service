@@ -70,8 +70,7 @@ async function renderConfirmationPage(
     ...(errors && {
       errors,
       errorSummaryTitle: lang.errorSummaryTitle
-    }),
-    hideLanguageToggle: true
+    })
   });
 }
 

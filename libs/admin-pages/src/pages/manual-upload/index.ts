@@ -95,8 +95,7 @@ const getHandler = async (req: Request, res: Response) => {
     listTypes: selectOption(LIST_TYPES, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
-    locale,
-    hideLanguageToggle: true
+    locale
   });
 };
 

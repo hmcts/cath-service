@@ -87,7 +87,6 @@ describe("manual-upload page", () => {
           pageTitle: "Upload - Manual upload",
           warningTitle: "Warning",
           continueButton: "Continue",
-          hideLanguageToggle: true,
           locale: "en"
         })
       );
@@ -182,23 +181,6 @@ describe("manual-upload page", () => {
 
       expect(renderData.locations).toBeDefined();
       expect(Array.isArray(renderData.locations)).toBe(true);
-    });
-
-    it("should set hideLanguageToggle to true", async () => {
-      const req = {
-        session: {},
-        query: {}
-      } as unknown as Request;
-      const res = {
-        render: vi.fn()
-      } as unknown as Response;
-
-      await callHandler(GET, req, res);
-
-      const renderCall = vi.mocked(res.render).mock.calls[0];
-      const renderData = renderCall?.[1] as any;
-
-      expect(renderData.hideLanguageToggle).toBe(true);
     });
 
     it("should pre-populate form data from session when successfully submitted", async () => {

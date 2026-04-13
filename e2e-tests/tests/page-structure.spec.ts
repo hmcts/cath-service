@@ -32,11 +32,12 @@ test.describe("Page Structure - VIBE-149", () => {
       await expect(signInLink).toHaveText("Sign in");
     });
 
-    test("should display Welsh toggle in beta banner", async ({ page }) => {
+    test("should display Welsh toggle in service navigation", async ({ page }) => {
       await page.goto("/");
 
-      // AC6: Welsh toggle in beta banner (phase banner)
-      const languageToggle = page.locator('.govuk-phase-banner a:has-text("Cymraeg")');
+      // AC6: Welsh toggle in service navigation (moved from phase banner in issue 292)
+      const serviceNav = page.locator(".govuk-service-navigation");
+      const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
       await expect(languageToggle).toBeVisible();
       await expect(languageToggle).toHaveText("Cymraeg");
     });
@@ -147,8 +148,9 @@ test.describe("Page Structure - VIBE-149", () => {
       const serviceNameLink = page.locator(".govuk-service-navigation__service-name a");
       await expect(serviceNameLink).toHaveText("Court and tribunal hearings");
 
-      // Click the language toggle to switch to Welsh (in phase banner)
-      const languageToggle = page.locator('.govuk-phase-banner a:has-text("Cymraeg")');
+      // Click the language toggle to switch to Welsh (in service navigation)
+      const serviceNav = page.locator(".govuk-service-navigation");
+      const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
       await expect(languageToggle).toBeVisible();
       await languageToggle.click();
 
@@ -156,8 +158,8 @@ test.describe("Page Structure - VIBE-149", () => {
       await expect(page).toHaveURL(/.*\?lng=cy/);
       await expect(serviceNameLink).toHaveText("Gwrandawiadau llys a thribiwnlys");
 
-      // Find the English toggle (in phase banner)
-      const englishToggle = page.locator('.govuk-phase-banner a:has-text("English")');
+      // Find the English toggle (in service navigation)
+      const englishToggle = serviceNav.locator('a:has-text("English")');
       await expect(englishToggle).toBeVisible();
 
       // Verify Sign in link is in Welsh
@@ -216,7 +218,8 @@ test.describe("Page Structure - VIBE-149", () => {
       const govukLink = page.locator(".govuk-header__link--homepage");
       await expect(govukLink).toBeVisible();
 
-      const languageToggle = page.locator('.govuk-phase-banner a:has-text("Cymraeg")');
+      const serviceNav = page.locator(".govuk-service-navigation");
+      const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
       await expect(languageToggle).toBeVisible();
     });
   });
@@ -229,7 +232,7 @@ test.describe("Page Structure - VIBE-149", () => {
       const keyElements = [
         { selector: ".govuk-service-navigation__service-name a", name: "Service name" },
         { selector: '.govuk-service-navigation__link[href="/sign-in"]', name: "Sign in" },
-        { selector: '.govuk-phase-banner a:has-text("Cymraeg")', name: "Language toggle" }
+        { selector: '.govuk-service-navigation a:has-text("Cymraeg")', name: "Language toggle" }
       ];
 
       // Verify all key navigation elements are visible and have href (keyboard accessible)
@@ -239,6 +242,11 @@ test.describe("Page Structure - VIBE-149", () => {
         const href = await element.getAttribute("href");
         expect(href, `${name} should have href attribute`).toBeTruthy();
       }
+
+      // Verify language toggle is in service navigation
+      const serviceNav = page.locator(".govuk-service-navigation");
+      const languageToggle = serviceNav.locator('a:has-text("Cymraeg")');
+      await expect(languageToggle, "Language toggle should be in service navigation").toBeVisible();
     });
   });
 
@@ -286,7 +294,7 @@ test.describe("Page Structure - VIBE-149", () => {
         { selector: ".govuk-header__link--homepage", name: "GOV.UK header" },
         { selector: ".govuk-service-navigation__service-name a", name: "Service name" },
         { selector: '.govuk-service-navigation__link[href="/sign-in"]', name: "Sign in link" },
-        { selector: '.govuk-phase-banner a:has-text("Cymraeg")', name: "Welsh toggle" }
+        { selector: '.govuk-service-navigation a:has-text("Cymraeg")', name: "Welsh toggle" }
       ];
 
       for (const element of elements) {

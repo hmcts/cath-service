@@ -70,8 +70,7 @@ describe("media-application details page", () => {
         rejectButton: "Reject application",
         fileNotAvailable: "File not available",
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
-        hideLanguageToggle: true
+        proofOfIdFilename: "IACListPublishPreviewed.pdf"
       });
     });
 
@@ -110,8 +109,7 @@ describe("media-application details page", () => {
         rejectButton: "Gwrthod cais",
         fileNotAvailable: "Ffeil ar gael ddim",
         application: mockApplication,
-        proofOfIdFilename: "IACListPublishPreviewed.pdf",
-        hideLanguageToggle: true
+        proofOfIdFilename: "IACListPublishPreviewed.pdf"
       });
     });
 
@@ -149,8 +147,7 @@ describe("media-application details page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/index", {
         pageTitle: "Applicant's details",
         error: "This application has already been reviewed.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
 
@@ -176,8 +173,7 @@ describe("media-application details page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/index", {
         pageTitle: "Applicant's details",
         error: "This application has already been reviewed.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
 
@@ -190,8 +186,7 @@ describe("media-application details page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/index", {
         pageTitle: "Applicant's details",
         error: "Unable to load applicant details. Please try again later.",
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     });
 
