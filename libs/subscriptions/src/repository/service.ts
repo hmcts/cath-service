@@ -151,7 +151,7 @@ export async function getAllSubscriptionsByUserId(userId: string, locale = "en")
   return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
 }
 
-export async function getCaseSubscriptionsByUserId(userId: string, locale = "en") {
+export async function getCaseSubscriptionsByUserId(_userId: string, _locale = "en") {
   // Case subscriptions not yet implemented (VIBE-300)
   // When implemented, this will query a case_subscription table
   return [];
