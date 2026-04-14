@@ -11,12 +11,12 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/postgres": "workspace:*",
-    "config": "4.1.1"
+    "config": "4.4.1"
   },
   "devDependencies": {
     "@types/config": "3.3.5",

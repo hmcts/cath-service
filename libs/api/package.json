@@ -20,7 +20,7 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
@@ -32,8 +32,8 @@
     "express": "^5.2.0"
   },
   "devDependencies": {
-    "@types/express": "5.0.0",
+    "@types/express": "5.0.6",
     "typescript": "5.9.3",
-    "vitest": "4.0.16"
+    "vitest": "4.1.4"
   }
 }
