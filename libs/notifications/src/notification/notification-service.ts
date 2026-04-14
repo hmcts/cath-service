@@ -28,6 +28,8 @@ import {
   getSubscriptionTemplateIdForListType,
   type TemplateParameters
 } from "../govnotify/template-config.js";
+import { checkEmailRateLimit } from "../rate-limiting/email-rate-limiter.js";
+import { TooManyEmailsException } from "../rate-limiting/too-many-emails-exception.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
@@ -122,6 +124,14 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     const validationResult = await validateUserEmail(subscription, event.publicationId);
     if (validationResult) {
       return validationResult;
+    }
+
+    try {
+      await checkEmailRateLimit(subscription.userId, subscription.user.email!, "SUBSCRIPTION");
+    } catch (error) {
+      if (error instanceof TooManyEmailsException) throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { status: "skipped", error: `User ${subscription.userId}: ${errorMessage}` };
     }
 
     const notification = await createNotificationAuditLog({
