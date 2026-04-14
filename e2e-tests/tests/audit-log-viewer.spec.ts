@@ -22,9 +22,7 @@ test.describe("Audit Log Viewer @nightly", () => {
     await expect(heading).toHaveText("Audit Log");
 
     // Check accessibility on list page
-    const listAccessibilityResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const listAccessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(listAccessibilityResults.violations).toEqual([]);
 
     // Verify table is present
@@ -52,9 +50,7 @@ test.describe("Audit Log Viewer @nightly", () => {
 
     // Check accessibility on Welsh page
     await page.goto("/audit-log-list?lng=cy");
-    const welshAccessibilityResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const welshAccessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(welshAccessibilityResults.violations).toEqual([]);
     await page.goto("/audit-log-list");
 
@@ -73,9 +69,7 @@ test.describe("Audit Log Viewer @nightly", () => {
       await expect(detailHeading).toHaveText("Audit Log Entry");
 
       // Check accessibility on detail page
-      const detailAccessibilityResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
+      const detailAccessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(detailAccessibilityResults.violations).toEqual([]);
 
       // Verify detail fields are present

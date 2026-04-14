@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres";
-import { seedAllReferenceData } from "./utils/seed-reference-data.js";
+import type { FullConfig } from "@playwright/test";
 import { seedListTypes } from "./utils/seed-list-types.js";
 import { seedLocationData } from "./utils/seed-location-data.js";
+import { seedAllReferenceData } from "./utils/seed-reference-data.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
-import type { FullConfig } from "@playwright/test";
-import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const ARTEFACT_TRACKING_FILE = path.join(process.cwd(), ".test-artefacts.json");
 const LOCATION_TRACKING_FILE = path.join(process.cwd(), ".test-locations.json");
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup(_config: FullConfig) {
   try {
     // Step 1: Wait for database connection
     console.log("Waiting for database connection...");
@@ -27,7 +27,7 @@ async function globalSetup(config: FullConfig) {
         console.log("Database connection established");
         connected = true;
         break;
-      } catch (error) {
+      } catch (_error) {
         if (i === maxRetries - 1) {
           throw new Error(`Failed to connect to database after ${maxRetries} attempts`);
         }
@@ -50,7 +50,7 @@ async function globalSetup(config: FullConfig) {
         console.log("Database migrations completed");
         migrationsComplete = true;
         break;
-      } catch (error) {
+      } catch (_error) {
         if (i === maxRetries - 1) {
           console.error("Database migrations did not complete in time");
           throw new Error("Database migrations did not complete. Please ensure the web server is running and migrations have been applied.");

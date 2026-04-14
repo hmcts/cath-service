@@ -113,9 +113,7 @@ test.describe("Administrative Court Daily Cause Lists - Viewing @nightly", () =>
     await expect(page.locator("body")).toContainText("Lleoliad");
 
     // Test accessibility
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Test table search functionality
@@ -147,9 +145,7 @@ test.describe("Administrative Court Daily Cause Lists - Viewing @nightly", () =>
     await expect(page.locator("th")).toContainText("Case Number");
 
     // Test accessibility
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
