@@ -1,4 +1,4 @@
-import { formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
+import { formatDisplayDate, formatLastUpdatedDateTime, normaliseHearings } from "@hmcts/list-types-common";
 import type { AdministrativeCourtHearing, AdministrativeCourtHearingList } from "../models/types.js";
 
 export interface RenderOptions {
@@ -23,16 +23,6 @@ export function renderAdminCourt(hearingList: AdministrativeCourtHearingList, op
   const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
-  const renderedHearings = hearingList.map((hearing) => ({
-    venue: hearing.venue,
-    judge: hearing.judge,
-    time: normalizeTime(hearing.time),
-    caseNumber: hearing.caseNumber,
-    caseDetails: hearing.caseDetails,
-    hearingType: hearing.hearingType,
-    additionalInformation: hearing.additionalInformation || ""
-  }));
-
   return {
     header: {
       listTitle: options.listTitle,
@@ -40,6 +30,6 @@ export function renderAdminCourt(hearingList: AdministrativeCourtHearingList, op
       lastUpdatedDate,
       lastUpdatedTime
     },
-    hearings: renderedHearings
+    hearings: normaliseHearings(hearingList)
   };
 }
