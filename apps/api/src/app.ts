@@ -1,12 +1,11 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { apiRoutes as blobIngestionRoutes } from "@hmcts/blob-ingestion/config";
-import { configurePropertiesVolume, healthcheck } from "@hmcts/cloud-native-platform";
+import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts/cloud-native-platform";
 import { apiRoutes as locationRoutes } from "@hmcts/location/config";
 import { apiRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import compression from "compression";
-import config from "config";
 import cors from "cors";
 import type { Express } from "express";
 import express from "express";
@@ -16,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
 
 export async function createApp(): Promise<Express> {
-  await configurePropertiesVolume(config, { chartPath });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
 
   const app = express();
 

@@ -1,7 +1,7 @@
 import type { UserProfile } from "@hmcts/auth";
 import type { ListType } from "@hmcts/list-types-common";
 import { mockListTypes } from "@hmcts/list-types-common";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { Artefact } from "../repository/model.js";
