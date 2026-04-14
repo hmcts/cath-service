@@ -6,7 +6,7 @@ interface B2cConfig {
   clientId: string;
   clientSecret: string;
   policyCath: string;
-  policyPasswordReset: string;
+  policyResetCredentials: string;
   redirectUri: string;
   responseType: "code" | "code id_token" | "id_token code" | "id_token";
   responseMode: "query" | "form_post";
@@ -46,7 +46,7 @@ export function getB2cConfig(): B2cConfig {
     clientId: getConfigValue("B2C_CLIENT_ID"),
     clientSecret: getConfigValue("B2C_CLIENT_SECRET"),
     policyCath: getConfigValue("B2C_POLICY_CATH") || "B2C_1_SignInUserFlow",
-    policyPasswordReset: getConfigValue("B2C_POLICY_PASSWORD_RESET") || "B2C_1A_PASSWORD_RESET",
+    policyResetCredentials: getConfigValue("B2C_POLICY_RESET_CREDENTIALS") || "B2C_1A_PASSWORD_RESET",
     redirectUri,
     responseType: "code",
     responseMode: "query",

@@ -163,7 +163,7 @@ async function exchangeCodeForTokens(code: string, provider: string): Promise<{ 
   if (provider === "cath") {
     policy = b2cConfig.policyCath;
   } else if (provider === "password_reset") {
-    policy = b2cConfig.policyPasswordReset;
+    policy = b2cConfig.policyResetCredentials;
   } else {
     throw new Error(`Invalid B2C provider: ${provider}. Only 'cath' and 'password_reset' are supported.`);
   }

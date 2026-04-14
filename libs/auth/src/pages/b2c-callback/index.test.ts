@@ -55,7 +55,7 @@ describe("B2C Callback Handler", () => {
       clientId: "test-client-id",
       clientSecret: "test-secret",
       policyCath: "B2C_1_CathSignIn",
-      policyPasswordReset: "B2C_1A_PASSWORD_RESET",
+      policyResetCredentials: "B2C_1A_PASSWORD_RESET",
       redirectUri: "https://localhost:8080/login/return",
       responseType: "code",
       responseMode: "query",

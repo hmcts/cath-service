@@ -22,7 +22,7 @@ export const GET = (req: Request, res: Response) => {
   // Build B2C password reset URL
   const b2cBaseUrl = getB2cBaseUrl();
   const resetUrl = new URL(`${b2cBaseUrl}/oauth2/v2.0/authorize`);
-  resetUrl.searchParams.set("p", b2cConfig.policyPasswordReset);
+  resetUrl.searchParams.set("p", b2cConfig.policyResetCredentials);
   resetUrl.searchParams.set("client_id", b2cConfig.clientId);
   resetUrl.searchParams.set("redirect_uri", b2cConfig.redirectUri);
   resetUrl.searchParams.set("response_type", b2cConfig.responseType);
