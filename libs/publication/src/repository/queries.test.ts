@@ -25,6 +25,10 @@ vi.mock("@hmcts/postgres", () => ({
       findMany: vi.fn(),
       deleteMany: vi.fn()
     },
+    listType: {
+      findMany: vi.fn(),
+      findUnique: vi.fn()
+    },
     artefactSearch: {
       create: vi.fn(),
       findFirst: vi.fn(),
@@ -32,25 +36,6 @@ vi.mock("@hmcts/postgres", () => ({
     },
     $queryRaw: vi.fn()
   }
-}));
-
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      name: "CIVIL_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Civil Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil",
-      provenance: "CFT_IDAM"
-    },
-    {
-      id: 2,
-      name: "FAMILY_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Family Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Teulu",
-      provenance: "CFT_IDAM"
-    }
-  ]
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -734,7 +719,19 @@ describe("getArtefactSummariesByLocation", () => {
       }
     ] as any;
 
+    const mockListTypes = [
+      {
+        id: 1,
+        friendlyName: "Civil Daily Cause List"
+      },
+      {
+        id: 2,
+        friendlyName: "Family Daily Cause List"
+      }
+    ] as any;
+
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+    vi.mocked(prisma.listType.findMany).mockResolvedValue(mockListTypes);
 
     const result = await getArtefactSummariesByLocation("123");
 
@@ -777,6 +774,7 @@ describe("getArtefactSummariesByLocation", () => {
     ] as any;
 
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+    vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
 
     const result = await getArtefactSummariesByLocation("123");
 
@@ -822,7 +820,13 @@ describe("getArtefactMetadata", () => {
       subJurisdictions: [1]
     };
 
+    const mockListType = {
+      id: 1,
+      friendlyName: "Civil Daily Cause List"
+    } as any;
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation);
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
@@ -871,7 +875,13 @@ describe("getArtefactMetadata", () => {
       subJurisdictions: [1]
     };
 
+    const mockListType = {
+      id: 1,
+      friendlyName: "Civil Daily Cause List"
+    } as any;
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation);
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
@@ -896,7 +906,13 @@ describe("getArtefactMetadata", () => {
       noMatch: false
     } as any;
 
+    const mockListType = {
+      id: 1,
+      friendlyName: "Civil Daily Cause List"
+    } as any;
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType);
     vi.mocked(getLocationById).mockResolvedValue(undefined);
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
@@ -930,6 +946,7 @@ describe("getArtefactMetadata", () => {
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation);
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
@@ -962,7 +979,13 @@ describe("getArtefactMetadata", () => {
       subJurisdictions: [1]
     };
 
+    const mockListType = {
+      id: 1,
+      friendlyName: "Civil Daily Cause List"
+    } as any;
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation);
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");

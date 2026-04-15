@@ -14,11 +14,7 @@ vi.mock("@hmcts/publication", () => ({
     SJP: "SJP",
     SNL: "SNL",
     COMMON_PLATFORM: "COMMON_PLATFORM"
-  },
-  mockListTypes: [
-    { id: 1, englishFriendlyName: "Daily Cause List", welshFriendlyName: "Rhestr Achosion Dyddiol" },
-    { id: 8, englishFriendlyName: "Civil And Family Daily Cause List", welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu" }
-  ]
+  }
 }));
 
 vi.mock("./queries.js", () => ({
