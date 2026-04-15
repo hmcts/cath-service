@@ -64,6 +64,21 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
+// Mock the system-admin-pages module
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findAllListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 4,
+        name: "MAGISTRATES_PUBLIC_LIST",
+        friendlyName: "Magistrates Public List",
+        welshFriendlyName: "Magistrates Public List",
+        url: "magistrates-public-list"
+      }
+    ])
+  )
+}));
+
 describe("Summary of Publications - GET handler", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
