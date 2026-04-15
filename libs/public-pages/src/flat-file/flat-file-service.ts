@@ -1,5 +1,6 @@
 import { getLocationById } from "@hmcts/location";
-import { getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName, mockListTypes } from "@hmcts/publication";
+import { getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 
 export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en") {
   const artefact = await getArtefactById(artefactId);
@@ -28,10 +29,10 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
   }
 
   const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
-  const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+  const listType = await findListTypeById(artefact.listTypeId);
 
   const courtName = locale === "cy" ? location?.welshName || location?.name || "Unknown" : location?.name || "Unknown";
-  const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.englishFriendlyName || "Unknown";
+  const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.friendlyName || "Unknown";
 
   // Get file extension from filesystem
   const fileExtension = await getFileExtension(artefact.artefactId);

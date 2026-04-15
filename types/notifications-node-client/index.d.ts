@@ -25,10 +25,6 @@ declare module "notifications-node-client" {
   export class NotifyClient {
     constructor(apiKey: string, baseUrl?: string);
 
-    sendEmail(
-      templateId: string,
-      emailAddress: string,
-      options?: NotificationEmailOptions
-    ): Promise<NotificationResponse>;
+    sendEmail(templateId: string, emailAddress: string, options?: NotificationEmailOptions): Promise<NotificationResponse>;
   }
 }

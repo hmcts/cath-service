@@ -3,7 +3,16 @@ import { fileURLToPath } from "node:url";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot, pageRoutes as adminCourtRoutes } from "@hmcts/administrative-court-daily-cause-list/config";
-import { authNavigationMiddleware, cftCallbackHandler, configurePassport, ssoCallbackHandler } from "@hmcts/auth";
+import {
+  authNavigationMiddleware,
+  b2cCallbackHandler,
+  b2cCallbackPostHandler,
+  b2cForgotPasswordHandler,
+  cftCallbackHandler,
+  configurePassport,
+  sessionTimeoutMiddleware,
+  ssoCallbackHandler
+} from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import {
   moduleRoot as careStandardsTribunalModuleRoot,
@@ -66,7 +75,9 @@ export async function createApp(): Promise<Express> {
   app.use(configureNonce());
   app.use(
     configureHelmet({
-      cftIdamUrl: process.env.CFT_IDAM_URL
+      cftIdamUrl: process.env.CFT_IDAM_URL,
+      b2cCustomDomain: process.env.B2C_CUSTOM_DOMAIN,
+      b2cTenantName: process.env.B2C_TENANT_NAME
     })
   );
   app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
@@ -114,11 +125,22 @@ export async function createApp(): Promise<Express> {
   // Add authentication state to navigation (AFTER all other middleware is set up)
   app.use(authNavigationMiddleware());
 
+  // Session timeout tracking for authenticated users
+  app.use(sessionTimeoutMiddleware);
+
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);
 
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
+
+  // Manual route registration for B2C callback (maintains /login/return URL for Azure B2C config)
+  // Supports both GET (response_mode=query) and POST (response_mode=form_post)
+  app.get("/login/return", b2cCallbackHandler);
+  app.post("/login/return", b2cCallbackPostHandler);
+
+  // Manual route registration for B2C password reset
+  app.get("/b2c-forgot-password", b2cForgotPasswordHandler);
 
   // Register location autocomplete routes (no prefix - frontend expects /locations)
   app.use(await createSimpleRouter(locationApiRoutes));

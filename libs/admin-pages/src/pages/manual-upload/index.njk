@@ -43,7 +43,7 @@
 
     <h1 class="govuk-heading-xl">{{ title }}</h1>
 
-    <form method="post" enctype="multipart/form-data" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate data-list-type-sensitivity='{{ listTypeSensitivityMap | safe }}'>
 
       {% set fileErrorText = getError(errors, "#file") %}
       <div class="govuk-inset-text">

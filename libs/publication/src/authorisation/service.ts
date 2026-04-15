@@ -1,7 +1,12 @@
 import type { UserProfile } from "@hmcts/auth";
-import type { ListType } from "@hmcts/list-types-common";
 import type { Artefact } from "../repository/model.js";
 import { Sensitivity } from "../sensitivity.js";
+
+export interface ListType {
+  id: number;
+  provenance: string;
+  isNonStrategic: boolean;
+}
 
 const METADATA_ONLY_ROLES = ["INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"] as const;
 const VERIFIED_USER_PROVENANCES = ["B2C_IDAM", "CFT_IDAM", "CRIME_IDAM"] as const;

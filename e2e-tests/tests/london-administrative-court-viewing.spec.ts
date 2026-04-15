@@ -133,9 +133,7 @@ test.describe("London Administrative Court Daily Cause List - Viewing @nightly",
     await expect(page.locator("h2")).toContainText("Llys Cynllunio");
 
     // Test accessibility
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Test table search across both sections
