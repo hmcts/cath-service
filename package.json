@@ -74,7 +74,7 @@
     "qs": "6.15.1",
     "tar": "7.5.13",
     "undici": "7.24.5",
-    "vite": "7.3.1"
+    "vite": "7.3.2"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "3.0.7",
