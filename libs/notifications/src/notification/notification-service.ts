@@ -97,6 +97,11 @@ interface EmailTemplateData {
 }
 
 export async function sendPublicationNotifications(event: PublicationEvent): Promise<NotificationResult> {
+  const listTypeName =
+    event.listTypeId === undefined
+      ? undefined
+      : (await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }).catch(() => null))?.name;
+
   const validation = validatePublicationEvent(event);
   if (!validation.valid) {
     throw new Error(`Invalid publication event: ${validation.errors.join(", ")}`);
@@ -113,12 +118,12 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
     return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [] };
   }
 
-  const results = await Promise.allSettled(subscriptions.map((subscription) => processUserNotification(subscription, event)));
+  const results = await Promise.allSettled(subscriptions.map((subscription) => processUserNotification(subscription, event, listTypeName)));
 
   return aggregateResults(results, subscriptions.length);
 }
 
-async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent): Promise<UserNotificationResult> {
+async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent, listTypeName?: string): Promise<UserNotificationResult> {
   try {
     const validationResult = await validateUserEmail(subscription, event.publicationId);
     if (validationResult) {
@@ -133,7 +138,7 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     });
 
     const userName = buildUserName(subscription.user.firstName, subscription.user.surname);
-    const emailData = await buildEmailTemplateData(event, userName);
+    const emailData = await buildEmailTemplateData(event, userName, listTypeName);
 
     const emailResult = await sendEmail({
       emailAddress: subscription.user.email!,
@@ -176,9 +181,8 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
   return { status: "skipped", error: `User ${subscription.userId}: ${reason}` };
 }
 
-async function buildEmailTemplateData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listType = event.listTypeId !== undefined ? await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }) : undefined;
-  const config = listType ? EMAIL_BUILDER_REGISTRY[listType.name] : undefined;
+async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string): Promise<EmailTemplateData> {
+  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {
     return buildEnhancedEmailData(event, userName, config);

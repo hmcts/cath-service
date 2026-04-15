@@ -72,13 +72,13 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
 export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
   const { listTypeId, artefactId, logPrefix = "[Publication]" } = params;
 
-  const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
-  const generator = listType ? PDF_GENERATOR_REGISTRY[listType.name] : undefined;
-  if (!generator) {
-    return {};
-  }
-
   try {
+    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+    const generator = listType ? PDF_GENERATOR_REGISTRY[listType.name] : undefined;
+    if (!generator) {
+      return {};
+    }
+
     const pdfResult = await generator(params);
 
     if (pdfResult.success && pdfResult.pdfPath) {
@@ -131,8 +131,18 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       return { success: false };
     }
 
-    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true, friendlyName: true } });
-    const listTypeFriendlyName = listType?.friendlyName || `LIST_TYPE_${listTypeId}`;
+    let listTypeFriendlyName = `LIST_TYPE_${listTypeId}`;
+    try {
+      const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { friendlyName: true } });
+      if (listType?.friendlyName) {
+        listTypeFriendlyName = listType.friendlyName;
+      }
+    } catch (error) {
+      console.warn(`${logPrefix} List type lookup failed, using fallback name:`, {
+        listTypeId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
 
     const result = await sendPublicationNotifications({
       publicationId: artefactId,
