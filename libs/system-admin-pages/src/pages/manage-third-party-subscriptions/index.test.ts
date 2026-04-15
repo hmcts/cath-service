@@ -11,13 +11,11 @@ vi.mock("../../third-party-user/validation.js", () => ({
   validateSensitivity: vi.fn()
 }));
 
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    { id: 1, englishFriendlyName: "Civil Daily Cause List" },
-    { id: 2, englishFriendlyName: "Crown Daily List" }
-  ]
+vi.mock("../../list-type/queries.js", () => ({
+  findAllListTypes: vi.fn()
 }));
 
+import { findAllListTypes } from "../../list-type/queries.js";
 import { findThirdPartyUserById, updateThirdPartySubscriptions } from "../../third-party-user/queries.js";
 import { validateSensitivity } from "../../third-party-user/validation.js";
 
@@ -25,8 +23,14 @@ describe("manage-third-party-subscriptions page", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 
+  const mockListTypes = [
+    { id: 1, friendlyName: "Civil Daily Cause List" },
+    { id: 2, friendlyName: "Crown Daily List" }
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
+    (findAllListTypes as any).mockResolvedValue(mockListTypes);
 
     req = {
       query: {},
