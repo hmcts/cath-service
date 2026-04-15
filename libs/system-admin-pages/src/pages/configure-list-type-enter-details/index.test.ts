@@ -83,7 +83,7 @@ describe("enter-details page", () => {
         "configure-list-type-enter-details/index",
         expect.objectContaining({
           data: sessionData,
-          checkedProvenance: { CFT_IDAM: true, PI_AAD: false, COMMON_PLATFORM: false }
+          checkedProvenance: { CFT_IDAM: true, PI_AAD: false, CRIME_IDAM: false }
         })
       );
     });
@@ -133,7 +133,7 @@ describe("enter-details page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "configure-list-type-enter-details/index",
         expect.objectContaining({
-          checkedProvenance: { CFT_IDAM: true, PI_AAD: true, COMMON_PLATFORM: false }
+          checkedProvenance: { CFT_IDAM: true, PI_AAD: true, CRIME_IDAM: false }
         })
       );
     });

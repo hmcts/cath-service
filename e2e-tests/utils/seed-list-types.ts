@@ -37,7 +37,7 @@ const listTypes: ListTypeData[] = [
     name: "CRIME_DAILY_LIST",
     englishFriendlyName: "Crime Daily List",
     welshFriendlyName: "Crime Daily List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crime-daily-list",
     isNonStrategic: false,
     defaultSensitivity: "Public"
@@ -47,7 +47,7 @@ const listTypes: ListTypeData[] = [
     name: "MAGISTRATES_PUBLIC_LIST",
     englishFriendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM,PI_AAD",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
     defaultSensitivity: "Public"
@@ -57,7 +57,7 @@ const listTypes: ListTypeData[] = [
     name: "CROWN_WARNED_LIST",
     englishFriendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crown-warned-list",
     isNonStrategic: false,
     defaultSensitivity: "Public"
@@ -67,7 +67,7 @@ const listTypes: ListTypeData[] = [
     name: "CROWN_DAILY_LIST",
     englishFriendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crown-daily-cause-list",
     isNonStrategic: false,
     defaultSensitivity: "Public"
@@ -77,7 +77,7 @@ const listTypes: ListTypeData[] = [
     name: "CROWN_FIRM_LIST",
     englishFriendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     urlPath: "crown-firm-list",
     isNonStrategic: false,
     defaultSensitivity: "Public"
@@ -97,7 +97,7 @@ const listTypes: ListTypeData[] = [
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
-    provenance: "MANUAL_UPLOAD",
+    provenance: "CFT_IDAM",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public"
