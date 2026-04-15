@@ -1455,6 +1455,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/third-party-fulfilment@workspace:libs/third-party-fulfilment"
   dependencies:
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres": "workspace:*"
   peerDependencies:
