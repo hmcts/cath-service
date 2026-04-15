@@ -18,8 +18,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
@@ -63,8 +62,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
@@ -91,8 +89,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 1),
-      displayTo: new Date(2025, 0, 7),
+      contentDate: new Date(2025, 0, 1),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
@@ -117,8 +114,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
@@ -143,8 +139,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T14:30:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
@@ -160,8 +155,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
@@ -187,8 +181,7 @@ describe("renderCareStandardsTribunalData", () => {
     const optionsWelsh = {
       locale: "cy",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal"
     };
@@ -213,8 +206,7 @@ describe("renderCareStandardsTribunalData", () => {
     const options = {
       locale: "en",
       courtName: "Care Standards Tribunal",
-      displayFrom: new Date(2025, 0, 2),
-      displayTo: new Date(2025, 0, 8),
+      contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     };
