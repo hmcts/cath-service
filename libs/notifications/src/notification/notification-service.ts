@@ -15,11 +15,12 @@ import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
-import { type CaseSummary, getListTypeName, type ListTypeName } from "@hmcts/list-types-common";
+import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
+import { prisma } from "@hmcts/postgres";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
@@ -45,7 +46,7 @@ interface EmailBuilderConfig {
 const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
 const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
 
-const EMAIL_BUILDER_REGISTRY: Partial<Record<ListTypeName, EmailBuilderConfig>> = {
+const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
     extract: extractCivilFamilySummary as SummaryExtractor,
     format: formatCivilFamilySummaryForEmail
@@ -176,8 +177,8 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 }
 
 async function buildEmailTemplateData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeName = event.listTypeId !== undefined ? getListTypeName(event.listTypeId) : undefined;
-  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
+  const listType = event.listTypeId !== undefined ? await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }) : undefined;
+  const config = listType ? EMAIL_BUILDER_REGISTRY[listType.name] : undefined;
 
   if (config && event.jsonData) {
     return buildEnhancedEmailData(event, userName, config);
