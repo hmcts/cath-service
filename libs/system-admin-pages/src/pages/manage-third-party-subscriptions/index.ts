@@ -89,8 +89,11 @@ const postHandler = async (req: Request, res: Response) => {
 
   const getListTypeNames = (ids: number[]) =>
     ids
-      .map((id) => listTypes.find((lt) => lt.id === id)?.friendlyName)
-      .filter(Boolean)
+      .map((id) => {
+        const listType = listTypes.find((lt) => lt.id === id);
+        return listType?.friendlyName || listType?.name;
+      })
+      .filter((name): name is string => Boolean(name))
       .join(", ") || "None";
 
   const previousListTypes = getListTypeNames(session.manageThirdPartyUser.originalSubscriptions);

@@ -30,7 +30,7 @@ describe("manage-third-party-subscriptions page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (findAllListTypes as any).mockResolvedValue(mockListTypes);
+    vi.mocked(findAllListTypes).mockResolvedValue(mockListTypes);
 
     req = {
       query: {},
