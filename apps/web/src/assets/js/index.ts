@@ -1,3 +1,4 @@
+import { initListTypeSensitivity } from "@hmcts/admin-pages/src/assets/js/list-type-sensitivity.js";
 import "@hmcts/auth/src/assets/js/session-timeout.js";
 import cookieManager from "@hmcts/cookie-manager";
 import { initTableSearch } from "@hmcts/list-types-common/src/assets/js/table-search.js";
@@ -16,6 +17,7 @@ if (document.readyState === "loading") {
     });
     initFilterPanel();
     initBackToTop();
+    initListTypeSensitivity();
     initTableSearch();
   });
 } else {
@@ -24,6 +26,7 @@ if (document.readyState === "loading") {
   });
   initFilterPanel();
   initBackToTop();
+  initListTypeSensitivity();
   initTableSearch();
 }
 

@@ -1,5 +1,6 @@
 import { prisma } from "@hmcts/postgres";
 import { locationData } from "./location-data.js";
+import { seedListTypes } from "./seed-list-types.js";
 
 async function shouldSeed(): Promise<boolean> {
   // Only seed in local development, not in CI or production
@@ -94,6 +95,9 @@ export async function seedLocationData() {
     });
   }
   console.log(`Seeded ${locationData.subJurisdictions.length} sub-jurisdictions`);
+
+  // Seed list types
+  await seedListTypes();
 
   // Seed locations
   console.log("Seeding locations...");
