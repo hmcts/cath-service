@@ -54,7 +54,9 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   });
 
   test.describe("CFT IDAM authenticated users (VERIFIED role with CFT provenance)", () => {
-    test("CFT user can access PUBLIC, PRIVATE, and CLASSIFIED CFT publications with provenance filtering, maintains session, and loses access after logout", async ({ page }) => {
+    test("CFT user can access PUBLIC, PRIVATE, and CLASSIFIED CFT publications with provenance filtering, maintains session, and loses access after logout", async ({
+      page
+    }) => {
       // 1. Login as CFT user
       await page.goto("/sign-in");
 
@@ -499,7 +501,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
           tagName: el.tagName,
           hasOutline: computedStyle.outline !== "none" && computedStyle.outline !== "",
           hasBorder: computedStyle.border !== "none",
-          hasBoxShadow: computedStyle.boxShadow !== "none",
+          hasBoxShadow: computedStyle.boxShadow !== "none"
         };
       });
 
@@ -557,7 +559,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
           return {
             tagName: el.tagName,
             text: el.textContent?.trim().substring(0, 30) || "",
-            href: (el as HTMLAnchorElement).href || null,
+            href: (el as HTMLAnchorElement).href || null
           };
         });
         focusOrder.push(elementInfo);
@@ -569,5 +571,4 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(focusOrder.every((el) => ["A", "BUTTON", "INPUT"].includes(el.tagName))).toBe(true);
     });
   });
-
 });

@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
-import { getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
+import { getArtefactById } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import type { CareStandardsTribunalHearingList } from "../models/types.js";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";

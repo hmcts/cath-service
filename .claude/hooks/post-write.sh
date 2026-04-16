@@ -16,19 +16,16 @@ log_hook() {
 log_hook "Hook started"
 echo "🔧 Running post-write checks..."
 
-# Run formatter check
-echo "Checking code formatting..."
-log_hook "Starting formatter check"
-if ! yarn format; then
+# Run formatter and linter directly via root biome (not turbo per-workspace)
+echo "Checking code formatting and linting..."
+log_hook "Starting biome format and lint"
+if ! yarn biome format --write .; then
     echo "❌ Code formatting check failed. Run 'yarn format' to fix."
     log_hook "Formatter check failed"
     exit 2
 fi
 
-# Run linter and exit with code 2 if it fails
-echo "Running linter..."
-log_hook "Starting linter"
-if ! yarn lint:fix; then
+if ! yarn biome check --write .; then
     echo "❌ Linting failed"
     log_hook "Linter failed"
     exit 2

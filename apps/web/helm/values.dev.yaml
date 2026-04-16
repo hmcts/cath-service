@@ -17,6 +17,9 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: '1988bbdd-d223-49bf-912f-ed34cb43e35e'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT: '689c0183-0461-423e-a542-de513a93a5b7'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_EXISTING_USER: '13b058a5-82da-4331-98ff-97d3ebf66f51'
+    ENABLE_B2C: 'true'
+    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
+    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
     # Local development uses pip-ss-kv-stg with -dev suffixed secrets
     pip-ss-kv-stg:
@@ -37,11 +40,9 @@ nodejs:
         # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-
         # GOV.UK Notify
         - name: gov-uk-notify-test-api-key
           alias: GOVUK_NOTIFY_API_KEY
-
         # Azure AD B2C secrets (media user account management)
         - name: b2c-tenant-id
           alias: AZURE_B2C_TENANT_ID
@@ -51,3 +52,8 @@ nodejs:
           alias: AZURE_B2C_CLIENT_SECRET
         - name: b2c-ad-url
           alias: AZURE_B2C_DOMAIN
+        # B2C secrets for verified user sign-in (using PIP staging frontend app registration)
+        - name: auto-pip-stg-pip-frontend-stg-id
+          alias: B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-frontend-stg-pwd
+          alias: B2C_CLIENT_SECRET
