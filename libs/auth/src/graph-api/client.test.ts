@@ -325,37 +325,44 @@ describe("getGraphApiAccessToken", () => {
 describe("findUserByEmail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.AZURE_B2C_DOMAIN = "test.b2clogin.com";
   });
+
+  afterEach(() => {
+    delete process.env.AZURE_B2C_DOMAIN;
+  });
+
+  const buildMockChain = (resolvedValue: unknown) => {
+    const mockGet = vi.fn().mockResolvedValue(resolvedValue);
+    const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
+    const mockFilter = vi.fn().mockReturnValue({ select: mockSelect });
+    const mockCount = vi.fn().mockReturnValue({ filter: mockFilter });
+    const mockHeader = vi.fn().mockReturnValue({ count: mockCount });
+    const mockApi = vi.fn().mockReturnValue({ header: mockHeader });
+    return { mockGet, mockSelect, mockFilter, mockCount, mockHeader, mockApi };
+  };
 
   it("should return user ID when user is found", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
     const { findUserByEmail } = await import("./client.js");
 
-    const mockGet = vi.fn().mockResolvedValue({
-      value: [{ id: "user-123" }]
-    });
-    const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
-    const mockFilter = vi.fn().mockReturnValue({ select: mockSelect });
-    const mockApi = vi.fn().mockReturnValue({ filter: mockFilter });
-
+    const { mockFilter, mockCount, mockHeader, mockApi } = buildMockChain({ value: [{ id: "user-123" }] });
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
     const result = await findUserByEmail("test-token", "user@example.com");
 
     expect(result).toBe("user-123");
     expect(mockApi).toHaveBeenCalledWith("/users");
-    expect(mockFilter).toHaveBeenCalledWith("mail eq 'user@example.com'");
+    expect(mockHeader).toHaveBeenCalledWith("ConsistencyLevel", "eventual");
+    expect(mockCount).toHaveBeenCalledWith(true);
+    expect(mockFilter).toHaveBeenCalledWith("identities/any(id:id/issuerAssignedId eq 'user@example.com' and id/issuer eq 'test.b2clogin.com')");
   });
 
   it("should return null when user is not found", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
     const { findUserByEmail } = await import("./client.js");
 
-    const mockGet = vi.fn().mockResolvedValue({ value: [] });
-    const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
-    const mockFilter = vi.fn().mockReturnValue({ select: mockSelect });
-    const mockApi = vi.fn().mockReturnValue({ filter: mockFilter });
-
+    const { mockApi } = buildMockChain({ value: [] });
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
     const result = await findUserByEmail("test-token", "nobody@example.com");
@@ -367,27 +374,26 @@ describe("findUserByEmail", () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
     const { findUserByEmail } = await import("./client.js");
 
-    const mockGet = vi.fn().mockResolvedValue({ value: [] });
-    const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
-    const mockFilter = vi.fn().mockReturnValue({ select: mockSelect });
-    const mockApi = vi.fn().mockReturnValue({ filter: mockFilter });
-
+    const { mockFilter, mockApi } = buildMockChain({ value: [] });
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
     await findUserByEmail("test-token", "test'user@example.com");
 
-    expect(mockFilter).toHaveBeenCalledWith("mail eq 'test''user@example.com'");
+    expect(mockFilter).toHaveBeenCalledWith("identities/any(id:id/issuerAssignedId eq 'test''user@example.com' and id/issuer eq 'test.b2clogin.com')");
+  });
+
+  it("should throw error when AZURE_B2C_DOMAIN is not configured", async () => {
+    delete process.env.AZURE_B2C_DOMAIN;
+    const { findUserByEmail } = await import("./client.js");
+
+    await expect(findUserByEmail("test-token", "user@example.com")).rejects.toThrow("Azure B2C domain not configured");
   });
 
   it("should throw error when Graph API fails", async () => {
     const { Client } = await import("@microsoft/microsoft-graph-client");
     const { findUserByEmail } = await import("./client.js");
 
-    const mockGet = vi.fn().mockRejectedValue({ message: "Service unavailable" });
-    const mockSelect = vi.fn().mockReturnValue({ get: mockGet });
-    const mockFilter = vi.fn().mockReturnValue({ select: mockSelect });
-    const mockApi = vi.fn().mockReturnValue({ filter: mockFilter });
-
+    const { mockApi } = buildMockChain(Promise.reject({ message: "Service unavailable" }));
     vi.mocked(Client.init).mockReturnValue({ api: mockApi } as any);
 
     await expect(findUserByEmail("test-token", "user@example.com")).rejects.toThrow("Failed to find user by email: Service unavailable");

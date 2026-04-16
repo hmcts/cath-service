@@ -10,14 +10,14 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 const mockSendMediaNewAccountEmail = vi.fn();
-const mockSendMediaExistingUserEmail = vi.fn();
+const mockSendMediaDuplicateAccountEmail = vi.fn();
 
 vi.mock("@hmcts/notification", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/notification")>();
   return {
     extractNotifyError: actual.extractNotifyError,
     sendMediaNewAccountEmail: (...args: unknown[]) => mockSendMediaNewAccountEmail(...args),
-    sendMediaExistingUserEmail: (...args: unknown[]) => mockSendMediaExistingUserEmail(...args)
+    sendMediaDuplicateAccountEmail: (...args: unknown[]) => mockSendMediaDuplicateAccountEmail(...args)
   };
 });
 
@@ -72,7 +72,6 @@ describe("media-application approve page", () => {
     };
 
     mockGetGraphApiAccessToken.mockResolvedValue("mock-access-token");
-    process.env.MEDIA_FORGOT_PASSWORD_LINK = "https://example.com/reset";
   });
 
   describe("GET handler", () => {
@@ -190,30 +189,24 @@ describe("media-application approve page", () => {
       expect(approveApplication).toHaveBeenCalledWith("app-123", "mock-access-token");
       expect(mockSendMediaNewAccountEmail).toHaveBeenCalledWith({
         email: "test@example.com",
-        fullName: "Test User",
-        signInPageLink: "https://example.com/reset",
-        subscriptionPageLink: "",
-        startPageLink: ""
+        fullName: "Test User"
       });
-      expect(mockSendMediaExistingUserEmail).not.toHaveBeenCalled();
+      expect(mockSendMediaDuplicateAccountEmail).not.toHaveBeenCalled();
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
     });
 
-    it("should send existing user email when user already exists", async () => {
+    it("should send duplicate account email when user already exists", async () => {
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
       vi.mocked(approveApplication).mockResolvedValue({ isNewUser: false });
-      mockSendMediaExistingUserEmail.mockResolvedValue(undefined);
+      mockSendMediaDuplicateAccountEmail.mockResolvedValue(undefined);
       mockRequest.body = { confirm: "yes" };
 
       const handler = POST[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-      expect(mockSendMediaExistingUserEmail).toHaveBeenCalledWith({
+      expect(mockSendMediaDuplicateAccountEmail).toHaveBeenCalledWith({
         email: "test@example.com",
-        fullName: "Test User",
-        signInPageLink: "https://example.com/reset",
-        subscriptionPageLink: "",
-        startPageLink: ""
+        fullName: "Test User"
       });
       expect(mockSendMediaNewAccountEmail).not.toHaveBeenCalled();
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
@@ -229,28 +222,6 @@ describe("media-application approve page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       expect(redirectSpy).toHaveBeenCalledWith("/media-applications/app-123/approved");
-    });
-
-    it("should show error when MEDIA_FORGOT_PASSWORD_LINK is not configured", async () => {
-      // Arrange
-      delete process.env.MEDIA_FORGOT_PASSWORD_LINK;
-      vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
-      mockRequest.body = { confirm: "yes" };
-
-      // Act
-      const handler = POST[1];
-      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
-
-      // Assert
-      expect(approveApplication).not.toHaveBeenCalled();
-      expect(renderSpy).toHaveBeenCalledWith(
-        "media-applications/[id]/approve",
-        expect.objectContaining({
-          error: "Unable to create user account in Azure AD. Please try again later."
-        })
-      );
-      expect(mockSendMediaNewAccountEmail).not.toHaveBeenCalled();
-      expect(redirectSpy).not.toHaveBeenCalled();
     });
 
     it("should show Azure AD error and keep PENDING status when approval fails", async () => {

@@ -15,7 +15,9 @@ export function extractNotifyError(error: unknown): { status: number; message: s
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY;
 const TEMPLATE_ID_MEDIA_REJECTION = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION;
 const TEMPLATE_ID_MEDIA_NEW_ACCOUNT = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT;
-const TEMPLATE_ID_MEDIA_EXISTING_USER = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_EXISTING_USER;
+const TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT;
+const MEDIA_PASSWORD_RESET_LINK = process.env.MEDIA_PASSWORD_RESET_LINK;
+const MEDIA_SIGN_IN_LINK = process.env.MEDIA_SIGN_IN_LINK;
 
 interface MediaApplicationRejectionEmailData {
   fullName: string;
@@ -27,9 +29,6 @@ interface MediaApplicationRejectionEmailData {
 interface MediaAccountEmailData {
   email: string;
   fullName: string;
-  signInPageLink: string;
-  subscriptionPageLink?: string;
-  startPageLink?: string;
 }
 
 export async function sendMediaRejectionEmail(data: MediaApplicationRejectionEmailData): Promise<void> {
@@ -62,36 +61,41 @@ export async function sendMediaNewAccountEmail(data: MediaAccountEmailData): Pro
     throw new Error("GOV Notify new account template ID not configured");
   }
 
+  if (!MEDIA_PASSWORD_RESET_LINK) {
+    throw new Error("MEDIA_PASSWORD_RESET_LINK environment variable is not configured");
+  }
+
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_NEW_ACCOUNT, data.email, {
     personalisation: {
       full_name: data.fullName,
-      "forgot password process link": data.signInPageLink
+      "forgot password process link": MEDIA_PASSWORD_RESET_LINK
     },
     reference: `media-new-account-${Date.now()}`
   });
 }
 
-export async function sendMediaExistingUserEmail(data: MediaAccountEmailData): Promise<void> {
+export async function sendMediaDuplicateAccountEmail(data: MediaAccountEmailData): Promise<void> {
   if (!GOVUK_NOTIFY_API_KEY) {
     throw new Error("GOV Notify API key not configured");
   }
 
-  if (!TEMPLATE_ID_MEDIA_EXISTING_USER) {
-    throw new Error("GOV Notify existing user template ID not configured");
+  if (!TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT) {
+    throw new Error("GOV Notify duplicate account template ID not configured");
+  }
+
+  if (!MEDIA_SIGN_IN_LINK) {
+    throw new Error("MEDIA_SIGN_IN_LINK environment variable is not configured");
   }
 
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
-  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_EXISTING_USER, data.email, {
+  await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT, data.email, {
     personalisation: {
       "Full name": data.fullName,
-      "sign in page link": data.signInPageLink,
-      forgot_password_process_link: data.signInPageLink,
-      "subscription page link": data.subscriptionPageLink ?? "",
-      "start page link": data.startPageLink ?? ""
+      "sign in page link": MEDIA_SIGN_IN_LINK
     },
-    reference: `media-existing-user-${Date.now()}`
+    reference: `media-duplicate-account-${Date.now()}`
   });
 }

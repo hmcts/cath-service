@@ -128,9 +128,21 @@ export async function findUserByEmail(accessToken: string, email: string): Promi
     }
   });
 
+  const b2cDomain = process.env.AZURE_B2C_DOMAIN;
+  if (!b2cDomain) {
+    throw new Error("Azure B2C domain not configured: AZURE_B2C_DOMAIN is required");
+  }
+
   try {
     const sanitisedEmail = email.replace(/'/g, "''");
-    const result = await client.api("/users").filter(`mail eq '${sanitisedEmail}'`).select("id").get();
+    const sanitisedDomain = b2cDomain.replace(/'/g, "''");
+    const result = await client
+      .api("/users")
+      .header("ConsistencyLevel", "eventual")
+      .count(true)
+      .filter(`identities/any(id:id/issuerAssignedId eq '${sanitisedEmail}' and id/issuer eq '${sanitisedDomain}')`)
+      .select("id")
+      .get();
 
     return result?.value?.[0]?.id ?? null;
   } catch (error) {

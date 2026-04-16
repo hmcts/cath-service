@@ -20,10 +20,11 @@ nodejs:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
-    MEDIA_FORGOT_PASSWORD_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=form_post'
+    MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=form_post'
+    MEDIA_SIGN_IN_LINK: 'https://pip-frontend.staging.platform.hmcts.net/login?p=B2C_1_SignInUserFlow'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: '1988bbdd-d223-49bf-912f-ed34cb43e35e'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT: '689c0183-0461-423e-a542-de513a93a5b7'
-    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_EXISTING_USER: '13b058a5-82da-4331-98ff-97d3ebf66f51'
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT: '2b4ccd66-2b04-4d27-94e5-b7372f58be08'
   keyVaults:
     # Using pip-ss-kv-stg for time being, once pipeline properly setup, stg will be replaced by environment
     pip-ss-kv-stg:

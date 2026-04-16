@@ -1,5 +1,5 @@
 import { getGraphApiAccessToken, requireRole, USER_ROLES } from "@hmcts/auth";
-import { extractNotifyError, sendMediaExistingUserEmail, sendMediaNewAccountEmail } from "@hmcts/notification";
+import { extractNotifyError, sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../../media-application/model.js";
@@ -81,27 +81,14 @@ const postHandler = async (req: Request, res: Response) => {
       return res.redirect(`/media-applications/${id}`);
     }
 
-    const signInPageLink = process.env.MEDIA_FORGOT_PASSWORD_LINK;
-    if (!signInPageLink) {
-      throw new Error("MEDIA_FORGOT_PASSWORD_LINK environment variable is not configured");
-    }
-
     const accessToken = await getGraphApiAccessToken();
     const { isNewUser } = await approveApplication(id, accessToken);
 
-    const emailData = {
-      email: application.email,
-      fullName: application.name,
-      signInPageLink,
-      subscriptionPageLink: process.env.MEDIA_SUBSCRIPTION_PAGE_LINK ?? "",
-      startPageLink: process.env.MEDIA_START_PAGE_LINK ?? ""
-    };
-
     try {
       if (isNewUser) {
-        await sendMediaNewAccountEmail(emailData);
+        await sendMediaNewAccountEmail({ email: application.email, fullName: application.name });
       } else {
-        await sendMediaExistingUserEmail(emailData);
+        await sendMediaDuplicateAccountEmail({ email: application.email, fullName: application.name });
       }
     } catch (error) {
       const { status, message } = extractNotifyError(error);

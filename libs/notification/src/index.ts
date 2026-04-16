@@ -1,6 +1,6 @@
 export {
   extractNotifyError,
-  sendMediaExistingUserEmail,
+  sendMediaDuplicateAccountEmail,
   sendMediaNewAccountEmail,
   sendMediaRejectionEmail
 } from "./govuk-notify-service.js";
