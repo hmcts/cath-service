@@ -212,9 +212,7 @@ describe("GOV Notify Service", () => {
       vi.resetModules();
       const { sendMediaNewAccountEmail: testFunc } = await import("./govuk-notify-service.js");
 
-      await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow(
-        "GOV Notify new account template ID not configured"
-      );
+      await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("GOV Notify new account template ID not configured");
 
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT = originalTemplateId;
     });
@@ -256,9 +254,7 @@ describe("GOV Notify Service", () => {
       vi.resetModules();
       const { sendMediaDuplicateAccountEmail: testFunc } = await import("./govuk-notify-service.js");
 
-      await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow(
-        "MEDIA_SIGN_IN_LINK environment variable is not configured"
-      );
+      await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("MEDIA_SIGN_IN_LINK environment variable is not configured");
 
       process.env.MEDIA_SIGN_IN_LINK = original;
     });
