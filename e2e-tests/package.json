@@ -25,7 +25,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",
     "@azure/identity": "4.13.1",
-    "@azure/keyvault-secrets": "4.10.0",
+    "@azure/keyvault-secrets": "4.11.1",
     "@playwright/test": "1.57.0",
     "exceljs": "4.4.0"
   }
