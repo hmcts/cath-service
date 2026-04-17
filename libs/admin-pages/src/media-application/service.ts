@@ -1,9 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createLocalMediaUser, splitName, updateLocalMediaUser } from "@hmcts/account/repository/service";
+import { createMediaUser, findUserByEmail, updateMediaUser } from "@hmcts/auth";
 import { APPLICATION_STATUS } from "./model.js";
 import { getApplicationById, updateApplicationStatus } from "./queries.js";
 
-export async function approveApplication(id: string): Promise<void> {
+export async function approveApplication(id: string, accessToken: string): Promise<{ isNewUser: boolean }> {
   const application = await getApplicationById(id);
 
   if (!application) {
@@ -14,11 +16,34 @@ export async function approveApplication(id: string): Promise<void> {
     throw new Error("Application has already been reviewed");
   }
 
+  const existingUserId = await findUserByEmail(accessToken, application.email);
+  const { givenName, surname } = splitName(application.name);
+
+  if (existingUserId) {
+    await updateMediaUser(accessToken, existingUserId, {
+      displayName: application.name,
+      givenName,
+      surname
+    });
+    await updateLocalMediaUser(existingUserId, givenName, surname);
+  } else {
+    const { azureAdUserId } = await createMediaUser(accessToken, {
+      email: application.email,
+      displayName: application.name,
+      givenName,
+      surname
+    });
+
+    await createLocalMediaUser(application.email, application.name, azureAdUserId);
+  }
+
   await updateApplicationStatus(id, APPLICATION_STATUS.APPROVED);
 
   if (application.proofOfIdPath) {
     await deleteProofOfIdFile(application.proofOfIdPath);
   }
+
+  return { isNewUser: !existingUserId };
 }
 
 export async function rejectApplication(id: string): Promise<void> {

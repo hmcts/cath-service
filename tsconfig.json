@@ -12,6 +12,7 @@
       "@hmcts/web-core": ["libs/web-core/src"],
       "@hmcts/account": ["libs/account/src"],
       "@hmcts/account/repository/query": ["libs/account/src/repository/query"],
+      "@hmcts/account/repository/service": ["libs/account/src/repository/service"],
       "@hmcts/admin-pages": ["libs/admin-pages/src"],
       "@hmcts/auth": ["libs/auth/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],

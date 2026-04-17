@@ -10,6 +10,10 @@
     "./repository/query": {
       "production": "./dist/repository/query.js",
       "default": "./src/repository/query.ts"
+    },
+    "./repository/service": {
+      "production": "./dist/repository/service.js",
+      "default": "./src/repository/service.ts"
     }
   },
   "types": "./dist/roles.d.ts",
