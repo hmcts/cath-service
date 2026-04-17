@@ -74,4 +74,3 @@ export async function deleteProofOfIdFile(filePath: string): Promise<void> {
     }
   }
 }
-

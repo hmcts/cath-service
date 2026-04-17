@@ -369,5 +369,4 @@ describe("media-application service", () => {
       await expect(deleteProofOfIdFile("/tmp/file.pdf")).rejects.toThrow("Permission denied");
     });
   });
-
 });
