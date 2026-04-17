@@ -41,3 +41,147 @@
   color: #0b0c0c;
   margin-bottom: 1em;
 }
+
+// MOJ Sub-navigation component
+.moj-sub-navigation {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.moj-sub-navigation__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0;
+}
+
+.moj-sub-navigation__item {
+  margin: 0;
+  padding: 0;
+}
+
+.moj-sub-navigation__link {
+  display: inline-block;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #1d70b8;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  border-bottom: 4px solid transparent;
+
+  &:hover {
+    color: #003078;
+    text-decoration: underline;
+  }
+
+  &:focus {
+    outline: 3px solid #ffdd00;
+    outline-offset: 0;
+    background-color: #ffdd00;
+    color: #0b0c0c;
+    box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+    text-decoration: none;
+  }
+
+  &[aria-current="page"] {
+    color: #0b0c0c;
+    font-weight: 700;
+    border-bottom-color: #1d70b8;
+    text-decoration: none;
+
+    &:hover {
+      color: #0b0c0c;
+      text-decoration: none;
+    }
+  }
+}
+
+// Responsive: stack on mobile
+@media (max-width: 640px) {
+  .moj-sub-navigation__list {
+    flex-direction: column;
+    border-bottom: 1px solid #b1b4b6;
+  }
+
+  .moj-sub-navigation__item {
+    border-top: 1px solid #b1b4b6;
+
+    &:first-child {
+      border-top: none;
+    }
+  }
+
+  .moj-sub-navigation__link {
+    display: block;
+    padding: 15px 0;
+    border-bottom: none;
+
+    &[aria-current="page"] {
+      border-left: 4px solid #1d70b8;
+      padding-left: 16px;
+      border-bottom: none;
+    }
+  }
+}
+
+// List types selection table
+.app-list-types-table {
+  &__letter-cell {
+    width: 60px;
+    vertical-align: top;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  &__checkbox-cell {
+    width: 40px;
+    vertical-align: middle;
+  }
+
+  &__label-cell {
+    vertical-align: middle;
+  }
+}
+
+// Compact checkbox styling for list types
+.app-list-types-checkbox {
+  margin-bottom: 0;
+
+  .govuk-checkboxes__item {
+    margin-bottom: 0;
+    min-height: 0;
+  }
+
+  .govuk-checkboxes__label {
+    min-height: 0;
+  }
+}
+
+// Selection count box
+.app-selection-count-box {
+  background-color: #f3f2f1;
+  padding: 15px;
+  margin-bottom: 30px;
+}
+
+// Subscription confirmation table
+.app-subscription-confirm-table {
+  .govuk-table__header {
+    font-size: 1.1875rem;
+  }
+
+  .govuk-table__cell {
+    font-size: 1.1875rem;
+    font-weight: normal;
+  }
+
+  .govuk-table__header:first-child {
+    width: 75%;
+  }
+
+  .govuk-table__header:last-child {
+    width: 25%;
+  }
+}

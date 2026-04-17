@@ -3,7 +3,6 @@ export const en = {
   heading: "Subscribe by court or tribunal name",
   description: "Subscribe to receive hearings list by court or tribunal",
   continueButton: "Continue",
-  back: "Back",
   backToTop: "Back to top",
   totalSelected: "Total selected",
   selected: "selected",
@@ -16,9 +15,9 @@ export const en = {
   jurisdictionHeading: "Jurisdiction",
   regionHeading: "Region",
   subJurisdictionLabels: {
-    1: "Court type",
-    2: "Tribunal type",
-    3: "Venue type",
-    4: "Service area type"
+    1: "Type of civil court",
+    2: "Type of family court",
+    3: "Type of criminal court",
+    4: "Type of tribunal"
   }
 };

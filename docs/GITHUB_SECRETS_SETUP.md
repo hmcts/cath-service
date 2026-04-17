@@ -19,7 +19,7 @@ The following secrets must be configured in your GitHub repository settings (`Se
 
 | Secret Name | Description | Used By |
 |------------|-------------|---------|
-| `GOVUK_NOTIFY_API_KEY` | GOV.UK Notify API Key | Notification E2E tests |
+| `GOVUK_NOTIFY_TEST_API_KEY` | GOV.UK Notify API Key | Notification E2E tests |
 | `GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION` | GOV.UK Notify Template ID for subscription notifications | Notification E2E tests |
 
 ### SSO Authentication
@@ -90,17 +90,17 @@ AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
 APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
 
 # GOV.UK Notify
-GOVUK_NOTIFY_API_KEY: ${{ secrets.GOVUK_NOTIFY_API_KEY }}
+GOVUK_NOTIFY_TEST_API_KEY: ${{ secrets.GOVUK_NOTIFY_TEST_API_KEY }}
 GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION }}
 ```
 
 ## Notification E2E Tests
 
 The notification E2E tests (`blob-ingestion-notifications.spec.ts`) will:
-- **Skip** the "verify GOV.UK Notify email content" test if `GOVUK_NOTIFY_API_KEY` is not set
+- **Skip** the "verify GOV.UK Notify email content" test if `GOVUK_NOTIFY_TEST_API_KEY` is not set
 - **Run** all other notification tests (email validation, skipped notifications, etc.)
 
-To enable the full test suite in CI, ensure both `GOVUK_NOTIFY_API_KEY` and `GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION` secrets are configured.
+To enable the full test suite in CI, ensure both `GOVUK_NOTIFY_TEST_API_KEY` and `GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION` secrets are configured.
 
 ## Troubleshooting
 

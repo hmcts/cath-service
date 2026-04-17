@@ -1,0 +1,50 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errorSummary %}
+      {{ govukErrorSummary(errorSummary) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    {{ govukInsetText({
+      text: bodyText
+    }) }}
+
+    <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      {{ govukRadios({
+        name: "subscriptionMethod",
+        errorMessage: fieldErrors.subscriptionMethod if fieldErrors and fieldErrors.subscriptionMethod,
+        items: [
+          {
+            value: "courtOrTribunal",
+            text: optionCourtOrTribunal
+          },
+          {
+            value: "caseName",
+            text: optionCaseName
+          },
+          {
+            value: "caseReference",
+            text: optionCaseReference
+          }
+        ]
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

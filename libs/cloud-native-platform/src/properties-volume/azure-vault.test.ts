@@ -130,7 +130,7 @@ describe("addFromAzureVault", () => {
     });
   });
 
-  it("should throw error when secret retrieval fails", async () => {
+  it("should warn when secret retrieval fails", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -143,12 +143,13 @@ describe("addFromAzureVault", () => {
     mockYamlLoad.mockReturnValue(helmChart);
     mockGetSecret.mockRejectedValue(new Error("Access denied"));
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret failing-secret: Access denied"
-    );
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Warning: Azure Key Vault: Vault 'test-vault': Failed to retrieve secret failing-secret: Access denied");
+    expect(config).toEqual({ existing: "value" });
   });
 
-  it("should provide cleaner error message for permission errors", async () => {
+  it("should warn with cleaner message for permission errors", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -163,12 +164,15 @@ describe("addFromAzureVault", () => {
     permissionError.statusCode = 403;
     mockGetSecret.mockRejectedValue(permissionError);
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Could not load secret 'redis-access-key'. Check it exists and you have access to it."
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Warning: Azure Key Vault: Vault 'test-vault': Could not load secret 'redis-access-key'. Check it exists and you have access to it."
     );
+    expect(config).toEqual({ existing: "value" });
   });
 
-  it("should throw error when secret has no value", async () => {
+  it("should warn when secret has no value", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -181,9 +185,12 @@ describe("addFromAzureVault", () => {
     mockYamlLoad.mockReturnValue(helmChart);
     mockGetSecret.mockResolvedValue({ value: null });
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret empty-secret: Secret empty-secret has no value"
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Warning: Azure Key Vault: Vault 'test-vault': Failed to retrieve secret empty-secret: Secret empty-secret has no value"
     );
+    expect(config).toEqual({ existing: "value" });
   });
 
   it("should normalize secret names when no alias provided", async () => {
@@ -316,7 +323,7 @@ describe("addFromAzureVault", () => {
     });
   });
 
-  it("should handle errors with no message property", async () => {
+  it("should warn for errors with no message property", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -329,12 +336,13 @@ describe("addFromAzureVault", () => {
     mockYamlLoad.mockReturnValue(helmChart);
     mockGetSecret.mockRejectedValue("String error");
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Failed to retrieve secret secret1: String error"
-    );
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Warning: Azure Key Vault: Vault 'test-vault': Failed to retrieve secret secret1: String error");
+    expect(config).toEqual({ existing: "value" });
   });
 
-  it("should not duplicate vault name in error message if already present", async () => {
+  it("should warn without duplicating vault name in message", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -348,9 +356,12 @@ describe("addFromAzureVault", () => {
     const error = new Error("test-vault: Already contains vault name");
     mockGetSecret.mockRejectedValue(error);
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Failed to retrieve secret secret1: test-vault: Already contains vault name"
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Warning: Azure Key Vault: Vault 'test-vault': Failed to retrieve secret secret1: test-vault: Already contains vault name"
     );
+    expect(config).toEqual({ existing: "value" });
   });
 
   it("should handle error without message property in addFromAzureVault", async () => {
@@ -363,7 +374,7 @@ describe("addFromAzureVault", () => {
     );
   });
 
-  it("should handle SecretNotFound error code", async () => {
+  it("should warn for SecretNotFound error code", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -378,12 +389,13 @@ describe("addFromAzureVault", () => {
     notFoundError.code = "SecretNotFound";
     mockGetSecret.mockRejectedValue(notFoundError);
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
-    );
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Warning: Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault");
+    expect(config).toEqual({ existing: "value" });
   });
 
-  it("should handle error message containing 'was not found'", async () => {
+  it("should warn for error message containing 'was not found'", async () => {
     const helmChart = {
       keyVaults: {
         "test-vault": {
@@ -396,8 +408,9 @@ describe("addFromAzureVault", () => {
     mockYamlLoad.mockReturnValue(helmChart);
     mockGetSecret.mockRejectedValue(new Error("The secret was not found in the vault"));
 
-    await expect(addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" })).rejects.toThrow(
-      "Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault"
-    );
+    await addFromAzureVault(config, { pathToHelmChart: "/path/to/chart.yaml" });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Warning: Azure Key Vault: Vault 'test-vault': Secret 'missing-secret' does not exist in the vault");
+    expect(config).toEqual({ existing: "value" });
   });
 });

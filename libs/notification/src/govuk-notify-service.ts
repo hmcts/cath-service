@@ -1,6 +1,6 @@
 import { NotifyClient } from "notifications-node-client";
 
-const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY;
+const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_TEST_API_KEY;
 const TEMPLATE_ID_MEDIA_APPROVAL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL;
 const TEMPLATE_ID_MEDIA_REJECTION = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION;
 

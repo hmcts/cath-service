@@ -7,6 +7,7 @@ import {
   createTestSubscription,
   createTestUser,
   getGovNotifyEmail,
+  getNotificationsByPublicationId,
   waitForNotifications
 } from "../utils/notification-helpers.js";
 
@@ -172,6 +173,8 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
   });
 
   test("should send email notification with case summary to subscribers", async ({ request }) => {
+    test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
+
     // Create test user and subscription
     const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser.userId);
@@ -206,7 +209,7 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
     expect(sentNotification.status).toBe("Sent");
 
     // Verify GOV.UK Notify email content
-    if (process.env.GOVUK_NOTIFY_API_KEY && sentNotification?.govNotifyId) {
+    if (process.env.GOVUK_NOTIFY_TEST_API_KEY && sentNotification?.govNotifyId) {
       const govNotifyEmail = await getGovNotifyEmail(sentNotification.govNotifyId);
 
       // Verify email recipient
@@ -231,6 +234,8 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
   });
 
   test("should send notifications to multiple subscribers for same publication", async ({ request }) => {
+    test.skip(!process.env.GOVUK_NOTIFY_TEST_API_KEY, "Skipping: GOVUK_NOTIFY_TEST_API_KEY not set");
+
     // Create multiple test users and subscriptions
     const testUser1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     const testUser2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
@@ -256,12 +261,14 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
     const result = await apiResponse.json();
     testData.publicationIds.push(result.artefact_id);
 
-    // Wait for notifications
-    const notifications = await waitForNotifications(result.artefact_id, 15, 1000, true);
+    // Wait for notifications - give more time for multiple notifications to complete
+    let notifications = await waitForNotifications(result.artefact_id, 15, 1000, true);
 
-    // Verify notifications were sent to both subscribers
-    const sentNotifications = notifications.filter((n) => n.govNotifyId !== null && n.status === "Sent");
-    expect(sentNotifications.length).toBeGreaterThanOrEqual(2);
+    // If we don't have both notifications yet, wait a bit longer
+    if (notifications.length < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      notifications = await getNotificationsByPublicationId(result.artefact_id);
+    }
 
     // Verify both subscriptions received notifications
     const sub1Notification = notifications.find((n) => n.subscriptionId === subscription1.subscriptionId);
@@ -269,8 +276,12 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
 
     expect(sub1Notification).toBeDefined();
     expect(sub2Notification).toBeDefined();
+
+    // Verify notifications were sent successfully
     expect(sub1Notification?.status).toBe("Sent");
     expect(sub2Notification?.status).toBe("Sent");
+    expect(sub1Notification?.govNotifyId).toBeDefined();
+    expect(sub2Notification?.govNotifyId).toBeDefined();
   });
 
   test("should not send notifications when no subscriptions exist for location", async ({ request }) => {

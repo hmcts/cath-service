@@ -1,6 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { deleteSubscriptionsByIds, getSubscriptionDetailsForConfirmation } from "@hmcts/subscriptions";
+import { deleteSubscriptionsByIds, getSubscriptionDetailsForConfirmation } from "@hmcts/subscription";
 import type { Request, RequestHandler, Response } from "express";
+import { getCsrfToken } from "../../utils/csrf.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -36,7 +37,7 @@ const getHandler = async (req: Request, res: Response) => {
       courtSubscriptions,
       hasCaseSubscriptions: caseSubscriptions.length > 0,
       hasCourtSubscriptions: courtSubscriptions.length > 0,
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error("Error retrieving subscription details for confirmation:", error);
@@ -67,7 +68,7 @@ async function renderValidationError(req: Request, res: Response, selectedIds: s
           href: t.errorNoRadioHref
         }
       ],
-      csrfToken: (req as any).csrfToken?.() || ""
+      csrfToken: getCsrfToken(req)
     });
   } catch (error) {
     console.error("Error rendering validation error:", error);

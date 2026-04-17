@@ -82,9 +82,6 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
     await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
 
-    // Extract and store artefact search data for case number/name search
-    await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
-
     // Log successful ingestion
     await createIngestionLog({
       id: randomUUID(),

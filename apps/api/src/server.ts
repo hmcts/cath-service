@@ -7,7 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load .env from project root (three levels up from src/)
-dotenv.config({ path: path.join(__dirname, "../../../.env") });
+// Only load if GOVUK_NOTIFY_TEST_API_KEY is not already set (e.g., by Playwright)
+if (!process.env.GOVUK_NOTIFY_TEST_API_KEY) {
+  dotenv.config({ path: path.join(__dirname, "../../../.env") });
+}
 
 const PORT = process.env.API_PORT || 3001;
 

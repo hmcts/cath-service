@@ -11,6 +11,9 @@ export const cy = {
   tableHeaderCourtName: "Enw'r llys neu'r tribiwnlys",
   bulkUnsubscribeButton: "Dileu swmp o danysgrifiadau",
   emptyStateMessage: "Nid oes gennych unrhyw danysgrifiadau yn y categori hwn.",
+  noCaseSubscriptions: "Nid oes gennych unrhyw danysgrifiadau achos.",
+  noCourtSubscriptions: "Nid oes gennych unrhyw danysgrifiadau llys neu dribiwnlys.",
+  notAvailable: "Ddim ar gael",
   errorSummaryTitle: "Mae yna broblem",
   errorNoSelectionMessage: "Mae angen o leiaf un tanysgrifiad",
   errorNoSelectionHref: "#subscriptions"
