@@ -1,5 +1,5 @@
+import type { AuditLog } from "@hmcts/postgres";
 import { prisma } from "@hmcts/postgres";
-import type { AuditLog } from "@prisma/client";
 
 export interface AuditLogFilters {
   email?: string;

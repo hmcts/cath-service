@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { getArtefactById } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres";
+import { canAccessPublicationData, getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderCauseListData } from "../rendering/renderer.js";
@@ -7,15 +8,24 @@ import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
 import { GET } from "./index.js";
 
 vi.mock("node:fs/promises");
-vi.mock("@hmcts/publication", () => ({
-  getArtefactById: vi.fn(),
-  canAccessPublicationData: vi.fn(() => true),
-  mockListTypes: [],
-  PROVENANCE_LABELS: {
-    MANUAL_UPLOAD: "Manual Upload",
-    LIST_ASSIST: "List Assist"
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    artefact: {
+      findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
+    }
   }
 }));
+vi.mock("@hmcts/publication", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/publication")>();
+  return {
+    ...actual,
+    getArtefactById: vi.fn(),
+    canAccessPublicationData: vi.fn()
+  };
+});
 vi.mock("../validation/json-validator.js");
 vi.mock("../rendering/renderer.js");
 
@@ -23,6 +33,12 @@ describe("civil-and-family-daily-cause-list controller", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
   const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+  const mockListType = {
+    id: 8,
+    allowedProvenance: ["MANUAL_UPLOAD"],
+    isNonStrategic: false
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,6 +50,9 @@ describe("civil-and-family-daily-cause-list controller", () => {
       status: vi.fn().mockReturnThis(),
       render: vi.fn()
     };
+    // Default mock for listType - tests can override if needed
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType as any);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
   });
 
   afterAll(() => {

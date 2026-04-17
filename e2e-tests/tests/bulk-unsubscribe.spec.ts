@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 import { prisma } from "@hmcts/postgres";
+import { expect, test } from "@playwright/test";
+import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 
 interface TestData {
   locationId1: number;
@@ -47,7 +47,7 @@ async function createTestData(): Promise<TestData> {
   for (const [id, name, welshName] of [
     [locationId1, locationName1, locationWelshName1],
     [locationId2, locationName2, locationWelshName2],
-    [locationId3, locationName3, locationWelshName3],
+    [locationId3, locationName3, locationWelshName3]
   ]) {
     await prisma.location.upsert({
       where: { locationId: id },
@@ -59,21 +59,21 @@ async function createTestData(): Promise<TestData> {
         contactNo: "01234567890",
         locationSubJurisdictions: {
           create: {
-            subJurisdictionId: subJurisdiction.subJurisdictionId,
-          },
+            subJurisdictionId: subJurisdiction.subJurisdictionId
+          }
         },
         locationRegions: {
           create: {
-            regionId: region.regionId,
-          },
-        },
+            regionId: region.regionId
+          }
+        }
       },
       update: {
         name: name,
         welshName: welshName,
         email: "test.location@test.hmcts.net",
-        contactNo: "01234567890",
-      },
+        contactNo: "01234567890"
+      }
     });
   }
 
@@ -86,7 +86,7 @@ async function createTestData(): Promise<TestData> {
     locationWelshName2,
     locationId3,
     locationName3,
-    locationWelshName3,
+    locationWelshName3
   };
 }
 
@@ -96,21 +96,17 @@ async function deleteTestData(testData: TestData): Promise<void> {
       where: {
         searchType: "LOCATION_ID",
         searchValue: {
-          in: [
-            testData.locationId1.toString(),
-            testData.locationId2.toString(),
-            testData.locationId3.toString()
-          ],
-        },
-      },
+          in: [testData.locationId1.toString(), testData.locationId2.toString(), testData.locationId3.toString()]
+        }
+      }
     });
 
     await prisma.location.deleteMany({
       where: {
         locationId: {
-          in: [testData.locationId1, testData.locationId2, testData.locationId3],
-        },
-      },
+          in: [testData.locationId1, testData.locationId2, testData.locationId3]
+        }
+      }
     });
   } catch (error) {
     console.log("Test data cleanup:", error);
@@ -136,11 +132,7 @@ test.describe("Bulk Unsubscribe", () => {
     const continueButton = page.getByRole("button", { name: /continue/i });
     await continueButton.click();
 
-    await loginWithCftIdam(
-      page,
-      process.env.CFT_VALID_TEST_ACCOUNT,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD
-    );
+    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
 
     await expect(page).toHaveURL(/\/account-home/);
   });
@@ -206,9 +198,7 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(page.getByRole("heading", { name: /bulk unsubscribe/i, level: 1 })).toBeVisible();
 
     // Check accessibility on bulk unsubscribe page
-    let accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(["region"])
-      .analyze();
+    let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 4: Test "All subscriptions" view displays both tables
@@ -231,10 +221,29 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(page.getByRole('cell', { name: testData.locationName1 }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: testData.locationName2 }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: testData.locationName3 }).first()).toBeVisible();
+    // Verify subscriptions are displayed in the active tab panel
+    const activeTabPanel = page.locator('[role="tabpanel"]:visible');
+    await expect(activeTabPanel.getByRole("cell", { name: testData.locationName1 }).first()).toBeVisible();
+    await expect(activeTabPanel.getByRole("cell", { name: testData.locationName2 }).first()).toBeVisible();
+    await expect(activeTabPanel.getByRole("cell", { name: testData.locationName3 }).first()).toBeVisible();
 
     // STEP 6: Navigate back to all subscriptions
     await allLink.click();
     await expect(page).toHaveURL(/view=all/);
+    // STEP 5: Test keyboard navigation for tabs
+    await allTab.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(caseTab).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(courtTab).toBeFocused();
+
+    // STEP 6: Test "Subscriptions by court or tribunal" tab
+    await courtTab.click();
+    await expect(courtTab).toHaveAttribute("aria-selected", "true");
+    const courtTabPanel = page.locator('[role="tabpanel"]:visible');
+    await expect(courtTabPanel.getByRole("cell", { name: testData.locationName1 }).first()).toBeVisible();
+    await expect(courtTabPanel.getByRole("cell", { name: testData.locationName2 }).first()).toBeVisible();
+    await expect(courtTabPanel.getByRole("cell", { name: testData.locationName3 }).first()).toBeVisible();
 
     // STEP 7: Test Welsh translation
     await page.goto("/bulk-unsubscribe?lng=cy");
@@ -299,14 +308,12 @@ test.describe("Bulk Unsubscribe", () => {
 
     // STEP 14: Verify confirmation page displays selected subscriptions
     await expect(page.getByRole("heading", { name: /are you sure you want to remove these subscriptions/i, level: 1 })).toBeVisible();
-    await expect(page.getByRole('cell', { name: testData.locationName1 }).first()).toBeVisible();
-    await expect(page.getByRole('cell', { name: testData.locationName2 }).first()).toBeVisible();
-    await expect(page.getByRole('cell', { name: testData.locationName3 }).first()).not.toBeVisible(); // Not selected
+    await expect(page.getByRole("cell", { name: testData.locationName1 }).first()).toBeVisible();
+    await expect(page.getByRole("cell", { name: testData.locationName2 }).first()).toBeVisible();
+    await expect(page.getByRole("cell", { name: testData.locationName3 }).first()).not.toBeVisible(); // Not selected
 
     // Check accessibility on confirmation page
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(["region"])
-      .analyze();
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 15: Test validation - submitting with no radio selected
@@ -356,9 +363,7 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(page.getByText(/find a court or tribunal/i)).toBeVisible();
 
     // Check accessibility on success page
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .disableRules(["region"])
-      .analyze();
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 20: Test Welsh translation on success page
@@ -370,9 +375,9 @@ test.describe("Bulk Unsubscribe", () => {
       where: {
         searchType: "LOCATION_ID",
         searchValue: {
-          in: [testData.locationId1.toString(), testData.locationId2.toString()],
-        },
-      },
+          in: [testData.locationId1.toString(), testData.locationId2.toString()]
+        }
+      }
     });
 
     expect(remainingSubscriptions).toHaveLength(0);
@@ -381,8 +386,8 @@ test.describe("Bulk Unsubscribe", () => {
     const subscription3 = await prisma.subscription.findFirst({
       where: {
         searchType: "LOCATION_ID",
-        searchValue: testData.locationId3.toString(),
-      },
+        searchValue: testData.locationId3.toString()
+      }
     });
 
     expect(subscription3).not.toBeNull();

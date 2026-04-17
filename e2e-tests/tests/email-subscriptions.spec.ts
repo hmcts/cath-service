@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 import { prisma } from "@hmcts/postgres";
+import { expect, test } from "@playwright/test";
+import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
 
 // Store test location data per test to avoid parallel test conflicts
 interface TestLocationData {
@@ -45,14 +45,14 @@ async function createTestLocation(): Promise<TestLocationData> {
       contactNo: "01234567890",
       locationSubJurisdictions: {
         create: {
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-        },
+          subJurisdictionId: subJurisdiction.subJurisdictionId
+        }
       },
       locationRegions: {
         create: {
-          regionId: region.regionId,
-        },
-      },
+          regionId: region.regionId
+        }
+      }
     },
     update: {
       name: testLocationName,
@@ -62,22 +62,22 @@ async function createTestLocation(): Promise<TestLocationData> {
       locationSubJurisdictions: {
         deleteMany: {},
         create: {
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-        },
+          subJurisdictionId: subJurisdiction.subJurisdictionId
+        }
       },
       locationRegions: {
         deleteMany: {},
         create: {
-          regionId: region.regionId,
-        },
-      },
-    },
+          regionId: region.regionId
+        }
+      }
+    }
   });
 
   return {
     locationId: testLocationId,
     name: testLocationName,
-    welshName: testLocationWelshName,
+    welshName: testLocationWelshName
   };
 }
 
@@ -88,6 +88,7 @@ async function deleteTestLocation(locationData: TestLocationData): Promise<void>
     // Delete subscriptions first (if any)
     // Subscriptions are linked to locations via searchType and searchValue
     await prisma.subscription.deleteMany({
+      where: { locationId: locationData.locationId }
       where: {
         searchType: "LOCATION_ID",
         searchValue: locationData.locationId.toString(),
@@ -96,7 +97,7 @@ async function deleteTestLocation(locationData: TestLocationData): Promise<void>
 
     // Delete location (cascade will handle relationships)
     await prisma.location.delete({
-      where: { locationId: locationData.locationId },
+      where: { locationId: locationData.locationId }
     });
   } catch (error) {
     // Ignore if location doesn't exist
@@ -171,9 +172,7 @@ test.describe("Email Subscriptions", () => {
       await expect(page.getByRole("button", { name: /add email subscription/i })).toBeVisible();
 
       // Check accessibility on subscription management page
-      let accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Step 2: Navigate to subscription method selection
@@ -280,9 +279,7 @@ test.describe("Email Subscriptions", () => {
       await expect(manageLink).toBeVisible();
 
       // Check accessibility on confirmation page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Navigate back to subscription management
@@ -376,9 +373,7 @@ test.describe("Email Subscriptions", () => {
       await expect(manageLink).toBeVisible();
 
       // Check accessibility on confirmation page
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Navigate back to subscription management
@@ -398,7 +393,7 @@ test.describe("Email Subscriptions", () => {
         "/pending-subscriptions",
         "/subscription-confirmed",
         "/delete-subscription?subscriptionId=550e8400-e29b-41d4-a716-446655440000",
-        "/unsubscribe-confirmation",
+        "/unsubscribe-confirmation"
       ];
 
       for (const url of protectedPages) {

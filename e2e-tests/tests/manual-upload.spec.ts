@@ -1,16 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { loginWithSSO } from "../utils/sso-helpers.js";
 import {
   cleanupTestNotifications,
   cleanupTestSubscriptions,
   cleanupTestUsers,
   createTestSubscription,
   createTestUser,
-  getNotificationsByPublicationId,
   getNotificationsBySubscriptionId
 } from "../utils/notification-helpers.js";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -512,6 +511,47 @@ test.describe("Manual Upload End-to-End Flow", () => {
       await expect(page.locator('input[name="displayTo-day"]')).toHaveValue("20");
       await expect(page.locator('input[name="displayTo-month"]')).toHaveValue("06");
       await expect(page.locator('input[name="displayTo-year"]')).toHaveValue("2025");
+    });
+
+    test("should auto-select default sensitivity when list type is selected", async ({ page }) => {
+      await page.goto("/manual-upload?locationId=9001");
+      await page.waitForTimeout(1000);
+
+      const listTypeSelect = page.locator('select[name="listType"]');
+      const sensitivitySelect = page.locator('select[name="sensitivity"]');
+
+      // Initially, sensitivity should be empty
+      await expect(sensitivitySelect).toHaveValue("");
+
+      // Select list type 6 (Crown Daily List) which has default sensitivity PUBLIC
+      await listTypeSelect.selectOption("6");
+
+      // Wait a moment for the JavaScript to execute
+      await page.waitForTimeout(100);
+
+      // Sensitivity should now be automatically set to PUBLIC
+      await expect(sensitivitySelect).toHaveValue("PUBLIC");
+
+      // Change to list type 2 (Family Daily Cause List) which has default sensitivity PRIVATE
+      await listTypeSelect.selectOption("2");
+      await page.waitForTimeout(100);
+
+      // Sensitivity should now be automatically set to PRIVATE
+      await expect(sensitivitySelect).toHaveValue("PRIVATE");
+
+      // Clear the list type selection
+      await listTypeSelect.selectOption("");
+      await page.waitForTimeout(100);
+
+      // Sensitivity should be cleared
+      await expect(sensitivitySelect).toHaveValue("");
+
+      // Select list type 1 (Civil Daily Cause List) which has default sensitivity PUBLIC
+      await listTypeSelect.selectOption("1");
+      await page.waitForTimeout(100);
+
+      // Sensitivity should now be automatically set to PUBLIC
+      await expect(sensitivitySelect).toHaveValue("PUBLIC");
     });
   });
 

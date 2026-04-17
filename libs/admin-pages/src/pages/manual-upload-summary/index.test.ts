@@ -46,6 +46,15 @@ vi.mock("@hmcts/location", () => ({
   })
 }));
 
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findListTypeById: vi.fn((id: number) => {
+    if (id === 1) return Promise.resolve({ id: 1, friendlyName: "Test List Type", welshFriendlyName: "Test List Type CY" });
+    if (id === 4) return Promise.resolve({ id: 4, friendlyName: "Family Daily List", welshFriendlyName: "Rhestr Ddyddiol Teulu" });
+    if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
+    return Promise.resolve(null);
+  })
+}));
+
 vi.mock("@hmcts/web-core", async () => {
   const actual = await vi.importActual("@hmcts/web-core");
   return {
@@ -68,8 +77,7 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn(),
-    processPublication: vi.fn()
+    createArtefact: vi.fn()
   };
 });
 
@@ -569,6 +577,18 @@ describe("manual-upload-summary page", () => {
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
       vi.mocked(processPublication).mockResolvedValue();
+      vi.mocked(getLocationById).mockResolvedValue({
+        locationId: 1,
+        name: "Test Crown Court",
+        welshName: "Test Crown Court CY"
+      });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 5,
+        sent: 5,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
 
       const session = {
         save: vi.fn((callback) => callback())
