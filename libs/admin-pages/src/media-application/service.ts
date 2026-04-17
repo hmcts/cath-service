@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createUser, updateUser } from "@hmcts/account/repository/query";
+import { createLocalMediaUser, splitName, updateLocalMediaUser } from "@hmcts/account/repository/service";
 import { createMediaUser, findUserByEmail, updateMediaUser } from "@hmcts/auth";
 import { APPLICATION_STATUS } from "./model.js";
 import { getApplicationById, updateApplicationStatus } from "./queries.js";
@@ -75,33 +75,3 @@ export async function deleteProofOfIdFile(filePath: string): Promise<void> {
   }
 }
 
-export function splitName(fullName: string): { givenName: string; surname: string } {
-  const trimmed = fullName.trim();
-  const lastSpaceIndex = trimmed.lastIndexOf(" ");
-
-  if (lastSpaceIndex === -1) {
-    return { givenName: trimmed, surname: "" };
-  }
-
-  return {
-    givenName: trimmed.substring(0, lastSpaceIndex),
-    surname: trimmed.substring(lastSpaceIndex + 1)
-  };
-}
-
-async function updateLocalMediaUser(azureAdUserId: string, firstName: string, surname: string): Promise<void> {
-  await updateUser(azureAdUserId, { firstName, surname });
-}
-
-async function createLocalMediaUser(email: string, name: string, azureAdUserId: string): Promise<void> {
-  const { givenName, surname } = splitName(name);
-
-  await createUser({
-    email,
-    firstName: givenName,
-    surname,
-    userProvenance: "B2C_IDAM",
-    userProvenanceId: azureAdUserId,
-    role: "VERIFIED"
-  });
-}

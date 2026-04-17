@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { APPLICATION_STATUS } from "./model.js";
 import * as queries from "./queries.js";
-import { approveApplication, deleteProofOfIdFile, rejectApplication, splitName } from "./service.js";
+import { approveApplication, deleteProofOfIdFile, rejectApplication } from "./service.js";
 
 vi.mock("node:fs/promises");
 vi.mock("./queries.js");
@@ -17,12 +17,18 @@ vi.mock("@hmcts/auth", () => ({
   updateMediaUser: (...args: unknown[]) => mockUpdateMediaUser(...args)
 }));
 
-const mockCreateUser = vi.fn();
-const mockUpdateUser = vi.fn();
+const mockCreateLocalMediaUser = vi.fn();
+const mockUpdateLocalMediaUser = vi.fn();
 
-vi.mock("@hmcts/account/repository/query", () => ({
-  createUser: (...args: unknown[]) => mockCreateUser(...args),
-  updateUser: (...args: unknown[]) => mockUpdateUser(...args)
+vi.mock("@hmcts/account/repository/service", () => ({
+  splitName: (name: string) => {
+    const trimmed = name.trim();
+    const lastSpaceIndex = trimmed.lastIndexOf(" ");
+    if (lastSpaceIndex === -1) return { givenName: trimmed, surname: "" };
+    return { givenName: trimmed.substring(0, lastSpaceIndex), surname: trimmed.substring(lastSpaceIndex + 1) };
+  },
+  createLocalMediaUser: (...args: unknown[]) => mockCreateLocalMediaUser(...args),
+  updateLocalMediaUser: (...args: unknown[]) => mockUpdateLocalMediaUser(...args)
 }));
 
 const MOCK_ACCESS_TOKEN = "test-access-token";
@@ -30,7 +36,7 @@ const MOCK_ACCESS_TOKEN = "test-access-token";
 describe("media-application service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCreateUser.mockResolvedValue({ userId: "local-user-id" });
+    mockCreateLocalMediaUser.mockResolvedValue(undefined);
   });
 
   describe("approveApplication", () => {
@@ -103,12 +109,9 @@ describe("media-application service", () => {
         givenName: "Jane",
         surname: "Smith"
       });
-      expect(mockUpdateUser).toHaveBeenCalledWith("existing-azure-id", {
-        firstName: "Jane",
-        surname: "Smith"
-      });
+      expect(mockUpdateLocalMediaUser).toHaveBeenCalledWith("existing-azure-id", "Jane", "Smith");
       expect(mockCreateMediaUser).not.toHaveBeenCalled();
-      expect(mockCreateUser).not.toHaveBeenCalled();
+      expect(mockCreateLocalMediaUser).not.toHaveBeenCalled();
     });
 
     it("should return isNewUser: true for new users", async () => {
@@ -191,13 +194,7 @@ describe("media-application service", () => {
       await approveApplication("1", MOCK_ACCESS_TOKEN);
 
       // Assert
-      expect(mockCreateUser).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: "john@example.com",
-          userProvenance: "B2C_IDAM",
-          role: "VERIFIED"
-        })
-      );
+      expect(mockCreateLocalMediaUser).toHaveBeenCalledWith("john@example.com", "John Doe", "azure-123");
     });
 
     it("should throw error and not update status when Azure AD creation fails", async () => {
@@ -373,21 +370,4 @@ describe("media-application service", () => {
     });
   });
 
-  describe("splitName", () => {
-    it("should split full name into given name and surname", () => {
-      expect(splitName("Test Name")).toEqual({ givenName: "Test", surname: "Name" });
-    });
-
-    it("should handle multiple name parts by putting last part as surname", () => {
-      expect(splitName("Test Middle Name")).toEqual({ givenName: "Test Middle", surname: "Name" });
-    });
-
-    it("should handle single name by using empty string for surname", () => {
-      expect(splitName("Test")).toEqual({ givenName: "Test", surname: "" });
-    });
-
-    it("should handle names with leading/trailing whitespace", () => {
-      expect(splitName("  Test Name  ")).toEqual({ givenName: "Test", surname: "Name" });
-    });
-  });
 });
