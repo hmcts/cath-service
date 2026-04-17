@@ -99,10 +99,14 @@ const postHandler = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Failed to approve media application:", error);
     const application = await getApplicationById(id).catch(() => null);
+    const errorMessage =
+      error instanceof Error && error.message === "Application has already been reviewed"
+        ? lang.errorMessages.alreadyReviewed
+        : lang.errorMessages.azureAdFailed;
 
     res.render("media-applications/[id]/approve", {
       pageTitle: lang.pageTitle,
-      error: lang.errorMessages.azureAdFailed,
+      error: errorMessage,
       subheading: lang.subheading,
       tableHeaders: lang.tableHeaders,
       proofOfIdText: lang.proofOfIdText,

@@ -80,7 +80,7 @@ export function splitName(fullName: string): { givenName: string; surname: strin
   const lastSpaceIndex = trimmed.lastIndexOf(" ");
 
   if (lastSpaceIndex === -1) {
-    return { givenName: trimmed, surname: trimmed };
+    return { givenName: trimmed, surname: "" };
   }
 
   return {
@@ -90,11 +90,7 @@ export function splitName(fullName: string): { givenName: string; surname: strin
 }
 
 async function updateLocalMediaUser(azureAdUserId: string, firstName: string, surname: string): Promise<void> {
-  try {
-    await updateUser(azureAdUserId, { firstName, surname });
-  } catch (error) {
-    console.error("Failed to update local media user:", error);
-  }
+  await updateUser(azureAdUserId, { firstName, surname });
 }
 
 async function createLocalMediaUser(email: string, name: string, azureAdUserId: string): Promise<void> {

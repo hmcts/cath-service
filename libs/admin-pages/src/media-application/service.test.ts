@@ -382,8 +382,8 @@ describe("media-application service", () => {
       expect(splitName("Test Middle Name")).toEqual({ givenName: "Test Middle", surname: "Name" });
     });
 
-    it("should handle single name by using it for both", () => {
-      expect(splitName("Test")).toEqual({ givenName: "Test", surname: "Test" });
+    it("should handle single name by using empty string for surname", () => {
+      expect(splitName("Test")).toEqual({ givenName: "Test", surname: "" });
     });
 
     it("should handle names with leading/trailing whitespace", () => {

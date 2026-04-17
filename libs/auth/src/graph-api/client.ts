@@ -134,8 +134,8 @@ export async function findUserByEmail(accessToken: string, email: string): Promi
   }
 
   try {
-    const sanitisedEmail = email.replace(/'/g, "''");
-    const sanitisedDomain = b2cDomain.replace(/'/g, "''");
+    const sanitisedEmail = email.replaceAll("'", "''");
+    const sanitisedDomain = b2cDomain.replaceAll("'", "''");
     const result = await client
       .api("/users")
       .header("ConsistencyLevel", "eventual")

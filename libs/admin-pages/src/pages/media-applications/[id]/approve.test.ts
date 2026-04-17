@@ -242,6 +242,23 @@ describe("media-application approve page", () => {
       expect(redirectSpy).not.toHaveBeenCalled();
     });
 
+    it("should show already reviewed error when application has already been reviewed", async () => {
+      vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(approveApplication).mockRejectedValue(new Error("Application has already been reviewed"));
+      mockRequest.body = { confirm: "yes" };
+
+      const handler = POST[1];
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      expect(renderSpy).toHaveBeenCalledWith(
+        "media-applications/[id]/approve",
+        expect.objectContaining({
+          error: "This application has already been reviewed."
+        })
+      );
+      expect(redirectSpy).not.toHaveBeenCalled();
+    });
+
     it("should show Azure AD error when token acquisition fails", async () => {
       vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
       mockGetGraphApiAccessToken.mockRejectedValue(new Error("Token error"));

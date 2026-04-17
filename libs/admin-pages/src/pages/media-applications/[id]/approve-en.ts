@@ -21,6 +21,7 @@ export default {
     selectOption: "An option must be selected",
     notFound: "Application not found.",
     loadFailed: "Unable to load applicant details. Please try again later.",
-    azureAdFailed: "Unable to create user account in Azure AD. Please try again later."
+    azureAdFailed: "Unable to create user account in Azure AD. Please try again later.",
+    alreadyReviewed: "This application has already been reviewed."
   }
 };
