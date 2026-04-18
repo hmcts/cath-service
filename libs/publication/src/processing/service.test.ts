@@ -17,12 +17,12 @@ vi.mock("@hmcts/notifications", () => ({
   sendPublicationNotifications: vi.fn()
 }));
 
-vi.mock("../index.js", () => ({
-  mockListTypes: [
-    { id: 1, englishFriendlyName: "Daily Cause List" },
-    { id: 8, englishFriendlyName: "Civil And Family Daily Cause List" },
-    { id: 9, englishFriendlyName: "Care Standards Tribunal Weekly Hearing List" }
-  ]
+vi.mock("@hmcts/postgres", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn()
+    }
+  }
 }));
 
 describe("publication-processor", async () => {
@@ -30,9 +30,14 @@ describe("publication-processor", async () => {
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendPublicationNotifications } = await import("@hmcts/notifications");
+  const { prisma } = await import("@hmcts/postgres");
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+      name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+      friendlyName: "Civil And Family Daily Cause List"
+    } as any);
   });
 
   describe("generatePublicationPdf", () => {
@@ -47,6 +52,8 @@ describe("publication-processor", async () => {
     };
 
     it("should return empty result for unsupported list types", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: "Civil Daily Cause List" } as any);
+
       const result = await generatePublicationPdf({ ...baseParams, listTypeId: 1 });
 
       expect(result).toEqual({});
@@ -131,6 +138,11 @@ describe("publication-processor", async () => {
     });
 
     it("should generate PDF for Care Standards Tribunal Weekly Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        friendlyName: "Care Standards Tribunal Weekly Hearing List"
+      } as any);
+
       const careStandardsParams = {
         ...baseParams,
         listTypeId: 9,
@@ -244,6 +256,7 @@ describe("publication-processor", async () => {
     });
 
     it("should use fallback list type name when not found", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
       vi.mocked(getLocationById).mockResolvedValue({
         id: 123,
         name: "Test Court",

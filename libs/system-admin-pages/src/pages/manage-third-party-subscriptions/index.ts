@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { mockListTypes } from "@hmcts/list-types-common";
 import type { Request, RequestHandler, Response } from "express";
+import { findAllListTypes } from "../../list-type/queries.js";
 import { findThirdPartyUserById, updateThirdPartySubscriptions } from "../../third-party-user/queries.js";
 import { validateSensitivity } from "../../third-party-user/validation.js";
 import { cy } from "./cy.js";
@@ -41,10 +41,11 @@ const getHandler = async (req: Request, res: Response) => {
 
   const currentSensitivity = user.subscriptions.length > 0 ? user.subscriptions[0].sensitivity : "";
   const currentListTypeIds = user.subscriptions.map((s) => s.listTypeId);
+  const listTypes = await findAllListTypes();
 
   res.render("manage-third-party-subscriptions/index", {
     ...content,
-    listTypes: mockListTypes,
+    listTypes,
     currentChannel: "API",
     currentSensitivity,
     currentListTypeIds,
@@ -64,12 +65,13 @@ const postHandler = async (req: Request, res: Response) => {
   const channel = req.body.channel as string;
   const sensitivity = req.body.sensitivity as string | undefined;
   const listTypeIds = Array.isArray(req.body.listTypes) ? req.body.listTypes.map(Number) : req.body.listTypes ? [Number(req.body.listTypes)] : [];
+  const listTypes = await findAllListTypes();
 
   const validationError = validateSensitivity(sensitivity);
   if (validationError) {
     return res.render("manage-third-party-subscriptions/index", {
       ...content,
-      listTypes: mockListTypes,
+      listTypes,
       currentChannel: channel || "API",
       currentSensitivity: sensitivity || "",
       currentListTypeIds: listTypeIds,
@@ -87,8 +89,11 @@ const postHandler = async (req: Request, res: Response) => {
 
   const getListTypeNames = (ids: number[]) =>
     ids
-      .map((id) => mockListTypes.find((lt) => lt.id === id)?.englishFriendlyName)
-      .filter(Boolean)
+      .map((id) => {
+        const listType = listTypes.find((lt) => lt.id === id);
+        return listType?.friendlyName || listType?.name;
+      })
+      .filter((name): name is string => Boolean(name))
       .join(", ") || "None";
 
   const previousListTypes = getListTypeNames(session.manageThirdPartyUser.originalSubscriptions);
