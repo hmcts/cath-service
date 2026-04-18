@@ -38,7 +38,8 @@
       "@hmcts/notifications": ["libs/notifications/src"],
       "@hmcts/list-search-config": ["libs/list-search-config/src"],
       "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
-      "@hmcts/pdf-generation": ["libs/pdf-generation/src"]
+      "@hmcts/pdf-generation": ["libs/pdf-generation/src"],
+      "@hmcts/third-party-fulfilment": ["libs/third-party-fulfilment/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

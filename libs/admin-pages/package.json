@@ -40,6 +40,7 @@
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
+    "@hmcts/third-party-fulfilment": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   },
   "devDependencies": {

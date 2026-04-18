@@ -83,7 +83,7 @@ describe("createArtefact", () => {
 
     const result = await createArtefact(artefactData as any);
 
-    expect(result).toBe(artefactData.artefactId);
+    expect(result).toEqual({ artefactId: artefactData.artefactId, isUpdate: false });
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
       where: {
         locationId: artefactData.locationId,
@@ -159,7 +159,7 @@ describe("createArtefact", () => {
 
     const result = await createArtefact(artefactData as any);
 
-    expect(result).toBe(existingArtefactId);
+    expect(result).toEqual({ artefactId: existingArtefactId, isUpdate: true });
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
       where: {
         locationId: artefactData.locationId,
@@ -625,6 +625,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
       noMatch: false
     });
   });
@@ -673,6 +674,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: false,
       provenance: "API",
+      supersededCount: 5,
       noMatch: true
     });
   });

@@ -1027,6 +1027,7 @@ __metadata:
     "@hmcts/postgres": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
+    "@hmcts/third-party-fulfilment": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/multer": "npm:2.0.0"
@@ -1342,6 +1343,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres": "workspace:*"
+    "@hmcts/third-party-fulfilment": "workspace:*"
     ajv: "npm:8.18.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.4"
@@ -1413,6 +1415,19 @@ __metadata:
     "@types/papaparse": "npm:5.5.2"
     papaparse: "npm:5.5.3"
   peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/third-party-fulfilment@workspace:*, @hmcts/third-party-fulfilment@workspace:libs/third-party-fulfilment":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/third-party-fulfilment@workspace:libs/third-party-fulfilment"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres": "workspace:*"
+  peerDependencies:
+    "@prisma/client": "*"
     express: ^5.2.0
   languageName: unknown
   linkType: soft
