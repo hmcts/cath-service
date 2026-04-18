@@ -143,12 +143,12 @@ const postHandler = async (req: Request, res: Response) => {
       const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
 
       if (hasConverterForListType(listTypeId)) {
-        const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
-        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+        jsonData = await convertExcelForListType(listTypeId, uploadData.file);
+        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
 
         // Extract and store artefact search data from converted JSON
         try {
-          await extractAndStoreArtefactSearch(artefactId, listTypeId, hearingsData);
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
         } catch (error) {
           console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
             artefactId,
