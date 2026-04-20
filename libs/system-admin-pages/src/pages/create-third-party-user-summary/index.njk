@@ -1,0 +1,41 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: {
+            text: nameLabel
+          },
+          value: {
+            text: name
+          },
+          actions: {
+            items: [
+              {
+                href: "/create-third-party-user" + ("?lng=cy" if lng == "cy" else ""),
+                text: changeLink,
+                visuallyHiddenText: changeLinkAriaLabel
+              }
+            ]
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: confirmButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

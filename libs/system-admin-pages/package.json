@@ -30,12 +30,15 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "papaparse": "5.5.3"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
-    "@types/express-session": "1.18.2",
+    "@types/express-session": "1.19.0",
     "@types/papaparse": "5.5.2"
   }
 }
