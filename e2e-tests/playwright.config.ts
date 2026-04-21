@@ -31,8 +31,8 @@ export default defineConfig({
     : {
         webServer: {
           command: process.env.CI
-            ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:ci`
-            : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:nowatch`,
+            ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_B2C=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:ci`
+            : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_B2C=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:nowatch`,
           port: 8080,
           reuseExistingServer: !process.env.CI,
           timeout: 120 * 1000,

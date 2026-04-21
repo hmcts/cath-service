@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import ExcelJSPkg from "exceljs";

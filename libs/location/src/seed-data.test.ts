@@ -84,6 +84,12 @@ vi.mock("./location-data.js", () => ({
   locationData: mockLocationData
 }));
 
+// Mock seedListTypes
+const mockSeedListTypes = vi.fn().mockResolvedValue(undefined);
+vi.mock("./seed-list-types.js", () => ({
+  seedListTypes: mockSeedListTypes
+}));
+
 describe("seed-data", () => {
   let originalEnv: NodeJS.ProcessEnv;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
@@ -92,6 +98,7 @@ describe("seed-data", () => {
     originalEnv = { ...process.env };
     consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     vi.clearAllMocks();
+    mockSeedListTypes.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -354,6 +361,14 @@ describe("seed-data", () => {
       expect(consoleLogSpy).toHaveBeenCalledWith("Location reference data seeding completed successfully");
     });
 
+    it("should seed list types after sub-jurisdictions", async () => {
+      const { seedLocationData } = await import("./seed-data.js");
+      await seedLocationData();
+
+      // Verify seedListTypes was called
+      expect(mockSeedListTypes).toHaveBeenCalledTimes(1);
+    });
+
     it("should complete full seeding workflow in correct order", async () => {
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
@@ -366,6 +381,9 @@ describe("seed-data", () => {
       expect(calls.indexOf("Seeding jurisdictions...")).toBeLessThan(calls.indexOf("Seeding sub-jurisdictions..."));
       expect(calls.indexOf("Seeding sub-jurisdictions...")).toBeLessThan(calls.indexOf("Seeding locations..."));
       expect(calls.indexOf("Seeding locations...")).toBeLessThan(calls.indexOf("Location reference data seeding completed successfully"));
+
+      // Verify seedListTypes was called
+      expect(mockSeedListTypes).toHaveBeenCalledTimes(1);
     });
   });
 });

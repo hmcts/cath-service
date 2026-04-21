@@ -81,7 +81,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user selects CaTH account", () => {
-    test("should redirect to home page when continue is clicked with accessibility check", async ({ page }) => {
+    test("should redirect to B2C login when continue is clicked with accessibility check", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Initial accessibility check
@@ -109,15 +109,31 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify navigation to home page
-      await expect(page).toHaveURL("/");
+      // Verify navigation to B2C login (redirects to Azure B2C or /b2c-login)
+      await page.waitForTimeout(1000); // Wait for redirect
+      const currentUrl = page.url();
+      expect(currentUrl).toMatch(/pip-frontend\.staging\.platform\.hmcts\.net|b2c-login/);
+    });
 
-      // Final accessibility check on destination page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
+    test("should preserve Welsh language when redirecting to B2C @nightly", async ({ page }) => {
+      await page.goto("/sign-in?lng=cy");
+
+      // Select the CaTH account radio option
+      const cathRadio = page.getByRole("radio", { name: /gyda chyfrif gwrandawiadau llys a thribiwnlys/i });
+      await cathRadio.check();
+
+      // Click continue button
+      const continueButton = page.getByRole("button", { name: /parhau/i });
+      await continueButton.click();
+
+      // Verify B2C redirect includes Welsh locale
+      await page.waitForTimeout(1000);
+      const currentUrl = page.url();
+      expect(currentUrl).toMatch(/pip-frontend\.staging\.platform\.hmcts\.net|b2c-login/);
+      // B2C URL should contain ui_locales=cy-GB for Welsh
+      if (currentUrl.includes("pip-frontend")) {
+        expect(currentUrl).toContain("ui_locales=cy-GB");
+      }
     });
   });
 
