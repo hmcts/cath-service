@@ -17,53 +17,48 @@ describe("subscription-queries", () => {
     vi.clearAllMocks();
   });
 
-  it("should find subscriptions by location", async () => {
-    const mockSubscriptions = [
-      {
-        subscriptionId: "sub-1",
-        userId: "user-1",
-        searchType: "LOCATION_ID",
-        searchValue: "1",
-        user: {
-          email: "user1@example.com",
-          firstName: "John",
-          surname: "Doe"
+  describe("findActiveSubscriptionsByLocation", () => {
+    it("should return only subscribers with no subscriptionListType configured", async () => {
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub-1",
+          userId: "user-1",
+          searchType: "LOCATION_ID",
+          searchValue: "1",
+          user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+        },
+        {
+          subscriptionId: "sub-2",
+          userId: "user-2",
+          searchType: "LOCATION_ID",
+          searchValue: "1",
+          user: { email: "user2@example.com", firstName: "Jane", surname: "Smith" }
         }
-      },
-      {
-        subscriptionId: "sub-2",
-        userId: "user-2",
-        searchType: "LOCATION_ID",
-        searchValue: "1",
-        user: {
-          email: "user2@example.com",
-          firstName: "Jane",
-          surname: "Smith"
-        }
-      }
-    ];
+      ];
 
-    const { prisma } = await import("@hmcts/postgres");
-    vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
 
-    const result = await findActiveSubscriptionsByLocation(1);
+      const result = await findActiveSubscriptionsByLocation(1);
 
-    expect(result).toHaveLength(2);
-    expect(result[0].user.email).toBe("user1@example.com");
-    expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-      where: {
-        searchType: "LOCATION_ID",
-        searchValue: "1"
-      },
-      include: {
-        user: {
-          select: {
-            email: true,
-            firstName: true,
-            surname: true
+      expect(result).toHaveLength(2);
+      expect(result[0].user.email).toBe("user1@example.com");
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          searchType: "LOCATION_ID",
+          searchValue: "1",
+          user: { subscriptionListTypes: { none: {} } }
+        },
+        include: {
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              surname: true
+            }
           }
         }
-      }
+      });
     });
   });
 

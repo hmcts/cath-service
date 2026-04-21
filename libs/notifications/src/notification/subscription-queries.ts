@@ -22,10 +22,11 @@ export interface ListTypeSubscriberWithUser {
 }
 
 export async function findActiveSubscriptionsByLocation(locationId: number): Promise<SubscriptionWithUser[]> {
-  const subscriptions = await prisma.subscription.findMany({
+  return prisma.subscription.findMany({
     where: {
       searchType: "LOCATION_ID",
-      searchValue: locationId.toString()
+      searchValue: locationId.toString(),
+      user: { subscriptionListTypes: { none: {} } }
     },
     include: {
       user: {
@@ -37,8 +38,6 @@ export async function findActiveSubscriptionsByLocation(locationId: number): Pro
       }
     }
   });
-
-  return subscriptions;
 }
 
 export async function findListTypeSubscribersByListTypeAndLanguage(listTypeId: number, language: string): Promise<ListTypeSubscriberWithUser[]> {
