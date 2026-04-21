@@ -27,7 +27,8 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
-    "@hmcts/publication": "workspace:*"
+    "@hmcts/publication": "workspace:*",
+    "@hmcts/system-admin-pages": "workspace:*"
   },
   "peerDependencies": {
     "express": "^5.2.0"

@@ -41,6 +41,7 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
+    "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   },
   "devDependencies": {
