@@ -178,7 +178,9 @@ test.describe("Email Subscriptions", () => {
       accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Test back navigation from location search
+      // Test back navigation from location search: back link goes to /add-email-subscription
+      await page.locator(".govuk-back-link").click();
+      await expect(page).toHaveURL("/add-email-subscription");
       await page.locator(".govuk-back-link").click();
       await expect(page).toHaveURL("/subscription-management");
 
@@ -207,8 +209,8 @@ test.describe("Email Subscriptions", () => {
 
       await expect(page.locator("h1")).toBeVisible();
 
-      const confirmButton = page.getByRole("button", { name: /confirm/i });
-      await expect(confirmButton).toBeVisible();
+      const pendingContinueButton = page.getByRole("button", { name: /continue/i });
+      await expect(pendingContinueButton).toBeVisible();
 
       const removeButtons = page.getByRole("button", { name: /remove/i });
       await expect(removeButtons.first()).toBeVisible();
@@ -217,8 +219,22 @@ test.describe("Email Subscriptions", () => {
       accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Step 5: Confirm subscription
-      await confirmButton.click();
+      // Step 5: Select list types and language, then confirm
+      await pendingContinueButton.click();
+
+      // Step 5a: Select list types on subscription-add-list
+      await expect(page).toHaveURL("/subscription-add-list");
+      await page.locator('input[name="selectedListTypes"]').first().check();
+      await page.getByRole("button", { name: /continue/i }).click();
+
+      // Step 5b: Select language on subscription-add-list-language
+      await expect(page).toHaveURL("/subscription-add-list-language");
+      await page.getByRole("radio", { name: "English" }).check();
+      await page.getByRole("button", { name: /continue/i }).click();
+
+      // Step 5c: Confirm on subscription-confirmation-preview
+      await expect(page).toHaveURL("/subscription-confirmation-preview");
+      await page.getByRole("button", { name: /confirm subscriptions/i }).click();
 
       // Step 6: Verify confirmation page
       await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });

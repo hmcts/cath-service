@@ -141,58 +141,22 @@ test.describe("Bulk Unsubscribe", () => {
     const testData = testDataMap.get(testInfo.testId);
     if (!testData) throw new Error("Test data not found");
 
-    // STEP 1: Create multiple subscriptions to test bulk unsubscribe
+    // STEP 1: Create multiple subscriptions directly via database to avoid the multi-step UI flow
     await page.goto("/account-home");
-    const emailSubsTile = page.locator(".verified-tile").nth(2);
-    await emailSubsTile.click();
-    await expect(page).toHaveURL("/subscription-management");
+    const testUser = await prisma.user.findFirst({ where: { email: process.env.CFT_VALID_TEST_ACCOUNT } });
+    if (!testUser) throw new Error("Test user not found in database");
 
-    // Add first subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location1Checkbox = page.locator(`#location-${testData.locationId1}`);
-    await location1Checkbox.check();
-    await page
-      .locator("form[method='post']")
-      .getByRole("button", { name: /continue/i })
-      .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
-
-    // Add second subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location2Checkbox = page.locator(`#location-${testData.locationId2}`);
-    await location2Checkbox.check();
-    await page
-      .locator("form[method='post']")
-      .getByRole("button", { name: /continue/i })
-      .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
-
-    // Add third subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location3Checkbox = page.locator(`#location-${testData.locationId3}`);
-    await location3Checkbox.check();
-    await page
-      .locator("form[method='post']")
-      .getByRole("button", { name: /continue/i })
-      .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await prisma.subscription.createMany({
+      data: [
+        { userId: testUser.userId, searchType: "LOCATION_ID", searchValue: testData.locationId1.toString() },
+        { userId: testUser.userId, searchType: "LOCATION_ID", searchValue: testData.locationId2.toString() },
+        { userId: testUser.userId, searchType: "LOCATION_ID", searchValue: testData.locationId3.toString() }
+      ],
+      skipDuplicates: true
+    });
 
     // STEP 2: Navigate to bulk unsubscribe from subscription management
+    await page.goto("/subscription-management");
     await expect(page).toHaveURL("/subscription-management");
     const bulkUnsubscribeButton = page.getByRole("button", { name: /bulk unsubscribe/i });
     await expect(bulkUnsubscribeButton).toBeVisible();
