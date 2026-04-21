@@ -35,12 +35,13 @@ export const GET = [
 
     // Create or update user record in database
     try {
-      await createOrUpdateUser({
+      const dbUser = await createOrUpdateUser({
         email: req.user.email,
         userProvenance: "SSO",
         userProvenanceId: req.user.id,
         role: req.user.role as "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN"
       });
+      req.user.id = dbUser.userId;
     } catch (error) {
       trackException(error as Error, {
         area: "SSO callback",

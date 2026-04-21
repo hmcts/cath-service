@@ -39,6 +39,7 @@ import {
   moduleRoot as systemAdminModuleRoot,
   pageRoutes as systemAdminPageRoutes
 } from "@hmcts/system-admin-pages/config";
+import { restorePendingSubscriptionsMiddleware } from "@hmcts/verified-pages";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
@@ -80,7 +81,9 @@ export async function createApp(): Promise<Express> {
       b2cTenantName: process.env.B2C_TENANT_NAME
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
+  const redisClient = await getRedisClient();
+  app.locals.redisClient = redisClient;
+  app.use(expressSessionRedis({ redisConnection: redisClient }));
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -127,6 +130,9 @@ export async function createApp(): Promise<Express> {
 
   // Session timeout tracking for authenticated users
   app.use(sessionTimeoutMiddleware);
+
+  // Restore pending subscriptions from Redis when user logs back in
+  app.use(restorePendingSubscriptionsMiddleware());
 
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);

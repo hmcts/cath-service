@@ -7,6 +7,7 @@ export interface ListTypeData {
   urlPath?: string;
   isNonStrategic: boolean;
   defaultSensitivity: string;
+  subJurisdictionIds?: number[];
 }
 
 export const listTypeData: ListTypeData[] = [
@@ -48,7 +49,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM,PI_AAD",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [7]
   },
   {
     id: 5,
@@ -58,7 +60,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-warned-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 6,
@@ -68,7 +71,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 7,
@@ -78,7 +82,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-firm-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 8,

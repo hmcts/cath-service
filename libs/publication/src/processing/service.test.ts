@@ -14,7 +14,8 @@ vi.mock("@hmcts/location", () => ({
 }));
 
 vi.mock("@hmcts/notifications", () => ({
-  sendPublicationNotifications: vi.fn()
+  sendPublicationNotifications: vi.fn(),
+  sendListTypePublicationNotifications: vi.fn()
 }));
 
 vi.mock("@hmcts/postgres", () => ({
@@ -29,7 +30,7 @@ describe("publication-processor", async () => {
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
-  const { sendPublicationNotifications } = await import("@hmcts/notifications");
+  const { sendListTypePublicationNotifications, sendPublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres");
 
   beforeEach(() => {
@@ -38,6 +39,13 @@ describe("publication-processor", async () => {
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
       friendlyName: "Civil And Family Daily Cause List"
     } as any);
+    vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
+      totalSubscriptions: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+      errors: []
+    });
   });
 
   describe("generatePublicationPdf", () => {
@@ -322,6 +330,99 @@ describe("publication-processor", async () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Failed to send notifications:", {
         artefactId: "test-artefact-id",
         error: "Service unavailable"
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should dispatch list type notifications when locale is provided", async () => {
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
+
+      await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "en" });
+
+      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(
+        expect.objectContaining({
+          publicationId: "test-artefact-id",
+          locationId: "123",
+          locationName: "Test Court",
+          listTypeId: 8,
+          language: "ENGLISH"
+        })
+      );
+    });
+
+    it("should map cy locale to WELSH for list type query", async () => {
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
+
+      await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "cy" });
+
+      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ language: "WELSH" }));
+    });
+
+    it("should not dispatch list type notifications when locale is not provided", async () => {
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
+
+      await sendPublicationNotificationsForArtefact(baseParams);
+
+      expect(sendListTypePublicationNotifications).not.toHaveBeenCalled();
+    });
+
+    it("should log list type notification errors without failing the overall result", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
+      vi.mocked(sendListTypePublicationNotifications).mockRejectedValue(new Error("List type service down"));
+
+      const result = await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "en" });
+
+      expect(result.success).toBe(true);
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Failed to send list type notifications:", {
+        artefactId: "test-artefact-id",
+        error: "List type service down"
       });
 
       consoleErrorSpy.mockRestore();

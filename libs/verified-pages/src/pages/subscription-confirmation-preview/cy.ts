@@ -1,0 +1,21 @@
+export const cy = {
+  title: "Cadarnhau eich tanysgrifiadau e-bost",
+  heading: "Cadarnhau eich tanysgrifiadau e-bost",
+  tableHeaderCourt: "Enw'r llys neu'r tribiwnlys",
+  tableHeaderListType: "Math o restr",
+  tableHeaderVersion: "Fersiwn",
+  tableHeaderActions: "Camau gweithredu",
+  removeLink: "Dileu",
+  changeVersionLink: "Newid",
+  confirmButton: "Cadarnhau tanysgrifiadau",
+  addAnotherLink: "Ychwanegu tanysgrifiad e-bost arall",
+  selectListTypesLink: "Dewis mathau o restrau",
+  addSubscriptionsButton: "Ychwanegu tanysgrifiadau",
+  back: "Yn ôl",
+  noLanguageSelected: "Heb ei ddewis",
+  versionTooltip: "Bydd y newid fersiwn hwn yn effeithio ar yr iaith a ddewiswyd yn flaenorol ar gyfer yr holl danysgrifiadau presennol.",
+  errorSummaryTitle: "Mae problem wedi codi",
+  errorNoData: "Ni chanfuwyd data tanysgrifiad. Dechreuwch eto.",
+  errorNoSubscription: "Mae angen o leiaf un tanysgrifiad.",
+  errorNoListType: "Dewiswch fath o restr i barhau."
+};

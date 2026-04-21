@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { findActiveSubscriptionsByLocation } from "./subscription-queries.js";
+import { findActiveSubscriptionsByLocation, findListTypeSubscribersByListTypeAndLanguage } from "./subscription-queries.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
     subscription: {
+      findMany: vi.fn()
+    },
+    subscriptionListType: {
       findMany: vi.fn()
     }
   }
@@ -61,6 +64,74 @@ describe("subscription-queries", () => {
           }
         }
       }
+    });
+  });
+
+  describe("findListTypeSubscribersByListTypeAndLanguage", () => {
+    it("should return subscribers where listTypeIds contains the given id and listLanguage contains the given language", async () => {
+      const mockSubscribers = [
+        {
+          userId: "user-1",
+          user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+        }
+      ];
+
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscribers as never);
+
+      const result = await findListTypeSubscribersByListTypeAndLanguage(5, "ENGLISH");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].user.email).toBe("user1@example.com");
+      expect(prisma.subscriptionListType.findMany).toHaveBeenCalledWith({
+        where: {
+          listTypeIds: { has: 5 },
+          listLanguage: { has: "ENGLISH" }
+        },
+        select: {
+          userId: true,
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              surname: true
+            }
+          }
+        }
+      });
+    });
+
+    it("should match WELSH subscribers when publication language is WELSH", async () => {
+      const mockSubscribers = [
+        {
+          userId: "user-2",
+          user: { email: "user2@example.com", firstName: "Jane", surname: "Smith" }
+        }
+      ];
+
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscribers as never);
+
+      const result = await findListTypeSubscribersByListTypeAndLanguage(5, "WELSH");
+
+      expect(prisma.subscriptionListType.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            listTypeIds: { has: 5 },
+            listLanguage: { has: "WELSH" }
+          }
+        })
+      );
+      expect(result).toHaveLength(1);
+    });
+
+    it("should return empty array when no subscribers match", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue([]);
+
+      const result = await findListTypeSubscribersByListTypeAndLanguage(99, "ENGLISH");
+
+      expect(result).toHaveLength(0);
     });
   });
 });

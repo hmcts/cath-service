@@ -1,5 +1,8 @@
 import { prisma } from "@hmcts/postgres";
 
+const CIVIL_FAMILY_JURISDICTION_IDS = [1, 2];
+const CRIME_JURISDICTION_IDS = [3];
+
 interface ListTypeData {
   id: number;
   name: string;
@@ -104,6 +107,13 @@ const listTypes: ListTypeData[] = [
   }
 ];
 
+function getJurisdictionIdsForProvenance(provenance: string): number[] {
+  const ids: number[] = [];
+  if (provenance.includes("CFT_IDAM")) ids.push(...CIVIL_FAMILY_JURISDICTION_IDS);
+  if (provenance.includes("CRIME_IDAM")) ids.push(...CRIME_JURISDICTION_IDS);
+  return ids;
+}
+
 export async function seedListTypes() {
   console.log("Seeding list types...");
 
@@ -140,6 +150,9 @@ export async function seedListTypes() {
     }
 
     try {
+      const jurisdictionIds = getJurisdictionIdsForProvenance(listType.provenance);
+      const relevantSubJurisdictions = allSubJurisdictions.filter((sj: any) => jurisdictionIds.includes(sj.jurisdictionId));
+
       await (prisma as any).listType.create({
         data: {
           name: listType.name,
@@ -151,7 +164,7 @@ export async function seedListTypes() {
           allowedProvenance: listType.provenance,
           isNonStrategic: listType.isNonStrategic,
           subJurisdictions: {
-            create: allSubJurisdictions.map((sj: any) => ({
+            create: relevantSubJurisdictions.map((sj: any) => ({
               subJurisdictionId: sj.subJurisdictionId
             }))
           }

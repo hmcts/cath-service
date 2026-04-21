@@ -10,7 +10,8 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  getAllSubscriptionsByUserId: vi.fn()
+  getCaseSubscriptionsByUserId: vi.fn(),
+  getCourtSubscriptionsByUserId: vi.fn()
 }));
 
 describe("subscription-management", () => {
@@ -34,8 +35,8 @@ describe("subscription-management", () => {
   });
 
   describe("GET", () => {
-    it("should render page with subscriptions", async () => {
-      const mockSubscriptions = [
+    it("should render page with court subscriptions", async () => {
+      const mockCourtSubscriptions = [
         {
           subscriptionId: "sub1",
           type: "court" as const,
@@ -52,32 +53,39 @@ describe("subscription-management", () => {
         }
       ];
 
-      vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue(mockSubscriptions);
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionService.getCourtSubscriptionsByUserId).mockResolvedValue(mockCourtSubscriptions);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(subscriptionService.getAllSubscriptionsByUserId).toHaveBeenCalledWith("user123", "en");
+      expect(subscriptionService.getCourtSubscriptionsByUserId).toHaveBeenCalledWith("user123", "en");
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-management/index",
         expect.objectContaining({
           count: 2,
-          subscriptions: expect.arrayContaining([
-            expect.objectContaining({ locationName: "Birmingham Crown Court" }),
-            expect.objectContaining({ locationName: "Manchester Crown Court" })
-          ])
+          courtSubscriptions: mockCourtSubscriptions,
+          caseSubscriptions: [],
+          hasCourtSubscriptions: true,
+          hasCaseSubscriptions: false,
+          allSubscriptionsCount: 2,
+          courtSubscriptionsCount: 2,
+          caseSubscriptionsCount: 0
         })
       );
     });
 
     it("should render page with no subscriptions", async () => {
-      vi.mocked(subscriptionService.getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionService.getCourtSubscriptionsByUserId).mockResolvedValue([]);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "subscription-management/index",
         expect.objectContaining({
-          count: 0
+          count: 0,
+          hasCaseSubscriptions: false,
+          hasCourtSubscriptions: false
         })
       );
     });
@@ -88,7 +96,22 @@ describe("subscription-management", () => {
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
-      expect(subscriptionService.getAllSubscriptionsByUserId).not.toHaveBeenCalled();
+      expect(subscriptionService.getCourtSubscriptionsByUserId).not.toHaveBeenCalled();
+    });
+
+    it("should render empty state on error", async () => {
+      vi.mocked(subscriptionService.getCaseSubscriptionsByUserId).mockRejectedValue(new Error("DB error"));
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-management/index",
+        expect.objectContaining({
+          count: 0,
+          caseSubscriptions: [],
+          courtSubscriptions: []
+        })
+      );
     });
   });
 });

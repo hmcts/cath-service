@@ -1,0 +1,69 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {% if errors %}Error: {% endif %}{{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: "/subscription-configure-list"
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errors.titleText,
+        errorList: errors.errorList
+      }) }}
+    {% endif %}
+
+    <form method="post" novalidate>
+
+      {{ govukRadios({
+        name: "language",
+        fieldset: {
+          legend: {
+            text: heading,
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--l"
+          }
+        },
+        errorMessage: errors and { text: errors.errorList[0].text },
+        items: [
+          {
+            value: "ENGLISH",
+            text: englishOption,
+            checked: selectedLanguage === "ENGLISH"
+          },
+          {
+            value: "WELSH",
+            text: welshOption,
+            checked: selectedLanguage === "WELSH"
+          },
+          {
+            value: "ENGLISH_AND_WELSH",
+            text: englishAndWelshOption,
+            checked: selectedLanguage === "ENGLISH_AND_WELSH"
+          }
+        ]
+      }) }}
+
+      {{ govukButton({
+        text: continueButton,
+        type: "submit"
+      }) }}
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

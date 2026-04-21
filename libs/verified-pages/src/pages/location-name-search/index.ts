@@ -11,6 +11,7 @@ import {
   type Location
 } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
+import { savePendingSubscriptions } from "../../pending-subscriptions-store.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -204,8 +205,13 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.emailSubscriptions = {};
   }
 
-  // Replace pending subscriptions entirely with new selection
-  req.session.emailSubscriptions.pendingSubscriptions = selectedLocationIds;
+  const existingPending = req.session.emailSubscriptions.pendingSubscriptions || [];
+  const existingConfirmed = req.session.emailSubscriptions.confirmedLocations || [];
+  req.session.emailSubscriptions.pendingSubscriptions = [...new Set([...existingConfirmed, ...existingPending, ...selectedLocationIds])];
+
+  if (req.user?.id) {
+    await savePendingSubscriptions(req.app.locals.redisClient, req.user.id, req.session.emailSubscriptions.pendingSubscriptions);
+  }
 
   // Save session before redirect to ensure data persists
   req.session.save((err: Error | null) => {

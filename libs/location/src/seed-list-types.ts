@@ -1,6 +1,9 @@
 import { prisma } from "@hmcts/postgres";
 import { listTypeData } from "./list-type-data.js";
 
+const CIVIL_FAMILY_JURISDICTION_IDS = [1, 2];
+const CRIME_JURISDICTION_IDS = [3];
+
 async function shouldSeed(): Promise<boolean> {
   // Only seed in local development, not in CI or production
   if (process.env.NODE_ENV === "production") {
@@ -25,6 +28,13 @@ async function shouldSeed(): Promise<boolean> {
   return true;
 }
 
+function getJurisdictionIdsForProvenance(provenance: string): number[] {
+  const ids: number[] = [];
+  if (provenance.includes("CFT_IDAM")) ids.push(...CIVIL_FAMILY_JURISDICTION_IDS);
+  if (provenance.includes("CRIME_IDAM")) ids.push(...CRIME_JURISDICTION_IDS);
+  return ids;
+}
+
 export async function seedListTypes() {
   console.log("Checking if list type data seeding is needed...");
 
@@ -46,6 +56,10 @@ export async function seedListTypes() {
 
   for (const listType of listTypeData) {
     try {
+      const relevantSubJurisdictions = listType.subJurisdictionIds
+        ? allSubJurisdictions.filter((sj: any) => listType.subJurisdictionIds!.includes(sj.subJurisdictionId))
+        : allSubJurisdictions.filter((sj: any) => getJurisdictionIdsForProvenance(listType.provenance).includes(sj.jurisdictionId));
+
       await (prisma as any).listType.create({
         data: {
           name: listType.name,
@@ -57,7 +71,7 @@ export async function seedListTypes() {
           allowedProvenance: listType.provenance,
           isNonStrategic: listType.isNonStrategic,
           subJurisdictions: {
-            create: allSubJurisdictions.map((sj: any) => ({
+            create: relevantSubJurisdictions.map((sj: any) => ({
               subJurisdictionId: sj.subJurisdictionId
             }))
           }
