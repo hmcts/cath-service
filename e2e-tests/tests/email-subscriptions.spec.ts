@@ -229,7 +229,7 @@ test.describe("Email Subscriptions", () => {
 
       // Step 5b: Select language on subscription-add-list-language
       await expect(page).toHaveURL("/subscription-add-list-language");
-      await page.getByRole("radio", { name: "English" }).check();
+      await page.getByRole("radio", { name: "English", exact: true }).check();
       await page.getByRole("button", { name: /continue/i }).click();
 
       // Step 5c: Confirm on subscription-confirmation-preview
