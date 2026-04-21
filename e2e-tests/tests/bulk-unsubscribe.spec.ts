@@ -149,6 +149,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     // Add first subscription
     await page.getByRole("button", { name: /add email subscription/i }).click();
+    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
     await page.waitForLoadState("networkidle");
     const location1Checkbox = page.locator(`#location-${testData.locationId1}`);
     await location1Checkbox.check();
@@ -162,6 +164,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     // Add second subscription
     await page.getByRole("button", { name: /add email subscription/i }).click();
+    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
     await page.waitForLoadState("networkidle");
     const location2Checkbox = page.locator(`#location-${testData.locationId2}`);
     await location2Checkbox.check();
@@ -175,6 +179,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     // Add third subscription
     await page.getByRole("button", { name: /add email subscription/i }).click();
+    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
     await page.waitForLoadState("networkidle");
     const location3Checkbox = page.locator(`#location-${testData.locationId3}`);
     await location3Checkbox.check();
