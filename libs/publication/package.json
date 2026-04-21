@@ -19,9 +19,9 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/postgres": "workspace:*",
-    "@hmcts/third-party-fulfilment": "workspace:*",
     "ajv": "8.18.0"
   },
   "devDependencies": {

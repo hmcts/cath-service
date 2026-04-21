@@ -42,7 +42,7 @@ export async function seedListTypes() {
     throw new Error("No sub-jurisdictions found. Please ensure sub-jurisdictions are seeded first.");
   }
 
-  let seededCount = 0;
+  let _seededCount = 0;
 
   for (const listType of listTypeData) {
     try {
@@ -64,7 +64,7 @@ export async function seedListTypes() {
         }
       });
 
-      seededCount++;
+      _seededCount++;
     } catch (error) {
       console.error(`Failed to seed list type "${listType.name}":`, error);
       throw error;

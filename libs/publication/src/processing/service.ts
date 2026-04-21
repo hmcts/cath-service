@@ -2,12 +2,12 @@ import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCa
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { getListTypeName, type ListTypeName } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
 import { sendPublicationNotifications } from "@hmcts/notifications";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
-import { sendThirdPartyPublications } from "@hmcts/third-party-fulfilment";
 import { mockListTypes } from "../index.js";
 
 interface GeneratePdfParams {

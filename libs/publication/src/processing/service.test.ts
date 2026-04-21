@@ -19,7 +19,7 @@ vi.mock("@hmcts/notifications", () => ({
   sendPublicationNotifications: vi.fn()
 }));
 
-vi.mock("@hmcts/third-party-fulfilment", () => ({
+vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
   sendThirdPartyPublications: mockSendThirdPartyPublications
 }));
 

@@ -214,7 +214,7 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
       id: artefact.listTypeId
     }
   });
-  const location = await getLocationById(Number.parseInt(artefact.locationId));
+  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
 
   return {
     artefactId: artefact.artefactId,

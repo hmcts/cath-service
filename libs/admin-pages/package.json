@@ -35,12 +35,12 @@
   },
   "dependencies": {
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/notification": "workspace:*",
     "@hmcts/postgres": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
-    "@hmcts/third-party-fulfilment": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   },
   "devDependencies": {

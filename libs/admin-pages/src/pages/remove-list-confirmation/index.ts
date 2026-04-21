@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { sendThirdPartyDeletion } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
-import { sendThirdPartyDeletion } from "@hmcts/third-party-fulfilment";
 import type { Request, RequestHandler, Response } from "express";
 import cy from "./cy.js";
 import en from "./en.js";

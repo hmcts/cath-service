@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/third-party-fulfilment",
+  "name": "@hmcts/legacy-third-party-fulfilment",
   "version": "1.0.0",
   "type": "module",
   "exports": {
