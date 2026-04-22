@@ -26,6 +26,11 @@ export async function createSubscriptionListTypes(userId: string, listTypeIds: n
   await upsertSubscriptionListType(userId, mergedListTypeIds, listLanguage);
 }
 
+export async function replaceSubscriptionListTypes(userId: string, listTypeIds: number[], language: string) {
+  const listLanguage = toListLanguage(language);
+  await upsertSubscriptionListType(userId, listTypeIds, listLanguage);
+}
+
 export async function getSubscriptionListTypesByUserId(userId: string): Promise<SubscriptionListTypeDto | null> {
   const record = await findSubscriptionListTypeByUserId(userId);
   if (!record) return null;

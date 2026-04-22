@@ -28,7 +28,8 @@ export async function seedSubJurisdictions(): Promise<void> {
     { subJurisdictionId: 5, name: "Court of Appeal", welshName: "Llys Apêl", jurisdictionId: 1 },
     { subJurisdictionId: 6, name: "Immigration and Asylum Tribunal", welshName: "Tribiwnlys Mewnfudo a Lloches", jurisdictionId: 4 },
     { subJurisdictionId: 7, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 3 },
-    { subJurisdictionId: 8, name: "Social Security and Child Support", welshName: "Nawdd Cymdeithasol a Chynhaliaeth Plant", jurisdictionId: 4 }
+    { subJurisdictionId: 8, name: "Social Security and Child Support", welshName: "Nawdd Cymdeithasol a Chynhaliaeth Plant", jurisdictionId: 4 },
+    { subJurisdictionId: 9, name: "Care Standards Tribunal", welshName: "Tribiwnlys Safonau Gofal", jurisdictionId: 4 }
   ];
 
   for (const subJurisdiction of subJurisdictions) {

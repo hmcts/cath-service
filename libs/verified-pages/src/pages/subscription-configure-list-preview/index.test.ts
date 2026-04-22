@@ -17,7 +17,7 @@ vi.mock("@hmcts/postgres", () => ({
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  createSubscriptionListTypes: vi.fn()
+  replaceSubscriptionListTypes: vi.fn()
 }));
 
 describe("subscription-configure-list-preview", () => {
@@ -89,15 +89,15 @@ describe("subscription-configure-list-preview", () => {
   });
 
   describe("POST", () => {
-    it("should call createSubscriptionListTypes and redirect to subscription-confirmed on confirm", async () => {
-      const { createSubscriptionListTypes } = await import("@hmcts/subscriptions");
-      vi.mocked(createSubscriptionListTypes).mockResolvedValue(undefined);
+    it("should call replaceSubscriptionListTypes and redirect to subscription-confirmed on confirm", async () => {
+      const { replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
+      vi.mocked(replaceSubscriptionListTypes).mockResolvedValue(undefined);
 
       mockReq.body = { action: "confirm" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(createSubscriptionListTypes).toHaveBeenCalledWith("user-123", [1, 2], "ENGLISH");
+      expect(replaceSubscriptionListTypes).toHaveBeenCalledWith("user-123", [1, 2], "ENGLISH");
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBeUndefined();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
@@ -132,7 +132,7 @@ describe("subscription-configure-list-preview", () => {
 
     it("should re-render the page with empty listTypes when confirm is submitted with no list types", async () => {
       const { prisma } = await import("@hmcts/postgres");
-      const { createSubscriptionListTypes } = await import("@hmcts/subscriptions");
+      const { replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
 
       mockReq.session = { emailSubscriptions: { pendingListTypeIds: [], pendingLanguage: "ENGLISH" } } as any;
@@ -140,7 +140,7 @@ describe("subscription-configure-list-preview", () => {
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(createSubscriptionListTypes).not.toHaveBeenCalled();
+      expect(replaceSubscriptionListTypes).not.toHaveBeenCalled();
       expect(mockRes.redirect).not.toHaveBeenCalledWith("/subscription-confirmed");
       expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-preview/index", expect.objectContaining({ listTypes: [] }));
     });

@@ -5,7 +5,8 @@ import {
   createSubscriptionListTypes,
   getSubscriptionListTypesByUserId,
   pruneStaleListTypesForUser,
-  removeSubscriptionListType
+  removeSubscriptionListType,
+  replaceSubscriptionListTypes
 } from "./subscription-list-type-service.js";
 
 vi.mock("./subscription-list-type-queries.js");
@@ -79,6 +80,25 @@ describe("Subscription List Type Service", () => {
       await createSubscriptionListTypes("user-123", [2, 3, 5], "ENGLISH");
 
       expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [1, 2, 3, 5], ["ENGLISH"]);
+    });
+  });
+
+  describe("replaceSubscriptionListTypes", () => {
+    it("should upsert with the provided IDs without merging existing ones", async () => {
+      vi.mocked(queries.upsertSubscriptionListType).mockResolvedValue({} as any);
+
+      await replaceSubscriptionListTypes("user-123", [2, 3], "ENGLISH");
+
+      expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [2, 3], ["ENGLISH"]);
+      expect(queries.findSubscriptionListTypeByUserId).not.toHaveBeenCalled();
+    });
+
+    it("should expand ENGLISH_AND_WELSH into both languages", async () => {
+      vi.mocked(queries.upsertSubscriptionListType).mockResolvedValue({} as any);
+
+      await replaceSubscriptionListTypes("user-123", [1], "ENGLISH_AND_WELSH");
+
+      expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [1], ["ENGLISH", "WELSH"]);
     });
   });
 

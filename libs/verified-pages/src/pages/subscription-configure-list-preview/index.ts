@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { prisma } from "@hmcts/postgres";
-import { createSubscriptionListTypes } from "@hmcts/subscriptions";
+import { replaceSubscriptionListTypes } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -34,8 +34,8 @@ async function renderPage(req: Request, res: Response, locale: string) {
 
   const listTypes = await resolveListTypeNames(pendingListTypeIds, locale);
 
-  const languageDisplay =
-    pendingLanguage && LANGUAGE_DISPLAY[pendingLanguage] ? LANGUAGE_DISPLAY[pendingLanguage][locale === "cy" ? "cy" : "en"] : t.noLanguageSelected;
+  const localeKey = locale === "cy" ? "cy" : "en";
+  const languageDisplay = pendingLanguage && LANGUAGE_DISPLAY[pendingLanguage] ? LANGUAGE_DISPLAY[pendingLanguage][localeKey] : t.noLanguageSelected;
 
   res.render("subscription-configure-list-preview/index", {
     ...t,
@@ -85,7 +85,7 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     if (pendingLanguage) {
-      await createSubscriptionListTypes(userId, pendingListTypeIds, pendingLanguage);
+      await replaceSubscriptionListTypes(userId, pendingListTypeIds, pendingLanguage);
     }
 
     if (!req.session.emailSubscriptions) {

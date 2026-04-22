@@ -625,7 +625,9 @@ describe("Subscription Service", () => {
     });
 
     it("should handle database error", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue([]);
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "100", dateAdded: new Date() }
+      ]);
       vi.mocked(queries.deleteSubscriptionsByIds).mockRejectedValue(new Error("Database connection failed"));
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Database connection failed");

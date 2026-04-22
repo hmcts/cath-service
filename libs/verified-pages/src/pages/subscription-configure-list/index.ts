@@ -77,7 +77,12 @@ const postHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   const raw = req.body.selectedListTypes;
-  const selectedListTypes = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  let selectedListTypes: string[];
+  if (Array.isArray(raw)) {
+    selectedListTypes = raw;
+  } else {
+    selectedListTypes = raw ? [raw] : [];
+  }
 
   if (selectedListTypes.length === 0) {
     if (!req.user?.id) {

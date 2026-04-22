@@ -194,6 +194,12 @@ export const locationData: {
       name: "Social Security and Child Support",
       welshName: "Nawdd Cymdeithasol a Chynhaliaeth Plant",
       jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 9,
+      name: "Care Standards Tribunal",
+      welshName: "Tribiwnlys Safonau Gofal",
+      jurisdictionId: 4
     }
   ]
 };

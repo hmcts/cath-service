@@ -72,20 +72,23 @@ export async function removeSubscription(subscriptionId: string, userId: string)
     throw new Error("Subscription not found");
   }
 
-  const removedLocationId = Number.parseInt(subscription.searchValue, 10);
+  const removedLocationId = subscription.searchType === "LOCATION_ID" ? Number.parseInt(subscription.searchValue, 10) : Number.NaN;
+  const removedLocationIds = Number.isNaN(removedLocationId) ? [] : [removedLocationId];
   const count = await deleteSubscriptionRecord(subscriptionId, userId);
 
   if (count === 0) {
     throw new Error("Subscription not found");
   }
 
-  const remainingSubscriptions = await findSubscriptionsByUserId(userId);
-  const remainingLocationIds = remainingSubscriptions
-    .filter((s) => s.searchType === "LOCATION_ID")
-    .map((s) => Number.parseInt(s.searchValue, 10))
-    .filter((id) => !Number.isNaN(id));
+  if (removedLocationIds.length > 0) {
+    const remainingSubscriptions = await findSubscriptionsByUserId(userId);
+    const remainingLocationIds = remainingSubscriptions
+      .filter((s) => s.searchType === "LOCATION_ID")
+      .map((s) => Number.parseInt(s.searchValue, 10))
+      .filter((id) => !Number.isNaN(id));
 
-  await pruneStaleListTypesForUser(userId, [removedLocationId], remainingLocationIds);
+    await pruneStaleListTypesForUser(userId, removedLocationIds, remainingLocationIds);
+  }
 
   return count;
 }
@@ -198,13 +201,14 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
   }
 
   const toDelete = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
+
+  if (toDelete.length !== subscriptionIds.length) {
+    throw new Error("Unauthorized: User does not own all selected subscriptions");
+  }
+
   const removedLocationIds = toDelete.map((s) => Number.parseInt(s.searchValue, 10)).filter((id) => !Number.isNaN(id));
 
   const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
-
-  if (count !== subscriptionIds.length) {
-    throw new Error("Unauthorized: User does not own all selected subscriptions");
-  }
 
   const remainingSubscriptions = await findSubscriptionsByUserId(userId);
   const remainingLocationIds = remainingSubscriptions
