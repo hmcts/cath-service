@@ -8,11 +8,11 @@ datasource db {
 }
 
 model Artefact {
-  artefactId        String          @id @default(uuid()) @map("artefact_id") @db.Uuid
-  type              String          @db.VarChar(50)
-  locationId        String          @map("location_id")
-  listTypeId        Int             @map("list_type_id")
-  contentDate       DateTime        @map("content_date") @db.Date
+  artefactId        String            @id @default(uuid()) @map("artefact_id") @db.Uuid
+  type              String            @db.VarChar(50)
+  locationId        String            @map("location_id")
+  listTypeId        Int               @map("list_type_id")
+  contentDate       DateTime          @map("content_date") @db.Date
   sensitivity       String
   language          String
   displayFrom       DateTime          @map("display_from")
