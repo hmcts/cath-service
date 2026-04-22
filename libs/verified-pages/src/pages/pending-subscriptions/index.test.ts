@@ -132,6 +132,21 @@ describe("pending-subscriptions", () => {
       );
     });
 
+    it("should initialize emailSubscriptions in session when removing and session has no emailSubscriptions", async () => {
+      mockReq.session = {} as any;
+      mockReq.body = { action: "remove", locationId: "456" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "pending-subscriptions/index",
+        expect.objectContaining({
+          errors: expect.any(Object),
+          locations: []
+        })
+      );
+    });
+
     it("should confirm subscriptions when action is confirm", async () => {
       mockReq.body = { action: "confirm" };
 

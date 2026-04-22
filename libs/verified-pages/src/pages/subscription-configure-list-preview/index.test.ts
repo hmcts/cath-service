@@ -112,6 +112,16 @@ describe("subscription-configure-list-preview", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-preview");
     });
 
+    it("should initialize emailSubscriptions in session when removing a list type and session has no emailSubscriptions", async () => {
+      mockReq.session = {} as any;
+      mockReq.body = { action: "remove-list-type", listTypeId: "1" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toEqual([]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-preview");
+    });
+
     it("should redirect to subscription-configure-list-language on change-language", async () => {
       mockReq.body = { action: "change-language" };
 

@@ -73,6 +73,16 @@ describe("subscription-configure-list-language", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-preview");
     });
 
+    it("should initialize emailSubscriptions in session when it does not exist", async () => {
+      mockReq.session = {} as any;
+      mockReq.body = { language: "ENGLISH" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBe("ENGLISH");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-preview");
+    });
+
     it("should show validation error when no language selected", async () => {
       mockReq.body = {};
 

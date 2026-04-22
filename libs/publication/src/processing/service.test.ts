@@ -9,6 +9,14 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   generateCauseListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
+  generateCourtOfAppealCivilDailyCauseListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/london-administrative-court-daily-cause-list", () => ({
+  generateLondonAdministrativeCourtDailyCauseListPdf: vi.fn()
+}));
+
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
@@ -29,6 +37,8 @@ vi.mock("@hmcts/postgres", () => ({
 describe("publication-processor", async () => {
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
+  const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
+  const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendListTypePublicationNotifications, sendPublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres");
@@ -143,6 +153,42 @@ describe("publication-processor", async () => {
       expect(consoleWarnSpy).toHaveBeenCalledWith("[Custom] PDF generation failed:", expect.any(Object));
 
       consoleWarnSpy.mockRestore();
+    });
+
+    it("should generate PDF for London Administrative Court Daily Cause List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+        friendlyName: "London Administrative Court Daily Cause List"
+      } as any);
+      vi.mocked(generateLondonAdministrativeCourtDailyCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/london-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 10 });
+
+      expect(generateLondonAdministrativeCourtDailyCauseListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/london-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for Court of Appeal Civil Daily Cause List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
+        friendlyName: "Court of Appeal Civil Daily Cause List"
+      } as any);
+      vi.mocked(generateCourtOfAppealCivilDailyCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/coa-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 11 });
+
+      expect(generateCourtOfAppealCivilDailyCauseListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/coa-pdf", sizeBytes: 2048, exceedsMaxSize: false });
     });
 
     it("should generate PDF for Care Standards Tribunal Weekly Hearing List", async () => {
@@ -261,6 +307,30 @@ describe("publication-processor", async () => {
         failed: 2,
         skipped: 0
       });
+    });
+
+    it("should use fallback list type name when list type DB lookup throws", async () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      vi.mocked(prisma.listType.findUnique).mockRejectedValue(new Error("DB timeout"));
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
+
+      await sendPublicationNotificationsForArtefact({ ...baseParams, listTypeId: 8 });
+
+      expect(sendPublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ hearingListName: "LIST_TYPE_8" }));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "[Publication] List type lookup failed, using fallback name:",
+        expect.objectContaining({ listTypeId: 8, error: "DB timeout" })
+      );
+
+      consoleWarnSpy.mockRestore();
     });
 
     it("should use fallback list type name when not found", async () => {
@@ -423,6 +493,36 @@ describe("publication-processor", async () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Failed to send list type notifications:", {
         artefactId: "test-artefact-id",
         error: "List type service down"
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should log list type notification errors with redacted emails when they contain errors", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: []
+      });
+      vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
+        totalSubscriptions: 1,
+        sent: 0,
+        failed: 1,
+        skipped: 0,
+        errors: ["Failed for user@example.com"]
+      });
+
+      const result = await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "en" });
+
+      expect(result.success).toBe(true);
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] List type notification errors:", {
+        count: 1,
+        errors: ["Failed for [REDACTED_EMAIL]"]
       });
 
       consoleErrorSpy.mockRestore();

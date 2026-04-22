@@ -181,6 +181,16 @@ describe("subscription-configure-list", () => {
         })
       );
     });
+
+    it("should render empty list when location has no sub-jurisdictions", async () => {
+      const { getLocationById } = await import("@hmcts/location");
+
+      vi.mocked(getLocationById).mockResolvedValue({ ...mockLocation, subJurisdictions: [] } as any);
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list/index", expect.objectContaining({ listTypeGroups: [] }));
+    });
   });
 
   describe("POST", () => {
@@ -224,6 +234,16 @@ describe("subscription-configure-list", () => {
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should initialize emailSubscriptions in session when it does not exist", async () => {
+      mockReq.session = {} as any;
+      mockReq.body = { selectedListTypes: ["1", "2"] };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toEqual([1, 2]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-language");
     });
   });
 });
