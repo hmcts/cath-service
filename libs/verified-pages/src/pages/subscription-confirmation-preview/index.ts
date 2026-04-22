@@ -1,7 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres";
-import { createSubscriptionListTypes, getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
+import { createSubscriptionListTypes, getAllowedListTypeIdsForLocations, getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -121,17 +121,18 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (action === "confirm") {
+    if (!res.locals.navigation) {
+      res.locals.navigation = {};
+    }
+    res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+    const t = locale === "cy" ? cy : en;
+    const localeKey = locale === "cy" ? "cy" : "en";
+    const confirmedLocations = req.session.emailSubscriptions?.confirmedLocations || [];
     const pendingListTypeIds = req.session.emailSubscriptions?.pendingListTypeIds || [];
     const pendingLanguage = req.session.emailSubscriptions?.pendingLanguage;
 
     if (pendingListTypeIds.length === 0 || !pendingLanguage) {
-      if (!res.locals.navigation) {
-        res.locals.navigation = {};
-      }
-      res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
-
-      const t = locale === "cy" ? cy : en;
-      const confirmedLocations = req.session.emailSubscriptions?.confirmedLocations || [];
       const locationRows = await resolveLocationRows(confirmedLocations, locale);
       const listTypes = await resolveListTypeNames(pendingListTypeIds, locale);
 
@@ -147,13 +148,56 @@ const postHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const confirmedLocations = req.session.emailSubscriptions?.confirmedLocations || [];
+    const resolvedLocationIds = (
+      await Promise.all(
+        confirmedLocations.map(async (id) => {
+          const location = await getLocationById(Number.parseInt(id, 10));
+          return location ? id : null;
+        })
+      )
+    ).filter((id): id is string => id !== null);
+
+    if (resolvedLocationIds.length === 0) {
+      const listTypes = await resolveListTypeNames(pendingListTypeIds, locale);
+      const languageDisplay = LANGUAGE_DISPLAY[pendingLanguage] ? LANGUAGE_DISPLAY[pendingLanguage][localeKey] : t.noLanguageSelected;
+
+      return res.render("subscription-confirmation-preview/index", {
+        ...t,
+        locationRows: [],
+        listTypes,
+        languageDisplay,
+        errors: {
+          titleText: t.errorSummaryTitle,
+          errorList: [{ text: t.errorNoSubscription, href: "#" }]
+        }
+      });
+    }
+
+    const allowedListTypeIds = await getAllowedListTypeIdsForLocations(resolvedLocationIds.map((id) => Number.parseInt(id, 10)));
+    const validListTypeIds = pendingListTypeIds.filter((id) => allowedListTypeIds.includes(id));
+
+    if (validListTypeIds.length === 0) {
+      const locationRows = await resolveLocationRows(resolvedLocationIds, locale);
+      const languageDisplay = LANGUAGE_DISPLAY[pendingLanguage] ? LANGUAGE_DISPLAY[pendingLanguage][localeKey] : t.noLanguageSelected;
+
+      return res.render("subscription-confirmation-preview/index", {
+        ...t,
+        locationRows,
+        listTypes: [],
+        languageDisplay,
+        errors: {
+          titleText: t.errorSummaryTitle,
+          errorList: [{ text: t.errorNoListType, href: "#select-list-types-link" }]
+        }
+      });
+    }
+
     const existingSubscriptions = await getAllSubscriptionsByUserId(userId);
     const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId.toString());
-    const allLocationIds = [...new Set([...existingLocationIds, ...confirmedLocations])];
+    const allLocationIds = [...new Set([...existingLocationIds, ...resolvedLocationIds])];
     await replaceUserSubscriptions(userId, allLocationIds);
 
-    await createSubscriptionListTypes(userId, pendingListTypeIds, pendingLanguage);
+    await createSubscriptionListTypes(userId, validListTypeIds, pendingLanguage);
 
     if (!req.session.emailSubscriptions) {
       req.session.emailSubscriptions = {};

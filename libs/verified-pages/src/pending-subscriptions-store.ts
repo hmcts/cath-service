@@ -14,7 +14,16 @@ export async function savePendingSubscriptions(redisClient: any, userId: string,
 export async function getPendingSubscriptions(redisClient: any, userId: string): Promise<string[] | null> {
   const value = await redisClient.get(buildKey(userId));
   if (!value) return null;
-  return JSON.parse(value) as string[];
+
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed) || !parsed.every((id) => typeof id === "string")) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup

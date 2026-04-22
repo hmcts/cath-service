@@ -30,6 +30,7 @@ vi.mock("@hmcts/postgres", () => ({
 vi.mock("@hmcts/subscriptions", () => ({
   createSubscriptionListTypes: vi.fn(),
   getAllSubscriptionsByUserId: vi.fn(),
+  getAllowedListTypeIdsForLocations: vi.fn(),
   replaceUserSubscriptions: vi.fn()
 }));
 

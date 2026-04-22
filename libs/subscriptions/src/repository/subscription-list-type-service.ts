@@ -31,6 +31,11 @@ export async function replaceSubscriptionListTypes(userId: string, listTypeIds: 
   await upsertSubscriptionListType(userId, listTypeIds, listLanguage);
 }
 
+export async function getAllowedListTypeIdsForLocations(locationIds: number[]): Promise<number[]> {
+  const idArrays = await Promise.all(locationIds.map(getListTypeIdsForLocation));
+  return [...new Set(idArrays.flat())];
+}
+
 export async function getSubscriptionListTypesByUserId(userId: string): Promise<SubscriptionListTypeDto | null> {
   const record = await findSubscriptionListTypeByUserId(userId);
   if (!record) return null;

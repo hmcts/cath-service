@@ -11,9 +11,8 @@ export function restorePendingSubscriptionsMiddleware() {
       return next();
     }
 
-    req.session.pendingSubscriptionsRestored = true;
-
     if (req.session.emailSubscriptions?.pendingSubscriptions?.length) {
+      req.session.pendingSubscriptionsRestored = true;
       return next();
     }
 
@@ -25,6 +24,7 @@ export function restorePendingSubscriptionsMiddleware() {
         }
         req.session.emailSubscriptions.pendingSubscriptions = locationIds;
       }
+      req.session.pendingSubscriptionsRestored = true;
     } catch {
       // Non-fatal — continue without restoring
     }
