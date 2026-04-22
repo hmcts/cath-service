@@ -21,7 +21,7 @@ export function buildPushHeaders(params: PushHeaderParams): Record<string, strin
   return {
     "x-provenance": provenance,
     "x-source-artefact-id": artefactId,
-    "x-type": listTypeName,
+    "x-type": "LIST",
     "x-list-type": listTypeName,
     "x-content-date": contentDate.toISOString(),
     "x-sensitivity": sensitivity,

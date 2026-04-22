@@ -43,7 +43,7 @@ describe("buildPushHeaders", () => {
 
     expect(headers["x-provenance"]).toBe("SNL");
     expect(headers["x-source-artefact-id"]).toBe("artefact-abc-123");
-    expect(headers["x-type"]).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
+    expect(headers["x-type"]).toBe("LIST");
     expect(headers["x-list-type"]).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(headers["x-content-date"]).toBe("2024-03-15T10:00:00.000Z");
     expect(headers["x-sensitivity"]).toBe("PUBLIC");
@@ -96,10 +96,10 @@ describe("buildPushHeaders", () => {
     expect(headers["x-location-region"]).toBe("");
   });
 
-  it("falls back to String(listTypeId) for x-type and x-list-type when list type name is unknown", () => {
+  it("always uses LIST for x-type and falls back to String(listTypeId) for x-list-type when list type name is unknown", () => {
     const headers = buildPushHeaders({ ...baseParams, listTypeId: 1234 });
 
-    expect(headers["x-type"]).toBe("1234");
+    expect(headers["x-type"]).toBe("LIST");
     expect(headers["x-list-type"]).toBe("1234");
   });
 });
