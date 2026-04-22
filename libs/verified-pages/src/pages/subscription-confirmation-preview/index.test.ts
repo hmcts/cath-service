@@ -177,6 +177,7 @@ describe("subscription-confirmation-preview", () => {
     it("should confirm subscriptions, clear session data and redirect", async () => {
       mockReq.body = { action: "confirm" };
       vi.mocked(subscriptionsService.getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionsService.getAllowedListTypeIdsForLocations).mockResolvedValue([1, 2]);
       vi.mocked(subscriptionsService.replaceUserSubscriptions).mockResolvedValue({ added: 1, removed: 0 });
       vi.mocked(subscriptionsService.createSubscriptionListTypes).mockResolvedValue(undefined);
 
