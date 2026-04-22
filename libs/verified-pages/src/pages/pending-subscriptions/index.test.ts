@@ -16,7 +16,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("../../pending-subscriptions-store.js", () => ({
+vi.mock("@hmcts/subscriptions", () => ({
   savePendingSubscriptions: vi.fn(),
   deletePendingSubscriptions: vi.fn()
 }));

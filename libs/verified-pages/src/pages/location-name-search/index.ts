@@ -11,7 +11,7 @@ import {
   type Location
 } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
-import { savePendingSubscriptions } from "../../pending-subscriptions-store.js";
+import { savePendingSubscriptions } from "@hmcts/subscriptions";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

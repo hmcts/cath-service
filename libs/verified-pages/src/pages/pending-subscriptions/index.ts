@@ -1,7 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
-import { deletePendingSubscriptions, savePendingSubscriptions } from "../../pending-subscriptions-store.js";
+import { deletePendingSubscriptions, savePendingSubscriptions } from "@hmcts/subscriptions";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

@@ -39,7 +39,7 @@ import {
   moduleRoot as systemAdminModuleRoot,
   pageRoutes as systemAdminPageRoutes
 } from "@hmcts/system-admin-pages/config";
-import { restorePendingSubscriptionsMiddleware } from "@hmcts/verified-pages";
+import { restorePendingSubscriptionsMiddleware } from "@hmcts/subscriptions";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,
