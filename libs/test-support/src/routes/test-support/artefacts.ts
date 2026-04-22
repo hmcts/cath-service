@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 import type { CreateArtefactInput } from "../../types.js";
 

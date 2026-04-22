@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 
 export const GET = async (_req: Request, res: Response) => {
