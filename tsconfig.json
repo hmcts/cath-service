@@ -38,6 +38,8 @@
       "@hmcts/notifications": ["libs/notifications/src"],
       "@hmcts/pdda-html-upload": ["libs/pdda-html-upload/src"],
       "@hmcts/pdda-html-upload/config": ["libs/pdda-html-upload/src/config"],
+      "@hmcts/list-search-config": ["libs/list-search-config/src"],
+      "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
       "@hmcts/pdf-generation": ["libs/pdf-generation/src"]
     },
     "esModuleInterop": true,

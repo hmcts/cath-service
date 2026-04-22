@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
-import { loginWithSSO } from "../utils/sso-helpers.js";
-import { prisma } from "@hmcts/postgres";
 import fs from "node:fs/promises";
 import path from "node:path";
+import AxeBuilder from "@axe-core/playwright";
+import { prisma } from "@hmcts/postgres";
+import { expect, test } from "@playwright/test";
+import { loginWithSSO } from "../utils/sso-helpers.js";
 
 interface TestPublicationData {
   artefactId: string;
@@ -52,18 +52,13 @@ async function createTestPublication(): Promise<TestPublicationData> {
       courtLists: [
         {
           courtHouse: { courtHouseName: location.name },
-          courtListings: [
-            { case: { caseName: "Test Case 123" } },
-          ],
-        },
-      ],
-    },
+          courtListings: [{ case: { caseName: "Test Case 123" } }]
+        }
+      ]
+    }
   };
 
-  await fs.writeFile(
-    path.join(storageDir, `${artefactId}.json`),
-    JSON.stringify(testJsonContent, null, 2)
-  );
+  await fs.writeFile(path.join(storageDir, `${artefactId}.json`), JSON.stringify(testJsonContent, null, 2));
 
   // Create a test user and subscription for resubmission test
   const testUser = await prisma.user.create({
@@ -71,22 +66,22 @@ async function createTestPublication(): Promise<TestPublicationData> {
       email: `test-subscriber+${artefactId}@hmcts.net`,
       userProvenance: "SSO",
       userProvenanceId: `test-${Date.now()}`,
-      role: "MEDIA",
-    },
+      role: "MEDIA"
+    }
   });
 
   await prisma.subscription.create({
     data: {
       userId: testUser.userId,
-      locationId: location.locationId,
-    },
+      locationId: location.locationId
+    }
   });
 
   return {
     artefactId,
     locationId: location.locationId,
     locationName: location.name,
-    userId: testUser.userId,
+    userId: testUser.userId
   };
 }
 
@@ -97,7 +92,7 @@ async function deleteTestPublication(publicationData: TestPublicationData): Prom
     // Delete subscription first (foreign key constraint)
     try {
       await prisma.subscription.deleteMany({
-        where: { userId: publicationData.userId },
+        where: { userId: publicationData.userId }
       });
     } catch (error) {
       console.log("Subscription cleanup error:", error);
@@ -106,7 +101,7 @@ async function deleteTestPublication(publicationData: TestPublicationData): Prom
     // Delete test user
     try {
       await prisma.user.delete({
-        where: { userId: publicationData.userId },
+        where: { userId: publicationData.userId }
       });
     } catch (error) {
       console.log("User cleanup error:", error);
@@ -114,7 +109,7 @@ async function deleteTestPublication(publicationData: TestPublicationData): Prom
 
     // Delete artefact
     await prisma.artefact.delete({
-      where: { artefactId: publicationData.artefactId },
+      where: { artefactId: publicationData.artefactId }
     });
 
     // Delete test file
@@ -165,9 +160,7 @@ test.describe("Blob Explorer", () => {
       await page.waitForURL(/lng=en/);
 
       // Check accessibility on locations page
-      let accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Test keyboard navigation - tab to first location link
@@ -194,9 +187,7 @@ test.describe("Blob Explorer", () => {
       await page.waitForURL(/lng=en/);
 
       // Check accessibility on publications page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // STEP 5: Select JSON publication and view metadata
@@ -227,9 +218,7 @@ test.describe("Blob Explorer", () => {
       await page.waitForURL(/lng=en/);
 
       // Check accessibility on JSON file page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // STEP 7: Test accordion with raw JSON content
@@ -267,9 +256,7 @@ test.describe("Blob Explorer", () => {
       await page.waitForURL(/lng=en/);
 
       // Check accessibility on confirmation page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Test Cancel link (should return to locations)
@@ -303,9 +290,7 @@ test.describe("Blob Explorer", () => {
       await page.waitForURL(/lng=en/);
 
       // Check accessibility on success page
-      accessibilityScanResults = await new AxeBuilder({ page })
-        .disableRules(["region"])
-        .analyze();
+      accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // STEP 13: Test POST/Redirect/GET pattern - browser back should not re-submit
@@ -318,7 +303,6 @@ test.describe("Blob Explorer", () => {
       await expect(locationsLink).toBeVisible();
       await locationsLink.click();
       await expect(page).toHaveURL("/blob-explorer-locations");
-
     } finally {
       // Cleanup test publication
       const pubData = testPublicationMap.get(testInfo.testId);

@@ -1,7 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language, mockListTypes } from "@hmcts/publication";
+import { Language } from "@hmcts/publication";
+import { findStrategicListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";
@@ -10,10 +11,16 @@ import { validateManualUploadForm } from "../../manual-upload/validation.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const LIST_TYPES = [
-  { value: "", text: "<Please choose a list type>" },
-  ...mockListTypes.filter((listType) => !listType.isNonStrategic).map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
-];
+async function getListTypes() {
+  const strategicListTypes = await findStrategicListTypes();
+  return [
+    { value: "", text: "<Please choose a list type>" },
+    ...strategicListTypes.map((listType) => ({
+      value: listType.id.toString(),
+      text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
+    }))
+  ];
+}
 
 const SENSITIVITY_OPTIONS = [
   { value: "", text: "<Please choose a sensitivity>" },
@@ -87,14 +94,28 @@ const getHandler = async (req: Request, res: Response) => {
   const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
   const locationName = location?.name || formData.locationName || "";
 
+  const listTypes = await getListTypes();
+
+  // Create mapping of list type ID to default sensitivity for client-side use
+  const strategicListTypes = await findStrategicListTypes();
+  const listTypeSensitivityMap = strategicListTypes.reduce(
+    (acc, lt) => {
+      // Convert to uppercase to match dropdown values (PUBLIC, PRIVATE, CLASSIFIED)
+      acc[lt.id.toString()] = lt.defaultSensitivity?.toUpperCase() || "";
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+
   res.render("manual-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
     locations: await getAllLocations(locale),
-    listTypes: selectOption(LIST_TYPES, formData.listType),
+    listTypes: selectOption(listTypes, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
+    listTypeSensitivityMap: JSON.stringify(listTypeSensitivityMap),
     locale,
     hideLanguageToggle: true
   });

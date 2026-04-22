@@ -1,5 +1,5 @@
-import type { Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Helper function to perform CFT IDAM login
@@ -11,22 +11,22 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   // Wait for CFT IDAM login page
   try {
     await page.waitForURL(/idam-web-public\.aat\.platform\.hmcts\.net/, { timeout: 10000 });
-  } catch (error) {
+  } catch (_error) {
     const currentUrl = page.url();
     throw new Error(
       `Failed to redirect to CFT IDAM login page. Current URL: ${currentUrl}. ` +
-      `This might indicate that CFT IDAM is not properly configured or ENABLE_CFT_IDAM=true is not set.`
+        `This might indicate that CFT IDAM is not properly configured or ENABLE_CFT_IDAM=true is not set.`
     );
   }
 
   // Enter email
   const emailInput = page.locator('input[type="text"]#username, input[type="email"]#username, input[name="username"]');
-  await emailInput.waitFor({ state: 'visible', timeout: 5000 });
+  await emailInput.waitFor({ state: "visible", timeout: 5000 });
   await emailInput.fill(email);
 
   // Enter password
   const passwordInput = page.locator('input[type="password"]#password, input[name="password"]');
-  await passwordInput.waitFor({ state: 'visible', timeout: 5000 });
+  await passwordInput.waitFor({ state: "visible", timeout: 5000 });
   await passwordInput.fill(password);
 
   // Click sign in button
@@ -46,7 +46,7 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
  */
 export async function assertAuthenticated(page: Page): Promise<void> {
   // Wait a moment for the page to settle
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState("networkidle");
 
   // Check that we're not on the CFT IDAM login page
   await expect(page).not.toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net/);
@@ -67,6 +67,6 @@ export async function assertNotAuthenticated(page: Page): Promise<void> {
  * Helper to logout the user
  */
 export async function logout(page: Page): Promise<void> {
-  await page.goto('/logout');
+  await page.goto("/logout");
   await page.waitForURL(/\/session-logged-out/, { timeout: 10000 });
 }

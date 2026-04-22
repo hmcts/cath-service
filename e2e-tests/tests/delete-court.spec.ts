@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
+import { prisma } from "@hmcts/postgres";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { prisma } from "@hmcts/postgres";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 // Helper to validate required environment variables
@@ -16,10 +16,7 @@ function validateEnvVars() {
   }
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}. ` +
-      "Please set these variables before running the tests."
-    );
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}. ` + "Please set these variables before running the tests.");
   }
 }
 
@@ -37,12 +34,9 @@ async function authenticateSystemAdmin(page: Page) {
 }
 
 // Helper to wait for autocomplete to complete and select option
-async function selectAutocompleteOption(page: Page, searchText: string) {
+async function selectAutocompleteOption(page: Page, _searchText: string) {
   // Wait for the autocomplete API request to complete
-  const responsePromise = page.waitForResponse(
-    response => response.url().includes("/locations?q=") && response.status() === 200,
-    { timeout: 10000 }
-  );
+  const responsePromise = page.waitForResponse((response) => response.url().includes("/locations?q=") && response.status() === 200, { timeout: 10000 });
 
   // Wait for the response to complete
   await responsePromise;
@@ -51,8 +45,8 @@ async function selectAutocompleteOption(page: Page, searchText: string) {
   await page.waitForSelector(".autocomplete__menu", { state: "visible", timeout: 5000 });
 
   // Select from dropdown using keyboard
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Enter');
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
 
   // Wait for the hidden locationId field to be populated
   await page.waitForFunction(
@@ -71,7 +65,7 @@ const createdUsers: string[] = [];
 // Helper to create a test court for deletion
 async function createTestCourt(name: string, welshName: string): Promise<number> {
   // Generate unique locationId using timestamp and random number
-  const locationId = 90000 + Math.floor(Math.random() * 9000) + Date.now() % 1000;
+  const locationId = 90000 + Math.floor(Math.random() * 9000) + (Date.now() % 1000);
 
   // Create new court
   await prisma.location.create({
@@ -79,7 +73,7 @@ async function createTestCourt(name: string, welshName: string): Promise<number>
       locationId,
       name,
       welshName,
-      email: `${name.toLowerCase().replace(/\s+/g, '-')}@test.hmcts.net`,
+      email: `${name.toLowerCase().replace(/\s+/g, "-")}@test.hmcts.net`,
       contactNo: "01234567890",
       locationRegions: {
         create: [{ regionId: 4 }] // North
@@ -102,22 +96,26 @@ test.describe("Delete Court Journey", () => {
   test.afterAll(async () => {
     // Clean up test users (this will cascade delete subscriptions)
     for (const userId of createdUsers) {
-      await prisma.user.delete({
-        where: { userId }
-      }).catch(() => {
-        // Ignore errors if already deleted
-      });
+      await prisma.user
+        .delete({
+          where: { userId }
+        })
+        .catch(() => {
+          // Ignore errors if already deleted
+        });
     }
     createdUsers.length = 0;
 
     // Clean up any courts that weren't deleted during the test
     // (this will cascade delete artefacts and other related data)
     for (const locationId of createdCourts) {
-      await prisma.location.delete({
-        where: { locationId }
-      }).catch(() => {
-        // Ignore errors if court was already deleted during test
-      });
+      await prisma.location
+        .delete({
+          where: { locationId }
+        })
+        .catch(() => {
+          // Ignore errors if court was already deleted during test
+        });
     }
     createdCourts.length = 0;
   });
@@ -143,8 +141,8 @@ test.describe("Delete Court Journey", () => {
     // Step 3: Search for a valid test court (refresh page to clear validation state)
     await page.reload();
     await page.waitForURL("**/delete-court");
-    const courtInput = page.getByRole('combobox', { name: /court or tribunal name/i });
-    await courtInput.waitFor({ state: 'visible', timeout: 10000 });
+    const courtInput = page.getByRole("combobox", { name: /court or tribunal name/i });
+    await courtInput.waitFor({ state: "visible", timeout: 10000 });
     await courtInput.fill("Delete Test Court A");
 
     // Wait for autocomplete to load and select option
@@ -183,7 +181,7 @@ test.describe("Delete Court Journey", () => {
     // Step 8: Navigate back to delete court and search again
     await page.click('a:has-text("Delete Court")');
     await page.waitForURL("**/delete-court");
-    const courtInput2 = page.getByRole('combobox', { name: /court or tribunal name/i });
+    const courtInput2 = page.getByRole("combobox", { name: /court or tribunal name/i });
     await courtInput2.fill("Delete Test Court B");
 
     // Wait for autocomplete to load and select option
@@ -202,9 +200,7 @@ test.describe("Delete Court Journey", () => {
     await expect(page.locator("h1")).toHaveText("Are you sure you want to delete this court?");
 
     // Step 10: Test accessibility
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Step 11: Confirm deletion
@@ -219,7 +215,7 @@ test.describe("Delete Court Journey", () => {
     await expect(successPanel).toContainText("Court has been deleted");
 
     // Step 13: Verify next steps section
-    await expect(page.getByRole('heading', { name: 'What do you want to do next?' })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What do you want to do next?" })).toBeVisible();
     await expect(page.locator('a:has-text("Remove another court")')).toBeVisible();
     await expect(page.locator('a:has-text("Upload Reference Data")')).toBeVisible();
     await expect(page.locator('a:has-text("Home")')).toBeVisible();
@@ -228,19 +224,17 @@ test.describe("Delete Court Journey", () => {
     await page.click('a:has-text("Cymraeg")');
     await expect(page.locator("h1")).toHaveText("Wedi llwyddo i ddileu");
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Mae'r llys wedi'i ddileu");
-    await expect(page.getByRole('heading', { name: "Beth hoffech chi ei wneud nesaf?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Beth hoffech chi ei wneud nesaf?" })).toBeVisible();
     await expect(page.locator('a:has-text("Dileu llys arall")')).toBeVisible();
 
     // Step 15: Test accessibility on success page
-    const successAccessibility = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
+    const successAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(successAccessibility.violations).toEqual([]);
 
     // Step 16: Verify navigation links work
     await page.click('a:has-text("Hafan")'); // Home in Welsh
-    await page.waitForURL("**/system-admin-dashboard");
-    await expect(page.locator("h1")).toContainText("System Admin");
+    await page.waitForURL(/system-admin-dashboard/);
+    await expect(page.locator("h1")).toContainText("Dangosfwrdd Gweinyddwr y System");
   });
 
   test("should block deletion of court with active subscriptions", async ({ page }) => {
@@ -266,7 +260,8 @@ test.describe("Delete Court Journey", () => {
     await prisma.subscription.create({
       data: {
         userId: testUser.userId,
-        locationId: courtLocationId
+        searchType: "LOCATION_ID",
+        searchValue: courtLocationId.toString()
       }
     });
 
@@ -291,8 +286,8 @@ test.describe("Delete Court Journey", () => {
     await page.waitForURL("**/delete-court");
 
     // Search for the test court
-    const courtInput = page.getByRole('combobox', { name: /court or tribunal name/i });
-    await courtInput.waitFor({ state: 'visible', timeout: 10000 });
+    const courtInput = page.getByRole("combobox", { name: /court or tribunal name/i });
+    await courtInput.waitFor({ state: "visible", timeout: 10000 });
     await courtInput.fill(courtName);
 
     // Wait for autocomplete to load and select option
@@ -311,8 +306,7 @@ test.describe("Delete Court Journey", () => {
     // Error should be one of these
     const errorText = await page.locator(".govuk-error-summary__body").textContent();
     const hasExpectedError =
-      errorText?.includes("There are active subscriptions for the given location") ||
-      errorText?.includes("There are active artefacts for the given location");
+      errorText?.includes("There are active subscriptions for the given location") || errorText?.includes("There are active artefacts for the given location");
 
     expect(hasExpectedError).toBe(true);
 
@@ -330,8 +324,8 @@ test.describe("Delete Court Journey", () => {
     await page.waitForURL("**/delete-court");
 
     // Focus on court input and verify keyboard interaction
-    const courtInput = page.getByRole('combobox', { name: /court or tribunal name/i });
-    await courtInput.waitFor({ state: 'visible', timeout: 10000 });
+    const courtInput = page.getByRole("combobox", { name: /court or tribunal name/i });
+    await courtInput.waitFor({ state: "visible", timeout: 10000 });
     await courtInput.focus();
     await expect(courtInput).toBeFocused();
 
