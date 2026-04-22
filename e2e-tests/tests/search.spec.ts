@@ -1,5 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+
+// Shared test location for the entire test suite
+let testLocationId: number;
+let testLocationName: string;
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -8,6 +13,13 @@ import { expect, test } from "@playwright/test";
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
 test.describe("Search Page", () => {
+  // Create test location before all tests run
+  test.beforeAll(async () => {
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Search Page Court" });
+    testLocationId = testLocation.locationId;
+    testLocationName = testLocation.name;
+  });
+
   test.describe("given user is on the search page", () => {
     test("should load the page with search input and accessibility compliance", async ({ page }) => {
       await page.goto("/search");
@@ -81,11 +93,11 @@ test.describe("Search Page", () => {
     });
 
     test("should show preselected location value when locationId query param is provided", async ({ page }) => {
-      await page.goto("/search?locationId=9001");
+      await page.goto(`/search?locationId=${testLocationId}`);
 
       // Check that input has the preselected location value
       const locationInput = page.getByRole("combobox");
-      await expect(locationInput).toHaveValue("Test Court Alpha");
+      await expect(locationInput).toHaveValue(testLocationName);
     });
   });
 
@@ -243,11 +255,11 @@ test.describe("Search Page", () => {
 
   test.describe("given user arrives via preselected location", () => {
     test("should display search page with location pre-filled when locationId query param is present", async ({ page }) => {
-      await page.goto("/search?locationId=9001");
+      await page.goto(`/search?locationId=${testLocationId}`);
 
       // Check that the location input is pre-filled
       const locationInput = page.getByRole("combobox");
-      await expect(locationInput).toHaveValue("Test Court Alpha");
+      await expect(locationInput).toHaveValue(testLocationName);
 
       // Run accessibility checks
       const accessibilityScanResults = await new AxeBuilder({ page })

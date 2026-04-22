@@ -1,10 +1,9 @@
-import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres";
-import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+import { createTestArtefact } from "../utils/test-support-api.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -67,10 +66,9 @@ startxref
 %%EOF`);
 }
 
-// Helper function to create a flat file artefact in the database
+// Helper function to create a flat file artefact via API
 async function createFlatFileArtefact(
   options: {
-    artefactId: string;
     locationId: string;
     displayFrom?: Date;
     displayTo?: Date;
@@ -81,7 +79,6 @@ async function createFlatFileArtefact(
   trackingArray?: string[]
 ): Promise<string> {
   const {
-    artefactId,
     locationId,
     displayFrom = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
     displayTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
@@ -90,22 +87,20 @@ async function createFlatFileArtefact(
     fileContent = "Test Flat File Content"
   } = options;
 
-  // Create artefact in database
-  await prisma.artefact.create({
-    data: {
-      artefactId,
-      locationId,
-      listTypeId: 6, // Crown Daily List
-      contentDate: new Date(),
-      sensitivity: "PUBLIC",
-      language: "ENGLISH",
-      displayFrom,
-      displayTo,
-      isFlatFile,
-      provenance: "MANUAL",
-      supersededCount: 0
-    }
+  // Create artefact via API and get the returned artefactId
+  const createdArtefact = await createTestArtefact({
+    locationId,
+    listTypeId: 6, // Crown Daily List
+    contentDate: new Date().toISOString(),
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    displayFrom: displayFrom.toISOString(),
+    displayTo: displayTo.toISOString(),
+    isFlatFile,
+    provenance: "MANUAL"
   });
+
+  const artefactId = createdArtefact.artefactId;
 
   // Create file in storage if requested
   if (createFile) {
@@ -125,69 +120,42 @@ async function createFlatFileArtefact(
   return artefactId;
 }
 
-// Helper function to create a flat file link in the summary of publications page
-async function _navigateToSummaryPage(page: Page, locationId: string) {
-  await page.goto(`/summary-of-publications?locationId=${locationId}`);
-  await page.waitForLoadState("domcontentloaded");
+// Helper to clean up PDF files from storage
+async function cleanupPDFFiles(artefactIds: string[]) {
+  for (const artefactId of artefactIds) {
+    const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
+    try {
+      await fs.promises.unlink(filePath);
+    } catch {
+      // File might not exist, which is fine
+    }
+  }
 }
 
-test.describe.configure({ mode: "serial" });
-
 test.describe("Flat File Viewing", () => {
-  const testLocationId = "9"; // SJP location from seed data
-  const trackedArtefactIds: string[] = [];
-
-  test.afterEach(async () => {
-    // Clean up tracked artefacts from database
-    if (trackedArtefactIds.length > 0) {
-      await prisma.artefact.deleteMany({
-        where: { artefactId: { in: trackedArtefactIds } }
-      });
-
-      // Remove corresponding files from storage
-      for (const artefactId of trackedArtefactIds) {
-        const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
-        try {
-          await fs.promises.unlink(filePath);
-        } catch {
-          // File might not exist, which is fine
-        }
-      }
-
-      // Clear the tracking array
-      trackedArtefactIds.length = 0;
-    }
-  });
+  // Track artefact IDs for PDF file cleanup (database cleanup is automatic via prefix)
+  const createdArtefactIds: string[] = [];
 
   test.afterAll(async () => {
-    // Ensure STORAGE_PATH is cleaned of any leftover test PDFs
-    try {
-      const files = await fs.promises.readdir(STORAGE_PATH);
-      for (const file of files) {
-        if (file.endsWith(".pdf")) {
-          await fs.promises.unlink(path.join(STORAGE_PATH, file));
-        }
-      }
-    } catch {
-      // Directory might not exist or be empty, which is fine
-    }
+    await cleanupPDFFiles(createdArtefactIds);
   });
 
   test.describe("Happy Path - View flat file PDF", () => {
     test("should open flat file in new tab and display PDF inline with accessibility compliance (TS1, TS2, TS9)", async ({ page, context }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Flat File Test Court" });
+
       // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Test Hearing List for Happy Path"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate directly to the flat file viewer page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Verify page loaded successfully (not an error page)
@@ -203,14 +171,14 @@ test.describe("Flat File Viewing", () => {
       const [newPage] = await Promise.all([
         context.waitForEvent("page"),
         // Simulate opening viewer page in new tab
-        page.evaluate((url) => window.open(url, "_blank"), `/hearing-lists/${testLocationId}/${artefactId}`)
+        page.evaluate((url) => window.open(url, "_blank"), `/hearing-lists/${testLocation.locationId}/${artefactId}`)
       ]);
 
       await newPage.waitForLoadState("domcontentloaded");
 
       // TS2: Verify PDF displays inline in browser
       const pageUrl = newPage.url();
-      expect(pageUrl).toContain(`/hearing-lists/${testLocationId}/${artefactId}`);
+      expect(pageUrl).toContain(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
 
       // Verify page title includes court name and list type
       await expect(newPage).toHaveTitle(/.*Crown Daily List.*/);
@@ -249,15 +217,16 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should serve PDF with correct Content-Type and Content-Disposition headers (TS2, TS8)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Headers Test Court" });
+
       // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Test PDF for Headers"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Make request to download endpoint
@@ -280,20 +249,21 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should allow downloading PDF file (TS3)", async ({ page, context }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Download Test Court" });
+
       // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Test PDF for Download"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to flat file viewer page
       const viewerPage = await context.newPage();
-      await viewerPage.goto(`https://localhost:8080/hearing-lists/${testLocationId}/${artefactId}`, {
+      await viewerPage.goto(`https://localhost:8080/hearing-lists/${testLocation.locationId}/${artefactId}`, {
         waitUntil: "domcontentloaded"
       });
 
@@ -316,28 +286,28 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Error Handling - Expired Files", () => {
     test("should show error message when file has expired (displayTo in past) (TS4)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Expired File Court" });
+
       // Arrange: Create expired artefact
-      const artefactId = randomUUID();
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           displayFrom: twoDaysAgo,
           displayTo: yesterday, // Expired
           fileContent: "Expired File"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify 410 Gone status and error message
-      // Note: Playwright doesn't expose HTTP status directly, so we check for error page content
       const errorSummary = page.locator(".govuk-error-summary");
       await expect(errorSummary).toBeVisible();
 
@@ -355,24 +325,25 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should show error message when file not yet available (displayFrom in future)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Future File Court" });
+
       // Arrange: Create future artefact
-      const artefactId = randomUUID();
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           displayFrom: tomorrow, // Not yet available
           displayTo: nextWeek,
           fileContent: "Future File"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify error message
@@ -387,19 +358,20 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Error Handling - Missing Files", () => {
     test("should show error message when file missing from storage (TS5)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Missing File Court" });
+
       // Arrange: Create artefact without file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           createFile: false // Don't create file in storage
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify 404 Not Found status and error message
@@ -421,11 +393,14 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should show error message when artefact does not exist", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Nonexistent Artefact Court" });
+
       // Arrange: Use non-existent artefact ID (valid UUID format that doesn't exist)
       const artefactId = "00000000-0000-0000-0000-000000000000";
 
       // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify 404 error message
@@ -438,20 +413,21 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should show error message when locationId does not match artefact", async ({ page }) => {
+      // Create unique locations for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Mismatch Court" });
+      const wrongLocation = await createUniqueTestLocation({ namePrefix: "Wrong Court" });
+
       // Arrange: Create artefact with one location
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Location Mismatch Test"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Try to access with different locationId
-      const wrongLocationId = "9001";
-      await page.goto(`/hearing-lists/${wrongLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${wrongLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify 404 error message (security: don't reveal artefact exists)
@@ -466,20 +442,21 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Error Handling - Not Flat File", () => {
     test("should show error message when artefact is not a flat file", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Not Flat File Court" });
+
       // Arrange: Create artefact with isFlatFile=false
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           isFlatFile: false, // Not a flat file
           createFile: false
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify error message
@@ -495,30 +472,20 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Navigation - Back Button", () => {
     test("should return to previous page when back button is clicked (TS6)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Back Button Court" });
+
       // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           createFile: false // Don't create file to trigger error
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
-      // Act: First establish session by visiting summary page
-      await page.goto("/view-option");
-      const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
-      await sjpCaseRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
-      // Verify we're on summary page (establishes session)
-      await expect(page).toHaveURL(/\/summary-of-publications/);
-      await page.waitForLoadState("networkidle");
-
-      // Now navigate directly to the error page (file doesn't exist)
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      // Act: Navigate directly to the error page (file doesn't exist)
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("networkidle");
 
       // Verify error page is shown
@@ -540,19 +507,20 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Welsh Language Support", () => {
     test("should display Welsh error messages when lng=cy is set (TS7)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Welsh Error Court" });
+
       // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           createFile: false // Don't create file to trigger error
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to flat file URL with Welsh language parameter
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}?lng=cy`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify Welsh error messages
@@ -570,19 +538,20 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should display Welsh content in viewer page when file exists", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Welsh Viewer Court" });
+
       // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Test Welsh Viewer"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to viewer page with Welsh language
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}?lng=cy`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify Welsh download link text
@@ -594,19 +563,20 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Accessibility - Error Page", () => {
     test("should meet WCAG 2.2 AA standards on error page (TS9)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Accessibility Error Court" });
+
       // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           createFile: false
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to error page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Run accessibility checks
@@ -633,30 +603,20 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Keyboard Navigation", () => {
     test("should support keyboard navigation on error page (TS10)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Keyboard Error Court" });
+
       // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           createFile: false
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
-      // Act: First establish session by visiting summary page
-      await page.goto("/view-option");
-      const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
-      await sjpCaseRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
-      // Verify we're on summary page (establishes session)
-      await expect(page).toHaveURL(/\/summary-of-publications/);
-      await page.waitForLoadState("networkidle");
-
-      // Now navigate directly to the error page (file doesn't exist)
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      // Navigate directly to the error page (file doesn't exist)
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("networkidle");
 
       // Verify error page elements are keyboard accessible (specific selector to avoid matching "feedback")
@@ -683,19 +643,20 @@ test.describe("Flat File Viewing", () => {
     });
 
     test("should support keyboard navigation on viewer page", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Keyboard Viewer Court" });
+
       // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Test Keyboard Viewer"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Navigate to viewer page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Verify download link is keyboard accessible
@@ -710,12 +671,14 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Invalid Requests", () => {
     test("should show error message when artefactId is missing", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Missing Artefact Court" });
+
       // Act: Navigate to URL without artefactId
-      await page.goto(`/hearing-lists/${testLocationId}/`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/`);
       await page.waitForLoadState("domcontentloaded");
 
       // Assert: Verify error message (likely 404 from Express)
-      // The actual behavior depends on routing configuration
       const statusText = await page.evaluate(() => document.title);
       expect(statusText).toBeTruthy();
     });
@@ -734,15 +697,16 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Content-Type Headers for Multiple File Types", () => {
     test("should serve PDF with application/pdf Content-Type (TS8)", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Content Type Court" });
+
       // Arrange: Create test PDF
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "PDF Content Type Test"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Act: Request file
@@ -758,15 +722,16 @@ test.describe("Flat File Viewing", () => {
 
   test.describe("Full User Journey", () => {
     test("should complete full journey from landing page to viewing flat file", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Full Journey Court" });
+
       // Arrange: Create test flat file artefact
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
+      const artefactId = await createFlatFileArtefact(
         {
-          artefactId,
-          locationId: testLocationId,
+          locationId: testLocation.locationId.toString(),
           fileContent: "Full Journey Test"
         },
-        trackedArtefactIds
+        createdArtefactIds
       );
 
       // Step 1: Start at landing page
@@ -790,11 +755,11 @@ test.describe("Flat File Viewing", () => {
 
       // Step 5: Navigate directly to the flat file viewer
       // (Note: The summary page shows non-flat-file artefacts, so we navigate directly)
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
+      await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
       await page.waitForLoadState("domcontentloaded");
 
       // Step 6: Verify flat file viewer loaded successfully
-      expect(page.url()).toContain(`/hearing-lists/${testLocationId}/${artefactId}`);
+      expect(page.url()).toContain(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
 
       // Verify page title includes court name and list type
       await expect(page).toHaveTitle(/.*Crown Daily List.*/);

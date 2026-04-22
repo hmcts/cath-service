@@ -5,6 +5,7 @@ import { configurePropertiesVolume, healthcheck } from "@hmcts/cloud-native-plat
 import { apiRoutes as locationRoutes } from "@hmcts/location/config";
 import { apiRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { apiRoutes as testSupportRoutes } from "@hmcts/test-support/config";
 import compression from "compression";
 import config from "config";
 import cors from "cors";
@@ -34,6 +35,11 @@ export async function createApp(): Promise<Express> {
   app.use(express.urlencoded({ extended: true }));
 
   const routeMounts = [{ path: `${__dirname}/routes` }, blobIngestionRoutes, locationRoutes, publicPagesRoutes];
+
+  // Only enable test-support routes in non-production environments
+  if (process.env.NODE_ENV !== "production") {
+    routeMounts.push(testSupportRoutes);
+  }
 
   app.use(await createSimpleRouter(...routeMounts));
 

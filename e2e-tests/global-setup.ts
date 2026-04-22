@@ -1,79 +1,60 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres";
 import type { FullConfig } from "@playwright/test";
 import { seedListTypes } from "./utils/seed-list-types.js";
 import { seedLocationData } from "./utils/seed-location-data.js";
 import { seedAllReferenceData } from "./utils/seed-reference-data.js";
+import { checkTestSupportHealth } from "./utils/test-support-api.js";
+import { generateTestPrefix, setTestPrefix } from "./utils/test-prefix.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const ARTEFACT_TRACKING_FILE = path.join(process.cwd(), ".test-artefacts.json");
-const LOCATION_TRACKING_FILE = path.join(process.cwd(), ".test-locations.json");
 
 async function globalSetup(_config: FullConfig) {
   try {
-    // Step 1: Wait for database connection
-    console.log("Waiting for database connection...");
+    // Step 1: Generate and store test prefix for this run
+    const testPrefix = generateTestPrefix();
+    setTestPrefix(testPrefix);
+    console.log(`\n=== E2E Test Run: ${testPrefix} ===\n`);
+
+    // Step 2: Wait for API and database to be ready
+    console.log("Waiting for API and database to be ready...");
     const maxRetries = 30;
-    let connected = false;
+    let ready = false;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
-        await prisma.$connect();
-        console.log("Database connection established");
-        connected = true;
-        break;
-      } catch (_error) {
-        if (i === maxRetries - 1) {
-          throw new Error(`Failed to connect to database after ${maxRetries} attempts`);
+        const health = await checkTestSupportHealth();
+        if (health.status === "healthy" && health.migrations === "complete") {
+          console.log("API and database are ready");
+          ready = true;
+          break;
         }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
-
-    if (!connected) {
-      throw new Error("Could not establish database connection");
-    }
-
-    // Step 2: Wait for database migrations to complete by checking if tables exist
-    console.log("Waiting for database migrations to complete...");
-    let migrationsComplete = false;
-
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        // Try to query the jurisdiction table to see if migrations are complete
-        await (prisma as any).jurisdiction.findMany({ take: 1 });
-        console.log("Database migrations completed");
-        migrationsComplete = true;
-        break;
-      } catch (_error) {
-        if (i === maxRetries - 1) {
-          console.error("Database migrations did not complete in time");
-          throw new Error("Database migrations did not complete. Please ensure the web server is running and migrations have been applied.");
+        if (health.migrations === "pending") {
+          console.log(`Attempt ${i + 1}/${maxRetries}: Database migrations pending...`);
         }
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } catch (_error) {
+        console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for API...`);
       }
+
+      if (i === maxRetries - 1) {
+        throw new Error("API or database did not become ready. Please ensure the API server is running and migrations have been applied.");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
-    if (!migrationsComplete) {
-      throw new Error("Database migrations did not complete");
+    if (!ready) {
+      throw new Error("API or database did not become ready");
     }
 
-    // Step 3: Seed jurisdictions, sub-jurisdictions, and regions
+    // Step 3: Seed reference data (jurisdictions, sub-jurisdictions, regions)
+    // These don't use the prefix as they're stable lookup data
     console.log("Seeding reference data (jurisdictions, sub-jurisdictions, regions)...");
     await seedAllReferenceData();
 
-    // Step 4: Seed list types (required for VIBE-309 Configure List Type feature)
+    // Step 4: Seed list types with test prefix
     console.log("Seeding list types...");
-    await seedListTypes();
+    await seedListTypes(testPrefix);
 
-    // Step 5: Seed location data directly (avoids SSO issues in CI)
+    // Step 5: Seed location data with test prefix
     console.log("Seeding test location data...");
-    await seedLocationData();
+    await seedLocationData(testPrefix);
 
     // Step 6: Verify all seed data is correct
     console.log("\nVerifying seed data...");
@@ -87,32 +68,9 @@ async function globalSetup(_config: FullConfig) {
       console.warn("Seed data has warnings (non-fatal):", verificationResult.warnings);
     }
 
-    // Step 7: Query all existing artefact IDs before tests run
-    const existingArtefacts = await prisma.artefact.findMany({
-      select: { artefactId: true }
-    });
-
-    const existingIds = existingArtefacts.map((a) => a.artefactId);
-
-    // Store existing IDs to tracking file
-    fs.writeFileSync(ARTEFACT_TRACKING_FILE, JSON.stringify(existingIds, null, 2));
-    console.log(`Stored ${existingIds.length} existing artefact(s) before E2E tests`);
-
-    // Step 8: Query all existing location IDs before tests run
-    const existingLocations = await (prisma as any).location.findMany({
-      select: { locationId: true }
-    });
-
-    const existingLocationIds = existingLocations.map((l: any) => l.locationId);
-
-    // Store existing location IDs to tracking file
-    fs.writeFileSync(LOCATION_TRACKING_FILE, JSON.stringify(existingLocationIds, null, 2));
-    console.log(`Stored ${existingLocationIds.length} existing location(s) before E2E tests`);
-
-    await prisma.$disconnect();
+    console.log(`\n=== Setup Complete: ${testPrefix} ===\n`);
   } catch (error) {
     console.error("Error during setup:", error);
-    await prisma.$disconnect();
     throw error;
   }
 }

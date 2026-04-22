@@ -1,6 +1,14 @@
-import { randomUUID } from "node:crypto";
-import { prisma } from "@hmcts/postgres";
 import { NotifyClient } from "notifications-node-client";
+import {
+  createTestSubscription as createSubscriptionApi,
+  createTestUser as createUserApi,
+  deleteTestNotifications,
+  deleteTestSubscriptions,
+  deleteTestUsers,
+  getNotificationsByPublicationId as getNotificationsByPublicationIdApi,
+  getNotificationsBySubscriptionId as getNotificationsBySubscriptionIdApi,
+  type NotificationRecord
+} from "./test-support-api.js";
 
 export interface TestSubscription {
   subscriptionId: string;
@@ -17,55 +25,43 @@ export interface TestUser {
 }
 
 export async function createTestUser(email: string, firstName = "Test", surname = "User"): Promise<TestUser> {
-  const userId = randomUUID();
-
-  await prisma.user.create({
-    data: {
-      userId,
-      email,
-      firstName,
-      surname,
-      role: "VERIFIED",
-      userProvenance: "CFT_IDAM",
-      userProvenanceId: `cft-test-${userId}`
-    }
+  const user = await createUserApi({
+    email,
+    firstName,
+    surname,
+    userProvenance: "CFT_IDAM",
+    role: "VERIFIED"
   });
-
-  return { userId, email, firstName, surname };
-}
-
-export async function createTestSubscription(userId: string, locationId: number): Promise<TestSubscription> {
-  const subscriptionId = randomUUID();
-
-  await prisma.subscription.create({
-    data: {
-      subscriptionId,
-      userId,
-      searchType: "LOCATION_ID",
-      searchValue: locationId.toString(),
-      dateAdded: new Date()
-    }
-  });
-
-  const user = await prisma.user.findUnique({ where: { userId } });
 
   return {
-    subscriptionId,
-    userId,
-    locationId,
-    userEmail: user?.email || ""
+    userId: user.userId,
+    email: user.email,
+    firstName: user.firstName,
+    surname: user.surname
   };
 }
 
-export async function getNotificationsByPublicationId(publicationId: string) {
-  return await (prisma as any).notificationAuditLog.findMany({
-    where: { publicationId },
-    orderBy: { createdAt: "asc" }
+export async function createTestSubscription(userId: string, locationId: number): Promise<TestSubscription> {
+  const subscription = await createSubscriptionApi({
+    userId,
+    searchType: "LOCATION_ID",
+    searchValue: locationId.toString()
   });
+
+  return {
+    subscriptionId: subscription.subscriptionId,
+    userId: subscription.userId,
+    locationId,
+    userEmail: "" // Email not returned from subscription API, but tests don't seem to need it
+  };
 }
 
-export async function waitForNotifications(publicationId: string, maxRetries = 15, delayMs = 1000, waitForGovNotifyId = false): Promise<any[]> {
-  let notifications = [];
+export async function getNotificationsByPublicationId(publicationId: string): Promise<NotificationRecord[]> {
+  return getNotificationsByPublicationIdApi(publicationId);
+}
+
+export async function waitForNotifications(publicationId: string, maxRetries = 15, delayMs = 1000, waitForGovNotifyId = false): Promise<NotificationRecord[]> {
+  let notifications: NotificationRecord[] = [];
   for (let i = 0; i < maxRetries; i++) {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
     notifications = await getNotificationsByPublicationId(publicationId);
@@ -83,11 +79,8 @@ export async function waitForNotifications(publicationId: string, maxRetries = 1
   return notifications;
 }
 
-export async function getNotificationsBySubscriptionId(subscriptionId: string) {
-  return await (prisma as any).notificationAuditLog.findMany({
-    where: { subscriptionId },
-    orderBy: { createdAt: "desc" }
-  });
+export async function getNotificationsBySubscriptionId(subscriptionId: string): Promise<NotificationRecord[]> {
+  return getNotificationsBySubscriptionIdApi(subscriptionId);
 }
 
 export async function getGovNotifyEmail(notificationId: string, maxRetries = 5, delayMs = 2000) {
@@ -122,37 +115,21 @@ export async function cleanupTestNotifications(publicationIds: string[]) {
   const validIds = publicationIds.filter((id) => id !== undefined && id !== null);
   if (validIds.length === 0) return;
 
-  await (prisma as any).notificationAuditLog.deleteMany({
-    where: {
-      publicationId: { in: validIds }
-    }
-  });
+  await deleteTestNotifications({ publicationIds: validIds });
 }
 
 export async function cleanupTestSubscriptions(subscriptionIds: string[]) {
   if (subscriptionIds.length === 0) return;
 
   // Delete notifications first to avoid foreign key constraint violation
-  await (prisma as any).notificationAuditLog.deleteMany({
-    where: {
-      subscriptionId: { in: subscriptionIds }
-    }
-  });
+  await deleteTestNotifications({ subscriptionIds });
 
   // Then delete subscriptions
-  await (prisma as any).subscription.deleteMany({
-    where: {
-      subscriptionId: { in: subscriptionIds }
-    }
-  });
+  await deleteTestSubscriptions({ searchValues: subscriptionIds });
 }
 
 export async function cleanupTestUsers(userIds: string[]) {
   if (userIds.length === 0) return;
 
-  await prisma.user.deleteMany({
-    where: {
-      userId: { in: userIds }
-    }
-  });
+  await deleteTestUsers(userIds);
 }
