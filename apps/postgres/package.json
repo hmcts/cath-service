@@ -20,7 +20,10 @@
     "seed": "psql $DATABASE_URL -f prisma/seed.sql"
   },
   "dependencies": {
-    "http-proxy": "1.18.1"
+    "@prisma/adapter-pg": "7.2.0",
+    "@prisma/client": "7.2.0",
+    "http-proxy": "1.18.1",
+    "pg": "8.20.0"
   },
   "devDependencies": {
     "@prisma/client": "7.2.0",
