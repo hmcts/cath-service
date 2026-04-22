@@ -62,8 +62,8 @@ const getHandler = async (req: Request, res: Response) => {
   const locationRows = await resolveLocationRows(confirmedLocations, locale);
   const listTypes = await resolveListTypeNames(pendingListTypeIds, locale);
 
-  const languageDisplay =
-    pendingLanguage && LANGUAGE_DISPLAY[pendingLanguage] ? LANGUAGE_DISPLAY[pendingLanguage][locale === "cy" ? "cy" : "en"] : t.noLanguageSelected;
+  const localeKey = locale === "cy" ? "cy" : "en";
+  const languageDisplay = pendingLanguage && LANGUAGE_DISPLAY[pendingLanguage] ? LANGUAGE_DISPLAY[pendingLanguage][localeKey] : t.noLanguageSelected;
 
   const errors =
     pendingListTypeIds.length === 0 ? { titleText: t.errorSummaryTitle, errorList: [{ text: t.errorNoListType, href: "#select-list-types-link" }] } : undefined;

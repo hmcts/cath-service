@@ -210,7 +210,11 @@ const postHandler = async (req: Request, res: Response) => {
   req.session.emailSubscriptions.pendingSubscriptions = [...new Set([...existingConfirmed, ...existingPending, ...selectedLocationIds])];
 
   if (req.user?.id) {
-    await savePendingSubscriptions(req.app.locals.redisClient, req.user.id, req.session.emailSubscriptions.pendingSubscriptions);
+    try {
+      await savePendingSubscriptions(req.app.locals.redisClient, req.user.id, req.session.emailSubscriptions.pendingSubscriptions);
+    } catch (err) {
+      console.error("Failed to persist pending subscriptions to Redis:", err);
+    }
   }
 
   // Save session before redirect to ensure data persists
