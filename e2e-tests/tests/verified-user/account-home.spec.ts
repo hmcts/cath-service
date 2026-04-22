@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
+import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 
 test.describe("Account Home Page", () => {
   // Authenticate before each test

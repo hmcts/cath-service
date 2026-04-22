@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { loginWithSSO } from "../utils/sso-helpers.js";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 // Helper function to authenticate as System Admin
 async function authenticateSystemAdmin(page: Page) {

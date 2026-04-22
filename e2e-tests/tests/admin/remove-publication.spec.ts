@@ -1,6 +1,18 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { loginWithSSO } from "../utils/sso-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
+import { getListTypeByName } from "../../utils/test-support-api.js";
+
+// List type name for Civil Daily Cause List (from app's default seeding)
+const CIVIL_DAILY_CAUSE_LIST_NAME = "CIVIL_DAILY_CAUSE_LIST";
+
+// Store list type ID after lookup
+let listTypeId: number;
+
+// Shared test location for the entire test suite
+let testLocationId: number;
+let testLocationName: string;
 
 test.describe("Remove Publication Flow", () => {
   test.beforeEach(async ({ page }) => {
@@ -9,6 +21,22 @@ test.describe("Remove Publication Flow", () => {
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
     }
     await page.waitForURL("/admin-dashboard");
+  });
+
+  // Look up list type ID and create test location before running tests
+  test.beforeAll(async () => {
+    // Create unique test location
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Remove Publication Court" });
+    testLocationId = testLocation.locationId;
+    testLocationName = testLocation.name;
+
+    // Look up list type
+    const listType = (await getListTypeByName(CIVIL_DAILY_CAUSE_LIST_NAME)) as { id: number };
+    if (!listType?.id) {
+      throw new Error(`List type ${CIVIL_DAILY_CAUSE_LIST_NAME} not found in database`);
+    }
+    listTypeId = listType.id;
+    console.log(`Found list type: ID=${listTypeId}, location: ${testLocationName} (${testLocationId})`);
   });
 
   // Upload test data before running remove tests
@@ -21,8 +49,8 @@ test.describe("Remove Publication Flow", () => {
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
     }
 
-    // Upload a test publication for locationId=9001 (Test Court Alpha)
-    await page.goto("/manual-upload?locationId=9001");
+    // Upload a test publication for the dynamically created location
+    await page.goto(`/manual-upload?locationId=${testLocationId}`);
     await page.waitForTimeout(1000); // Wait for autocomplete to initialize
 
     await page.locator('input[name="file"]').setInputFiles({
@@ -31,7 +59,7 @@ test.describe("Remove Publication Flow", () => {
       buffer: Buffer.from("E2E test content for remove-publication tests")
     });
 
-    await page.selectOption('select[name="listType"]', "1"); // Civil Daily Cause List
+    await page.selectOption('select[name="listType"]', listTypeId.toString());
     await page.fill('input[name="hearingStartDate-day"]', "15");
     await page.fill('input[name="hearingStartDate-month"]', "06");
     await page.fill('input[name="hearingStartDate-year"]', "2025");
@@ -110,7 +138,7 @@ test.describe("Remove Publication Flow", () => {
     // Use the autocomplete widget to select a location
     const courtInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });
     await courtInput.waitFor({ state: "visible", timeout: 10000 });
-    await courtInput.fill("Test Court Alpha");
+    await courtInput.fill(testLocationName);
     await page.waitForTimeout(500); // Wait for autocomplete suggestions
 
     // Select the first suggestion

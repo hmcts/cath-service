@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../utils/api-auth-helpers.js";
+import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import {
   cleanupTestNotifications,
   cleanupTestSubscriptions,
@@ -8,14 +9,14 @@ import {
   createTestUser,
   getGovNotifyEmail,
   waitForNotifications
-} from "../utils/notification-helpers.js";
+} from "../../utils/notification-helpers.js";
 
 const API_BASE_URL = "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
-function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: string, displayTo: string) {
+function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: string, displayTo: string, locationId: number, locationName: string) {
   return {
-    court_id: "9001",
+    court_id: locationId.toString(),
     provenance: "MANUAL_UPLOAD",
     content_date: contentDate,
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
@@ -29,7 +30,7 @@ function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: str
         version: "1.0"
       },
       venue: {
-        venueName: "Test Court Alpha",
+        venueName: locationName,
         venueAddress: {
           line: ["1 Test Street", "Test District"],
           town: "Test City",
@@ -44,7 +45,7 @@ function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: str
       courtLists: [
         {
           courtHouse: {
-            courtHouseName: "Test Court Alpha",
+            courtHouseName: locationName,
             courtHouseAddress: {
               line: ["1 Test Street"],
               town: "Test City",
@@ -151,6 +152,10 @@ function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: str
 }
 
 test.describe("Subscription Notifications - Email Summary and PDF", () => {
+  // Shared test location for the entire test suite
+  let testLocationId: number;
+  let testLocationName: string;
+
   const testData: {
     userIds: string[];
     subscriptionIds: string[];
@@ -160,6 +165,13 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
     subscriptionIds: [],
     publicationIds: []
   };
+
+  // Create test location before all tests run
+  test.beforeAll(async () => {
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Subscription Notification Court" });
+    testLocationId = testLocation.locationId;
+    testLocationName = testLocation.name;
+  });
 
   test.afterEach(async () => {
     await cleanupTestNotifications(testData.publicationIds);
@@ -176,14 +188,14 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
     const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser.userId);
 
-    const subscription = await createTestSubscription(testUser.userId, 9001);
+    const subscription = await createTestSubscription(testUser.userId, testLocationId);
     testData.subscriptionIds.push(subscription.subscriptionId);
 
     // Upload publication via API
     const contentDate = "2025-06-15";
     const displayFrom = "2025-06-15T00:00:00Z";
     const displayTo = "2025-06-16T23:59:59Z";
-    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo);
+    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo, testLocationId, testLocationName);
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
@@ -214,7 +226,7 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
 
       // Verify email contains list type and court information
       expect(govNotifyEmail.body).toContain("Civil and Family Daily Cause List");
-      expect(govNotifyEmail.body).toContain("Test Court Alpha");
+      expect(govNotifyEmail.body).toContain(testLocationName);
       expect(govNotifyEmail.body).toContain("15 June 2025");
 
       // Verify email contains Special Category Data warning
@@ -236,15 +248,15 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
     const testUser2 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser1.userId, testUser2.userId);
 
-    const subscription1 = await createTestSubscription(testUser1.userId, 9001);
-    const subscription2 = await createTestSubscription(testUser2.userId, 9001);
+    const subscription1 = await createTestSubscription(testUser1.userId, testLocationId);
+    const subscription2 = await createTestSubscription(testUser2.userId, testLocationId);
     testData.subscriptionIds.push(subscription1.subscriptionId, subscription2.subscriptionId);
 
     // Upload publication
     const contentDate = "2025-06-20";
     const displayFrom = "2025-06-20T00:00:00Z";
     const displayTo = "2025-06-21T23:59:59Z";
-    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo);
+    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo, testLocationId, testLocationName);
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
@@ -279,10 +291,7 @@ test.describe("Subscription Notifications - Email Summary and PDF", () => {
     const displayFrom = "2025-07-05T00:00:00Z";
     const displayTo = "2025-07-06T23:59:59Z";
 
-    const payload = {
-      ...createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo),
-      court_id: "999"
-    };
+    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo, 999, "Non-existent Court");
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {

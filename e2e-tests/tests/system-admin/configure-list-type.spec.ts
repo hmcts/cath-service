@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres";
 import { expect, test } from "@playwright/test";
-import { loginWithSSO } from "../utils/sso-helpers.js";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
+import { createTestArtefact, deleteTestArtefact, getFirstTestLocation, getListTypeByName } from "../../utils/test-support-api.js";
 
 test("admin can create, edit, and delete list type", async ({ page }) => {
   const uniqueName = `TEST_LIST_TYPE_${Date.now()}`;
@@ -113,12 +113,10 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   const createSuccessResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
   expect(createSuccessResults.violations).toEqual([]);
 
-  // Step 16: Get the created list type ID from the database
-  const createdListType = await prisma.listType.findUnique({
-    where: { name: uniqueName }
-  });
+  // Step 16: Get the created list type ID via API
+  const createdListType = (await getListTypeByName(uniqueName)) as { listTypeId: number } | null;
   expect(createdListType).toBeTruthy();
-  listTypeId = createdListType!.id;
+  listTypeId = createdListType!.listTypeId;
 
   // Step 17: Return to dashboard
   await page.getByRole("link", { name: "Return to System Admin dashboard" }).click();
@@ -226,34 +224,30 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
 });
 
 test("admin cannot delete list type with artifacts @nightly", async ({ page }) => {
-  // Setup: Query for list type and location instead of using hardcoded IDs
+  // Setup: Query for list type and location via API instead of using hardcoded IDs
   let testArtefactId: string | undefined;
 
   try {
-    const familyListType = await prisma.listType.findFirst({
-      where: { name: "FAMILY_DAILY_CAUSE_LIST" }
-    });
+    const familyListType = (await getListTypeByName("FAMILY_DAILY_CAUSE_LIST")) as { listTypeId: number } | null;
     if (!familyListType) {
       throw new Error("Family Daily Cause List not found in seed data");
     }
 
-    const testLocation = await prisma.location.findFirst();
+    const testLocation = (await getFirstTestLocation()) as { locationId: number } | null;
     if (!testLocation) {
       throw new Error("No location found in seed data");
     }
 
-    const testArtefact = await prisma.artefact.create({
-      data: {
-        locationId: String(testLocation.locationId),
-        listTypeId: familyListType.id,
-        contentDate: new Date(),
-        sensitivity: "Public",
-        language: "ENGLISH",
-        displayFrom: new Date(),
-        displayTo: new Date(Date.now() + 86400000),
-        isFlatFile: false,
-        provenance: "CFT_IDAM"
-      }
+    const testArtefact = await createTestArtefact({
+      locationId: String(testLocation.locationId),
+      listTypeId: familyListType.listTypeId,
+      contentDate: new Date().toISOString(),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date().toISOString(),
+      displayTo: new Date(Date.now() + 86400000).toISOString(),
+      isFlatFile: false,
+      provenance: "CFT_IDAM"
     });
     testArtefactId = testArtefact.artefactId;
 
@@ -289,11 +283,9 @@ test("admin cannot delete list type with artifacts @nightly", async ({ page }) =
     await page.getByRole("button", { name: "Confirm" }).click();
     await expect(page).toHaveURL("/view-list-types");
   } finally {
-    // Cleanup: Delete the test artefact
+    // Cleanup: Delete the test artefact via API
     if (testArtefactId) {
-      await prisma.artefact.delete({
-        where: { artefactId: testArtefactId }
-      });
+      await deleteTestArtefact(testArtefactId);
     }
   }
 });

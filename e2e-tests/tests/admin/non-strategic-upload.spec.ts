@@ -3,9 +3,13 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
 import ExcelJSPkg from "exceljs";
-import { loginWithSSO } from "../utils/sso-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 const { Workbook } = ExcelJSPkg;
+
+// Shared test location for the entire test suite
+let testLocationId: number;
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -40,7 +44,7 @@ async function authenticateSystemAdmin(page: Page) {
 // Helper function to navigate to summary page by completing the upload form
 async function navigateToSummaryPage(page: Page) {
   await authenticateSystemAdmin(page);
-  await page.goto("/non-strategic-upload?locationId=9001");
+  await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
   await page.waitForTimeout(1000);
 
   await page.selectOption('select[name="listType"]', "9");
@@ -75,6 +79,12 @@ async function completeNonStrategicUploadFlow(page: Page) {
 }
 
 test.describe("Non-Strategic Upload End-to-End Flow", () => {
+  // Create test location before all tests run
+  test.beforeAll(async () => {
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Non-Strategic Upload Court" });
+    testLocationId = testLocation.locationId;
+  });
+
   test.beforeEach(async ({ page }) => {
     await authenticateSystemAdmin(page);
   });
@@ -82,7 +92,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
   test.describe("Complete End-to-End Journey", () => {
     test("should be keyboard accessible throughout entire upload flow", async ({ page }) => {
       // Step 1: Test keyboard accessibility on form page
-      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
@@ -156,7 +166,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
 
     test("should complete full upload flow from form to success", async ({ page }) => {
       // Step 1: Load non-strategic upload form
-      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
       await expect(page).toHaveTitle("Upload - Upload Excel file - Court and tribunal hearings - GOV.UK");
 
@@ -344,7 +354,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
     });
 
     test("should display file validation errors for invalid type and large size", async ({ page }) => {
-      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
 
       await page.selectOption('select[name="listType"]', "9");
@@ -472,7 +482,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
     });
 
     test("should validate date range and preserve all form data when validation fails", async ({ page }) => {
-      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');
@@ -705,7 +715,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
       await completeNonStrategicUploadFlow(page);
       await expect(page).toHaveURL("/non-strategic-upload-success");
 
-      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
 
       await page.selectOption('select[name="listType"]', "9");
@@ -741,7 +751,7 @@ test.describe("Non-Strategic Upload End-to-End Flow", () => {
     test("should display correctly on mobile viewport throughout entire flow", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
 
-      await page.goto("/non-strategic-upload?locationId=9001");
+      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
 
       const fileInput = page.locator('input[name="file"]');

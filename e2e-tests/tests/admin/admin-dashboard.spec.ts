@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { loginWithSSO } from "../utils/sso-helpers.js";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe("Admin Dashboard", () => {
   test.beforeEach(async ({ page }) => {
