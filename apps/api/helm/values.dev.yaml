@@ -13,7 +13,5 @@ nodejs:
           alias: AZURE_CLIENT_ID
         - name: app-pip-data-management-scope
           alias: AZURE_SCOPE
-        - name: auto-pip-stg-courtel-api
-          alias: COURTEL_API_URL
         - name: courtel-certificate
           alias: COURTEL_CERTIFICATE
