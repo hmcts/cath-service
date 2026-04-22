@@ -206,8 +206,8 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
       ...validPayload,
       hearing_list: {
         cases: Array(100000).fill({
-          caseNumber: "A" + "x".repeat(100),
-          caseName: "B" + "x".repeat(100)
+          caseNumber: `A${"x".repeat(100)}`,
+          caseName: `B${"x".repeat(100)}`
         })
       }
     };

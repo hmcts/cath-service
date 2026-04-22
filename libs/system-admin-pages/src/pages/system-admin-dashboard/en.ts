@@ -12,9 +12,9 @@ export const en = {
       href: "/delete-court"
     },
     {
-      title: "Manage Third-Party Users",
+      title: "Manage Third Party Users",
       description: "View, create, update and remove third-party users and subscriptions",
-      href: "/third-party-users"
+      href: "/manage-third-party-users"
     },
     {
       title: "User Management",
@@ -45,6 +45,11 @@ export const en = {
       title: "Manage List Types",
       description: "View, create and update list type configuration",
       href: "/manage-list-types"
+    },
+    {
+      title: "Configure List Type",
+      description: "Add and manage list type configurations",
+      href: "/configure-list-type-enter-details"
     }
   ]
 };

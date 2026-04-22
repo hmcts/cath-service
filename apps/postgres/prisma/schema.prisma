@@ -85,3 +85,28 @@ model IngestionLog {
   @@map("ingestion_log")
 }
 
+model LegacyThirdPartyUser {
+  id          String   @id @default(uuid()) @map("id") @db.Uuid
+  name        String   @db.VarChar(255)
+  createdDate DateTime @default(now()) @map("created_date")
+
+  subscriptions LegacyThirdPartySubscription[]
+
+  @@map("legacy_third_party_user")
+}
+
+model LegacyThirdPartySubscription {
+  id          String   @id @default(uuid()) @map("id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  listTypeId  Int      @map("list_type_id")
+  channel     String   @default("API") @db.VarChar(20)
+  sensitivity String   @db.VarChar(20)
+  createdDate DateTime @default(now()) @map("created_date")
+
+  user LegacyThirdPartyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([listTypeId])
+  @@map("legacy_third_party_subscription")
+}
+

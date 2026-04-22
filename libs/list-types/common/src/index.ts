@@ -41,4 +41,4 @@ export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";
 export * from "./sjp/sjp-service.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
-export { convertListTypeNameToKebabCase, validateListTypeJson } from "./validation/list-type-validator.js";
+export { convertListTypeNameToKebabCase, type ListTypeInfo, validateListTypeJson } from "./validation/list-type-validator.js";

@@ -28,7 +28,7 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
@@ -39,10 +39,7 @@
   },
   "devDependencies": {
     "@types/node": "24.10.4",
-    "typescript": "5.9.3"
-  },
-  "peerDependencies": {
-    "@prisma/client": "*",
-    "vitest": "4.0.18"
+    "typescript": "5.9.3",
+    "vitest": "4.1.4"
   }
 }
