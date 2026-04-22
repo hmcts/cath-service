@@ -14,7 +14,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
     const email = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL;
     const password = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD;
     if (!email || !password) {
-      throw new Error('SSO_TEST_SYSTEM_ADMIN_EMAIL and SSO_TEST_SYSTEM_ADMIN_PASSWORD must be set');
+      throw new Error("SSO_TEST_SYSTEM_ADMIN_EMAIL and SSO_TEST_SYSTEM_ADMIN_PASSWORD must be set");
     }
     await loginWithSSO(page, email, password);
   }
@@ -38,7 +38,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
 
   // Step 5: Test accessibility on enter details page
   const accessibilityResults = await new AxeBuilder({ page })
-    .disableRules(['region']) // Disable region rule - GOV.UK skip links, phase banner, and back links intentionally outside landmarks
+    .disableRules(["region"]) // Disable region rule - GOV.UK skip links, phase banner, and back links intentionally outside landmarks
     .analyze();
   expect(accessibilityResults.violations).toEqual([]);
 
@@ -75,9 +75,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   await firstCheckbox.check();
 
   // Step 10: Test accessibility on sub-jurisdictions page
-  const subJurisdictionsResults = await new AxeBuilder({ page })
-    .disableRules(['region'])
-    .analyze();
+  const subJurisdictionsResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
   expect(subJurisdictionsResults.violations).toEqual([]);
 
   // Step 10a: Test keyboard navigation - navigate checkboxes with keyboard
@@ -98,9 +96,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   await expect(page.getByText("Test List", { exact: true })).toBeVisible();
 
   // Step 13: Test accessibility on preview page
-  const previewResults = await new AxeBuilder({ page })
-    .disableRules(['region'])
-    .analyze();
+  const previewResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
   expect(previewResults.violations).toEqual([]);
 
   // Step 13a: Test keyboard navigation - focus and press Enter to submit
@@ -114,9 +110,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   await expect(page.getByText("List type saved successfully")).toBeVisible();
 
   // Step 15: Test accessibility on success page
-  const createSuccessResults = await new AxeBuilder({ page })
-    .disableRules(['region'])
-    .analyze();
+  const createSuccessResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
   expect(createSuccessResults.violations).toEqual([]);
 
   // Step 16: Get the created list type ID from the database
@@ -185,9 +179,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   await page.getByRole("link", { name: "English" }).click();
 
   // Step 31: Test accessibility on delete page
-  const deletePageResults = await new AxeBuilder({ page })
-    .disableRules(['region'])
-    .analyze();
+  const deletePageResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
   expect(deletePageResults.violations).toEqual([]);
 
   // Step 31a: Test keyboard navigation - navigate radio buttons with arrow keys
@@ -221,9 +213,7 @@ test("admin can create, edit, and delete list type", async ({ page }) => {
   await expect(page.getByText("The list type has been deleted successfully")).toBeVisible();
 
   // Step 36: Test accessibility on success page
-  const deleteSuccessResults = await new AxeBuilder({ page })
-    .disableRules(['region'])
-    .analyze();
+  const deleteSuccessResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
   expect(deleteSuccessResults.violations).toEqual([]);
 
   // Step 37: Return to view list types
@@ -273,7 +263,7 @@ test("admin cannot delete list type with artifacts @nightly", async ({ page }) =
       const email = process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL;
       const password = process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD;
       if (!email || !password) {
-        throw new Error('SSO_TEST_SYSTEM_ADMIN_EMAIL and SSO_TEST_SYSTEM_ADMIN_PASSWORD must be set');
+        throw new Error("SSO_TEST_SYSTEM_ADMIN_EMAIL and SSO_TEST_SYSTEM_ADMIN_PASSWORD must be set");
       }
       await loginWithSSO(page, email, password);
     }
@@ -291,9 +281,7 @@ test("admin cannot delete list type with artifacts @nightly", async ({ page }) =
     await expect(page).toHaveURL(new RegExp(`/delete-list-type\\?id=${familyListType.id}`));
 
     // Step 5: Test accessibility with error message
-    const errorPageResults = await new AxeBuilder({ page })
-      .disableRules(['region', 'empty-heading'])
-      .analyze();
+    const errorPageResults = await new AxeBuilder({ page }).disableRules(["region", "empty-heading"]).analyze();
     expect(errorPageResults.violations).toEqual([]);
 
     // Step 6: Select "No" to cancel and return to view list types

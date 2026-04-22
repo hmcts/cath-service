@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
 const API_BASE_URL = "http://localhost:3001";
 

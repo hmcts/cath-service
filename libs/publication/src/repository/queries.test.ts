@@ -60,7 +60,6 @@ vi.mock("@hmcts/list-types-common", () => ({
   ]
 }));
 
-
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
