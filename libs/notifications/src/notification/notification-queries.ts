@@ -1,25 +1,5 @@
 import { prisma } from "@hmcts/postgres";
 
-export interface CreateNotificationData {
-  subscriptionId: string;
-  userId: string;
-  publicationId: string;
-  status?: string;
-  errorMessage?: string;
-}
-
-export interface NotificationAuditLog {
-  notificationId: string;
-  subscriptionId: string;
-  userId: string;
-  publicationId: string;
-  govNotifyId: string | null;
-  status: string;
-  errorMessage: string | null;
-  createdAt: Date;
-  sentAt: Date | null;
-}
-
 export async function createNotificationAuditLog(data: CreateNotificationData): Promise<NotificationAuditLog> {
   const notification = await prisma.notificationAuditLog.create({
     data: {
@@ -27,7 +7,8 @@ export async function createNotificationAuditLog(data: CreateNotificationData): 
       userId: data.userId,
       publicationId: data.publicationId,
       status: data.status || "Pending",
-      errorMessage: data.errorMessage
+      errorMessage: data.errorMessage,
+      emailType: data.emailType || "SUBSCRIPTION"
     }
   });
 
@@ -62,4 +43,39 @@ export async function getNotificationsByPublicationId(publicationId: string): Pr
   return await prisma.notificationAuditLog.findMany({
     where: { publicationId }
   });
+}
+
+export async function countEmailsSentInWindow(userId: string, emailType: string, windowStart: Date): Promise<number> {
+  return prisma.notificationAuditLog.count({
+    where: {
+      userId,
+      emailType,
+      status: "Sent",
+      createdAt: {
+        gte: windowStart
+      }
+    }
+  });
+}
+
+export interface CreateNotificationData {
+  subscriptionId: string;
+  userId: string;
+  publicationId: string;
+  status?: string;
+  errorMessage?: string;
+  emailType?: string;
+}
+
+export interface NotificationAuditLog {
+  notificationId: string;
+  subscriptionId: string;
+  userId: string;
+  publicationId: string;
+  govNotifyId: string | null;
+  status: string;
+  errorMessage: string | null;
+  emailType: string;
+  createdAt: Date;
+  sentAt: Date | null;
 }
