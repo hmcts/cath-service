@@ -89,7 +89,7 @@ const getHandler = async (req: Request, res: Response) => {
     // Stream the file
     const fileContent = await fs.readFile(filePath);
     res.send(fileContent);
-  } catch (error) {
+  } catch (_error) {
     console.error("Error serving file");
     res.status(404).send("File not found");
   }

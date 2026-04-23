@@ -46,11 +46,15 @@ vi.mock("config", () => ({
 }));
 
 vi.mock("@hmcts/auth", () => ({
-  configurePassport: vi.fn(),
   authNavigationMiddleware: vi.fn(() => vi.fn()),
-  ssoCallbackHandler: vi.fn(),
+  b2cCallbackHandler: vi.fn(),
+  b2cCallbackPostHandler: vi.fn(),
+  b2cForgotPasswordHandler: vi.fn(),
   cftCallbackHandler: vi.fn(),
-  crimeCallbackHandler: vi.fn()
+  configurePassport: vi.fn(),
+  crimeCallbackHandler: vi.fn(),
+  sessionTimeoutMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
+  ssoCallbackHandler: vi.fn()
 }));
 
 vi.mock("@hmcts/admin-pages/config", () => ({

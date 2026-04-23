@@ -8,11 +8,7 @@ test.describe("Account Home Page", () => {
     await page.goto("/sign-in");
     await page.getByRole("radio", { name: /with a myhmcts account/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(
-      page,
-      process.env.CFT_VALID_TEST_ACCOUNT!,
-      process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!
-    );
+    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
     await expect(page).toHaveURL(/\/account-home/);
 
     // Check page content

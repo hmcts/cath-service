@@ -25,8 +25,8 @@ describe("system-admin-dashboard template", () => {
       expect(en.title).toBe("System Admin Dashboard");
     });
 
-    it("should have 9 tiles", () => {
-      expect(en.tiles).toHaveLength(9);
+    it("should have 10 tiles", () => {
+      expect(en.tiles).toHaveLength(10);
     });
 
     it("should have tiles with required properties", () => {
@@ -43,7 +43,7 @@ describe("system-admin-dashboard template", () => {
     it("should have correct tile order and titles", () => {
       expect(en.tiles[0].title).toBe("Upload Reference Data");
       expect(en.tiles[1].title).toBe("Delete Court");
-      expect(en.tiles[2].title).toBe("Manage Third-Party Users");
+      expect(en.tiles[2].title).toBe("Manage Third Party Users");
       expect(en.tiles[3].title).toBe("User Management");
       expect(en.tiles[4].title).toBe("Blob Explorer");
       expect(en.tiles[5].title).toBe("Bulk Create Media Accounts");
@@ -55,7 +55,7 @@ describe("system-admin-dashboard template", () => {
     it("should have correct href for each tile", () => {
       expect(en.tiles[0].href).toBe("/upload-reference-data");
       expect(en.tiles[1].href).toBe("/delete-court");
-      expect(en.tiles[2].href).toBe("/third-party-users");
+      expect(en.tiles[2].href).toBe("/manage-third-party-users");
       expect(en.tiles[3].href).toBe("/user-management");
       expect(en.tiles[4].href).toBe("/blob-explorer-locations");
       expect(en.tiles[5].href).toBe("/bulk-media-accounts");

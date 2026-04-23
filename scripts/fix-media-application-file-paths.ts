@@ -1,12 +1,13 @@
 #!/usr/bin/env tsx
+
 /**
  * Script to fix media applications that have files on disk but no proofOfIdPath in database
  * Run with: tsx scripts/fix-media-application-file-paths.ts
  */
 
-import { prisma } from "@hmcts/postgres";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { prisma } from "@hmcts/postgres";
 
 const STORAGE_PATH = path.join(process.cwd(), "storage", "temp", "files");
 
@@ -35,9 +36,7 @@ async function fixMediaApplicationFilePaths() {
         await fs.access(filePath);
         foundFile = filePath;
         break;
-      } catch {
-        continue;
-      }
+      } catch {}
     }
 
     if (foundFile) {

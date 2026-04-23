@@ -14,7 +14,7 @@ export const cy = {
     {
       title: "Rheoli Defnyddwyr Trydydd Parti",
       description: "Gweld, creu, diweddaru a dileu defnyddwyr a thanysgrifiadau trydydd parti",
-      href: "/third-party-users"
+      href: "/manage-third-party-users"
     },
     {
       title: "Rheoli Defnyddwyr",
@@ -45,6 +45,11 @@ export const cy = {
       title: "Rheoli Mathau Rhestr",
       description: "Gweld, creu a diweddaru ffurfweddiad math rhestr",
       href: "/manage-list-types"
+    },
+    {
+      title: "Ffurfweddu Math Rhestr",
+      description: "Ychwanegu a rheoli ffurfweddiadau math rhestr",
+      href: "/configure-list-type-enter-details"
     }
   ]
 };

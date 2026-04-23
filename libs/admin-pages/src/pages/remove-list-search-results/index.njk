@@ -27,7 +27,7 @@
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
                 <th scope="col" class="govuk-table__header govuk-table__header--sortable">
-                  <a href="?sort=listType&order={{ 'desc' if sortBy == 'listType' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                  <a href="?sort=listType&order={{ 'desc' if sortBy == 'listType' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.listType }}
                     {% if sortBy == 'listType' %}
                       <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
@@ -35,7 +35,7 @@
                   </a>
                 </th>
                 <th scope="col" class="govuk-table__header govuk-table__header--sortable">
-                  <a href="?sort=courtName&order={{ 'desc' if sortBy == 'courtName' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                  <a href="?sort=courtName&order={{ 'desc' if sortBy == 'courtName' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.courtName }}
                     {% if sortBy == 'courtName' %}
                       <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
@@ -43,7 +43,7 @@
                   </a>
                 </th>
                 <th scope="col" class="govuk-table__header govuk-table__header--sortable">
-                  <a href="?sort=contentDate&order={{ 'desc' if sortBy == 'contentDate' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                  <a href="?sort=contentDate&order={{ 'desc' if sortBy == 'contentDate' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.contentDate }}
                     {% if sortBy == 'contentDate' %}
                       <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
@@ -52,7 +52,7 @@
                 </th>
                 <th scope="col" class="govuk-table__header">{{ tableHeaders.displayDates }}</th>
                 <th scope="col" class="govuk-table__header govuk-table__header--sortable">
-                  <a href="?sort=language&order={{ 'desc' if sortBy == 'language' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                  <a href="?sort=language&order={{ 'desc' if sortBy == 'language' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.language }}
                     {% if sortBy == 'language' %}
                       <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
@@ -60,7 +60,7 @@
                   </a>
                 </th>
                 <th scope="col" class="govuk-table__header govuk-table__header--sortable">
-                  <a href="?sort=sensitivity&order={{ 'desc' if sortBy == 'sensitivity' and order == 'asc' else 'asc' }}{{ '&lng=cy' if lng == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
+                  <a href="?sort=sensitivity&order={{ 'desc' if sortBy == 'sensitivity' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.sensitivity }}
                     {% if sortBy == 'sensitivity' %}
                       <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>

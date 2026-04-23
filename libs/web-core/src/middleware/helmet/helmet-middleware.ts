@@ -7,6 +7,8 @@ export interface SecurityOptions {
   isDevelopment?: boolean;
   cftIdamUrl?: string;
   crimeIdamUrl?: string;
+  b2cTenantName?: string;
+  b2cCustomDomain?: string;
 }
 
 export function configureNonce() {
@@ -17,7 +19,17 @@ export function configureNonce() {
 }
 
 export function configureHelmet(options: SecurityOptions = {}) {
-  const { enableGoogleTagManager = true, isDevelopment = process.env.NODE_ENV !== "production", cftIdamUrl, crimeIdamUrl } = options;
+  const {
+    enableGoogleTagManager = true,
+    isDevelopment = process.env.NODE_ENV !== "production",
+    cftIdamUrl,
+    crimeIdamUrl,
+    b2cTenantName,
+    b2cCustomDomain
+  } = options;
+
+  // Use custom domain if provided, otherwise fall back to b2clogin.com
+  const b2cUrl = b2cCustomDomain ? `https://${b2cCustomDomain}` : b2cTenantName ? `https://${b2cTenantName}.b2clogin.com` : undefined;
 
   const scriptSources = [
     "'self'",
@@ -36,7 +48,7 @@ export function configureHelmet(options: SecurityOptions = {}) {
 
   const frameSources = ["'self'", ...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
 
-  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : []), ...(crimeIdamUrl ? [crimeIdamUrl] : [])];
+  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : []), ...(crimeIdamUrl ? [crimeIdamUrl] : []), ...(b2cUrl ? [b2cUrl] : [])];
 
   return helmet({
     contentSecurityPolicy: {
