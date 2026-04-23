@@ -3,6 +3,9 @@
 nodejs:
   environment:
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
+    ENABLE_B2C: 'true'
+    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
+    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
     pip-ss-kv-stg:
       secrets:
@@ -22,11 +25,8 @@ nodejs:
           alias: CFT_IDAM_CLIENT_SECRET
         - name: gov-uk-notify-test-api-key
           alias: GOVUK_NOTIFY_API_KEY
-        - name: b2c-tenant-id
-          alias: AZURE_B2C_TENANT_ID
-        - name: auto-pip-stg-pip-account-management-stg-id
-          alias: AZURE_B2C_CLIENT_ID
-        - name: auto-pip-stg-pip-account-management-stg-pwd
-          alias: AZURE_B2C_CLIENT_SECRET
-        - name: b2c-ad-url
-          alias: AZURE_B2C_DOMAIN
+        # B2C secrets for verified user sign-in (using PIP staging frontend app registration)
+        - name: auto-pip-stg-pip-frontend-stg-id
+          alias: B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-frontend-stg-pwd
+          alias: B2C_CLIENT_SECRET
