@@ -113,7 +113,7 @@ describe("pushWithRetry", () => {
     const result = await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, null);
 
     expect(result).toEqual({ statusCode: 204, success: true });
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined);
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, undefined);
   });
 
   it("forwards pdfPath to executePush", async () => {
@@ -122,6 +122,15 @@ describe("pushWithRetry", () => {
 
     await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, "[ThirdParty]", pdfPath);
 
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, pdfPath);
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, pdfPath, undefined);
+  });
+
+  it("forwards flatFilePath to executePush", async () => {
+    mockExecutePush.mockResolvedValue({ statusCode: 200, success: true });
+    const flatFilePath = "/tmp/artefact-1.xlsx";
+
+    await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, null, "[ThirdParty]", undefined, flatFilePath);
+
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, flatFilePath);
   });
 });

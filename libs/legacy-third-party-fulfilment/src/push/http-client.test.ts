@@ -246,4 +246,70 @@ describe("executePush", () => {
       expect(options.headers["Content-Type"]).not.toBe("application/json");
     });
   });
+
+  describe("multipart/form-data with flatFilePath", () => {
+    const TEST_FLAT_FILE_PATH = "/tmp/artefact-1.xlsx";
+    const TEST_FLAT_FILE_BYTES = Buffer.from("fake excel content");
+
+    beforeEach(() => {
+      mockReadFile.mockResolvedValue(TEST_FLAT_FILE_BYTES);
+    });
+
+    it("sets Content-Type to multipart/form-data when flatFilePath is provided", async () => {
+      setupResponseMock(200);
+
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, TEST_FLAT_FILE_PATH);
+
+      const options = mockHttpsRequest.mock.calls[0][0] as { headers: Record<string, string | number> };
+      expect(options.headers["Content-Type"]).toMatch(/^multipart\/form-data; boundary=/);
+    });
+
+    it("reads the flat file from the given path", async () => {
+      setupResponseMock(200);
+
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, TEST_FLAT_FILE_PATH);
+
+      expect(mockReadFile).toHaveBeenCalledWith(TEST_FLAT_FILE_PATH);
+    });
+
+    it("includes only the file part with correct content type for xlsx", async () => {
+      const reqMock = setupResponseMock(200);
+
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, TEST_FLAT_FILE_PATH);
+
+      expect(reqMock.write).toHaveBeenCalledOnce();
+      const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
+      const bodyStr = writtenBuffer.toString("binary");
+
+      expect(bodyStr).toContain('name="file"');
+      expect(bodyStr).toContain('filename="artefact-1.xlsx"');
+      expect(bodyStr).toContain("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      expect(bodyStr).not.toContain('name="json"');
+      expect(bodyStr).not.toContain('name="pdf"');
+    });
+
+    it("uses application/octet-stream for unknown file extensions", async () => {
+      const reqMock = setupResponseMock(200);
+
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, "/tmp/artefact-1.dat");
+
+      const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
+      const bodyStr = writtenBuffer.toString("binary");
+
+      expect(bodyStr).toContain("application/octet-stream");
+    });
+
+    it("takes priority over pdfPath when both are provided", async () => {
+      const reqMock = setupResponseMock(200);
+
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, TEST_PDF_PATH, TEST_FLAT_FILE_PATH);
+
+      const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
+      const bodyStr = writtenBuffer.toString("binary");
+
+      expect(bodyStr).toContain('name="file"');
+      expect(bodyStr).not.toContain('name="pdf"');
+      expect(bodyStr).not.toContain('name="json"');
+    });
+  });
 });

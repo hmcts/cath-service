@@ -181,6 +181,7 @@ interface ProcessPublicationParams {
   sensitivity?: string;
   language?: string;
   isUpdate?: boolean;
+  flatFilePath?: string;
   skipNotifications?: boolean;
   skipThirdPartyPush?: boolean;
   logPrefix?: string;
@@ -208,6 +209,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     sensitivity = "",
     language = "",
     isUpdate = false,
+    flatFilePath,
     skipNotifications = false,
     skipThirdPartyPush = false,
     logPrefix = "[Publication]"
@@ -263,6 +265,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       isUpdate,
       jsonData,
       pdfPath: result.pdfPath,
+      flatFilePath,
       logPrefix
     }).catch((error) => {
       console.error(`${logPrefix} Third-party push failed:`, error);

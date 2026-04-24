@@ -470,5 +470,17 @@ describe("publication-processor", async () => {
 
       expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: undefined }));
     });
+
+    it("forwards flatFilePath to sendThirdPartyPublications when provided", async () => {
+      await processPublication({ ...baseParams, jsonData: undefined, skipNotifications: true, flatFilePath: "/tmp/artefact.xlsx" });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: "/tmp/artefact.xlsx" }));
+    });
+
+    it("forwards undefined flatFilePath to sendThirdPartyPublications when not provided", async () => {
+      await processPublication({ ...baseParams, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: undefined }));
+    });
   });
 });

@@ -113,6 +113,19 @@ describe("sendThirdPartyPublications", () => {
     const [, , , , , forwardedPdfPath] = vi.mocked(pushWithRetry).mock.calls[0];
     expect(forwardedPdfPath).toBeUndefined();
   });
+
+  it("forwards flatFilePath to pushWithRetry when provided", async () => {
+    const flatFilePath = "/tmp/artefact-1.xlsx";
+    await sendThirdPartyPublications({ ...BASE_PARAMS, flatFilePath });
+    const [, , , , , , forwardedFlatFilePath] = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(forwardedFlatFilePath).toBe(flatFilePath);
+  });
+
+  it("forwards undefined flatFilePath to pushWithRetry when not provided", async () => {
+    await sendThirdPartyPublications(BASE_PARAMS);
+    const [, , , , , , forwardedFlatFilePath] = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(forwardedFlatFilePath).toBeUndefined();
+  });
 });
 
 describe("sendThirdPartyDeletion", () => {
