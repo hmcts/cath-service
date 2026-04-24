@@ -6,8 +6,8 @@
  * Cleanup happens automatically in global-teardown using the prefix.
  */
 
-import { createTestLocation, getFirstSubJurisdiction } from "./test-support-api.js";
 import { prefixName } from "./test-prefix.js";
+import { createTestLocation, getFirstSubJurisdiction } from "./test-support-api.js";
 
 /**
  * Generate a unique test identifier for this test instance.

@@ -2,8 +2,8 @@ import type { FullConfig } from "@playwright/test";
 import { seedListTypes } from "./utils/seed-list-types.js";
 import { seedLocationData } from "./utils/seed-location-data.js";
 import { seedAllReferenceData } from "./utils/seed-reference-data.js";
-import { checkTestSupportHealth } from "./utils/test-support-api.js";
 import { generateTestPrefix, setTestPrefix } from "./utils/test-prefix.js";
+import { checkTestSupportHealth } from "./utils/test-support-api.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
 
 async function globalSetup(_config: FullConfig) {

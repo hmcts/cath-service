@@ -1,5 +1,4 @@
 import { NotifyClient } from "notifications-node-client";
-import { generateTestEmail } from "./test-prefix.js";
 import {
   createTestSubscription as createSubscriptionApi,
   createTestUser as createUserApi,
@@ -93,7 +92,7 @@ export async function getGovNotifyEmail(notificationId: string, maxRetries = 5, 
   const notifyClient = new NotifyClient(apiKey);
 
   // Retry fetching the notification as it might not be immediately available
-  let lastError;
+  let lastError: Error | undefined;
   for (let i = 0; i < maxRetries; i++) {
     try {
       await new Promise((resolve) => setTimeout(resolve, delayMs));

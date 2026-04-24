@@ -26,7 +26,7 @@ test.describe("Email Subscriptions", () => {
     await expect(page).toHaveURL(/\/account-home/);
   });
 
-  test.afterEach(async ({}, testInfo) => {
+  test.afterEach(async (_, testInfo) => {
     // Only cleanup subscriptions - locations are prefixed and handled by global teardown
     const locationData = testLocationMap.get(testInfo.testId);
     if (locationData) {

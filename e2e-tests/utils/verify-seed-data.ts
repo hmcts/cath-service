@@ -115,12 +115,16 @@ export async function verifySeedData(): Promise<VerificationResult> {
       console.log("\n✓ All seed data verification checks passed!");
     } else {
       console.error("\n✗ Seed data verification failed:");
-      errors.forEach((error) => console.error(`  - ${error}`));
+      for (const error of errors) {
+        console.error(`  - ${error}`);
+      }
     }
 
     if (warnings.length > 0) {
       console.warn("\n⚠ Warnings:");
-      warnings.forEach((warning) => console.warn(`  - ${warning}`));
+      for (const warning of warnings) {
+        console.warn(`  - ${warning}`);
+      }
     }
 
     console.log("\nSummary:", result.summary);

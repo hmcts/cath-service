@@ -1,5 +1,5 @@
-import { cleanupTestDataByPrefix } from "./utils/test-support-api.js";
 import { clearTestPrefix, getTestPrefix } from "./utils/test-prefix.js";
+import { cleanupTestDataByPrefix } from "./utils/test-support-api.js";
 
 async function globalTeardown() {
   try {

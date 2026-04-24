@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderCauseListData } from "../rendering/renderer.js";

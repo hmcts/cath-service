@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import {
   cleanupTestNotifications,
   cleanupTestSubscriptions,

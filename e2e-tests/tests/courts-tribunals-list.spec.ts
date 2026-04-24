@@ -5,7 +5,7 @@ import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 // Shared test locations for the entire test suite
 let testLocationId: number;
 let testLocationName: string;
-let testSjpLocationId: number;
+let _testSjpLocationId: number;
 let testSjpLocationName: string;
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
@@ -22,7 +22,7 @@ test.describe("Courts and Tribunals List Page", () => {
     testLocationName = testLocation.name;
 
     const sjpLocation = await createUniqueTestLocation({ namePrefix: "Courts List SJP Court" });
-    testSjpLocationId = sjpLocation.locationId;
+    _testSjpLocationId = sjpLocation.locationId;
     testSjpLocationName = sjpLocation.name;
   });
 

@@ -17,7 +17,7 @@ function validateEnvVars() {
   }
 
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(", ")}. ` + "Please set these variables before running the tests.");
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}. Please set these variables before running the tests.`);
   }
 }
 

@@ -41,7 +41,7 @@ test.describe("Account Home", () => {
     await expect(emailSection).toHaveAttribute("href", "/subscription-management");
 
     // STEP 7: Test accessibility
-    let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 8: Test Welsh content

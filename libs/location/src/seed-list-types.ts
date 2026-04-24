@@ -42,8 +42,6 @@ export async function seedListTypes() {
     throw new Error("No sub-jurisdictions found. Please ensure sub-jurisdictions are seeded first.");
   }
 
-  let seededCount = 0;
-
   for (const listType of listTypeData) {
     try {
       await (prisma as any).listType.create({
@@ -63,8 +61,6 @@ export async function seedListTypes() {
           }
         }
       });
-
-      seededCount++;
     } catch (error) {
       console.error(`Failed to seed list type "${listType.name}":`, error);
       throw error;
