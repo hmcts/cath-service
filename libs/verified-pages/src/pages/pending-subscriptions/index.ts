@@ -20,7 +20,7 @@ const getHandler = async (req: Request, res: Response) => {
     const merged = [...req.session.emailSubscriptions.confirmedCaseSubscriptions, ...(req.session.emailSubscriptions.pendingCaseSubscriptions || [])];
     const seen = new Set<string>();
     req.session.emailSubscriptions.pendingCaseSubscriptions = merged.filter((sub) => {
-      const key = sub.caseNumber;
+      const key = sub.caseNumber ?? `${sub.searchType}:${sub.searchValue}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
