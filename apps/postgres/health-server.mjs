@@ -4,7 +4,7 @@ import httpProxy from "http-proxy";
 const proxy = httpProxy.createProxyServer({ target: "http://localhost:5556" });
 
 // Without this, a failed proxy attempt emits an unhandled 'error' event and crashes the process
-proxy.on("error", (err, req, res) => {
+proxy.on("error", (_err, _req, res) => {
   res.writeHead(502, { "Content-Type": "text/plain" });
   res.end("Prisma Studio unavailable");
 });
