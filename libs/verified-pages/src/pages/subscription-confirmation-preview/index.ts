@@ -1,7 +1,13 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
-import { createSubscriptionListTypes, getAllowedListTypeIdsForLocations, getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
+import { Prisma, prisma } from "@hmcts/postgres";
+import {
+  createCaseSubscription,
+  createSubscriptionListTypes,
+  getAllowedListTypeIdsForLocations,
+  getAllSubscriptionsByUserId,
+  replaceUserSubscriptions
+} from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -40,6 +46,7 @@ const getHandler = async (req: Request, res: Response) => {
   const confirmedLocations = req.session.emailSubscriptions?.confirmedLocations || [];
   const pendingListTypeIds = req.session.emailSubscriptions?.pendingListTypeIds || [];
   const pendingLanguage = req.session.emailSubscriptions?.pendingLanguage;
+  const confirmedCaseSubscriptions = req.session.emailSubscriptions?.confirmedCaseSubscriptions || [];
 
   if (!res.locals.navigation) {
     res.locals.navigation = {};
@@ -47,8 +54,19 @@ const getHandler = async (req: Request, res: Response) => {
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
   if (confirmedLocations.length === 0) {
+    if (confirmedCaseSubscriptions.length > 0) {
+      return res.render("subscription-confirmation-preview/index", {
+        ...t,
+        confirmedCaseSubscriptions,
+        locationRows: [],
+        listTypes: [],
+        languageDisplay: t.noLanguageSelected
+      });
+    }
+
     return res.render("subscription-confirmation-preview/index", {
       ...t,
+      confirmedCaseSubscriptions: [],
       locationRows: [],
       listTypes: [],
       languageDisplay: t.noLanguageSelected,
@@ -70,6 +88,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("subscription-confirmation-preview/index", {
     ...t,
+    confirmedCaseSubscriptions,
     locationRows,
     listTypes,
     languageDisplay,
@@ -116,6 +135,22 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/subscription-confirmation-preview");
   }
 
+  if (action === "remove-case-subscription") {
+    const caseIndex = Number.parseInt(req.body.caseIndex, 10);
+    const currentCases = req.session.emailSubscriptions?.confirmedCaseSubscriptions || [];
+
+    if (!req.session.emailSubscriptions) {
+      req.session.emailSubscriptions = {};
+    }
+    if (!Number.isNaN(caseIndex)) {
+      const updated = [...currentCases];
+      updated.splice(caseIndex, 1);
+      req.session.emailSubscriptions.confirmedCaseSubscriptions = updated;
+    }
+
+    return res.redirect("/subscription-confirmation-preview");
+  }
+
   if (action === "change-version") {
     return res.redirect("/subscription-add-list-language");
   }
@@ -131,6 +166,29 @@ const postHandler = async (req: Request, res: Response) => {
     const confirmedLocations = req.session.emailSubscriptions?.confirmedLocations || [];
     const pendingListTypeIds = req.session.emailSubscriptions?.pendingListTypeIds || [];
     const pendingLanguage = req.session.emailSubscriptions?.pendingLanguage;
+    const confirmedCaseSubscriptions = req.session.emailSubscriptions?.confirmedCaseSubscriptions || [];
+
+    if (confirmedLocations.length === 0 && confirmedCaseSubscriptions.length > 0) {
+      for (const sub of confirmedCaseSubscriptions) {
+        try {
+          await createCaseSubscription(userId, sub.searchType, sub.searchValue, sub.caseName, sub.caseNumber);
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            // Already subscribed — treat as success and continue
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      if (!req.session.emailSubscriptions) {
+        req.session.emailSubscriptions = {};
+      }
+      delete req.session.emailSubscriptions.confirmedCaseSubscriptions;
+      req.session.emailSubscriptions.confirmationComplete = true;
+
+      return res.redirect("/subscription-confirmed");
+    }
 
     if (pendingListTypeIds.length === 0 || !pendingLanguage) {
       const locationRows = await resolveLocationRows(confirmedLocations, locale);
@@ -138,6 +196,7 @@ const postHandler = async (req: Request, res: Response) => {
 
       return res.render("subscription-confirmation-preview/index", {
         ...t,
+        confirmedCaseSubscriptions,
         locationRows,
         listTypes,
         languageDisplay: t.noLanguageSelected,
@@ -163,6 +222,7 @@ const postHandler = async (req: Request, res: Response) => {
 
       return res.render("subscription-confirmation-preview/index", {
         ...t,
+        confirmedCaseSubscriptions,
         locationRows: [],
         listTypes,
         languageDisplay,
@@ -182,6 +242,7 @@ const postHandler = async (req: Request, res: Response) => {
 
       return res.render("subscription-confirmation-preview/index", {
         ...t,
+        confirmedCaseSubscriptions,
         locationRows,
         listTypes: [],
         languageDisplay,
@@ -190,6 +251,18 @@ const postHandler = async (req: Request, res: Response) => {
           errorList: [{ text: t.errorNoListType, href: "#select-list-types-link" }]
         }
       });
+    }
+
+    for (const sub of confirmedCaseSubscriptions) {
+      try {
+        await createCaseSubscription(userId, sub.searchType, sub.searchValue, sub.caseName, sub.caseNumber);
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          // Already subscribed — treat as success and continue
+        } else {
+          throw error;
+        }
+      }
     }
 
     const existingSubscriptions = await getAllSubscriptionsByUserId(userId);
@@ -205,6 +278,7 @@ const postHandler = async (req: Request, res: Response) => {
     delete req.session.emailSubscriptions.pendingListTypeIds;
     delete req.session.emailSubscriptions.pendingLanguage;
     delete req.session.emailSubscriptions.confirmedLocations;
+    delete req.session.emailSubscriptions.confirmedCaseSubscriptions;
     req.session.emailSubscriptions.confirmationComplete = true;
 
     return res.redirect("/subscription-confirmed");

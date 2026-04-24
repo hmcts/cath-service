@@ -32,6 +32,7 @@ import {
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { restorePendingSubscriptionsMiddleware } from "@hmcts/subscriptions";
 import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
@@ -39,7 +40,6 @@ import {
   moduleRoot as systemAdminModuleRoot,
   pageRoutes as systemAdminPageRoutes
 } from "@hmcts/system-admin-pages/config";
-import { restorePendingSubscriptionsMiddleware } from "@hmcts/subscriptions";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,

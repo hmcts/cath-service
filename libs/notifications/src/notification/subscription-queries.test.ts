@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { findActiveSubscriptionsByLocation, findListTypeSubscribersByListTypeAndLanguage } from "./subscription-queries.js";
+import {
+  findActiveSubscriptionsByCaseNumber,
+  findActiveSubscriptionsByLocation,
+  findListTypeSubscribersByListTypeAndLanguage
+} from "./subscription-queries.js";
 
 vi.mock("@hmcts/postgres", () => ({
   prisma: {
@@ -59,6 +63,52 @@ describe("subscription-queries", () => {
           }
         }
       });
+    });
+  });
+
+  describe("findActiveSubscriptionsByCaseNumber", () => {
+    it("should return subscribers where searchType is CASE_NUMBER and searchValue matches the case number", async () => {
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub-1",
+          userId: "user-1",
+          searchType: "CASE_NUMBER",
+          searchValue: "AB-123",
+          user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+        }
+      ];
+
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
+
+      const result = await findActiveSubscriptionsByCaseNumber("AB-123");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].user.email).toBe("user1@example.com");
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          searchType: "CASE_NUMBER",
+          searchValue: "AB-123"
+        },
+        include: {
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              surname: true
+            }
+          }
+        }
+      });
+    });
+
+    it("should return empty array when no subscribers match the case number", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await findActiveSubscriptionsByCaseNumber("UNKNOWN-999");
+
+      expect(result).toHaveLength(0);
     });
   });
 

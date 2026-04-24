@@ -10,8 +10,8 @@ import {
   getSubJurisdictionsForJurisdiction,
   type Location
 } from "@hmcts/location";
-import type { Request, RequestHandler, Response } from "express";
 import { savePendingSubscriptions } from "@hmcts/subscriptions";
+import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 

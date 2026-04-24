@@ -78,20 +78,20 @@ describe("add-email-subscription", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/location-name-search");
     });
 
-    it("should redirect to subscription-management for case name option", async () => {
+    it("should redirect to case-name-search for case name option", async () => {
       mockReq.body = { subscriptionMethod: "caseName" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/case-name-search");
     });
 
-    it("should redirect to subscription-management for case reference option", async () => {
+    it("should redirect to case-reference-search for case reference option", async () => {
       mockReq.body = { subscriptionMethod: "caseReference" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-management");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/case-reference-search");
     });
   });
 });

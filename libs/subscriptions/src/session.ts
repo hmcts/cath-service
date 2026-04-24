@@ -1,16 +1,7 @@
 declare module "express-session" {
   interface SessionData {
-    emailSubscriptions: {
+    emailSubscriptions?: {
       pendingSubscriptions?: string[];
-      pendingListTypeIds?: number[];
-      pendingLanguage?: string;
-      confirmationComplete?: boolean;
-      confirmedLocations?: string[];
-      subscriptionToRemove?: string;
-      caseNameSearch?: string;
-      caseReferenceSearch?: string;
-      caseSearchResults?: Array<{ caseNumber: string | null; caseName: string | null }>;
-      searchSource?: "/case-name-search" | "/case-reference-search";
       pendingCaseSubscriptions?: Array<{
         caseName: string;
         caseNumber: string | null;

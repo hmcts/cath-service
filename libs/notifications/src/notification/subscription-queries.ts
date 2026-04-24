@@ -40,6 +40,34 @@ export async function findActiveSubscriptionsByLocation(locationId: number): Pro
   });
 }
 
+export interface CaseSubscriberWithUser {
+  subscriptionId: string;
+  userId: string;
+  user: {
+    email: string;
+    firstName: string | null;
+    surname: string | null;
+  };
+}
+
+export async function findActiveSubscriptionsByCaseNumber(caseNumber: string): Promise<CaseSubscriberWithUser[]> {
+  return prisma.subscription.findMany({
+    where: {
+      searchType: "CASE_NUMBER",
+      searchValue: caseNumber
+    },
+    include: {
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
+}
+
 export async function findListTypeSubscribersByListTypeAndLanguage(listTypeId: number, language: string): Promise<ListTypeSubscriberWithUser[]> {
   return prisma.subscriptionListType.findMany({
     where: {

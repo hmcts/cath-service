@@ -4,7 +4,8 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 
-{% set displayError = locations.length == 0 %}
+{% set hasCaseSubscriptions = pendingCaseSubscriptions and pendingCaseSubscriptions.length > 0 %}
+{% set displayError = locations.length == 0 and not hasCaseSubscriptions %}
 
 {% block pageTitle %}
   {% if displayError %}
@@ -40,6 +41,7 @@
         }) }}
       </div>
     </form>
+
   {% else %}
     <h1 class="govuk-heading-l">{{ heading }}</h1>
 
@@ -50,40 +52,71 @@
       }) }}
     {% endif %}
 
-    <style nonce="{{ cspNonce }}">
-      .subscription-table .govuk-table__cell {
-        padding-top: 10px !important;
-        padding-bottom: 0 !important;
-      }
-      .subscription-table .govuk-table__row {
-        border-bottom: 1px solid #b1b4b6;
-      }
-    </style>
+    {% if hasCaseSubscriptions %}
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ caseNameLabel }}</th>
+            <th scope="col" class="govuk-table__header">{{ referenceNumberLabel }}</th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for sub in pendingCaseSubscriptions %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ sub.caseName }}</td>
+              <td class="govuk-table__cell">{{ sub.caseNumber }}</td>
+              <td class="govuk-table__cell govuk-!-text-align-right">
+                <form method="post" style="display: inline;">
+                  <input type="hidden" name="action" value="remove-case">
+                  <input type="hidden" name="caseIndex" value="{{ loop.index0 }}">
+                  <button type="submit" class="govuk-link govuk-body-m" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer; font-size: 19px;">
+                    {{ removeLink }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
 
-    <table class="govuk-table subscription-table" style="margin-bottom: 40px;">
-      <thead class="govuk-table__head">
-        <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">{{ tableHeaderLocation }}</th>
-          <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
-        </tr>
-      </thead>
-      <tbody class="govuk-table__body">
-      {% for location in locations %}
-        <tr class="govuk-table__row">
-          <td class="govuk-table__cell">{{ location.name }}</td>
-          <td class="govuk-table__cell govuk-!-text-align-right">
-            <form method="post" style="display: inline;">
-              <input type="hidden" name="action" value="remove">
-              <input type="hidden" name="locationId" value="{{ location.locationId }}">
-              <button type="submit" class="govuk-link govuk-body-m" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer; font-size: 19px;">
-                {{ removeLink }}
-              </button>
-            </form>
-          </td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+    {% if locations.length > 0 %}
+      <style nonce="{{ cspNonce }}">
+        .subscription-table .govuk-table__cell {
+          padding-top: 10px !important;
+          padding-bottom: 0 !important;
+        }
+        .subscription-table .govuk-table__row {
+          border-bottom: 1px solid #b1b4b6;
+        }
+      </style>
+
+      <table class="govuk-table subscription-table" style="margin-bottom: 40px;">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ tableHeaderLocation }}</th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+        {% for location in locations %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ location.name }}</td>
+            <td class="govuk-table__cell govuk-!-text-align-right">
+              <form method="post" style="display: inline;">
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="locationId" value="{{ location.locationId }}">
+                <button type="submit" class="govuk-link govuk-body-m" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer; font-size: 19px;">
+                  {{ removeLink }}
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
 
     <p class="govuk-body">
       <a class="govuk-link" href="/add-email-subscription">{{ addAnotherSubscription }}</a>

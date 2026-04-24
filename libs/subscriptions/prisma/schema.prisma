@@ -12,6 +12,8 @@ model Subscription {
 	userId         String   @map("user_id") @db.Uuid
 	searchType     String   @map("search_type") @db.VarChar(50)
 	searchValue    String   @map("search_value")
+	caseName       String?  @map("case_name")
+	caseNumber     String?  @map("case_number")
 	dateAdded      DateTime @default(now()) @map("date_added")
 
 	user                  User                   @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)

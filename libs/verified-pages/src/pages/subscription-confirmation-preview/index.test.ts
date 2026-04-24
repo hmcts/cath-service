@@ -24,10 +24,20 @@ vi.mock("@hmcts/postgres", () => ({
     listType: {
       findMany: vi.fn()
     }
+  },
+  Prisma: {
+    PrismaClientKnownRequestError: class PrismaClientKnownRequestError extends Error {
+      code: string;
+      constructor(message: string, { code }: { code: string }) {
+        super(message);
+        this.code = code;
+      }
+    }
   }
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
+  createCaseSubscription: vi.fn(),
   createSubscriptionListTypes: vi.fn(),
   getAllSubscriptionsByUserId: vi.fn(),
   getAllowedListTypeIdsForLocations: vi.fn(),
@@ -124,6 +134,28 @@ describe("subscription-confirmation-preview", () => {
       expect(mockRes.render).toHaveBeenCalledWith("subscription-confirmation-preview/index", expect.objectContaining({ languageDisplay: "Welsh" }));
     });
 
+    it("should render case-only view without error when no locations but case subscriptions exist", async () => {
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: [],
+          confirmedCaseSubscriptions: [{ caseName: "Test Case", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" }]
+        }
+      } as any;
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirmation-preview/index",
+        expect.objectContaining({
+          confirmedCaseSubscriptions: [expect.objectContaining({ caseName: "Test Case" })],
+          locationRows: [],
+          listTypes: []
+        })
+      );
+      const renderCall = vi.mocked(mockRes.render).mock.calls[0][1] as Record<string, unknown>;
+      expect(renderCall.errors).toBeUndefined();
+    });
+
     it("should render error when no locations are confirmed", async () => {
       mockReq.session = {
         emailSubscriptions: {
@@ -171,6 +203,44 @@ describe("subscription-confirmation-preview", () => {
         })
       );
     });
+
+    it("should pass confirmedCaseSubscriptions to the template when present in session", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [1],
+          pendingLanguage: "ENGLISH",
+          confirmedCaseSubscriptions: [{ caseName: "Test Case", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" }]
+        }
+      } as any;
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([
+        {
+          id: 1,
+          name: "Civil List",
+          friendlyName: "Civil List",
+          welshFriendlyName: null,
+          shortenedFriendlyName: null,
+          url: null,
+          defaultSensitivity: null,
+          allowedProvenance: "MANUAL",
+          isNonStrategic: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null
+        }
+      ] as any);
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirmation-preview/index",
+        expect.objectContaining({
+          confirmedCaseSubscriptions: [expect.objectContaining({ caseName: "Test Case", caseNumber: "T/001" })]
+        })
+      );
+    });
   });
 
   describe("POST", () => {
@@ -188,17 +258,72 @@ describe("subscription-confirmation-preview", () => {
       expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBeUndefined();
+      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toBeUndefined();
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
     });
 
-    it("should clear list types and language when last location is removed", async () => {
+    it("should create case subscriptions and redirect to confirmed when no locations remain", async () => {
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: [],
+          confirmedCaseSubscriptions: [{ caseName: "Test Case", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" }]
+        }
+      } as any;
+      vi.mocked(subscriptionsService.createCaseSubscription).mockResolvedValue(undefined as any);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionsService.createCaseSubscription).toHaveBeenCalledWith("user123", "CASE_NUMBER", "T/001", "Test Case", "T/001");
+      expect(subscriptionsService.replaceUserSubscriptions).not.toHaveBeenCalled();
+      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toBeUndefined();
+      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should create case subscriptions before location subscriptions when confirmedCaseSubscriptions present", async () => {
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [1],
+          pendingLanguage: "ENGLISH",
+          confirmedCaseSubscriptions: [{ caseName: "Test Case", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" }]
+        }
+      } as any;
+      vi.mocked(subscriptionsService.createCaseSubscription).mockResolvedValue(undefined as any);
+      vi.mocked(subscriptionsService.getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionsService.getAllowedListTypeIdsForLocations).mockResolvedValue([1]);
+      vi.mocked(subscriptionsService.replaceUserSubscriptions).mockResolvedValue({ added: 1, removed: 0 });
+      vi.mocked(subscriptionsService.createSubscriptionListTypes).mockResolvedValue(undefined);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(subscriptionsService.createCaseSubscription).toHaveBeenCalledWith("user123", "CASE_NUMBER", "T/001", "Test Case", "T/001");
+      expect(subscriptionsService.replaceUserSubscriptions).toHaveBeenCalled();
+      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toBeUndefined();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should clear list types and language but keep case subscriptions when last location is removed", async () => {
       mockReq.body = { action: "remove-location", locationId: "100" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [1, 2],
+          pendingLanguage: "ENGLISH",
+          confirmedCaseSubscriptions: [{ caseName: "Test Case", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" }]
+        }
+      } as any;
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session?.emailSubscriptions?.confirmedLocations).toEqual([]);
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBeUndefined();
+      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toEqual([
+        { caseName: "Test Case", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" }
+      ]);
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmation-preview");
     });
 
@@ -226,6 +351,28 @@ describe("subscription-confirmation-preview", () => {
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toEqual([2]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmation-preview");
+    });
+
+    it("should remove a case subscription by index and redirect back", async () => {
+      mockReq.body = { action: "remove-case-subscription", caseIndex: "0" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [1, 2],
+          pendingLanguage: "ENGLISH",
+          confirmedCaseSubscriptions: [
+            { caseName: "Test Case A", caseNumber: "T/001", searchType: "CASE_NUMBER", searchValue: "T/001" },
+            { caseName: "Test Case B", caseNumber: "T/002", searchType: "CASE_NUMBER", searchValue: "T/002" }
+          ]
+        }
+      } as any;
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toEqual([
+        { caseName: "Test Case B", caseNumber: "T/002", searchType: "CASE_NUMBER", searchValue: "T/002" }
+      ]);
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmation-preview");
     });
 

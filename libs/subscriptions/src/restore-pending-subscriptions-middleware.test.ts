@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { restorePendingSubscriptionsMiddleware } from "./restore-pending-subscriptions-middleware.js";
 
 vi.mock("./pending-subscriptions-store.js", () => ({
-  getPendingSubscriptions: vi.fn()
+  getPendingSubscriptions: vi.fn(),
+  getPendingCaseSubscriptions: vi.fn()
 }));
 
 describe("restorePendingSubscriptionsMiddleware", () => {
@@ -48,30 +49,48 @@ describe("restorePendingSubscriptionsMiddleware", () => {
     expect(mockNext).toHaveBeenCalledTimes(1);
   });
 
-  it("should call next without hitting Redis when session already has pending subscriptions", async () => {
-    const { getPendingSubscriptions } = await import("./pending-subscriptions-store.js");
-    mockReq.session.emailSubscriptions = { pendingSubscriptions: ["loc-1"] };
-
-    await restorePendingSubscriptionsMiddleware()(mockReq, mockRes, mockNext);
-
-    expect(getPendingSubscriptions).not.toHaveBeenCalled();
-    expect(mockNext).toHaveBeenCalledTimes(1);
-    expect(mockReq.session.pendingSubscriptionsRestored).toBe(true);
-  });
-
-  it("should restore pending subscriptions from Redis and call next", async () => {
-    const { getPendingSubscriptions } = await import("./pending-subscriptions-store.js");
+  it("should restore pending location subscriptions from Redis and call next", async () => {
+    const { getPendingSubscriptions, getPendingCaseSubscriptions } = await import("./pending-subscriptions-store.js");
     vi.mocked(getPendingSubscriptions).mockResolvedValue(["loc-1", "loc-2"]);
+    vi.mocked(getPendingCaseSubscriptions).mockResolvedValue(null);
 
     await restorePendingSubscriptionsMiddleware()(mockReq, mockRes, mockNext);
 
     expect(mockReq.session.emailSubscriptions?.pendingSubscriptions).toEqual(["loc-1", "loc-2"]);
+    expect(mockReq.session.pendingSubscriptionsRestored).toBe(true);
     expect(mockNext).toHaveBeenCalledTimes(1);
   });
 
-  it("should initialize emailSubscriptions when it does not exist and Redis has data", async () => {
-    const { getPendingSubscriptions } = await import("./pending-subscriptions-store.js");
+  it("should restore pending case subscriptions from Redis and call next", async () => {
+    const { getPendingSubscriptions, getPendingCaseSubscriptions } = await import("./pending-subscriptions-store.js");
+    const caseSubscriptions = [{ caseName: "Smith v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Smith v Jones" }];
+    vi.mocked(getPendingSubscriptions).mockResolvedValue(null);
+    vi.mocked(getPendingCaseSubscriptions).mockResolvedValue(caseSubscriptions);
+
+    await restorePendingSubscriptionsMiddleware()(mockReq, mockRes, mockNext);
+
+    expect(mockReq.session.emailSubscriptions?.pendingCaseSubscriptions).toEqual(caseSubscriptions);
+    expect(mockReq.session.pendingSubscriptionsRestored).toBe(true);
+    expect(mockNext).toHaveBeenCalledTimes(1);
+  });
+
+  it("should restore both location and case subscriptions from Redis", async () => {
+    const { getPendingSubscriptions, getPendingCaseSubscriptions } = await import("./pending-subscriptions-store.js");
+    const caseSubscriptions = [{ caseName: "Smith v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Smith v Jones" }];
     vi.mocked(getPendingSubscriptions).mockResolvedValue(["loc-1"]);
+    vi.mocked(getPendingCaseSubscriptions).mockResolvedValue(caseSubscriptions);
+
+    await restorePendingSubscriptionsMiddleware()(mockReq, mockRes, mockNext);
+
+    expect(mockReq.session.emailSubscriptions?.pendingSubscriptions).toEqual(["loc-1"]);
+    expect(mockReq.session.emailSubscriptions?.pendingCaseSubscriptions).toEqual(caseSubscriptions);
+    expect(mockReq.session.pendingSubscriptionsRestored).toBe(true);
+  });
+
+  it("should initialize emailSubscriptions when it does not exist and Redis has data", async () => {
+    const { getPendingSubscriptions, getPendingCaseSubscriptions } = await import("./pending-subscriptions-store.js");
+    vi.mocked(getPendingSubscriptions).mockResolvedValue(["loc-1"]);
+    vi.mocked(getPendingCaseSubscriptions).mockResolvedValue(null);
     mockReq.session.emailSubscriptions = undefined;
 
     await restorePendingSubscriptionsMiddleware()(mockReq, mockRes, mockNext);
@@ -79,9 +98,10 @@ describe("restorePendingSubscriptionsMiddleware", () => {
     expect(mockReq.session.emailSubscriptions?.pendingSubscriptions).toEqual(["loc-1"]);
   });
 
-  it("should call next without setting subscriptions when Redis returns null", async () => {
-    const { getPendingSubscriptions } = await import("./pending-subscriptions-store.js");
+  it("should call next without setting subscriptions when Redis returns null for both", async () => {
+    const { getPendingSubscriptions, getPendingCaseSubscriptions } = await import("./pending-subscriptions-store.js");
     vi.mocked(getPendingSubscriptions).mockResolvedValue(null);
+    vi.mocked(getPendingCaseSubscriptions).mockResolvedValue(null);
 
     await restorePendingSubscriptionsMiddleware()(mockReq, mockRes, mockNext);
 

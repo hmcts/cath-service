@@ -1,8 +1,9 @@
+import type {} from "@hmcts/auth";
 import type { NextFunction, Request, Response } from "express";
-import { getPendingSubscriptions } from "./pending-subscriptions-store.js";
+import { getPendingCaseSubscriptions, getPendingSubscriptions } from "./pending-subscriptions-store.js";
 
 export function restorePendingSubscriptionsMiddleware() {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     if (!req.isAuthenticated() || !req.user?.id) {
       return next();
     }
@@ -11,19 +12,24 @@ export function restorePendingSubscriptionsMiddleware() {
       return next();
     }
 
-    if (req.session.emailSubscriptions?.pendingSubscriptions?.length) {
-      req.session.pendingSubscriptionsRestored = true;
-      return next();
-    }
-
     try {
-      const locationIds = await getPendingSubscriptions(req.app.locals.redisClient, req.user.id);
-      if (locationIds?.length) {
+      const [locationIds, caseSubscriptions] = await Promise.all([
+        getPendingSubscriptions(req.app.locals.redisClient, req.user.id),
+        getPendingCaseSubscriptions(req.app.locals.redisClient, req.user.id)
+      ]);
+
+      if (locationIds?.length || caseSubscriptions?.length) {
         if (!req.session.emailSubscriptions) {
           req.session.emailSubscriptions = {};
         }
-        req.session.emailSubscriptions.pendingSubscriptions = locationIds;
+        if (locationIds?.length) {
+          req.session.emailSubscriptions.pendingSubscriptions = locationIds;
+        }
+        if (caseSubscriptions?.length) {
+          req.session.emailSubscriptions.pendingCaseSubscriptions = caseSubscriptions;
+        }
       }
+
       req.session.pendingSubscriptionsRestored = true;
     } catch {
       // Non-fatal — continue without restoring
