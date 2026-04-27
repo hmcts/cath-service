@@ -1106,6 +1106,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
+    "@hmcts/test-support": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/cors": "npm:2.8.19"
     "@types/express": "npm:5.0.6"
@@ -1465,7 +1466,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/test-support@workspace:libs/test-support":
+"@hmcts/test-support@workspace:*, @hmcts/test-support@workspace:libs/test-support":
   version: 0.0.0-use.local
   resolution: "@hmcts/test-support@workspace:libs/test-support"
   dependencies:
