@@ -84,7 +84,7 @@ describe("seed-locations routes", () => {
       // Assert
       expect((prisma as any).subJurisdiction.findMany).toHaveBeenCalledWith({
         where: { name: { in: ["Civil", "Criminal"] } },
-        select: { subJurisdictionId: true, name: true }
+        select: { subJurisdictionId: true }
       });
       expect((prisma as any).locationSubJurisdiction.upsert).toHaveBeenCalledTimes(2);
     });
@@ -107,7 +107,7 @@ describe("seed-locations routes", () => {
       // Assert
       expect((prisma as any).region.findMany).toHaveBeenCalledWith({
         where: { name: { in: ["London", "South East"] } },
-        select: { regionId: true, name: true }
+        select: { regionId: true }
       });
       expect((prisma as any).locationRegion.upsert).toHaveBeenCalledTimes(2);
     });

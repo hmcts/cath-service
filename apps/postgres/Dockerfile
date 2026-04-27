@@ -1,8 +1,7 @@
 # ---- Base image ----
 FROM hmctspublic.azurecr.io/base/node:22-alpine AS base
 USER root
-RUN npm install -g corepack
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 COPY --chown=hmcts:hmcts . .
 USER hmcts
 

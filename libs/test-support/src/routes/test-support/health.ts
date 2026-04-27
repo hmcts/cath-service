@@ -7,9 +7,12 @@ export const GET = async (_req: Request, res: Response) => {
     await prisma.$connect();
 
     // Check if migrations are complete by querying a core table
-    try {
-      await (prisma as any).jurisdiction.findMany({ take: 1 });
-    } catch (_error) {
+    const migrationsComplete = await (prisma as any).jurisdiction
+      .findMany({ take: 1 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!migrationsComplete) {
       return res.status(503).json({
         status: "unhealthy",
         database: "connected",

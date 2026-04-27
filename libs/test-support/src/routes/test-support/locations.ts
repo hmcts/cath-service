@@ -48,7 +48,7 @@ export const POST = async (req: Request, res: Response) => {
         locationId,
         name: input.name,
         welshName: input.welshName,
-        email: input.email || `${input.name.toLowerCase().replace(/\s+/g, "-")}@test.hmcts.net`,
+        email: input.email || `${input.name.toLowerCase().replaceAll(/\s+/g, "-")}@test.hmcts.net`,
         contactNo: input.contactNo || "01234567890",
         locationRegions: {
           create: (input.regionIds || [4]).map((regionId) => ({ regionId }))
@@ -60,7 +60,7 @@ export const POST = async (req: Request, res: Response) => {
       update: {
         name: input.name,
         welshName: input.welshName,
-        email: input.email || `${input.name.toLowerCase().replace(/\s+/g, "-")}@test.hmcts.net`,
+        email: input.email || `${input.name.toLowerCase().replaceAll(/\s+/g, "-")}@test.hmcts.net`,
         contactNo: input.contactNo || "01234567890"
       }
     });
