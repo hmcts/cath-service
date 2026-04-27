@@ -115,7 +115,7 @@ test.describe("Subscription Notifications", () => {
     testLocationName = testLocation.name;
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ request: _ }) => {
     await cleanupTestNotifications(testData.publicationIds);
     await cleanupTestSubscriptions(testData.subscriptionIds);
     await cleanupTestUsers(testData.userIds);

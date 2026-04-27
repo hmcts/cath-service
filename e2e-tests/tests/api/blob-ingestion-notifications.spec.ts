@@ -69,7 +69,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     testLocationName = testLocation.name;
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ request: _ }) => {
     await cleanupTestNotifications(testData.publicationIds);
     await cleanupTestSubscriptions(testData.subscriptionIds);
     await cleanupTestUsers(testData.userIds);
