@@ -26,16 +26,16 @@ test.describe("Email Subscriptions", () => {
     await expect(page).toHaveURL(/\/account-home/);
   });
 
-  test.afterEach(async (_, testInfo) => {
+  test.afterEach(async () => {
     // Only cleanup subscriptions - locations are prefixed and handled by global teardown
-    const locationData = testLocationMap.get(testInfo.testId);
+    const locationData = testLocationMap.get(test.info().testId);
     if (locationData) {
       try {
         await deleteTestSubscriptions({ searchType: "LOCATION_ID", searchValues: [String(locationData.locationId)] });
       } catch {
         // Ignore cleanup errors
       }
-      testLocationMap.delete(testInfo.testId);
+      testLocationMap.delete(test.info().testId);
     }
   });
 
