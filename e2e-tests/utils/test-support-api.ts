@@ -206,7 +206,12 @@ interface HealthCheckResponse {
 }
 
 export async function checkTestSupportHealth(): Promise<HealthCheckResponse> {
-  return callTestSupportApi<HealthCheckResponse>("GET", "/test-support/health");
+  const url = `${API_BASE_URL}/test-support/health`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Health check failed: ${response.status}`);
+  }
+  return response.json();
 }
 
 // Jurisdictions
