@@ -34,9 +34,9 @@ export async function createApp(): Promise<Express> {
 
   const routeMounts = [{ path: `${__dirname}/routes` }, blobIngestionRoutes, locationRoutes, publicPagesRoutes];
 
-  // Only enable test-support routes in non-production environments
-  // Dynamic import used intentionally — @hmcts/test-support is not bundled in production images
-  if (process.env.NODE_ENV !== "production") {
+  // Enable test-support routes in non-production environments or when explicitly enabled
+  // ENABLE_TEST_SUPPORT=true allows preview/staging deployments to run E2E tests
+  if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
     const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
     routeMounts.push(testSupportRoutes);
   }

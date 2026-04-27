@@ -29,8 +29,9 @@ async function globalSetup(_config: FullConfig) {
         if (health.migrations === "pending") {
           console.log(`Attempt ${i + 1}/${maxRetries}: Database migrations pending...`);
         }
-      } catch (_error) {
-        console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for API...`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for API... (${message})`);
       }
 
       if (i === maxRetries - 1) {

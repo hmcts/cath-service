@@ -66,15 +66,25 @@ interface CreateArtefactResponse {
 }
 
 async function callTestSupportApi<T>(method: "GET" | "POST" | "DELETE", endpoint: string, data?: unknown): Promise<T> {
-  const token = await getApiAuthToken();
+  // Auth is optional — test-support routes have no auth middleware.
+  // When Azure AD credentials are available (e.g. nightly workflow), a token is sent.
+  // When credentials are absent (e.g. PR E2E against deployed env), requests proceed without auth.
+  let token: string | null = null;
+  try {
+    token = await getApiAuthToken();
+  } catch {
+    // Credentials not configured — continue without auth
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   const response = await fetch(url, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
+    headers,
     body: data ? JSON.stringify(data) : undefined
   });
 

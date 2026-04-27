@@ -19,6 +19,7 @@
     "@hmcts/location": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
+    "@hmcts/test-support": "workspace:*",
     "compression": "1.8.1",
     "config": "4.4.1",
     "cors": "2.8.6",

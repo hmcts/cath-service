@@ -45,6 +45,7 @@ cath-api:
     ingressHost: "{{ .Release.Name }}-api.dev.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
+      ENABLE_TEST_SUPPORT: "true"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
