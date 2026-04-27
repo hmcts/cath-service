@@ -40,6 +40,7 @@ export const POST = async (req: Request, res: Response) => {
       });
     }
 
+    // NOSONAR: Math.random() is safe here - test-only code, no security requirement, just needs unique ID
     const locationId = input.locationId || 90000 + Math.floor(Math.random() * 9000) + (Date.now() % 1000);
 
     const location = await prisma.location.upsert({
