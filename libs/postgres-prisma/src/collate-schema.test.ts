@@ -193,4 +193,83 @@ enum Status {
     // Assert
     expect(deps.globSync).toHaveBeenCalledWith("**/*.prisma", expect.objectContaining({ absolute: true }));
   });
+
+  it("should log success message with model and enum counts", async () => {
+    // Arrange
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const schema1 = `model User {
+  id String @id
+}
+
+enum Role {
+  ADMIN
+}`;
+
+    const deps = {
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockResolvedValueOnce(schema1),
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      globSync: vi.fn(() => ["/mock/schema1.prisma"])
+    };
+
+    // Act
+    await collateSchemas(deps);
+
+    // Assert
+    expect(consoleSpy).toHaveBeenCalledWith("Prisma schema collated successfully!");
+    expect(consoleSpy).toHaveBeenCalledWith("Total: 1 models, 1 enums");
+    consoleSpy.mockRestore();
+  });
+
+  it("should throw error when base schema read fails", async () => {
+    // Arrange
+    const deps = {
+      readFile: vi.fn().mockRejectedValueOnce(new Error("File not found")),
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      globSync: vi.fn(() => [])
+    };
+
+    // Act & Assert
+    await expect(collateSchemas(deps)).rejects.toThrow("File not found");
+  });
+
+  it("should throw error when lib schema read fails", async () => {
+    // Arrange
+    const deps = {
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema).mockRejectedValueOnce(new Error("Permission denied")),
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      globSync: vi.fn(() => ["/mock/schema.prisma"])
+    };
+
+    // Act & Assert
+    await expect(collateSchemas(deps)).rejects.toThrow("Permission denied");
+  });
+
+  it("should throw error when mkdir fails", async () => {
+    // Arrange
+    const deps = {
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema),
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      mkdir: vi.fn().mockRejectedValueOnce(new Error("Cannot create directory")),
+      globSync: vi.fn(() => [])
+    };
+
+    // Act & Assert
+    await expect(collateSchemas(deps)).rejects.toThrow("Cannot create directory");
+  });
+
+  it("should throw error when writeFile fails", async () => {
+    // Arrange
+    const deps = {
+      readFile: vi.fn().mockResolvedValueOnce(baseSchema),
+      writeFile: vi.fn().mockRejectedValueOnce(new Error("Disk full")),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      globSync: vi.fn(() => [])
+    };
+
+    // Act & Assert
+    await expect(collateSchemas(deps)).rejects.toThrow("Disk full");
+  });
 });
