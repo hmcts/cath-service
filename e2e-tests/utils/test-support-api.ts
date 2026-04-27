@@ -1,6 +1,6 @@
 import { getApiAuthToken } from "./api-auth-helpers.js";
 
-const API_BASE_URL = process.env.API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 
 interface CreateLocationInput {
   locationId?: number;
