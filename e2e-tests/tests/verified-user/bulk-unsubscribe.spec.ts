@@ -40,9 +40,9 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(page).toHaveURL(/\/account-home/);
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ request: _ }, testInfo) => {
     // Only cleanup subscriptions - locations are prefixed and handled by global teardown
-    const testData = testDataMap.get(test.info().testId);
+    const testData = testDataMap.get(testInfo.testId);
     if (testData) {
       try {
         await deleteTestSubscriptions({
@@ -52,7 +52,7 @@ test.describe("Bulk Unsubscribe", () => {
       } catch {
         // Ignore cleanup errors
       }
-      testDataMap.delete(test.info().testId);
+      testDataMap.delete(testInfo.testId);
     }
   });
 
