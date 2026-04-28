@@ -15,7 +15,7 @@ const { Workbook } = ExcelJSPkg;
 // 2. Crown copyright logo link missing accessible text (WCAG 2.4.4, 4.1.2)
 // These issues affect ALL pages and should be addressed in a separate ticket
 
-const API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
 // Create Civil and Family Daily Cause List payload (strategic list type that accepts JSON via API)

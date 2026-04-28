@@ -192,6 +192,13 @@ export async function createApp(): Promise<Express> {
   }
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
+  // Enable test-support routes in non-production environments or when explicitly enabled
+  if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
+    const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+    app.use(express.json());
+    app.use(await createSimpleRouter(testSupportRoutes));
+  }
+
   app.use(notFoundHandler());
   app.use(errorHandler());
 

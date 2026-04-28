@@ -20,6 +20,7 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/test-support": "workspace:*",
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/auth": "workspace:*",

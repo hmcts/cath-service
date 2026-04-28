@@ -3,7 +3,7 @@ import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
-import { createTestArtefact, deleteTestFlatFile, uploadTestFlatFile } from "../utils/test-support-api.js";
+import { createTestArtefact, deleteTestFlatFileFromWeb, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -110,9 +110,10 @@ async function createFlatFileArtefact(
     const pdfBuffer = createTestPDFBuffer(fileContent);
 
     if (IS_DEPLOYED) {
-      // In deployed environments, upload file via test-support API so it lands on the deployed server's filesystem
-      console.log(`[flat-file] Uploading file via API for artefact ${artefactId}`);
-      await uploadTestFlatFile({ artefactId, content: pdfBuffer, extension: ".pdf" });
+      // In deployed environments, upload file via the web app's test-support endpoint so it
+      // lands on the web pod's filesystem where the flat-file viewer reads from
+      console.log(`[flat-file] Uploading file via web app for artefact ${artefactId}`);
+      await uploadTestFlatFileToWeb({ artefactId, content: pdfBuffer, extension: ".pdf" });
     } else {
       // Locally, write directly to shared storage directory
       if (!fs.existsSync(STORAGE_PATH)) {
@@ -136,7 +137,7 @@ async function cleanupPDFFiles(artefactIds: string[]) {
   for (const artefactId of artefactIds) {
     if (IS_DEPLOYED) {
       try {
-        await deleteTestFlatFile(artefactId);
+        await deleteTestFlatFileFromWeb(artefactId);
       } catch {
         // File might not exist, which is fine
       }

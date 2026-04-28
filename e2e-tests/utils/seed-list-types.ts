@@ -105,14 +105,17 @@ const BASE_LIST_TYPES = [
 export async function seedListTypes(prefix: string) {
   console.log("Seeding list types...");
 
-  // Add prefix to list type names for test isolation
-  const prefixedListTypes = BASE_LIST_TYPES.map((lt) => ({
-    ...lt,
-    name: `${prefix}${lt.name}`,
-    friendlyName: `${prefix}${lt.friendlyName}`
-  }));
-
   try {
+    // Seed base (unprefixed) list types first - required for API endpoints that use hardcoded list type names
+    await seedListTypesApi(BASE_LIST_TYPES, true);
+
+    // Seed prefixed list types for test isolation
+    const prefixedListTypes = BASE_LIST_TYPES.map((lt) => ({
+      ...lt,
+      name: `${prefix}${lt.name}`,
+      friendlyName: `${prefix}${lt.friendlyName}`
+    }));
+
     const result = await seedListTypesApi(prefixedListTypes, true);
     console.log(`Seeded ${result.seeded} list types with prefix: ${prefix}`);
     return result;

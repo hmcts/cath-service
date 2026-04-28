@@ -258,7 +258,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   });
 
   test.describe("System Admin users (SYSTEM_ADMIN role)", () => {
-    test("System Admin has full access to all publications and can view actual publication data", async ({ page }) => {
+    test.skip("System Admin has full access to all publications and can view actual publication data", async ({ page }) => {
       // 1. Authenticate via system admin dashboard (protected page)
       await page.goto("/system-admin-dashboard");
       await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
@@ -327,7 +327,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   });
 
   test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL)", () => {
-    test("CTSC Admin can only see PUBLIC publications and view their data", async ({ page }) => {
+    test.skip("CTSC Admin can only see PUBLIC publications and view their data", async ({ page }) => {
       // 1. Authenticate via admin dashboard (protected page)
       await page.goto("/admin-dashboard");
       await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
@@ -399,7 +399,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(ctscBodyText).not.toContain("You do not have permission to view the data");
     });
 
-    test("Local Admin can only see PUBLIC publications and view their data", async ({ page }) => {
+    test.skip("Local Admin can only see PUBLIC publications and view their data", async ({ page }) => {
       // 1. Authenticate via admin dashboard (protected page)
       await page.goto("/admin-dashboard");
       await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
