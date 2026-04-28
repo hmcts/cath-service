@@ -12,14 +12,14 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   if (!email || email === "undefined") {
     throw new Error(
       "CFT_VALID_TEST_ACCOUNT environment variable is not set. " +
-        "Credentials should be loaded from Azure Key Vault (pip-bootstrap-stg-kv). " +
+        "Credentials should be loaded from Azure Key Vault (cath-stg). " +
         "Ensure the runner has Azure access via Workload Identity or service principal."
     );
   }
   if (!password || password === "undefined") {
     throw new Error(
       "CFT_VALID_TEST_ACCOUNT_PASSWORD environment variable is not set. " +
-        "Credentials should be loaded from Azure Key Vault (pip-bootstrap-stg-kv). " +
+        "Credentials should be loaded from Azure Key Vault (cath-stg). " +
         "Ensure the runner has Azure access via Workload Identity or service principal."
     );
   }
