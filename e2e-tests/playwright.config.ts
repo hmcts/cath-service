@@ -14,7 +14,7 @@ export default defineConfig({
   globalSetup: "./global-setup.ts",
   globalTeardown: "./global-teardown.ts",
   reporter: process.env.CI
-    ? [["dot"], ["github"], ["junit", { outputFile: "junit-results.xml" }], ["html", { outputFolder: "playwright-report", open: "never" }]]
+    ? [["line"], ["github"], ["junit", { outputFile: "junit-results.xml" }], ["html", { outputFolder: "playwright-report", open: "never" }]]
     : "list",
   use: {
     baseURL,
