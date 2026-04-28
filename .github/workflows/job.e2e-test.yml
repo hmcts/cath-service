@@ -24,6 +24,7 @@ jobs:
       checks: write
       pull-requests: write
       actions: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -76,6 +77,11 @@ jobs:
             echo "CATH_SERVICE_API_URL=${API_URL}" >> $GITHUB_ENV
             echo "API URL: ${API_URL}"
           fi
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
       - name: Run E2E tests
         id: e2e-tests
