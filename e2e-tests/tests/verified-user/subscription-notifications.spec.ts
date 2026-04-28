@@ -150,14 +150,13 @@ test.describe("Subscription Notifications", () => {
     expect(result.artefact_id).toBeDefined();
     testData.publicationIds.push(result.artefact_id);
 
-    // Wait for notification to be sent
-    const notifications = await waitForNotifications(result.artefact_id, 15, 1000, true);
+    // Wait for notification to be sent (don't require govNotifyId - may be null in non-production envs)
+    const notifications = await waitForNotifications(result.artefact_id, 15, 1000, false);
     expect(notifications.length).toBeGreaterThan(0);
 
     // Verify notification was successfully sent
-    const sentNotification = notifications.find((n) => n.govNotifyId !== null);
+    const sentNotification = notifications.find((n) => n.status === "Sent");
     expect(sentNotification).toBeDefined();
-    expect(sentNotification.status).toBe("Sent");
 
     // Verify GOV.UK Notify email content
     if (process.env.GOVUK_NOTIFY_API_KEY && sentNotification?.govNotifyId) {
@@ -206,10 +205,10 @@ test.describe("Subscription Notifications", () => {
     testData.publicationIds.push(result2.artefact_id);
 
     // Wait for notifications
-    const notifications2 = await waitForNotifications(result2.artefact_id, 15, 1000, true);
+    const notifications2 = await waitForNotifications(result2.artefact_id, 15, 1000, false);
 
     // Verify notifications were sent to both subscribers
-    const sentNotifications = notifications2.filter((n) => n.govNotifyId !== null && n.status === "Sent");
+    const sentNotifications = notifications2.filter((n) => n.status === "Sent");
     expect(sentNotifications.length).toBeGreaterThanOrEqual(2);
 
     // Verify both subscriptions received notifications

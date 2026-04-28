@@ -6,7 +6,7 @@ import ExcelJSPkg from "exceljs";
 import { getApiAuthToken } from "../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
-import { createOrGetListType, deleteTestArtefacts } from "../utils/test-support-api.js";
+import { createOrGetListType, deleteTestArtefacts, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
 const { Workbook } = ExcelJSPkg;
 
@@ -17,6 +17,7 @@ const { Workbook } = ExcelJSPkg;
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 
 // Create Civil and Family Daily Cause List payload (strategic list type that accepts JSON via API)
 function createCivilFamilyCauseListPayload(locationId: number, contentDate: string, displayFrom: string, displayTo: string) {
@@ -120,6 +121,14 @@ async function uploadPublicationViaApi(request: APIRequestContext, locationId: n
   expect(response.status()).toBe(201);
   const result = await response.json();
   expect(result.artefact_id).toBeDefined();
+
+  // In deployed environments, API and web are separate pods with separate filesystems.
+  // The API stores the JSON on the API pod; the web controller reads from the web pod.
+  // Upload the JSON to the web pod so the list type page can render it.
+  if (IS_DEPLOYED) {
+    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
+    await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
+  }
 
   return result.artefact_id;
 }

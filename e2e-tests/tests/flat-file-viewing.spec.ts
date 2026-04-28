@@ -3,7 +3,7 @@ import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
-import { createTestArtefact, deleteTestFlatFileFromWeb, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
+import { createTestArtefact, deleteTestFlatFileFromWeb, getListTypeByName, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -90,10 +90,13 @@ async function createFlatFileArtefact(
     fileContent = "Test Flat File Content"
   } = options;
 
+  // Look up the actual list type ID (don't hardcode - DB IDs are not guaranteed sequential)
+  const crownDailyList = (await getListTypeByName("CROWN_DAILY_LIST")) as { id: number };
+
   // Create artefact via API and get the returned artefactId
   const createdArtefact = await createTestArtefact({
     locationId,
-    listTypeId: 6, // Crown Daily List
+    listTypeId: crownDailyList.id, // Crown Daily List
     contentDate: new Date().toISOString(),
     sensitivity: "PUBLIC",
     language: "ENGLISH",

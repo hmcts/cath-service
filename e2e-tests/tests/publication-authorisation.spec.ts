@@ -1,8 +1,84 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { assertAuthenticated, loginWithCftIdam, logout } from "../utils/cft-idam-helpers.js";
+import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
-import { createTestArtefact } from "../utils/test-support-api.js";
+import { createTestArtefact, getListTypeByName, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
+
+const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
+
+// Sets up a real publication at the given location so keyboard nav can navigate to its detail page
+async function setupPublicationForNav(locationId: number): Promise<void> {
+  const listType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
+  const artefact = await createTestArtefact({
+    locationId: locationId.toString(),
+    listTypeId: listType.id,
+    contentDate: new Date().toISOString(),
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    displayFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    displayTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    isFlatFile: false,
+    provenance: "MANUAL_UPLOAD"
+  });
+
+  // In deployed env the web pod filesystem is separate from the API pod — upload JSON to web pod
+  if (IS_DEPLOYED) {
+    const hearingList = {
+      document: { publicationDate: new Date().toISOString(), version: "1.0" },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: { line: ["1 Test Street"], town: "Test City", county: "Test County", postCode: "TC1 1TC" },
+        venueContact: { venueTelephone: "01234 567890", venueEmail: "test@example.com" }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtHouseAddress: { line: ["1 Test Street"], town: "Test City", postCode: "TC1 1TC" },
+            courtRoom: [
+              {
+                courtRoomName: "Court Room 1",
+                session: [
+                  {
+                    judiciary: [{ johKnownAs: "Judge Test", isPresiding: true }],
+                    sittings: [
+                      {
+                        sittingStart: new Date().toISOString(),
+                        sittingEnd: new Date().toISOString(),
+                        channel: ["In Person"],
+                        hearing: [
+                          {
+                            hearingType: "Trial",
+                            case: [
+                              {
+                                caseNumber: "KB-NAV-001",
+                                caseName: "Navigation Test Case",
+                                caseType: "Civil",
+                                caseSequenceIndicator: "1 of 1",
+                                party: [
+                                  {
+                                    partyRole: "APPLICANT_PETITIONER",
+                                    individualDetails: { title: "Mr", individualForenames: "John", individualSurname: "Smith" }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+    await uploadTestFlatFileToWeb({ artefactId: artefact.artefactId, content: Buffer.from(JSON.stringify(hearingList)), extension: ".json" });
+  }
+}
 
 /**
  * E2E tests for publication authorisation based on sensitivity levels
@@ -474,8 +550,11 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
   test.describe("Keyboard Navigation Journey", () => {
     test("should support complete keyboard navigation through publication list and detail pages", async ({ page }) => {
-      // 1. Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // 1. Create test data and navigate to summary page
+      const testLocation = await createUniqueTestLocation({ namePrefix: "Keyboard Nav Court" });
+      await setupPublicationForNav(testLocation.locationId);
+
+      await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // 2. Test Tab navigation - find publication links via keyboard
@@ -559,7 +638,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(previousElement).not.toBe(backLinkHref);
 
       // 7. Test focus order is logical - Tab through first 3 interactive elements
-      await page.goto("/summary-of-publications?locationId=9");
+      await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
       await page.waitForSelector("h1.govuk-heading-l");
 
       const focusOrder = [];
