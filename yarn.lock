@@ -1545,6 +1545,7 @@ __metadata:
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
+    "@hmcts/test-support": "workspace:*"
     "@hmcts/verified-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/config": "npm:3.3.5"

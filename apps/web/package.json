@@ -20,7 +20,6 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/test-support": "workspace:*",
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/auth": "workspace:*",
@@ -36,6 +35,7 @@
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
+    "@hmcts/test-support": "workspace:*",
     "@hmcts/verified-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
