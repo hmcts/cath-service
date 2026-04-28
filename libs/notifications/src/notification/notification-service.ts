@@ -31,7 +31,11 @@ import {
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import {
+  type CaseSubscriberWithUser,
+  findActiveSubscriptionsByCaseName,
+  findActiveSubscriptionsByCaseNumber,
   findActiveSubscriptionsByLocation,
+  findCaseSubscriptionsByUserIds,
   findListTypeSubscribersByListTypeAndLanguage,
   type ListTypeSubscriberWithUser,
   type SubscriptionWithUser
@@ -88,6 +92,7 @@ export interface NotificationResult {
   failed: number;
   skipped: number;
   errors: string[];
+  notifiedUserIds: string[];
 }
 
 interface UserNotificationResult {
@@ -101,34 +106,12 @@ interface EmailTemplateData {
   pdfBuffer?: Buffer;
 }
 
-export async function sendPublicationNotifications(event: PublicationEvent): Promise<NotificationResult> {
-  const listTypeName =
-    event.listTypeId === undefined
-      ? undefined
-      : (await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }).catch(() => null))?.name;
-
-  const validation = validatePublicationEvent(event);
-  if (!validation.valid) {
-    throw new Error(`Invalid publication event: ${validation.errors.join(", ")}`);
-  }
-
-  const locationIdNum = Number.parseInt(event.locationId, 10);
-  if (Number.isNaN(locationIdNum)) {
-    throw new Error(`Invalid location ID: ${event.locationId}`);
-  }
-
-  const subscriptions = await findActiveSubscriptionsByLocation(locationIdNum);
-
-  if (subscriptions.length === 0) {
-    return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [] };
-  }
-
-  const results = await Promise.allSettled(subscriptions.map((subscription) => processUserNotification(subscription, event, listTypeName)));
-
-  return aggregateResults(results, subscriptions.length);
-}
-
-async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent, listTypeName?: string): Promise<UserNotificationResult> {
+async function processUserNotification(
+  subscription: SubscriptionWithUser,
+  event: PublicationEvent,
+  caseValue?: string,
+  listTypeName?: string
+): Promise<UserNotificationResult> {
   try {
     const validationResult = await validateUserEmail(subscription, event.publicationId);
     if (validationResult) {
@@ -143,7 +126,7 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     });
 
     const userName = buildUserName(subscription.user.firstName, subscription.user.surname);
-    const emailData = await buildEmailTemplateData(event, userName, listTypeName);
+    const emailData = await buildEmailTemplateData(event, userName, listTypeName, caseValue);
 
     const emailResult = await sendEmail({
       emailAddress: subscription.user.email!,
@@ -186,17 +169,17 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
   return { status: "skipped", error: `User ${subscription.userId}: ${reason}` };
 }
 
-async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string): Promise<EmailTemplateData> {
+async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {
-    return buildEnhancedEmailData(event, userName, config);
+    return buildEnhancedEmailData(event, userName, config, caseValue);
   }
 
-  return buildFallbackEmailData(event, userName);
+  return buildFallbackEmailData(event, userName, caseValue);
 }
 
-async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig): Promise<EmailTemplateData> {
+async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
   const listTypeId = event.listTypeId!;
 
   try {
@@ -208,7 +191,8 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
       hearingListName: event.hearingListName,
       publicationDate: event.publicationDate,
       locationName: event.locationName,
-      caseSummary
+      caseSummary,
+      caseValue
     });
 
     if (event.pdfFilePath) {
@@ -221,7 +205,7 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
     };
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return buildFallbackEmailData(event, userName);
+    return buildFallbackEmailData(event, userName, caseValue);
   }
 }
 
@@ -239,13 +223,14 @@ async function buildEmailDataWithPdf(pdfFilePath: string, templateParameters: Te
   return { templateParameters, templateId };
 }
 
-function buildFallbackEmailData(event: PublicationEvent, userName: string): EmailTemplateData {
+function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): EmailTemplateData {
   return {
     templateParameters: buildTemplateParameters({
       userName,
       hearingListName: event.hearingListName,
       publicationDate: event.publicationDate,
-      locationName: event.locationName
+      locationName: event.locationName,
+      caseValue
     })
   };
 }
@@ -256,7 +241,8 @@ function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[
     sent: 0,
     failed: 0,
     skipped: 0,
-    errors: []
+    errors: [],
+    notifiedUserIds: []
   };
 
   for (const settledResult of results) {
@@ -292,24 +278,42 @@ export interface ListTypePublicationEvent {
   pdfFilePath?: string;
 }
 
-export async function sendListTypePublicationNotifications(event: ListTypePublicationEvent): Promise<NotificationResult> {
+export async function sendListTypePublicationNotifications(event: ListTypePublicationEvent, excludeUserIds?: string[]): Promise<NotificationResult> {
   const listTypeName = (await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }).catch(() => null))?.name;
 
-  const subscribers = await findListTypeSubscribersByListTypeAndLanguage(event.listTypeId, event.language);
+  const allSubscribers = await findListTypeSubscribersByListTypeAndLanguage(event.listTypeId, event.language);
+  const excludeSet = new Set(excludeUserIds ?? []);
+  const subscribers = excludeSet.size > 0 ? allSubscribers.filter((s) => !excludeSet.has(s.userId)) : allSubscribers;
 
   if (subscribers.length === 0) {
-    return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [] };
+    return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [], notifiedUserIds: [] };
   }
 
-  const results = await Promise.allSettled(subscribers.map((subscriber) => processListTypeUserNotification(subscriber, event, listTypeName)));
+  const caseValueByUserId = await buildCaseValueMapFromSubscriptions(subscribers.map((s) => s.userId));
+
+  const results = await Promise.allSettled(
+    subscribers.map((subscriber) => processListTypeUserNotification(subscriber, event, listTypeName, caseValueByUserId.get(subscriber.userId)))
+  );
 
   return aggregateResults(results, subscribers.length);
+}
+
+async function buildCaseValueMapFromSubscriptions(userIds: string[]): Promise<Map<string, string>> {
+  const subscriptions = await findCaseSubscriptionsByUserIds(userIds);
+  const map = new Map<string, string>();
+  for (const sub of subscriptions) {
+    if (!map.has(sub.userId)) {
+      map.set(sub.userId, sub.searchValue);
+    }
+  }
+  return map;
 }
 
 async function processListTypeUserNotification(
   subscriber: ListTypeSubscriberWithUser,
   event: ListTypePublicationEvent,
-  listTypeName?: string
+  listTypeName?: string,
+  caseValue?: string
 ): Promise<UserNotificationResult> {
   if (!subscriber.user.email) {
     return { status: "skipped", error: `User ${subscriber.userId}: No email address` };
@@ -327,7 +331,7 @@ async function processListTypeUserNotification(
       jsonData: event.jsonData,
       pdfFilePath: event.pdfFilePath
     };
-    const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName);
+    const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
 
     const emailResult = await sendEmail({
       emailAddress: subscriber.user.email,
@@ -345,4 +349,94 @@ async function processListTypeUserNotification(
     const errorMessage = error instanceof Error ? error.message : String(error);
     return { status: "failed", error: `User ${subscriber.userId}: ${errorMessage}` };
   }
+}
+
+interface CombinedSubscriberEntry {
+  subscriber: SubscriptionWithUser | CaseSubscriberWithUser;
+  caseValue?: string;
+}
+
+function formatCaseValue(caseNumber: string | null, caseName: string | null): string {
+  if (caseNumber && caseName) return `${caseNumber} (${caseName})`;
+  return caseNumber ?? caseName ?? "";
+}
+
+export async function sendLocationAndCaseSubscriptionNotifications(artefactId: string, event: PublicationEvent): Promise<NotificationResult> {
+  const validation = validatePublicationEvent(event);
+  if (!validation.valid) {
+    throw new Error(`Invalid publication event: ${validation.errors.join(", ")}`);
+  }
+
+  const locationIdNum = Number.parseInt(event.locationId, 10);
+  if (Number.isNaN(locationIdNum)) {
+    throw new Error(`Invalid location ID: ${event.locationId}`);
+  }
+
+  const listTypeName = event.listTypeId
+    ? (await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }).catch(() => null))?.name
+    : undefined;
+
+  const subscriberMap = new Map<string, CombinedSubscriberEntry>();
+
+  // Add location subscribers first
+  const locationSubs = await findActiveSubscriptionsByLocation(locationIdNum);
+  for (const sub of locationSubs) {
+    subscriberMap.set(sub.userId, { subscriber: sub });
+  }
+
+  // Enrich location subscribers with their case subscription values
+  if (locationSubs.length > 0) {
+    const locationCaseValues = await buildCaseValueMapFromSubscriptions(locationSubs.map((s) => s.userId));
+    for (const [userId, entry] of subscriberMap) {
+      entry.caseValue ??= locationCaseValues.get(userId);
+    }
+  }
+
+  // Merge in case-only subscribers via artefact search
+  const artefactSearches = await prisma.artefactSearch.findMany({
+    where: { artefactId },
+    select: { caseNumber: true, caseName: true }
+  });
+
+  for (const search of artefactSearches) {
+    if (search.caseNumber) {
+      const subs = await findActiveSubscriptionsByCaseNumber(search.caseNumber);
+      const caseValue = formatCaseValue(search.caseNumber, search.caseName);
+      for (const sub of subs) {
+        const existing = subscriberMap.get(sub.userId);
+        if (existing) {
+          existing.caseValue ??= caseValue;
+        } else {
+          subscriberMap.set(sub.userId, { subscriber: sub, caseValue });
+        }
+      }
+    }
+
+    if (search.caseName) {
+      const subs = await findActiveSubscriptionsByCaseName(search.caseName);
+      const caseValue = formatCaseValue(search.caseNumber, search.caseName);
+      for (const sub of subs) {
+        const existing = subscriberMap.get(sub.userId);
+        if (existing) {
+          existing.caseValue ??= caseValue;
+        } else {
+          subscriberMap.set(sub.userId, { subscriber: sub, caseValue });
+        }
+      }
+    }
+  }
+
+  if (subscriberMap.size === 0) {
+    return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [], notifiedUserIds: [] };
+  }
+
+  const notifiedUserIds = Array.from(subscriberMap.keys());
+
+  const results = await Promise.allSettled(
+    Array.from(subscriberMap.values()).map(({ subscriber, caseValue }) =>
+      processUserNotification(subscriber as unknown as SubscriptionWithUser, event, caseValue, listTypeName)
+    )
+  );
+
+  return { ...aggregateResults(results, subscriberMap.size), notifiedUserIds };
 }

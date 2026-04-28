@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  findActiveSubscriptionsByCaseName,
   findActiveSubscriptionsByCaseNumber,
   findActiveSubscriptionsByLocation,
+  findCaseSubscriptionsByUserIds,
   findListTypeSubscribersByListTypeAndLanguage
 } from "./subscription-queries.js";
 
@@ -107,6 +109,84 @@ describe("subscription-queries", () => {
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
 
       const result = await findActiveSubscriptionsByCaseNumber("UNKNOWN-999");
+
+      expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("findActiveSubscriptionsByCaseName", () => {
+    it("should return subscribers where searchType is CASE_NAME and searchValue matches the case name", async () => {
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub-1",
+          userId: "user-1",
+          searchType: "CASE_NAME",
+          searchValue: "Smith v Jones",
+          user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+        }
+      ];
+
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
+
+      const result = await findActiveSubscriptionsByCaseName("Smith v Jones");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].user.email).toBe("user1@example.com");
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          searchType: "CASE_NAME",
+          searchValue: { equals: "Smith v Jones", mode: "insensitive" }
+        },
+        include: {
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              surname: true
+            }
+          }
+        }
+      });
+    });
+
+    it("should return empty array when no subscribers match the case name", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await findActiveSubscriptionsByCaseName("Unknown Case");
+
+      expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("findCaseSubscriptionsByUserIds", () => {
+    it("should return empty array when userIds is empty", async () => {
+      const result = await findCaseSubscriptionsByUserIds([]);
+      expect(result).toHaveLength(0);
+    });
+
+    it("should find all case subscriptions for given user IDs", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([
+        { userId: "user-1", searchValue: "AB-123" },
+        { userId: "user-2", searchValue: "Smith v Jones" }
+      ] as never);
+
+      const result = await findCaseSubscriptionsByUserIds(["user-1", "user-2"]);
+
+      expect(result).toHaveLength(2);
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: { userId: { in: ["user-1", "user-2"] }, searchType: { in: ["CASE_NUMBER", "CASE_NAME"] } },
+        select: { userId: true, searchValue: true }
+      });
+    });
+
+    it("should return empty array when no case subscriptions exist for users", async () => {
+      const { prisma } = await import("@hmcts/postgres");
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await findCaseSubscriptionsByUserIds(["user-1"]);
 
       expect(result).toHaveLength(0);
     });

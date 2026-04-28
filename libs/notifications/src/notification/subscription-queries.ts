@@ -68,6 +68,32 @@ export async function findActiveSubscriptionsByCaseNumber(caseNumber: string): P
   });
 }
 
+export async function findActiveSubscriptionsByCaseName(caseName: string): Promise<CaseSubscriberWithUser[]> {
+  return prisma.subscription.findMany({
+    where: {
+      searchType: "CASE_NAME",
+      searchValue: { equals: caseName, mode: "insensitive" }
+    },
+    include: {
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
+}
+
+export async function findCaseSubscriptionsByUserIds(userIds: string[]): Promise<{ userId: string; searchValue: string }[]> {
+  if (userIds.length === 0) return [];
+  return prisma.subscription.findMany({
+    where: { userId: { in: userIds }, searchType: { in: ["CASE_NUMBER", "CASE_NAME"] } },
+    select: { userId: true, searchValue: true }
+  });
+}
+
 export async function findListTypeSubscribersByListTypeAndLanguage(listTypeId: number, language: string): Promise<ListTypeSubscriberWithUser[]> {
   return prisma.subscriptionListType.findMany({
     where: {

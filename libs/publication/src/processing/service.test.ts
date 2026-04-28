@@ -22,7 +22,7 @@ vi.mock("@hmcts/location", () => ({
 }));
 
 vi.mock("@hmcts/notifications", () => ({
-  sendPublicationNotifications: vi.fn(),
+  sendLocationAndCaseSubscriptionNotifications: vi.fn(),
   sendListTypePublicationNotifications: vi.fn()
 }));
 
@@ -34,14 +34,19 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
+vi.mock("../artefact-search-extractor.js", () => ({
+  extractAndStoreArtefactSearch: vi.fn()
+}));
+
 describe("publication-processor", async () => {
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
-  const { sendListTypePublicationNotifications, sendPublicationNotifications } = await import("@hmcts/notifications");
+  const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres");
+  const { extractAndStoreArtefactSearch } = await import("../artefact-search-extractor.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,6 +54,14 @@ describe("publication-processor", async () => {
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
       friendlyName: "Civil And Family Daily Cause List"
     } as any);
+    vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+      totalSubscriptions: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+      errors: [],
+      notifiedUserIds: []
+    });
     vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
       totalSubscriptions: 0,
       sent: 0,
@@ -253,7 +266,7 @@ describe("publication-processor", async () => {
 
       expect(result).toEqual({ success: false });
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Invalid location ID for notifications:", "invalid");
-      expect(sendPublicationNotifications).not.toHaveBeenCalled();
+      expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
     });
@@ -269,7 +282,7 @@ describe("publication-processor", async () => {
       expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Location not found for notifications:", {
         locationId: "123"
       });
-      expect(sendPublicationNotifications).not.toHaveBeenCalled();
+      expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
 
       consoleWarnSpy.mockRestore();
     });
@@ -280,17 +293,18 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 10,
         sent: 8,
         failed: 2,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       const result = await sendPublicationNotificationsForArtefact(baseParams);
 
-      expect(sendPublicationNotifications).toHaveBeenCalledWith({
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith("test-artefact-id", {
         publicationId: "test-artefact-id",
         locationId: "123",
         locationName: "Test Court",
@@ -314,17 +328,21 @@ describe("publication-processor", async () => {
 
       vi.mocked(prisma.listType.findUnique).mockRejectedValue(new Error("DB timeout"));
       vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       await sendPublicationNotificationsForArtefact({ ...baseParams, listTypeId: 8 });
 
-      expect(sendPublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ hearingListName: "LIST_TYPE_8" }));
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "test-artefact-id",
+        expect.objectContaining({ hearingListName: "LIST_TYPE_8" })
+      );
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         "[Publication] List type lookup failed, using fallback name:",
         expect.objectContaining({ listTypeId: 8, error: "DB timeout" })
@@ -340,17 +358,19 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       await sendPublicationNotificationsForArtefact({ ...baseParams, listTypeId: 999 });
 
-      expect(sendPublicationNotifications).toHaveBeenCalledWith(
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "test-artefact-id",
         expect.objectContaining({
           hearingListName: "LIST_TYPE_999"
         })
@@ -365,12 +385,13 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 2,
         sent: 0,
         failed: 2,
         skipped: 0,
-        errors: [{ email: "user@example.com", error: "Invalid email" }, "Failed for test@domain.org"]
+        errors: [{ email: "user@example.com", error: "Invalid email" }, "Failed for test@domain.org"],
+        notifiedUserIds: []
       });
 
       const result = await sendPublicationNotificationsForArtefact(baseParams);
@@ -392,7 +413,7 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockRejectedValue(new Error("Service unavailable"));
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockRejectedValue(new Error("Service unavailable"));
 
       const result = await sendPublicationNotificationsForArtefact(baseParams);
 
@@ -411,12 +432,13 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: ["user-1", "user-2"]
       });
 
       await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "en" });
@@ -428,7 +450,8 @@ describe("publication-processor", async () => {
           locationName: "Test Court",
           listTypeId: 8,
           language: "ENGLISH"
-        })
+        }),
+        ["user-1", "user-2"]
       );
     });
 
@@ -438,17 +461,18 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       await sendPublicationNotificationsForArtefact({ ...baseParams, locale: "cy" });
 
-      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ language: "WELSH" }));
+      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ language: "WELSH" }), []);
     });
 
     it("should not dispatch list type notifications when locale is not provided", async () => {
@@ -457,12 +481,13 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       await sendPublicationNotificationsForArtefact(baseParams);
@@ -478,12 +503,13 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
       vi.mocked(sendListTypePublicationNotifications).mockRejectedValue(new Error("List type service down"));
 
@@ -502,12 +528,13 @@ describe("publication-processor", async () => {
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
       vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
         totalSubscriptions: 1,
@@ -552,12 +579,13 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 5,
         sent: 5,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       const result = await processPublication(baseParams);
@@ -571,18 +599,76 @@ describe("publication-processor", async () => {
       });
     });
 
+    it("should call extractAndStoreArtefactSearch when jsonData is provided", async () => {
+      vi.mocked(generateCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+
+      await processPublication(baseParams);
+
+      expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("test-artefact-id", 8, baseParams.jsonData);
+    });
+
+    it("should not call extractAndStoreArtefactSearch when jsonData is not provided", async () => {
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+
+      await processPublication({ ...baseParams, jsonData: undefined });
+
+      expect(extractAndStoreArtefactSearch).not.toHaveBeenCalled();
+    });
+
+    it("should continue with PDF generation and notifications when extractAndStoreArtefactSearch fails", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      vi.mocked(extractAndStoreArtefactSearch).mockRejectedValue(new Error("Extraction failed"));
+      vi.mocked(generateCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+      vi.mocked(getLocationById).mockResolvedValue({
+        id: 123,
+        name: "Test Court",
+        welshName: "Llys Prawf"
+      });
+
+      const result = await processPublication(baseParams);
+
+      expect(result.pdfPath).toBe("/path/to/pdf");
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Failed to extract artefact search data:", {
+        artefactId: "test-artefact-id",
+        error: "Extraction failed"
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should skip PDF generation when jsonData is not provided", async () => {
       vi.mocked(getLocationById).mockResolvedValue({
         id: 123,
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       const result = await processPublication({
@@ -607,7 +693,7 @@ describe("publication-processor", async () => {
         skipNotifications: true
       });
 
-      expect(sendPublicationNotifications).not.toHaveBeenCalled();
+      expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
       expect(result.notificationsSent).toBeUndefined();
       expect(result.pdfPath).toBe("/path/to/pdf");
     });
@@ -624,17 +710,19 @@ describe("publication-processor", async () => {
         name: "Test Court",
         welshName: "Llys Prawf"
       });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
         totalSubscriptions: 1,
         sent: 1,
         failed: 0,
         skipped: 0,
-        errors: []
+        errors: [],
+        notifiedUserIds: []
       });
 
       await processPublication(baseParams);
 
-      expect(sendPublicationNotifications).toHaveBeenCalledWith(
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "test-artefact-id",
         expect.objectContaining({
           pdfFilePath: "/generated/pdf/path"
         })
