@@ -12,7 +12,7 @@ import {
   waitForNotifications
 } from "../../utils/notification-helpers.js";
 
-const API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
 function createValidPayload(locationId: number, locationName: string) {
