@@ -65,6 +65,7 @@ export async function createApp(): Promise<Express> {
   const { default: config } = await import("config");
 
   const app = express();
+  app.set("trust proxy", 1);
 
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
