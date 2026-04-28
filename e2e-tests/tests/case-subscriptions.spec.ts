@@ -116,12 +116,12 @@ test.describe("Case Subscriptions", () => {
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Step 2: Validate - submit empty form shows error
-    await page.getByRole("button", { name: /search/i }).click();
+    await page.getByRole("button", { name: /continue/i }).click();
     await expect(page.getByText(/please enter a minimum of 3 characters/i)).toBeVisible();
 
     // Step 3: Search using part of the case name
     await page.getByLabel(/case name/i).fill("E2E Test");
-    await page.getByRole("button", { name: /search/i }).click();
+    await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/case-search-results");
 
     // Check accessibility on case search results page
@@ -182,12 +182,12 @@ test.describe("Case Subscriptions", () => {
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Step 2: Validate - submit empty form shows error
-    await page.getByRole("button", { name: /search/i }).click();
+    await page.getByRole("button", { name: /continue/i }).click();
     await expect(page.getByText(/enter a valid case reference number/i)).toBeVisible();
 
     // Step 3: Search using the exact case number
     await page.getByLabel(/reference number/i).fill(caseData.caseNumber);
-    await page.getByRole("button", { name: /search/i }).click();
+    await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/case-search-results");
 
     // Check accessibility on case search results page

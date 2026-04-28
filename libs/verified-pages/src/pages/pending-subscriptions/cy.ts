@@ -2,10 +2,10 @@ export const cy = {
   title: "Eich tanysgrifiadau e-bost",
   heading: "Eich tanysgrifiadau e-bost",
   tableHeaderLocation: "Enw llys neu dribiwnlys",
-  tableHeaderActions: "Gweithredoedd",
+  tableHeaderActions: "Camau gweithredu",
   confirmButton: "Parhau",
   confirmButtonPlural: "Parhau",
-  confirmSubscription: "Cadarnhewch tanysgrifiadau",
+  confirmSubscription: "Cadarnhau tanysgrifiadau",
   removeLink: "Dileu",
   addAnotherSubscription: "Ychwanegu tanysgrifiad e-bost arall",
   errorSummaryTitle: "Mae problem wedi codi",
@@ -13,6 +13,6 @@ export const cy = {
   errorDuplicateCase: "Rydych eisoes wedi tanysgrifio i'r achos hwn",
   addSubscriptions: "Ychwanegu Tanysgrifiadau",
   back: "Yn ôl",
-  caseNameLabel: "Enw'r Achos",
+  caseNameLabel: "Enw'r achos",
   referenceNumberLabel: "Cyfeirnod"
 };

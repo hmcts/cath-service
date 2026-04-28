@@ -23,9 +23,6 @@ const getHandler = async (req: Request, res: Response) => {
     )
   ).filter(Boolean);
 
-  delete req.session.emailSubscriptions.confirmationComplete;
-  delete req.session.emailSubscriptions.confirmedLocations;
-
   if (!res.locals.navigation) {
     res.locals.navigation = {};
   }

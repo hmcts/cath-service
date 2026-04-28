@@ -1,9 +1,9 @@
 export const cy = {
-  title: "Canlyniadau chwilio achos tanysgrifiad",
-  heading: "Canlyniadau chwilio achos tanysgrifiad",
+  title: "Canlyniadau'r chwiliad yn ôl tanysgrifiad i restr achosion",
+  heading: "Canlyniadau'r chwiliad yn ôl tanysgrifiad i restr achosion",
   resultsFound: "canlyniad(au) wedi'u canfod",
   columnSelect: "Dewiswch ganlyniad",
-  columnCaseName: "Enw'r Achos",
+  columnCaseName: "Enw'r achos",
   columnReferenceNumber: "Cyfeirnod",
   continueButton: "Parhau",
   back: "Yn ôl",

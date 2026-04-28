@@ -5,8 +5,8 @@ export const cy = {
   caseNameHint: "Er enghraifft, Smith.",
   continueButton: "Parhau",
   back: "Yn ôl",
-  errorSummaryTitle: "Mae problem",
-  errorMinLength: "Rhowch o leiaf 3 nod",
-  errorNoResultsSummary: "Nid oes dim sy'n cyfateb i'ch meini prawf",
-  errorNoResultsInline: "Rhowch enw achos cywir"
+  errorSummaryTitle: "Mae yna broblem",
+  errorMinLength: "Nodwch o leiaf 3 nod",
+  errorNoResultsSummary: "Does yna ddim yn cyfateb i'r meini prawf",
+  errorNoResultsInline: "Darparwch enw cywir ar gyfer yr achos"
 };
