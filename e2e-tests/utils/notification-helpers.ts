@@ -60,17 +60,30 @@ export async function getNotificationsByPublicationId(publicationId: string): Pr
   return getNotificationsByPublicationIdApi(publicationId);
 }
 
-export async function waitForNotifications(publicationId: string, maxRetries = 15, delayMs = 1000, waitForGovNotifyId = false): Promise<NotificationRecord[]> {
+const TERMINAL_STATUSES = new Set(["Sent", "Failed", "Skipped"]);
+
+export async function waitForNotifications(
+  publicationId: string,
+  maxRetries = 15,
+  delayMs = 1000,
+  waitForGovNotifyId = false,
+  waitForTerminalStatus = false
+): Promise<NotificationRecord[]> {
   let notifications: NotificationRecord[] = [];
   for (let i = 0; i < maxRetries; i++) {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
     notifications = await getNotificationsByPublicationId(publicationId);
 
     if (notifications.length > 0) {
-      // If waiting for GOV.UK Notify ID, check if at least one notification has it
       if (waitForGovNotifyId) {
+        // Wait until at least one notification has a GOV.UK Notify ID
         const hasGovNotifyId = notifications.some((n) => n.govNotifyId !== null);
         if (hasGovNotifyId) break;
+      } else if (waitForTerminalStatus) {
+        // Wait until all notifications have reached a terminal status (not Pending)
+        // Needed because processPublication runs fire-and-forget after the API 201 response
+        const allTerminal = notifications.every((n) => TERMINAL_STATUSES.has(n.status));
+        if (allTerminal) break;
       } else {
         break;
       }

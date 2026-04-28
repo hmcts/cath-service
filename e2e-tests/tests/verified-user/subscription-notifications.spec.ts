@@ -150,8 +150,8 @@ test.describe("Subscription Notifications", () => {
     expect(result.artefact_id).toBeDefined();
     testData.publicationIds.push(result.artefact_id);
 
-    // Wait for notification to be sent (don't require govNotifyId - may be null in non-production envs)
-    const notifications = await waitForNotifications(result.artefact_id, 15, 1000, false);
+    // Wait for notification to reach terminal status (processPublication is fire-and-forget after 201)
+    const notifications = await waitForNotifications(result.artefact_id, 30, 1000, false, true);
     expect(notifications.length).toBeGreaterThan(0);
 
     // Verify notification was processed (Sent when Notify is configured, Failed otherwise)
@@ -204,8 +204,8 @@ test.describe("Subscription Notifications", () => {
     const result2 = await apiResponse2.json();
     testData.publicationIds.push(result2.artefact_id);
 
-    // Wait for notifications
-    const notifications2 = await waitForNotifications(result2.artefact_id, 15, 1000, false);
+    // Wait for notifications to reach terminal status
+    const notifications2 = await waitForNotifications(result2.artefact_id, 30, 1000, false, true);
 
     // Verify notifications were processed for both subscribers (Sent or Failed depending on Notify config)
     const processedNotifications = notifications2.filter((n) => n.status === "Sent" || n.status === "Failed");
