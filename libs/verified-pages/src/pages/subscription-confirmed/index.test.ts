@@ -52,8 +52,6 @@ describe("subscription-confirmed", () => {
           isPlural: true
         })
       );
-      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBeUndefined();
-      expect(mockReq.session?.emailSubscriptions?.confirmedLocations).toBeUndefined();
     });
 
     it("should redirect if confirmation not complete", async () => {

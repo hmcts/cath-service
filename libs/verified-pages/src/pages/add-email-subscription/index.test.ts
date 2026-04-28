@@ -48,7 +48,7 @@ describe("add-email-subscription", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "add-email-subscription/index",
         expect.objectContaining({
-          heading: "Sut ydych chi am ychwanegu tanysgrifiad e-bost?"
+          heading: "Sut ydych chi eisiau ychwanegu tanysgrifiad e-bost?"
         })
       );
     });

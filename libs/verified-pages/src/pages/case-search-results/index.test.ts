@@ -86,7 +86,10 @@ describe("case-search-results", () => {
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(mockRes.render).toHaveBeenCalledWith("case-search-results/index", expect.objectContaining({ heading: "Canlyniadau chwilio achos tanysgrifiad" }));
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "case-search-results/index",
+        expect.objectContaining({ heading: "Canlyniadau'r chwiliad yn ôl tanysgrifiad i restr achosion" })
+      );
     });
   });
 
