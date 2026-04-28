@@ -21,6 +21,7 @@ cath-web:
     ingressHost: "{{ .Release.Name }}-web.dev.platform.hmcts.net"
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.dev.platform.hmcts.net"
+      CFT_IDAM_URL: "https://idam-web-public.aat.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
