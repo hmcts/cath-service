@@ -117,7 +117,7 @@ test.describe("Case Subscriptions", () => {
 
     // Step 2: Validate - submit empty form shows error
     await page.getByRole("button", { name: /continue/i }).click();
-    await expect(page.getByText(/please enter a minimum of 3 characters/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /please enter a minimum of 3 characters/i })).toBeVisible();
 
     // Step 3: Search using part of the case name
     await page.getByLabel(/case name/i).fill("E2E Test");
@@ -130,7 +130,7 @@ test.describe("Case Subscriptions", () => {
 
     // Step 4: Validate - submit without selecting a case shows error
     await page.getByRole("button", { name: /continue/i }).click();
-    await expect(page.getByText(/select a case/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /select a case/i })).toBeVisible();
 
     // Step 5: Select the test case by its case name
     await page.getByRole("checkbox", { name: new RegExp(caseData.caseName) }).check();
@@ -183,7 +183,7 @@ test.describe("Case Subscriptions", () => {
 
     // Step 2: Validate - submit empty form shows error
     await page.getByRole("button", { name: /continue/i }).click();
-    await expect(page.getByText(/enter a valid case reference number/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /there is nothing matching your criteria/i })).toBeVisible();
 
     // Step 3: Search using the exact case number
     await page.getByLabel(/reference number/i).fill(caseData.caseNumber);
