@@ -600,8 +600,8 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(focusedElementDetails.tagName).toBe("A");
 
       // 4. Test keyboard activation - Enter key should navigate
-      await page.keyboard.press("Enter");
-      await page.waitForLoadState("networkidle");
+      // Use Promise.all to avoid race condition where navigation completes before waitForURL is registered
+      await Promise.all([page.waitForURL(/artefactId=/, { timeout: 10000 }), page.keyboard.press("Enter")]);
 
       // Verify navigation to publication detail page
       const detailUrl = page.url();
