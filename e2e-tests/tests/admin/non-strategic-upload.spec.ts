@@ -126,14 +126,29 @@ test.describe("Non-Strategic Upload", () => {
     await expect(errorSummary).toBeVisible();
     await expect(errorSummary.getByRole("link", { name: /the selected file must be smaller than 2mb/i })).toBeVisible();
 
-    // STEP 6: Test date range validation
-    await fileInput.setInputFiles({
+    // STEP 6: Test date range validation (re-fill all fields since form state may be lost after validation errors)
+    await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+    await page.waitForTimeout(1000);
+
+    await page.selectOption('select[name="listType"]', "9");
+    await page.fill('input[name="hearingStartDate-day"]', "15");
+    await page.fill('input[name="hearingStartDate-month"]', "06");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+    await page.selectOption('select[name="language"]', "ENGLISH");
+    await page.fill('input[name="displayFrom-day"]', "20");
+    await page.fill('input[name="displayFrom-month"]', "06");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "10"); // Invalid: to date (10) before from date (20)
+    await page.fill('input[name="displayTo-month"]', "06");
+    await page.fill('input[name="displayTo-year"]', "2025");
+
+    const fileInputStep6 = page.locator('input[name="file"]');
+    await fileInputStep6.setInputFiles({
       name: "test.xlsx",
       mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       buffer: await createMinimalExcelFile()
     });
-    await page.fill('input[name="displayFrom-day"]', "20");
-    await page.fill('input[name="displayTo-day"]', "10"); // Invalid: to before from
 
     await page.getByRole("button", { name: /continue/i }).click();
     errorSummary = page.locator(".govuk-error-summary");
