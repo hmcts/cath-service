@@ -399,6 +399,32 @@ export async function deleteTestUsers(userIds: string[]): Promise<{ deleted: num
   return callTestSupportApi<{ deleted: number }>("DELETE", "/test-support/users", { userIds });
 }
 
+// Flat file management for deployed environment testing
+interface UploadFlatFileInput {
+  artefactId: string;
+  content: Buffer | Uint8Array;
+  extension?: string;
+}
+
+interface UploadFlatFileResponse {
+  artefactId: string;
+  filename: string;
+  size: number;
+}
+
+export async function uploadTestFlatFile(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
+  const base64Content = Buffer.from(input.content).toString("base64");
+  return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
+    artefactId: input.artefactId,
+    content: base64Content,
+    extension: input.extension || ".pdf"
+  });
+}
+
+export async function deleteTestFlatFile(artefactId: string): Promise<{ deleted: boolean }> {
+  return callTestSupportApi<{ deleted: boolean }>("DELETE", "/test-support/flat-files", { artefactId });
+}
+
 export async function createOrGetListType(input: CreateListTypeInput): Promise<ListTypeRecord> {
   // First try to find existing list type by name
   try {

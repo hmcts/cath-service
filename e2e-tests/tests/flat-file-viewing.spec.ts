@@ -3,7 +3,7 @@ import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
-import { createTestArtefact } from "../utils/test-support-api.js";
+import { createTestArtefact, deleteTestFlatFile, uploadTestFlatFile } from "../utils/test-support-api.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -11,6 +11,9 @@ import { createTestArtefact } from "../utils/test-support-api.js";
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
+// When running against a deployed environment, files must be uploaded via the test-support API.
+// When running locally, files can be written directly to the shared storage directory.
+const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 const STORAGE_PATH = path.join(process.cwd(), "..", "storage", "temp", "uploads");
 
 // Helper function to create a test PDF file
@@ -104,12 +107,20 @@ async function createFlatFileArtefact(
 
   // Create file in storage if requested
   if (createFile) {
-    if (!fs.existsSync(STORAGE_PATH)) {
-      fs.mkdirSync(STORAGE_PATH, { recursive: true });
-    }
+    const pdfBuffer = createTestPDFBuffer(fileContent);
 
-    const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
-    fs.writeFileSync(filePath, createTestPDFBuffer(fileContent));
+    if (IS_DEPLOYED) {
+      // In deployed environments, upload file via test-support API so it lands on the deployed server's filesystem
+      console.log(`[flat-file] Uploading file via API for artefact ${artefactId}`);
+      await uploadTestFlatFile({ artefactId, content: pdfBuffer, extension: ".pdf" });
+    } else {
+      // Locally, write directly to shared storage directory
+      if (!fs.existsSync(STORAGE_PATH)) {
+        fs.mkdirSync(STORAGE_PATH, { recursive: true });
+      }
+      const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
+      fs.writeFileSync(filePath, pdfBuffer);
+    }
   }
 
   // Track artefact for cleanup if tracking array provided
@@ -123,11 +134,19 @@ async function createFlatFileArtefact(
 // Helper to clean up PDF files from storage
 async function cleanupPDFFiles(artefactIds: string[]) {
   for (const artefactId of artefactIds) {
-    const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
-    try {
-      await fs.promises.unlink(filePath);
-    } catch {
-      // File might not exist, which is fine
+    if (IS_DEPLOYED) {
+      try {
+        await deleteTestFlatFile(artefactId);
+      } catch {
+        // File might not exist, which is fine
+      }
+    } else {
+      const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
+      try {
+        await fs.promises.unlink(filePath);
+      } catch {
+        // File might not exist, which is fine
+      }
     }
   }
 }
@@ -202,7 +221,8 @@ test.describe("Flat File Viewing", () => {
     await newPage.close();
 
     // STEP 6: Test PDF download with correct headers
-    const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
+    const baseUrl = process.env.CATH_SERVICE_WEB_URL || "https://localhost:8080";
+    const response = await page.request.get(`${baseUrl}/api/flat-file/${artefactId}/download`, {
       ignoreHTTPSErrors: true
     });
 
