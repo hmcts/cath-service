@@ -185,12 +185,12 @@ async function createValidCSTExcel(): Promise<Buffer> {
 }
 
 // Helper function to upload CST Excel file via non-strategic upload page
-async function uploadCSTExcel(page: Page, excelBuffer: Buffer, locationId: number) {
+async function uploadCSTExcel(page: Page, excelBuffer: Buffer, locationId: number, listTypeId: number) {
   await page.goto(`/non-strategic-upload?locationId=${locationId}`);
   await page.waitForTimeout(1000);
 
-  // Select Care Standards Tribunal (listTypeId === 9)
-  await page.selectOption('select[name="listType"]', "9");
+  // Select Care Standards Tribunal using the actual DB ID (not hardcoded)
+  await page.selectOption('select[name="listType"]', String(listTypeId));
   await page.fill('input[name="hearingStartDate-day"]', "20");
   await page.fill('input[name="hearingStartDate-month"]', "01");
   await page.fill('input[name="hearingStartDate-year"]', "2026");
@@ -464,7 +464,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     await authenticateSystemAdmin(page);
 
     // Step 2: Ensure CST list type exists (it's a non-strategic list type)
-    await createOrGetListType({
+    const cstListType = await createOrGetListType({
       name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
       friendlyName: "Care Standards Tribunal Weekly Hearing List",
       welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
@@ -476,7 +476,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
 
     // Step 3: Create and upload CST Excel file
     const excelBuffer = await createValidCSTExcel();
-    await uploadCSTExcel(page, excelBuffer, testLocation.locationId);
+    await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
 
     // Step 4: Verify summary page displays correctly
     await expect(page.locator("h1")).toContainText("File upload summary");
@@ -534,7 +534,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     // Step 1: Authenticate and upload CST file
     await authenticateSystemAdmin(page);
 
-    await createOrGetListType({
+    const cstListType = await createOrGetListType({
       name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
       friendlyName: "Care Standards Tribunal Weekly Hearing List",
       welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
@@ -545,7 +545,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     });
 
     const excelBuffer = await createValidCSTExcel();
-    await uploadCSTExcel(page, excelBuffer, testLocation.locationId);
+    await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
     await page.getByRole("button", { name: "Confirm" }).click();
     await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
 
