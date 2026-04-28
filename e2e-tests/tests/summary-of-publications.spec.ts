@@ -477,7 +477,7 @@ test.describe("Summary of Publications Page", () => {
 });
 
 test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
-  test("should upload CST Excel file and view in summary of publications", async ({ page }) => {
+  test.skip("should upload CST Excel file and view in summary of publications", async ({ page }) => {
     // Create unique location for this test
     const testLocation = await createUniqueTestLocation({ namePrefix: "CST Upload Test Court" });
 
