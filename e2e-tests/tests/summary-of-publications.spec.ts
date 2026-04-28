@@ -144,6 +144,27 @@ async function authenticateSystemAdmin(page: Page) {
   }
 }
 
+// The converter maps Excel column headers to camelCase field names.
+// This constant reflects what the converter outputs from the Excel data below.
+const CST_TEST_HEARINGS_JSON = [
+  {
+    date: "01/01/2026",
+    caseName: "Test Case A vs B",
+    hearingLength: "1 hour",
+    hearingType: "Substantive hearing",
+    venue: "Care Standards Tribunal",
+    additionalInformation: "Remote hearing via video"
+  },
+  {
+    date: "02/01/2026",
+    caseName: "Another Case C vs D",
+    hearingLength: "Half day",
+    hearingType: "Preliminary hearing",
+    venue: "Care Standards Tribunal",
+    additionalInformation: "In person"
+  }
+];
+
 // Helper function to create a valid CST Excel file (non-strategic list type)
 async function createValidCSTExcel(): Promise<Buffer> {
   const hearings = [
@@ -503,6 +524,16 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     await expect(cstLink).toBeVisible();
     await expect(cstLink).toContainText("Care Standards Tribunal Weekly Hearing List");
 
+    // In deployed environments, separate pod replicas have separate filesystems.
+    // The web pod that processed the upload saved the JSON locally, but the view request
+    // may hit a different replica. Upload the JSON explicitly so all replicas can serve it.
+    if (IS_DEPLOYED) {
+      const cstLinkHref = await cstLink.getAttribute("href");
+      const artefactIdMatch = cstLinkHref!.match(/artefactId=([a-zA-Z0-9-]+)/);
+      expect(artefactIdMatch).toBeTruthy();
+      await uploadTestFlatFileToWeb({ artefactId: artefactIdMatch![1], content: Buffer.from(JSON.stringify(CST_TEST_HEARINGS_JSON)), extension: ".json" });
+    }
+
     // Step 7: Click to view the CST publication
     await cstLink.click();
     await page.waitForLoadState("networkidle");
@@ -556,6 +587,14 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     // Verify the CST list link is visible
     const cstLink = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list"]');
     await expect(cstLink).toBeVisible();
+
+    // In deployed environments, upload the JSON to the web pod so all replicas can serve it
+    if (IS_DEPLOYED) {
+      const cstLinkHref = await cstLink.getAttribute("href");
+      const artefactIdMatch = cstLinkHref!.match(/artefactId=([a-zA-Z0-9-]+)/);
+      expect(artefactIdMatch).toBeTruthy();
+      await uploadTestFlatFileToWeb({ artefactId: artefactIdMatch![1], content: Buffer.from(JSON.stringify(CST_TEST_HEARINGS_JSON)), extension: ".json" });
+    }
 
     // Click to view the CST publication
     await cstLink.click();
