@@ -13,6 +13,7 @@ import {
   getNotificationsBySubscriptionId
 } from "../../utils/notification-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
+import { getLatestArtefactByLocationAndListType } from "../../utils/test-support-api.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 
@@ -439,103 +440,89 @@ test.describe
         await cleanupTestUsers(testData.userIds);
       }
     });
-  });
-
-test.describe("PDF Generation", () => {
-  let pdfTestLocationId: number;
-
-  test.beforeAll(async () => {
-    const testLocation = await createUniqueTestLocation({ namePrefix: "PDF Generation Court" });
-    pdfTestLocationId = testLocation.locationId;
-  });
-
-  const CIVIL_FAMILY_JSON = {
-    document: {
-      publicationDate: "2025-11-12T09:00:00.000Z",
-      documentName: "Civil and Family Daily Cause List",
-      version: "1.0"
-    },
-    venue: {
-      venueName: "Oxford Combined Court Centre",
-      venueAddress: {
-        line: ["St Aldate's"],
-        town: "Oxford",
-        postCode: "OX1 1TL"
+    const CIVIL_FAMILY_JSON = {
+      document: {
+        publicationDate: "2025-11-12T09:00:00.000Z",
+        documentName: "Civil and Family Daily Cause List",
+        version: "1.0"
       },
-      venueContact: {
-        venueTelephone: "01865 264 200",
-        venueEmail: "enquiries.oxford.countycourt@justice.gov.uk"
-      }
-    },
-    courtLists: [
-      {
-        courtHouse: {
-          courtHouseName: "Oxford Combined Court Centre",
-          courtRoom: [
-            {
-              courtRoomName: "Courtroom 1",
-              session: [
-                {
-                  sittings: [
-                    {
-                      sittingStart: "2025-11-12T10:00:00.000Z",
-                      sittingEnd: "2025-11-12T11:00:00.000Z",
-                      hearing: [
-                        {
-                          hearingType: "Family Hearing",
-                          case: [{ caseName: "Brown v Brown", caseNumber: "CF-2025-001" }]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+      venue: {
+        venueName: "Oxford Combined Court Centre",
+        venueAddress: {
+          line: ["St Aldate's"],
+          town: "Oxford",
+          postCode: "OX1 1TL"
+        },
+        venueContact: {
+          venueTelephone: "01865 264 200",
+          venueEmail: "enquiries.oxford.countycourt@justice.gov.uk"
         }
-      }
-    ]
-  };
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Oxford Combined Court Centre",
+            courtRoom: [
+              {
+                courtRoomName: "Courtroom 1",
+                session: [
+                  {
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [
+                          {
+                            hearingType: "Family Hearing",
+                            case: [{ caseName: "Brown v Brown", caseNumber: "CF-2025-001" }]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
 
-  test.beforeEach(async ({ page }) => {
-    await authenticateSystemAdmin(page);
-  });
+    test("should generate a PDF after uploading a JSON publication @nightly", async ({ page }) => {
+      await page.goto(`/manual-upload?locationId=${testLocationId}`);
+      await page.waitForTimeout(1000);
 
-  test("should generate a PDF after uploading a JSON publication @nightly", async ({ page }) => {
-    await page.goto(`/manual-upload?locationId=${pdfTestLocationId}`);
-    await page.waitForTimeout(1000);
+      await page.selectOption('select[name="listType"]', "8"); // CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+      await page.fill('input[name="hearingStartDate-day"]', "12");
+      await page.fill('input[name="hearingStartDate-month"]', "11");
+      await page.fill('input[name="hearingStartDate-year"]', "2025");
+      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+      await page.selectOption('select[name="language"]', "ENGLISH");
+      await page.fill('input[name="displayFrom-day"]', "12");
+      await page.fill('input[name="displayFrom-month"]', "11");
+      await page.fill('input[name="displayFrom-year"]', "2025");
+      await page.fill('input[name="displayTo-day"]', "13");
+      await page.fill('input[name="displayTo-month"]', "11");
+      await page.fill('input[name="displayTo-year"]', "2025");
 
-    await page.selectOption('select[name="listType"]', "8"); // CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
-    await page.fill('input[name="hearingStartDate-day"]', "12");
-    await page.fill('input[name="hearingStartDate-month"]', "11");
-    await page.fill('input[name="hearingStartDate-year"]', "2025");
-    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
-    await page.selectOption('select[name="language"]', "ENGLISH");
-    await page.fill('input[name="displayFrom-day"]', "12");
-    await page.fill('input[name="displayFrom-month"]', "11");
-    await page.fill('input[name="displayFrom-year"]', "2025");
-    await page.fill('input[name="displayTo-day"]', "13");
-    await page.fill('input[name="displayTo-month"]', "11");
-    await page.fill('input[name="displayTo-year"]', "2025");
+      const fileInput = page.locator('input[name="file"]');
+      await fileInput.setInputFiles({
+        name: "civil-and-family-daily-cause-list.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(CIVIL_FAMILY_JSON))
+      });
 
-    const fileInput = page.locator('input[name="file"]');
-    await fileInput.setInputFiles({
-      name: "civil-and-family-daily-cause-list.json",
-      mimeType: "application/json",
-      buffer: Buffer.from(JSON.stringify(CIVIL_FAMILY_JSON))
+      await page.getByRole("button", { name: /continue/i }).click();
+      await page.waitForURL(/\/manual-upload-summary\?uploadId=/);
+
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/manual-upload-success", { timeout: 30000 });
+
+      const artefact = await getLatestArtefactByLocationAndListType(testLocationId, 8);
+      expect(artefact).toBeDefined();
+
+      const pdfPath = path.join(process.cwd(), "..", "storage", "temp", "uploads", `${artefact!.artefactId}.pdf`);
+      expect(fs.existsSync(pdfPath)).toBe(true);
+      expect(fs.statSync(pdfPath).size).toBeGreaterThan(0);
     });
-
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForURL(/\/manual-upload-summary\?uploadId=/);
-
-    await page.getByRole("button", { name: "Confirm" }).click();
-    await page.waitForURL("/manual-upload-success", { timeout: 30000 });
-
-    const artefact = await getLatestArtefactByLocationAndListType(pdfTestLocationId, 8);
-    expect(artefact).toBeDefined();
-
-    const pdfPath = path.join(process.cwd(), "..", "storage", "temp", "uploads", `${artefact!.artefactId}.pdf`);
-    expect(fs.existsSync(pdfPath)).toBe(true);
-    expect(fs.statSync(pdfPath).size).toBeGreaterThan(0);
   });
-});
