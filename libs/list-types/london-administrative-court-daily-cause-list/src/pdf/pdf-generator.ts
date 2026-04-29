@@ -25,8 +25,7 @@ export async function generateLondonAdministrativeCourtDailyCauseListPdf(options
   try {
     const renderedData = renderLondonAdminCourt(options.jsonData, {
       locale: options.locale,
-      displayFrom: options.contentDate,
-      displayTo: options.contentDate,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString()
     });
 

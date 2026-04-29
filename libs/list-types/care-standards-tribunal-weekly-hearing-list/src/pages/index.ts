@@ -77,8 +77,7 @@ export const GET = async (req: Request, res: Response) => {
     const { header, hearings } = renderCareStandardsTribunalData(jsonData, {
       locale,
       courtName,
-      displayFrom: artefact.displayFrom,
-      displayTo: artefact.displayTo,
+      contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: t.pageTitle
     });

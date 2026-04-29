@@ -45,8 +45,7 @@ export async function generateAdministrativeCourtDailyCauseListPdf(options: PdfG
       locale: options.locale,
       listTypeId: options.listTypeId,
       listTitle,
-      displayFrom: options.contentDate,
-      displayTo: options.contentDate,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString()
     });
 
