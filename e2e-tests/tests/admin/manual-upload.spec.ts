@@ -10,7 +10,6 @@ import {
   cleanupTestUsers,
   createTestSubscription,
   createTestUser,
-  getLatestArtefactByLocationAndListType,
   getNotificationsBySubscriptionId
 } from "../../utils/notification-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
