@@ -1,5 +1,5 @@
 import { getLocationWithDetails } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { buildPushHeaders } from "./push/headers.js";
 import { pushWithRetry } from "./push/retry.js";
 import { findSubscribersByListType } from "./queries.js";

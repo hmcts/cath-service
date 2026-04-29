@@ -1259,7 +1259,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     "@prisma/client": "*"
     express: ^5.2.0
@@ -1368,7 +1368,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
+"@hmcts/postgres@workspace:apps/postgres":
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:

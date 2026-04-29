@@ -3,7 +3,7 @@ import { findSubscribersByListType } from "./queries.js";
 
 const mockFindMany = vi.hoisted(() => vi.fn());
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     legacyThirdPartySubscription: {
       findMany: mockFindMany

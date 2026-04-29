@@ -7,7 +7,7 @@ vi.mock("@hmcts/location", () => ({
   getLocationWithDetails: vi.fn().mockResolvedValue({ name: "Test Court", regions: [], subJurisdictions: [] })
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     thirdPartyPushLog: {
       create: mockPushLogCreate

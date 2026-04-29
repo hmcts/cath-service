@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 const SENSITIVITY_ORDER = ["PUBLIC", "PRIVATE", "CLASSIFIED"] as const;
 type SensitivityLevel = (typeof SENSITIVITY_ORDER)[number];
