@@ -1,0 +1,33 @@
+apiVersion: v2
+name: cath-service
+description: Umbrella chart for deploying all CATH services
+type: application
+version: 0.0.1
+annotations:
+  team: cath
+home: https://github.com/hmcts/cath-service
+dependencies:
+  - name: cath-postgres
+    version: 0.0.1
+    repository: "file://../../apps/postgres/helm"
+    condition: postgres.enabled
+  - name: cath-web
+    version: 0.0.1
+    repository: "file://../../apps/web/helm"
+    condition: web.enabled
+  - name: cath-api
+    version: 0.0.1
+    repository: "file://../../apps/api/helm"
+    condition: api.enabled
+  - name: cath-crons
+    version: 0.0.1
+    repository: "file://../../apps/crons/helm"
+    condition: crons.enabled
+  - name: redis
+    version: 24.1.8
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: postgresql
+    version: 1.1.0
+    repository: oci://hmctspublic.azurecr.io/helm
+    condition: postgresql.enabled

@@ -1,6 +1,3 @@
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 -- AlterTable
 ALTER TABLE "artefact" ADD COLUMN     "no_match" BOOLEAN NOT NULL DEFAULT false;
 

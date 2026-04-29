@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { APPLICATION_STATUS, type MediaApplicationDetails, type PendingApplicationSummary } from "./model.js";
 
 export async function getPendingApplications(): Promise<PendingApplicationSummary[]> {

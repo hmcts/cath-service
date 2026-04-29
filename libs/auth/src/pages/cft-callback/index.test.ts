@@ -240,6 +240,43 @@ describe("CFT Login Return Handler", () => {
     expect(mockSession.lng).toBeUndefined(); // Should be cleaned up
   });
 
+  it("should redirect to sign-in with db_error when createOrUpdateUser fails", async () => {
+    vi.mocked(tokenClient.exchangeCodeForToken).mockResolvedValue({
+      access_token: "token",
+      id_token: "id_token",
+      token_type: "Bearer",
+      expires_in: 3600
+    });
+
+    vi.mocked(tokenClient.extractUserInfoFromToken).mockReturnValue({
+      id: "user-123",
+      email: "test@example.com",
+      displayName: "Test User",
+      firstName: "Test",
+      surname: "User",
+      roles: ["caseworker"]
+    });
+
+    vi.mocked(roleService.isRejectedCFTRole).mockReturnValue(false);
+    vi.mocked(accountQuery.createOrUpdateUser).mockRejectedValue(new Error("DB connection failed"));
+
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await GET(mockReq as Request, mockRes as Response);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "CFT callback: failed to create/update user",
+      expect.objectContaining({
+        userEmail: "test@example.com",
+        userId: "user-123"
+      })
+    );
+    expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=db_error&lng=en");
+    expect(mockReq.login).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("should preserve Welsh language in error redirects", async () => {
     mockSession.lng = "cy";
     mockReq.query = {};
