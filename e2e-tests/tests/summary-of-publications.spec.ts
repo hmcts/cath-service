@@ -110,6 +110,8 @@ async function uploadPublicationViaApi(request: APIRequestContext, locationId: n
   const displayFrom = "2025-01-01T00:00:00Z";
   const displayTo = "2030-12-31T23:59:59Z";
 
+  console.log(`[uploadPublicationViaApi] IS_DEPLOYED=${IS_DEPLOYED} API_URL=${PUBLICATION_ENDPOINT}`);
+
   const payload = createCivilFamilyCauseListPayload(locationId, contentDate, displayFrom, displayTo);
   const token = await getApiAuthToken();
 
@@ -118,16 +120,22 @@ async function uploadPublicationViaApi(request: APIRequestContext, locationId: n
     headers: { Authorization: `Bearer ${token}` }
   });
 
+  console.log(`[uploadPublicationViaApi] API response status=${response.status()}`);
   expect(response.status()).toBe(201);
   const result = await response.json();
+  console.log(`[uploadPublicationViaApi] API response body=${JSON.stringify(result)}`);
   expect(result.artefact_id).toBeDefined();
 
   // In deployed environments, API and web are separate pods with separate filesystems.
   // The API stores the JSON on the API pod; the web controller reads from the web pod.
   // Upload the JSON to the web pod so the list type page can render it.
   if (IS_DEPLOYED) {
+    console.log(`[uploadPublicationViaApi] Uploading flat file to web pod for artefactId=${result.artefact_id}`);
     const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
-    await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
+    const uploadResult = await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
+    console.log(`[uploadPublicationViaApi] Flat file upload result=${JSON.stringify(uploadResult)}`);
+  } else {
+    console.log("[uploadPublicationViaApi] Not deployed, skipping flat file upload to web pod");
   }
 
   return result.artefact_id;
