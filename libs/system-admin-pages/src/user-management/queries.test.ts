@@ -1,8 +1,8 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteUserById, getUserById, searchUsers } from "./queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     user: {
       findMany: vi.fn(),

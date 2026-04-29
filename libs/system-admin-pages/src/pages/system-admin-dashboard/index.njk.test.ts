@@ -61,7 +61,7 @@ describe("system-admin-dashboard template", () => {
       expect(en.tiles[5].href).toBe("/bulk-media-accounts");
       expect(en.tiles[6].href).toBe("/audit-log-list");
       expect(en.tiles[7].href).toBe("/location-metadata-search");
-      expect(en.tiles[8].href).toBe("/manage-list-types");
+      expect(en.tiles[8].href).toBe("/view-list-types");
     });
 
     it("should have descriptions for all tiles", () => {

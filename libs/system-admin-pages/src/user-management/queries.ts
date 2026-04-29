@@ -1,5 +1,5 @@
-import type { Prisma } from "@hmcts/postgres";
-import { prisma } from "@hmcts/postgres";
+import type { Prisma } from "@hmcts/postgres-prisma";
+import { prisma } from "@hmcts/postgres-prisma";
 
 interface UserSearchFilters {
   email?: string;

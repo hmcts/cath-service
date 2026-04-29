@@ -3,7 +3,7 @@ import type { IngestionLog } from "./model.js";
 import { createIngestionLog, getIngestionLogsByDateRange, getRecentErrorLogs } from "./queries.js";
 
 // Mock the prisma client
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     ingestionLog: {
       create: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock("@hmcts/postgres", () => ({
 }));
 
 describe("queries", async () => {
-  const { prisma } = await import("@hmcts/postgres");
+  const { prisma } = await import("@hmcts/postgres-prisma");
 
   beforeEach(() => {
     vi.clearAllMocks();
