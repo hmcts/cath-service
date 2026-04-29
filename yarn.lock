@@ -1086,6 +1086,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -1171,6 +1172,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -1187,6 +1189,7 @@ __metadata:
   resolution: "@hmcts/civil-and-family-daily-cause-list@workspace:libs/list-types/civil-and-family-daily-cause-list"
   dependencies:
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
@@ -1228,6 +1231,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
@@ -1289,6 +1293,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
@@ -1406,6 +1411,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
