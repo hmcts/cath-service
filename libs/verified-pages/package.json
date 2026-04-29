@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc && yarn build:nunjucks && yarn build:assets",
     "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "build:assets": "mkdir -p dist/assets && rsync -a --include='*/' --include='*.scss' --include='*.css' --exclude='*' src/assets/ dist/assets/",
+    "build:assets": "mkdir -p dist/assets && cd src/assets && find . \\( -name '*.scss' -o -name '*.css' \\) -exec sh -c 'mkdir -p ../../dist/assets/$(dirname {}) && cp {} ../../dist/assets/{}' \\;",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -27,6 +27,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hmcts/auth": "workspace:*",
+    "@hmcts/location": "workspace:*",
     "@hmcts/subscriptions": "workspace:*"
   },
   "peerDependencies": {

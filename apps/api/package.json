@@ -15,14 +15,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hmcts/blob-ingestion": "workspace:*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/location": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/public-pages": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
+    "@hmcts/test-support": "workspace:*",
     "compression": "1.8.1",
     "config": "4.4.1",
     "cors": "2.8.6",
-    "express": "5.2.1"
+    "express": "5.2.1",
+    "jwks-rsa": "3.2.2"
   },
   "devDependencies": {
     "@types/compression": "1.8.1",

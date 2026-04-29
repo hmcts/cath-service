@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@hmcts/account": "*",
+    "@hmcts/cloud-native-platform": "workspace:*",
     "@microsoft/microsoft-graph-client": "3.0.7",
     "passport-azure-ad": "4.3.5"
   },

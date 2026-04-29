@@ -22,6 +22,9 @@
     "lint:fix": "biome check --write --unsafe .",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@hmcts/postgres-prisma": "workspace:*"
+  },
   "peerDependencies": {
     "express": "^5.2.0"
   }

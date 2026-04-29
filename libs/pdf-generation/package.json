@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "puppeteer": "24.37.5"
+    "puppeteer": "24.42.0"
   },
   "devDependencies": {
     "@types/node": "22.19.17",

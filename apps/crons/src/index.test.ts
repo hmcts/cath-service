@@ -1,17 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockConfigurePropertiesVolume = vi.fn();
-const mockConfigGet = vi.fn();
+const mockGetPropertiesVolumeSecrets = vi.fn().mockResolvedValue({});
 const mockExampleScript = vi.fn();
 
 vi.mock("@hmcts/cloud-native-platform", () => ({
-  configurePropertiesVolume: mockConfigurePropertiesVolume
-}));
-
-vi.mock("config", () => ({
-  default: {
-    get: mockConfigGet
-  }
+  getPropertiesVolumeSecrets: mockGetPropertiesVolumeSecrets
 }));
 
 vi.mock("./example.js", () => ({
@@ -37,10 +30,10 @@ describe("index - cron job runner", () => {
     const { main } = await import("./index.js");
     await main();
 
-    expect(mockConfigurePropertiesVolume).toHaveBeenCalledWith(
-      expect.anything(),
+    expect(mockGetPropertiesVolumeSecrets).toHaveBeenCalledWith(
       expect.objectContaining({
-        chartPath: expect.stringContaining("helm/values.yaml")
+        chartPath: expect.stringContaining("helm/values.yaml"),
+        omit: ["DATABASE_URL"]
       })
     );
   });
@@ -72,10 +65,10 @@ describe("index - cron job runner", () => {
     await expect(main()).rejects.toThrow("Script execution failed");
   });
 
-  it("should throw error when configurePropertiesVolume fails", async () => {
+  it("should throw error when getPropertiesVolumeSecrets fails", async () => {
     process.env.SCRIPT_NAME = "example";
     const mockError = new Error("Config failed");
-    mockConfigurePropertiesVolume.mockRejectedValueOnce(mockError);
+    mockGetPropertiesVolumeSecrets.mockRejectedValueOnce(mockError);
 
     const { main } = await import("./index.js");
 

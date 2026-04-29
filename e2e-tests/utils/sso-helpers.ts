@@ -41,8 +41,8 @@ export async function loginWithSSO(page: Page, email: string, password: string):
     // Prompt didn't appear, continue
   }
 
-  // Wait for redirect back to application (any localhost:8080 page)
-  await page.waitForURL(/localhost:8080/, { timeout: 30000 });
+  // Wait for redirect back to application (away from Microsoft login)
+  await page.waitForURL((url) => !url.toString().includes("login.microsoftonline.com"), { timeout: 30000 });
 }
 
 /**

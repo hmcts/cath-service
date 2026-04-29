@@ -3,23 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "production": "./dist/index.js",
-      "default": "./src/index.ts"
-    }
-  },
   "scripts": {
-    "build": "yarn collate && prisma generate --no-hints && tsc",
-    "collate": "tsx src/collate-schema.ts",
-    "generate": "yarn collate && prisma generate --no-hints",
-    "migrate": "yarn collate && prisma migrate deploy",
-    "migrate:dev": "yarn collate && prisma migrate dev",
-    "migrate:reset": "yarn collate && prisma migrate reset",
+    "build": "yarn workspace @hmcts/postgres-prisma run collate && mkdir -p dist && cp ../../libs/postgres-prisma/dist/schema.prisma dist/schema.prisma",
+    "start": "npx prisma migrate deploy --schema=./dist/schema.prisma && npx prisma studio --schema=./dist/schema.prisma --hostname 0.0.0.0 --browser none",
+    "migrate": "yarn build && npx prisma migrate deploy --schema=./dist/schema.prisma",
+    "migrate:dev": "yarn build && npx prisma migrate dev --schema=./dist/schema.prisma",
+    "migrate:reset": "yarn build && npx prisma migrate reset --schema=./dist/schema.prisma",
     "seed": "psql $DATABASE_URL -f prisma/seed.sql",
-    "studio": "yarn collate && prisma studio",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
+    "studio": "yarn build && npx prisma studio --schema=./dist/schema.prisma",
+    "test": "echo 'No tests for migration runner'",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write --unsafe .",
@@ -29,14 +21,10 @@
     "seed": "psql $DATABASE_URL -f prisma/seed.sql"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "7.2.0",
-    "@prisma/client": "7.2.0",
-    "pg": "8.19.0"
+    "http-proxy": "1.18.1"
   },
   "devDependencies": {
-    "@types/pg": "8.11.11",
-    "dotenv": "^17.2.3",
-    "glob": "13.0.6",
+    "@prisma/client": "7.2.0",
     "prisma": "7.2.0"
   }
 }
