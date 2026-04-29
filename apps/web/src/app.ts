@@ -88,7 +88,9 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
+  const redisClient = await getRedisClient(config);
+  app.use(expressSessionRedis({ redisConnection: redisClient }));
+  app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);

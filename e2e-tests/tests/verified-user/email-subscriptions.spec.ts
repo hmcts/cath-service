@@ -13,6 +13,8 @@ interface TestLocationData {
 const testLocationMap = new Map<string, TestLocationData>();
 
 test.describe("Email Subscriptions", () => {
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }, testInfo) => {
     // Create prefixed test location - cleanup handled by global teardown
     const locationData = await createUniqueTestLocation({ namePrefix: "Email Sub Court" });
@@ -70,8 +72,11 @@ test.describe("Email Subscriptions", () => {
     let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // STEP 3: Navigate to location search
+    // STEP 3: Navigate to location search via subscription choice page
     await page.getByRole("button", { name: /add email subscription/i }).click();
+    await expect(page).toHaveURL("/add-email-subscription");
+    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/location-name-search");
     await expect(page.getByRole("heading", { name: /subscribe by court or tribunal name/i })).toBeVisible();
     await expect(page.getByText(/jurisdiction/i).first()).toBeVisible();
@@ -82,10 +87,11 @@ test.describe("Email Subscriptions", () => {
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // STEP 4: Test back navigation
+    // STEP 4: Test back navigation (JS history back goes to previous page in flow)
     await page.locator(".govuk-back-link").click();
-    await expect(page).toHaveURL("/subscription-management");
-    await page.getByRole("button", { name: /add email subscription/i }).click();
+    await expect(page).toHaveURL("/add-email-subscription");
+    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
 
     // STEP 5: Select test location and continue
     await page.waitForLoadState("networkidle");
@@ -102,7 +108,7 @@ test.describe("Email Subscriptions", () => {
     // STEP 6: Verify pending subscriptions page
     await expect(page).toHaveURL("/pending-subscriptions");
     await expect(page.locator("h1")).toBeVisible();
-    const confirmButton = page.getByRole("button", { name: /confirm/i });
+    const confirmButton = page.getByRole("button", { name: /^continue$/i });
     await expect(confirmButton).toBeVisible();
     await expect(page.getByRole("button", { name: /remove/i }).first()).toBeVisible();
 
@@ -110,11 +116,31 @@ test.describe("Email Subscriptions", () => {
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // STEP 7: Confirm subscription
+    // STEP 7: Proceed from pending subscriptions to list type selection
     await confirmButton.click();
+    await expect(page).toHaveURL("/subscription-add-list");
+
+    // STEP 8: Select list type and continue
+    await page.waitForLoadState("networkidle");
+    const firstListType = page.locator(".list-item").first();
+    await firstListType.waitFor({ state: "visible" });
+    await firstListType.check();
+    await page
+      .locator("form[method='post']")
+      .getByRole("button", { name: /continue/i })
+      .click();
+    await expect(page).toHaveURL("/subscription-add-list-language");
+
+    // STEP 9: Select language and continue
+    await page.getByRole("radio", { name: /^english$/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
+    await expect(page).toHaveURL("/subscription-confirmation-preview");
+
+    // STEP 10: Confirm subscriptions
+    await page.getByRole("button", { name: /confirm subscriptions/i }).click();
     await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
 
-    // STEP 8: Verify confirmation page
+    // STEP 11: Verify confirmation page
     const panel = page.locator(".govuk-panel--confirmation");
     await expect(panel).toBeVisible();
     const manageLink = page.getByRole("link", { name: /manage.*subscriptions/i });
@@ -137,20 +163,32 @@ test.describe("Email Subscriptions", () => {
     await page.goto("/account-home");
     await page.locator(".verified-tile").nth(2).click();
     await page.getByRole("button", { name: /add email subscription/i }).click();
+    await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
     await page.waitForLoadState("networkidle");
     await page.locator(`#location-${locationData.locationId}`).check();
     await page
       .locator("form[method='post']")
       .getByRole("button", { name: /continue/i })
       .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
+    await page.getByRole("button", { name: /^continue$/i }).click();
+    await expect(page).toHaveURL("/subscription-add-list");
+    await page.waitForLoadState("networkidle");
+    await page.locator(".list-item").first().check();
+    await page
+      .locator("form[method='post']")
+      .getByRole("button", { name: /continue/i })
+      .click();
+    await page.getByRole("radio", { name: /^english$/i }).check();
+    await page.getByRole("button", { name: /continue/i }).click();
+    await page.getByRole("button", { name: /confirm subscriptions/i }).click();
     await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
     await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
 
     // STEP 2: Navigate to delete subscription page
     await page.goto("/subscription-management");
     const removeButtonForTestLocation = page.getByRole("button", {
-      name: `Remove subscription for ${locationData.name}`
+      name: `Unsubscribe from ${locationData.name}`
     });
     await removeButtonForTestLocation.click();
     await expect(page).toHaveURL(/\/delete-subscription/);
@@ -171,7 +209,7 @@ test.describe("Email Subscriptions", () => {
     await expect(page).toHaveURL("/subscription-management");
 
     // STEP 5: Complete full unsubscribe flow
-    await page.getByRole("button", { name: `Remove subscription for ${locationData.name}` }).click();
+    await page.getByRole("button", { name: `Unsubscribe from ${locationData.name}` }).click();
     await expect(page).toHaveURL(/\/delete-subscription/);
 
     await page.getByRole("radio", { name: /yes/i }).check();

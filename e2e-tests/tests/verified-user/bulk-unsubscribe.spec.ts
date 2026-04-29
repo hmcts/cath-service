@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
 import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { deleteTestSubscriptions, getTestSubscriptions } from "../../utils/test-support-api.js";
@@ -17,6 +17,32 @@ interface TestData {
 }
 
 const testDataMap = new Map<string, TestData>();
+
+async function createSubscriptionViaUI(page: Page, locationId: number): Promise<void> {
+  await page.goto("/subscription-management");
+  await page.getByRole("button", { name: /add email subscription/i }).click();
+  await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
+  await page.getByRole("button", { name: /continue/i }).click();
+  await page.waitForLoadState("networkidle");
+  const locationCheckbox = page.locator(`#location-${locationId}`);
+  await locationCheckbox.waitFor({ state: "visible" });
+  await locationCheckbox.check();
+  await page
+    .locator("form[method='post']")
+    .getByRole("button", { name: /continue/i })
+    .click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
+  await page.waitForLoadState("networkidle");
+  await page.locator(".list-item").first().check();
+  await page
+    .locator("form[method='post']")
+    .getByRole("button", { name: /continue/i })
+    .click();
+  await page.getByRole("radio", { name: /^english$/i }).check();
+  await page.getByRole("button", { name: /continue/i }).click();
+  await page.getByRole("button", { name: /confirm subscriptions/i }).click();
+  await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
+}
 
 test.describe("Bulk Unsubscribe", () => {
   test.beforeEach(async ({ page }, testInfo) => {
@@ -63,48 +89,9 @@ test.describe("Bulk Unsubscribe", () => {
     const { location1, location2, location3 } = testData;
 
     // STEP 1: Create multiple subscriptions to test bulk unsubscribe
-    await page.goto("/account-home");
-    const testUser = await prisma.user.findFirst({ where: { email: process.env.CFT_VALID_TEST_ACCOUNT } });
-    if (!testUser) throw new Error("Test user not found in database");
-
-    // Add first subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location1Checkbox = page.locator(`#location-${location1.locationId}`);
-    await location1Checkbox.check();
-    await page
-      .locator("form[method='post']")
-      .getByRole("button", { name: /continue/i })
-      .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
-
-    // Add second subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location2Checkbox = page.locator(`#location-${location2.locationId}`);
-    await location2Checkbox.check();
-    await page
-      .locator("form[method='post']")
-      .getByRole("button", { name: /continue/i })
-      .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
-
-    // Add third subscription
-    await page.getByRole("button", { name: /add email subscription/i }).click();
-    await page.waitForLoadState("networkidle");
-    const location3Checkbox = page.locator(`#location-${location3.locationId}`);
-    await location3Checkbox.check();
-    await page
-      .locator("form[method='post']")
-      .getByRole("button", { name: /continue/i })
-      .click();
-    await page.getByRole("button", { name: /confirm/i }).click();
-    await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
-    await page.getByRole("link", { name: /manage.*subscriptions/i }).click();
+    await createSubscriptionViaUI(page, location1.locationId);
+    await createSubscriptionViaUI(page, location2.locationId);
+    await createSubscriptionViaUI(page, location3.locationId);
 
     // STEP 2: Navigate to bulk unsubscribe from subscription management
     await page.goto("/subscription-management");
