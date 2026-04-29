@@ -40,7 +40,7 @@ jobs:
 
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -200,7 +200,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -332,7 +332,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -454,7 +454,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
