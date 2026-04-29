@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // Mock dependencies
 vi.mock("@hmcts/cloud-native-platform", () => ({
   healthcheck: vi.fn(() => vi.fn()),
-  configurePropertiesVolume: vi.fn(() => Promise.resolve())
+  getPropertiesVolumeSecrets: vi.fn(() => Promise.resolve({}))
 }));
 
 vi.mock("@hmcts/simple-router", () => ({

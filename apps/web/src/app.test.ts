@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock all dependencies before importing createApp
 vi.mock("@hmcts/cloud-native-platform", () => ({
-  configurePropertiesVolume: vi.fn().mockResolvedValue(undefined),
+  getPropertiesVolumeSecrets: vi.fn().mockResolvedValue({}),
   healthcheck: vi.fn(() => vi.fn()),
   monitoringMiddleware: vi.fn(() => vi.fn())
 }));
@@ -150,8 +150,8 @@ describe("Web Application", () => {
     });
 
     it("should configure properties volume", async () => {
-      const { configurePropertiesVolume } = await import("@hmcts/cloud-native-platform");
-      expect(configurePropertiesVolume).toHaveBeenCalled();
+      const { getPropertiesVolumeSecrets } = await import("@hmcts/cloud-native-platform");
+      expect(getPropertiesVolumeSecrets).toHaveBeenCalled();
     });
 
     it("should configure middleware in correct order", () => {
@@ -211,7 +211,7 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalledTimes(15);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(16);
     });
 
     it("should register system-admin page routes", async () => {

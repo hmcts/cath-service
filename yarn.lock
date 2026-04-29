@@ -5,14 +5,14 @@ __metadata:
   version: 9
   cacheKey: 10c0
 
-"@axe-core/playwright@npm:4.11.2":
-  version: 4.11.2
-  resolution: "@axe-core/playwright@npm:4.11.2"
+"@axe-core/playwright@npm:4.11.1":
+  version: 4.11.1
+  resolution: "@axe-core/playwright@npm:4.11.1"
   dependencies:
-    axe-core: "npm:~4.11.3"
+    axe-core: "npm:~4.11.1"
   peerDependencies:
     playwright-core: ">= 1.0.0"
-  checksum: 10c0/cb6f259c969668ae41b1c56e9fbf8d380d4b9440ef76f3037faa615fdcd36a748f53451116bb53b101dae52c6adc9183ce8de7f62819beb3866989849a9834b6
+  checksum: 10c0/8c916cd2dd831d91f8c2ab9e3a07ef19837415bb41d40439e4acb88ed0009af2479696b865670199b13ccad984a247868610fbb34d520fca9f7c02de0f7a9439
   languageName: node
   linkType: hard
 
@@ -88,6 +88,18 @@ __metadata:
     "@azure/logger": "npm:^1.0.0"
     tslib: "npm:^2.6.2"
   checksum: 10c0/b2f1d3ffe43e7f55842cf7455f266f6825e5ab4b56cf3dae56572dd9e7ae6b3aa5eeef21172908b2cfb2c6adc7c3598744500c1e1aa0804c70426b4b59c98e62
+  languageName: node
+  linkType: hard
+
+"@azure/core-http-compat@npm:^2.2.0":
+  version: 2.4.0
+  resolution: "@azure/core-http-compat@npm:2.4.0"
+  dependencies:
+    "@azure/abort-controller": "npm:^2.1.2"
+  peerDependencies:
+    "@azure/core-client": ^1.10.0
+    "@azure/core-rest-pipeline": ^1.22.0
+  checksum: 10c0/160cdd9c4f8bae7ad60099586dcd3316d725d2969d90806ffb7705258d7fa459ee5fb98319def6b5c75881bc8063ce2da031497f457e8ebd36e512adce965967
   languageName: node
   linkType: hard
 
@@ -182,6 +194,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/functions-extensions-base@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@azure/functions-extensions-base@npm:0.2.0"
+  checksum: 10c0/ad28de16bf39fc716ecbc79511cbdd11ff582284d3b3b2e188a6ea8bd9db5c671c21514abd5afd6dd94aa3959be39fc3356ce6766a6e0f3f1036a5039afaf444
+  languageName: node
+  linkType: hard
+
 "@azure/functions-old@npm:@azure/functions@3.5.1":
   version: 3.5.1
   resolution: "@azure/functions@npm:3.5.1"
@@ -193,14 +212,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/functions@npm:^4.6.0":
-  version: 4.8.0
-  resolution: "@azure/functions@npm:4.8.0"
+"@azure/functions@npm:^4.11.2":
+  version: 4.13.0
+  resolution: "@azure/functions@npm:4.13.0"
   dependencies:
+    "@azure/functions-extensions-base": "npm:0.2.0"
     cookie: "npm:^0.7.0"
-    long: "npm:^4.0.0"
-    undici: "npm:^5.29.0"
-  checksum: 10c0/e7c544bd42981e86e967d3f55e0be88951495cb3426dd62a9cd08fbd2a98136a7e0fccf43b0d6674ffffeb2a7e13ed7a6aa5626ab49c154f1e1f1b4217a3adda
+  checksum: 10c0/8ce3295beead6910d0a32fefea3f1ee0e8806037bcb4fc98dedd9e24b58ab2997764feb99b1f81cce6c56c7bed364fae0f7240b94b712ce3a6e8f8c70ae87a04
   languageName: node
   linkType: hard
 
@@ -223,7 +241,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/keyvault-common@npm:^2.1.0":
+"@azure/keyvault-common@npm:^2.0.0, @azure/keyvault-common@npm:^2.1.0":
   version: 2.1.0
   resolution: "@azure/keyvault-common@npm:2.1.0"
   dependencies:
@@ -239,7 +257,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/keyvault-secrets@npm:4.11.1, @azure/keyvault-secrets@npm:^4.7.0":
+"@azure/keyvault-secrets@npm:4.10.0":
+  version: 4.10.0
+  resolution: "@azure/keyvault-secrets@npm:4.10.0"
+  dependencies:
+    "@azure-rest/core-client": "npm:^2.3.3"
+    "@azure/abort-controller": "npm:^2.1.2"
+    "@azure/core-auth": "npm:^1.9.0"
+    "@azure/core-http-compat": "npm:^2.2.0"
+    "@azure/core-lro": "npm:^2.7.2"
+    "@azure/core-paging": "npm:^1.6.2"
+    "@azure/core-rest-pipeline": "npm:^1.19.0"
+    "@azure/core-tracing": "npm:^1.2.0"
+    "@azure/core-util": "npm:^1.11.0"
+    "@azure/keyvault-common": "npm:^2.0.0"
+    "@azure/logger": "npm:^1.1.4"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/7ac315870fb8f38eab45b53e10bb801f24c0a306a4599b9866bab861b25ba2834ed5c4c9a963b52dc8eef8e84ee6a04ece00613a10e8a5da59bd534f02aee688
+  languageName: node
+  linkType: hard
+
+"@azure/keyvault-secrets@npm:^4.7.0":
   version: 4.11.1
   resolution: "@azure/keyvault-secrets@npm:4.11.1"
   dependencies:
@@ -268,9 +306,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.38, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.38":
-  version: 1.0.0-beta.38
-  resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.38"
+"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.39, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.39":
+  version: 1.0.0-beta.39
+  resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.39"
   dependencies:
     "@azure/core-auth": "npm:^1.9.0"
     "@azure/core-client": "npm:^1.9.2"
@@ -284,19 +322,19 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^2.1.0"
     "@opentelemetry/semantic-conventions": "npm:^1.37.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/dc12ca3ced1fee40a4a404582c8270e8b771b01aa0070a2b05309f1000c8e21221f777c76ee54b2114162bafc557bcbda481d578375386cd13e2c925beb2b78a
+  checksum: 10c0/3a7f8089926e35f6c76e74a70465faf3d14c295e3480140fab4051f358c2ca7e303d35e00951dd2999b9fd601a007651140a8ee7f8e17d3928ac1fb3525d54ec
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry@npm:^1.15.1":
-  version: 1.15.1
-  resolution: "@azure/monitor-opentelemetry@npm:1.15.1"
+"@azure/monitor-opentelemetry@npm:^1.16.0":
+  version: 1.16.0
+  resolution: "@azure/monitor-opentelemetry@npm:1.16.0"
   dependencies:
     "@azure/core-auth": "npm:^1.10.1"
     "@azure/core-client": "npm:^1.10.1"
     "@azure/core-rest-pipeline": "npm:^1.22.2"
     "@azure/logger": "npm:^1.3.0"
-    "@azure/monitor-opentelemetry-exporter": "npm:1.0.0-beta.38"
+    "@azure/monitor-opentelemetry-exporter": "npm:1.0.0-beta.39"
     "@azure/opentelemetry-instrumentation-azure-sdk": "npm:^1.0.0-beta.9"
     "@microsoft/applicationinsights-web-snippet": "npm:^1.2.3"
     "@opentelemetry/api": "npm:^1.9.0"
@@ -320,7 +358,7 @@ __metadata:
     "@opentelemetry/semantic-conventions": "npm:^1.38.0"
     "@opentelemetry/winston-transport": "npm:^0.19.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/8a250480310c7c7579055e5fbbd748b08a9e3552412210b77ae70024067c7d7c41f864dec6a7665e658b1ed7923833f06679fc74d964aa709c59b876b731bcde
+  checksum: 10c0/a5121ed858ffc6fc46777511a28d59dea31920e53a7373941f50200dd5d3631f0bd199cc7b64b0535a2fa74264064e658c4c95e95960864058f0de9b07390035
   languageName: node
   linkType: hard
 
@@ -1014,6 +1052,8 @@ __metadata:
 "@hmcts/account@npm:*, @hmcts/account@workspace:libs/account":
   version: 0.0.0-use.local
   resolution: "@hmcts/account@workspace:libs/account"
+  dependencies:
+    "@hmcts/postgres-prisma": "workspace:*"
   languageName: unknown
   linkType: soft
 
@@ -1021,12 +1061,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
   dependencies:
-    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/notification": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/multer": "npm:2.0.0"
@@ -1043,11 +1085,7 @@ __metadata:
   resolution: "@hmcts/administrative-court-daily-cause-list@workspace:libs/list-types/administrative-court-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/publication": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -1063,10 +1101,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/api@workspace:apps/api"
   dependencies:
+    "@hmcts/blob-ingestion": "workspace:*"
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/public-pages": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
+    "@hmcts/test-support": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/cors": "npm:2.8.19"
     "@types/express": "npm:5.0.6"
@@ -1075,6 +1115,7 @@ __metadata:
     config: "npm:4.4.1"
     cors: "npm:2.8.6"
     express: "npm:5.2.1"
+    jwks-rsa: "npm:3.2.2"
     nodemon: "npm:3.1.14"
     supertest: "npm:^7.1.4"
   languageName: unknown
@@ -1093,6 +1134,7 @@ __metadata:
   resolution: "@hmcts/auth@workspace:libs/auth"
   dependencies:
     "@hmcts/account": "npm:*"
+    "@hmcts/cloud-native-platform": "workspace:*"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
@@ -1105,14 +1147,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/blob-ingestion@workspace:libs/api":
+"@hmcts/blob-ingestion@workspace:*, @hmcts/blob-ingestion@workspace:libs/api":
   version: 0.0.0-use.local
   resolution: "@hmcts/blob-ingestion@workspace:libs/api"
   dependencies:
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*"
     "@types/express": "npm:5.0.6"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.5"
@@ -1126,11 +1170,7 @@ __metadata:
   resolution: "@hmcts/care-standards-tribunal-weekly-hearing-list@workspace:libs/list-types/care-standards-tribunal-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/publication": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -1146,11 +1186,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/civil-and-family-daily-cause-list@workspace:libs/list-types/civil-and-family-daily-cause-list"
   dependencies:
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/publication": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
@@ -1171,7 +1207,7 @@ __metadata:
     "@azure/keyvault-secrets": "npm:^4.7.0"
     "@types/express": "npm:5.0.6"
     "@types/js-yaml": "npm:^4.0.9"
-    applicationinsights: "npm:3.13.0"
+    applicationinsights: "npm:3.14.0"
     js-yaml: "npm:^4.1.0"
   peerDependencies:
     config: ^3.3.12 || ^4.0.0
@@ -1191,11 +1227,7 @@ __metadata:
   resolution: "@hmcts/court-of-appeal-civil-daily-cause-list@workspace:libs/list-types/court-of-appeal-civil-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/publication": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
@@ -1213,16 +1245,17 @@ __metadata:
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
     "@hmcts/cloud-native-platform": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
     "@types/config": "npm:3.3.5"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.1"
   languageName: unknown
   linkType: soft
 
-"@hmcts/list-search-config@workspace:libs/list-search-config":
+"@hmcts/list-search-config@workspace:*, @hmcts/list-search-config@workspace:libs/list-search-config":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
+  dependencies:
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1244,7 +1277,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/location@workspace:libs/location"
   dependencies:
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     "@prisma/client": "*"
   languageName: unknown
@@ -1255,11 +1288,7 @@ __metadata:
   resolution: "@hmcts/london-administrative-court-daily-cause-list@workspace:libs/list-types/london-administrative-court-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/publication": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
@@ -1283,7 +1312,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/notifications@workspace:libs/notifications":
+"@hmcts/notifications@workspace:*, @hmcts/notifications@workspace:libs/notifications":
   version: 0.0.0-use.local
   resolution: "@hmcts/notifications@workspace:libs/notifications"
   dependencies:
@@ -1291,8 +1320,9 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     notifications-node-client: "npm:8.3.2"
   peerDependencies:
@@ -1310,16 +1340,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/postgres@npm:*, @hmcts/postgres@workspace:*, @hmcts/postgres@workspace:apps/postgres":
+"@hmcts/postgres-prisma@workspace:*, @hmcts/postgres-prisma@workspace:libs/postgres-prisma":
   version: 0.0.0-use.local
-  resolution: "@hmcts/postgres@workspace:apps/postgres"
+  resolution: "@hmcts/postgres-prisma@workspace:libs/postgres-prisma"
   dependencies:
     "@prisma/adapter-pg": "npm:7.2.0"
     "@prisma/client": "npm:7.2.0"
     "@types/pg": "npm:8.11.11"
-    dotenv: "npm:^17.2.3"
     glob: "npm:13.0.6"
     pg: "npm:8.19.0"
+    prisma: "npm:7.2.0"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/postgres@workspace:apps/postgres":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/postgres@workspace:apps/postgres"
+  dependencies:
+    "@prisma/client": "npm:7.2.0"
+    http-proxy: "npm:1.18.1"
     prisma: "npm:7.2.0"
   languageName: unknown
   linkType: soft
@@ -1329,7 +1368,9 @@ __metadata:
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
   dependencies:
     "@hmcts/location": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
   peerDependencies:
     express: ^5.2.0
@@ -1340,8 +1381,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/publication@workspace:libs/publication"
   dependencies:
+    "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/notifications": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.18.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.5"
@@ -1353,11 +1405,7 @@ __metadata:
   resolution: "@hmcts/rcj-standard-daily-cause-list@workspace:libs/list-types/rcj-standard-daily-cause-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
-    "@hmcts/publication": "workspace:*"
-    "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -1391,9 +1439,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
   dependencies:
-    "@hmcts/auth": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     express: ^5.2.0
   languageName: unknown
@@ -1404,9 +1451,11 @@ __metadata:
   resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
   dependencies:
     "@hmcts/auth": "workspace:*"
+    "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
@@ -1417,10 +1466,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/test-support@workspace:*, @hmcts/test-support@workspace:libs/test-support":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/test-support@workspace:libs/test-support"
+  dependencies:
+    "@hmcts/postgres-prisma": "workspace:*"
+  peerDependencies:
+    "@prisma/client": "*"
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/verified-pages@workspace:*, @hmcts/verified-pages@workspace:libs/verified-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"
   dependencies:
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/location": "workspace:*"
     "@hmcts/subscriptions": "workspace:*"
   peerDependencies:
     express: ^5.2.0
@@ -1452,9 +1514,6 @@ __metadata:
     nunjucks: ^3.2.4
     pg: ^8.13.1
     pg-format: ^1.0.4
-    sass: ^1.90.0
-    vite: ^7.0.0
-    vite-plugin-static-copy: ^3.1.0
   peerDependenciesMeta:
     connect-redis:
       optional: true
@@ -1472,17 +1531,23 @@ __metadata:
   resolution: "@hmcts/web@workspace:apps/web"
   dependencies:
     "@hmcts/admin-pages": "workspace:*"
+    "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
+    "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
+    "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/simple-router": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
+    "@hmcts/test-support": "workspace:*"
     "@hmcts/verified-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
-    "@types/compression": "npm:1.8.1"
     "@types/config": "npm:3.3.5"
     "@types/cookie-parser": "npm:1.4.10"
     "@types/express": "npm:5.0.6"
@@ -1495,7 +1560,6 @@ __metadata:
     config: "npm:4.4.1"
     connect-redis: "npm:9.0.0"
     cookie-parser: "npm:1.4.7"
-    dotenv: "npm:17.3.1"
     express: "npm:5.2.1"
     express-session: "npm:1.19.0"
     glob: "npm:13.0.6"
@@ -1504,6 +1568,9 @@ __metadata:
     multer: "npm:2.0.2"
     nodemon: "npm:3.1.14"
     nunjucks: "npm:3.2.4"
+    passport: "npm:0.7.0"
+    pg: "npm:8.19.0"
+    pg-format: "npm:1.0.4"
     redis: "npm:5.11.0"
     sass: "npm:1.99.0"
     supertest: "npm:7.2.2"
@@ -2429,14 +2496,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:1.59.1":
-  version: 1.59.1
-  resolution: "@playwright/test@npm:1.59.1"
+"@playwright/test@npm:1.57.0":
+  version: 1.57.0
+  resolution: "@playwright/test@npm:1.57.0"
   dependencies:
-    playwright: "npm:1.59.1"
+    playwright: "npm:1.57.0"
   bin:
     playwright: cli.js
-  checksum: 10c0/8c2d94a860d3c254a0b114df2f888ad0a0e9310f45b6059bd5d4da196d965cadf6922267cef0881cfa9784d4bef6d78363d2c2d94caa64be67ff644c41162137
+  checksum: 10c0/35ba4b28be72bf0a53e33dbb11c6cff848fb9a37f49e893ce63a90675b5291ec29a1ba82c8a3b043abaead129400f0589623e9ace2e6a1c8eaa409721ecc3774
   languageName: node
   linkType: hard
 
@@ -3637,16 +3704,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"applicationinsights@npm:3.13.0":
-  version: 3.13.0
-  resolution: "applicationinsights@npm:3.13.0"
+"applicationinsights@npm:3.14.0":
+  version: 3.14.0
+  resolution: "applicationinsights@npm:3.14.0"
   dependencies:
     "@azure/core-auth": "npm:^1.9.0"
-    "@azure/functions": "npm:^4.6.0"
+    "@azure/functions": "npm:^4.11.2"
     "@azure/functions-old": "npm:@azure/functions@3.5.1"
     "@azure/identity": "npm:^4.6.0"
-    "@azure/monitor-opentelemetry": "npm:^1.15.1"
-    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.38"
+    "@azure/monitor-opentelemetry": "npm:^1.16.0"
+    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.39"
     "@azure/opentelemetry-instrumentation-azure-sdk": "npm:^1.0.0-beta.7"
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/api-logs": "npm:^0.208.0"
@@ -3664,7 +3731,7 @@ __metadata:
     "@opentelemetry/semantic-conventions": "npm:^1.38.0"
     diagnostic-channel: "npm:1.1.1"
     diagnostic-channel-publishers: "npm:1.0.8"
-  checksum: 10c0/897fcb1974ecbdcfdc357a67a2e86a2b3e7f6831fc8ebe75c13aa78ebc7285cc79d1cb559481cceb3425df74a3e745425bfe37dd132cbe4369550bdc8608b45b
+  checksum: 10c0/9a9dd177acf83d5bf18ed6602be49e05d66c8b4504a0afae4794cb7ddd62727267c122625798f15139c564f4967e84d93e94ba191a366d428066fe6db803b989
   languageName: node
   linkType: hard
 
@@ -3781,7 +3848,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axe-core@npm:~4.11.3":
+"axe-core@npm:~4.11.1":
   version: 4.11.3
   resolution: "axe-core@npm:4.11.3"
   checksum: 10c0/bc757775ef41396faf6470752a12e96f3972d0d97cae4ec28e99cec7bca2c5aaa6d040b97e7f0278e8d1ea354fa0b0bf7fcaa51775a725d7ed0a0834e7ea13d7
@@ -4780,13 +4847,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:17.3.1":
-  version: 17.3.1
-  resolution: "dotenv@npm:17.3.1"
-  checksum: 10c0/c78e0c2d5a549c751e544cc60e2b95e7cb67e0c551f42e094d161c6b297aa44b630a3c2dcacf5569e529a6c2a6b84e2ab9be8d37b299d425df5a18b81ce4a35f
-  languageName: node
-  linkType: hard
-
 "dotenv@npm:^16.6.1":
   version: 16.6.1
   resolution: "dotenv@npm:16.6.1"
@@ -4835,11 +4895,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "e2e-tests@workspace:e2e-tests"
   dependencies:
-    "@axe-core/playwright": "npm:4.11.2"
+    "@axe-core/playwright": "npm:4.11.1"
     "@azure/identity": "npm:4.13.1"
-    "@azure/keyvault-secrets": "npm:4.11.1"
-    "@hmcts/postgres": "npm:*"
-    "@playwright/test": "npm:1.59.1"
+    "@azure/keyvault-secrets": "npm:4.10.0"
+    "@playwright/test": "npm:1.57.0"
     dotenv: "npm:^17.2.3"
     exceljs: "npm:4.4.0"
   languageName: unknown
@@ -5239,6 +5298,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eventemitter3@npm:^4.0.0":
+  version: 4.0.7
+  resolution: "eventemitter3@npm:4.0.7"
+  checksum: 10c0/5f6d97cbcbac47be798e6355e3a7639a84ee1f7d9b199a07017f1d2f1e2fe236004d14fa5dfaeba661f94ea57805385e326236a6debbc7145c8877fbc0297c6b
+  languageName: node
+  linkType: hard
+
 "events-universal@npm:^1.0.0":
   version: 1.0.1
   resolution: "events-universal@npm:1.0.1"
@@ -5464,6 +5530,16 @@ __metadata:
   version: 3.4.2
   resolution: "flatted@npm:3.4.2"
   checksum: 10c0/a65b67aae7172d6cdf63691be7de6c5cd5adbdfdfe2e9da1a09b617c9512ed794037741ee53d93114276bff3f93cd3b0d97d54f9b316e1e4885dde6e9ffdf7ed
+  languageName: node
+  linkType: hard
+
+"follow-redirects@npm:^1.0.0":
+  version: 1.16.0
+  resolution: "follow-redirects@npm:1.16.0"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 10c0/a1e2900163e6f1b4d1ed5c221b607f41decbab65534c63fe7e287e40a5d552a6496e7d9d7d976fa4ba77b4c51c11e5e9f683f10b43011ea11e442ff128d0e181
   languageName: node
   linkType: hard
 
@@ -5876,6 +5952,17 @@ __metadata:
     agent-base: "npm:^7.1.0"
     debug: "npm:^4.3.4"
   checksum: 10c0/4207b06a4580fb85dd6dff521f0abf6db517489e70863dca1a0291daa7f2d3d2d6015a57bd702af068ea5cf9f1f6ff72314f5f5b4228d299c0904135d2aef921
+  languageName: node
+  linkType: hard
+
+"http-proxy@npm:1.18.1":
+  version: 1.18.1
+  resolution: "http-proxy@npm:1.18.1"
+  dependencies:
+    eventemitter3: "npm:^4.0.0"
+    follow-redirects: "npm:^1.0.0"
+    requires-port: "npm:^1.0.0"
+  checksum: 10c0/148dfa700a03fb421e383aaaf88ac1d94521dfc34072f6c59770528c65250983c2e4ec996f2f03aa9f3fe46cd1270a593126068319311e3e8d9e610a37533e94
   languageName: node
   linkType: hard
 
@@ -7598,27 +7685,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.59.1":
-  version: 1.59.1
-  resolution: "playwright-core@npm:1.59.1"
+"playwright-core@npm:1.57.0":
+  version: 1.57.0
+  resolution: "playwright-core@npm:1.57.0"
   bin:
     playwright-core: cli.js
-  checksum: 10c0/d41a74d9681ce3beb3d5239e9ed577710b4ad099a6ca2476219c6599d51e9cb4b80bd72ed82c528da6a5d929c18ae3b872cf02bb83f78fa1c2cb9199c501abee
+  checksum: 10c0/798e35d83bf48419a8c73de20bb94d68be5dde68de23f95d80a0ebe401e3b83e29e3e84aea7894d67fa6c79d2d3d40cc5bcde3e166f657ce50987aaa2421b6a9
   languageName: node
   linkType: hard
 
-"playwright@npm:1.59.1":
-  version: 1.59.1
-  resolution: "playwright@npm:1.59.1"
+"playwright@npm:1.57.0":
+  version: 1.57.0
+  resolution: "playwright@npm:1.57.0"
   dependencies:
     fsevents: "npm:2.3.2"
-    playwright-core: "npm:1.59.1"
+    playwright-core: "npm:1.57.0"
   dependenciesMeta:
     fsevents:
       optional: true
   bin:
     playwright: cli.js
-  checksum: 10c0/dfe38396e616e5c4f98825ce90037bb96e477c5a2bd9258a24854f8ce72a8a41427b19098863866f85aa0216e70287dd537c4438d761aca93995e31ae099c533
+  checksum: 10c0/ab03c99a67b835bdea9059f516ad3b6e42c21025f9adaa161a4ef6bc7ca716dcba476d287140bb240d06126eb23f889a8933b8f5f1f1a56b80659d92d1358899
   languageName: node
   linkType: hard
 
@@ -8052,6 +8139,13 @@ __metadata:
     debug: "npm:^4.3.5"
     module-details-from-path: "npm:^1.0.3"
   checksum: 10c0/4b3d29adfff873585dceffa9ddb8f33bb6599001ddff758503e0e5ade2ae6d20d691314125bb13679fa75a19893338e11953d4702dd2fea181e95c0f8316b29b
+  languageName: node
+  linkType: hard
+
+"requires-port@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "requires-port@npm:1.0.0"
+  checksum: 10c0/b2bfdd09db16c082c4326e573a82c0771daaf7b53b9ce8ad60ea46aa6e30aaf475fe9b164800b89f93b748d2c234d8abff945d2551ba47bf5698e04cd7713267
   languageName: node
   linkType: hard
 
@@ -9066,13 +9160,6 @@ __metadata:
   version: 7.19.2
   resolution: "undici-types@npm:7.19.2"
   checksum: 10c0/7159f10546f9f6c47d36776bb1bbf8671e87c1e587a6fee84ae1f111ae8de4f914efa8ca0dfcd224f4f4a9dfc3f6028f627ccb5ddaccf82d7fd54671b89fac3e
-  languageName: node
-  linkType: hard
-
-"undici@npm:7.25.0":
-  version: 7.25.0
-  resolution: "undici@npm:7.25.0"
-  checksum: 10c0/02a0b45dc14eb91bc488948750232450fe52f27a6b08086d6ac6736bb47908d600fe3a96d346f12eab24729c782e5c2f693bc8e8eca6696d4e4c09b1ed4cb4ec
   languageName: node
   linkType: hard
 

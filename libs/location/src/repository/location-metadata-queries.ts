@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { CreateLocationMetadataInput, UpdateLocationMetadataInput } from "./model.js";
 
 export async function findLocationMetadataByLocationId(locationId: number) {

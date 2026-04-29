@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { MediaApplicationCreateData } from "./model.js";
 
 export async function createMediaApplication(data: MediaApplicationCreateData): Promise<string> {

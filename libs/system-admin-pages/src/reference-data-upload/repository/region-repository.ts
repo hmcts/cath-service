@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 export async function getMaxRegionId(): Promise<number> {
   const result = await prisma.region.findFirst({

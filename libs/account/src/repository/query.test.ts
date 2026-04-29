@@ -3,7 +3,7 @@ import type { User } from "./model.js";
 import { createOrUpdateUser, createUser, findUserByEmail, findUserById, findUserByProvenanceId, updateUser } from "./query.js";
 
 // Mock @hmcts/postgres
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     user: {
       create: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock("@hmcts/postgres", () => ({
 }));
 
 // Import after mocking
-const { prisma } = await import("@hmcts/postgres");
+const { prisma } = await import("@hmcts/postgres-prisma");
 
 describe("User Repository", () => {
   beforeEach(() => {
