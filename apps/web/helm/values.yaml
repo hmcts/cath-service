@@ -42,8 +42,8 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-        # Third-party push secrets
-        - name: auto-pip-stg-courtel-api
-          alias: COURTEL_API_URL
-        - name: courtel-certificate
-          alias: COURTEL_CERTIFICATE
+        # Third-party push secrets - disabled until secrets are added to the cath Key Vault
+        # - name: auto-pip-stg-courtel-api
+        #   alias: COURTEL_API_URL
+        # - name: courtel-certificate
+        #   alias: COURTEL_CERTIFICATE
