@@ -180,7 +180,8 @@ describe("crime-callback", () => {
           email: "test@example.com",
           displayName: "Test User",
           role: "VERIFIED",
-          provenance: "CRIME_IDAM"
+          provenance: "CRIME_IDAM",
+          idToken: "test-id-token"
         }),
         expect.any(Function)
       );

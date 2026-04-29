@@ -34,8 +34,8 @@ export const GET = async (req: Request, res: Response) => {
       // Clear session cookie
       res.clearCookie("connect.sid");
 
-      // CFT IDAM logout - direct redirect
-      if (userProvenance === "CFT_IDAM") {
+      // CFT IDAM and Crime IDAM logout - clear local session only
+      if (userProvenance === "CFT_IDAM" || userProvenance === "CRIME_IDAM") {
         return res.redirect("/session-logged-out");
       }
 

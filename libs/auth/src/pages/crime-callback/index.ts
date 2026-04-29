@@ -55,7 +55,8 @@ export const GET = async (req: Request, res: Response) => {
       email: userInfo.email,
       displayName: userInfo.displayName,
       role: "VERIFIED",
-      provenance: "CRIME_IDAM"
+      provenance: "CRIME_IDAM",
+      idToken: tokenResponse.id_token ?? tokenResponse.access_token
     };
 
     req.session.regenerate((err: Error | null) => {
