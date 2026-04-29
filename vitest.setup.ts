@@ -3,7 +3,7 @@ import { vi } from "vitest";
 /**
  * GLOBAL MOCK FOR ALL UNIT TESTS
  *
- * This mocks @hmcts/postgres to prevent Prisma initialization in ANY package.
+ * This mocks @hmcts/postgres-prisma to prevent Prisma initialization in ANY package.
  * Unit tests should NEVER connect to a database or initialize Prisma.
  *
  * Why this is necessary:
@@ -13,7 +13,7 @@ import { vi } from "vitest";
  *
  * This runs BEFORE any test files load, ensuring the mock is always in place.
  */
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     location: {
       findMany: vi.fn(),

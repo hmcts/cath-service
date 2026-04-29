@@ -6,7 +6,7 @@ import {
   updateLocationMetadataRecord
 } from "./location-metadata-queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     locationMetadata: {
       findUnique: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 describe("location-metadata-queries", () => {
   beforeEach(() => {

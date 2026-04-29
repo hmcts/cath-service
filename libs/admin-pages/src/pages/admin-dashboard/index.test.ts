@@ -13,7 +13,7 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 // Mock the Prisma client
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     mediaApplication: {
       count: vi.fn().mockResolvedValue(0)
