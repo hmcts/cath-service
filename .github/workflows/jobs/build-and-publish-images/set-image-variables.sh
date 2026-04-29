@@ -18,7 +18,8 @@ set -euo pipefail
 #   - {APP}_IMAGE for each Helm app
 #     - If app was affected (PR): pr-{change_id}-{sha}
 #     - If app was affected (non-PR): {change_id}-{sha}
-#     - If app was not affected: latest
+#     - If app was not affected (PR): pr-{change_id}
+#     - If app was not affected (non-PR): {change_id}
 
 main() {
   local affected_apps="${1:-}"
@@ -79,14 +80,19 @@ main() {
 
       echo "✓ ${app}: ${image_tag} (rebuilt)"
     else
-      # App not affected - use latest
-      local image_tag="latest"
+      # App not affected - use PR floating tag for PRs, change_id tag for non-PRs
+      local image_tag
+      if [[ "${change_id}" =~ ^[0-9]+$ ]]; then
+        image_tag="pr-${change_id}"
+      else
+        image_tag="${change_id}"
+      fi
 
       if [ -n "${GITHUB_ENV:-}" ]; then
         echo "${env_var_name}=${image_tag}" >> "$GITHUB_ENV"
       fi
 
-      echo "○ ${app}: ${image_tag} (not rebuilt, using static tag)"
+      echo "○ ${app}: ${image_tag} (not rebuilt, using existing tag)"
     fi
   done
 }
