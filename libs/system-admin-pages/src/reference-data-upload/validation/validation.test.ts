@@ -1,9 +1,9 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { describe, expect, it, vi } from "vitest";
 import type { ParsedLocationData } from "../model.js";
 import { validateLocationData } from "./validation.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     location: {
       findFirst: vi.fn()

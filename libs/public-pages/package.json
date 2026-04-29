@@ -21,14 +21,16 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write --unsafe ."
   },
   "peerDependencies": {
     "express": "^5.2.0"
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
+    "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   }
 }

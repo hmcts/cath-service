@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { describe, expect, it, vi } from "vitest";
 import {
   checkSubJurisdictionExistsInJurisdiction,
@@ -13,7 +13,7 @@ const { mockCreate, mockQueryRaw, mockExecuteRaw } = vi.hoisted(() => ({
   mockExecuteRaw: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     subJurisdiction: {
       findFirst: vi.fn(),

@@ -1,21 +1,12 @@
-// Load environment variables from .env file
-
 import fs from "node:fs";
 import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import dotenv from "dotenv";
+import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Load .env before importing app modules — ESM static imports are hoisted and
-// evaluated before module body code, so DB connections would be created with
-// undefined DATABASE_URL if createApp were a static import.
-dotenv.config({ path: path.join(__dirname, "../../../.env") });
-
-const { createApp } = await import("./app.js");
 
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";

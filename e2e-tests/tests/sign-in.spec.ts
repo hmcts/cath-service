@@ -109,13 +109,14 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify navigation to home page
-      await expect(page).toHaveURL("/");
+      // Verify navigation to B2C login page (CaTH account requires Azure AD B2C authentication)
+      await expect(page).toHaveURL(/\/b2c-login/);
 
       // Final accessibility check on destination page
+      // Note: html-has-lang and document-title are disabled because B2C login page is a partner page we don't control
       accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
+        .disableRules(["target-size", "link-name", "html-has-lang", "document-title"])
         .analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });

@@ -22,14 +22,18 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write --unsafe ."
   },
   "peerDependencies": {
     "express": "^5.2.0"
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
+    "@hmcts/publication": "workspace:*",
     "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "@launchdarkly/node-server-sdk": "^9.7.0",
@@ -37,7 +41,7 @@
   },
   "devDependencies": {
     "@types/express": "5.0.6",
-    "@types/express-session": "1.18.2",
+    "@types/express-session": "1.19.0",
     "@types/papaparse": "5.5.2"
   }
 }

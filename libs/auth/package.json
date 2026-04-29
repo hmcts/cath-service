@@ -10,6 +10,12 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
+    },
+    "./src/assets/js/session-timeout.js": {
+      "default": "./src/assets/js/session-timeout.ts"
+    },
+    "./src/assets/css/session-timeout.scss": {
+      "default": "./src/assets/css/session-timeout.scss"
     }
   },
   "types": "./dist/index.d.ts",
@@ -21,7 +27,7 @@
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write --unsafe ."
   },
   "peerDependencies": {
     "express": "^5.2.0",
@@ -30,12 +36,13 @@
   },
   "dependencies": {
     "@hmcts/account": "*",
+    "@hmcts/cloud-native-platform": "workspace:*",
     "@microsoft/microsoft-graph-client": "3.0.7",
     "passport-azure-ad": "4.3.5"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
-    "@types/express-session": "1.18.2",
+    "@types/express-session": "1.19.0",
     "@types/passport": "1.0.17"
   }
 }

@@ -16,17 +16,22 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
   return {
     ...actual,
-    mockListTypes: [
-      {
-        id: 1,
-        name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        englishFriendlyName: "Civil and Family Daily Cause List",
-        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
-      }
-    ],
     validateListTypeJson: vi.fn(() => Promise.resolve({ isValid: true, errors: [], schemaVersion: "1.0" }))
   };
 });
+
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findAllListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 1,
+        name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+        friendlyName: "Civil and Family Daily Cause List",
+        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
+      }
+    ])
+  )
+}));
 
 describe("validateBlobRequest", () => {
   const validRequest: BlobIngestionRequest = {

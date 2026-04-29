@@ -1,5 +1,5 @@
-import type { Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Helper function to perform SSO login through Azure AD
@@ -11,18 +11,18 @@ export async function loginWithSSO(page: Page, email: string, password: string):
   // Wait for Azure AD login page
   try {
     await page.waitForURL(/login.microsoftonline.com/, { timeout: 10000 });
-  } catch (error) {
+  } catch (_error) {
     const currentUrl = page.url();
     throw new Error(
       `Failed to redirect to Azure AD login page. Current URL: ${currentUrl}. ` +
-      `This might indicate that SSO is not properly configured or ENABLE_SSO=true is not set.`
+        `This might indicate that SSO is not properly configured or ENABLE_SSO=true is not set.`
     );
   }
 
   // Enter email
   await page.fill('input[type="email"]', email);
   await page.click('input[type="submit"]');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState("networkidle");
 
   // Enter password
   await page.fill('input[type="password"]', password);
@@ -41,8 +41,8 @@ export async function loginWithSSO(page: Page, email: string, password: string):
     // Prompt didn't appear, continue
   }
 
-  // Wait for redirect back to application (any localhost:8080 page)
-  await page.waitForURL(/localhost:8080/, { timeout: 30000 });
+  // Wait for redirect back to application (away from Microsoft login)
+  await page.waitForURL((url) => !url.toString().includes("login.microsoftonline.com"), { timeout: 30000 });
 }
 
 /**
@@ -51,7 +51,7 @@ export async function loginWithSSO(page: Page, email: string, password: string):
  */
 export async function assertAuthenticated(page: Page): Promise<void> {
   // Wait a moment for the page to settle
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState("networkidle");
 
   // Check that we're not on the login page
   await expect(page).not.toHaveURL(/login.microsoftonline.com/);
@@ -72,6 +72,6 @@ export async function assertNotAuthenticated(page: Page): Promise<void> {
  * Helper to logout the user
  */
 export async function logout(page: Page): Promise<void> {
-  await page.click('text=/logout|sign out/i');
+  await page.click("text=/logout|sign out/i");
   await page.waitForURL(/login.microsoftonline.com/, { timeout: 10000 });
 }
