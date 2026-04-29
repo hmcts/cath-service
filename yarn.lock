@@ -91,18 +91,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-http-compat@npm:^2.2.0":
-  version: 2.4.0
-  resolution: "@azure/core-http-compat@npm:2.4.0"
-  dependencies:
-    "@azure/abort-controller": "npm:^2.1.2"
-  peerDependencies:
-    "@azure/core-client": ^1.10.0
-    "@azure/core-rest-pipeline": ^1.22.0
-  checksum: 10c0/160cdd9c4f8bae7ad60099586dcd3316d725d2969d90806ffb7705258d7fa459ee5fb98319def6b5c75881bc8063ce2da031497f457e8ebd36e512adce965967
-  languageName: node
-  linkType: hard
-
 "@azure/core-lro@npm:^2.7.2":
   version: 2.7.2
   resolution: "@azure/core-lro@npm:2.7.2"
@@ -241,7 +229,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/keyvault-common@npm:^2.0.0, @azure/keyvault-common@npm:^2.1.0":
+"@azure/keyvault-common@npm:^2.1.0":
   version: 2.1.0
   resolution: "@azure/keyvault-common@npm:2.1.0"
   dependencies:
@@ -257,27 +245,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/keyvault-secrets@npm:4.10.0":
-  version: 4.10.0
-  resolution: "@azure/keyvault-secrets@npm:4.10.0"
-  dependencies:
-    "@azure-rest/core-client": "npm:^2.3.3"
-    "@azure/abort-controller": "npm:^2.1.2"
-    "@azure/core-auth": "npm:^1.9.0"
-    "@azure/core-http-compat": "npm:^2.2.0"
-    "@azure/core-lro": "npm:^2.7.2"
-    "@azure/core-paging": "npm:^1.6.2"
-    "@azure/core-rest-pipeline": "npm:^1.19.0"
-    "@azure/core-tracing": "npm:^1.2.0"
-    "@azure/core-util": "npm:^1.11.0"
-    "@azure/keyvault-common": "npm:^2.0.0"
-    "@azure/logger": "npm:^1.1.4"
-    tslib: "npm:^2.8.1"
-  checksum: 10c0/7ac315870fb8f38eab45b53e10bb801f24c0a306a4599b9866bab861b25ba2834ed5c4c9a963b52dc8eef8e84ee6a04ece00613a10e8a5da59bd534f02aee688
-  languageName: node
-  linkType: hard
-
-"@azure/keyvault-secrets@npm:^4.7.0":
+"@azure/keyvault-secrets@npm:4.11.1, @azure/keyvault-secrets@npm:^4.7.0":
   version: 4.11.1
   resolution: "@azure/keyvault-secrets@npm:4.11.1"
   dependencies:
@@ -4903,7 +4871,7 @@ __metadata:
   dependencies:
     "@axe-core/playwright": "npm:4.11.2"
     "@azure/identity": "npm:4.13.1"
-    "@azure/keyvault-secrets": "npm:4.10.0"
+    "@azure/keyvault-secrets": "npm:4.11.1"
     "@playwright/test": "npm:1.59.1"
     dotenv: "npm:^17.2.3"
     exceljs: "npm:4.4.0"
