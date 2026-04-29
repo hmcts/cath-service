@@ -1,8 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { prisma } from "@hmcts/postgres";
-import { loginWithSSO } from "../utils/sso-helpers.js";
+import { loginWithSSO } from "../../utils/sso-helpers.js";
+import { getTestPrefix } from "../../utils/test-prefix.js";
+import {
+  createTestThirdPartyUser,
+  deleteTestThirdPartyUser,
+  findTestThirdPartyUserByName
+} from "../../utils/test-support-api.js";
 
 function validateEnvVars() {
   const missing: string[] = [];
@@ -21,18 +26,9 @@ async function authenticateSystemAdmin(page: Page) {
   }
 }
 
-const createdUserIds: string[] = [];
-
 test.describe("Third Party User Management", () => {
   test.beforeEach(async ({ page }) => {
     await authenticateSystemAdmin(page);
-  });
-
-  test.afterAll(async () => {
-    for (const id of createdUserIds) {
-      await prisma.thirdPartyUser.delete({ where: { id } }).catch(() => {});
-    }
-    createdUserIds.length = 0;
   });
 
   test("user can create a third party user @nightly", async ({ page }) => {
@@ -52,8 +48,8 @@ test.describe("Third Party User Management", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Rheoli defnyddwyr trydydd parti");
     await page.getByRole("link", { name: "English" }).click();
 
-    // Navigate to create
-    await page.getByRole("link", { name: "Create new user" }).click();
+    // Navigate to create (govukButton with href renders with role="button")
+    await page.getByRole("button", { name: "Create new user" }).click();
     await page.waitForURL("**/third-party-users/create");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create third party user");
 
@@ -67,8 +63,9 @@ test.describe("Third Party User Management", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Creu defnyddiwr trydydd parti");
     await page.getByRole("link", { name: "English" }).click();
 
-    // Enter valid name
-    const uniqueName = `E2E Test Corp ${Date.now()}`;
+    // Enter valid name with test prefix for cleanup
+    // Replace underscores with hyphens since validation only allows letters, numbers, spaces, hyphens, apostrophes
+    const uniqueName = `${getTestPrefix().replace(/_/g, "-")}Test Corp`;
     await page.getByLabel("Name").fill(uniqueName);
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -99,21 +96,18 @@ test.describe("Third Party User Management", () => {
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third party user created");
     await expect(page.locator(".govuk-panel--confirmation")).toContainText(uniqueName);
 
-    // Test page refresh doesn't duplicate (idempotency already handled by session clear)
     // Navigate back to the list to verify user exists
     await page.getByRole("link", { name: "Manage third party users" }).click();
     await page.waitForURL("**/third-party-users");
     await expect(page.locator(".govuk-table")).toContainText(uniqueName);
 
-    // Clean up - record id for teardown
-    const createdUser = await prisma.thirdPartyUser.findFirst({ where: { name: uniqueName } });
-    if (createdUser) createdUserIds.push(createdUser.id);
+    // Note: Cleanup handled by global teardown via test prefix
   });
 
   test("user can manage subscriptions for a third party user @nightly", async ({ page }) => {
-    // Create a test user directly in DB
-    const testUser = await prisma.thirdPartyUser.create({ data: { name: `Sub Test Corp ${Date.now()}` } });
-    createdUserIds.push(testUser.id);
+    // Create a test user via API
+    const uniqueName = `${getTestPrefix()}Sub Test Corp`;
+    const testUser = await createTestThirdPartyUser({ name: uniqueName });
 
     await page.goto(`/third-party-users/${testUser.id}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage user");
@@ -125,8 +119,8 @@ test.describe("Third Party User Management", () => {
       .analyze();
     expect(accessibilityResults.violations).toEqual([]);
 
-    // Navigate to subscriptions
-    await page.getByRole("link", { name: "Manage subscriptions" }).click();
+    // Navigate to subscriptions (govukButton with href renders with role="button")
+    await page.getByRole("button", { name: "Manage subscriptions" }).click();
     await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions**`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage subscriptions");
 
@@ -134,6 +128,8 @@ test.describe("Third Party User Management", () => {
     await page.getByRole("link", { name: "Cymraeg" }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Rheoli tanysgrifiadau");
     await page.getByRole("link", { name: "English" }).click();
+    // Wait for page to stabilize after language switch
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage subscriptions");
 
     // Select a sensitivity for the first list type (radio button variant by default)
     const firstPublicRadio = page.locator('input[type="radio"][value="PUBLIC"]').first();
@@ -142,32 +138,41 @@ test.describe("Third Party User Management", () => {
     }
 
     // Navigate through pages and save on last page
-    let isLastPage = false;
-    while (!isLastPage) {
+    // Use a max iterations guard to prevent infinite loops
+    const maxPages = 10;
+    for (let pageNum = 0; pageNum < maxPages; pageNum++) {
       const saveButton = page.getByRole("button", { name: "Save subscriptions" });
       const nextButton = page.getByRole("button", { name: "Next" });
+
+      // Wait for either button to be visible
+      await expect(saveButton.or(nextButton)).toBeVisible();
+
       if (await saveButton.isVisible()) {
         await saveButton.click();
-        isLastPage = true;
-      } else {
-        await nextButton.click();
+        break;
       }
+      await nextButton.click();
+      // Wait for next page to load
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage subscriptions");
     }
 
     // Check confirmation
     await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions/confirmation`);
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third Party Subscriptions Updated");
     await expect(page.getByRole("link", { name: "Manage third party users" })).toBeVisible();
+
+    // Note: Cleanup handled by global teardown via test prefix
   });
 
   test("user can delete a third party user @nightly", async ({ page }) => {
-    // Create a test user directly in DB
-    const testUser = await prisma.thirdPartyUser.create({ data: { name: `Delete Test Corp ${Date.now()}` } });
+    // Create a test user via API
+    const uniqueName = `${getTestPrefix()}Delete Test Corp`;
+    const testUser = await createTestThirdPartyUser({ name: uniqueName });
 
     await page.goto(`/third-party-users/${testUser.id}`);
 
-    // Navigate to delete
-    await page.getByRole("link", { name: "Delete user" }).click();
+    // Navigate to delete (govukButton with href renders with role="button")
+    await page.getByRole("button", { name: "Delete user" }).click();
     await page.waitForURL(`**/third-party-users/${testUser.id}/delete`);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Are you sure you want to delete");
 
@@ -193,7 +198,7 @@ test.describe("Third Party User Management", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage user");
 
     // Go back to delete and confirm Yes
-    await page.getByRole("link", { name: "Delete user" }).click();
+    await page.getByRole("button", { name: "Delete user" }).click();
     await page.waitForURL(`**/third-party-users/${testUser.id}/delete`);
     await page.locator('input[value="yes"]').check();
     await page.getByRole("button", { name: "Continue" }).click();
@@ -209,5 +214,7 @@ test.describe("Third Party User Management", () => {
     await page.getByRole("link", { name: "Manage another third party user" }).click();
     await page.waitForURL("**/third-party-users");
     await expect(page.locator("body")).not.toContainText(testUser.name);
+
+    // Note: User already deleted via UI, no cleanup needed
   });
 });
