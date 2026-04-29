@@ -7,9 +7,10 @@
     "paths": {
       "@hmcts/api": ["apps/api/src"],
       "@hmcts/crons": ["apps/crons/src"],
-      "@hmcts/postgres": ["apps/postgres/src"],
+      "@hmcts/postgres-prisma": ["libs/postgres-prisma/src"],
       "@hmcts/web": ["apps/web/src"],
       "@hmcts/web-core": ["libs/web-core/src"],
+      "@hmcts/web-core/vite": ["libs/web-core/src/assets/vite-config"],
       "@hmcts/account": ["libs/account/src"],
       "@hmcts/account/repository/query": ["libs/account/src/repository/query"],
       "@hmcts/admin-pages": ["libs/admin-pages/src"],
@@ -38,7 +39,9 @@
       "@hmcts/notifications": ["libs/notifications/src"],
       "@hmcts/list-search-config": ["libs/list-search-config/src"],
       "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
-      "@hmcts/pdf-generation": ["libs/pdf-generation/src"]
+      "@hmcts/pdf-generation": ["libs/pdf-generation/src"],
+      "@hmcts/test-support": ["libs/test-support/src"],
+      "@hmcts/test-support/config": ["libs/test-support/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

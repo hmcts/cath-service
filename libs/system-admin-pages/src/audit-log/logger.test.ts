@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as logger from "./logger.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     auditLog: {
       create: vi.fn()
@@ -9,7 +9,7 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
-const { prisma } = await import("@hmcts/postgres");
+const { prisma } = await import("@hmcts/postgres-prisma");
 
 describe("logger", () => {
   beforeEach(() => {

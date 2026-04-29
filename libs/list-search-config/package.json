@@ -21,6 +21,9 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write --unsafe ."
   },
+  "dependencies": {
+    "@hmcts/postgres-prisma": "workspace:*"
+  },
   "peerDependencies": {
     "express": "^5.2.0"
   }

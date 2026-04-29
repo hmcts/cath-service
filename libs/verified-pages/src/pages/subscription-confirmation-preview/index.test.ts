@@ -19,7 +19,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findMany: vi.fn()
@@ -64,7 +64,7 @@ describe("subscription-confirmation-preview", () => {
 
   describe("GET", () => {
     it("should render page with resolved location and list type names", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([
         {
           id: 1,
@@ -116,7 +116,7 @@ describe("subscription-confirmation-preview", () => {
           pendingLanguage: "WELSH"
         }
       } as any;
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
@@ -148,7 +148,7 @@ describe("subscription-confirmation-preview", () => {
     });
 
     it("should render error when no list types are pending", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
       mockReq.session = {
         emailSubscriptions: {

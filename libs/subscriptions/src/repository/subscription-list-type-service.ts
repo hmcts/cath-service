@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import {
   deleteAllSubscriptionListTypesByUserId,
   findSubscriptionListTypeByUserId,

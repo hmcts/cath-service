@@ -5,7 +5,7 @@ import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPd
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
 import { sendListTypePublicationNotifications, sendPublicationNotifications } from "@hmcts/notifications";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {

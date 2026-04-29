@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as queries from "./subscription-list-type-queries.js";
 import {
@@ -10,7 +10,7 @@ import {
 } from "./subscription-list-type-service.js";
 
 vi.mock("./subscription-list-type-queries.js");
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findFirst: vi.fn()

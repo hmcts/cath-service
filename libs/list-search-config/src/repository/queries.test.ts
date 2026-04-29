@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { create, findByListTypeId, update, upsert } from "./queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listSearchConfig: {
       findUnique: vi.fn(),
@@ -25,7 +25,7 @@ describe("list-search-config queries", () => {
         caseNameFieldName: "caseName"
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.findUnique).mockResolvedValue(mockConfig as any);
 
       const result = await findByListTypeId(1);
@@ -37,7 +37,7 @@ describe("list-search-config queries", () => {
     });
 
     it("should return null when config not found", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.findUnique).mockResolvedValue(null);
 
       const result = await findByListTypeId(999);
@@ -55,7 +55,7 @@ describe("list-search-config queries", () => {
         caseNameFieldName: "case_name"
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.findUnique).mockResolvedValue(mockConfig as any);
 
       const result = await findByListTypeId(5);
@@ -79,7 +79,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.create).mockResolvedValue(mockCreatedConfig as any);
 
       const result = await create(1, data);
@@ -105,7 +105,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.create).mockResolvedValue(mockCreatedConfig as any);
 
       const result = await create(2, data);
@@ -133,7 +133,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.update).mockResolvedValue(mockUpdatedConfig as any);
 
       const result = await update(1, data);
@@ -159,7 +159,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.update).mockResolvedValue(mockUpdatedConfig as any);
 
       const result = await update(3, data);
@@ -187,7 +187,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.upsert).mockResolvedValue(mockUpsertedConfig as any);
 
       const result = await upsert(1, data);
@@ -218,7 +218,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.upsert).mockResolvedValue(mockUpsertedConfig as any);
 
       const result = await upsert(2, data);
@@ -249,7 +249,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.upsert).mockResolvedValue(mockUpsertedConfig as any);
 
       const result = await upsert(5, data);
@@ -280,7 +280,7 @@ describe("list-search-config queries", () => {
         ...data
       };
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listSearchConfig.upsert).mockResolvedValue(mockUpsertedConfig as any);
 
       const result = await upsert(99, data);

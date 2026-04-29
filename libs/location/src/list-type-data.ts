@@ -49,7 +49,7 @@ export const listTypeData: ListTypeData[] = [
     name: "MAGISTRATES_PUBLIC_LIST",
     englishFriendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",
-    provenance: "CRIME_IDAM,PI_AAD",
+    provenance: "CRIME_IDAM",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { findActiveSubscriptionsByLocation, findListTypeSubscribersByListTypeAndLanguage } from "./subscription-queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     subscription: {
       findMany: vi.fn()
@@ -36,7 +36,7 @@ describe("subscription-queries", () => {
         }
       ];
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
 
       const result = await findActiveSubscriptionsByLocation(1);
@@ -71,7 +71,7 @@ describe("subscription-queries", () => {
         }
       ];
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscribers as never);
 
       const result = await findListTypeSubscribersByListTypeAndLanguage(5, "ENGLISH");
@@ -104,7 +104,7 @@ describe("subscription-queries", () => {
         }
       ];
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue(mockSubscribers as never);
 
       const result = await findListTypeSubscribersByListTypeAndLanguage(5, "WELSH");
@@ -121,7 +121,7 @@ describe("subscription-queries", () => {
     });
 
     it("should return empty array when no subscribers match", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscriptionListType.findMany).mockResolvedValue([]);
 
       const result = await findListTypeSubscribersByListTypeAndLanguage(99, "ENGLISH");

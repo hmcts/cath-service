@@ -1,6 +1,5 @@
 import { USER_ROLES } from "@hmcts/account";
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
-import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import passport from "passport";
 import { isSsoConfigured } from "../../config/sso-config.js";
@@ -43,8 +42,8 @@ export const GET = [
       });
       req.user.id = dbUser.userId;
     } catch (error) {
-      trackException(error as Error, {
-        area: "SSO callback",
+      console.error("SSO callback: failed to create/update user", {
+        error,
         userEmail: req.user?.email,
         userId: req.user?.id
       });

@@ -18,7 +18,7 @@ vi.mock("@hmcts/location", () => ({
   }))
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findMany: vi.fn()
@@ -53,7 +53,7 @@ describe("subscription-add-list", () => {
 
   describe("GET", () => {
     it("should render list types from sub-jurisdictions of confirmed locations", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([
         {
           id: 1,
@@ -142,7 +142,7 @@ describe("subscription-add-list", () => {
     });
 
     it("should show validation error when no list type selected", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
       mockReq.body = {};
 

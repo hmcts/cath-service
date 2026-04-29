@@ -12,7 +12,7 @@ vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findMany: vi.fn()
@@ -84,7 +84,7 @@ describe("subscription-configure-list", () => {
 
     const { getAllSubscriptionsByUserId, getSubscriptionListTypesByUserId } = await import("@hmcts/subscriptions");
     const { getLocationById } = await import("@hmcts/location");
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue(mockLocationSubscriptions as any);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation as any);
@@ -167,7 +167,7 @@ describe("subscription-configure-list", () => {
 
     it("should filter list types using sub-jurisdictions from the user's subscribed locations", async () => {
       const { getLocationById } = await import("@hmcts/location");
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
 
       vi.mocked(getLocationById).mockResolvedValue({ ...mockLocation, subJurisdictions: [1] } as any);
 

@@ -26,7 +26,7 @@ vi.mock("@hmcts/notifications", () => ({
   sendListTypePublicationNotifications: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn()
@@ -41,7 +41,7 @@ describe("publication-processor", async () => {
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendListTypePublicationNotifications, sendPublicationNotifications } = await import("@hmcts/notifications");
-  const { prisma } = await import("@hmcts/postgres");
+  const { prisma } = await import("@hmcts/postgres-prisma");
 
   beforeEach(() => {
     vi.clearAllMocks();
