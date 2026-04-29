@@ -147,7 +147,7 @@ test.describe("Create Media Account", () => {
   });
 
   test("should verify database record created after successful submission @nightly", async ({ page }) => {
-    const { prisma } = await import("@hmcts/postgres");
+    const { getTestMediaApplicationByEmail, deleteTestMediaApplication } = await import("../utils/test-support-api.js");
 
     await page.goto("/create-media-account");
 
@@ -169,9 +169,13 @@ test.describe("Create Media Account", () => {
 
     await page.waitForURL(/\/account-request-submitted/);
 
-    const application = await prisma.mediaApplication.findFirst({
-      where: { email: testEmail.toLowerCase() }
-    });
+    const application = (await getTestMediaApplicationByEmail(testEmail.toLowerCase())) as {
+      id: string;
+      name: string;
+      email: string;
+      employer: string;
+      status: string;
+    } | null;
 
     expect(application).not.toBeNull();
     expect(application?.name).toBe("Database Test User");
@@ -191,7 +195,7 @@ test.describe("Create Media Account", () => {
         await fs.unlink(filePath);
       }
 
-      await prisma.mediaApplication.delete({ where: { id: application.id } });
+      await deleteTestMediaApplication(application.id);
     }
   });
 

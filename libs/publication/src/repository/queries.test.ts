@@ -15,7 +15,7 @@ import {
   getLocationsWithPublicationCount
 } from "./queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findFirst: vi.fn(),
@@ -43,7 +43,7 @@ vi.mock("@hmcts/location", () => ({
 }));
 
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 describe("createArtefact", () => {
   beforeEach(() => {

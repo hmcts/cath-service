@@ -1,8 +1,8 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { describe, expect, it, vi } from "vitest";
 import { checkJurisdictionExists, createJurisdiction, getMaxJurisdictionId } from "./jurisdiction-repository.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     jurisdiction: {
       findFirst: vi.fn(),

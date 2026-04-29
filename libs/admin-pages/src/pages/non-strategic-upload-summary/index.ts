@@ -140,10 +140,18 @@ const postHandler = async (req: Request, res: Response) => {
     let jsonData: unknown;
 
     if (isExcelFile && selectedListType?.isNonStrategic) {
-      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
+      const { convertExcelForListType, convertExcelForListTypeName, hasConverterForListType, hasConverterForListTypeName } = await import(
+        "@hmcts/list-types-common"
+      );
 
-      if (hasConverterForListType(listTypeId)) {
-        const hearingsData = await convertExcelForListType(listTypeId, uploadData.file);
+      const listTypeName = selectedListType.name;
+      const canConvertById = hasConverterForListType(listTypeId);
+      const canConvertByName = !canConvertById && listTypeName ? hasConverterForListTypeName(listTypeName) : false;
+
+      if (canConvertById || canConvertByName) {
+        const hearingsData = canConvertById
+          ? await convertExcelForListType(listTypeId, uploadData.file)
+          : await convertExcelForListTypeName(listTypeName!, uploadData.file);
         await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
 
         // Extract and store artefact search data from converted JSON
