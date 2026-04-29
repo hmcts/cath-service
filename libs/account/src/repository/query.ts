@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { UpdateUserInput, User } from "./model.js";
 
 export async function createUser(input: User) {
@@ -44,16 +44,19 @@ export async function updateUser(userProvenanceId: string, input: UpdateUserInpu
 }
 
 export async function createOrUpdateUser(input: User) {
-  const existingUser = await findUserByProvenanceId(input.userProvenanceId);
-
-  if (existingUser) {
-    // Update existing user
-    return await updateUser(input.userProvenanceId, {
+  return await prisma.user.upsert({
+    where: { userProvenanceId: input.userProvenanceId },
+    update: {
+      lastSignedInDate: new Date()
+    },
+    create: {
+      email: input.email,
+      firstName: input.firstName,
+      surname: input.surname,
+      userProvenance: input.userProvenance,
+      userProvenanceId: input.userProvenanceId,
       role: input.role,
       lastSignedInDate: new Date()
-    });
-  }
-
-  // Create new user
-  return await createUser(input);
+    }
+  });
 }

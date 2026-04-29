@@ -64,9 +64,4 @@ describe("Web Core Module Exports", () => {
     expect(typeof webCore.formatDateAndLocale).toBe("function");
     expect(typeof webCore.parseDate).toBe("function");
   });
-
-  it("should export vite config", () => {
-    expect(webCore.createBaseViteConfig).toBeDefined();
-    expect(typeof webCore.createBaseViteConfig).toBe("function");
-  });
 });

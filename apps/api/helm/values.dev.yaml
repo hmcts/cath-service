@@ -1,5 +1,0 @@
-# Local development override — excludes production cath vault
-# Applied on top of values.yaml via: helm install -f values.yaml -f values.dev.yaml
-nodejs:
-  keyVaults:
-    cath: null

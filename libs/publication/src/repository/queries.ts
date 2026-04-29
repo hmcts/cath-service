@@ -1,5 +1,5 @@
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
 import type { Artefact } from "./model.js";
 
@@ -211,7 +211,7 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
       id: artefact.listTypeId
     }
   });
-  const location = await getLocationById(Number.parseInt(artefact.locationId));
+  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
 
   return {
     artefactId: artefact.artefactId,

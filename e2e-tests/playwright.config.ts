@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// When CATH_SERVICE_WEB_URL is set, tests run against the deployed environment
+// and no local web server is needed
+const deployedWebUrl = process.env.CATH_SERVICE_WEB_URL;
+const baseURL = deployedWebUrl || "https://localhost:8080";
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -9,10 +14,10 @@ export default defineConfig({
   globalSetup: "./global-setup.ts",
   globalTeardown: "./global-teardown.ts",
   reporter: process.env.CI
-    ? [["dot"], ["github"], ["junit", { outputFile: "junit-results.xml" }], ["html", { outputFolder: "playwright-report", open: "never" }]]
+    ? [["line"], ["github"], ["junit", { outputFile: "junit-results.xml" }], ["html", { outputFolder: "playwright-report", open: "never" }]]
     : "list",
   use: {
-    baseURL: "https://localhost:8080",
+    baseURL,
     trace: "on-first-retry",
     headless: true,
     screenshot: "only-on-failure",
@@ -26,24 +31,26 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] }
     }
   ],
-  webServer: {
-    // ENABLE_SSO=true required to test SSO flows (SSO disabled by default in development)
-    // ENABLE_CFT_IDAM=true required to test CFT IDAM flows
-    // ENABLE_B2C=true required to test B2C flows
-    // GOVUK_NOTIFY_* required for notification tests
-    // In CI: use dev:ci (skips docker-compose, service containers are used instead)
-    // Locally: use dev:nowatch (starts docker-compose and runs migrations)
-    command: process.env.CI
-      ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_B2C=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:ci`
-      : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_B2C=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:nowatch`,
-    // Check port instead of URL to avoid HTTPS certificate issues
-    port: 8080,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    cwd: "..",
-    stdout: "pipe",
-    stderr: "pipe"
-  },
+  // Only start a local web server when not running against a deployed environment
+  webServer: deployedWebUrl
+    ? undefined
+    : {
+        // ENABLE_SSO=true required to test SSO flows (SSO disabled by default in development)
+        // ENABLE_CFT_IDAM=true required to test CFT IDAM flows
+        // GOVUK_NOTIFY_* required for notification tests
+        // In CI: use dev:ci (skips docker-compose, service containers are used instead)
+        // Locally: use dev:nowatch (starts docker-compose and runs migrations)
+        command: process.env.CI
+          ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:ci`
+          : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION="${process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || ""}" yarn dev:nowatch`,
+        // Check port instead of URL to avoid HTTPS certificate issues
+        port: 8080,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120 * 1000,
+        cwd: "..",
+        stdout: "pipe",
+        stderr: "pipe"
+      },
   // Longer timeout for SSO tests (Azure AD redirects)
   timeout: 60 * 1000
 });
