@@ -1,5 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+
+// Shared test locations for the entire test suite
+let testLocationId: number;
+let testLocationName: string;
+let _testSjpLocationId: number;
+let testSjpLocationName: string;
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -8,6 +15,17 @@ import { expect, test } from "@playwright/test";
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
 test.describe("Courts and Tribunals List Page", () => {
+  // Create test locations before all tests run
+  test.beforeAll(async () => {
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Courts List Court" });
+    testLocationId = testLocation.locationId;
+    testLocationName = testLocation.name;
+
+    const sjpLocation = await createUniqueTestLocation({ namePrefix: "Courts List SJP Court" });
+    _testSjpLocationId = sjpLocation.locationId;
+    testSjpLocationName = sjpLocation.name;
+  });
+
   test.describe("given user is on the courts-tribunals-list page", () => {
     test("should load the page with locations grouped alphabetically and accessibility compliance", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
@@ -58,11 +76,11 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list");
 
       // Click on a location link (e.g., test court alpha)
-      const locationLink = page.getByRole("link", { name: /test court alpha/i });
+      const locationLink = page.getByRole("link", { name: new RegExp(testLocationName, "i") });
       await locationLink.click();
 
       // Verify navigation to summary-of-publications page with locationId parameter
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9001");
+      await expect(page).toHaveURL(`/summary-of-publications?locationId=${testLocationId}`);
 
       // Note: The summary-of-publications page will be implemented in a future ticket
       // For now, this will show a 404 or error page
@@ -101,10 +119,10 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list");
 
       // Check for specific locations from our mock data
-      const oxfordLink = page.getByRole("link", { name: /test court alpha/i });
+      const oxfordLink = page.getByRole("link", { name: new RegExp(testLocationName, "i") });
       await expect(oxfordLink).toBeVisible();
 
-      const sjpLink = page.getByRole("link", { name: /test sjp court/i });
+      const sjpLink = page.getByRole("link", { name: new RegExp(testSjpLocationName, "i") });
       await expect(sjpLink).toBeVisible();
     });
   });
@@ -190,11 +208,11 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list");
 
       // Click a location link to verify it's functional
-      const locationLink = page.getByRole("link", { name: /test court alpha/i });
+      const locationLink = page.getByRole("link", { name: new RegExp(testLocationName, "i") });
       await locationLink.click();
 
       // Verify navigation to summary-of-publications page with locationId
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9001");
+      await expect(page).toHaveURL(`/summary-of-publications?locationId=${testLocationId}`);
     });
   });
 
@@ -211,11 +229,11 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Click on a location
-      const locationLink = page.getByRole("link", { name: /test court alpha/i });
+      const locationLink = page.getByRole("link", { name: new RegExp(testLocationName, "i") });
       await locationLink.click();
 
       // Verify navigation to summary-of-publications page
-      await expect(page).toHaveURL("/summary-of-publications?locationId=9001");
+      await expect(page).toHaveURL(`/summary-of-publications?locationId=${testLocationId}`);
 
       // Note: The summary-of-publications page will be implemented in a future ticket
       // For now, this will show a 404 or error page

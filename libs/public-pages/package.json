@@ -28,7 +28,9 @@
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
+    "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   }
 }

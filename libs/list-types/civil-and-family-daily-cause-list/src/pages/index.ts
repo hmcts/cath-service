@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { canAccessPublicationData, getArtefactById, mockListTypes, PROVENANCE_LABELS } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
@@ -21,7 +22,10 @@ export const GET = async (req: Request, res: Response) => {
 
   const artefactId = req.query.artefactId as string;
 
+  console.log(`[civil-and-family-daily-cause-list] GET artefactId=${artefactId} MONOREPO_ROOT=${MONOREPO_ROOT} TEMP_UPLOAD_DIR=${TEMP_UPLOAD_DIR}`);
+
   if (!artefactId) {
+    console.log("[civil-and-family-daily-cause-list] No artefactId provided, returning 400");
     return res.status(400).render("errors/common", {
       en,
       cy,
@@ -31,9 +35,11 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   try {
+    console.log(`[civil-and-family-daily-cause-list] Looking up artefact ${artefactId}`);
     const artefact = await getArtefactById(artefactId);
 
     if (!artefact) {
+      console.log(`[civil-and-family-daily-cause-list] Artefact not found: ${artefactId}`);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -42,9 +48,27 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
+    console.log(`[civil-and-family-daily-cause-list] Artefact found: listTypeId=${artefact.listTypeId} sensitivity=${artefact.sensitivity}`);
+
     // Check if user has permission to access the publication data
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-    if (!canAccessPublicationData(req.user, artefact, listType)) {
+    const dbListType = await prisma.listType.findUnique({
+      where: { id: artefact.listTypeId }
+    });
+
+    console.log(`[civil-and-family-daily-cause-list] dbListType=${JSON.stringify(dbListType)}`);
+
+    const listType: ListType | undefined = dbListType
+      ? {
+          id: dbListType.id,
+          provenance: dbListType.allowedProvenance,
+          isNonStrategic: dbListType.isNonStrategic
+        }
+      : undefined;
+
+    const canAccess = canAccessPublicationData(req.user, artefact, listType);
+    console.log(`[civil-and-family-daily-cause-list] canAccess=${canAccess} user=${JSON.stringify(req.user)}`);
+
+    if (!canAccess) {
       return res.status(403).render("errors/403", {
         en: {
           title: en.error403Title,
@@ -58,12 +82,14 @@ export const GET = async (req: Request, res: Response) => {
     }
 
     const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
+    console.log(`[civil-and-family-daily-cause-list] Reading JSON from ${jsonFilePath}`);
 
     let jsonContent: string;
     try {
       jsonContent = await readFile(jsonFilePath, "utf-8");
+      console.log(`[civil-and-family-daily-cause-list] JSON file read successfully (${jsonContent.length} bytes)`);
     } catch (error) {
-      console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
+      console.error(`[civil-and-family-daily-cause-list] Error reading JSON file at ${jsonFilePath}:`, error);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -75,8 +101,9 @@ export const GET = async (req: Request, res: Response) => {
     const jsonData = JSON.parse(jsonContent);
 
     const validationResult = validateCivilFamilyCauseList(jsonData);
+    console.log(`[civil-and-family-daily-cause-list] Validation result: isValid=${validationResult.isValid} errors=${JSON.stringify(validationResult.errors)}`);
     if (!validationResult.isValid) {
-      console.error("Validation errors:", validationResult.errors);
+      console.error("[civil-and-family-daily-cause-list] Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {
         en,
         cy,
@@ -93,6 +120,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
+    console.log(`[civil-and-family-daily-cause-list] Rendering successfully`);
     res.render("civil-and-family-daily-cause-list", {
       en,
       cy,
@@ -104,7 +132,7 @@ export const GET = async (req: Request, res: Response) => {
       t
     });
   } catch (error) {
-    console.error("Error rendering cause list:", error);
+    console.error("[civil-and-family-daily-cause-list] Unexpected error:", error);
     return res.status(500).render("errors/common", {
       en,
       cy,

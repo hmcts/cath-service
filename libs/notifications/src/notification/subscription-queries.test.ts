@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { findActiveSubscriptionsByLocation } from "./subscription-queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     subscription: {
       findMany: vi.fn()
@@ -40,7 +40,7 @@ describe("subscription-queries", () => {
       }
     ];
 
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
     vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
 
     const result = await findActiveSubscriptionsByLocation(1);

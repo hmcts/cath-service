@@ -1,6 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
+import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 // Mock passport
@@ -12,11 +13,16 @@ vi.mock("passport", () => ({
 
 // Mock createOrUpdateUser
 vi.mock("@hmcts/account/repository/query", () => ({
-  createOrUpdateUser: vi.fn()
+  createOrUpdateUser: vi.fn().mockResolvedValue({})
 }));
 
 describe("SSO Return handler", () => {
   const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(createOrUpdateUser).mockResolvedValue({} as any);
+  });
 
   it("should redirect to /auth/login when no user data", async () => {
     const req = {
@@ -167,6 +173,48 @@ describe("SSO Return handler", () => {
     await handler(req, res);
 
     expect(res.redirect).toHaveBeenCalledWith("/some/page");
+  });
+
+  it("should redirect to /login with db_error when createOrUpdateUser fails", async () => {
+    // Arrange
+    vi.mocked(createOrUpdateUser).mockRejectedValue(new Error("DB connection failed"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const user = {
+      id: "user-db-err",
+      email: "admin@example.com",
+      displayName: "Admin User",
+      roles: ["System Admin"],
+      groupIds: ["group-1"],
+      role: USER_ROLES.SYSTEM_ADMIN
+    };
+
+    const req = {
+      user,
+      isAuthenticated: () => true,
+      session: { regenerate: vi.fn((cb) => cb(null)), returnTo: undefined },
+      login: vi.fn((_u, cb) => cb(null))
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    // Act
+    await handler(req, res);
+
+    // Assert
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "SSO callback: failed to create/update user",
+      expect.objectContaining({
+        userEmail: "admin@example.com",
+        userId: "user-db-err"
+      })
+    );
+    expect(res.redirect).toHaveBeenCalledWith("/login?error=db_error");
+    expect(req.login).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 
   it("should redirect to /auth/login on session regeneration error", async () => {

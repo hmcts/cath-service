@@ -1,10 +1,9 @@
-import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres";
-import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+import { createTestArtefact, deleteTestFlatFileFromWeb, getListTypeByName, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -12,6 +11,9 @@ import { expect, test } from "@playwright/test";
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
+// When running against a deployed environment, files must be uploaded via the test-support API.
+// When running locally, files can be written directly to the shared storage directory.
+const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 const STORAGE_PATH = path.join(process.cwd(), "..", "storage", "temp", "uploads");
 
 // Helper function to create a test PDF file
@@ -67,10 +69,9 @@ startxref
 %%EOF`);
 }
 
-// Helper function to create a flat file artefact in the database
+// Helper function to create a flat file artefact via API
 async function createFlatFileArtefact(
   options: {
-    artefactId: string;
     locationId: string;
     displayFrom?: Date;
     displayTo?: Date;
@@ -81,7 +82,6 @@ async function createFlatFileArtefact(
   trackingArray?: string[]
 ): Promise<string> {
   const {
-    artefactId,
     locationId,
     displayFrom = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
     displayTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
@@ -90,31 +90,41 @@ async function createFlatFileArtefact(
     fileContent = "Test Flat File Content"
   } = options;
 
-  // Create artefact in database
-  await prisma.artefact.create({
-    data: {
-      artefactId,
-      locationId,
-      listTypeId: 6, // Crown Daily List
-      contentDate: new Date(),
-      sensitivity: "PUBLIC",
-      language: "ENGLISH",
-      displayFrom,
-      displayTo,
-      isFlatFile,
-      provenance: "MANUAL",
-      supersededCount: 0
-    }
+  // Look up the actual list type ID (don't hardcode - DB IDs are not guaranteed sequential)
+  const crownDailyList = (await getListTypeByName("CROWN_DAILY_LIST")) as { id: number };
+
+  // Create artefact via API and get the returned artefactId
+  const createdArtefact = await createTestArtefact({
+    locationId,
+    listTypeId: crownDailyList.id, // Crown Daily List
+    contentDate: new Date().toISOString(),
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    displayFrom: displayFrom.toISOString(),
+    displayTo: displayTo.toISOString(),
+    isFlatFile,
+    provenance: "MANUAL"
   });
+
+  const artefactId = createdArtefact.artefactId;
 
   // Create file in storage if requested
   if (createFile) {
-    if (!fs.existsSync(STORAGE_PATH)) {
-      fs.mkdirSync(STORAGE_PATH, { recursive: true });
-    }
+    const pdfBuffer = createTestPDFBuffer(fileContent);
 
-    const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
-    fs.writeFileSync(filePath, createTestPDFBuffer(fileContent));
+    if (IS_DEPLOYED) {
+      // In deployed environments, upload file via the web app's test-support endpoint so it
+      // lands on the web pod's filesystem where the flat-file viewer reads from
+      console.log(`[flat-file] Uploading file via web app for artefact ${artefactId}`);
+      await uploadTestFlatFileToWeb({ artefactId, content: pdfBuffer, extension: ".pdf" });
+    } else {
+      // Locally, write directly to shared storage directory
+      if (!fs.existsSync(STORAGE_PATH)) {
+        fs.mkdirSync(STORAGE_PATH, { recursive: true });
+      }
+      const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
+      fs.writeFileSync(filePath, pdfBuffer);
+    }
   }
 
   // Track artefact for cleanup if tracking array provided
@@ -125,688 +135,347 @@ async function createFlatFileArtefact(
   return artefactId;
 }
 
-// Helper function to create a flat file link in the summary of publications page
-async function _navigateToSummaryPage(page: Page, locationId: string) {
-  await page.goto(`/summary-of-publications?locationId=${locationId}`);
-  await page.waitForLoadState("domcontentloaded");
+// Helper to clean up PDF files from storage
+async function cleanupPDFFiles(artefactIds: string[]) {
+  for (const artefactId of artefactIds) {
+    if (IS_DEPLOYED) {
+      try {
+        await deleteTestFlatFileFromWeb(artefactId);
+      } catch {
+        // File might not exist, which is fine
+      }
+    } else {
+      const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
+      try {
+        await fs.promises.unlink(filePath);
+      } catch {
+        // File might not exist, which is fine
+      }
+    }
+  }
 }
 
-test.describe.configure({ mode: "serial" });
-
 test.describe("Flat File Viewing", () => {
-  const testLocationId = "9"; // SJP location from seed data
-  const trackedArtefactIds: string[] = [];
-
-  test.afterEach(async () => {
-    // Clean up tracked artefacts from database
-    if (trackedArtefactIds.length > 0) {
-      await prisma.artefact.deleteMany({
-        where: { artefactId: { in: trackedArtefactIds } }
-      });
-
-      // Remove corresponding files from storage
-      for (const artefactId of trackedArtefactIds) {
-        const filePath = path.join(STORAGE_PATH, `${artefactId}.pdf`);
-        try {
-          await fs.promises.unlink(filePath);
-        } catch {
-          // File might not exist, which is fine
-        }
-      }
-
-      // Clear the tracking array
-      trackedArtefactIds.length = 0;
-    }
-  });
+  // Track artefact IDs for PDF file cleanup (database cleanup is automatic via prefix)
+  const createdArtefactIds: string[] = [];
 
   test.afterAll(async () => {
-    // Ensure STORAGE_PATH is cleaned of any leftover test PDFs
-    try {
-      const files = await fs.promises.readdir(STORAGE_PATH);
-      for (const file of files) {
-        if (file.endsWith(".pdf")) {
-          await fs.promises.unlink(path.join(STORAGE_PATH, file));
-        }
-      }
-    } catch {
-      // Directory might not exist or be empty, which is fine
-    }
+    await cleanupPDFFiles(createdArtefactIds);
   });
 
-  test.describe("Happy Path - View flat file PDF", () => {
-    test("should open flat file in new tab and display PDF inline with accessibility compliance (TS1, TS2, TS9)", async ({ page, context }) => {
-      // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Test Hearing List for Happy Path"
-        },
-        trackedArtefactIds
-      );
+  test("complete flat file viewing journey with download, headers, accessibility, Welsh, and keyboard navigation", async ({ page, context }) => {
+    // Create unique location for this test
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Flat File Journey Court" });
 
-      // Act: Navigate directly to the flat file viewer page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
+    // STEP 1: Create test artefact and navigate to viewer
+    const artefactId = await createFlatFileArtefact(
+      {
+        locationId: testLocation.locationId.toString(),
+        fileContent: "Test Hearing List for Journey"
+      },
+      createdArtefactIds
+    );
 
-      // Verify page loaded successfully (not an error page)
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).not.toBeVisible();
+    await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
+    await page.waitForLoadState("domcontentloaded");
 
-      // Verify PDF viewer is present
-      const pdfObject = page.locator('object[type="application/pdf"]');
-      await expect(pdfObject).toBeVisible();
-      await expect(pdfObject).toHaveAttribute("data", `/api/flat-file/${artefactId}/download`);
+    // Verify page loaded successfully (not an error page)
+    const errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).not.toBeVisible();
 
-      // TS1: Test opening in new tab by using window.open
-      const [newPage] = await Promise.all([
-        context.waitForEvent("page"),
-        // Simulate opening viewer page in new tab
-        page.evaluate((url) => window.open(url, "_blank"), `/hearing-lists/${testLocationId}/${artefactId}`)
-      ]);
+    // STEP 2: Verify PDF viewer is present and displays inline
+    const pdfObject = page.locator('object[type="application/pdf"]');
+    await expect(pdfObject).toBeVisible();
+    await expect(pdfObject).toHaveAttribute("data", `/api/flat-file/${artefactId}/download`);
 
-      await newPage.waitForLoadState("domcontentloaded");
+    // Verify page title includes court name and list type
+    await expect(page).toHaveTitle(/.*Crown Daily List.*/);
 
-      // TS2: Verify PDF displays inline in browser
-      const pageUrl = newPage.url();
-      expect(pageUrl).toContain(`/hearing-lists/${testLocationId}/${artefactId}`);
+    // STEP 3: Verify download link is present
+    const downloadLink = page.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
+    await expect(downloadLink).toBeVisible();
+    await expect(downloadLink).toContainText(/download/i);
+    await expect(downloadLink).toHaveAttribute("download", "");
 
-      // Verify page title includes court name and list type
-      await expect(newPage).toHaveTitle(/.*Crown Daily List.*/);
+    // STEP 4: Test opening in new tab
+    const [newPage] = await Promise.all([
+      context.waitForEvent("page"),
+      page.evaluate((url) => window.open(url, "_blank"), `/hearing-lists/${testLocation.locationId}/${artefactId}`)
+    ]);
 
-      // Verify download link is present
-      const downloadLink = newPage.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
-      await expect(downloadLink).toBeVisible();
-      await expect(downloadLink).toContainText(/download/i);
+    await newPage.waitForLoadState("domcontentloaded");
 
-      // Verify PDF viewer object is present in new tab
-      const newPagePdfObject = newPage.locator('object[type="application/pdf"]');
-      await expect(newPagePdfObject).toBeVisible();
-      await expect(newPagePdfObject).toHaveAttribute("data", `/api/flat-file/${artefactId}/download`);
+    // Verify PDF displays inline in new tab
+    const pageUrl = newPage.url();
+    expect(pageUrl).toContain(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
 
-      // TS9: Run accessibility checks on viewer page
-      const accessibilityScanResults = await new AxeBuilder({ page: newPage })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
+    // Verify PDF viewer object is present in new tab
+    const newPagePdfObject = newPage.locator('object[type="application/pdf"]');
+    await expect(newPagePdfObject).toBeVisible();
+    await expect(newPagePdfObject).toHaveAttribute("data", `/api/flat-file/${artefactId}/download`);
 
-      if (accessibilityScanResults.violations.length > 0) {
-        console.log("Accessibility violations found:");
-        accessibilityScanResults.violations.forEach((violation) => {
-          console.log(`- ${violation.id}: ${violation.description}`);
-          console.log(`  Impact: ${violation.impact}`);
-          console.log(`  Affected nodes: ${violation.nodes.length}`);
-          violation.nodes.forEach((node) => {
-            console.log(`    ${node.target}`);
-          });
-        });
-      }
+    // STEP 5: Run accessibility checks on viewer page
+    let accessibilityScanResults = await new AxeBuilder({ page: newPage })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .disableRules(["target-size", "link-name"])
+      .analyze();
 
-      expect(accessibilityScanResults.violations).toEqual([]);
+    expect(accessibilityScanResults.violations).toEqual([]);
 
-      await newPage.close();
+    await newPage.close();
+
+    // STEP 6: Test PDF download with correct headers
+    const baseUrl = process.env.CATH_SERVICE_WEB_URL || "https://localhost:8080";
+    const response = await page.request.get(`${baseUrl}/api/flat-file/${artefactId}/download`, {
+      ignoreHTTPSErrors: true
     });
 
-    test("should serve PDF with correct Content-Type and Content-Disposition headers (TS2, TS8)", async ({ page }) => {
-      // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Test PDF for Headers"
-        },
-        trackedArtefactIds
-      );
+    expect(response.status()).toBe(200);
 
-      // Act: Make request to download endpoint
-      const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
-        ignoreHTTPSErrors: true
-      });
+    const contentType = response.headers()["content-type"];
+    expect(contentType).toBe("application/pdf");
 
-      // Assert: Verify response status and headers
-      expect(response.status()).toBe(200);
+    const contentDisposition = response.headers()["content-disposition"];
+    expect(contentDisposition).toContain("inline");
+    expect(contentDisposition).toContain(`${artefactId}.pdf`);
 
-      const contentType = response.headers()["content-type"];
-      expect(contentType).toBe("application/pdf");
+    const cacheControl = response.headers()["cache-control"];
+    expect(cacheControl).toBe("private, max-age=0, no-cache, no-store, must-revalidate");
 
-      const contentDisposition = response.headers()["content-disposition"];
-      expect(contentDisposition).toContain("inline");
-      expect(contentDisposition).toContain(`${artefactId}.pdf`);
+    // STEP 7: Test Welsh language support on viewer page
+    await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}?lng=cy`);
+    await page.waitForLoadState("domcontentloaded");
 
-      const cacheControl = response.headers()["cache-control"];
-      expect(cacheControl).toBe("private, max-age=0, no-cache, no-store, must-revalidate");
-    });
+    // Verify Welsh download link text
+    const welshDownloadLink = page.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
+    await expect(welshDownloadLink).toBeVisible();
+    await expect(welshDownloadLink).toContainText(/lawrlwytho/i);
 
-    test("should allow downloading PDF file (TS3)", async ({ page, context }) => {
-      // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Test PDF for Download"
-        },
-        trackedArtefactIds
-      );
+    // STEP 8: Test keyboard navigation on viewer page (still on Welsh page)
+    await welshDownloadLink.focus();
+    await expect(welshDownloadLink).toBeFocused();
 
-      // Act: Navigate to flat file viewer page
-      const viewerPage = await context.newPage();
-      await viewerPage.goto(`https://localhost:8080/hearing-lists/${testLocationId}/${artefactId}`, {
-        waitUntil: "domcontentloaded"
-      });
+    // STEP 9: Full user journey from landing page (reset to English)
+    await page.goto("/?lng=en");
+    await expect(page).toHaveTitle(/Court and tribunal hearings/);
 
-      // Find and verify download link
-      const downloadLink = viewerPage.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
-      await expect(downloadLink).toBeVisible();
-      await expect(downloadLink).toHaveAttribute("download", "");
+    // Click continue button
+    const continueButtonLanding = page.getByRole("button", { name: /continue/i });
+    await continueButtonLanding.click();
 
-      // Verify download link is functional by checking the response
-      const response = await viewerPage.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
-        ignoreHTTPSErrors: true
-      });
+    // Select SJP view option
+    await expect(page).toHaveURL("/view-option");
+    const sjpRadio = page.getByRole("radio", { name: /single justice procedure/i });
+    await sjpRadio.check();
+    await page.getByRole("button", { name: /continue/i }).click();
 
-      expect(response.status()).toBe(200);
-      expect(response.headers()["content-type"]).toBe("application/pdf");
+    // Verify summary of publications page loads
+    await expect(page).toHaveURL(/\/summary-of-publications/);
+    await expect(page.locator("h1")).toContainText(/What do you want to view/i);
 
-      await viewerPage.close();
-    });
+    // Navigate to flat file viewer
+    await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    // Verify viewer loaded successfully
+    expect(page.url()).toContain(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
+    await expect(page.locator('object[type="application/pdf"]')).toBeVisible();
+
+    // Final accessibility check
+    accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .disableRules(["target-size", "link-name"])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test.describe("Error Handling - Expired Files", () => {
-    test("should show error message when file has expired (displayTo in past) (TS4)", async ({ page }) => {
-      // Arrange: Create expired artefact
-      const artefactId = randomUUID();
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          displayFrom: twoDaysAgo,
-          displayTo: yesterday, // Expired
-          fileContent: "Expired File"
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify 410 Gone status and error message
-      // Note: Playwright doesn't expose HTTP status directly, so we check for error page content
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      const errorTitle = page.locator("h1.govuk-heading-l");
-      await expect(errorTitle).toBeVisible();
-      await expect(errorTitle).toContainText(/file not available/i);
-
-      const errorMessage = page.locator(".govuk-error-summary__body");
-      await expect(errorMessage).toBeVisible();
-      await expect(errorMessage).toContainText(/not available or has expired/i);
-
-      // Verify back button is present
-      const backButton = page.locator("a.govuk-button", { hasText: /back/i });
-      await expect(backButton).toBeVisible();
-    });
-
-    test("should show error message when file not yet available (displayFrom in future)", async ({ page }) => {
-      // Arrange: Create future artefact
-      const artefactId = randomUUID();
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          displayFrom: tomorrow, // Not yet available
-          displayTo: nextWeek,
-          fileContent: "Future File"
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify error message
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      const errorMessage = page.locator(".govuk-error-summary__body");
-      await expect(errorMessage).toBeVisible();
-      await expect(errorMessage).toContainText(/not available or has expired/i);
-    });
-  });
-
-  test.describe("Error Handling - Missing Files", () => {
-    test("should show error message when file missing from storage (TS5)", async ({ page }) => {
-      // Arrange: Create artefact without file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          createFile: false // Don't create file in storage
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify 404 Not Found status and error message
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      const errorTitle = page.locator("h1.govuk-heading-l");
-      await expect(errorTitle).toBeVisible();
-      await expect(errorTitle).toContainText(/file not available/i);
-
-      // Check error summary list item
-      const errorSummaryList = page.locator(".govuk-error-summary__list");
-      await expect(errorSummaryList).toBeVisible();
-      await expect(errorSummaryList).toContainText(/could not load the hearing list file/i);
-
-      // Verify back button is present
-      const backButton = page.locator("a.govuk-button", { hasText: /back/i });
-      await expect(backButton).toBeVisible();
-    });
-
-    test("should show error message when artefact does not exist", async ({ page }) => {
-      // Arrange: Use non-existent artefact ID (valid UUID format that doesn't exist)
-      const artefactId = "00000000-0000-0000-0000-000000000000";
-
-      // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify 404 error message
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      const errorMessage = page.locator(".govuk-error-summary__body");
-      await expect(errorMessage).toBeVisible();
-      await expect(errorMessage).toContainText(/not available or has expired/i);
-    });
-
-    test("should show error message when locationId does not match artefact", async ({ page }) => {
-      // Arrange: Create artefact with one location
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Location Mismatch Test"
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Try to access with different locationId
-      const wrongLocationId = "9001";
-      await page.goto(`/hearing-lists/${wrongLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify 404 error message (security: don't reveal artefact exists)
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      const errorMessage = page.locator(".govuk-error-summary__body");
-      await expect(errorMessage).toBeVisible();
-      await expect(errorMessage).toContainText(/not available or has expired/i);
-    });
-  });
-
-  test.describe("Error Handling - Not Flat File", () => {
-    test("should show error message when artefact is not a flat file", async ({ page }) => {
-      // Arrange: Create artefact with isFlatFile=false
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          isFlatFile: false, // Not a flat file
-          createFile: false
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to flat file URL
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify error message
-      const errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      // Check error summary list item
-      const errorSummaryList = page.locator(".govuk-error-summary__list");
-      await expect(errorSummaryList).toBeVisible();
-      await expect(errorSummaryList).toContainText(/not available as a file/i);
-    });
-  });
-
-  test.describe("Navigation - Back Button", () => {
-    test("should return to previous page when back button is clicked (TS6)", async ({ page }) => {
-      // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          createFile: false // Don't create file to trigger error
-        },
-        trackedArtefactIds
-      );
-
-      // Act: First establish session by visiting summary page
-      await page.goto("/view-option");
-      const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
-      await sjpCaseRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
-      // Verify we're on summary page (establishes session)
-      await expect(page).toHaveURL(/\/summary-of-publications/);
-      await page.waitForLoadState("networkidle");
-
-      // Now navigate directly to the error page (file doesn't exist)
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("networkidle");
-
-      // Verify error page is shown
-      await expect(page.locator("h1")).toContainText(/not available|error/i);
-
-      // Find and verify back button (more specific selector to avoid matching "feedback")
-      const backButton = page.locator("a.govuk-button").filter({ hasText: /^back/i });
-      await expect(backButton).toBeVisible();
-
-      // Verify back button links to summary of publications with locationId parameter
-      const backHref = await backButton.getAttribute("href");
-      expect(backHref).toMatch(/\/summary-of-publications\?locationId=\d+/);
-
-      // Click the back button and verify navigation
-      await backButton.click();
-      await expect(page).toHaveURL(/\/summary-of-publications\?locationId=\d+/);
-    });
-  });
-
-  test.describe("Welsh Language Support", () => {
-    test("should display Welsh error messages when lng=cy is set (TS7)", async ({ page }) => {
-      // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          createFile: false // Don't create file to trigger error
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to flat file URL with Welsh language parameter
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify Welsh error messages
-      const errorTitle = page.locator("h1.govuk-heading-l");
-      await expect(errorTitle).toBeVisible();
-      await expect(errorTitle).toContainText(/ffeil ddim ar gael/i);
-
-      // Check error summary list item for Welsh text
-      const errorSummaryList = page.locator(".govuk-error-summary__list");
-      await expect(errorSummaryList).toBeVisible();
-      await expect(errorSummaryList).toContainText(/ni allwn lwytho/i);
-
-      const backButton = page.locator("a.govuk-button", { hasText: /ôl/i });
-      await expect(backButton).toBeVisible();
-    });
-
-    test("should display Welsh content in viewer page when file exists", async ({ page }) => {
-      // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Test Welsh Viewer"
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to viewer page with Welsh language
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}?lng=cy`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify Welsh download link text
-      const downloadLink = page.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
-      await expect(downloadLink).toBeVisible();
-      await expect(downloadLink).toContainText(/lawrlwytho/i);
-    });
-  });
-
-  test.describe("Accessibility - Error Page", () => {
-    test("should meet WCAG 2.2 AA standards on error page (TS9)", async ({ page }) => {
-      // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          createFile: false
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to error page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Run accessibility checks
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
-
-      if (accessibilityScanResults.violations.length > 0) {
-        console.log("Accessibility violations found on error page:");
-        accessibilityScanResults.violations.forEach((violation) => {
-          console.log(`- ${violation.id}: ${violation.description}`);
-          console.log(`  Impact: ${violation.impact}`);
-          console.log(`  Affected nodes: ${violation.nodes.length}`);
-          violation.nodes.forEach((node) => {
-            console.log(`    ${node.target}`);
-          });
-        });
-      }
-
-      expect(accessibilityScanResults.violations).toEqual([]);
-    });
-  });
-
-  test.describe("Keyboard Navigation", () => {
-    test("should support keyboard navigation on error page (TS10)", async ({ page }) => {
-      // Arrange: Create missing file scenario
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          createFile: false
-        },
-        trackedArtefactIds
-      );
-
-      // Act: First establish session by visiting summary page
-      await page.goto("/view-option");
-      const sjpCaseRadio = page.getByRole("radio", { name: /single justice procedure/i });
-      await sjpCaseRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
-      // Verify we're on summary page (establishes session)
-      await expect(page).toHaveURL(/\/summary-of-publications/);
-      await page.waitForLoadState("networkidle");
-
-      // Now navigate directly to the error page (file doesn't exist)
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("networkidle");
-
-      // Verify error page elements are keyboard accessible (specific selector to avoid matching "feedback")
-      const backButton = page.locator("a.govuk-button").filter({ hasText: /^back/i });
-      await expect(backButton).toBeVisible();
-
-      // Test Tab navigation to back button
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-
-      // Find focused element
-      const focusedElement = page.locator(":focus");
-      await expect(focusedElement).toBeVisible();
-
-      // Verify back button can be activated with keyboard
-      await backButton.focus();
-      await expect(backButton).toBeFocused();
-
-      // Test Enter key activation - should navigate to summary of publications with locationId
-      await page.keyboard.press("Enter");
-      await expect(page).toHaveURL(/\/summary-of-publications\?locationId=/);
-    });
-
-    test("should support keyboard navigation on viewer page", async ({ page }) => {
-      // Arrange: Create test artefact and file
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Test Keyboard Viewer"
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Navigate to viewer page
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Verify download link is keyboard accessible
-      const downloadLink = page.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
-      await expect(downloadLink).toBeVisible();
-
-      // Test keyboard focus
-      await downloadLink.focus();
-      await expect(downloadLink).toBeFocused();
-    });
-  });
-
-  test.describe("Invalid Requests", () => {
-    test("should show error message when artefactId is missing", async ({ page }) => {
-      // Act: Navigate to URL without artefactId
-      await page.goto(`/hearing-lists/${testLocationId}/`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify error message (likely 404 from Express)
-      // The actual behavior depends on routing configuration
-      const statusText = await page.evaluate(() => document.title);
-      expect(statusText).toBeTruthy();
-    });
-
-    test("should show error message when locationId is missing", async ({ page }) => {
-      // Act: Navigate to URL without locationId
-      const artefactId = "test-artefact";
-      await page.goto(`/hearing-lists//${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Assert: Verify error message
-      const statusText = await page.evaluate(() => document.title);
-      expect(statusText).toBeTruthy();
-    });
-  });
-
-  test.describe("Content-Type Headers for Multiple File Types", () => {
-    test("should serve PDF with application/pdf Content-Type (TS8)", async ({ page }) => {
-      // Arrange: Create test PDF
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "PDF Content Type Test"
-        },
-        trackedArtefactIds
-      );
-
-      // Act: Request file
-      const response = await page.request.get(`https://localhost:8080/api/flat-file/${artefactId}/download`, {
-        ignoreHTTPSErrors: true
-      });
-
-      // Assert: Verify Content-Type
-      expect(response.status()).toBe(200);
-      expect(response.headers()["content-type"]).toBe("application/pdf");
-    });
-  });
-
-  test.describe("Full User Journey", () => {
-    test("should complete full journey from landing page to viewing flat file", async ({ page }) => {
-      // Arrange: Create test flat file artefact
-      const artefactId = randomUUID();
-      await createFlatFileArtefact(
-        {
-          artefactId,
-          locationId: testLocationId,
-          fileContent: "Full Journey Test"
-        },
-        trackedArtefactIds
-      );
-
-      // Step 1: Start at landing page
-      await page.goto("/");
-      await expect(page).toHaveTitle(/Court and tribunal hearings/);
-
-      // Step 2: Click continue button
-      const continueButtonLanding = page.getByRole("button", { name: /continue/i });
-      await continueButtonLanding.click();
-
-      // Step 3: Select view option (SJP)
-      await expect(page).toHaveURL("/view-option");
-      const sjpRadio = page.getByRole("radio", { name: /single justice procedure/i });
-      await sjpRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
-
-      // Step 4: Verify summary of publications page loads
-      await expect(page).toHaveURL(/\/summary-of-publications/);
-      await expect(page.locator("h1")).toContainText(/What do you want to view/i);
-
-      // Step 5: Navigate directly to the flat file viewer
-      // (Note: The summary page shows non-flat-file artefacts, so we navigate directly)
-      await page.goto(`/hearing-lists/${testLocationId}/${artefactId}`);
-      await page.waitForLoadState("domcontentloaded");
-
-      // Step 6: Verify flat file viewer loaded successfully
-      expect(page.url()).toContain(`/hearing-lists/${testLocationId}/${artefactId}`);
-
-      // Verify page title includes court name and list type
-      await expect(page).toHaveTitle(/.*Crown Daily List.*/);
-
-      // Verify PDF viewer is present
-      const pdfObject = page.locator('object[type="application/pdf"]');
-      await expect(pdfObject).toBeVisible();
-      await expect(pdfObject).toHaveAttribute("data", `/api/flat-file/${artefactId}/download`);
-
-      // Verify download link is present
-      const downloadLink = page.locator(`a[href="/api/flat-file/${artefactId}/download"]`);
-      await expect(downloadLink).toBeVisible();
-    });
+  test("error handling journey - expired, missing, invalid files with accessibility, Welsh, and navigation", async ({ page }) => {
+    // Create unique locations for different error scenarios
+    const [expiredLocation, futureLocation, missingFileLocation, mismatchLocation, wrongLocation, notFlatFileLocation] = await Promise.all([
+      createUniqueTestLocation({ namePrefix: "Expired File Court" }),
+      createUniqueTestLocation({ namePrefix: "Future File Court" }),
+      createUniqueTestLocation({ namePrefix: "Missing File Court" }),
+      createUniqueTestLocation({ namePrefix: "Mismatch Court" }),
+      createUniqueTestLocation({ namePrefix: "Wrong Court" }),
+      createUniqueTestLocation({ namePrefix: "Not Flat File Court" })
+    ]);
+
+    // STEP 1: Test expired file (displayTo in past)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    const expiredArtefactId = await createFlatFileArtefact(
+      {
+        locationId: expiredLocation.locationId.toString(),
+        displayFrom: twoDaysAgo,
+        displayTo: yesterday, // Expired
+        fileContent: "Expired File"
+      },
+      createdArtefactIds
+    );
+
+    await page.goto(`/hearing-lists/${expiredLocation.locationId}/${expiredArtefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    // Verify expired file error message
+    let errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    let errorTitle = page.locator("h1.govuk-heading-l");
+    await expect(errorTitle).toBeVisible();
+    await expect(errorTitle).toContainText(/file not available/i);
+
+    let errorMessage = page.locator(".govuk-error-summary__body");
+    await expect(errorMessage).toBeVisible();
+    await expect(errorMessage).toContainText(/not available or has expired/i);
+
+    // Verify back button is present
+    let backButton = page.locator("a.govuk-button", { hasText: /back/i });
+    await expect(backButton).toBeVisible();
+
+    // STEP 2: Test future file (displayFrom in future)
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const futureArtefactId = await createFlatFileArtefact(
+      {
+        locationId: futureLocation.locationId.toString(),
+        displayFrom: tomorrow, // Not yet available
+        displayTo: nextWeek,
+        fileContent: "Future File"
+      },
+      createdArtefactIds
+    );
+
+    await page.goto(`/hearing-lists/${futureLocation.locationId}/${futureArtefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    errorMessage = page.locator(".govuk-error-summary__body");
+    await expect(errorMessage).toContainText(/not available or has expired/i);
+
+    // STEP 3: Test missing file from storage
+    const missingArtefactId = await createFlatFileArtefact(
+      {
+        locationId: missingFileLocation.locationId.toString(),
+        createFile: false // Don't create file in storage
+      },
+      createdArtefactIds
+    );
+
+    await page.goto(`/hearing-lists/${missingFileLocation.locationId}/${missingArtefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    errorTitle = page.locator("h1.govuk-heading-l");
+    await expect(errorTitle).toContainText(/file not available/i);
+
+    const errorSummaryList = page.locator(".govuk-error-summary__list");
+    await expect(errorSummaryList).toBeVisible();
+    await expect(errorSummaryList).toContainText(/could not load the hearing list file/i);
+
+    // STEP 4: Test non-existent artefact
+    const nonExistentArtefactId = "00000000-0000-0000-0000-000000000000";
+    await page.goto(`/hearing-lists/${missingFileLocation.locationId}/${nonExistentArtefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    errorMessage = page.locator(".govuk-error-summary__body");
+    await expect(errorMessage).toContainText(/not available or has expired/i);
+
+    // STEP 5: Test location ID mismatch (security)
+    const mismatchArtefactId = await createFlatFileArtefact(
+      {
+        locationId: mismatchLocation.locationId.toString(),
+        fileContent: "Location Mismatch Test"
+      },
+      createdArtefactIds
+    );
+
+    // Try to access with different locationId - should fail
+    await page.goto(`/hearing-lists/${wrongLocation.locationId}/${mismatchArtefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    errorMessage = page.locator(".govuk-error-summary__body");
+    await expect(errorMessage).toContainText(/not available or has expired/i);
+
+    // STEP 6: Test non-flat file artefact
+    const notFlatFileArtefactId = await createFlatFileArtefact(
+      {
+        locationId: notFlatFileLocation.locationId.toString(),
+        isFlatFile: false, // Not a flat file
+        createFile: false
+      },
+      createdArtefactIds
+    );
+
+    await page.goto(`/hearing-lists/${notFlatFileLocation.locationId}/${notFlatFileArtefactId}`);
+    await page.waitForLoadState("domcontentloaded");
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    const notFlatFileErrorList = page.locator(".govuk-error-summary__list");
+    await expect(notFlatFileErrorList).toBeVisible();
+    await expect(notFlatFileErrorList).toContainText(/not available as a file/i);
+
+    // STEP 7: Run accessibility checks on error page
+    let accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .disableRules(["target-size", "link-name"])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // STEP 8: Test Welsh error messages
+    await page.goto(`/hearing-lists/${missingFileLocation.locationId}/${missingArtefactId}?lng=cy`);
+    await page.waitForLoadState("domcontentloaded");
+
+    errorTitle = page.locator("h1.govuk-heading-l");
+    await expect(errorTitle).toBeVisible();
+    await expect(errorTitle).toContainText(/ffeil ddim ar gael/i);
+
+    const welshErrorSummaryList = page.locator(".govuk-error-summary__list");
+    await expect(welshErrorSummaryList).toContainText(/ni allwn lwytho/i);
+
+    const welshBackButton = page.locator("a.govuk-button", { hasText: /ôl/i });
+    await expect(welshBackButton).toBeVisible();
+
+    // STEP 9: Test keyboard navigation on error page (switch back to English)
+    await page.goto(`/hearing-lists/${missingFileLocation.locationId}/${missingArtefactId}?lng=en`);
+    await page.waitForLoadState("networkidle");
+
+    // Verify error page elements are keyboard accessible
+    backButton = page.locator("a.govuk-button").filter({ hasText: /^back/i });
+    await expect(backButton).toBeVisible();
+
+    // Verify back button links to summary of publications with locationId parameter
+    const backHref = await backButton.getAttribute("href");
+    expect(backHref).toMatch(/\/summary-of-publications\?locationId=\d+/);
+
+    // Test Tab navigation and Enter key activation
+    await backButton.focus();
+    await expect(backButton).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/summary-of-publications\?locationId=/);
+
+    // STEP 10: Final accessibility check
+    accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .disableRules(["target-size", "link-name"])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

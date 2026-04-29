@@ -21,6 +21,12 @@ vi.mock("node:fs", async () => {
   };
 });
 
+// Mock location seeding to avoid prisma calls
+vi.mock("@hmcts/location", () => ({
+  seedLocationData: vi.fn(() => Promise.resolve()),
+  seedListTypes: vi.fn(() => Promise.resolve())
+}));
+
 // Mock the app creation to avoid actually starting a server
 vi.mock("./app.js", () => ({
   createApp: vi.fn(async () => {

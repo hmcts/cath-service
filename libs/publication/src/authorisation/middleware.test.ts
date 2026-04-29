@@ -1,31 +1,20 @@
 import type { UserProfile } from "@hmcts/auth";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sensitivity } from "../sensitivity.js";
 import { requirePublicationAccess, requirePublicationDataAccess } from "./middleware.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
     }
   }
-}));
-
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      listType: "test-list",
-      englishFriendlyName: "Test List",
-      welshFriendlyName: "Rhestr Prawf",
-      jsonSchema: {},
-      provenance: "CFT_IDAM",
-      urlPath: "/test"
-    }
-  ]
 }));
 
 const createMockRequest = (params: Record<string, string>, user?: UserProfile): Partial<Request> => ({
@@ -163,7 +152,14 @@ describe("requirePublicationAccess", () => {
       noMatch: false
     };
 
+    const listType = {
+      id: 1,
+      allowedProvenance: "CFT_IDAM",
+      isNonStrategic: false
+    };
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(listType as any);
 
     const user: UserProfile = {
       id: "user-1",
@@ -199,7 +195,14 @@ describe("requirePublicationAccess", () => {
       noMatch: false
     };
 
+    const listType = {
+      id: 1,
+      allowedProvenance: "CFT_IDAM",
+      isNonStrategic: false
+    };
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(listType as any);
 
     const user: UserProfile = {
       id: "user-1",
@@ -235,7 +238,14 @@ describe("requirePublicationAccess", () => {
       noMatch: false
     };
 
+    const listType = {
+      id: 1,
+      allowedProvenance: "CFT_IDAM",
+      isNonStrategic: false
+    };
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(listType as any);
 
     const user: UserProfile = {
       id: "user-1",
@@ -398,7 +408,14 @@ describe("requirePublicationDataAccess", () => {
       noMatch: false
     };
 
+    const listType = {
+      id: 1,
+      allowedProvenance: "CFT_IDAM",
+      isNonStrategic: false
+    };
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(listType as any);
 
     const user: UserProfile = {
       id: "user-1",
@@ -447,7 +464,14 @@ describe("requirePublicationDataAccess", () => {
       noMatch: false
     };
 
+    const listType = {
+      id: 1,
+      allowedProvenance: "CFT_IDAM",
+      isNonStrategic: false
+    };
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(listType as any);
 
     const user: UserProfile = {
       id: "user-1",
@@ -483,7 +507,14 @@ describe("requirePublicationDataAccess", () => {
       noMatch: false
     };
 
+    const listType = {
+      id: 1,
+      allowedProvenance: "CFT_IDAM",
+      isNonStrategic: false
+    };
+
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(listType as any);
 
     const user: UserProfile = {
       id: "user-1",
