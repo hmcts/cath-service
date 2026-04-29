@@ -180,7 +180,7 @@ export async function getArtefactSummariesByLocation(locationId: string): Promis
     }
   });
 
-  const listTypes = await prisma.listType.findMany();
+  const listTypes = (await prisma.listType.findMany()) as Array<{ id: number; friendlyName: string | null }>;
   const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
 
   return artefacts.map((artefact) => {
@@ -258,7 +258,7 @@ export async function getLocationsWithPublicationCount(): Promise<LocationWithPu
     ORDER BY l.name ASC
   `;
 
-  return result.map((row) => ({
+  return result.map((row: { location_id: number; location_name: string; publication_count: bigint }) => ({
     locationId: String(row.location_id),
     locationName: row.location_name,
     publicationCount: Number(row.publication_count)
