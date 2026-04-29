@@ -206,7 +206,13 @@ export async function createApp(): Promise<Express> {
 }
 
 const getRedisClient = async (config: { get: (key: string) => any }) => {
-  const redisClient = createClient({ url: config.get("redis.url") });
+  // process.env.REDIS_URL is set by getPropertiesVolumeSecrets before this is called.
+  // We cannot use config.get("redis.url") because the config module is a singleton that
+  // caches env vars at initialization time. Static imports in this module (e.g. @hmcts/auth)
+  // cause `config` to load before getPropertiesVolumeSecrets runs, so it caches the
+  // default localhost URL. Reading from process.env directly avoids this stale cache issue.
+  const url = process.env.REDIS_URL ?? config.get("redis.url");
+  const redisClient = createClient({ url });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));
 
   await redisClient.connect();
