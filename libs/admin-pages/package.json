@@ -13,6 +13,10 @@
     },
     "./src/assets/css/index.scss": {
       "default": "./src/assets/css/index.scss"
+    },
+    "./src/assets/js/list-type-sensitivity.js": {
+      "production": "./dist/assets/js/list-type-sensitivity.js",
+      "default": "./src/assets/js/list-type-sensitivity.ts"
     }
   },
   "scripts": {
@@ -30,12 +34,14 @@
     "express": "^5.2.0"
   },
   "dependencies": {
-    "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
+    "@hmcts/auth": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/notification": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
+    "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   },
   "devDependencies": {
@@ -43,6 +49,6 @@
     "@types/multer": "2.0.0",
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
-    "vitest": "4.1.4"
+    "vitest": "4.1.5"
   }
 }

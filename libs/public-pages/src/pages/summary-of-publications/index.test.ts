@@ -31,7 +31,7 @@ vi.mock("@hmcts/location", () => ({
 import { getLocationMetadataByLocationId } from "@hmcts/location";
 
 // Mock the postgres module
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findMany: vi.fn(() => [
@@ -62,6 +62,21 @@ vi.mock("@hmcts/postgres", () => ({
       ])
     }
   }
+}));
+
+// Mock the system-admin-pages module
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findAllListTypes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 4,
+        name: "MAGISTRATES_PUBLIC_LIST",
+        friendlyName: "Magistrates Public List",
+        welshFriendlyName: "Magistrates Public List",
+        url: "magistrates-public-list"
+      }
+    ])
+  )
 }));
 
 describe("Summary of Publications - GET handler", () => {
@@ -251,7 +266,7 @@ describe("Summary of Publications - GET handler", () => {
 
   describe("Deduplication", () => {
     it("should show only the latest publication when multiple publications have same list type, content date, and language", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
 
       // Mock data with duplicates
       const mockArtefacts = [
@@ -297,7 +312,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should keep publications with different content dates", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
 
       const mockArtefacts = [
         {
@@ -341,7 +356,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should keep publications with different languages", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
 
       const mockArtefacts = [
         {
@@ -385,7 +400,7 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should keep publications with different list types", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
 
       const mockArtefacts = [
         {

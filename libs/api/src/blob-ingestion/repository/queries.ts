@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { IngestionLog } from "./model.js";
 
 export async function createIngestionLog(log: IngestionLog): Promise<void> {

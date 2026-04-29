@@ -4,7 +4,6 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "pretest:e2e": "cd .. && yarn db:generate",
     "test:e2e": "node run-with-credentials.js --grep-invert \"@nightly\"",
     "test:e2e:all": "node run-with-credentials.js",
     "test:e2e:ui": "node run-with-credentials.js --ui",
@@ -19,7 +18,6 @@
     "playwright:install": "npx playwright install"
   },
   "dependencies": {
-    "@hmcts/postgres": "*",
     "dotenv": "^17.2.3"
   },
   "devDependencies": {
