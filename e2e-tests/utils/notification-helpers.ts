@@ -141,16 +141,6 @@ export async function cleanupTestSubscriptions(subscriptionIds: string[]) {
   await deleteTestSubscriptions({ searchValues: subscriptionIds });
 }
 
-export async function getLatestArtefactByLocationAndListType(locationId: number, listTypeId: number) {
-  return await prisma.artefact.findFirst({
-    where: {
-      locationId: locationId.toString(),
-      listTypeId
-    },
-    orderBy: { lastReceivedDate: "desc" }
-  });
-}
-
 export async function cleanupTestUsers(userIds: string[]) {
   if (userIds.length === 0) return;
 

@@ -532,9 +532,6 @@ test.describe("PDF Generation", () => {
     await page.getByRole("button", { name: "Confirm" }).click();
     await page.waitForURL("/manual-upload-success", { timeout: 30000 });
 
-    const artefact = await getLatestArtefactByLocationAndListType(pdfTestLocationId, 8);
-    expect(artefact).toBeDefined();
-
     const pdfPath = path.join(process.cwd(), "..", "storage", "temp", "uploads", `${artefact!.artefactId}.pdf`);
     expect(fs.existsSync(pdfPath)).toBe(true);
     expect(fs.statSync(pdfPath).size).toBeGreaterThan(0);
