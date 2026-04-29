@@ -1,5 +1,5 @@
 import { getLocationById, getLocationMetadataByLocationId } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { filterPublicationsForSummary, type ListType } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { formatDateAndLocale } from "@hmcts/web-core";

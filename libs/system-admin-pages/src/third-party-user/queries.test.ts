@@ -8,7 +8,7 @@ import {
   updateThirdPartySubscriptions
 } from "./queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     legacyThirdPartyUser: {
       findMany: vi.fn(),
@@ -24,7 +24,7 @@ vi.mock("@hmcts/postgres", () => ({
   }
 }));
 
-const { prisma } = await import("@hmcts/postgres");
+const { prisma } = await import("@hmcts/postgres-prisma");
 
 describe("findAllThirdPartyUsers", () => {
   beforeEach(() => {

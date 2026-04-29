@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { Jurisdiction, Location, Region, SubJurisdiction } from "./model.js";
 
 export type { Location };
