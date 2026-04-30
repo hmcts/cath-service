@@ -52,7 +52,7 @@
     "passport": "0.7.0",
     "pg": "8.19.0",
     "pg-format": "1.0.4",
-    "redis": "5.11.0"
+    "redis": "5.12.1"
   },
   "devDependencies": {
     "@types/config": "3.3.5",
