@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { prisma } from "@hmcts/postgres-prisma";
 import { locationData } from "./location-data.js";
 import { seedListTypes } from "./seed-list-types.js";
