@@ -1,8 +1,7 @@
-import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres-prisma";
 import { expect, test } from "@playwright/test";
-import { loginWithCftIdam } from "../utils/cft-idam-helpers.js";
+import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
+import { createTestArtefact, deleteTestArtefact, deleteTestSubscriptions, getFirstTestLocation, getListTypeByName } from "../../utils/test-support-api.js";
 
 interface TestCaseData {
   artefactId: string;
@@ -14,65 +13,38 @@ interface TestCaseData {
 const testCaseDataMap = new Map<string, TestCaseData>();
 
 async function createTestCaseData(): Promise<TestCaseData> {
-  const artefactId = randomUUID();
   const uniqueSuffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   const caseNumber = `E2E-${uniqueSuffix}`;
   const caseName = `E2E Test Case ${uniqueSuffix}`;
 
+  const listType = (await getListTypeByName("CIVIL_DAILY_CAUSE_LIST")) as { id: number };
+  if (!listType?.id) throw new Error("CIVIL_DAILY_CAUSE_LIST list type not found");
+
+  const location = (await getFirstTestLocation()) as { locationId: number };
+  if (!location?.locationId) throw new Error("No test location found");
+
   const now = new Date();
-  const displayTo = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-  // Ensure ListSearchConfig exists for listTypeId 1 (CIVIL_DAILY_CAUSE_LIST)
-  // so that searchByCaseName can find results
-  await prisma.listSearchConfig.upsert({
-    where: { listTypeId: 1 },
-    create: {
-      listTypeId: 1,
-      caseNumberFieldName: "case_number",
-      caseNameFieldName: "case_name"
-    },
-    update: {}
+  const artefact = await createTestArtefact({
+    locationId: String(location.locationId),
+    listTypeId: listType.id,
+    contentDate: now.toISOString(),
+    sensitivity: "Public",
+    language: "ENGLISH",
+    displayFrom: now.toISOString(),
+    displayTo: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    isFlatFile: false,
+    provenance: "CFT_IDAM",
+    caseNumber,
+    caseName
   });
 
-  // Create Artefact with displayFrom/displayTo window covering now
-  await prisma.artefact.create({
-    data: {
-      artefactId,
-      locationId: "1",
-      listTypeId: 1,
-      contentDate: now,
-      sensitivity: "Public",
-      language: "ENGLISH",
-      displayFrom: now,
-      displayTo,
-      isFlatFile: false,
-      provenance: "CFT_IDAM"
-    }
-  });
-
-  // Create ArtefactSearch record linked to the artefact
-  await prisma.artefactSearch.create({
-    data: {
-      artefactId,
-      caseNumber,
-      caseName
-    }
-  });
-
-  return { artefactId, caseNumber, caseName };
+  return { artefactId: artefact.artefactId, caseNumber, caseName };
 }
 
 async function deleteTestCaseData(data: TestCaseData): Promise<void> {
   try {
-    // Delete subscriptions created for this test case
-    await prisma.subscription.deleteMany({
-      where: { caseNumber: data.caseNumber }
-    });
-
-    // Deleting the artefact cascades to artefactSearch
-    await prisma.artefact.deleteMany({
-      where: { artefactId: data.artefactId }
-    });
+    await deleteTestSubscriptions({ searchValues: [data.caseName, data.caseNumber] });
+    await deleteTestArtefact(data.artefactId);
   } catch (error) {
     console.log("Test case data cleanup:", error);
   }

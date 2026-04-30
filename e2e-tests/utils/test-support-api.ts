@@ -58,6 +58,8 @@ interface CreateArtefactInput {
   displayTo?: string;
   isFlatFile?: boolean;
   provenance?: string;
+  caseNumber?: string;
+  caseName?: string;
 }
 
 interface CreateArtefactResponse {
