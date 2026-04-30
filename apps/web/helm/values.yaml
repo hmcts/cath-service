@@ -12,6 +12,7 @@ nodejs:
     POSTGRES_DATABASE: cath
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
     CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+    CRIME_IDAM_BASE_URL: https://login.sit.cjscp.org.uk
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY: ebc08910-5dd5-44c5-b3fc-72f90935f858
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY: bf0802f9-3199-4774-a0c1-f9cb1755ff8f

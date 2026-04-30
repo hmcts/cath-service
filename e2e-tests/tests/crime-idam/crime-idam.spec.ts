@@ -69,7 +69,7 @@ test.describe("Crime IDAM", () => {
     await expect(page).toHaveURL(/\/sign-in\?error=invalid_state/);
   });
 
-  test("language parameter is preserved through Crime IDAM redirect", async ({ page }) => {
+  test("language parameter is preserved through Crime IDAM redirect @nightly", async ({ page }) => {
     await page.goto("/sign-in?lng=cy");
 
     await expect(page.getByRole("heading", { name: /sut hoffech chi fewngofnodi/i })).toBeVisible();
