@@ -20,7 +20,7 @@
 
     <h1 class="govuk-heading-l">{{ heading }}</h1>
 
-    {% if locationRows | length == 0 %}
+    {% if locationRows | length == 0 and confirmedCaseSubscriptions | length == 0 %}
       {{ govukErrorSummary({
         titleText: errors.titleText,
         errorList: errors.errorList
@@ -30,6 +30,53 @@
           text: addSubscriptionsButton
         }) }}
       </form>
+    {% elif locationRows | length == 0 %}
+
+      <style nonce="{{ cspNonce }}">
+        .govuk-table__cell, .govuk-table__header {
+          padding-bottom: 0 !important;
+        }
+      </style>
+
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
+            <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for sub in confirmedCaseSubscriptions %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ sub.caseName }}</td>
+              <td class="govuk-table__cell">{{ sub.caseNumber }}</td>
+              <td class="govuk-table__cell govuk-!-text-align-right">
+                <form method="post" style="display: inline;">
+                  <input type="hidden" name="action" value="remove-case-subscription">
+                  <input type="hidden" name="caseIndex" value="{{ loop.index0 }}">
+                  <button type="submit" class="govuk-link govuk-body" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
+                    {{ removeLink }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <p class="govuk-body">
+        <a href="/add-email-subscription" class="govuk-link">{{ addAnotherLink }}</a>
+      </p>
+
+      <form method="post" novalidate>
+        <input type="hidden" name="action" value="confirm">
+        {{ govukButton({
+          text: confirmButton,
+          type: "submit"
+        }) }}
+      </form>
+
     {% else %}
 
       {% if errors %}
@@ -44,6 +91,35 @@
           padding-bottom: 0 !important;
         }
       </style>
+
+      {% if confirmedCaseSubscriptions | length > 0 %}
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
+              <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for sub in confirmedCaseSubscriptions %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ sub.caseName }}</td>
+                <td class="govuk-table__cell">{{ sub.caseNumber }}</td>
+                <td class="govuk-table__cell govuk-!-text-align-right">
+                  <form method="post" style="display: inline;">
+                    <input type="hidden" name="action" value="remove-case-subscription">
+                    <input type="hidden" name="caseIndex" value="{{ loop.index0 }}">
+                    <button type="submit" class="govuk-link govuk-body" style="background: none; border: none; padding: 0; color: #1d70b8; text-decoration: underline; cursor: pointer;">
+                      {{ removeLink }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
 
       <table class="govuk-table">
         <thead class="govuk-table__head">

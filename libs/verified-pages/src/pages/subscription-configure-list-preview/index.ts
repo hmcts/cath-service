@@ -84,9 +84,11 @@ const postHandler = async (req: Request, res: Response) => {
       return renderPage(req, res, locale);
     }
 
-    if (pendingLanguage) {
-      await replaceSubscriptionListTypes(userId, pendingListTypeIds, pendingLanguage);
+    if (!pendingLanguage) {
+      return res.redirect("/subscription-configure-list-language");
     }
+
+    await replaceSubscriptionListTypes(userId, pendingListTypeIds, pendingLanguage);
 
     if (!req.session.emailSubscriptions) {
       req.session.emailSubscriptions = {};

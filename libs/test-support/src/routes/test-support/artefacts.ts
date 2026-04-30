@@ -2,6 +2,11 @@ import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 import type { CreateArtefactInput } from "../../types.js";
 
+interface CreateArtefactWithSearchInput extends CreateArtefactInput {
+  caseNumber?: string;
+  caseName?: string;
+}
+
 export const GET = async (req: Request, res: Response) => {
   try {
     const { locationId, provenance } = req.query;
@@ -21,7 +26,7 @@ export const GET = async (req: Request, res: Response) => {
 
 export const POST = async (req: Request, res: Response) => {
   try {
-    const input = req.body as CreateArtefactInput;
+    const input = req.body as CreateArtefactWithSearchInput;
 
     if (!input.locationId || !input.listTypeId || !input.contentDate) {
       return res.status(400).json({
@@ -45,6 +50,26 @@ export const POST = async (req: Request, res: Response) => {
         provenance: input.provenance || "MANUAL_UPLOAD"
       }
     });
+
+    if (input.caseNumber || input.caseName) {
+      await prisma.listSearchConfig.upsert({
+        where: { listTypeId: input.listTypeId },
+        create: {
+          listTypeId: input.listTypeId,
+          caseNumberFieldName: "case_number",
+          caseNameFieldName: "case_name"
+        },
+        update: {}
+      });
+
+      await prisma.artefactSearch.create({
+        data: {
+          artefactId: artefact.artefactId,
+          caseNumber: input.caseNumber ?? "",
+          caseName: input.caseName ?? ""
+        }
+      });
+    }
 
     return res.status(201).json({
       artefactId: artefact.artefactId,

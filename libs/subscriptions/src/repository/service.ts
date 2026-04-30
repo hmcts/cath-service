@@ -2,26 +2,43 @@ import { getLocationById } from "@hmcts/location";
 import { validateLocationId } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
+  createCaseSubscriptionRecord,
   createSubscriptionRecord,
   deleteSubscriptionRecord,
   deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
+  findCaseSubscriptionsByUserId,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
+  findSubscriptionsByIds,
   findSubscriptionsByUserId,
-  findSubscriptionsWithLocationByIds,
-  findSubscriptionsWithLocationByUserId
+  findSubscriptionsWithLocationByUserId,
+  searchByCaseName,
+  searchByCaseNumber
 } from "./queries.js";
+
+export { searchByCaseName, searchByCaseNumber };
+
 import { pruneStaleListTypesForUser } from "./subscription-list-type-service.js";
 
 const MAX_SUBSCRIPTIONS = 50;
 
-interface SubscriptionDto {
+type CourtSubscriptionDto = {
   subscriptionId: string;
-  type: "court" | "case";
+  type: "court";
   courtOrTribunalName: string;
   locationId: number;
   dateAdded: Date;
-}
+};
+
+type CaseConfirmationDto = {
+  subscriptionId: string;
+  type: "case";
+  caseName: string | null;
+  caseNumber: string | null;
+  dateAdded: Date;
+};
+
+type SubscriptionDto = CourtSubscriptionDto | CaseConfirmationDto;
 
 function mapSubscriptionToDto(
   sub: {
@@ -31,7 +48,7 @@ function mapSubscriptionToDto(
   },
   location: { name: string; welshName: string; locationId: number },
   locale: string
-): SubscriptionDto {
+): CourtSubscriptionDto {
   return {
     subscriptionId: sub.subscriptionId,
     type: "court",
@@ -161,13 +178,34 @@ export async function getAllSubscriptionsByUserId(userId: string, locale = "en")
     })
   );
 
-  return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
+  return dtos.filter((dto): dto is CourtSubscriptionDto => dto !== null);
 }
 
-export async function getCaseSubscriptionsByUserId(_userId: string, _locale = "en") {
-  // Case subscriptions not yet implemented (VIBE-300)
-  // When implemented, this will query a case_subscription table
-  return [];
+interface CaseSubscriptionDto {
+  subscriptionId: string;
+  caseName: string | null;
+  caseNumber: string | null;
+  dateAdded: Date;
+}
+
+export async function getCaseSubscriptionsByUserId(userId: string, _locale = "en"): Promise<CaseSubscriptionDto[]> {
+  const subscriptions = await findCaseSubscriptionsByUserId(userId);
+  return subscriptions.map((sub) => ({
+    subscriptionId: sub.subscriptionId,
+    caseName: sub.caseName,
+    caseNumber: sub.caseNumber,
+    dateAdded: sub.dateAdded
+  }));
+}
+
+export async function createCaseSubscription(
+  userId: string,
+  searchType: "CASE_NAME" | "CASE_NUMBER",
+  searchValue: string,
+  caseName: string,
+  caseNumber: string | null
+): Promise<void> {
+  await createCaseSubscriptionRecord(userId, searchType, searchValue, caseName, caseNumber);
 }
 
 export async function getCourtSubscriptionsByUserId(userId: string, locale = "en") {
@@ -179,16 +217,26 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
     return [];
   }
 
-  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
+  const subscriptions = await findSubscriptionsByIds(subscriptionIds, userId);
 
   const dtos = await Promise.all(
-    subscriptions.map(async (sub) => {
-      const locationId = Number.parseInt(sub.searchValue, 10);
-      const location = await getLocationById(locationId);
-      if (!location) {
-        return null;
+    subscriptions.map(async (sub): Promise<SubscriptionDto | null> => {
+      if (sub.searchType === "LOCATION_ID") {
+        const locationId = Number.parseInt(sub.searchValue, 10);
+        const location = await getLocationById(locationId);
+        if (!location) {
+          return null;
+        }
+        return mapSubscriptionToDto(sub, location, locale);
       }
-      return mapSubscriptionToDto(sub, location, locale);
+
+      return {
+        subscriptionId: sub.subscriptionId,
+        type: "case",
+        caseName: sub.caseName,
+        caseNumber: sub.caseNumber,
+        dateAdded: sub.dateAdded
+      };
     })
   );
 
@@ -200,13 +248,16 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
     throw new Error("No subscriptions provided for deletion");
   }
 
-  const toDelete = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
+  const toDelete = await findSubscriptionsByIds(subscriptionIds, userId);
 
   if (toDelete.length !== subscriptionIds.length) {
     throw new Error("Unauthorized: User does not own all selected subscriptions");
   }
 
-  const removedLocationIds = toDelete.map((s) => Number.parseInt(s.searchValue, 10)).filter((id) => !Number.isNaN(id));
+  const removedLocationIds = toDelete
+    .filter((s) => s.searchType === "LOCATION_ID")
+    .map((s) => Number.parseInt(s.searchValue, 10))
+    .filter((id) => !Number.isNaN(id));
 
   const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
 

@@ -30,49 +30,47 @@ describe("template-config", () => {
 
   describe("getSubscriptionTemplateIdForListType", () => {
     it("should return PDF_AND_SUMMARY template when PDF is under 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-summary-template";
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "pdf-summary-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
       expect(getSubscriptionTemplateIdForListType(8, true, true)).toBe("pdf-summary-template");
     });
 
-    it("should return SUMMARY_ONLY template when PDF is over 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-only-template";
+    it("should return subscription template when PDF is over 2MB", async () => {
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "subscription-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(getSubscriptionTemplateIdForListType(8, true, false)).toBe("summary-only-template");
+      expect(getSubscriptionTemplateIdForListType(8, true, false)).toBe("subscription-template");
     });
 
-    it("should return SUMMARY_ONLY template when no PDF", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "summary-only-template";
+    it("should return subscription template when no PDF", async () => {
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "subscription-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(getSubscriptionTemplateIdForListType(8, false, false)).toBe("summary-only-template");
+      expect(getSubscriptionTemplateIdForListType(8, false, false)).toBe("subscription-template");
     });
 
     it("should return PDF_AND_SUMMARY template for any list type with PDF under 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "pdf-summary-template";
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "pdf-summary-template";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
       expect(getSubscriptionTemplateIdForListType(1, true, true)).toBe("pdf-summary-template");
     });
 
     it("should throw error when PDF_AND_SUMMARY template is not set", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY = "";
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
       expect(() => getSubscriptionTemplateIdForListType(1, true, true)).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY environment variable is not set"
+        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY environment variable is not set"
       );
     });
 
-    it("should throw error when SUMMARY_ONLY template is not set", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY = "";
+    it("should throw error when subscription template is not set and no PDF", async () => {
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "";
 
       const { getSubscriptionTemplateIdForListType } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateIdForListType(1, false, false)).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY environment variable is not set"
-      );
+      expect(() => getSubscriptionTemplateIdForListType(1, false, false)).toThrow("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION environment variable is not set");
     });
   });
 
@@ -136,7 +134,7 @@ describe("template-config", () => {
   });
 
   describe("buildTemplateParameters", () => {
-    it("should build template parameters correctly", async () => {
+    it("should build template parameters for a location subscription", async () => {
       process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
 
       const { buildTemplateParameters } = await import("./template-config.js");
@@ -152,8 +150,98 @@ describe("template-config", () => {
         ListType: "Civil And Family Daily Cause List",
         content_date: "20 January 2025",
         start_page_link: "https://test-service.gov.uk",
-        subscription_page_link: "https://test-service.gov.uk"
+        subscription_page_link: "https://test-service.gov.uk",
+        display_locations: "yes",
+        display_case: "no",
+        case: "",
+        display_summary: "no",
+        summary_of_cases: ""
       });
+    });
+
+    it("should build template parameters for a case subscription with location name", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildTemplateParameters } = await import("./template-config.js");
+      const result = buildTemplateParameters({
+        userName: "John Doe",
+        hearingListName: "Civil And Family Daily Cause List",
+        publicationDate: new Date("2025-01-20"),
+        locationName: "Oxford Court",
+        caseValue: "AB-1234"
+      });
+
+      expect(result).toEqual({
+        locations: "Oxford Court",
+        ListType: "Civil And Family Daily Cause List",
+        content_date: "20 January 2025",
+        start_page_link: "https://test-service.gov.uk",
+        subscription_page_link: "https://test-service.gov.uk",
+        display_locations: "yes",
+        display_case: "yes",
+        case: "AB-1234",
+        display_summary: "no",
+        summary_of_cases: ""
+      });
+    });
+
+    it("should build template parameters showing both location and case for a combined subscription", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildTemplateParameters } = await import("./template-config.js");
+      const result = buildTemplateParameters({
+        userName: "John Doe",
+        hearingListName: "Civil And Family Daily Cause List",
+        publicationDate: new Date("2025-01-20"),
+        locationName: "Oxford Court",
+        caseValue: "AB-1234"
+      });
+
+      expect(result).toEqual({
+        locations: "Oxford Court",
+        ListType: "Civil And Family Daily Cause List",
+        content_date: "20 January 2025",
+        start_page_link: "https://test-service.gov.uk",
+        subscription_page_link: "https://test-service.gov.uk",
+        display_locations: "yes",
+        display_case: "yes",
+        case: "AB-1234",
+        display_summary: "no",
+        summary_of_cases: ""
+      });
+    });
+
+    it("should not display location when locationName is empty", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildTemplateParameters } = await import("./template-config.js");
+      const result = buildTemplateParameters({
+        userName: "John Doe",
+        hearingListName: "Daily Cause List",
+        publicationDate: new Date("2025-01-20"),
+        locationName: ""
+      });
+
+      expect(result.display_locations).toBe("no");
+      expect(result.locations).toBe("");
+    });
+
+    it("should display both location and case for a case-only subscriber when locationName is present", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildTemplateParameters } = await import("./template-config.js");
+      const result = buildTemplateParameters({
+        userName: "John Doe",
+        hearingListName: "Daily Cause List",
+        publicationDate: new Date("2025-01-20"),
+        locationName: "Oxford Court",
+        caseValue: "AB-1234"
+      });
+
+      expect(result.display_locations).toBe("yes");
+      expect(result.locations).toBe("Oxford Court");
+      expect(result.display_case).toBe("yes");
+      expect(result.case).toBe("AB-1234");
     });
   });
 
@@ -176,6 +264,9 @@ describe("template-config", () => {
         content_date: "10 February 2025",
         start_page_link: "https://test-service.gov.uk",
         subscription_page_link: "https://test-service.gov.uk",
+        display_locations: "yes",
+        display_case: "no",
+        case: "",
         display_summary: "yes",
         summary_of_cases: "Case 123 - Smith v Jones"
       });
@@ -198,6 +289,25 @@ describe("template-config", () => {
       expect(result).toHaveProperty("locations");
       expect(result).toHaveProperty("ListType");
       expect(result).toHaveProperty("content_date");
+    });
+
+    it("should set display_case and case when caseValue is provided", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildEnhancedTemplateParameters } = await import("./template-config.js");
+      const result = buildEnhancedTemplateParameters({
+        userName: "Jane Smith",
+        hearingListName: "Civil And Family Daily Cause List",
+        publicationDate: new Date("2025-02-10"),
+        locationName: "Birmingham Court",
+        caseSummary: "Case 123 - Smith v Jones",
+        caseValue: "AB-123"
+      });
+
+      expect(result.display_case).toBe("yes");
+      expect(result.case).toBe("AB-123");
+      expect(result.display_summary).toBe("yes");
+      expect(result.summary_of_cases).toBe("Case 123 - Smith v Jones");
     });
   });
 });

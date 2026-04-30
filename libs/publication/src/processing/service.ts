@@ -4,9 +4,10 @@ import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-famil
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
-import { sendListTypePublicationNotifications, sendPublicationNotifications } from "@hmcts/notifications";
+import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
   en: "ENGLISH",
@@ -150,7 +151,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       });
     }
 
-    const result = await sendPublicationNotifications({
+    const result = await sendLocationAndCaseSubscriptionNotifications(artefactId, {
       publicationId: artefactId,
       locationId,
       locationName: location.name,
@@ -172,17 +173,20 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
     if (locale) {
       const language = LOCALE_TO_LANGUAGE[locale] ?? "ENGLISH";
       try {
-        const listTypeResult = await sendListTypePublicationNotifications({
-          publicationId: artefactId,
-          locationId,
-          locationName: location.name,
-          hearingListName: listTypeFriendlyName,
-          publicationDate: contentDate,
-          listTypeId,
-          language,
-          jsonData,
-          pdfFilePath
-        });
+        const listTypeResult = await sendListTypePublicationNotifications(
+          {
+            publicationId: artefactId,
+            locationId,
+            locationName: location.name,
+            hearingListName: listTypeFriendlyName,
+            publicationDate: contentDate,
+            listTypeId,
+            language,
+            jsonData,
+            pdfFilePath
+          },
+          result.notifiedUserIds
+        );
 
         if (listTypeResult.errors.length > 0) {
           const sanitizedErrors = listTypeResult.errors.map((error) => {
@@ -249,6 +253,15 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   const result: ProcessPublicationResult = {};
 
   if (jsonData) {
+    try {
+      await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+    } catch (error) {
+      console.error(`${logPrefix} Failed to extract artefact search data:`, {
+        artefactId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+
     const pdfResult = await generatePublicationPdf({
       artefactId,
       listTypeId,

@@ -1,6 +1,9 @@
 export const en = {
   title: "Confirm your email subscriptions",
   heading: "Confirm your email subscriptions",
+  tableHeaderCaseName: "Case name",
+  tableHeaderReferenceNumber: "Reference number",
+  tableHeaderCaseSubscriptions: "Subscriptions by case",
   tableHeaderCourt: "Court or tribunal name",
   tableHeaderListType: "List type",
   tableHeaderVersion: "Version",

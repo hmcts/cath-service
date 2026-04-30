@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { type Page, expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { deleteTestSubscriptions, getTestSubscriptions } from "../../utils/test-support-api.js";

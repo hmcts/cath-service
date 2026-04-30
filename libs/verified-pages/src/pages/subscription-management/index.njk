@@ -31,23 +31,20 @@
   {% if count > 0 %}
     {% set allTabHtml %}
       {% if hasCaseSubscriptions %}
-        <h2 class="govuk-heading-m">{{ tabSubscriptionsByCase }}</h2>
-        <table class="govuk-table" id="all-case-subscriptions-table">
+        <table class="govuk-table" id="all-case-subscriptions-table" style="margin-bottom: 50px;">
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
               <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
-              <th scope="col" class="govuk-table__header">{{ tableHeaderPartyName }}</th>
               <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
-              <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
-              <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 160px;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 100px;">{{ tableHeaderActions }}</th>
             </tr>
           </thead>
           <tbody class="govuk-table__body">
             {% for subscription in caseSubscriptions %}
               <tr class="govuk-table__row">
                 <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber }}</td>
                 <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
                 <td class="govuk-table__cell govuk-table__cell--numeric">
                   <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
@@ -66,17 +63,15 @@
 
       {% if hasCourtSubscriptions %}
         {{ govukButton({ text: editListTypeLink, href: '/subscription-configure-list' }) }}
-        {% if hasCaseSubscriptions %}
-          <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ tabSubscriptionsByCourt }}</h2>
-        {% endif %}
         <table class="govuk-table" id="all-court-subscriptions-table">
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
-              <th scope="col" class="govuk-table__header govuk-!-width-one-half">{{ tableHeaderLocation }}</th>
-              <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
-              <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeaderLocation }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 160px;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 100px;">{{ tableHeaderActions }}</th>
             </tr>
           </thead>
+
           <tbody class="govuk-table__body">
             {% for subscription in courtSubscriptions %}
               <tr class="govuk-table__row">
@@ -104,18 +99,16 @@
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
               <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
-              <th scope="col" class="govuk-table__header">{{ tableHeaderPartyName }}</th>
               <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
-              <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
-              <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 160px;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 100px;">{{ tableHeaderActions }}</th>
             </tr>
           </thead>
           <tbody class="govuk-table__body">
             {% for subscription in caseSubscriptions %}
               <tr class="govuk-table__row">
                 <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
+                <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber }}</td>
                 <td class="govuk-table__cell" style="white-space: nowrap; vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
                 <td class="govuk-table__cell govuk-table__cell--numeric">
                   <form method="post" action="/delete-subscription" style="display: inline; margin: 0; padding: 0;">
@@ -141,9 +134,9 @@
         <table class="govuk-table" id="court-subscriptions-table">
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
-              <th scope="col" class="govuk-table__header govuk-!-width-one-half">{{ tableHeaderLocation }}</th>
-              <th scope="col" class="govuk-table__header">{{ tableHeaderDate }}</th>
-              <th scope="col" class="govuk-table__header govuk-table__header--numeric">{{ tableHeaderActions }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeaderLocation }}</th>
+              <th scope="col" class="govuk-table__header" style="width: 160px;">{{ tableHeaderDate }}</th>
+              <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 100px;">{{ tableHeaderActions }}</th>
             </tr>
           </thead>
           <tbody class="govuk-table__body">

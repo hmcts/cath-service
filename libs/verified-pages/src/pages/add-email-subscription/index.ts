@@ -40,6 +40,14 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/location-name-search");
   }
 
+  if (subscriptionMethod === "caseName") {
+    return res.redirect("/case-name-search");
+  }
+
+  if (subscriptionMethod === "caseReference") {
+    return res.redirect("/case-reference-search");
+  }
+
   return res.redirect("/subscription-management");
 };
 

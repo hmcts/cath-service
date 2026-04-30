@@ -1,6 +1,9 @@
 export const cy = {
   title: "Cadarnhau eich tanysgrifiadau e-bost",
   heading: "Cadarnhau eich tanysgrifiadau e-bost",
+  tableHeaderCaseName: "Enw'r achos",
+  tableHeaderReferenceNumber: "Cyfeirnod",
+  tableHeaderCaseSubscriptions: "Tanysgrifiadau yn ôl achos",
   tableHeaderCourt: "Enw'r llys neu'r tribiwnlys",
   tableHeaderListType: "Math o restr",
   tableHeaderVersion: "Fersiwn",
