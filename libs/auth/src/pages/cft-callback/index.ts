@@ -1,5 +1,4 @@
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
-import { trackException } from "@hmcts/cloud-native-platform";
 import type { Request, Response } from "express";
 import { exchangeCodeForToken, extractUserInfoFromToken } from "../../cft-idam/token-client.js";
 import { getCftIdamConfig } from "../../config/cft-idam-config.js";
@@ -38,8 +37,8 @@ export const GET = async (req: Request, res: Response) => {
         role: "VERIFIED"
       });
     } catch (error) {
-      trackException(error as Error, {
-        area: "CFT callback",
+      console.error("CFT callback: failed to create/update user", {
+        error,
         userEmail: userInfo.email,
         userId: userInfo.id
       });

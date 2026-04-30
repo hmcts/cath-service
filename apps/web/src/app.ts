@@ -19,7 +19,7 @@ import {
   pageRoutes as careStandardsTribunalRoutes
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
-import { configurePropertiesVolume, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
+import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
@@ -51,8 +51,6 @@ import {
   notFoundHandler
 } from "@hmcts/web-core";
 import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
-import compression from "compression";
-import config from "config";
 import cookieParser from "cookie-parser";
 import type { Express } from "express";
 import express from "express";
@@ -63,11 +61,12 @@ const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
 
 export async function createApp(): Promise<Express> {
-  await configurePropertiesVolume(config, { chartPath });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
+  const { default: config } = await import("config");
 
   const app = express();
+  app.set("trust proxy", 1);
 
-  app.use(compression());
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(healthcheck());
@@ -80,7 +79,15 @@ export async function createApp(): Promise<Express> {
       b2cTenantName: process.env.B2C_TENANT_NAME
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient() }));
+  app.use(
+    "/assets",
+    express.static(path.join(__dirname, "../dist/assets"), {
+      setHeaders: (res) => {
+        res.removeHeader("Content-Length");
+      }
+    })
+  );
+  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -185,14 +192,27 @@ export async function createApp(): Promise<Express> {
   }
   app.use(await createSimpleRouter(adminRoutes, pageRoutes));
 
+  // Enable test-support routes in non-production environments or when explicitly enabled
+  if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
+    const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+    app.use(express.json());
+    app.use(await createSimpleRouter(testSupportRoutes));
+  }
+
   app.use(notFoundHandler());
   app.use(errorHandler());
 
   return app;
 }
 
-const getRedisClient = async () => {
-  const redisClient = createClient({ url: config.get("redis.url") });
+const getRedisClient = async (config: { get: (key: string) => any }) => {
+  // process.env.REDIS_URL is set by getPropertiesVolumeSecrets before this is called.
+  // We cannot use config.get("redis.url") because the config module is a singleton that
+  // caches env vars at initialization time. Static imports in this module (e.g. @hmcts/auth)
+  // cause `config` to load before getPropertiesVolumeSecrets runs, so it caches the
+  // default localhost URL. Reading from process.env directly avoids this stale cache issue.
+  const url = process.env.REDIS_URL ?? config.get("redis.url");
+  const redisClient = createClient({ url });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));
 
   await redisClient.connect();

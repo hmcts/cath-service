@@ -22,9 +22,8 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/auth": "workspace:*",
     "@hmcts/location": "workspace:*",
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   },
   "peerDependencies": {
     "express": "^5.2.0"

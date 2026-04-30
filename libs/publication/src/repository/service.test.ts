@@ -7,7 +7,7 @@ vi.mock("./queries.js", () => ({
   getArtefactListTypeId: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn()
@@ -17,7 +17,7 @@ vi.mock("@hmcts/postgres", () => ({
 
 vi.mock("node:fs/promises");
 
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 describe("Publication Service", () => {
   beforeEach(() => {

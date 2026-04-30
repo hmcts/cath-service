@@ -17,6 +17,9 @@
     }
   },
   "types": "./dist/roles.d.ts",
+  "dependencies": {
+    "@hmcts/postgres-prisma": "workspace:*"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

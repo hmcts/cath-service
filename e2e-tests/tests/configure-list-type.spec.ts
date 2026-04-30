@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 

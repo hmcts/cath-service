@@ -10,8 +10,15 @@ export interface ListTypeConverter {
 // Registry mapping list type IDs to their converters
 const converterRegistry = new Map<number, ListTypeConverter>();
 
+// Registry mapping list type names to their converters (used when DB ID differs from canonical ID)
+const nameConverterRegistry = new Map<string, ListTypeConverter>();
+
 export function registerConverter(listTypeId: number, converter: ListTypeConverter): void {
   converterRegistry.set(listTypeId, converter);
+}
+
+export function registerConverterByName(listTypeName: string, converter: ListTypeConverter): void {
+  nameConverterRegistry.set(listTypeName, converter);
 }
 
 export function getConverterForListType(listTypeId: number): ListTypeConverter | undefined {
@@ -22,10 +29,22 @@ export function hasConverterForListType(listTypeId: number): boolean {
   return converterRegistry.has(listTypeId);
 }
 
+export function hasConverterForListTypeName(listTypeName: string): boolean {
+  return nameConverterRegistry.has(listTypeName);
+}
+
 export async function convertExcelForListType(listTypeId: number, buffer: Buffer): Promise<unknown[]> {
   const converter = getConverterForListType(listTypeId);
   if (!converter) {
     throw new Error(`No converter found for list type ID: ${listTypeId}`);
+  }
+  return converter.convertExcelToJson(buffer);
+}
+
+export async function convertExcelForListTypeName(listTypeName: string, buffer: Buffer): Promise<unknown[]> {
+  const converter = nameConverterRegistry.get(listTypeName);
+  if (!converter) {
+    throw new Error(`No converter found for list type name: ${listTypeName}`);
   }
   return converter.convertExcelToJson(buffer);
 }
