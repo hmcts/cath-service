@@ -149,14 +149,14 @@ const postHandler = async (req: Request, res: Response) => {
       const canConvertByName = !canConvertById && listTypeName ? hasConverterForListTypeName(listTypeName) : false;
 
       if (canConvertById || canConvertByName) {
-        const hearingsData = canConvertById
+        jsonData = canConvertById
           ? await convertExcelForListType(listTypeId, uploadData.file)
           : await convertExcelForListTypeName(listTypeName!, uploadData.file);
-        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(hearingsData)));
+        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
 
         // Extract and store artefact search data from converted JSON
         try {
-          await extractAndStoreArtefactSearch(artefactId, listTypeId, hearingsData);
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
         } catch (error) {
           console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
             artefactId,
