@@ -1,4 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { sendThirdPartyDeletion } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
@@ -126,7 +127,25 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   try {
+    const artefactsToDelete = await getArtefactsByIds(sessionData.selectedArtefacts);
+
     await deleteArtefacts(sessionData.selectedArtefacts);
+
+    for (const artefact of artefactsToDelete) {
+      sendThirdPartyDeletion({
+        artefactId: artefact.artefactId,
+        locationId: artefact.locationId,
+        listTypeId: artefact.listTypeId,
+        contentDate: artefact.contentDate,
+        sensitivity: artefact.sensitivity,
+        language: artefact.language,
+        displayFrom: artefact.displayFrom,
+        displayTo: artefact.displayTo,
+        provenance: artefact.provenance
+      }).catch((error) => {
+        console.error("Third-party deletion push failed:", error);
+      });
+    }
 
     delete req.session.removalData;
     req.session.removalSuccess = true;

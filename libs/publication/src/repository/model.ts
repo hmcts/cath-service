@@ -10,5 +10,6 @@ export interface Artefact {
   lastReceivedDate: Date;
   isFlatFile: boolean;
   provenance: string;
+  supersededCount?: number;
   noMatch: boolean;
 }

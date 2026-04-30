@@ -1030,6 +1030,8 @@ __metadata:
   resolution: "@hmcts/admin-pages@workspace:libs/admin-pages"
   dependencies:
     "@hmcts/auth": "workspace:*"
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/notification": "workspace:*"
@@ -1223,6 +1225,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/legacy-third-party-fulfilment@workspace:*, @hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+  peerDependencies:
+    "@prisma/client": "*"
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/list-search-config@workspace:*, @hmcts/list-search-config@workspace:libs/list-search-config":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
@@ -1359,6 +1374,7 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
