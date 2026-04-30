@@ -361,7 +361,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.locator("body")).toContainText("Smith v Jones");
 
     // Test Welsh translation
-    await page.getByRole("link", { name: "Cymraeg" }).click();
+    await page.locator(".app-language-toggle a").click();
     await page.waitForLoadState("networkidle");
     await expect(page.locator("body")).toContainText("Rhestr ar gyfer 15 Ionawr 2026");
     await expect(page.locator("body")).toContainText("Diweddarwyd ddiwethaf");

@@ -70,7 +70,7 @@ test.describe("View Option Page", () => {
 
     // STEP 4: Test Welsh language support
     await page.goto("/view-option");
-    const languageToggle = page.locator(".language");
+    const languageToggle = page.locator(".app-language-toggle a");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toContainText("Cymraeg");
     await languageToggle.click();
