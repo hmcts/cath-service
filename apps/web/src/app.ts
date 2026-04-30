@@ -32,6 +32,8 @@ import {
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { assets as sjpPressListAssets, moduleRoot as sjpPressListModuleRoot, pageRoutes as sjpPressListRoutes } from "@hmcts/sjp-press-list/config";
+import { moduleRoot as sjpPublicListModuleRoot, pageRoutes as sjpPublicListRoutes } from "@hmcts/sjp-public-list/config";
 import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
@@ -100,13 +102,16 @@ export async function createApp(): Promise<Express> {
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
     civilFamilyCauseListModuleRoot,
+    sjpPressListModuleRoot,
+    sjpPublicListModuleRoot,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
-    verifiedPagesModuleRoot
+    verifiedPagesModuleRoot,
+    sjpPressListAssets
   ];
 
   await configureGovuk(app, modulePaths, {
@@ -161,6 +166,8 @@ export async function createApp(): Promise<Express> {
   // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
   app.use(await createSimpleRouter(careStandardsTribunalRoutes));
+  app.use(await createSimpleRouter(sjpPressListRoutes));
+  app.use(await createSimpleRouter(sjpPublicListRoutes));
   app.use(await createSimpleRouter(rcjStandardRoutes));
   app.use(await createSimpleRouter(londonAdminRoutes));
   app.use(await createSimpleRouter(civilAppealRoutes));

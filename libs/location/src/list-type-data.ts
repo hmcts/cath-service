@@ -243,5 +243,25 @@ export const listTypeData: ListTypeData[] = [
     urlPath: "manchester-administrative-court-daily-cause-list",
     isNonStrategic: true,
     defaultSensitivity: "Public"
+  },
+  {
+    id: 24,
+    name: "SJP_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-press-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified"
+  },
+  {
+    id: 25,
+    name: "SJP_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-public-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public"
   }
 ];

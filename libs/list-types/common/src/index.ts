@@ -27,7 +27,7 @@ export {
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
 export { getListTypeName, type ListTypeName } from "./list-type-ids.js";
-export { type ListType, mockListTypes } from "./mock-list-types.js";
+export { type ListType, mockListTypes, SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "./mock-list-types.js";
 export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export {
   type BasePdfGenerationOptions,
@@ -40,5 +40,8 @@ export {
   TEMP_STORAGE_BASE
 } from "./pdf/pdf-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
+export * from "./sjp/json-parser.js";
+export * from "./sjp/sjp-paginator.js";
+export * from "./sjp/sjp-service.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
 export { convertListTypeNameToKebabCase, type ListTypeInfo, validateListTypeJson } from "./validation/list-type-validator.js";
