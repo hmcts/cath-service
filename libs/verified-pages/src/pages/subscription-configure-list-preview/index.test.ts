@@ -8,7 +8,7 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findMany: vi.fn()
@@ -49,7 +49,7 @@ describe("subscription-configure-list-preview", () => {
 
   describe("GET", () => {
     it("should render preview with resolved list type names and language", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([
         { id: 1, friendlyName: "Civil List", welshFriendlyName: null, name: "civil_daily_list" } as any,
         { id: 2, friendlyName: "Family List", welshFriendlyName: null, name: "family_daily_list" } as any
@@ -71,7 +71,7 @@ describe("subscription-configure-list-preview", () => {
     });
 
     it("should show noLanguageSelected and empty listTypes when session has no pending list types or language", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
 
       mockReq.session = { emailSubscriptions: { pendingListTypeIds: [] } } as any;
@@ -131,7 +131,7 @@ describe("subscription-configure-list-preview", () => {
     });
 
     it("should re-render the page with empty listTypes when confirm is submitted with no list types", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       const { replaceSubscriptionListTypes } = await import("@hmcts/subscriptions");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
 

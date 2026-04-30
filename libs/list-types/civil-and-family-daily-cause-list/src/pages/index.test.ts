@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { prisma } from "@hmcts/postgres";
-import { canAccessPublicationData, getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderCauseListData } from "../rendering/renderer.js";
@@ -8,7 +8,7 @@ import { validateCivilFamilyCauseList } from "../validation/json-validator.js";
 import { GET } from "./index.js";
 
 vi.mock("node:fs/promises");
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()
@@ -140,7 +140,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(validateCivilFamilyCauseList).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Validation errors:", ["Validation error"]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[civil-and-family-daily-cause-list] Validation errors:", ["Validation error"]);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
@@ -313,7 +313,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
 
       await GET(req as Request, res as Response);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Error rendering cause list:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[civil-and-family-daily-cause-list] Unexpected error:", expect.any(Error));
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });

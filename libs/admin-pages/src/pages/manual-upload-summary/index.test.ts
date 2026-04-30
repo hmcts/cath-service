@@ -82,7 +82,7 @@ vi.mock("@hmcts/publication", async () => {
   };
 });
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn(({ where: { id } }: any) => {

@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deleteAllSubscriptionListTypesByUserId,
@@ -7,7 +7,7 @@ import {
   upsertSubscriptionListType
 } from "./subscription-list-type-queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listTypeSubJurisdiction: {
       findMany: vi.fn()

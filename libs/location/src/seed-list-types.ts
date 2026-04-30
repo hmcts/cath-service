@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { listTypeData } from "./list-type-data.js";
 
 async function shouldSeed(): Promise<boolean> {

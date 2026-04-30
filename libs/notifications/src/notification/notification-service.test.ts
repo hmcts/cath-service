@@ -53,7 +53,7 @@ vi.mock("./notification-queries.js", () => ({
   updateNotificationStatus: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn()
@@ -90,7 +90,7 @@ describe("sendListTypePublicationNotifications", () => {
       subscription_page_link: "https://example.com"
     });
 
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
 
     const { findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");

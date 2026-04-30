@@ -20,7 +20,7 @@ import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {

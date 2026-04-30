@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 
 export async function getListTypeIdsForLocation(locationId: number): Promise<number[]> {
   const records = await prisma.listTypeSubJurisdiction.findMany({

@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env file in the parent directory
 config({ path: path.resolve(__dirname, '../.env') });
 
-const VAULT_NAME = 'pip-bootstrap-stg-kv';
+const VAULT_NAME = 'cath-stg';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
 
 const SECRET_MAPPINGS = {
@@ -48,8 +48,9 @@ async function loadCredentialsFromAzure() {
       try {
         const secret = await client.getSecret(secretName);
         credentials[envVarName] = secret.value;
+        console.log(`  ✓ Loaded secret: ${secretName} → ${envVarName}`);
       } catch (error) {
-        console.error(`❌ Failed to fetch secret: ${secretName}`);
+        console.error(`  ❌ Failed to fetch secret: ${secretName} (${error.message})`);
         throw error;
       }
     }
@@ -63,7 +64,7 @@ async function loadCredentialsFromAzure() {
       throw new Error(`Missing credentials: ${missingCreds.join(', ')}`);
     }
 
-    console.log('✅ Test credentials loaded successfully');
+    console.log('✅ Test credentials loaded successfully from Key Vault');
     console.log('');
     console.log('SSO Credentials:');
     console.log(`  - System Admin: ${credentials.SSO_TEST_SYSTEM_ADMIN_EMAIL}`);
@@ -81,10 +82,16 @@ async function loadCredentialsFromAzure() {
     console.error('');
     console.error('❌ Error loading credentials from Azure Key Vault');
     console.error('');
-    console.error('Please check:');
-    console.error('1. You are authenticated to Azure CLI (run: az login)');
-    console.error('2. You have access to the Key Vault');
-    console.error('3. Your Azure subscription is set correctly');
+    if (process.env.CI === 'true') {
+      console.error('Running in CI - ensure the runner has Azure credentials configured:');
+      console.error('  - Workload Identity (OIDC) configured for the GitHub Actions runner, OR');
+      console.error('  - AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID are set as env vars');
+    } else {
+      console.error('Please check:');
+      console.error('1. You are authenticated to Azure CLI (run: az login)');
+      console.error('2. You have access to the Key Vault');
+      console.error('3. Your Azure subscription is set correctly');
+    }
     console.error('');
     throw error;
   }
@@ -93,23 +100,20 @@ async function loadCredentialsFromAzure() {
 async function runPlaywright() {
   const args = process.argv.slice(2);
 
-  // Check if running in CI
-  if (process.env.CI === 'true') {
-    console.log('ℹ️  Running in CI - using GitHub Secrets for SSO and CFT IDAM test credentials');
-    console.log('');
-  } else {
-    // Load credentials from Azure Key Vault
-    try {
-      const credentials = await loadCredentialsFromAzure();
+  // Load credentials from Azure Key Vault (works both locally and in CI via workload identity)
+  console.log(process.env.CI === 'true' ? 'ℹ️  Running in CI' : 'ℹ️  Running locally');
+  console.log('');
 
-      // Set credentials as environment variables for Playwright
-      for (const [key, value] of Object.entries(credentials)) {
-        process.env[key] = value;
-      }
-    } catch (error) {
-      console.error('Failed to load credentials:', error.message);
-      process.exit(1);
+  try {
+    const credentials = await loadCredentialsFromAzure();
+
+    // Set credentials as environment variables for Playwright
+    for (const [key, value] of Object.entries(credentials)) {
+      process.env[key] = value;
     }
+  } catch (error) {
+    console.error('Failed to load credentials from Key Vault:', error.message);
+    process.exit(1);
   }
 
   // Spawn Playwright with all environment variables

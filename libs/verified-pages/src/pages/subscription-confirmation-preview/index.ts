@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { Prisma, prisma } from "@hmcts/postgres";
+import { Prisma, prisma } from "@hmcts/postgres-prisma";
 import {
   createCaseSubscription,
   createSubscriptionListTypes,
