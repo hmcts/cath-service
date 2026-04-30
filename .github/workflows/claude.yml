@@ -28,7 +28,7 @@ jobs:
       - name: Get PR information
         if: github.event.issue.pull_request
         id: get-pr
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -40,7 +40,7 @@ jobs:
 
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -75,7 +75,7 @@ jobs:
         run: yarn db:generate
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
           aws-region: eu-west-1
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -146,7 +146,7 @@ jobs:
         run: yarn db:generate
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
           aws-region: eu-west-1
@@ -200,7 +200,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -233,7 +233,7 @@ jobs:
         run: yarn db:generate
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
           aws-region: eu-west-1
@@ -332,7 +332,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -371,7 +371,7 @@ jobs:
 
       - name: Post error if template not found
         if: steps.parse.outputs.valid == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -454,7 +454,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
@@ -465,7 +465,7 @@ jobs:
           fetch-depth: 1
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
           aws-region: eu-west-1

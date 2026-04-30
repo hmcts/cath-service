@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     notificationAuditLog: {
       create: vi.fn(),
@@ -27,7 +27,7 @@ describe("notification-queries", () => {
       sentAt: null
     };
 
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
     vi.mocked(prisma.notificationAuditLog.create).mockResolvedValue(mockNotification as never);
 
     const result = await createNotificationAuditLog({
@@ -41,7 +41,7 @@ describe("notification-queries", () => {
   });
 
   it("should update notification status", async () => {
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
     const sentAt = new Date();
 
     await updateNotificationStatus("notif-1", "Sent", sentAt);

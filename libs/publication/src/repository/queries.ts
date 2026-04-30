@@ -1,6 +1,5 @@
-import { mockListTypes } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
 import type { Artefact } from "./model.js";
 
@@ -181,12 +180,15 @@ export async function getArtefactSummariesByLocation(locationId: string): Promis
     }
   });
 
+  const listTypes = (await prisma.listType.findMany()) as Array<{ id: number; friendlyName: string | null }>;
+  const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+
   return artefacts.map((artefact) => {
-    const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+    const listType = listTypeMap.get(artefact.listTypeId);
 
     return {
       artefactId: artefact.artefactId,
-      listType: listType?.englishFriendlyName || "Unknown",
+      listType: listType?.friendlyName || "Unknown",
       displayFrom: artefact.displayFrom.toISOString(),
       displayTo: artefact.displayTo.toISOString()
     };
@@ -204,7 +206,11 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     return null;
   }
 
-  const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
+  const listType = await prisma.listType.findUnique({
+    where: {
+      id: artefact.listTypeId
+    }
+  });
   const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
 
   return {
@@ -212,7 +218,7 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     locationId: artefact.locationId,
     locationName: location?.name || "Unknown",
     publicationType: artefact.isFlatFile ? "Flat File" : "JSON",
-    listType: listType?.englishFriendlyName || "Unknown",
+    listType: listType?.friendlyName || "Unknown",
     provenance: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance,
     language: artefact.language,
     sensitivity: artefact.sensitivity,
@@ -252,7 +258,7 @@ export async function getLocationsWithPublicationCount(): Promise<LocationWithPu
     ORDER BY l.name ASC
   `;
 
-  return result.map((row) => ({
+  return result.map((row: { location_id: number; location_name: string; publication_count: bigint }) => ({
     locationId: String(row.location_id),
     locationName: row.location_name,
     publicationCount: Number(row.publication_count)

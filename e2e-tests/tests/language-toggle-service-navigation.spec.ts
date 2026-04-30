@@ -103,13 +103,13 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
       await expect(pageWelshToggle, `Language toggle should be visible on ${pagePath}`).toBeVisible();
 
       await pageWelshToggle.click();
-      await page.waitForURL(new RegExp(`.*\\?.*lng=cy`));
+      await page.waitForURL(/.*\?.*lng=cy/);
 
       const pageEnglishToggle = serviceNav.locator('a:has-text("English")');
       await expect(pageEnglishToggle, `English toggle should be visible on ${pagePath} in Welsh`).toBeVisible();
 
       await pageEnglishToggle.click();
-      await page.waitForURL(new RegExp(`.*\\?.*lng=en`));
+      await page.waitForURL(/.*\?.*lng=en/);
     }
 
     // 9. Test language preference persists across navigation
@@ -197,5 +197,4 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
     const serviceName = page.locator(".govuk-service-navigation__service-name a");
     await expect(serviceName).toBeVisible();
   });
-
 });
