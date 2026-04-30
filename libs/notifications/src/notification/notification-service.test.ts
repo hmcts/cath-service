@@ -49,6 +49,14 @@ vi.mock("./notification-queries.js", () => ({
   updateNotificationStatus: vi.fn()
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn()
+    }
+  }
+}));
+
 describe("notification-service", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -79,6 +87,9 @@ describe("notification-service", () => {
       summary_of_cases: "Case 123 - Smith v Jones"
     });
     vi.mocked(getSubscriptionTemplateIdForListType).mockReturnValue("template-id-123");
+
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
   });
 
   it("should send notifications to all subscribed users", async () => {
