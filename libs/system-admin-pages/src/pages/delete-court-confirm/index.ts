@@ -141,6 +141,14 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   await performLocationDeletion(session.deleteCourt.locationId);
+
+  // Set audit log flag
+  req.auditMetadata = {
+    shouldLog: true,
+    action: "DELETE_COURT",
+    entityInfo: `Name: ${session.deleteCourt.name}, Location ID: ${session.deleteCourt.locationId}`
+  };
+
   res.redirect(buildRedirectUrl("/delete-court-success", language));
 };
 

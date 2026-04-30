@@ -1,331 +1,227 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test.describe("Cookie Management", () => {
   test.beforeEach(async ({ context }) => {
-    // Clear all cookies before each test
     await context.clearCookies();
   });
 
-  test.describe("Cookie Banner", () => {
-    test("should display cookie banner on first visit", async ({ page }) => {
-      await page.goto("/");
+  test("cookie banner journey - display, accept/reject, persistence, and accessibility", async ({ page }) => {
+    // STEP 1: Verify cookie banner displays on first visit
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    const cookieBanner = page.locator(".govuk-cookie-banner");
+    await expect(cookieBanner).toBeVisible({ timeout: 10000 });
+    await expect(cookieBanner).toContainText("Cookies on this service");
+    await expect(cookieBanner).toContainText("We use some essential cookies to make this service work");
 
-      // Check cookie banner is visible
-      const cookieBanner = page.locator(".govuk-cookie-banner");
-      await expect(cookieBanner).toBeVisible();
+    // Verify banner has proper ARIA attributes for accessibility
+    await expect(cookieBanner).toHaveAttribute("role", "region");
+    await expect(cookieBanner).toHaveAttribute("aria-label", "Cookies on this service");
 
-      // Check banner content
-      await expect(cookieBanner).toContainText("Cookies on this service");
-      await expect(cookieBanner).toContainText("We use some essential cookies to make this service work");
+    // Verify buttons are present
+    const acceptButton = cookieBanner.locator('button:has-text("Accept analytics cookies")');
+    const rejectButton = cookieBanner.locator('button:has-text("Reject analytics cookies")');
+    const viewCookiesLink = cookieBanner.locator('a:has-text("View cookies")');
+    await expect(acceptButton).toBeVisible();
+    await expect(rejectButton).toBeVisible();
+    await expect(viewCookiesLink).toBeVisible();
 
-      // Check buttons are present
-      const acceptButton = cookieBanner.locator('button:has-text("Accept analytics cookies")');
-      const rejectButton = cookieBanner.locator('button:has-text("Reject analytics cookies")');
-      const viewCookiesLink = cookieBanner.locator('a:has-text("View cookies")');
+    // STEP 2: Test "View cookies" link navigation
+    await viewCookiesLink.click();
+    await expect(page).toHaveURL("/cookie-preferences");
+    await expect(page.locator("h1")).toHaveText("Cookie preferences");
 
-      await expect(acceptButton).toBeVisible();
-      await expect(rejectButton).toBeVisible();
-      await expect(viewCookiesLink).toBeVisible();
-    });
+    // Cookie banner should not be visible on the cookies page itself
+    await expect(cookieBanner).not.toBeVisible();
 
-    test("should not display cookie banner on cookies page", async ({ page }) => {
-      await page.goto("/cookie-preferences");
+    // STEP 3: Go back and test accepting cookies
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.locator('button:has-text("Accept analytics cookies")').click();
 
-      // Cookie banner should not be visible on the cookies page itself
-      const cookieBanner = page.locator(".govuk-cookie-banner");
-      await expect(cookieBanner).not.toBeVisible();
-    });
+    // Wait for the cookie to be set by the cookie manager JS
+    await page
+      .waitForFunction(() => document.cookie.includes("cookie_policy"), { timeout: 10000 })
+      .catch(() => console.log("[Cookie] Timed out waiting for cookie_policy after accept"));
 
-    test("should hide banner after accepting cookies", async ({ page }) => {
-      await page.goto("/");
+    // Verify cookie was set with accepted state
+    let cookies = await page.context().cookies();
+    let cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
+    expect(cookiePolicy).toBeDefined();
+    let policyValue = decodeURIComponent(cookiePolicy!.value);
+    console.log(`[Cookie] After accept: cookie value = ${policyValue}`);
+    // Cookie manager sets "on"/"off" strings; server POST sets true/false booleans
+    expect(policyValue).toMatch(/"analytics":(?:"on"|true)/);
 
-      // Wait for JavaScript to load
-      await page.waitForLoadState("networkidle");
+    // Navigate away and back - banner should stay hidden
+    await page.goto("/cookie-preferences");
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await expect(page.locator(".govuk-cookie-banner")).not.toBeVisible();
 
-      // Click accept button
-      const acceptButton = page.locator('button:has-text("Accept analytics cookies")');
-      await acceptButton.click();
+    // STEP 4: Clear cookies and test rejecting cookies
+    await page.context().clearCookies();
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.locator('button:has-text("Reject analytics cookies")').click();
 
-      // Wait for cookies to be set
-      await page.waitForTimeout(1000);
+    // Wait for the cookie to be set by the cookie manager JS
+    await page
+      .waitForFunction(() => document.cookie.includes("cookie_policy"), { timeout: 10000 })
+      .catch(() => console.log("[Cookie] Timed out waiting for cookie_policy after reject"));
 
-      // Check that cookie policy was set with accepted state
-      const cookies = await page.context().cookies();
-      const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
-      expect(cookiePolicy).toBeDefined();
-      const policyValue = decodeURIComponent(cookiePolicy!.value);
-      expect(policyValue).toContain('"analytics":"on"');
+    // Verify cookie was set with rejected state
+    cookies = await page.context().cookies();
+    cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
+    expect(cookiePolicy).toBeDefined();
+    policyValue = decodeURIComponent(cookiePolicy!.value);
+    console.log(`[Cookie] After reject: cookie value = ${policyValue}`);
+    // Cookie manager sets "off"; server POST sets false
+    expect(policyValue).toMatch(/"analytics":(?:"off"|false)/);
 
-      // Navigate to another page
-      await page.goto("/cookie-preferences");
-      await page.goto("/");
+    // Banner should stay hidden after navigation
+    await page.goto("/cookie-preferences");
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await expect(page.locator(".govuk-cookie-banner")).not.toBeVisible();
 
-      // Banner should still be hidden when returning to homepage
-      const cookieBanner = page.locator(".govuk-cookie-banner");
-      await expect(cookieBanner).not.toBeVisible();
-    });
+    // STEP 5: Test JavaScript button classes (alternative selectors)
+    await page.context().clearCookies();
+    await page.goto("/");
+    await page.waitForLoadState("load");
 
-    test("should hide banner after rejecting cookies", async ({ page }) => {
-      await page.goto("/");
+    const jsAcceptButton = page.locator(".js-cookie-banner-accept");
+    await jsAcceptButton.click();
 
-      // Wait for JavaScript to load
-      await page.waitForLoadState("networkidle");
+    await page
+      .waitForFunction(() => document.cookie.includes("cookie_policy"), { timeout: 10000 })
+      .catch(() => console.log("[Cookie] Timed out waiting for cookie_policy after JS accept"));
 
-      // Click reject button
-      const rejectButton = page.locator('button:has-text("Reject analytics cookies")');
-      await rejectButton.click();
-
-      // Wait for cookies to be set
-      await page.waitForTimeout(1000);
-
-      // Check that cookie policy was set with rejected state
-      const cookies = await page.context().cookies();
-      const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
-      expect(cookiePolicy).toBeDefined();
-      const policyValue = decodeURIComponent(cookiePolicy!.value);
-      expect(policyValue).toContain('"analytics":"off"');
-
-      // Navigate to another page
-      await page.goto("/cookie-preferences");
-      await page.goto("/");
-
-      // Banner should still be hidden when returning to homepage
-      const cookieBanner = page.locator(".govuk-cookie-banner");
-      await expect(cookieBanner).not.toBeVisible();
-    });
-
-    test("should navigate to cookie preferences page", async ({ page }) => {
-      await page.goto("/");
-
-      // Click "View cookies" link
-      const viewCookiesLink = page.locator('.govuk-cookie-banner a:has-text("View cookies")');
-      await viewCookiesLink.click();
-
-      // Should navigate to cookies page
-      await expect(page).toHaveURL("/cookie-preferences");
-
-      // Check page title
-      await expect(page.locator("h1")).toHaveText("Cookie preferences");
-    });
+    cookies = await page.context().cookies();
+    cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
+    expect(cookiePolicy).toBeDefined();
+    policyValue = decodeURIComponent(cookiePolicy!.value);
+    console.log(`[Cookie] After JS accept: cookie value = ${policyValue}`);
+    expect(policyValue).toMatch(/"analytics":(?:true|"on")/);
   });
 
-  test.describe("Cookie Preferences Page", () => {
-    test("should display cookie preferences form", async ({ page }) => {
-      await page.goto("/cookie-preferences");
+  test("cookie preferences page journey - form, save, persistence, Welsh, and accessibility", async ({ page }) => {
+    // STEP 1: Navigate to cookie preferences and verify form structure
+    await page.goto("/cookie-preferences");
+    await page.waitForLoadState("load");
+    await expect(page.locator("h1")).toHaveText("Cookie preferences");
 
-      // Check page title
-      await expect(page.locator("h1")).toHaveText("Cookie preferences");
+    // Verify all sections are visible
+    await expect(page.locator("text=Essential cookies")).toBeVisible();
+    await expect(page.locator("text=These cookies are necessary for the service to function")).toBeVisible();
+    await expect(page.locator('h2:has-text("Analytics cookies")')).toBeVisible();
+    await expect(page.locator("text=help us understand how you use the service").first()).toBeVisible();
+    await expect(page.locator('h2:has-text("Settings cookies")')).toBeVisible();
+    await expect(page.locator("text=remember your settings and preferences").first()).toBeVisible();
 
-      // Check essential cookies section
-      await expect(page.locator("text=Essential cookies")).toBeVisible();
-      await expect(page.locator("text=These cookies are necessary for the service to function")).toBeVisible();
+    // Verify radio buttons exist
+    const analyticsYes = page.locator("#analytics-yes");
+    const analyticsNo = page.locator("#analytics-no");
+    const preferencesYes = page.locator("#preferences-yes");
+    const preferencesNo = page.locator("#preferences-no");
+    await expect(analyticsYes).toBeVisible();
+    await expect(analyticsNo).toBeVisible();
+    await expect(preferencesYes).toBeVisible();
+    await expect(preferencesNo).toBeVisible();
 
-      // Check analytics cookies section
-      await expect(page.locator('h2:has-text("Analytics cookies")')).toBeVisible();
-      await expect(page.locator("text=help us understand how you use the service").first()).toBeVisible();
+    // Verify save button
+    const saveButton = page.locator('button:has-text("Save cookie preferences")');
+    await expect(saveButton).toBeVisible();
 
-      // Check settings cookies section
-      await expect(page.locator('h2:has-text("Settings cookies")')).toBeVisible();
-      await expect(page.locator("text=remember your settings and preferences").first()).toBeVisible();
+    // STEP 2: Verify form accessibility - check for proper structure
+    const form = page.locator("form");
+    await expect(form).toBeVisible();
 
-      // Check radio buttons
-      const analyticsYes = page.locator("#analytics-yes");
-      const analyticsNo = page.locator("#analytics-no");
-      const preferencesYes = page.locator("#preferences-yes");
-      const preferencesNo = page.locator("#preferences-no");
+    // Check fieldsets have legends
+    const fieldsets = page.locator("fieldset");
+    const fieldsetCount = await fieldsets.count();
+    for (let i = 0; i < fieldsetCount; i++) {
+      const fieldset = fieldsets.nth(i);
+      const legend = fieldset.locator("legend");
+      await expect(legend).toBeVisible();
+    }
 
-      await expect(analyticsYes).toBeVisible();
-      await expect(analyticsNo).toBeVisible();
-      await expect(preferencesYes).toBeVisible();
-      await expect(preferencesNo).toBeVisible();
+    // Check radio buttons have labels
+    const radios = page.locator('input[type="radio"]');
+    const radioCount = await radios.count();
+    for (let i = 0; i < radioCount; i++) {
+      const radio = radios.nth(i);
+      const id = await radio.getAttribute("id");
+      const label = page.locator(`label[for="${id}"]`);
+      await expect(label).toBeVisible();
+    }
 
-      // Check save button
-      const saveButton = page.locator('button:has-text("Save cookie preferences")');
-      await expect(saveButton).toBeVisible();
-    });
+    // STEP 3: Save preferences and verify they persist
+    await analyticsYes.check();
+    await preferencesNo.check();
+    await saveButton.click();
 
-    test("should save cookie preferences", async ({ page }) => {
-      await page.goto("/cookie-preferences");
+    // Wait for redirect after form submission
+    await page.waitForURL(/\/cookie-preferences/, { timeout: 10000 });
+    await page.waitForLoadState("load");
 
-      // Select analytics yes, preferences no
-      await page.locator("#analytics-yes").check();
-      await page.locator("#preferences-no").check();
+    // Verify cookie was saved correctly
+    const cookies = await page.context().cookies();
+    const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
+    expect(cookiePolicy).toBeDefined();
 
-      // Click save button
-      await page.locator('button:has-text("Save cookie preferences")').click();
+    // Decode cookie value (may be URL-encoded)
+    let decodedValue = cookiePolicy!.value;
+    try {
+      decodedValue = decodeURIComponent(decodedValue);
+    } catch {
+      // Already decoded
+    }
+    console.log(`[Cookie] Preferences saved: cookie value = ${decodedValue}`);
 
-      // Wait for the form to be processed
-      await page.waitForTimeout(1000);
+    // Parse the cookie - server stores booleans (true/false), JS cookie-manager stores strings ("on"/"off")
+    const policyObj = JSON.parse(decodedValue) as Record<string, unknown>;
+    console.log(`[Cookie] Parsed cookie: analytics=${policyObj.analytics}, preferences=${policyObj.preferences}`);
+    expect(policyObj.analytics === "on" || policyObj.analytics === true).toBe(true);
+    expect(policyObj.preferences === "off" || policyObj.preferences === false).toBe(true);
 
-      // The HMCTS cookie manager handles the form client-side
-      // so we just check that the cookies were saved correctly
+    // STEP 4: Verify preferences persist after navigation
+    await page.goto("/");
+    await page.goto("/cookie-preferences");
+    await page.waitForLoadState("load");
+    await expect(analyticsYes).toBeChecked();
+    await expect(preferencesNo).toBeChecked();
+    await expect(analyticsNo).not.toBeChecked();
+    await expect(preferencesYes).not.toBeChecked();
 
-      // Check that preferences were saved
-      const cookies = await page.context().cookies();
-      const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
+    // STEP 5: Test Welsh language support
+    await page.goto("/cookie-preferences?lng=cy");
+    await page.waitForLoadState("load");
+    await expect(page.locator("h1")).toHaveText("Dewisiadau cwcis");
+    await expect(page.locator('h2:has-text("Cwcis hanfodol")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Cwcis dadansoddi")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Cwcis gosodiadau")')).toBeVisible();
 
-      if (!cookiePolicy || !cookiePolicy.value) {
-        throw new Error(`cookie_policy not found or has no value. Available cookies: ${cookies.map(c => c.name).join(", ")}`);
-      }
+    // Verify Welsh button and save preferences
+    const welshSaveButton = page.locator('button:has-text("Cadw dewisiadau cwcis")');
+    await expect(welshSaveButton).toBeVisible();
+    await page.locator("#analytics-yes").check();
+    await welshSaveButton.click();
 
-      // Cookie value may be double-encoded, decode until we get valid JSON
-      let decodedValue = cookiePolicy.value;
-      const MAX_DECODE_ATTEMPTS = 3;
-      let policyValue: any;
+    // Wait for redirect after Welsh form submission
+    await page.waitForURL(/\/cookie-preferences/, { timeout: 10000 });
+    await page.waitForLoadState("load");
 
-      for (let attempt = 0; attempt < MAX_DECODE_ATTEMPTS; attempt++) {
-        try {
-          policyValue = JSON.parse(decodedValue);
-          break; // Successfully parsed, exit loop
-        } catch (jsonError) {
-          // If JSON parsing fails, try to decode URI component
-          if (attempt < MAX_DECODE_ATTEMPTS - 1) {
-            try {
-              decodedValue = decodeURIComponent(decodedValue);
-            } catch (decodeError: any) {
-              if (decodeError instanceof URIError) {
-                throw new Error(`Failed to decode cookie value after ${attempt + 1} attempts. Raw value: ${cookiePolicy.value}`);
-              }
-              throw decodeError; // Rethrow unexpected errors
-            }
-          } else {
-            // Last attempt failed
-            throw new Error(`Failed to parse cookie as JSON after ${MAX_DECODE_ATTEMPTS} attempts. Final decoded value: ${decodedValue}, Raw value: ${cookiePolicy.value}`);
-          }
-        }
-      }
+    // Verify cookie was saved in Welsh mode
+    const welshCookies = await page.context().cookies();
+    const welshCookiePolicy = welshCookies.find((c) => c.name === "cookie_policy");
+    expect(welshCookiePolicy).toBeDefined();
 
-      expect(policyValue.analytics).toBe("on");
-      expect(policyValue.preferences).toBe("off");
-    });
-
-    test("should reflect current cookie preferences @nightly", async ({ page }) => {
-      // First set some preferences
-      await page.goto("/cookie-preferences");
-      await page.locator("#analytics-no").check();
-      await page.locator("#preferences-yes").check();
-      await page.locator('button:has-text("Save cookie preferences")').click();
-
-      // Navigate away and come back
-      await page.goto("/");
-      await page.goto("/cookie-preferences");
-
-      // Check that the radio buttons reflect the saved preferences
-      await expect(page.locator("#analytics-no")).toBeChecked();
-      await expect(page.locator("#preferences-yes")).toBeChecked();
-      await expect(page.locator("#analytics-yes")).not.toBeChecked();
-      await expect(page.locator("#preferences-no")).not.toBeChecked();
-    });
-
-    test("should work with Welsh language @nightly", async ({ page }) => {
-      // Switch to Welsh
-      await page.goto("/cookie-preferences?lng=cy");
-
-      // Check Welsh translations
-      await expect(page.locator("h1")).toHaveText("Dewisiadau cwcis");
-      await expect(page.locator('h2:has-text("Cwcis hanfodol")')).toBeVisible();
-      await expect(page.locator('h2:has-text("Cwcis dadansoddi")')).toBeVisible();
-      await expect(page.locator('h2:has-text("Cwcis gosodiadau")')).toBeVisible();
-
-      // Check Welsh button text
-      await expect(page.locator('button:has-text("Cadw dewisiadau cwcis")')).toBeVisible();
-
-      // Save preferences in Welsh
-      await page.locator("#analytics-yes").check();
-      await page.locator('button:has-text("Cadw dewisiadau cwcis")').click();
-
-      // Wait for the form to be processed
-      await page.waitForTimeout(1000);
-
-      // The HMCTS cookie manager handles the form client-side
-      // Check that preferences were saved correctly
-      const cookies = await page.context().cookies();
-      const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
-      expect(cookiePolicy).toBeDefined();
-    });
-  });
-
-  test.describe("Cookie Banner JavaScript Behavior", () => {
-    test("should handle accept button click with JavaScript @nightly", async ({ page }) => {
-      await page.goto("/");
-
-      // Wait for JavaScript to load
-      await page.waitForLoadState("networkidle");
-
-      // Click accept button
-      const acceptButton = page.locator(".js-cookie-banner-accept");
-      await acceptButton.click();
-
-      // Wait for JavaScript to handle the click and set cookies
-      await page.waitForTimeout(1000);
-
-      // Check that cookies were set
-      const cookies = await page.context().cookies();
-      const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
-      expect(cookiePolicy).toBeDefined();
-      const policyValue = decodeURIComponent(cookiePolicy!.value);
-      expect(policyValue).toMatch(/"analytics":(?:true|"on")/);
-    });
-
-    test("should handle reject button click with JavaScript @nightly", async ({ page }) => {
-      await page.goto("/");
-
-      // Wait for JavaScript to load
-      await page.waitForLoadState("networkidle");
-
-      // Click reject button
-      const rejectButton = page.locator(".js-cookie-banner-reject");
-      await rejectButton.click();
-
-      // Wait for JavaScript to handle the click and set cookies
-      await page.waitForTimeout(1000);
-
-      // Check that cookies were set
-      const cookies = await page.context().cookies();
-      const cookiePolicy = cookies.find((c) => c.name === "cookie_policy");
-      expect(cookiePolicy).toBeDefined();
-      const policyValue = decodeURIComponent(cookiePolicy!.value);
-      expect(policyValue).toMatch(/"analytics":(?:false|"off")/);
-    });
-  });
-
-  test.describe("Accessibility", () => {
-    test("cookie banner should be accessible @nightly", async ({ page }) => {
-      await page.goto("/");
-
-      // The banner should have proper ARIA attributes
-      const cookieBanner = page.locator(".govuk-cookie-banner");
-      await expect(cookieBanner).toHaveAttribute("role", "region");
-      await expect(cookieBanner).toHaveAttribute("aria-label", "Cookies on this service");
-    });
-
-    test("cookie preferences page should be accessible @nightly", async ({ page }) => {
-      await page.goto("/cookie-preferences");
-
-      // Check for proper form structure
-      const form = page.locator("form");
-      await expect(form).toBeVisible();
-
-      // Check fieldsets have legends
-      const fieldsets = page.locator("fieldset");
-      const count = await fieldsets.count();
-
-      for (let i = 0; i < count; i++) {
-        const fieldset = fieldsets.nth(i);
-        const legend = fieldset.locator("legend");
-        await expect(legend).toBeVisible();
-      }
-
-      // Check radio buttons have labels
-      const radios = page.locator('input[type="radio"]');
-      const radioCount = await radios.count();
-
-      for (let i = 0; i < radioCount; i++) {
-        const radio = radios.nth(i);
-        const id = await radio.getAttribute("id");
-        const label = page.locator(`label[for="${id}"]`);
-        await expect(label).toBeVisible();
-      }
-    });
+    // STEP 6: Run accessibility scan
+    await page.goto("/cookie-preferences");
+    await page.waitForLoadState("load");
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

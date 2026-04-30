@@ -1,4 +1,11 @@
-import { prisma } from "@hmcts/postgres";
+import {
+  getAllTestArtefacts,
+  getArtefactsByLocation,
+  getJurisdictions,
+  getLocationsWithRelationships,
+  getRegions,
+  getSubJurisdictions
+} from "./test-support-api.js";
 
 export interface VerificationResult {
   success: boolean;
@@ -21,7 +28,7 @@ export async function verifySeedData(): Promise<VerificationResult> {
 
   try {
     // Check jurisdictions
-    const jurisdictions = await (prisma as any).jurisdiction.findMany();
+    const jurisdictions = (await getJurisdictions()) as unknown[];
     console.log(`✓ Found ${jurisdictions.length} jurisdictions`);
 
     if (jurisdictions.length < 4) {
@@ -29,7 +36,7 @@ export async function verifySeedData(): Promise<VerificationResult> {
     }
 
     // Check sub-jurisdictions
-    const subJurisdictions = await (prisma as any).subJurisdiction.findMany();
+    const subJurisdictions = (await getSubJurisdictions()) as unknown[];
     console.log(`✓ Found ${subJurisdictions.length} sub-jurisdictions`);
 
     if (subJurisdictions.length < 8) {
@@ -37,7 +44,7 @@ export async function verifySeedData(): Promise<VerificationResult> {
     }
 
     // Check regions
-    const regions = await (prisma as any).region.findMany();
+    const regions = (await getRegions()) as unknown[];
     console.log(`✓ Found ${regions.length} regions`);
 
     if (regions.length < 6) {
@@ -45,12 +52,7 @@ export async function verifySeedData(): Promise<VerificationResult> {
     }
 
     // Check locations
-    const locations = await (prisma as any).location.findMany({
-      include: {
-        locationRegions: true,
-        locationSubJurisdictions: true,
-      },
-    });
+    const locations = (await getLocationsWithRelationships()) as any[];
     console.log(`✓ Found ${locations.length} locations`);
 
     if (locations.length < 10) {
@@ -67,31 +69,31 @@ export async function verifySeedData(): Promise<VerificationResult> {
         console.log(`  ✓ Location ${locationId} exists: ${location.name}`);
 
         // Check relationships
-        if (location.locationSubJurisdictions.length === 0) {
+        if (!location.locationSubJurisdictions || location.locationSubJurisdictions.length === 0) {
           warnings.push(`Location ${locationId} has no sub-jurisdiction relationships`);
         }
-        if (location.locationRegions.length === 0) {
+        if (!location.locationRegions || location.locationRegions.length === 0) {
           warnings.push(`Location ${locationId} has no region relationships`);
         }
       }
     }
 
     // Check artefacts
-    const artefacts = await prisma.artefact.findMany();
+    const artefacts = await getAllTestArtefacts();
     console.log(`✓ Found ${artefacts.length} artefacts`);
 
     // Verify locationId=9 has artefacts
-    const sjpArtefacts = artefacts.filter((a: any) => a.locationId === "9");
-    if (sjpArtefacts.length === 0) {
+    const sjpArtefacts = await getArtefactsByLocation("9");
+    if ((sjpArtefacts as unknown[]).length === 0) {
       errors.push("Location 9 (SJP Court) has no artefacts");
     } else {
-      console.log(`  ✓ Location 9 has ${sjpArtefacts.length} artefacts`);
+      console.log(`  ✓ Location 9 has ${(sjpArtefacts as unknown[]).length} artefacts`);
     }
 
     // Verify locationId=9001 has NO artefacts (for "no publications" test)
-    const alphaArtefacts = artefacts.filter((a: any) => a.locationId === "9001");
-    if (alphaArtefacts.length > 0) {
-      warnings.push(`Location 9001 should have NO artefacts but has ${alphaArtefacts.length}`);
+    const alphaArtefacts = await getArtefactsByLocation("9001");
+    if ((alphaArtefacts as unknown[]).length > 0) {
+      warnings.push(`Location 9001 should have NO artefacts but has ${(alphaArtefacts as unknown[]).length}`);
     } else {
       console.log(`  ✓ Location 9001 has no artefacts (as expected)`);
     }
@@ -105,20 +107,24 @@ export async function verifySeedData(): Promise<VerificationResult> {
         subJurisdictions: subJurisdictions.length,
         regions: regions.length,
         locations: locations.length,
-        artefacts: artefacts.length,
-      },
+        artefacts: artefacts.length
+      }
     };
 
     if (result.success) {
       console.log("\n✓ All seed data verification checks passed!");
     } else {
       console.error("\n✗ Seed data verification failed:");
-      errors.forEach((error) => console.error(`  - ${error}`));
+      for (const error of errors) {
+        console.error(`  - ${error}`);
+      }
     }
 
     if (warnings.length > 0) {
       console.warn("\n⚠ Warnings:");
-      warnings.forEach((warning) => console.warn(`  - ${warning}`));
+      for (const warning of warnings) {
+        console.warn(`  - ${warning}`);
+      }
     }
 
     console.log("\nSummary:", result.summary);
@@ -135,8 +141,8 @@ export async function verifySeedData(): Promise<VerificationResult> {
         subJurisdictions: 0,
         regions: 0,
         locations: 0,
-        artefacts: 0,
-      },
+        artefacts: 0
+      }
     };
   }
 }

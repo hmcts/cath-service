@@ -2,7 +2,8 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language, mockListTypes } from "@hmcts/publication";
+import { Language } from "@hmcts/publication";
+import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";
@@ -11,13 +12,16 @@ import { validateNonStrategicUploadForm } from "../../manual-upload/validation.j
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const LIST_TYPES = [
-  { value: "", text: "<Please choose a list type>" },
-  ...mockListTypes
-    .filter((listType) => listType.isNonStrategic)
-    .map((listType) => ({ value: listType.id.toString(), text: listType.englishFriendlyName }))
-    .sort((a, b) => a.text.localeCompare(b.text))
-];
+async function getListTypes() {
+  const nonStrategicListTypes = await findNonStrategicListTypes();
+  const options = nonStrategicListTypes
+    .map((listType) => ({
+      value: listType.id.toString(),
+      text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
+    }))
+    .sort((a, b) => a.text.localeCompare(b.text));
+  return [{ value: "", text: "<Please choose a list type>" }, ...options];
+}
 
 const SENSITIVITY_OPTIONS = [
   { value: "", text: "<Please choose a sensitivity>" },
@@ -90,12 +94,14 @@ const getHandler = async (req: Request, res: Response) => {
   const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
   const locationName = location?.name || formData.locationName || "";
 
+  const listTypes = await getListTypes();
+
   res.render("non-strategic-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
     locations: await getAllLocations(locale),
-    listTypes: selectOption(LIST_TYPES, formData.listType),
+    listTypes: selectOption(listTypes, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
     locale,
@@ -128,7 +134,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   // Validate Excel file for non-strategic lists that require validation
   const listTypeId = formData.listType ? Number.parseInt(formData.listType, 10) : null;
-  const selectedListType = mockListTypes.find((lt) => lt.id === listTypeId);
+  const selectedListType = listTypeId ? await findListTypeById(listTypeId) : null;
   const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
 
   if (selectedListType?.isNonStrategic && isExcelFile && listTypeId) {

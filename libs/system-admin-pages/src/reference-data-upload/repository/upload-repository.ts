@@ -1,5 +1,5 @@
-import { prisma } from "@hmcts/postgres";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@hmcts/postgres-prisma";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { ParsedLocationData } from "../model.js";
 
 export async function upsertLocations(data: ParsedLocationData[]): Promise<void> {

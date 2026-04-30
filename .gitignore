@@ -1,6 +1,9 @@
 # Dependency directories
 node_modules/
 
+# Prisma generated client
+apps/postgres/generated/
+
 # Build output
 dist/
 build/
@@ -60,3 +63,9 @@ lcov.info
 /apps/postgres/.claude
 /e2e-tests/.claude
 /libs/api/.claude
+
+# Helm
+**/Chart.lock
+**/charts/*.tgz
+values.preview.yaml
+libs/postgres-prisma/generated/

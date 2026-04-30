@@ -1,9 +1,21 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { deleteArtefacts, getArtefactsByIds, mockListTypes } from "@hmcts/publication";
+import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import cy from "./cy.js";
 import en from "./en.js";
+
+declare module "express-serve-static-core" {
+  interface Request {
+    auditMetadata?: {
+      shouldLog?: boolean;
+      action?: string;
+      entityInfo?: string;
+      [key: string]: string | number | boolean | undefined;
+    };
+  }
+}
 
 function formatDateString(date: Date): string {
   return date.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
@@ -14,13 +26,23 @@ function capitalizeFirstLetter(text: string): string {
 }
 
 async function transformArtefactsForDisplay(artefacts: Awaited<ReturnType<typeof getArtefactsByIds>>, locale: "en" | "cy") {
+  // Fetch list types from database and create a map for quick lookup
+  const listTypes = await findAllListTypes();
+  const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
+
   return Promise.all(
     artefacts.map(async (artefact) => {
-      const listType = mockListTypes.find((lt) => lt.id === artefact.listTypeId);
-      const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.englishFriendlyName) : String(artefact.listTypeId);
+      const listType = listTypeMap.get(artefact.listTypeId);
+      let listTypeName = String(artefact.listTypeId);
+      if (listType) {
+        listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || String(artefact.listTypeId);
+      }
 
       const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
-      const courtName = location ? (locale === "cy" ? location.welshName : location.name) : artefact.locationId;
+      let courtName = artefact.locationId;
+      if (location) {
+        courtName = locale === "cy" ? location.welshName : location.name;
+      }
 
       const displayDates = `${formatDateString(artefact.displayFrom)} to ${formatDateString(artefact.displayTo)}`;
       const language = capitalizeFirstLetter(artefact.language);
@@ -115,6 +137,16 @@ const postHandler = async (req: Request, res: Response) => {
         else resolve();
       });
     });
+
+    // Get location name for audit log
+    const location = await getLocationById(Number(sessionData.locationId));
+
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "REMOVE_LIST",
+      entityInfo: `Court: ${location?.name || sessionData.locationId}, Artefacts removed: ${sessionData.selectedArtefacts.length}`
+    };
 
     const lng = req.query.lng === "cy" ? "?lng=cy" : "";
     res.redirect(`/remove-list-success${lng}`);

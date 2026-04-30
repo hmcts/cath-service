@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { findActiveSubscriptionsByLocation } from "./subscription-queries.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     subscription: {
       findMany: vi.fn()
@@ -19,7 +19,8 @@ describe("subscription-queries", () => {
       {
         subscriptionId: "sub-1",
         userId: "user-1",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user1@example.com",
           firstName: "John",
@@ -29,7 +30,8 @@ describe("subscription-queries", () => {
       {
         subscriptionId: "sub-2",
         userId: "user-2",
-        locationId: 1,
+        searchType: "LOCATION_ID",
+        searchValue: "1",
         user: {
           email: "user2@example.com",
           firstName: "Jane",
@@ -38,7 +40,7 @@ describe("subscription-queries", () => {
       }
     ];
 
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
     vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
 
     const result = await findActiveSubscriptionsByLocation(1);
@@ -46,7 +48,10 @@ describe("subscription-queries", () => {
     expect(result).toHaveLength(2);
     expect(result[0].user.email).toBe("user1@example.com");
     expect(prisma.subscription.findMany).toHaveBeenCalledWith({
-      where: { locationId: 1 },
+      where: {
+        searchType: "LOCATION_ID",
+        searchValue: "1"
+      },
       include: {
         user: {
           select: {

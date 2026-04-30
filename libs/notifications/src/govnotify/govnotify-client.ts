@@ -32,6 +32,8 @@ interface AxiosEmailResponse {
 export interface SendEmailParams {
   emailAddress: string;
   templateParameters: TemplateParameters;
+  templateId?: string;
+  pdfBuffer?: Buffer;
 }
 
 export interface SendEmailResult {
@@ -55,21 +57,24 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
 
 async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResult> {
   const notifyClient = new NotifyClient(getApiKey());
-  const templateId = getTemplateId();
+  const templateId = params.templateId || getTemplateId();
 
   try {
-    console.log("[govnotify-client] Sending email:", {
-      templateId,
-      emailAddress: params.emailAddress,
-      templateParameters: params.templateParameters
-    });
+    // Build personalisation with optional PDF link
+    const personalisation: Record<string, unknown> = { ...params.templateParameters };
+
+    // If PDF buffer is provided, upload to GOV.UK Notify document service
+    if (params.pdfBuffer) {
+      const linkToFile = (notifyClient as any).prepareUpload(params.pdfBuffer, {
+        confirmEmailBeforeDownload: false,
+        retentionPeriod: "1 week"
+      });
+      personalisation.link_to_file = linkToFile;
+    }
 
     const response = (await (notifyClient as any).sendEmail(templateId, params.emailAddress, {
-      personalisation: params.templateParameters
+      personalisation
     })) as unknown as AxiosEmailResponse;
-
-    console.log("[govnotify-client] Response keys:", Object.keys(response || {}));
-    console.log("[govnotify-client] Response.data:", response?.data);
 
     // The notifications-node-client v8.x returns response.data (Axios response structure)
     const notificationId = response?.data?.id;
@@ -86,12 +91,6 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       notificationId
     };
   } catch (error: any) {
-    console.error("[govnotify-client] Error details:", {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    });
-
     const errorDetails = error.response?.data?.errors || error.message || String(error);
     const detailedError = typeof errorDetails === "object" ? JSON.stringify(errorDetails) : errorDetails;
     throw new Error(`GOV.UK Notify error: ${detailedError}`);

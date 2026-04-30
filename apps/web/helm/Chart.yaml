@@ -2,6 +2,8 @@ apiVersion: v2
 appVersion: '1.0'
 description: A Helm chart for Court and Tribunal Hearings Service web
 name: cath-web
+annotations:
+  team: cath
 home: https://github.com/hmcts/cath-service
 version: 0.0.1
 dependencies:
