@@ -22,8 +22,7 @@ const getHandler = async (req: Request, res: Response) => {
       return res.render("media-applications/[id]/index", {
         pageTitle: lang.pageTitle,
         error: lang.errorMessages.alreadyReviewed,
-        application: null,
-        hideLanguageToggle: true
+        application: null
       });
     }
 
@@ -36,15 +35,13 @@ const getHandler = async (req: Request, res: Response) => {
       rejectButton: lang.rejectButton,
       fileNotAvailable: lang.fileNotAvailable,
       application,
-      proofOfIdFilename: application.proofOfIdOriginalName,
-      hideLanguageToggle: true
+      proofOfIdFilename: application.proofOfIdOriginalName
     });
   } catch (_error) {
     res.render("media-applications/[id]/index", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };

@@ -174,8 +174,7 @@ describe("manual-upload-summary page", () => {
           language: "Language",
           displayFileDates: "Display file dates",
           change: "Change",
-          confirmButton: "Confirm",
-          hideLanguageToggle: true
+          confirmButton: "Confirm"
         })
       );
     });
@@ -219,8 +218,7 @@ describe("manual-upload-summary page", () => {
           language: "Iaith",
           displayFileDates: "Dangos dyddiadau ffeil",
           change: "Newid",
-          confirmButton: "Cadarnhau",
-          hideLanguageToggle: true
+          confirmButton: "Cadarnhau"
         })
       );
     });

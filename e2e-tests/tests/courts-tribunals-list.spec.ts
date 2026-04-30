@@ -132,7 +132,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list");
 
       // Find and click the Welsh language toggle
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toBeVisible();
       await expect(languageToggle).toContainText("Cymraeg");
 
@@ -169,7 +169,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list?lng=cy");
 
       // Verify we're in Welsh mode
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toContainText("English");
 
       // Switch back to English
