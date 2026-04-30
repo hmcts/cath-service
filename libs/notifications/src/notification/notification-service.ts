@@ -118,13 +118,15 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
 }
 
 async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent): Promise<UserNotificationResult> {
+  let notification: Awaited<ReturnType<typeof createNotificationAuditLog>> | undefined;
+
   try {
     const validationResult = await validateUserEmail(subscription, event.publicationId);
     if (validationResult) {
       return validationResult;
     }
 
-    const notification = await createNotificationAuditLog({
+    notification = await createNotificationAuditLog({
       subscriptionId: subscription.subscriptionId,
       userId: subscription.userId,
       publicationId: event.publicationId,
@@ -150,6 +152,9 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     return { status: "failed", error: `User ${subscription.userId}: ${emailResult.error}` };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    if (notification) {
+      await updateNotificationStatus(notification.notificationId, "Failed", undefined, errorMessage).catch(() => {});
+    }
     return { status: "failed", error: `User ${subscription.userId}: ${errorMessage}` };
   }
 }

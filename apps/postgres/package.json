@@ -14,7 +14,8 @@
     "test": "echo 'No tests for migration runner'",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:fix": "biome check --write --unsafe ."
+    "lint:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit"
   },
   "prisma": {
     "seed": "psql $DATABASE_URL -f prisma/seed.sql"
