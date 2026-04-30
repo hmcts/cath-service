@@ -27,6 +27,7 @@ export interface CreateArtefactInput {
   locationId: string;
   listTypeId: number;
   contentDate: string;
+  type?: string;
   sensitivity?: string;
   language?: string;
   displayFrom?: string;

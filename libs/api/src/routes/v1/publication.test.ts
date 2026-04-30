@@ -11,6 +11,11 @@ vi.mock("../../middleware/oauth-middleware.js", () => ({
   authenticateApi: vi.fn(() => (_req: Request, _res: Response, next: () => void) => next())
 }));
 
+vi.mock("@hmcts/pdda-html-upload", () => ({
+  validatePddaHtmlUpload: vi.fn(),
+  uploadHtmlToS3: vi.fn()
+}));
+
 describe("POST /v1/publication", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -47,6 +52,7 @@ describe("POST /v1/publication", () => {
     };
 
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
   });
 
   it("should return 201 and artefact_id when blob ingestion is successful", async () => {
@@ -59,7 +65,7 @@ describe("POST /v1/publication", () => {
     });
 
     const handlers = POST;
-    const handler = handlers[1] as (req: Request, res: Response) => Promise<void>;
+    const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
 
     await handler(mockRequest as Request, mockResponse as Response);
 
@@ -81,7 +87,7 @@ describe("POST /v1/publication", () => {
     });
 
     const handlers = POST;
-    const handler = handlers[1] as (req: Request, res: Response) => Promise<void>;
+    const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
 
     await handler(mockRequest as Request, mockResponse as Response);
 
@@ -102,7 +108,7 @@ describe("POST /v1/publication", () => {
     });
 
     const handlers = POST;
-    const handler = handlers[1] as (req: Request, res: Response) => Promise<void>;
+    const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
 
     await handler(mockRequest as Request, mockResponse as Response);
 
@@ -119,12 +125,12 @@ describe("POST /v1/publication", () => {
     vi.mocked(processBlobIngestion).mockRejectedValue(new Error("Unexpected error"));
 
     const handlers = POST;
-    const handler = handlers[1] as (req: Request, res: Response) => Promise<void>;
+    const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
 
     await handler(mockRequest as Request, mockResponse as Response);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Unexpected error in blob ingestion endpoint:",
+      "Unexpected error in publication endpoint:",
       expect.objectContaining({
         name: expect.any(String),
         message: expect.any(String)
@@ -133,7 +139,8 @@ describe("POST /v1/publication", () => {
     expect(statusMock).toHaveBeenCalledWith(500);
     expect(jsonMock).toHaveBeenCalledWith({
       success: false,
-      message: "Internal server error"
+      message: "Internal server error",
+      correlation_id: undefined
     });
   });
 
@@ -147,7 +154,7 @@ describe("POST /v1/publication", () => {
     });
 
     const handlers = POST;
-    const handler = handlers[1] as (req: Request, res: Response) => Promise<void>;
+    const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
 
     await handler(mockRequest as Request, mockResponse as Response);
 
@@ -166,7 +173,7 @@ describe("POST /v1/publication", () => {
     });
 
     const handlers = POST;
-    const handler = handlers[1] as (req: Request, res: Response) => Promise<void>;
+    const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
 
     await handler(mockRequest as Request, mockResponse as Response);
 
@@ -175,6 +182,149 @@ describe("POST /v1/publication", () => {
       success: false,
       no_match: true,
       message: "Court not found"
+    });
+  });
+
+  describe("HTML file upload (multipart/form-data)", () => {
+    let mockMultipartRequest: Partial<Request>;
+
+    beforeEach(() => {
+      mockMultipartRequest = {
+        headers: {
+          "content-type": "multipart/form-data; boundary=----WebKitFormBoundary",
+          "x-correlation-id": "test-correlation-id"
+        },
+        body: {
+          type: "LCSU"
+        },
+        file: {
+          fieldname: "file",
+          originalname: "test.html",
+          encoding: "7bit",
+          mimetype: "text/html",
+          buffer: Buffer.from("<html></html>"),
+          size: 100,
+          stream: null as any,
+          destination: "",
+          filename: "",
+          path: ""
+        }
+      };
+    });
+
+    it("should return 201 on successful HTML upload", async () => {
+      const { validatePddaHtmlUpload, uploadHtmlToS3 } = await import("@hmcts/pdda-html-upload");
+
+      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
+      vi.mocked(uploadHtmlToS3).mockResolvedValue({
+        success: true,
+        s3Key: "pdda-html/2026/02/11/uuid.html",
+        bucketName: "test-bucket"
+      });
+
+      const handlers = POST;
+      const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
+
+      await handler(mockMultipartRequest as Request, mockResponse as Response);
+
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: true,
+        message: "Upload accepted and stored",
+        s3_key: "pdda-html/2026/02/11/uuid.html",
+        correlation_id: "test-correlation-id"
+      });
+    });
+
+    it("should return 400 when HTML validation fails", async () => {
+      const { validatePddaHtmlUpload } = await import("@hmcts/pdda-html-upload");
+
+      vi.mocked(validatePddaHtmlUpload).mockReturnValue({
+        valid: false,
+        error: "The uploaded file must be an HTM or HTML file"
+      });
+
+      const handlers = POST;
+      const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
+
+      await handler(mockMultipartRequest as Request, mockResponse as Response);
+
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: "The uploaded file must be an HTM or HTML file",
+        correlation_id: "test-correlation-id"
+      });
+    });
+
+    it("should return 400 when type is not LCSU", async () => {
+      mockMultipartRequest.body = { type: "JSON" };
+
+      const { validatePddaHtmlUpload } = await import("@hmcts/pdda-html-upload");
+
+      vi.mocked(validatePddaHtmlUpload).mockReturnValue({
+        valid: false,
+        error: "ArtefactType must be LCSU for HTM/HTML uploads"
+      });
+
+      const handlers = POST;
+      const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
+
+      await handler(mockMultipartRequest as Request, mockResponse as Response);
+
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: "ArtefactType must be LCSU for HTM/HTML uploads",
+        correlation_id: "test-correlation-id"
+      });
+    });
+
+    it("should return 500 when S3 upload fails", async () => {
+      const { validatePddaHtmlUpload, uploadHtmlToS3 } = await import("@hmcts/pdda-html-upload");
+
+      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
+      vi.mocked(uploadHtmlToS3).mockRejectedValue(new Error("S3 upload failed"));
+
+      const handlers = POST;
+      const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
+
+      await handler(mockMultipartRequest as Request, mockResponse as Response);
+
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: "Internal server error",
+        correlation_id: "test-correlation-id"
+      });
+    });
+
+    it("should work without correlation ID", async () => {
+      mockMultipartRequest.headers = {
+        "content-type": "multipart/form-data; boundary=----WebKitFormBoundary"
+      };
+
+      const { validatePddaHtmlUpload, uploadHtmlToS3 } = await import("@hmcts/pdda-html-upload");
+
+      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
+      vi.mocked(uploadHtmlToS3).mockResolvedValue({
+        success: true,
+        s3Key: "pdda-html/2026/02/11/uuid.html",
+        bucketName: "test-bucket"
+      });
+
+      const handlers = POST;
+      const handler = handlers[2] as (req: Request, res: Response) => Promise<void>;
+
+      await handler(mockMultipartRequest as Request, mockResponse as Response);
+
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: true,
+        message: "Upload accepted and stored",
+        s3_key: "pdda-html/2026/02/11/uuid.html",
+        correlation_id: undefined
+      });
     });
   });
 });

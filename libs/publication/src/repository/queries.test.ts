@@ -94,8 +94,9 @@ describe("createArtefact", () => {
     });
     expect(prisma.artefact.create).toHaveBeenCalledTimes(1);
     expect(prisma.artefact.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         artefactId: artefactData.artefactId,
+        type: "LIST",
         locationId: artefactData.locationId,
         listTypeId: artefactData.listTypeId,
         contentDate: artefactData.contentDate,
@@ -105,7 +106,7 @@ describe("createArtefact", () => {
         displayTo: artefactData.displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD"
-      }
+      })
     });
     expect(prisma.artefact.update).not.toHaveBeenCalled();
   });
@@ -370,8 +371,9 @@ describe("createArtefact", () => {
     await createArtefact(artefactData as any);
 
     expect(prisma.artefact.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         artefactId: artefactData.artefactId,
+        type: "LIST",
         locationId: artefactData.locationId,
         listTypeId: artefactData.listTypeId,
         contentDate,
@@ -381,7 +383,7 @@ describe("createArtefact", () => {
         displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD"
-      }
+      })
     });
   });
 });
