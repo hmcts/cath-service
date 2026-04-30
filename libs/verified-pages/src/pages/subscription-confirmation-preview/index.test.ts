@@ -205,7 +205,7 @@ describe("subscription-confirmation-preview", () => {
     });
 
     it("should pass confirmedCaseSubscriptions to the template when present in session", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
       mockReq.session = {
         emailSubscriptions: {

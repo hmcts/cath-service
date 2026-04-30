@@ -80,7 +80,7 @@ describe("subscription-queries", () => {
         }
       ];
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
 
       const result = await findActiveSubscriptionsByCaseNumber("AB-123");
@@ -105,7 +105,7 @@ describe("subscription-queries", () => {
     });
 
     it("should return empty array when no subscribers match the case number", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
 
       const result = await findActiveSubscriptionsByCaseNumber("UNKNOWN-999");
@@ -126,7 +126,7 @@ describe("subscription-queries", () => {
         }
       ];
 
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscriptions as never);
 
       const result = await findActiveSubscriptionsByCaseName("Smith v Jones");
@@ -151,7 +151,7 @@ describe("subscription-queries", () => {
     });
 
     it("should return empty array when no subscribers match the case name", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
 
       const result = await findActiveSubscriptionsByCaseName("Unknown Case");
@@ -167,7 +167,7 @@ describe("subscription-queries", () => {
     });
 
     it("should find all case subscriptions for given user IDs", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([
         { userId: "user-1", searchValue: "AB-123" },
         { userId: "user-2", searchValue: "Smith v Jones" }
@@ -183,7 +183,7 @@ describe("subscription-queries", () => {
     });
 
     it("should return empty array when no case subscriptions exist for users", async () => {
-      const { prisma } = await import("@hmcts/postgres");
+      const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
 
       const result = await findCaseSubscriptionsByUserIds(["user-1"]);

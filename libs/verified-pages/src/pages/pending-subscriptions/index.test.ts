@@ -24,7 +24,7 @@ vi.mock("@hmcts/subscriptions", () => ({
   createCaseSubscription: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   Prisma: {
     PrismaClientKnownRequestError: class PrismaClientKnownRequestError extends Error {
       code: string;
@@ -271,7 +271,7 @@ describe("pending-subscriptions", () => {
     });
 
     it("should redirect to subscription-confirmed even when all subscriptions already exist (P2002)", async () => {
-      const { Prisma } = await import("@hmcts/postgres");
+      const { Prisma } = await import("@hmcts/postgres-prisma");
       const pendingCaseSubscriptions = [
         {
           caseName: "Smith v Jones",

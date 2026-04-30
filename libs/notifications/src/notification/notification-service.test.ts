@@ -208,7 +208,7 @@ describe("sendListTypePublicationNotifications", () => {
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
     const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
     vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
@@ -224,7 +224,7 @@ describe("sendListTypePublicationNotifications", () => {
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
     const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
     vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
@@ -269,7 +269,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
       summary_of_cases: ""
     });
 
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
     vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.artefactSearch.findMany).mockResolvedValue([]);
 
@@ -333,7 +333,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
     const { findActiveSubscriptionsByCaseNumber } = await import("./subscription-queries.js");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { buildTemplateParameters } = await import("../govnotify/template-config.js");
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
     vi.mocked(prisma.artefactSearch.findMany).mockResolvedValue([{ caseNumber: "AB-123", caseName: null }] as any);
@@ -369,7 +369,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
     );
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { buildTemplateParameters } = await import("../govnotify/template-config.js");
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
     vi.mocked(prisma.artefactSearch.findMany).mockResolvedValue([{ caseNumber: "AB-123", caseName: "Smith v Jones" }] as any);
@@ -404,7 +404,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
     );
     const { createNotificationAuditLog } = await import("./notification-queries.js");
     const { buildTemplateParameters } = await import("../govnotify/template-config.js");
-    const { prisma } = await import("@hmcts/postgres");
+    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
     vi.mocked(prisma.artefactSearch.findMany).mockResolvedValue([{ caseNumber: "AB-123", caseName: "Smith v Jones" }] as any);
