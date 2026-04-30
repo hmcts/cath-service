@@ -9,7 +9,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       create: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      upsert: vi.fn()
     }
   }
 }));
@@ -244,7 +245,7 @@ describe("User Repository", () => {
   });
 
   describe("createOrUpdateUser", () => {
-    it("should create a new user if not exists", async () => {
+    it("should upsert user with correct create and update data", async () => {
       const input: User = {
         email: "test@example.com",
         firstName: "John",
@@ -254,70 +255,38 @@ describe("User Repository", () => {
         role: "VERIFIED"
       };
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.user.create).mockResolvedValue({
+      const mockUser = {
         userId: "user-123",
         ...input,
         firstName: input.firstName ?? null,
         surname: input.surname ?? null,
         createdDate: new Date(),
         lastSignedInDate: new Date()
-      } as any);
-
-      await createOrUpdateUser(input);
-
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { userProvenanceId: input.userProvenanceId }
-      });
-      expect(prisma.user.create).toHaveBeenCalled();
-      expect(prisma.user.update).not.toHaveBeenCalled();
-    });
-
-    it("should update existing user if found", async () => {
-      const input: User = {
-        email: "test@example.com",
-        firstName: "John",
-        surname: "Doe",
-        userProvenance: "SSO",
-        userProvenanceId: "123e4567-e89b-12d3-a456-426614174000",
-        role: "LOCAL_ADMIN"
       };
 
-      const existingUser = {
-        userId: "user-123",
-        email: "test@example.com",
-        firstName: "John",
-        surname: "Doe",
-        userProvenance: "SSO",
-        userProvenanceId: input.userProvenanceId,
-        role: "VERIFIED",
-        createdDate: new Date(),
-        lastSignedInDate: new Date()
-      };
+      vi.mocked(prisma.user.upsert).mockResolvedValue(mockUser as any);
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(existingUser);
-      vi.mocked(prisma.user.update).mockResolvedValue({
-        ...existingUser,
-        role: "LOCAL_ADMIN",
-        lastSignedInDate: new Date()
-      });
+      const result = await createOrUpdateUser(input);
 
-      await createOrUpdateUser(input);
-
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { userProvenanceId: input.userProvenanceId }
-      });
-      expect(prisma.user.update).toHaveBeenCalledWith({
+      expect(prisma.user.upsert).toHaveBeenCalledWith({
         where: { userProvenanceId: input.userProvenanceId },
-        data: {
-          role: "LOCAL_ADMIN",
+        update: {
+          lastSignedInDate: expect.any(Date)
+        },
+        create: {
+          email: input.email,
+          firstName: input.firstName,
+          surname: input.surname,
+          userProvenance: input.userProvenance,
+          userProvenanceId: input.userProvenanceId,
+          role: input.role,
           lastSignedInDate: expect.any(Date)
         }
       });
-      expect(prisma.user.create).not.toHaveBeenCalled();
+      expect(result).toEqual(mockUser);
     });
 
-    it("should update last signed in date when user exists", async () => {
+    it("should upsert user without optional fields", async () => {
       const input: User = {
         email: "test@example.com",
         userProvenance: "CFT_IDAM",
@@ -325,30 +294,34 @@ describe("User Repository", () => {
         role: "VERIFIED"
       };
 
-      const existingUser = {
+      const mockUser = {
         userId: "user-123",
-        email: "test@example.com",
+        email: input.email,
         firstName: null,
         surname: null,
-        userProvenance: "CFT_IDAM",
+        userProvenance: input.userProvenance,
         userProvenanceId: input.userProvenanceId,
-        role: "VERIFIED",
-        createdDate: new Date("2025-01-01"),
-        lastSignedInDate: new Date("2025-01-01")
+        role: input.role,
+        createdDate: new Date(),
+        lastSignedInDate: new Date()
       };
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(existingUser);
-      vi.mocked(prisma.user.update).mockResolvedValue({
-        ...existingUser,
-        lastSignedInDate: new Date()
-      });
+      vi.mocked(prisma.user.upsert).mockResolvedValue(mockUser as any);
 
       await createOrUpdateUser(input);
 
-      expect(prisma.user.update).toHaveBeenCalledWith({
+      expect(prisma.user.upsert).toHaveBeenCalledWith({
         where: { userProvenanceId: input.userProvenanceId },
-        data: {
-          role: "VERIFIED",
+        update: {
+          lastSignedInDate: expect.any(Date)
+        },
+        create: {
+          email: input.email,
+          firstName: undefined,
+          surname: undefined,
+          userProvenance: input.userProvenance,
+          userProvenanceId: input.userProvenanceId,
+          role: input.role,
           lastSignedInDate: expect.any(Date)
         }
       });
