@@ -15,8 +15,9 @@ const testCaseDataMap = new Map<string, TestCaseData>();
 
 async function createTestCaseData(): Promise<TestCaseData> {
   const artefactId = randomUUID();
-  const caseNumber = `E2E-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  const caseName = `E2E Test Case ${Date.now()}`;
+  const uniqueSuffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const caseNumber = `E2E-${uniqueSuffix}`;
+  const caseName = `E2E Test Case ${uniqueSuffix}`;
 
   const now = new Date();
   const displayTo = new Date(now.getTime() + 24 * 60 * 60 * 1000);
