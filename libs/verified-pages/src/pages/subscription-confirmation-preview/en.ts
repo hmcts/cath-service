@@ -1,0 +1,21 @@
+export const en = {
+  title: "Confirm your email subscriptions",
+  heading: "Confirm your email subscriptions",
+  tableHeaderCourt: "Court or tribunal name",
+  tableHeaderListType: "List type",
+  tableHeaderVersion: "Version",
+  tableHeaderActions: "Actions",
+  removeLink: "Remove",
+  changeVersionLink: "Change",
+  confirmButton: "Confirm subscriptions",
+  addAnotherLink: "Add another email subscription",
+  selectListTypesLink: "Select list types",
+  addSubscriptionsButton: "Add subscriptions",
+  back: "Back",
+  noLanguageSelected: "Not selected",
+  versionTooltip: "This version change will affect the previously selected language for all existing subscriptions.",
+  errorSummaryTitle: "There is a problem",
+  errorNoData: "No subscription data found. Please start again.",
+  errorNoSubscription: "At least one subscription is needed.",
+  errorNoListType: "Please select a list type to continue."
+};

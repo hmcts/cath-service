@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sendPublicationNotifications } from "./notification-service.js";
+import { sendListTypePublicationNotifications, sendPublicationNotifications } from "./notification-service.js";
 
 vi.mock("node:fs/promises", () => ({
   default: {
@@ -41,7 +41,8 @@ vi.mock("../govnotify/template-config.js", () => ({
 }));
 
 vi.mock("./subscription-queries.js", () => ({
-  findActiveSubscriptionsByLocation: vi.fn()
+  findActiveSubscriptionsByLocation: vi.fn(),
+  findListTypeSubscribersByListTypeAndLanguage: vi.fn()
 }));
 
 vi.mock("./notification-queries.js", () => ({
@@ -591,5 +592,108 @@ describe("notification-service", () => {
         templateId: undefined
       })
     );
+  });
+});
+
+describe("sendListTypePublicationNotifications", () => {
+  const baseEvent = {
+    publicationId: "pub-1",
+    locationId: "1",
+    locationName: "Test Court",
+    hearingListName: "Daily Cause List",
+    publicationDate: new Date("2025-01-01"),
+    listTypeId: 5,
+    language: "ENGLISH"
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-lt-1" });
+
+    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    vi.mocked(buildTemplateParameters).mockReturnValue({
+      locations: "Test Court",
+      ListType: "Daily Cause List",
+      content_date: "1 January 2025",
+      start_page_link: "https://example.com",
+      subscription_page_link: "https://example.com"
+    });
+
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+  });
+
+  it("should return empty result when no list type subscribers exist", async () => {
+    const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([]);
+
+    const result = await sendListTypePublicationNotifications(baseEvent);
+
+    expect(result.totalSubscriptions).toBe(0);
+    expect(result.sent).toBe(0);
+    expect(result.failed).toBe(0);
+    expect(result.skipped).toBe(0);
+  });
+
+  it("should send emails to all matched list type subscribers", async () => {
+    const mockSubscribers = [
+      { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } },
+      { userId: "user-2", user: { email: "user2@example.com", firstName: "Jane", surname: "Smith" } }
+    ];
+
+    const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
+
+    const result = await sendListTypePublicationNotifications(baseEvent);
+
+    expect(result.totalSubscriptions).toBe(2);
+    expect(result.sent).toBe(2);
+    expect(result.failed).toBe(0);
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ emailAddress: "user1@example.com" }));
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ emailAddress: "user2@example.com" }));
+  });
+
+  it("should skip subscribers with no email address", async () => {
+    const mockSubscribers = [{ userId: "user-1", user: { email: "", firstName: "John", surname: "Doe" } }];
+
+    const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
+
+    const result = await sendListTypePublicationNotifications(baseEvent);
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(0);
+  });
+
+  it("should record failures when email sending fails", async () => {
+    const mockSubscribers = [{ userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } }];
+
+    const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "API Error" });
+
+    const result = await sendListTypePublicationNotifications(baseEvent);
+
+    expect(result.totalSubscriptions).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(result.errors).toContain("User user-1: API Error");
+  });
+
+  it("should query using ENGLISH_AND_WELSH combined with the publication language", async () => {
+    const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([]);
+
+    await sendListTypePublicationNotifications({ ...baseEvent, language: "WELSH" });
+
+    expect(findListTypeSubscribersByListTypeAndLanguage).toHaveBeenCalledWith(5, "WELSH");
   });
 });

@@ -14,7 +14,7 @@
   {% endif %}
 {% endblock %}
 
-{% block beforeContent %}
+{% block backLink %}
   {{ govukBackLink({
     text: back,
     href: "/location-name-search"
@@ -33,7 +33,7 @@
         }) }}
       </div>
     </div>
-    <form action="/location-name-search"  method="get">
+    <form action="/add-email-subscription" method="get">
       <div class="govuk-!-text-align-left">
         {{ govukButton({
           text: addSubscriptions
@@ -53,18 +53,18 @@
     <style nonce="{{ cspNonce }}">
       .subscription-table .govuk-table__cell {
         padding-top: 10px !important;
-        padding-bottom: 10px !important;
+        padding-bottom: 0 !important;
       }
       .subscription-table .govuk-table__row {
         border-bottom: 1px solid #b1b4b6;
       }
     </style>
 
-    <table class="govuk-table subscription-table" style="margin-bottom: 20px;">
+    <table class="govuk-table subscription-table" style="margin-bottom: 40px;">
       <thead class="govuk-table__head">
         <tr class="govuk-table__row">
-          <th scope="col" class="govuk-table__header">{{ heading }}</th>
-          <th scope="col" class="govuk-table__header govuk-!-text-align-right">Actions</th>
+          <th scope="col" class="govuk-table__header">{{ tableHeaderLocation }}</th>
+          <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
         </tr>
       </thead>
       <tbody class="govuk-table__body">
@@ -86,7 +86,7 @@
     </table>
 
     <p class="govuk-body">
-      <a class="govuk-link" href="/location-name-search">{{ addAnotherSubscription }}</a>
+      <a class="govuk-link" href="/add-email-subscription">{{ addAnotherSubscription }}</a>
     </p>
 
     <form method="post">

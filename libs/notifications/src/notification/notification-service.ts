@@ -30,7 +30,12 @@ import {
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
-import { findActiveSubscriptionsByLocation, type SubscriptionWithUser } from "./subscription-queries.js";
+import {
+  findActiveSubscriptionsByLocation,
+  findListTypeSubscribersByListTypeAndLanguage,
+  type ListTypeSubscriberWithUser,
+  type SubscriptionWithUser
+} from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
 const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
@@ -273,4 +278,71 @@ function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[
 function buildUserName(firstName: string | null, surname: string | null): string {
   const parts = [firstName, surname].filter(Boolean);
   return parts.length > 0 ? parts.join(" ") : "User";
+}
+
+export interface ListTypePublicationEvent {
+  publicationId: string;
+  locationId: string;
+  locationName: string;
+  hearingListName: string;
+  publicationDate: Date;
+  listTypeId: number;
+  language: string;
+  jsonData?: unknown;
+  pdfFilePath?: string;
+}
+
+export async function sendListTypePublicationNotifications(event: ListTypePublicationEvent): Promise<NotificationResult> {
+  const listTypeName = (await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }).catch(() => null))?.name;
+
+  const subscribers = await findListTypeSubscribersByListTypeAndLanguage(event.listTypeId, event.language);
+
+  if (subscribers.length === 0) {
+    return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [] };
+  }
+
+  const results = await Promise.allSettled(subscribers.map((subscriber) => processListTypeUserNotification(subscriber, event, listTypeName)));
+
+  return aggregateResults(results, subscribers.length);
+}
+
+async function processListTypeUserNotification(
+  subscriber: ListTypeSubscriberWithUser,
+  event: ListTypePublicationEvent,
+  listTypeName?: string
+): Promise<UserNotificationResult> {
+  if (!subscriber.user.email) {
+    return { status: "skipped", error: `User ${subscriber.userId}: No email address` };
+  }
+
+  try {
+    const userName = buildUserName(subscriber.user.firstName, subscriber.user.surname);
+    const publicationEvent: PublicationEvent = {
+      publicationId: event.publicationId,
+      locationId: event.locationId,
+      locationName: event.locationName,
+      hearingListName: event.hearingListName,
+      publicationDate: event.publicationDate,
+      listTypeId: event.listTypeId,
+      jsonData: event.jsonData,
+      pdfFilePath: event.pdfFilePath
+    };
+    const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName);
+
+    const emailResult = await sendEmail({
+      emailAddress: subscriber.user.email,
+      templateParameters: emailData.templateParameters,
+      templateId: emailData.templateId,
+      pdfBuffer: emailData.pdfBuffer
+    });
+
+    if (emailResult.success) {
+      return { status: "sent" };
+    }
+
+    return { status: "failed", error: `User ${subscriber.userId}: ${emailResult.error}` };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { status: "failed", error: `User ${subscriber.userId}: ${errorMessage}` };
+  }
 }

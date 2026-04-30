@@ -12,11 +12,21 @@ export interface SubscriptionWithUser {
   };
 }
 
+export interface ListTypeSubscriberWithUser {
+  userId: string;
+  user: {
+    email: string;
+    firstName: string | null;
+    surname: string | null;
+  };
+}
+
 export async function findActiveSubscriptionsByLocation(locationId: number): Promise<SubscriptionWithUser[]> {
-  const subscriptions = await prisma.subscription.findMany({
+  return prisma.subscription.findMany({
     where: {
       searchType: "LOCATION_ID",
-      searchValue: locationId.toString()
+      searchValue: locationId.toString(),
+      user: { subscriptionListTypes: { none: {} } }
     },
     include: {
       user: {
@@ -28,6 +38,23 @@ export async function findActiveSubscriptionsByLocation(locationId: number): Pro
       }
     }
   });
+}
 
-  return subscriptions;
+export async function findListTypeSubscribersByListTypeAndLanguage(listTypeId: number, language: string): Promise<ListTypeSubscriberWithUser[]> {
+  return prisma.subscriptionListType.findMany({
+    where: {
+      listTypeIds: { has: listTypeId },
+      listLanguage: { has: language }
+    },
+    select: {
+      userId: true,
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
 }
