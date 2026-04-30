@@ -78,6 +78,7 @@ test.describe("Crime IDAM", () => {
     await page.getByRole("button", { name: /parhau/i }).click();
 
     // Language parameter should be passed to Crime IDAM
-    await expect(page).toHaveURL(/ui_locales=cy/);
+    // ui_locales=cy is URL-encoded as ui_locales%3Dcy when nested inside the goto parameter
+    await expect(page).toHaveURL(/ui_locales(%3D|=)cy/);
   });
 });
