@@ -1,5 +1,5 @@
-import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { sendMediaApprovalEmail } from "@hmcts/notification";
+import { getGraphApiAccessToken, requireRole, USER_ROLES } from "@hmcts/auth";
+import { extractNotifyError, sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../../media-application/model.js";
@@ -81,26 +81,42 @@ const postHandler = async (req: Request, res: Response) => {
       return res.redirect(`/media-applications/${id}`);
     }
 
-    await approveApplication(id);
+    const accessToken = await getGraphApiAccessToken();
+    const { isNewUser } = await approveApplication(id, accessToken);
 
-    // Send approval email notification
     try {
-      await sendMediaApprovalEmail({
-        name: application.name,
-        email: application.email,
-        employer: application.employer
-      });
+      if (isNewUser) {
+        await sendMediaNewAccountEmail({ email: application.email, fullName: application.name });
+      } else {
+        await sendMediaDuplicateAccountEmail({ email: application.email, fullName: application.name });
+      }
     } catch (error) {
-      console.error("❌ Failed to send approval email:", error);
-      // Don't fail the approval if email fails
+      const { status, message } = extractNotifyError(error);
+      console.error(`Failed to send confirmation email: ${status} ${message}`);
     }
 
     res.redirect(`/media-applications/${id}/approved`);
-  } catch (_error) {
+  } catch (error) {
+    console.error("Failed to approve media application:", error);
+    const application = await getApplicationById(id).catch(() => null);
+    const errorMessage =
+      error instanceof Error && error.message === "Application has already been reviewed"
+        ? lang.errorMessages.alreadyReviewed
+        : lang.errorMessages.azureAdFailed;
+
     res.render("media-applications/[id]/approve", {
       pageTitle: lang.pageTitle,
-      error: lang.errorMessages.loadFailed,
-      application: null,
+      error: errorMessage,
+      subheading: lang.subheading,
+      tableHeaders: lang.tableHeaders,
+      proofOfIdText: lang.proofOfIdText,
+      viewProofOfId: lang.viewProofOfId,
+      fileNotAvailable: lang.fileNotAvailable,
+      radioLegend: lang.radioLegend,
+      radioOptions: lang.radioOptions,
+      continueButton: lang.continueButton,
+      application,
+      proofOfIdFilename: application?.proofOfIdOriginalName,
       hideLanguageToggle: true
     });
   }

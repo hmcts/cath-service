@@ -1,42 +1,34 @@
-# Pipeline Deployment Helm Values
-# This file is used by Flux for non-prod and prod deployments
-# For local development, see values.dev.yaml
+# Local Development Helm Values
+# This file is automatically used when running locally (not in Kubernetes/Azure)
+# It references the pip-ss-kv-stg Key Vault with -dev suffixed secrets
+# For pipeline deployments, see values.yaml
 
 nodejs:
-  releaseNameOverride: "{{ .Release.Name }}-web"
   applicationPort: 8080
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
-    NODE_ENV: 'production'
-    POSTGRES_DATABASE: cath
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
-    CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
-    CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+    CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
     MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
     MEDIA_SIGN_IN_LINK: 'https://pip-frontend.staging.platform.hmcts.net/login?p=B2C_1_SignInUserFlow'
-    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
-    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY: ebc08910-5dd5-44c5-b3fc-72f90935f858
-    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY: bf0802f9-3199-4774-a0c1-f9cb1755ff8f
-    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
-    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: '1988bbdd-d223-49bf-912f-ed34cb43e35e'
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT: '689c0183-0461-423e-a542-de513a93a5b7'
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT: '2b4ccd66-2b04-4d27-94e5-b7372f58be08'
+    ENABLE_B2C: 'true'
+    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
+    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
-    cath:
+    # Local development uses pip-ss-kv-stg with -dev suffixed secrets
+    pip-ss-kv-stg:
       secrets:
-        - name: app-insights-connection-string
-          alias: APPLICATION_INSIGHTS_CONNECTION_STRING
-        - name: redis-url
-          alias: REDIS_URL
-        - name: postgres-url
-          alias: DATABASE_URL
-        - name: govuk-notify-api-key
-          alias: GOVUK_NOTIFY_API_KEY
-        - name: sso-client-id
+        # SSO secrets for local development
+        - name: sso-client-id-dev
           alias: SSO_CLIENT_ID
-        - name: sso-client-secret
+        - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
           alias: SSO_IDENTITY_METADATA
@@ -46,9 +38,12 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
         - name: sso-sg-admin-local
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
+        # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-
+        # GOV.UK Notify
+        - name: gov-uk-notify-test-api-key
+          alias: GOVUK_NOTIFY_API_KEY
         # Azure AD B2C secrets (media user account management)
         - name: b2c-tenant-id
           alias: AZURE_B2C_TENANT_ID
@@ -58,3 +53,8 @@ nodejs:
           alias: AZURE_B2C_CLIENT_SECRET
         - name: b2c-ad-url
           alias: AZURE_B2C_DOMAIN
+        # B2C secrets for verified user sign-in (using PIP staging frontend app registration)
+        - name: auto-pip-stg-pip-frontend-stg-id
+          alias: B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-frontend-stg-pwd
+          alias: B2C_CLIENT_SECRET
