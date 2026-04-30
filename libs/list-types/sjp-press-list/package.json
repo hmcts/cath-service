@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.10.4",

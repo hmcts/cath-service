@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { getLatestSjpArtefacts } from "@hmcts/publication";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";

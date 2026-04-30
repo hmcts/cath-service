@@ -5,7 +5,6 @@ const API_BASE_URL = "http://localhost:3001";
 
 // Helper function to create SJP public list test data
 function createSjpPublicListPayload() {
-  const postcodes = ["BS8", "BS9", "M1", "M2"];
   const prosecutors = ["TV Licensing", "Thames Valley Police", "Manchester City Council"];
   const offences = [
     "Use a television set without a licence",
@@ -19,7 +18,6 @@ function createSjpPublicListPayload() {
 
   // Create 15 test cases with varied data
   for (let i = 0; i < 15; i++) {
-    const postcode = postcodes[i % postcodes.length];
     const prosecutor = prosecutors[i % prosecutors.length];
     const offence = offences[i % offences.length];
     const name = names[i % names.length];

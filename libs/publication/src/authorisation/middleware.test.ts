@@ -1,12 +1,12 @@
 import type { UserProfile } from "@hmcts/auth";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sensitivity } from "../sensitivity.js";
 import { requirePublicationAccess, requirePublicationDataAccess } from "./middleware.js";
 
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()

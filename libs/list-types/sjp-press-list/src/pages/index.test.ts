@@ -8,7 +8,7 @@ vi.mock("@hmcts/auth", () => ({
   requireRole: vi.fn(() => vi.fn((_req, _res, next) => next())),
   USER_ROLES: { VERIFIED: "VERIFIED" }
 }));
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()
@@ -33,7 +33,7 @@ vi.mock("@hmcts/publication", () => ({
 }));
 
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { validateSjpPressList } from "../validation/json-validator.js";
 
 describe("SJP Press List Controller", () => {

@@ -1,6 +1,6 @@
 import { SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
 import type { Artefact } from "./model.js";
 
@@ -181,7 +181,7 @@ export async function getArtefactSummariesByLocation(locationId: string): Promis
     }
   });
 
-  const listTypes = await prisma.listType.findMany();
+  const listTypes = (await prisma.listType.findMany()) as Array<{ id: number; friendlyName: string | null }>;
   const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
 
   return artefacts.map((artefact) => {
@@ -259,7 +259,7 @@ export async function getLocationsWithPublicationCount(): Promise<LocationWithPu
     ORDER BY l.name ASC
   `;
 
-  return result.map((row) => ({
+  return result.map((row: { location_id: number; location_name: string; publication_count: bigint }) => ({
     locationId: String(row.location_id),
     locationName: row.location_name,
     publicationCount: Number(row.publication_count)

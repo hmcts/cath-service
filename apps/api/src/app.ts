@@ -1,12 +1,11 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { apiRoutes as blobIngestionRoutes } from "@hmcts/blob-ingestion/config";
-import { configurePropertiesVolume, healthcheck } from "@hmcts/cloud-native-platform";
+import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts/cloud-native-platform";
 import { apiRoutes as locationRoutes } from "@hmcts/location/config";
 import { apiRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import compression from "compression";
-import config from "config";
 import cors from "cors";
 import type { Express } from "express";
 import express from "express";
@@ -16,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const chartPath = path.join(__dirname, "../helm/values.yaml");
 
 export async function createApp(): Promise<Express> {
-  await configurePropertiesVolume(config, { chartPath });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
 
   const app = express();
 
@@ -34,6 +33,13 @@ export async function createApp(): Promise<Express> {
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
   const routeMounts = [{ path: `${__dirname}/routes` }, blobIngestionRoutes, locationRoutes, publicPagesRoutes];
+
+  // Enable test-support routes in non-production environments or when explicitly enabled
+  // ENABLE_TEST_SUPPORT=true allows preview/staging deployments to run E2E tests
+  if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
+    const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+    routeMounts.push(testSupportRoutes);
+  }
 
   app.use(await createSimpleRouter(...routeMounts));
 

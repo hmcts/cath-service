@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { listTypeData } from "./list-type-data.js";
 
 export async function seedListTypes() {
@@ -21,8 +21,6 @@ export async function seedListTypes() {
   if (allSubJurisdictions.length === 0) {
     throw new Error("No sub-jurisdictions found. Please ensure sub-jurisdictions are seeded first.");
   }
-
-  let seededCount = 0;
 
   for (const listType of listTypeData) {
     try {
@@ -53,15 +51,13 @@ export async function seedListTypes() {
           isNonStrategic: listType.isNonStrategic
         }
       });
-
-      seededCount++;
     } catch (error) {
       console.error(`Failed to seed list type "${listType.name}":`, error);
       throw error;
     }
   }
 
-  console.log(`Seeded ${seededCount} list types`);
+  console.log(`Seeded ${listTypeData.length} list types`);
   console.log("List type seeding completed successfully");
 }
 

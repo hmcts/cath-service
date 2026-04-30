@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";

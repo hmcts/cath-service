@@ -24,11 +24,8 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/location": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
-    "@hmcts/publication": "workspace:*",
-    "@hmcts/web-core": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
     "luxon": "3.7.2",
     "nunjucks": "3.2.4"
   },
@@ -37,7 +34,7 @@
     "@types/node": "24.10.4",
     "@types/nunjucks": "3.2.6",
     "typescript": "5.9.3",
-    "vitest": "4.1.4"
+    "vitest": "4.1.5"
   },
   "peerDependencies": {
     "express": "^5.2.0"

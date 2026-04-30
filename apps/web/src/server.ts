@@ -1,33 +1,18 @@
-// Load environment variables from .env file
-// NOTE: dotenv.config() must run before app.ts is imported because app.ts
-// transitively imports @hmcts/postgres which creates pg.Pool at module load time.
-// Using a dynamic import for app.ts ensures DATABASE_URL is set first.
-
 import fs from "node:fs";
 import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { seedListTypes, seedLocationData } from "@hmcts/location";
-import dotenv from "dotenv";
+import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Load .env from project root (two levels up from src/) BEFORE importing app
-dotenv.config({ path: path.join(__dirname, "../../../.env") });
-
-const { createApp } = await import("./app.js");
 
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 async function startServer() {
   const app = await createApp();
-
-  // Seed reference data if needed
-  await seedLocationData();
-  await seedListTypes();
 
   // Check if we should use HTTPS (local development with certificates)
   const certsDir = path.join(__dirname, "..", "certs");

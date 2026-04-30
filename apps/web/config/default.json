@@ -6,6 +6,13 @@
   "redis": {
     "url": "redis://localhost:6380"
   },
+  "CFT_IDAM_URL": "https://idam-web-public.aat.platform.hmcts.net",
+  "CATH_SERVICE_URL": "https://www.court-tribunal-hearings.service.gov.uk",
+  "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION": "",
+  "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY": "",
+  "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY": "",
+  "GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL": "",
+  "GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION": "",
   "gtm": {
     "containerId": "GTM-XXXXXX",
     "enabled": false

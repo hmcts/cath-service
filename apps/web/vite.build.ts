@@ -5,8 +5,8 @@ import { assets as listTypesCommonAssets } from "@hmcts/list-types-common/config
 import { assets as sjpPressListAssets } from "@hmcts/sjp-press-list/config";
 import { assets as systemAdminAssets } from "@hmcts/system-admin-pages/config";
 import { assets as verifiedPagesAssets } from "@hmcts/verified-pages/config";
-import { createBaseViteConfig } from "@hmcts/web-core";
 import { assets as webCoreAssets } from "@hmcts/web-core/config";
+import { createBaseViteConfig } from "@hmcts/web-core/vite";
 import { defineConfig, mergeConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -38,7 +38,14 @@ export default defineConfig(
       viteStaticCopy({
         targets: [
           {
-            // Copy app-specific images
+            src: "src/pages/**/*.{njk,html}",
+            dest: "../pages",
+            rename: (_fileName, _fileExtension, fullPath) => {
+              const relativePath = fullPath.split("src/pages/")[1];
+              return relativePath;
+            }
+          },
+          {
             src: "src/assets/images/**/*",
             dest: "images"
           }

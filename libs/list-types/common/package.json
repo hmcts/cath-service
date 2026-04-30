@@ -32,14 +32,14 @@
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
-    "@hmcts/postgres": "workspace:*",
-    "ajv": "8.18.0",
+    "@hmcts/postgres-prisma": "workspace:*",
+    "ajv": "8.20.0",
     "exceljs": "4.4.0",
     "zod": "3.24.1"
   },
   "devDependencies": {
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
-    "vitest": "4.1.4"
+    "vitest": "4.1.5"
   }
 }
