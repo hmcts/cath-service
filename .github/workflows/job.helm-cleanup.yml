@@ -27,7 +27,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
       - name: Get AKS Credentials
-        uses: azure/aks-set-context@v4
+        uses: azure/aks-set-context@v5
         with:
           resource-group: sds-stg-00-rg
           cluster-name: sds-stg-00-aks
