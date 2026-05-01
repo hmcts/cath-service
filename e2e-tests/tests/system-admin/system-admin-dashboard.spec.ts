@@ -2,96 +2,69 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
-test.describe
-  .skip("System Admin Dashboard", () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto("/system-admin-dashboard");
-      await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
-      await page.waitForURL("/system-admin-dashboard");
-    });
+test.describe("System Admin Dashboard", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/system-admin-dashboard");
+    await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
+    await page.waitForURL("/system-admin-dashboard");
+  });
 
-    test("system admin can view dashboard and navigate to upload page", async ({ page }) => {
-      // Verify page title and heading
-      await expect(page).toHaveTitle(/Court and tribunal hearings/i);
-      const heading = page.locator("h1");
-      await expect(heading).toBeVisible();
-      await expect(heading).toHaveText("System Admin Dashboard");
+  test("system admin can view and interact with dashboard", async ({ page }) => {
+    // Verify page loads correctly
+    await expect(page).toHaveTitle(/Court and tribunal hearings/i);
 
-      // Verify all 10 admin tiles are displayed
-      const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(10);
+    // Verify main heading
+    await expect(page.getByRole("heading", { name: "System Admin Dashboard", level: 1 })).toBeVisible();
 
-      // Verify correct tile titles and hrefs
-      const tileData = [
-        { title: "Upload Reference Data", href: "/upload-reference-data" },
-        { title: "Delete Court", href: "/delete-court" },
-        { title: "Manage Third Party Users", href: "/manage-third-party-users" },
-        { title: "User Management", href: "/user-management" },
-        { title: "Blob Explorer", href: "/blob-explorer-locations" },
-        { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
-        { title: "Audit Log Viewer", href: "/audit-log-list" },
-        { title: "Manage Location Metadata", href: "/location-metadata-search" },
-        { title: "Manage List Types", href: "/view-list-types" },
-        { title: "Configure List Type", href: "/configure-list-type-enter-details" }
-      ];
+    // Verify all 10 tiles with correct content
+    const tileData = [
+      { title: "Upload Reference Data", href: "/upload-reference-data", description: "Upload CSV location reference data" },
+      { title: "Delete Court", href: "/delete-court", description: "Delete court from reference data" },
+      {
+        title: "Manage Third Party Users",
+        href: "/manage-third-party-users",
+        description: "View, create, update and remove third-party users and subscriptions"
+      },
+      { title: "User Management", href: "/find-users", description: "Find, update and delete users" },
+      { title: "Blob Explorer", href: "/blob-explorer-locations", description: "Discover content uploaded to all locations" },
+      { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts", description: "Upload a CSV file for bulk creation of media accounts" },
+      { title: "Audit Log Viewer", href: "/audit-log-list", description: "View audit logs on system admin actions" },
+      { title: "Manage Location Metadata", href: "/location-metadata-search", description: "View, update and remove location metadata" },
+      { title: "Manage List Types", href: "/view-list-types", description: "View, create and update list type configuration" },
+      { title: "Configure List Type", href: "/configure-list-type-enter-details", description: "Add and manage list type configurations" }
+    ];
 
-      for (const { title, href } of tileData) {
-        const link = page.locator(`a.admin-tile:has-text("${title}")`);
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute("href", href);
-      }
+    for (const { title, href, description } of tileData) {
+      const link = page.getByRole("link", { name: new RegExp(title, "i") });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", href);
+      await expect(link).toContainText(description);
+    }
 
-      // Verify tile descriptions are displayed
-      const descriptions = page.locator(".admin-tile__description");
-      await expect(descriptions).toHaveCount(10);
+    // Check accessibility inline
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Verify 2-column grid layout
-      const gridColumns = page.locator(".govuk-grid-column-one-half");
-      await expect(gridColumns).toHaveCount(10);
-
-      // Accessibility check
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
-
-      // Navigate to Upload Reference Data page
-      await page.click('a:has-text("Upload Reference Data")');
-      await page.waitForURL("**/reference-data-upload");
-      const uploadHeading = page.locator("h1");
-      await expect(uploadHeading).toBeVisible();
-      await expect(uploadHeading).toHaveText("Manually upload a csv file");
-    });
-
-    test("dashboard is keyboard accessible @nightly", async ({ page }) => {
-      // Verify tiles are focusable
-      const tileLinks = page.locator("a.admin-tile");
-      await expect(tileLinks).toHaveCount(10);
-
-      // Verify first tile is visible and focusable
-      const firstTile = tileLinks.first();
-      await expect(firstTile).toBeVisible();
-
-      // Verify links are keyboard accessible (no tabindex=-1)
-      const tabindex = await firstTile.getAttribute("tabindex");
-      expect(tabindex === null || tabindex !== "-1").toBe(true);
-
-      // Verify they are anchor elements
-      const tagName = await firstTile.evaluate((el) => el.tagName.toLowerCase());
-      expect(tagName).toBe("a");
-
-      // Tab through and verify at least one tile gets focused
-      let foundFocusedTile = false;
-      for (let i = 0; i < 20 && !foundFocusedTile; i++) {
-        await page.keyboard.press("Tab");
-        for (let j = 0; j < 10; j++) {
-          try {
-            await expect(tileLinks.nth(j)).toBeFocused({ timeout: 100 });
-            foundFocusedTile = true;
-            break;
-          } catch {
-            // Continue checking
-          }
+    // Test keyboard navigation
+    let foundTiles = 0;
+    for (let i = 0; i < 30 && foundTiles < 10; i++) {
+      await page.keyboard.press("Tab");
+      for (const { title } of tileData) {
+        try {
+          const link = page.getByRole("link", { name: new RegExp(title, "i") });
+          await expect(link).toBeFocused({ timeout: 100 });
+          foundTiles++;
+          break;
+        } catch {
+          // Continue checking other tiles
         }
       }
-      expect(foundFocusedTile).toBe(true);
-    });
+    }
+    expect(foundTiles).toBeGreaterThan(0);
+
+    // Verify navigation works by clicking a tile
+    await page.getByRole("link", { name: /Upload Reference Data/i }).click();
+    await page.waitForURL("**/reference-data-upload");
+    await expect(page.getByRole("heading", { name: "Manually upload a csv file", level: 1 })).toBeVisible();
   });
+});
