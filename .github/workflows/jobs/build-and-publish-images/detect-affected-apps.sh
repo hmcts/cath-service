@@ -23,20 +23,9 @@ main() {
     export TURBO_SCM_BASE="$BASE_SHA"
     echo "Using custom base: $BASE_SHA"
   else
-    # No cached SHA - check if HEAD equals origin/master (first run on master)
-    local head_sha origin_master_sha
-    head_sha=$(git rev-parse HEAD)
-    origin_master_sha=$(git rev-parse origin/master 2>/dev/null || echo "")
-
-    if [ "$head_sha" = "$origin_master_sha" ]; then
-      # HEAD is origin/master, so turbo --affected would find nothing
-      # Fall back to building all apps with Dockerfiles
-      echo "No cached SHA and HEAD equals origin/master - will build all apps"
-      use_fallback="true"
-    else
-      export TURBO_SCM_BASE="origin/master"
-      echo "Using default base: origin/master"
-    fi
+    # No cached SHA - build all apps to establish baseline for this PR/change
+    echo "No cached SHA - building all apps to establish baseline"
+    use_fallback="true"
   fi
 
   local affected_apps

@@ -33,7 +33,7 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "ajv": "8.18.0"
+    "ajv": "8.20.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",

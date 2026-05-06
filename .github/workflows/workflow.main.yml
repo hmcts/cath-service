@@ -1,5 +1,5 @@
 name: Main
-
+# trigger build
 on:
   push:
     branches:
@@ -67,7 +67,7 @@ jobs:
     with:
       change-id: staging
       urls: ${{ needs.deploy-stage.outputs.urls }}
-      runner-group: azure-prod
+      runner-group: azure-nonprod
 
   e2e-stage:
     name: E2E
@@ -76,7 +76,7 @@ jobs:
     uses: ./.github/workflows/stage.e2e.yml
     with:
       urls: ${{ needs.deploy-stage.outputs.urls }}
-      runner-group: azure-prod
+      runner-group: azure-nonprod
     secrets: inherit
 
   cleanup-stage:
