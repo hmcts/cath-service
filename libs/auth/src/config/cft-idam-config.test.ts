@@ -12,6 +12,7 @@ describe("CFT IDAM Configuration", () => {
     vi.resetAllMocks();
     delete process.env.CFT_IDAM_URL;
     delete process.env.CFT_IDAM_CLIENT_SECRET;
+    delete process.env.CFT_IDAM_SCOPE;
     delete process.env.BASE_URL;
     delete process.env.ENABLE_CFT_IDAM;
   });
@@ -29,9 +30,27 @@ describe("CFT IDAM Configuration", () => {
         clientId: "app-pip-frontend",
         clientSecret: "test-secret",
         redirectUri: "https://example.com/cft-login/return",
+        scope: "openid profile roles",
         authorizationEndpoint: "https://idam-web-public.aat.platform.hmcts.net",
         tokenEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/token"
       });
+    });
+
+    it("should use custom scope from CFT_IDAM_SCOPE env var", () => {
+      process.env.CFT_IDAM_URL = "https://idam-web-public.aat.platform.hmcts.net";
+      process.env.CFT_IDAM_SCOPE = "openid profile";
+
+      const config = getCftIdamConfig();
+
+      expect(config.scope).toBe("openid profile");
+    });
+
+    it("should default scope to openid profile roles when CFT_IDAM_SCOPE not set", () => {
+      process.env.CFT_IDAM_URL = "https://idam-web-public.aat.platform.hmcts.net";
+
+      const config = getCftIdamConfig();
+
+      expect(config.scope).toBe("openid profile roles");
     });
 
     it("should use default BASE_URL when not provided", () => {
