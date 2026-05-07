@@ -436,6 +436,43 @@ describe("getPropertiesVolumeSecrets", () => {
     });
   });
 
+  describe("Alias mapping from helm chart in production filesystem path", () => {
+    it("should use alias as env var name when secret name has a corresponding alias in the helm chart", async () => {
+      // Arrange
+      process.env.NODE_ENV = "production";
+      delete process.env.REDIS_URL;
+      const helmChart = `nodejs:\n  keyVaults:\n    cath:\n      secrets:\n        - name: redis-url\n          alias: REDIS_URL\n`;
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValueOnce(helmChart as any).mockReturnValueOnce("rediss://:key@host:6380" as any);
+      mockReaddirSync.mockReturnValueOnce([dirEntry("cath", true)] as any);
+      mockReaddirSync.mockReturnValueOnce([fileEntry("redis-url")] as any);
+
+      // Act
+      const secrets = await getPropertiesVolumeSecrets({ chartPath: "/app/helm/values.yaml" });
+
+      // Assert - alias REDIS_URL is used as env var, not the raw file name redis-url
+      expect(process.env.REDIS_URL).toBe("rediss://:key@host:6380");
+      expect(process.env["redis-url"]).toBeUndefined();
+      expect(secrets["cath.redis-url"]).toBe("rediss://:key@host:6380");
+    });
+
+    it("should fall back to file name as env var when no alias is defined in the helm chart", async () => {
+      // Arrange
+      process.env.NODE_ENV = "production";
+      const helmChart = `nodejs:\n  keyVaults:\n    cath:\n      secrets:\n        - name: app-secret\n`;
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValueOnce(helmChart as any).mockReturnValueOnce("secret-value" as any);
+      mockReaddirSync.mockReturnValueOnce([dirEntry("cath", true)] as any);
+      mockReaddirSync.mockReturnValueOnce([fileEntry("app-secret")] as any);
+
+      // Act
+      await getPropertiesVolumeSecrets({ chartPath: "/app/helm/values.yaml" });
+
+      // Assert - no alias, so raw file name is used
+      expect(process.env["app-secret"]).toBe("secret-value");
+    });
+  });
+
   describe("Symbolic link handling in directories", () => {
     it("should handle symbolic links in vault directories", async () => {
       // Arrange
