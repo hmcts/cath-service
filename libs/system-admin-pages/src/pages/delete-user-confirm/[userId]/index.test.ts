@@ -123,7 +123,7 @@ describe("delete-user-confirm page", () => {
       expect(queries.getUserById).toHaveBeenCalledWith("user123");
       expect(mockRequest.auditMetadata).toEqual({
         shouldLog: true,
-        action: "Delete User",
+        action: "Delete user",
         entityInfo: `User: ${mockUser.email}`
       });
       expect(queries.deleteUserById).toHaveBeenCalledWith("user123");

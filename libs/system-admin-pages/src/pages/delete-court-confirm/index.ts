@@ -1,6 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationWithDetails, type LocationDetails } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { performLocationDeletion, VALIDATION_ERROR_CODES, type ValidationResult, validateLocationForDeletion } from "../../delete-court/service.js";
 import { validateRadioSelection } from "../../delete-court/validation.js";
 import { cy } from "./cy.js";
@@ -145,7 +146,7 @@ export const postHandler = async (req: Request, res: Response) => {
   // Set audit log flag
   req.auditMetadata = {
     shouldLog: true,
-    action: "DELETE_COURT",
+    action: AuditLogAction.DELETE_COURT,
     entityInfo: `Name: ${session.deleteCourt.name}, Location ID: ${session.deleteCourt.locationId}`
   };
 

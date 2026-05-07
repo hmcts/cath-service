@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../../audit-log/logger.js";
 import { deleteUserById, getUserById } from "../../../user-management/queries.js";
 import { validateDeleteConfirmation } from "../../../user-management/validation.js";
 import { cy } from "./cy.js";
@@ -98,7 +99,7 @@ const postHandler = async (req: Request, res: Response) => {
 
     req.auditMetadata = {
       shouldLog: true,
-      action: "Delete User",
+      action: AuditLogAction.DELETE_USER,
       entityInfo: `User: ${user.email}`
     };
 

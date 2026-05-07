@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
-import { findListTypeById } from "@hmcts/system-admin-pages";
+import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -11,17 +11,6 @@ import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.j
 import { getManualUpload } from "../../manual-upload/storage.js";
 import cy from "./cy.js";
 import en from "./en.js";
-
-declare module "express-serve-static-core" {
-  interface Request {
-    auditMetadata?: {
-      shouldLog?: boolean;
-      action?: string;
-      entityInfo?: string;
-      [key: string]: string | number | boolean | undefined;
-    };
-  }
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
@@ -175,7 +164,7 @@ const postHandler = async (req: Request, res: Response) => {
     // Set audit log flag
     req.auditMetadata = {
       shouldLog: true,
-      action: "MANUAL_UPLOAD",
+      action: AuditLogAction.MANUAL_UPLOAD,
       entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.friendlyName || listTypeId}, File: ${uploadData.fileName}`
     };
 

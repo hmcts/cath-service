@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { createRegion } from "../../reference-data-upload/repository/region-repository.js";
 import { validateRegionData } from "../../reference-data-upload/validation/region-validation.js";
 import { cy } from "./cy.js";
@@ -52,7 +53,7 @@ export const postHandler = async (req: Request, res: Response) => {
     // Set audit log flag
     req.auditMetadata = {
       shouldLog: true,
-      action: "ADD_REGION",
+      action: AuditLogAction.ADD_REGION,
       entityInfo: `Name: ${formData.name.trim()}, Welsh Name: ${formData.welshName.trim()}`
     };
 
