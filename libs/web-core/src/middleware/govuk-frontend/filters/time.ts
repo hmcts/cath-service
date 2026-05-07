@@ -15,5 +15,5 @@ export const time12Filter = (value: Date | string) => {
     hour12: true,
     ...(date.getMinutes() !== 0 && { minute: "2-digit" })
   };
-  return date.toLocaleTimeString("en-US", options).replace(/\s/g, "").toLowerCase();
+  return date.toLocaleTimeString("en-GB", options).replace(/\s/g, "").toLowerCase();
 };
