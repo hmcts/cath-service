@@ -137,7 +137,7 @@ jobs:
       - name: Collate Prisma schema
         run: |
           echo "Collating Prisma schema from all modules..."
-          cd apps/postgres && npx tsx src/collate-schema.ts && cd ../..
+          yarn workspace @hmcts/postgres-prisma run collate
 
       - name: Generate Prisma client
         run: yarn db:generate
