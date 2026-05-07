@@ -50,6 +50,36 @@ describe("Logout handler", () => {
     expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
   });
 
+  it("should logout Crime IDAM user and redirect to session-logged-out page", async () => {
+    const req = {
+      user: {
+        id: "user-456",
+        email: "crime@example.com",
+        displayName: "Crime User",
+        role: "VERIFIED",
+        provenance: "CRIME_IDAM"
+      },
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      },
+      protocol: "https",
+      get: vi.fn(() => "localhost:8080")
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    await GET(req, res);
+
+    expect(req.logout).toHaveBeenCalled();
+    expect(req.session.destroy).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
+  });
+
   it("should logout B2C user and redirect to B2C logout endpoint", async () => {
     const req = {
       user: {

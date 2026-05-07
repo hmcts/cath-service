@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { sendMediaRejectionEmail } from "@hmcts/notification";
+import { extractNotifyError, sendMediaRejectionEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../../media-application/model.js";
@@ -139,7 +139,8 @@ const postHandler = async (req: Request, res: Response) => {
         linkToService
       });
     } catch (error) {
-      console.error("❌ Failed to send rejection email:", error);
+      const { status, message } = extractNotifyError(error);
+      console.error(`Failed to send rejection email: ${status} ${message}`);
     }
 
     res.redirect(`/media-applications/${id}/rejected`);
