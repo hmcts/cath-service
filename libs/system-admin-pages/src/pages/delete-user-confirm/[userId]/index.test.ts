@@ -19,7 +19,7 @@ describe("delete-user-confirm page", () => {
   let mockUser: MockUser;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mockUser = {
       userId: "user123",
       email: "test@example.com"
@@ -108,9 +108,10 @@ describe("delete-user-confirm page", () => {
       expect(queries.deleteUserById).not.toHaveBeenCalled();
     });
 
-    it("should delete user and redirect to success when 'yes' is selected", async () => {
+    it("should delete user, set audit metadata, and redirect to success when 'yes' is selected", async () => {
       // Arrange
       mockRequest.body = { confirmation: "yes" };
+      vi.mocked(queries.getUserById).mockResolvedValue(mockUser);
       vi.mocked(queries.deleteUserById).mockResolvedValue();
 
       const handler = POST[POST.length - 1];
@@ -119,6 +120,11 @@ describe("delete-user-confirm page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       // Assert
+      expect(queries.getUserById).toHaveBeenCalledWith("user123");
+      expect(mockRequest.auditMetadata).toEqual({
+        shouldLog: true,
+        entityInfo: `User: ${mockUser.email}`
+      });
       expect(queries.deleteUserById).toHaveBeenCalledWith("user123");
       expect(mockResponse.redirect).toHaveBeenCalledWith("/delete-user-success");
     });
@@ -161,6 +167,7 @@ describe("delete-user-confirm page", () => {
     it("should handle delete errors", async () => {
       // Arrange
       mockRequest.body = { confirmation: "yes" };
+      vi.mocked(queries.getUserById).mockResolvedValue(mockUser);
       vi.mocked(queries.deleteUserById).mockRejectedValue(new Error("Delete failed"));
 
       const handler = POST[POST.length - 1];

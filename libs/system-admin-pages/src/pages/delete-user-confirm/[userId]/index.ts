@@ -91,6 +91,17 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   try {
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).render("errors/404");
+    }
+
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "Delete User",
+      entityInfo: `User: ${user.email}`
+    };
+
     await deleteUserById(userId);
     res.redirect(`/delete-user-success${language === "cy" ? "?lng=cy" : ""}`);
   } catch (error) {
