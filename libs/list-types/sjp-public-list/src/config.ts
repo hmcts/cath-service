@@ -8,5 +8,9 @@ export const pageRoutes = {
   path: path.join(__dirname, "pages"),
   prefix: "/sjp-public-list"
 };
+export const deltaPageRoutes = {
+  path: path.join(__dirname, "pages"),
+  prefix: "/sjp-delta-public-list"
+};
 export const moduleRoot = __dirname;
 export const assets = path.join(__dirname, "assets/");

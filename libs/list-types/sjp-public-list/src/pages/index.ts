@@ -76,7 +76,8 @@ export const GET = async (req: Request, res: Response) => {
   ]);
 
   res.render("sjp-public-list", {
-    ...t,
+    ...t.common,
+    title: req.path.includes("delta") ? t.SJP_DELTA_PUBLIC_LIST.title : t.SJP_PUBLIC_LIST.title,
     en,
     cy,
     locale,
@@ -113,5 +114,5 @@ export const POST = async (req: Request, res: Response) => {
   appendArrayToParams(queryParams, "postcode", filters.postcodes, true);
   appendArrayToParams(queryParams, "prosecutor", filters.prosecutors);
 
-  res.redirect(`/sjp-public-list?${queryParams.toString()}`);
+  res.redirect(`${req.path}?${queryParams.toString()}`);
 };

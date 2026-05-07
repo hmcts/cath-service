@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
@@ -58,7 +57,8 @@ const getHandler = async (req: Request, res: Response) => {
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
     res.render("sjp-press-list", {
-      ...t,
+      ...t.common,
+      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
       en,
       cy,
       locale,
@@ -93,7 +93,7 @@ const postHandler = async (req: Request, res: Response) => {
   appendArrayToParams(queryParams, "postcode", req.body.postcode, true);
   appendArrayToParams(queryParams, "prosecutor", req.body.prosecutor);
 
-  res.redirect(`/sjp-press-list?${queryParams.toString()}`);
+  res.redirect(`${req.path}?${queryParams.toString()}`);
 };
 
 async function loadJsonData(artefactId: string): Promise<unknown | null> {
@@ -223,5 +223,5 @@ interface PressCase {
   prosecutor?: string | null;
 }
 
-export const GET: RequestHandler[] = [requireRole([USER_ROLES.VERIFIED, USER_ROLES.SYSTEM_ADMIN]), getHandler];
-export const POST: RequestHandler[] = [requireRole([USER_ROLES.VERIFIED, USER_ROLES.SYSTEM_ADMIN]), postHandler];
+export const GET: RequestHandler = getHandler;
+export const POST: RequestHandler = postHandler;

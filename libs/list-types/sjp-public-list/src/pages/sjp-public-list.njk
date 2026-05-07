@@ -81,15 +81,8 @@
             <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFilters }}</h3>
             <a href="?artefactId={{ list.artefactId }}" class="govuk-link">{{ clearFilters }}</a>
 
-            {% if filters.searchQuery or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}
+            {% if (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}
             <div class="filter-tags govuk-!-margin-top-4">
-              {% if filters.searchQuery %}
-                <span class="filter-tag">
-                  {{ filters.searchQuery }}
-                  <a href="?artefactId={{ list.artefactId }}{% if filters.postcodes %}{% for pc in filters.postcodes %}&postcode={{ pc }}{% endfor %}{% endif %}{% if filters.prosecutors %}{% for p in filters.prosecutors %}&prosecutor={{ p }}{% endfor %}{% endif %}" class="filter-tag-remove" aria-label="Remove {{ searchLabel }} filter">×</a>
-                </span>
-              {% endif %}
-
               {% if filters.postcodes and filters.postcodes.length > 0 %}
                 {% for postcode in filters.postcodes %}
                   <span class="filter-tag">

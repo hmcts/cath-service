@@ -30,7 +30,7 @@ export async function seedListTypes() {
           name: listType.name,
           friendlyName: listType.englishFriendlyName,
           welshFriendlyName: listType.welshFriendlyName,
-          shortenedFriendlyName: listType.englishFriendlyName,
+          shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,
@@ -44,7 +44,7 @@ export async function seedListTypes() {
         update: {
           friendlyName: listType.englishFriendlyName,
           welshFriendlyName: listType.welshFriendlyName,
-          shortenedFriendlyName: listType.englishFriendlyName,
+          shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,

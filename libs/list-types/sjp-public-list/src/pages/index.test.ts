@@ -19,6 +19,7 @@ describe("SJP Public List Controller", () => {
     ({
       query: {},
       body: {},
+      path: "/sjp-public-list",
       ...overrides
     }) as unknown as Request;
 

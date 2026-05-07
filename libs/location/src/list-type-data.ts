@@ -7,6 +7,7 @@ export interface ListTypeData {
   urlPath?: string;
   isNonStrategic: boolean;
   defaultSensitivity: string;
+  shortenedFriendlyName?: string;
 }
 
 export const listTypeData: ListTypeData[] = [
@@ -247,21 +248,45 @@ export const listTypeData: ListTypeData[] = [
   {
     id: 24,
     name: "SJP_PRESS_LIST",
-    englishFriendlyName: "Single Justice Procedure Press List",
+    englishFriendlyName: "Single Justice Procedure Press List (Full list)",
     welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
     provenance: "COMMON_PLATFORM",
     urlPath: "sjp-press-list",
     isNonStrategic: false,
-    defaultSensitivity: "Classified"
+    defaultSensitivity: "Classified",
+    shortenedFriendlyName: "SJP Press List (Full list)"
   },
   {
     id: 25,
     name: "SJP_PUBLIC_LIST",
-    englishFriendlyName: "Single Justice Procedure Public List",
+    englishFriendlyName: "Single Justice Procedure Public List (Full list)",
     welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
     provenance: "COMMON_PLATFORM",
     urlPath: "sjp-public-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SJP Public List (Full list)"
+  },
+  {
+    id: 26,
+    name: "SJP_DELTA_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List (New cases)",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl (Achosion Newydd)",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-delta-press-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    shortenedFriendlyName: "SJP Press List (New cases)"
+  },
+  {
+    id: 27,
+    name: "SJP_DELTA_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List (New cases)",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl (Achosion Newydd)",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-delta-public-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SJP Public List (New cases)"
   }
 ];

@@ -4,10 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
 vi.mock("node:fs/promises");
-vi.mock("@hmcts/auth", () => ({
-  requireRole: vi.fn(() => vi.fn((_req, _res, next) => next())),
-  USER_ROLES: { VERIFIED: "VERIFIED" }
-}));
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -37,14 +33,14 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { validateSjpPressList } from "../validation/json-validator.js";
 
 describe("SJP Press List Controller", () => {
-  // GET and POST are arrays: [requireRole middleware, handler]
-  const getHandler = GET[1];
-  const postHandler = POST[1];
+  const getHandler = GET;
+  const postHandler = POST;
 
   const mockRequest = (overrides?: Partial<Request>) =>
     ({
       query: {},
       body: {},
+      path: "/sjp-press-list",
       ...overrides
     }) as unknown as Request;
 

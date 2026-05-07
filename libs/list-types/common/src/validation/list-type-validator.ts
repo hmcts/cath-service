@@ -19,6 +19,15 @@ export function convertListTypeNameToKebabCase(name: string): string {
 }
 
 /**
+ * Maps delta/variant list type package names to their parent package.
+ * Used when a list type shares the same JSON schema as another list type.
+ */
+const PACKAGE_ALIASES: Record<string, string> = {
+  "sjp-delta-press-list": "sjp-press-list",
+  "sjp-delta-public-list": "sjp-public-list"
+};
+
+/**
  * Dynamically validates JSON data against the appropriate list type schema
  * Only call this function for JSON files - other file types don't need validation
  *
@@ -40,9 +49,10 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
     };
   }
 
-  // Convert list type name to kebab-case for package name
+  // Convert list type name to kebab-case for package name, applying alias if one exists
   const kebabName = convertListTypeNameToKebabCase(listType.name);
-  const packageName = `@hmcts/${kebabName}`;
+  const resolvedName = PACKAGE_ALIASES[kebabName] ?? kebabName;
+  const packageName = `@hmcts/${resolvedName}`;
 
   try {
     // Dynamically import the list type package
