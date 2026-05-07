@@ -26,5 +26,8 @@ export const cy = {
   next: "Nesaf",
   backToTop: "Yn ôl i'r brig",
   errorSummaryTitle: "Mae problem wedi codi",
-  errorInvalidPostcode: "Rhowch god post dilys"
+  errorInvalidPostcode: "Rhowch god post dilys",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban."
 };

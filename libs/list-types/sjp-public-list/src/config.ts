@@ -9,3 +9,4 @@ export const pageRoutes = {
   prefix: "/sjp-public-list"
 };
 export const moduleRoot = __dirname;
+export const assets = path.join(__dirname, "assets/");

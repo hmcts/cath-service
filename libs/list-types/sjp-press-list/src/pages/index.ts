@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
-const CASES_PER_PAGE = 200;
+const CASES_PER_PAGE = 1000;
 const LONDON_POSTCODE_AREAS = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
 
 const getHandler = async (req: Request, res: Response) => {
@@ -148,7 +148,7 @@ function applyFilters(cases: PressCase[], filters: Filters): PressCase[] {
     result = result.filter((c) => c.prosecutor && filters.prosecutors!.includes(c.prosecutor));
   }
 
-  return result.sort((a, b) => a.name.localeCompare(b.name));
+  return result;
 }
 
 function matchesPostcodeFilter(postcode: string, selectedPostcodes: string[]): boolean {

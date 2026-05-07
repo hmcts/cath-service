@@ -31,6 +31,7 @@ export interface SjpParty {
     individualMiddleName?: string;
     individualSurname?: string;
     dateOfBirth?: string;
+    age?: number;
     address?: SjpAddress;
   };
   organisationDetails?: {
@@ -164,21 +165,6 @@ function extractOffenceDetails(offences: SjpOffence[]): Array<{ offenceTitle: st
 }
 
 /**
- * Calculates age from date of birth
- */
-function calculateAge(dateOfBirth: Date | null): number | null {
-  if (!dateOfBirth) return null;
-  const today = new Date();
-  const birthDate = new Date(dateOfBirth);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-/**
  * Transforms a hearing from the JSON structure into a case object
  */
 function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
@@ -193,7 +179,7 @@ function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
     postcode: extractPostcode(accused),
     prosecutor,
     dateOfBirth,
-    age: calculateAge(dateOfBirth),
+    age: accused?.individualDetails?.age ?? null,
     reference: caseUrn,
     address: formatAddress(accused),
     offences: extractOffenceDetails(hearing.offence)

@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { assets as adminPagesAssets } from "@hmcts/admin-pages/config";
 import { assets as listTypesCommonAssets } from "@hmcts/list-types-common/config";
 import { assets as sjpPressListAssets } from "@hmcts/sjp-press-list/config";
+import { assets as sjpPublicListAssets } from "@hmcts/sjp-public-list/config";
 import { assets as systemAdminAssets } from "@hmcts/system-admin-pages/config";
 import { assets as verifiedPagesAssets } from "@hmcts/verified-pages/config";
 import { assets as webCoreAssets } from "@hmcts/web-core/config";
@@ -20,6 +21,7 @@ const baseConfig = createBaseViteConfig([
   verifiedPagesAssets,
   adminPagesAssets,
   sjpPressListAssets,
+  sjpPublicListAssets,
   listTypesCommonAssets
 ]);
 

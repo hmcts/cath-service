@@ -1,5 +1,5 @@
 export const cy = {
-  title: "Gweithdrefn Cyfiawnder Sengl – Rhestr y Wasg",
+  title: "Achosion Gweithdrefn Cyfiawnder Sengl - Golwg y Wasg (Rhestr lawn)",
   accordionTitle: "Beth yw Achosion Gweithdrefn Cyfiawnder Sengl?",
   accordionContent: "Achosion sy'n barod i gael eu penderfynu gan ynad heb wrandawiad. Mae'n cynnwys trwyddedu teledu a throseddau traffig bach fel goryrru.",
   listFor: "Rhestr ar gyfer",
@@ -35,5 +35,8 @@ export const cy = {
   backToTop: "Yn ôl i'r brig",
   errorSummaryTitle: "Mae problem wedi codi",
   errorInvalidPostcode: "Rhowch god post dilys",
-  errorNotVerified: "Rhaid i chi fod yn ddefnyddiwr dilysedig i gael mynediad at restrau'r wasg"
+  errorNotVerified: "Rhaid i chi fod yn ddefnyddiwr dilysedig i gael mynediad at restrau'r wasg",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban."
 };

@@ -11,7 +11,7 @@ const createMockHearing = (includeDoB: boolean = false) => ({
         title: "Mr",
         individualForenames: "John",
         individualSurname: "Doe",
-        ...(includeDoB && { dateOfBirth: "01/01/1990" }),
+        ...(includeDoB && { dateOfBirth: "01/01/1990", age: 35 }),
         address: {
           line: ["123 Test Street"],
           town: "London",
@@ -399,12 +399,7 @@ describe("extractPressCases", () => {
     expect(cases[0].dateOfBirth?.getDate()).toBe(15);
   });
 
-  it("should calculate age correctly", () => {
-    const today = new Date();
-    const birthYear = today.getFullYear() - 30;
-    const birthMonth = today.getMonth() + 1; // Convert to 1-indexed
-    const birthDay = today.getDate();
-
+  it("should read age from input JSON", () => {
     const json: SjpJson = {
       document: { publicationDate: "2025-11-28T09:00:00Z" },
       courtLists: [
@@ -424,7 +419,8 @@ describe("extractPressCases", () => {
                                 partyRole: "ACCUSED",
                                 individualDetails: {
                                   individualSurname: "Doe",
-                                  dateOfBirth: `${String(birthDay).padStart(2, "0")}/${String(birthMonth).padStart(2, "0")}/${birthYear}`
+                                  dateOfBirth: "01/01/1990",
+                                  age: 35
                                 }
                               }
                             ],
@@ -443,7 +439,7 @@ describe("extractPressCases", () => {
     };
 
     const cases = extractPressCases(json);
-    expect(cases[0].age).toBe(30);
+    expect(cases[0].age).toBe(35);
   });
 
   it("should handle missing prosecutor", () => {

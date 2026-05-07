@@ -109,8 +109,8 @@
   z-index: 1000;
 }
 
-// Remove border from summary list rows
-.govuk-summary-list__row {
+// Remove border from summary list rows within the SJP press list content area
+.layout-width-four-fifths .govuk-summary-list__row {
   border-bottom: none !important;
 }
 

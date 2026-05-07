@@ -192,7 +192,7 @@ describe("SJP Press List Controller", () => {
         currentPage: 2,
         totalPages: 2,
         totalItems: 300,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: true,
         pageNumbers: [1, 2]
@@ -238,7 +238,7 @@ describe("SJP Press List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 1,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]
@@ -275,7 +275,7 @@ describe("SJP Press List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 1,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]

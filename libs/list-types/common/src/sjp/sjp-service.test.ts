@@ -240,18 +240,18 @@ describe("getSjpPublicCases", () => {
     expect(result.cases).toHaveLength(2);
     expect(result.totalCases).toBe(2);
     expect(result.cases[0]).toEqual({
-      caseId: "case-2",
-      name: "Jane Smith",
-      postcode: "M1",
-      offence: "No TV License",
-      prosecutor: "DVLA"
-    });
-    expect(result.cases[1]).toEqual({
       caseId: "case-1",
       name: "John Doe",
       postcode: "SW1A",
       offence: "Speeding",
       prosecutor: "CPS"
+    });
+    expect(result.cases[1]).toEqual({
+      caseId: "case-2",
+      name: "Jane Smith",
+      postcode: "M1",
+      offence: "No TV License",
+      prosecutor: "DVLA"
     });
   });
 
@@ -311,7 +311,7 @@ describe("getSjpPublicCases", () => {
   });
 
   it("should handle pagination correctly", async () => {
-    const manyCases: SjpCasePress[] = Array.from({ length: 250 }, (_, i) => ({
+    const manyCases: SjpCasePress[] = Array.from({ length: 1500 }, (_, i) => ({
       ...mockPressCases[0],
       caseId: `case-${i}`,
       name: `Person ${i}`
@@ -321,15 +321,30 @@ describe("getSjpPublicCases", () => {
     vi.mocked(extractPressCases).mockReturnValue(manyCases);
 
     const page1 = await getSjpPublicCases("list-1", {}, 1);
-    expect(page1.cases).toHaveLength(200);
-    expect(page1.totalCases).toBe(250);
+    expect(page1.cases).toHaveLength(1000);
+    expect(page1.totalCases).toBe(1500);
 
     const page2 = await getSjpPublicCases("list-1", {}, 2);
-    expect(page2.cases).toHaveLength(50);
-    expect(page2.totalCases).toBe(250);
+    expect(page2.cases).toHaveLength(500);
+    expect(page2.totalCases).toBe(1500);
   });
 
-  it("should sort by name ascending by default", async () => {
+  it("should preserve original order when no sortBy is specified", async () => {
+    const originalOrderCases: SjpCasePress[] = [
+      { ...mockPressCases[0], name: "Zoe Brown" },
+      { ...mockPressCases[1], name: "Alice Smith" }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(originalOrderCases);
+
+    const result = await getSjpPublicCases("list-1", {}, 1);
+
+    expect(result.cases[0].name).toBe("Zoe Brown");
+    expect(result.cases[1].name).toBe("Alice Smith");
+  });
+
+  it("should sort by name ascending when sortBy is name", async () => {
     const unsortedCases: SjpCasePress[] = [
       { ...mockPressCases[0], name: "Zoe Brown" },
       { ...mockPressCases[1], name: "Alice Smith" }
@@ -338,10 +353,30 @@ describe("getSjpPublicCases", () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
 
-    const result = await getSjpPublicCases("list-1", {}, 1);
+    const result = await getSjpPublicCases("list-1", {}, 1, "name", "asc");
 
     expect(result.cases[0].name).toBe("Alice Smith");
     expect(result.cases[1].name).toBe("Zoe Brown");
+  });
+
+  it("should join multiple offence titles as a comma-separated string", async () => {
+    const multiOffenceCase: SjpCasePress[] = [
+      {
+        ...mockPressCases[0],
+        offences: [
+          { offenceTitle: "Speeding", offenceWording: "Exceeded speed limit", reportingRestriction: false },
+          { offenceTitle: "No Insurance", offenceWording: null, reportingRestriction: false },
+          { offenceTitle: "", offenceWording: "Drove without a licence", reportingRestriction: false }
+        ]
+      }
+    ];
+
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(extractPressCases).mockReturnValue(multiOffenceCase);
+
+    const result = await getSjpPublicCases("list-1", {}, 1);
+
+    expect(result.cases[0].offence).toBe("Speeding, No Insurance, Drove without a licence");
   });
 
   it("should sort by name descending", async () => {
@@ -388,19 +423,19 @@ describe("getSjpPressCases", () => {
     expect(result.cases[0].name).toBe("John Doe");
   });
 
-  it("should sort press cases by name", async () => {
-    const unsortedCases: SjpCasePress[] = [
+  it("should preserve original order for press cases", async () => {
+    const cases: SjpCasePress[] = [
       { ...mockPressCases[0], name: "Zoe Brown" },
       { ...mockPressCases[1], name: "Alice Smith" }
     ];
 
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
+    vi.mocked(extractPressCases).mockReturnValue(cases);
 
     const result = await getSjpPressCases("list-1", {}, 1);
 
-    expect(result.cases[0].name).toBe("Alice Smith");
-    expect(result.cases[1].name).toBe("Zoe Brown");
+    expect(result.cases[0].name).toBe("Zoe Brown");
+    expect(result.cases[1].name).toBe("Alice Smith");
   });
 });
 
@@ -438,25 +473,25 @@ describe("getAllSjpPressCases", () => {
     const result = await getAllSjpPressCases("list-1", { searchQuery: "john" });
 
     expect(result.cases).toHaveLength(2);
-    expect(result.cases[0].name).toBe("John Adams");
-    expect(result.cases[1].name).toBe("John Doe");
+    expect(result.cases[0].name).toBe("John Doe");
+    expect(result.cases[1].name).toBe("John Adams");
   });
 
-  it("should sort all cases by name", async () => {
-    const unsortedCases: SjpCasePress[] = [
+  it("should preserve original order for all cases", async () => {
+    const cases: SjpCasePress[] = [
       { ...mockPressCases[0], name: "Zoe Brown" },
       { ...mockPressCases[1], name: "Alice Smith" },
       { ...mockPressCases[0], name: "Bob Jones", caseId: "case-3" }
     ];
 
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
+    vi.mocked(extractPressCases).mockReturnValue(cases);
 
     const result = await getAllSjpPressCases("list-1", {});
 
-    expect(result.cases[0].name).toBe("Alice Smith");
-    expect(result.cases[1].name).toBe("Bob Jones");
-    expect(result.cases[2].name).toBe("Zoe Brown");
+    expect(result.cases[0].name).toBe("Zoe Brown");
+    expect(result.cases[1].name).toBe("Alice Smith");
+    expect(result.cases[2].name).toBe("Bob Jones");
   });
 });
 

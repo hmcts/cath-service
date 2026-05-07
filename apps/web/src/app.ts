@@ -33,7 +33,7 @@ import {
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
 import { assets as sjpPressListAssets, moduleRoot as sjpPressListModuleRoot, pageRoutes as sjpPressListRoutes } from "@hmcts/sjp-press-list/config";
-import { moduleRoot as sjpPublicListModuleRoot, pageRoutes as sjpPublicListRoutes } from "@hmcts/sjp-public-list/config";
+import { assets as sjpPublicListAssets, moduleRoot as sjpPublicListModuleRoot, pageRoutes as sjpPublicListRoutes } from "@hmcts/sjp-public-list/config";
 import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
@@ -104,6 +104,7 @@ export async function createApp(): Promise<Express> {
     civilFamilyCauseListModuleRoot,
     sjpPressListModuleRoot,
     sjpPublicListModuleRoot,
+    sjpPublicListAssets,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
     civilAppealModuleRoot,

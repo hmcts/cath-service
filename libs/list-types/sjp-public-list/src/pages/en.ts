@@ -26,5 +26,8 @@ export const en = {
   next: "Next",
   backToTop: "Back to top",
   errorSummaryTitle: "There is a problem",
-  errorInvalidPostcode: "Enter a valid postcode"
+  errorInvalidPostcode: "Enter a valid postcode",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland."
 };

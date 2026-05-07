@@ -1,11 +1,11 @@
 export const en = {
-  title: "Single Justice Procedure – Press List",
-  accordionTitle: "What are Single Justice Procedure Cases?",
+  title: "Single Justice Procedure cases - Press view (Full list)",
+  accordionTitle: "What are Single Justice Procedure cases?",
   accordionContent: "Cases ready to be decided by a magistrate without a hearing. Includes TV licensing and minor traffic offences such as speeding.",
   listFor: "List for",
   published: "Published",
   at: "at",
-  importantInfoTitle: "Important Information",
+  importantInfoTitle: "Important information",
   importantInfoContent:
     "In accordance with the media protocol, additional documents from these cases are available to the members of the media on request. The link below takes you to the full protocol and further information in relation to what documentation can be obtained",
   mediaProtocolLink: "Protocol on sharing court lists, registers and documents with the media",
@@ -23,7 +23,7 @@ export const en = {
   clearFilters: "Clear filters",
   applyFilters: "Apply filters",
   nameHeader: "Name",
-  dobHeader: "Date of Birth",
+  dobHeader: "Date of birth",
   referenceHeader: "Reference",
   addressHeader: "Address",
   prosecutorHeader: "Prosecutor",
@@ -35,5 +35,8 @@ export const en = {
   backToTop: "Back to top",
   errorSummaryTitle: "There is a problem",
   errorInvalidPostcode: "Enter a valid postcode",
-  errorNotVerified: "You must be a verified user to access press lists"
+  errorNotVerified: "You must be a verified user to access press lists",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland."
 };

@@ -31,7 +31,7 @@ export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const artefactId = req.query.artefactId as string;
   const page = Number.parseInt(req.query.page as string, 10) || 1;
-  const sortBy = (req.query.sortBy as string) || "name";
+  const sortBy = (req.query.sortBy as string) || "";
   const sortOrder = (req.query.sortOrder as string) || "asc";
 
   if (!artefactId) {
@@ -64,7 +64,7 @@ export const GET = async (req: Request, res: Response) => {
   const { cases, totalCases } = await getSjpPublicCases(artefactId, filters, page, sortBy, sortOrder);
   const prosecutors = await getUniqueProsecutors(artefactId);
   const postcodeData = await getUniquePostcodes(artefactId);
-  const pagination = calculatePagination(page, totalCases, 200);
+  const pagination = calculatePagination(page, totalCases, 1000);
   const t = locale === "cy" ? cy : en;
 
   // Format cases for GOV.UK table component

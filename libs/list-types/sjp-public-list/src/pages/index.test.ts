@@ -117,7 +117,7 @@ describe("SJP Public List Controller", () => {
         currentPage: 2,
         totalPages: 2,
         totalItems: 300,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: true,
         pageNumbers: [1, 2]
@@ -126,10 +126,10 @@ describe("SJP Public List Controller", () => {
       await GET(req, res);
 
       expect(getSjpListById).toHaveBeenCalledWith("test-123");
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcodes: undefined, prosecutors: undefined }, 2, "name", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcodes: undefined, prosecutors: undefined }, 2, "", "asc");
       expect(getUniqueProsecutors).toHaveBeenCalledWith("test-123");
       expect(getUniquePostcodes).toHaveBeenCalledWith("test-123");
-      expect(calculatePagination).toHaveBeenCalledWith(2, 300, 200);
+      expect(calculatePagination).toHaveBeenCalledWith(2, 300, 1000);
 
       expect(res.render).toHaveBeenCalledWith(
         "sjp-public-list",
@@ -143,7 +143,7 @@ describe("SJP Public List Controller", () => {
           londonPostcodes: ["SW1A"],
           pagination: expect.any(Object),
           filters: { searchQuery: undefined, postcodes: [], prosecutors: [] },
-          sortBy: "name",
+          sortBy: "",
           sortOrder: "asc"
         })
       );
@@ -177,7 +177,7 @@ describe("SJP Public List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]
@@ -185,7 +185,7 @@ describe("SJP Public List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1, "name", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1, "", "asc");
     });
 
     it("should handle custom sort parameters", async () => {
@@ -214,7 +214,7 @@ describe("SJP Public List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]
@@ -247,7 +247,7 @@ describe("SJP Public List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]
@@ -255,7 +255,7 @@ describe("SJP Public List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", expect.any(Object), 1, "name", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", expect.any(Object), 1, "", "asc");
     });
 
     it("should format cases as table rows", async () => {
@@ -287,7 +287,7 @@ describe("SJP Public List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]
@@ -329,7 +329,7 @@ describe("SJP Public List Controller", () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: 200,
+        itemsPerPage: 1000,
         hasNext: false,
         hasPrevious: false,
         pageNumbers: [1]

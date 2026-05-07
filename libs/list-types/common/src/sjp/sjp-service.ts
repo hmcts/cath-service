@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-const CASES_PER_PAGE = 200;
+const CASES_PER_PAGE = 1000;
 
 export interface SjpListMetadata {
   artefactId: string;
@@ -193,7 +193,7 @@ export async function getSjpPublicCases(
   artefactId: string,
   filters: SjpSearchFilters,
   page: number,
-  sortBy: string = "name",
+  sortBy: string = "",
   sortOrder: string = "asc"
 ): Promise<{ cases: SjpCasePublic[]; totalCases: number }> {
   const sjpData = await readSjpJson(artefactId);
@@ -207,18 +207,24 @@ export async function getSjpPublicCases(
     caseId: c.caseId,
     name: c.name,
     postcode: c.postcode,
-    offence: c.offences[0]?.offenceTitle || c.offences[0]?.offenceWording || null,
+    offence:
+      c.offences
+        .map((o) => o.offenceTitle || o.offenceWording)
+        .filter(Boolean)
+        .join(", ") || null,
     prosecutor: c.prosecutor
   }));
 
-  // Sort
-  const sortField = sortBy as keyof SjpCasePublic;
-  allCases.sort((a, b) => {
-    const aVal = a[sortField] || "";
-    const bVal = b[sortField] || "";
-    const comparison = String(aVal).localeCompare(String(bVal));
-    return sortOrder === "asc" ? comparison : -comparison;
-  });
+  // Sort only when a sort field is explicitly requested
+  if (sortBy) {
+    const sortField = sortBy as keyof SjpCasePublic;
+    allCases.sort((a, b) => {
+      const aVal = a[sortField] || "";
+      const bVal = b[sortField] || "";
+      const comparison = String(aVal).localeCompare(String(bVal));
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+  }
 
   // Paginate
   const startIdx = (page - 1) * CASES_PER_PAGE;
@@ -240,9 +246,6 @@ export async function getSjpPressCases(artefactId: string, filters: SjpSearchFil
   // Apply filters
   allCases = applyFilters(allCases, filters);
 
-  // Sort by name
-  allCases.sort((a, b) => a.name.localeCompare(b.name));
-
   // Paginate
   const startIdx = (page - 1) * CASES_PER_PAGE;
   const paginatedCases = allCases.slice(startIdx, startIdx + CASES_PER_PAGE);
@@ -263,9 +266,6 @@ export async function getAllSjpPressCases(artefactId: string, filters: SjpSearch
 
   // Apply filters
   allCases = applyFilters(allCases, filters);
-
-  // Sort by name
-  allCases.sort((a, b) => a.name.localeCompare(b.name));
 
   return {
     cases: allCases,

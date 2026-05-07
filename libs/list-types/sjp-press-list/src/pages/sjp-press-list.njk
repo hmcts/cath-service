@@ -17,7 +17,11 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ title }}</h1>
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <p class="govuk-body">
+      <a href="{{ factLinkUrl }}" class="govuk-link">{{ factLinkText }}</a> {{ factAdditionalText }}
+    </p>
 
     {{ govukDetails({
       summaryText: accordionTitle,
@@ -224,7 +228,7 @@
           }) }}
           {% for offence in case.offences %}
             <p class="govuk-body govuk-!-margin-top-3">
-              {{ reportingRestrictionHeader }} - {{ offence.reportingRestriction }}<br>
+              {{ reportingRestrictionHeader }} - {{ "True" if offence.reportingRestriction else "False" }}<br>
               {% if offence.offenceWording %}
                 {{ offence.offenceTitle }} - {{ offence.offenceWording }}
               {% else %}
@@ -244,10 +248,10 @@
       </div>
     </div>
 
-    <div class="back-to-top-container">
-      <a href="#" class="govuk-link" id="back-to-top">
-        {{ backToTop }} ↑
-      </a>
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ backToTop }}</a>
+      </div>
     </div>
 
   </div>
@@ -316,13 +320,5 @@
     setupFilterToggle('postcodes-anchor', 'postcodes-link', 'postcodes-checkbox');
     setupFilterToggle('prosecutor-anchor', 'prosecutor-link', 'prosecutor-checkbox');
 
-    // Back to top
-    const backToTopLink = document.getElementById('back-to-top');
-    if (backToTopLink) {
-      backToTopLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    }
   </script>
 {% endblock %}
