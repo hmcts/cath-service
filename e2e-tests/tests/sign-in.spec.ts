@@ -164,7 +164,7 @@ test.describe("Sign In Account Selection Page", () => {
       await page.goto("/sign-in");
 
       // Find and click the Welsh language toggle
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toBeVisible();
       await expect(languageToggle).toContainText("Cymraeg");
 
@@ -215,7 +215,7 @@ test.describe("Sign In Account Selection Page", () => {
       await page.goto("/sign-in?lng=cy");
 
       // Verify we're in Welsh mode
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toContainText("English");
 
       // Switch back to English
@@ -257,7 +257,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(errorSummaryHeading).toBeVisible();
 
       // Verify language toggle still shows English option (we're in Welsh mode)
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toContainText("English");
     });
   });

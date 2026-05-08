@@ -72,8 +72,7 @@ const postHandler = async (req: Request, res: Response) => {
         continueButton: lang.continueButton,
         application,
         proofOfIdFilename: application.proofOfIdOriginalName,
-        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }]
       });
     }
 
