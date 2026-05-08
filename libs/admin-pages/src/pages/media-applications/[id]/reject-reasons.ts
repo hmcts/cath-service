@@ -18,8 +18,9 @@ const getHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // Get any previously selected reasons from session
-    const selectedReasons = req.session?.rejectionReasons || {};
+    // Clear any stale rejection reasons from a previous application
+    delete req.session.rejectionReasons;
+    const selectedReasons = {};
 
     res.render("media-applications/[id]/reject-reasons", {
       pageTitle: lang.pageTitle,

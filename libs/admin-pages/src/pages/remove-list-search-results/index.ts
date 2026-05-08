@@ -104,8 +104,7 @@ const getHandler = async (req: Request, res: Response) => {
     artefactRows,
     resultCount: artefacts.length,
     sortBy,
-    order,
-    hideLanguageToggle: true
+    order
   });
 };
 
@@ -180,8 +179,7 @@ const postHandler = async (req: Request, res: Response) => {
           href: "#artefacts"
         }
       ],
-      errorSummaryTitle: lang.errorSummaryTitle,
-      hideLanguageToggle: true
+      errorSummaryTitle: lang.errorSummaryTitle
     });
   }
 

@@ -1,5 +1,10 @@
 terraform {
-  backend "azurerm" {}
+  backend "azurerm" {
+    resource_group_name  = "jenkins-state-stg"
+    storage_account_name = "sdsstatestg"
+    container_name       = "tfstate-stg"
+    key                  = "cath-service/stg/terraform.tfstate"
+  }
 
   required_providers {
     azurerm = {

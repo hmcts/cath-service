@@ -52,6 +52,7 @@ vi.mock("@hmcts/auth", () => ({
   b2cForgotPasswordHandler: vi.fn(),
   cftCallbackHandler: vi.fn(),
   configurePassport: vi.fn(),
+  crimeCallbackHandler: vi.fn(),
   sessionTimeoutMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
   ssoCallbackHandler: vi.fn()
 }));

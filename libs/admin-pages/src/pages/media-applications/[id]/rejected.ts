@@ -31,15 +31,13 @@ const getHandler = async (req: Request, res: Response) => {
       whatHappensNextText: lang.whatHappensNextText,
       returnLink: lang.returnLink,
       application,
-      reasonsList,
-      hideLanguageToggle: true
+      reasonsList
     });
   } catch (_error) {
     res.render("media-applications/[id]/rejected", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };

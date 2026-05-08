@@ -1,5 +1,5 @@
 const SENSITIVITY_OPTIONS = ["Public", "Private", "Classified"] as const;
-const PROVENANCE_OPTIONS = ["CFT_IDAM", "PI_AAD", "COMMON_PLATFORM"] as const;
+const PROVENANCE_OPTIONS = ["CFT_IDAM", "PI_AAD", "CRIME_IDAM"] as const;
 
 function getFieldLabel(fieldName: string): string {
   const labels: Record<string, string> = {

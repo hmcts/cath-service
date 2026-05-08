@@ -14,8 +14,7 @@ const getHandler = async (req: Request, res: Response) => {
     searchHint: lang.searchHint,
     continueButton: lang.continueButton,
     locationId: "",
-    locationName: "",
-    hideLanguageToggle: true
+    locationName: ""
   });
 };
 
@@ -42,8 +41,7 @@ const postHandler = async (req: Request, res: Response) => {
       errorSummaryTitle: lang.errorSummaryTitle,
       locationError: {
         text: lang.errorLocationRequired
-      },
-      hideLanguageToggle: true
+      }
     });
   }
 

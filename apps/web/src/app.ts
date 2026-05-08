@@ -10,6 +10,7 @@ import {
   b2cForgotPasswordHandler,
   cftCallbackHandler,
   configurePassport,
+  crimeCallbackHandler,
   sessionTimeoutMiddleware,
   ssoCallbackHandler
 } from "@hmcts/auth";
@@ -75,6 +76,7 @@ export async function createApp(): Promise<Express> {
   app.use(
     configureHelmet({
       cftIdamUrl: process.env.CFT_IDAM_URL,
+      crimeIdamUrl: process.env.CRIME_IDAM_BASE_URL,
       b2cCustomDomain: process.env.B2C_CUSTOM_DOMAIN,
       b2cTenantName: process.env.B2C_TENANT_NAME
     })
@@ -141,6 +143,9 @@ export async function createApp(): Promise<Express> {
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
 
+  // Manual route registration for Crime IDAM callback (maintains /crime-login/return URL for external Crime IDAM config)
+  app.get("/crime-login/return", crimeCallbackHandler);
+
   // Manual route registration for B2C callback (maintains /login/return URL for Azure B2C config)
   // Supports both GET (response_mode=query) and POST (response_mode=form_post)
   app.get("/login/return", b2cCallbackHandler);
@@ -206,7 +211,13 @@ export async function createApp(): Promise<Express> {
 }
 
 const getRedisClient = async (config: { get: (key: string) => any }) => {
-  const redisClient = createClient({ url: config.get("redis.url") });
+  // process.env.REDIS_URL is set by getPropertiesVolumeSecrets before this is called.
+  // We cannot use config.get("redis.url") because the config module is a singleton that
+  // caches env vars at initialization time. Static imports in this module (e.g. @hmcts/auth)
+  // cause `config` to load before getPropertiesVolumeSecrets runs, so it caches the
+  // default localhost URL. Reading from process.env directly avoids this stale cache issue.
+  const url = process.env.REDIS_URL ?? config.get("redis.url");
+  const redisClient = createClient({ url });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));
 
   await redisClient.connect();

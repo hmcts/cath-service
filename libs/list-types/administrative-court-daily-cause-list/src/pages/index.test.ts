@@ -106,8 +106,7 @@ describe("Administrative Court page controller", () => {
         locale: "en",
         listTypeId: 20,
         listTitle: expect.any(String),
-        displayFrom: mockArtefact.displayFrom,
-        displayTo: mockArtefact.displayTo,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
       });
       const renderCall = vi.mocked(res.render).mock.calls[0];

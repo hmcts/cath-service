@@ -30,8 +30,7 @@ const getHandler = async (req: Request, res: Response) => {
   req.session.nonStrategicSuccessPageViewed = true;
 
   res.render("non-strategic-upload-success/index", {
-    ...t,
-    hideLanguageToggle: true
+    ...t
   });
 };
 

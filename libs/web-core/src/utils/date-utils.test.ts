@@ -69,33 +69,33 @@ describe("parseDate", () => {
     it("should parse a valid date correctly", () => {
       const result = parseDate({ day: "15", month: "6", year: "2025" });
       expect(result).toBeInstanceOf(Date);
-      expect(result?.getDate()).toBe(15);
-      expect(result?.getMonth()).toBe(5); // 0-indexed
-      expect(result?.getFullYear()).toBe(2025);
+      expect(result?.getUTCDate()).toBe(15);
+      expect(result?.getUTCMonth()).toBe(5); // 0-indexed
+      expect(result?.getUTCFullYear()).toBe(2025);
     });
 
     it("should handle single-digit day and month", () => {
       const result = parseDate({ day: "1", month: "1", year: "2025" });
       expect(result).toBeInstanceOf(Date);
-      expect(result?.getDate()).toBe(1);
-      expect(result?.getMonth()).toBe(0);
-      expect(result?.getFullYear()).toBe(2025);
+      expect(result?.getUTCDate()).toBe(1);
+      expect(result?.getUTCMonth()).toBe(0);
+      expect(result?.getUTCFullYear()).toBe(2025);
     });
 
     it("should handle end of month date", () => {
       const result = parseDate({ day: "31", month: "12", year: "2025" });
       expect(result).toBeInstanceOf(Date);
-      expect(result?.getDate()).toBe(31);
-      expect(result?.getMonth()).toBe(11);
-      expect(result?.getFullYear()).toBe(2025);
+      expect(result?.getUTCDate()).toBe(31);
+      expect(result?.getUTCMonth()).toBe(11);
+      expect(result?.getUTCFullYear()).toBe(2025);
     });
 
     it("should handle leap year date", () => {
       const result = parseDate({ day: "29", month: "2", year: "2024" });
       expect(result).toBeInstanceOf(Date);
-      expect(result?.getDate()).toBe(29);
-      expect(result?.getMonth()).toBe(1);
-      expect(result?.getFullYear()).toBe(2024);
+      expect(result?.getUTCDate()).toBe(29);
+      expect(result?.getUTCMonth()).toBe(1);
+      expect(result?.getUTCFullYear()).toBe(2024);
     });
   });
 
