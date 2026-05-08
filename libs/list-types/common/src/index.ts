@@ -38,5 +38,6 @@ export {
   TEMP_STORAGE_BASE
 } from "./pdf/pdf-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
+export { normaliseHearings } from "./rendering/hearing-normalisation.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
 export { convertListTypeNameToKebabCase, type ListTypeInfo, validateListTypeJson } from "./validation/list-type-validator.js";

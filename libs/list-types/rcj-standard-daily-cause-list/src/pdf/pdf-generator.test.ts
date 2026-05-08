@@ -301,8 +301,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "cy",
       listTypeId: 11,
       listTitle: "County Court at Central London Civil Daily Cause List",
-      displayFrom: contentDate,
-      displayTo: contentDate,
+      contentDate: contentDate,
       lastReceivedDate: expect.any(String)
     });
   });

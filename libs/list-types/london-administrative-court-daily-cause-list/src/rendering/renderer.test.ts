@@ -5,8 +5,7 @@ import { renderLondonAdminCourt } from "./renderer.js";
 describe("renderLondonAdminCourt", () => {
   const baseOptions = {
     locale: "en",
-    displayFrom: new Date(2025, 0, 15),
-    displayTo: new Date(2025, 0, 15),
+    contentDate: new Date(2025, 0, 15),
     lastReceivedDate: "2025-01-14T09:30:00Z"
   };
 

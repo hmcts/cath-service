@@ -29,8 +29,7 @@ describe("renderStandardDailyCauseList", () => {
       locale: "en",
       listTypeId: 10,
       listTitle: "Civil Courts at the RCJ Daily Cause List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -48,8 +47,7 @@ describe("renderStandardDailyCauseList", () => {
       locale: "cy",
       listTypeId: 10,
       listTitle: "Rhestr Achosion Dyddiol y Llysoedd Sifil yn y Llys Barn Brenhinol",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -63,8 +61,7 @@ describe("renderStandardDailyCauseList", () => {
       locale: "en",
       listTypeId: 10,
       listTitle: "Civil Courts at the RCJ Daily Cause List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -76,8 +73,7 @@ describe("renderStandardDailyCauseList", () => {
       locale: "en",
       listTypeId: 10,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
