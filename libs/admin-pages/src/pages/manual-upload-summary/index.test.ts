@@ -52,7 +52,10 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     if (id === 4) return Promise.resolve({ id: 4, friendlyName: "Family Daily List", welshFriendlyName: "Rhestr Ddyddiol Teulu" });
     if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
     return Promise.resolve(null);
-  })
+  }),
+  AuditLogAction: {
+    MANUAL_UPLOAD: "Manual upload"
+  }
 }));
 
 vi.mock("@hmcts/web-core", async () => {
@@ -77,7 +80,8 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn()
+    createArtefact: vi.fn(),
+    processPublication: vi.fn()
   };
 });
 
@@ -87,7 +91,7 @@ vi.mock("@hmcts/notifications", () => ({
 
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact } from "@hmcts/publication";
+import { createArtefact, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import { getManualUpload } from "../../manual-upload/storage.js";
 
@@ -572,22 +576,11 @@ describe("manual-upload-summary page", () => {
       expect(req.session.manualUploadForm).toEqual({ locationId: "1" });
     });
 
-    it("should send notifications on successful upload", async () => {
+    it("should process publication on successful upload", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(getLocationById).mockResolvedValue({
-        locationId: 1,
-        name: "Test Crown Court",
-        welshName: "Test Crown Court CY"
-      });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
-        totalSubscriptions: 5,
-        sent: 5,
-        failed: 0,
-        skipped: 0,
-        errors: []
-      });
+      vi.mocked(processPublication).mockResolvedValue();
 
       const session = {
         save: vi.fn((callback) => callback())
@@ -605,25 +598,21 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(sendPublicationNotifications).toHaveBeenCalledWith({
-        publicationId: "test-artefact-id-123",
-        locationId: "1",
-        locationName: "Test Crown Court",
-        hearingListName: "Crown Daily List",
-        publicationDate: expect.any(Date),
-        listTypeId: 6,
-        jsonData: undefined, // Not a JSON upload in this test
-        pdfFilePath: undefined // PDF generation not triggered for this list type
-      });
+      expect(processPublication).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artefactId: "test-artefact-id-123",
+          locationId: "1",
+          listTypeId: 6
+        })
+      );
     });
 
-    it("should continue upload even if location not found for notifications", async () => {
-      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
+    it("should continue upload even if location not found for audit log", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
       vi.mocked(getLocationById).mockResolvedValue(null);
+      vi.mocked(processPublication).mockResolvedValue();
 
       const session = {
         save: vi.fn((callback) => callback())
@@ -642,30 +631,15 @@ describe("manual-upload-summary page", () => {
       await callHandler(POST, req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-      expect(consoleWarnSpy).toHaveBeenCalledWith("[Manual Upload] Location not found for notifications:", {
-        locationId: "1"
-      });
-      expect(sendPublicationNotifications).not.toHaveBeenCalled();
-
-      consoleWarnSpy.mockRestore();
     });
 
-    it("should continue upload even if notifications fail", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
+    it("should render error page when processPublication fails", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(getLocationById).mockResolvedValue({
-        locationId: 1,
-        name: "Test Crown Court",
-        welshName: "Test Crown Court CY"
-      });
-      vi.mocked(sendPublicationNotifications).mockRejectedValue(new Error("Notification service down"));
+      vi.mocked(processPublication).mockRejectedValueOnce(new Error("Publication service down"));
 
-      const session = {
-        save: vi.fn((callback) => callback())
-      };
+      const session = {};
 
       const req = {
         query: { uploadId: "test-upload-id" },
@@ -679,15 +653,13 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[Manual Upload] Failed to send notifications:",
+      expect(res.render).toHaveBeenCalledWith(
+        "manual-upload-summary/index",
         expect.objectContaining({
-          artefactId: "test-artefact-id-123"
+          errors: [{ text: "We could not process your upload. Please try again.", href: "#" }]
         })
       );
-
-      consoleErrorSpy.mockRestore();
+      expect(res.redirect).not.toHaveBeenCalled();
     });
 
     it("should redirect to Welsh success page when lng=cy", async () => {

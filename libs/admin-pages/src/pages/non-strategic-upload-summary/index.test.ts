@@ -48,7 +48,10 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     if (id === 5) return Promise.resolve({ id: 5, friendlyName: "Magistrates Public List", welshFriendlyName: "Rhestr Gyhoeddus Ynadon" });
     if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
     return Promise.resolve(null);
-  })
+  }),
+  AuditLogAction: {
+    NON_STRATEGIC_UPLOAD: "Non strategic upload"
+  }
 }));
 
 vi.mock("@hmcts/web-core", async () => {
