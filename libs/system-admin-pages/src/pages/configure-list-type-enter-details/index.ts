@@ -42,7 +42,7 @@ const getHandler = async (req: Request, res: Response) => {
   const checkedProvenance = {
     CFT_IDAM: formData.allowedProvenance?.includes("CFT_IDAM") || false,
     PI_AAD: formData.allowedProvenance?.includes("PI_AAD") || false,
-    COMMON_PLATFORM: formData.allowedProvenance?.includes("COMMON_PLATFORM") || false
+    CRIME_IDAM: formData.allowedProvenance?.includes("CRIME_IDAM") || false
   };
 
   res.render("configure-list-type-enter-details/index", {
@@ -104,8 +104,8 @@ const postHandler = async (req: Request, res: Response) => {
 
     const checkedProvenance = {
       CFT_IDAM: formData.allowedProvenance?.includes("CFT_IDAM") || false,
-      B2C: formData.allowedProvenance?.includes("B2C") || false,
-      COMMON_PLATFORM: formData.allowedProvenance?.includes("COMMON_PLATFORM") || false
+      PI_AAD: formData.allowedProvenance?.includes("PI_AAD") || false,
+      CRIME_IDAM: formData.allowedProvenance?.includes("CRIME_IDAM") || false
     };
 
     return res.render("configure-list-type-enter-details/index", {

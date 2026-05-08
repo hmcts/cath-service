@@ -83,7 +83,7 @@ describe("enter-details page", () => {
         "configure-list-type-enter-details/index",
         expect.objectContaining({
           data: sessionData,
-          checkedProvenance: { CFT_IDAM: true, PI_AAD: false, COMMON_PLATFORM: false }
+          checkedProvenance: { CFT_IDAM: true, PI_AAD: false, CRIME_IDAM: false }
         })
       );
     });
@@ -133,7 +133,34 @@ describe("enter-details page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "configure-list-type-enter-details/index",
         expect.objectContaining({
-          checkedProvenance: { CFT_IDAM: true, PI_AAD: true, COMMON_PLATFORM: false }
+          checkedProvenance: { CFT_IDAM: true, PI_AAD: true, CRIME_IDAM: false }
+        })
+      );
+    });
+
+    it("should set CRIME_IDAM checked provenance to true when editing a CRIME_IDAM list type", async () => {
+      const existingData = {
+        id: 2,
+        name: "CRIME_TYPE",
+        friendlyName: "Crime Type",
+        welshFriendlyName: "Math Trosedd",
+        shortenedFriendlyName: "Crime",
+        url: "/crime",
+        defaultSensitivity: "Public",
+        allowedProvenance: "CRIME_IDAM",
+        isNonStrategic: false,
+        subJurisdictions: []
+      };
+      vi.mocked(findListTypeById).mockResolvedValue(existingData as any);
+      const req = { session: {}, query: { id: "2" } } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
+
+      await callHandler(GET, req, res);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "configure-list-type-enter-details/index",
+        expect.objectContaining({
+          checkedProvenance: { CFT_IDAM: false, PI_AAD: false, CRIME_IDAM: true }
         })
       );
     });
