@@ -30,7 +30,7 @@ test.describe("System Admin Dashboard", () => {
       { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts", description: "Upload a CSV file for bulk creation of media accounts" },
       { title: "Audit Log Viewer", href: "/audit-log-list", description: "View audit logs on system admin actions" },
       { title: "Manage Location Metadata", href: "/location-metadata-search", description: "View, update and remove location metadata" },
-      { title: "Manage List Types", href: "/view-list-types", description: "View, create and update list type configuration" },
+      { title: "Manage List Types", href: "/manage-list-types", description: "View, create and update list type configuration" },
       { title: "Configure List Type", href: "/configure-list-type-enter-details", description: "Add and manage list type configurations" }
     ];
 
