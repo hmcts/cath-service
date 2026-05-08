@@ -83,6 +83,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
+      - name: Export Azure SDK credentials
+        run: |
+          echo "AZURE_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS_SDS_STG).clientId }}" >> $GITHUB_ENV
+          echo "AZURE_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS_SDS_STG).clientSecret }}" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS_SDS_STG).tenantId }}" >> $GITHUB_ENV
+
       - name: Run E2E tests
         id: e2e-tests
         run: |
