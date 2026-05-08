@@ -123,6 +123,10 @@ jobs:
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
+          set: |
+            cath-web.nodejs.ingressHost=${{ env.TEAM_NAME }}-${{ env.RELEASE_NAME }}-web.staging.platform.hmcts.net
+            cath-api.nodejs.ingressHost=${{ env.TEAM_NAME }}-${{ env.RELEASE_NAME }}-api.staging.platform.hmcts.net
+            cath-postgres.nodejs.ingressHost=${{ env.TEAM_NAME }}-${{ env.RELEASE_NAME }}-postgres.staging.platform.hmcts.net
 
       - name: Register DNS for STG
         if: inputs.environment == 'stg'
