@@ -19,8 +19,7 @@ const getHandler = async (req: Request, res: Response) => {
     tiles,
     pendingCount,
     notificationText: lang.notificationText,
-    notificationLink: lang.notificationLink,
-    hideLanguageToggle: true
+    notificationLink: lang.notificationLink
   });
 };
 

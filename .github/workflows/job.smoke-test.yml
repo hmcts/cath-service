@@ -28,6 +28,20 @@ jobs:
           echo "Deployment URLs JSON: ${URLS_JSON}"
           echo "urls=${URLS_JSON}" >> "$GITHUB_OUTPUT"
 
+      - name: Network diagnostics
+        run: |
+          URLS_JSON='${{ steps.urls.outputs.urls }}'
+          for key in web api postgres; do
+            URL=$(echo "${URLS_JSON}" | jq -r ".${key} // empty")
+            if [ -z "${URL}" ]; then continue; fi
+            HOST=$(echo "${URL}" | sed -E 's#^https?://##; s#/.*$##')
+            echo "=== ${key}: ${HOST} ==="
+            echo "--- dig ${HOST} ---"
+            dig "${HOST}" || true
+            echo "--- nc -zv -w 3 ${HOST} 443 ---"
+            nc -zv -w 3 "${HOST}" 443 || true
+          done
+
       - name: Health check - Web
         run: |
           URLS_JSON='${{ steps.urls.outputs.urls }}'

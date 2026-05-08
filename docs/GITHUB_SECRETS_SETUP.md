@@ -57,6 +57,19 @@ The following secrets must be configured in your GitHub repository settings (`Se
 | `CFT_INVALID_TEST_ACCOUNT` | CFT IDAM invalid test account email |
 | `CFT_INVALID_TEST_ACCOUNT_PASSWORD` | CFT IDAM invalid test account password |
 
+### Test User Credentials (Crime IDAM)
+
+| Secret Name | Description |
+|------------|-------------|
+| `CRIME_IDAM_BASE_URL` | Crime IDAM base URL |
+| `CRIME_IDAM_CLIENT_ID` | Crime IDAM Client ID |
+| `CRIME_IDAM_CLIENT_SECRET` | Crime IDAM Client Secret |
+| `CRIME_IDAM_SCOPE` | Crime IDAM OAuth scope (defaults to "openid profile roles") |
+| `CRIME_VALID_TEST_ACCOUNT` | Crime IDAM valid test account email |
+| `CRIME_VALID_TEST_ACCOUNT_PASSWORD` | Crime IDAM valid test account password |
+| `CRIME_INVALID_TEST_ACCOUNT` | Crime IDAM invalid test account email |
+| `CRIME_INVALID_TEST_ACCOUNT_PASSWORD` | Crime IDAM invalid test account password |
+
 ## Workflow Configuration
 
 The E2E tests workflow (`.github/workflows/e2e.yml`) automatically uses these secrets when running tests on:

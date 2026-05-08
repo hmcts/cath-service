@@ -44,7 +44,7 @@ export const cy = {
     {
       title: "Rheoli Mathau Rhestr",
       description: "Gweld, creu a diweddaru ffurfweddiad math rhestr",
-      href: "/view-list-types"
+      href: "/manage-list-types"
     },
     {
       title: "Ffurfweddu Math Rhestr",
