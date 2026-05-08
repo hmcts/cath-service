@@ -11,8 +11,14 @@ nodejs:
   environment:
     NODE_ENV: 'production'
     POSTGRES_DATABASE: cath
+    REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
+    BASE_URL: 'https://{{ .Values.nodejs.ingressHost }}'
+    SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
     CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+    MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
+    MEDIA_SIGN_IN_LINK: 'https://pip-frontend.staging.platform.hmcts.net/login?p=B2C_1_SignInUserFlow'
+    CRIME_IDAM_BASE_URL: https://login.sit.cjscp.org.uk
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_AND_SUMMARY: ebc08910-5dd5-44c5-b3fc-72f90935f858
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_SUMMARY_ONLY: bf0802f9-3199-4774-a0c1-f9cb1755ff8f
@@ -43,3 +49,13 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
+
+        # Azure AD B2C secrets (media user account management)
+        - name: b2c-tenant-id
+          alias: AZURE_B2C_TENANT_ID
+        - name: auto-pip-stg-pip-account-management-stg-id
+          alias: AZURE_B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-account-management-stg-pwd
+          alias: AZURE_B2C_CLIENT_SECRET
+        - name: b2c-ad-url
+          alias: AZURE_B2C_DOMAIN

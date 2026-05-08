@@ -18,8 +18,9 @@ const getHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // Get any previously selected reasons from session
-    const selectedReasons = req.session?.rejectionReasons || {};
+    // Clear any stale rejection reasons from a previous application
+    delete req.session.rejectionReasons;
+    const selectedReasons = {};
 
     res.render("media-applications/[id]/reject-reasons", {
       pageTitle: lang.pageTitle,
@@ -28,12 +29,14 @@ const getHandler = async (req: Request, res: Response) => {
       reasons: lang.reasons,
       continueButton: lang.continueButton,
       id,
-      selectedReasons
+      selectedReasons,
+      hideLanguageToggle: true
     });
   } catch (_error) {
     res.render("media-applications/[id]/reject-reasons", {
       pageTitle: lang.pageTitle,
-      error: lang.errorMessages.loadFailed
+      error: lang.errorMessages.loadFailed,
+      hideLanguageToggle: true
     });
   }
 };
@@ -58,7 +61,8 @@ const postHandler = async (req: Request, res: Response) => {
       continueButton: lang.continueButton,
       id,
       selectedReasons: req.body,
-      errors: [{ text: lang.errorMessages.selectAtLeast, href: "#notAccredited" }]
+      errors: [{ text: lang.errorMessages.selectAtLeast, href: "#notAccredited" }],
+      hideLanguageToggle: true
     });
   }
 

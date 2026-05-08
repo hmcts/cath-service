@@ -98,12 +98,22 @@ describe("select-account page", () => {
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 
-      it("should redirect to / for common-platform account", async () => {
+      it("should redirect to Crime IDAM login for common-platform account", async () => {
         req.body = { accountType: "common-platform" };
 
         await POST(req as Request, res as Response);
 
-        expect(res.redirect).toHaveBeenCalledWith("/");
+        expect(res.redirect).toHaveBeenCalledWith("/crime-login?lng=en");
+        expect(res.redirect).toHaveBeenCalledTimes(1);
+      });
+
+      it("should redirect to Crime IDAM login for common-platform account with Welsh locale", async () => {
+        req.body = { accountType: "common-platform" };
+        res.locals = { locale: "cy" };
+
+        await POST(req as Request, res as Response);
+
+        expect(res.redirect).toHaveBeenCalledWith("/crime-login?lng=cy");
         expect(res.redirect).toHaveBeenCalledTimes(1);
       });
 

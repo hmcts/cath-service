@@ -60,8 +60,7 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
 
     const result = await generateCareStandardsTribunalWeeklyHearingListPdf({
       artefactId: "test-artefact-123",
-      displayFrom: new Date("2025-01-01"),
-      displayTo: new Date("2025-01-07"),
+      contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -83,8 +82,7 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
 
     const result = await generateCareStandardsTribunalWeeklyHearingListPdf({
       artefactId: "large-pdf-123",
-      displayFrom: new Date("2025-01-01"),
-      displayTo: new Date("2025-01-07"),
+      contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -102,8 +100,7 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
 
     const result = await generateCareStandardsTribunalWeeklyHearingListPdf({
       artefactId: "failed-pdf",
-      displayFrom: new Date("2025-01-01"),
-      displayTo: new Date("2025-01-07"),
+      contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -120,13 +117,11 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
       sizeBytes: 100
     });
 
-    const displayFrom = new Date("2025-06-15");
-    const displayTo = new Date("2025-06-21");
+    const contentDate = new Date("2025-06-15");
 
     await generateCareStandardsTribunalWeeklyHearingListPdf({
       artefactId: "test-render-options",
-      displayFrom,
-      displayTo,
+      contentDate,
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList
@@ -135,8 +130,7 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
     expect(renderCareStandardsTribunalData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
       courtName: "Care Standards Tribunal",
-      displayFrom,
-      displayTo,
+      contentDate,
       lastReceivedDate: expect.any(String),
       listTitle: "Care Standards Tribunal Weekly Hearing List"
     });

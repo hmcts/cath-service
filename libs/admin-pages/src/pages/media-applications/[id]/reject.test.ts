@@ -6,9 +6,13 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC" }
 }));
 
-vi.mock("@hmcts/notification", () => ({
-  sendMediaRejectionEmail: vi.fn()
-}));
+vi.mock("@hmcts/notification", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/notification")>();
+  return {
+    extractNotifyError: actual.extractNotifyError,
+    sendMediaRejectionEmail: vi.fn()
+  };
+});
 
 vi.mock("../../../media-application/queries.js", () => ({
   getApplicationById: vi.fn()

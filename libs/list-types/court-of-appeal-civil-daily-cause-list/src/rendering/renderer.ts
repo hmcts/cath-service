@@ -1,10 +1,9 @@
-import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
+import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normaliseHearings, normalizeTime } from "@hmcts/list-types-common";
 import type { CourtOfAppealCivilData, FutureJudgment, StandardHearing } from "../models/types.js";
 
 export interface RenderOptions {
   locale: string;
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
   lastReceivedDate: string;
 }
 
@@ -17,18 +16,6 @@ export interface RenderedData {
   };
   dailyHearings: StandardHearing[];
   futureJudgments: FutureJudgment[];
-}
-
-function renderStandardHearings(hearings: StandardHearing[]): StandardHearing[] {
-  return hearings.map((hearing) => ({
-    venue: hearing.venue,
-    judge: hearing.judge,
-    time: normalizeTime(hearing.time),
-    caseNumber: hearing.caseNumber,
-    caseDetails: hearing.caseDetails,
-    hearingType: hearing.hearingType,
-    additionalInformation: hearing.additionalInformation || ""
-  }));
 }
 
 function renderFutureJudgments(judgments: FutureJudgment[], locale: string): FutureJudgment[] {
@@ -45,7 +32,7 @@ function renderFutureJudgments(judgments: FutureJudgment[], locale: string): Fut
 }
 
 export function renderCourtOfAppealCivil(data: CourtOfAppealCivilData, options: RenderOptions): RenderedData {
-  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   return {
@@ -55,7 +42,7 @@ export function renderCourtOfAppealCivil(data: CourtOfAppealCivilData, options: 
       lastUpdatedDate,
       lastUpdatedTime
     },
-    dailyHearings: renderStandardHearings(data.dailyHearings),
+    dailyHearings: normaliseHearings(data.dailyHearings),
     futureJudgments: renderFutureJudgments(data.futureJudgments, options.locale)
   };
 }

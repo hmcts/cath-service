@@ -1,12 +1,11 @@
-import { formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
+import { formatDisplayDate, formatLastUpdatedDateTime, normaliseHearings } from "@hmcts/list-types-common";
 import type { StandardHearing, StandardHearingList } from "../models/types.js";
 
 export interface RenderOptions {
   locale: string;
   listTypeId: number;
   listTitle: string;
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
   lastReceivedDate: string;
 }
 
@@ -21,18 +20,8 @@ export interface RenderedData {
 }
 
 export function renderStandardDailyCauseList(hearingList: StandardHearingList, options: RenderOptions): RenderedData {
-  const listDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
-
-  const renderedHearings = hearingList.map((hearing) => ({
-    venue: hearing.venue,
-    judge: hearing.judge,
-    time: normalizeTime(hearing.time),
-    caseNumber: hearing.caseNumber,
-    caseDetails: hearing.caseDetails,
-    hearingType: hearing.hearingType,
-    additionalInformation: hearing.additionalInformation || ""
-  }));
 
   return {
     header: {
@@ -41,6 +30,6 @@ export function renderStandardDailyCauseList(hearingList: StandardHearingList, o
       lastUpdatedDate,
       lastUpdatedTime
     },
-    hearings: renderedHearings
+    hearings: normaliseHearings(hearingList)
   };
 }

@@ -5,6 +5,7 @@ export interface CftIdamConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
+  scope: string;
   authorizationEndpoint: string;
   tokenEndpoint: string;
 }
@@ -26,12 +27,14 @@ export function getCftIdamConfig(): CftIdamConfig {
   const cftIdamUrl = getConfigValue("CFT_IDAM_URL");
   const baseUrl = getConfigValue("BASE_URL") || "https://localhost:8080";
   const redirectUri = `${baseUrl}/cft-login/return`;
+  const scope = getConfigValue("CFT_IDAM_SCOPE") || "openid profile roles";
 
   return {
     cftIdamUrl,
     clientId: "app-pip-frontend",
     clientSecret: getConfigValue("CFT_IDAM_CLIENT_SECRET"),
     redirectUri,
+    scope,
     authorizationEndpoint: cftIdamUrl,
     tokenEndpoint: `${cftIdamUrl}/o/token`
   };

@@ -4,8 +4,7 @@ import type { CareStandardsTribunalHearing, CareStandardsTribunalHearingList } f
 export interface RenderOptions {
   locale: string;
   courtName: string;
-  displayFrom: Date;
-  displayTo: Date;
+  contentDate: Date;
   lastReceivedDate: string;
   listTitle: string;
 }
@@ -21,7 +20,7 @@ export interface RenderedData {
 }
 
 export function renderCareStandardsTribunalData(hearingList: CareStandardsTribunalHearingList, options: RenderOptions): RenderedData {
-  const weekCommencingDate = formatDisplayDate(options.displayFrom, options.locale);
+  const weekCommencingDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   const renderedHearings = hearingList.map((hearing) => ({

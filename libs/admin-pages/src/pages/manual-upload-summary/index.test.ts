@@ -85,6 +85,17 @@ vi.mock("@hmcts/notifications", () => ({
   sendPublicationNotifications: vi.fn()
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn(({ where: { id } }: any) => {
+        if (id === 6) return Promise.resolve({ name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List" });
+        return Promise.resolve(null);
+      })
+    }
+  }
+}));
+
 import { getLocationById } from "@hmcts/location";
 import { sendPublicationNotifications } from "@hmcts/notifications";
 import { createArtefact } from "@hmcts/publication";
@@ -610,8 +621,8 @@ describe("manual-upload-summary page", () => {
         hearingListName: "Crown Daily List",
         publicationDate: expect.any(Date),
         listTypeId: 6,
-        jsonData: undefined, // Not a JSON upload in this test
-        pdfFilePath: undefined // PDF generation not triggered for this list type
+        jsonData: undefined,
+        pdfFilePath: undefined
       });
     });
 
