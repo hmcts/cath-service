@@ -8,6 +8,12 @@ vi.mock("@hmcts/auth", () => ({
   blockUserAccess: vi.fn(() => (_req: any, _res: any, next: any) => next())
 }));
 
+vi.mock("@hmcts/subscriptions", () => ({
+  getSubscriptionListTypesByUserId: vi.fn()
+}));
+
+import { getSubscriptionListTypesByUserId } from "@hmcts/subscriptions";
+
 describe("subscription-configure-list-language", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
@@ -16,13 +22,15 @@ describe("subscription-configure-list-language", () => {
     mockReq = {
       body: {},
       path: "/subscription-configure-list-language",
-      session: { emailSubscriptions: {} } as any
+      session: { emailSubscriptions: {} } as any,
+      user: { id: "test-user-id" }
     };
     mockRes = {
       render: vi.fn(),
       redirect: vi.fn(),
       locals: {}
     };
+    vi.mocked(getSubscriptionListTypesByUserId).mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -30,18 +38,73 @@ describe("subscription-configure-list-language", () => {
   });
 
   describe("GET", () => {
-    it("should render the language selection page", async () => {
+    it("should redirect to sign-in when user is not authenticated", async () => {
+      mockReq.user = undefined;
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should render the language selection page with no pre-selection when no existing subscription", async () => {
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-language/index", expect.objectContaining({ selectedLanguage: undefined }));
     });
 
-    it("should pre-select language from session", async () => {
+    it("should pre-select language from session pendingLanguage", async () => {
       mockReq.session = { emailSubscriptions: { pendingLanguage: "WELSH" } } as any;
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-language/index", expect.objectContaining({ selectedLanguage: "WELSH" }));
+      expect(getSubscriptionListTypesByUserId).not.toHaveBeenCalled();
+    });
+
+    it("should pre-select ENGLISH from existing subscription", async () => {
+      vi.mocked(getSubscriptionListTypesByUserId).mockResolvedValue({
+        subscriptionListTypeId: "sub-id",
+        listTypeIds: [1],
+        listTypeNames: ["Test List"],
+        listLanguage: ["ENGLISH"],
+        dateAdded: new Date()
+      });
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(getSubscriptionListTypesByUserId).toHaveBeenCalledWith("test-user-id");
+      expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-language/index", expect.objectContaining({ selectedLanguage: "ENGLISH" }));
+    });
+
+    it("should pre-select WELSH from existing subscription", async () => {
+      vi.mocked(getSubscriptionListTypesByUserId).mockResolvedValue({
+        subscriptionListTypeId: "sub-id",
+        listTypeIds: [1],
+        listTypeNames: ["Test List"],
+        listLanguage: ["WELSH"],
+        dateAdded: new Date()
+      });
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-language/index", expect.objectContaining({ selectedLanguage: "WELSH" }));
+    });
+
+    it("should pre-select ENGLISH_AND_WELSH from existing subscription with both languages", async () => {
+      vi.mocked(getSubscriptionListTypesByUserId).mockResolvedValue({
+        subscriptionListTypeId: "sub-id",
+        listTypeIds: [1],
+        listTypeNames: ["Test List"],
+        listLanguage: ["ENGLISH", "WELSH"],
+        dateAdded: new Date()
+      });
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-configure-list-language/index",
+        expect.objectContaining({ selectedLanguage: "ENGLISH_AND_WELSH" })
+      );
     });
   });
 
