@@ -84,10 +84,16 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
       - name: Export Azure SDK credentials
+        env:
+          AZURE_CREDS_JSON: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
         run: |
-          echo "AZURE_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS_SDS_STG).clientId }}" >> $GITHUB_ENV
-          echo "AZURE_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS_SDS_STG).clientSecret }}" >> $GITHUB_ENV
-          echo "AZURE_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS_SDS_STG).tenantId }}" >> $GITHUB_ENV
+          CLIENT_ID=$(echo "$AZURE_CREDS_JSON" | jq -r '.clientId // .appId')
+          CLIENT_SECRET=$(echo "$AZURE_CREDS_JSON" | jq -r '.clientSecret // .password')
+          TENANT_ID=$(echo "$AZURE_CREDS_JSON" | jq -r '.tenantId // .tenant')
+          echo "AZURE_CLIENT_ID=${CLIENT_ID}" >> $GITHUB_ENV
+          echo "AZURE_CLIENT_SECRET=${CLIENT_SECRET}" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=${TENANT_ID}" >> $GITHUB_ENV
+          echo "Exported Azure SDK credentials (clientId length: ${#CLIENT_ID}, tenantId length: ${#TENANT_ID})"
 
       - name: Run E2E tests
         id: e2e-tests
