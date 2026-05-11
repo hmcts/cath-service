@@ -228,7 +228,7 @@ describe("delete-third-party-user page", () => {
 
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
-        action: "DELETE_THIRD_PARTY_USER",
+        action: "Delete third party user",
         entityInfo: "ID: user-123, Name: Test User"
       });
     });

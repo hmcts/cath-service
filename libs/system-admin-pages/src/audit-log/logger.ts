@@ -1,5 +1,21 @@
 import { prisma } from "@hmcts/postgres-prisma";
 
+export enum AuditLogAction {
+  ADD_JURISDICTION = "Add jurisdiction",
+  ADD_REGION = "Add region",
+  ADD_SUB_JURISDICTION = "Add sub-jurisdiction",
+  BLOB_EXPLORER_RESUBMISSION = "Blob explorer resubmission",
+  CREATE_THIRD_PARTY_USER = "Create third party user",
+  DELETE_COURT = "Delete court",
+  DELETE_THIRD_PARTY_USER = "Delete third party user",
+  DELETE_USER = "Delete user",
+  MANUAL_UPLOAD = "Manual upload",
+  NON_STRATEGIC_UPLOAD = "Non strategic upload",
+  REFERENCE_DATA_UPLOAD = "Reference data upload",
+  REMOVE_LIST = "Remove list",
+  UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions"
+}
+
 export interface AuditLogData {
   userId: string;
   userEmail: string;

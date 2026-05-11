@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import type { UploadSessionData } from "../../reference-data-upload/model.js";
 import { parseCsv } from "../../reference-data-upload/parsers/csv-parser.js";
 import { upsertLocations } from "../../reference-data-upload/repository/upload-repository.js";
@@ -138,7 +139,7 @@ const postHandler = async (req: Request, res: Response) => {
   // Set audit log flag
   req.auditMetadata = {
     shouldLog: true,
-    action: "REFERENCE_DATA_UPLOAD",
+    action: AuditLogAction.REFERENCE_DATA_UPLOAD,
     entityInfo: `File: ${uploadData.fileName}, Records: ${parseResult.data.length}`
   };
 

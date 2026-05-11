@@ -1,21 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
-import { findAllListTypes } from "@hmcts/system-admin-pages";
+import { AuditLogAction, findAllListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import cy from "./cy.js";
 import en from "./en.js";
-
-declare module "express-serve-static-core" {
-  interface Request {
-    auditMetadata?: {
-      shouldLog?: boolean;
-      action?: string;
-      entityInfo?: string;
-      [key: string]: string | number | boolean | undefined;
-    };
-  }
-}
 
 function formatDateString(date: Date): string {
   return date.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
@@ -143,7 +132,7 @@ const postHandler = async (req: Request, res: Response) => {
     // Set audit log flag
     req.auditMetadata = {
       shouldLog: true,
-      action: "REMOVE_LIST",
+      action: AuditLogAction.REMOVE_LIST,
       entityInfo: `Court: ${location?.name || sessionData.locationId}, Artefacts removed: ${sessionData.selectedArtefacts.length}`
     };
 
