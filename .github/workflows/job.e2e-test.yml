@@ -83,17 +83,25 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
-      - name: Export Azure SDK credentials
-        env:
-          AZURE_CREDS_JSON: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+      - name: Fetch test credentials from Key Vault
         run: |
-          CLIENT_ID=$(echo "$AZURE_CREDS_JSON" | jq -r '.clientId // .appId')
-          CLIENT_SECRET=$(echo "$AZURE_CREDS_JSON" | jq -r '.clientSecret // .password')
-          TENANT_ID=$(echo "$AZURE_CREDS_JSON" | jq -r '.tenantId // .tenant')
-          echo "AZURE_CLIENT_ID=${CLIENT_ID}" >> $GITHUB_ENV
-          echo "AZURE_CLIENT_SECRET=${CLIENT_SECRET}" >> $GITHUB_ENV
-          echo "AZURE_TENANT_ID=${TENANT_ID}" >> $GITHUB_ENV
-          echo "Exported Azure SDK credentials (clientId length: ${#CLIENT_ID}, tenantId length: ${#TENANT_ID})"
+          fetch() { az keyvault secret show --vault-name cath-stg --name "$1" --query value -o tsv; }
+          echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_SYSTEM_ADMIN_PASSWORD=$(fetch sso-test-system-admin-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_EMAIL=$(fetch sso-test-admin-local-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_PASSWORD=$(fetch sso-test-admin-local-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_EMAIL=$(fetch sso-test-admin-account-ctsc-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_PASSWORD=$(fetch sso-test-admin-account-ctsc-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_EMAIL=$(fetch sso-test-no-roles-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_PASSWORD=$(fetch sso-test-no-roles-account-pwd)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT=$(fetch cft-valid-test-account)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-valid-test-account-password)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT=$(fetch cft-invalid-test-account)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-invalid-test-account-password)" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=$(fetch app-tenant)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
+          echo "✅ Fetched all test credentials from Key Vault"
 
       - name: Run E2E tests
         id: e2e-tests
