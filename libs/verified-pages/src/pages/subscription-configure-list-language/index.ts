@@ -1,4 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { getSubscriptionListTypesByUserId } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -6,20 +7,41 @@ import { en } from "./en.js";
 const LANGUAGE_VALUES = ["ENGLISH", "WELSH", "ENGLISH_AND_WELSH"] as const;
 type LanguageValue = (typeof LANGUAGE_VALUES)[number];
 
+function convertListLanguageToRadioValue(listLanguage: string[]): LanguageValue {
+  if (listLanguage.includes("ENGLISH") && listLanguage.includes("WELSH")) {
+    return "ENGLISH_AND_WELSH";
+  }
+  if (listLanguage.includes("WELSH")) {
+    return "WELSH";
+  }
+  return "ENGLISH";
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
+
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
 
   if (!res.locals.navigation) {
     res.locals.navigation = {};
   }
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-  const pendingLanguage = req.session.emailSubscriptions?.pendingLanguage;
+  let selectedLanguage = req.session.emailSubscriptions?.pendingLanguage;
+
+  if (!selectedLanguage) {
+    const existingSubscription = await getSubscriptionListTypesByUserId(req.user.id);
+    if (existingSubscription?.listLanguage && existingSubscription.listLanguage.length > 0) {
+      selectedLanguage = convertListLanguageToRadioValue(existingSubscription.listLanguage);
+    }
+  }
 
   res.render("subscription-configure-list-language/index", {
     ...t,
-    selectedLanguage: pendingLanguage
+    selectedLanguage
   });
 };
 
