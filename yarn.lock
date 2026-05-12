@@ -1229,7 +1229,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment"
   dependencies:
-    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
