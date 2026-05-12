@@ -311,6 +311,10 @@ describe("processBlobIngestion", async () => {
       locale: "en",
       jsonData: expect.anything(),
       provenance: "XHIBIT",
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: expect.any(Date),
+      displayTo: expect.any(Date),
       isUpdate: false,
       logPrefix: "[blob-ingestion]"
     });
