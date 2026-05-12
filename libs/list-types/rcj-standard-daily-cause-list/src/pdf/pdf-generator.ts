@@ -53,8 +53,7 @@ export async function generateRcjStandardDailyCauseListPdf(options: PdfGeneratio
       locale: options.locale,
       listTypeId: options.listTypeId,
       listTitle,
-      displayFrom: options.contentDate,
-      displayTo: options.contentDate,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString()
     });
 

@@ -54,9 +54,7 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: (p) =>
     generateCareStandardsTribunalWeeklyHearingListPdf({
       ...p,
-      jsonData: p.jsonData as CareStandardsTribunalHearingList,
-      displayFrom: p.displayFrom!,
-      displayTo: p.displayTo!
+      jsonData: p.jsonData as CareStandardsTribunalHearingList
     }),
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardGenerator,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardGenerator,

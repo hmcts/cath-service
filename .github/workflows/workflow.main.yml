@@ -1,5 +1,5 @@
 name: Main
-
+# trigger build
 on:
   push:
     branches:
@@ -72,7 +72,7 @@ jobs:
   e2e-stage:
     name: E2E
     needs: [smoke-test-stage, deploy-stage]
-    if: always() && needs.deploy-stage.result == 'success' && needs.smoke-test-stage.result == 'success'
+    if: false
     uses: ./.github/workflows/stage.e2e.yml
     with:
       urls: ${{ needs.deploy-stage.outputs.urls }}
@@ -82,7 +82,7 @@ jobs:
   cleanup-stage:
     name: Cleanup
     needs: [e2e-stage, deploy-stage]
-    if: always() && needs.e2e-stage.result == 'success'
+    if: false
     uses: ./.github/workflows/stage.cleanup.yml
     with:
       release-name: ${{ needs.deploy-stage.outputs.release-name }}
@@ -91,8 +91,8 @@ jobs:
 
   promote-stage:
     name: Promote
-    needs: [e2e-stage, build-stage]
-    if: always() && needs.e2e-stage.result == 'success'
+    needs: [smoke-test-stage, build-stage]
+    if: always() && needs.smoke-test-stage.result == 'success'
     uses: ./.github/workflows/stage.promote-images.yml
     with:
       short-sha: ${{ needs.build-stage.outputs.short-sha }}

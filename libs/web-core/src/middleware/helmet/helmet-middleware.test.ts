@@ -301,6 +301,49 @@ describe("helmet-middleware", () => {
       });
     });
 
+    describe("Crime IDAM URL configuration", () => {
+      it("should include Crime IDAM URL in formAction when provided", () => {
+        configureHelmet({ crimeIdamUrl: "https://idam.crime.hmcts.net" });
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
+
+        expect(directives?.formAction).toContain("https://idam.crime.hmcts.net");
+      });
+
+      it("should not include Crime IDAM URL in formAction when not provided", () => {
+        configureHelmet();
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
+
+        expect(directives?.formAction).not.toContain("https://idam.crime.hmcts.net");
+      });
+
+      it("should include both CFT and Crime IDAM URLs when both provided", () => {
+        configureHelmet({
+          cftIdamUrl: "https://idam.example.com",
+          crimeIdamUrl: "https://idam.crime.hmcts.net"
+        });
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
+
+        expect(directives?.formAction).toContain("https://idam.example.com");
+        expect(directives?.formAction).toContain("https://idam.crime.hmcts.net");
+      });
+
+      it("should include self in formAction with Crime IDAM URL", () => {
+        configureHelmet({ crimeIdamUrl: "https://idam.crime.hmcts.net" });
+
+        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
+        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
+
+        expect(directives?.formAction).toContain("'self'");
+        expect(directives?.formAction).toContain("https://idam.crime.hmcts.net");
+      });
+    });
+
     describe("return value", () => {
       it("should return the helmet middleware", () => {
         const mockMiddleware = vi.fn();

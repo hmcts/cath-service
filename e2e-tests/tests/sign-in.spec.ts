@@ -61,7 +61,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user selects Common Platform account", () => {
-    test("should redirect to home page when continue is clicked", async ({ page }) => {
+    test("should redirect to Crime IDAM login when continue is clicked", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Select the Common Platform account radio option
@@ -75,8 +75,10 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify navigation to home page
-      await expect(page).toHaveURL("/");
+      // Verify navigation to Crime IDAM login (external OAuth flow)
+      await page.waitForTimeout(1000); // Wait for redirect
+      const currentUrl = page.url();
+      expect(currentUrl).toMatch(/cjscp\.org\.uk|crime-login/);
     });
   });
 
@@ -162,7 +164,7 @@ test.describe("Sign In Account Selection Page", () => {
       await page.goto("/sign-in");
 
       // Find and click the Welsh language toggle
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toBeVisible();
       await expect(languageToggle).toContainText("Cymraeg");
 
@@ -213,7 +215,7 @@ test.describe("Sign In Account Selection Page", () => {
       await page.goto("/sign-in?lng=cy");
 
       // Verify we're in Welsh mode
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toContainText("English");
 
       // Switch back to English
@@ -255,7 +257,7 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(errorSummaryHeading).toBeVisible();
 
       // Verify language toggle still shows English option (we're in Welsh mode)
-      const languageToggle = page.locator(".language");
+      const languageToggle = page.locator(".app-language-toggle a");
       await expect(languageToggle).toContainText("English");
     });
   });

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
@@ -73,8 +73,7 @@ const getHandler = async (req: Request, res: Response) => {
       sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
       language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
       displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
-    },
-    hideLanguageToggle: true
+    }
   });
 };
 
@@ -130,8 +129,12 @@ const postHandler = async (req: Request, res: Response) => {
     if (!isFlatFile) {
       try {
         jsonData = JSON.parse(uploadData.file.toString("utf-8"));
-      } catch {
-        // Not valid JSON — processPublication will skip extraction
+        await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+      } catch (error) {
+        console.error("[Manual Upload] Failed to extract artefact search data", {
+          artefactId,
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
 
@@ -223,8 +226,7 @@ const postHandler = async (req: Request, res: Response) => {
         language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
         displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
       },
-      errors: [{ text: "We could not process your upload. Please try again.", href: "#" }],
-      hideLanguageToggle: true
+      errors: [{ text: "We could not process your upload. Please try again.", href: "#" }]
     });
   }
 };

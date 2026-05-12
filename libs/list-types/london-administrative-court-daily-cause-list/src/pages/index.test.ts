@@ -108,8 +108,7 @@ describe("London Administrative Court page controller", () => {
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderLondonAdminCourt).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        displayFrom: mockArtefact.displayFrom,
-        displayTo: mockArtefact.displayTo,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
       });
       const renderCall = vi.mocked(res.render).mock.calls[0];

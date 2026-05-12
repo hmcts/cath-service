@@ -17,13 +17,18 @@ crons:
 cath-web:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.${ENVIRONMENT}.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
+    environment:
+      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
+      ENABLE_TEST_SUPPORT: "true"
 
 # API application configuration
 cath-api:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.${ENVIRONMENT}.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.staging.platform.hmcts.net"
+    environment:
+      ENABLE_TEST_SUPPORT: "true"
 
 # Crons application configuration
 cath-crons:
@@ -37,7 +42,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.${ENVIRONMENT}.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.staging.platform.hmcts.net"
 
 # Dev dependencies - DISABLED for stg/prod (managed by Terraform)
 postgresql:

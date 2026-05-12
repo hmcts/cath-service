@@ -17,6 +17,7 @@ export const GET = (req: Request, res: Response) => {
     client_id: config.clientId,
     response_type: "code",
     redirect_uri: config.redirectUri,
+    scope: config.scope,
     ui_locales: locale
   });
 

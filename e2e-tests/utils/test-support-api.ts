@@ -443,6 +443,20 @@ export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promi
   return response.json();
 }
 
+export async function getLatestArtefactByLocationAndListType(locationId: number, listTypeId: number) {
+  const artefacts = (await getTestArtefacts({ locationId: locationId.toString() })) as {
+    artefactId: string;
+    listTypeId: number;
+    lastReceivedDate: string;
+  }[];
+
+  const matching = artefacts
+    .filter((a) => a.listTypeId === listTypeId)
+    .sort((a, b) => new Date(b.lastReceivedDate).getTime() - new Date(a.lastReceivedDate).getTime());
+
+  return matching[0] ?? null;
+}
+
 export async function deleteTestFlatFileFromWeb(artefactId: string): Promise<{ deleted: boolean }> {
   const url = `${WEB_BASE_URL}/test-support/flat-files`;
   const response = await fetch(url, {

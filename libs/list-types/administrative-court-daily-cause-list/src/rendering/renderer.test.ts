@@ -29,8 +29,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Birmingham Administrative Court Daily Cause List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -48,8 +47,7 @@ describe("renderAdminCourt", () => {
       locale: "cy",
       listTypeId: 20,
       listTitle: "Rhestr Achosion Dyddiol Llys Gweinyddol Birmingham",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -63,8 +61,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -77,8 +74,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -90,8 +86,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -110,8 +105,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T14:30:00Z"
     });
 
@@ -123,8 +117,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T14:00:00Z"
     });
 
@@ -148,8 +141,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 0, 15),
-      displayTo: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
     });
 
@@ -161,8 +153,7 @@ describe("renderAdminCourt", () => {
       locale: "en",
       listTypeId: 20,
       listTitle: "Test List",
-      displayFrom: new Date(2025, 11, 25),
-      displayTo: new Date(2025, 11, 25),
+      contentDate: new Date(2025, 11, 25),
       lastReceivedDate: "2025-12-25T09:30:00Z"
     });
 
@@ -178,8 +169,7 @@ describe("renderAdminCourt", () => {
         locale: "en",
         listTypeId,
         listTitle: "Test List",
-        displayFrom: new Date(2025, 0, 15),
-        displayTo: new Date(2025, 0, 15),
+        contentDate: new Date(2025, 0, 15),
         lastReceivedDate: "2025-01-15T09:30:00Z"
       });
 

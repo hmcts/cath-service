@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { sendMediaRejectionEmail } from "@hmcts/notification";
+import { extractNotifyError, sendMediaRejectionEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import "../../../media-application/model.js";
@@ -62,15 +62,13 @@ const getHandler = async (req: Request, res: Response) => {
       continueButton: lang.continueButton,
       emailPreview: lang.emailPreview,
       application,
-      reasonsList,
-      hideLanguageToggle: true
+      reasonsList
     });
   } catch (_error) {
     res.render("media-applications/[id]/reject", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };
@@ -107,8 +105,7 @@ const postHandler = async (req: Request, res: Response) => {
         emailPreview: lang.emailPreview,
         application,
         reasonsList,
-        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }],
-        hideLanguageToggle: true
+        errors: [{ text: lang.errorMessages.selectOption, href: "#confirm" }]
       });
     }
 
@@ -139,7 +136,8 @@ const postHandler = async (req: Request, res: Response) => {
         linkToService
       });
     } catch (error) {
-      console.error("❌ Failed to send rejection email:", error);
+      const { status, message } = extractNotifyError(error);
+      console.error(`Failed to send rejection email: ${status} ${message}`);
     }
 
     res.redirect(`/media-applications/${id}/rejected`);
@@ -147,8 +145,7 @@ const postHandler = async (req: Request, res: Response) => {
     res.render("media-applications/[id]/reject", {
       pageTitle: lang.pageTitle,
       error: lang.errorMessages.loadFailed,
-      application: null,
-      hideLanguageToggle: true
+      application: null
     });
   }
 };

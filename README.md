@@ -18,7 +18,7 @@ This monorepo will contain all your apps, libraries, and infrastructure for your
 
 **Examples:**
 - Team: CaTH, Product: Service → `cath-service`
-- Team: Civil, Product: Money-Claims → `civil-money-claims`.
+- Team: Civil, Product: Money-Claims → `civil-money-claims`
 
 ### Setup Steps
 
