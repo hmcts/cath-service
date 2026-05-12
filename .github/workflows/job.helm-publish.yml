@@ -9,14 +9,15 @@ on:
         description: "Short git SHA for chart version suffix"
 
 env:
-  REGISTRY: hmctspublic.azurecr.io
+  REGISTRY: hmctsprod.azurecr.io
 
 jobs:
   publish:
-    name: Publish Umbrella Chart
+    name: Publish Charts
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -27,11 +28,15 @@ jobs:
         with:
           version: 'v3.14.0'
 
-      - name: Login to Helm OCI registry
-        run: |
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
-            helm registry login ${{ env.REGISTRY }} \
-              --username "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: ACR login
+        run: az acr login --name "${REGISTRY%.azurecr.io}"
 
       - name: Add Bitnami repo
         run: helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -46,30 +51,51 @@ jobs:
       - name: Build umbrella chart dependencies
         run: helm dependency update helm/cath-service
 
-      - name: Package chart
+      - name: Package and push charts
         run: |
+          mkdir -p ./dist
+
+          # Publish individual subcharts (used by Flux GitOps)
+          for chart_dir in apps/*/helm; do
+            CHART_NAME=$(grep '^name:' "${chart_dir}/Chart.yaml" | awk '{print $2}')
+            BASE_VERSION=$(grep '^version:' "${chart_dir}/Chart.yaml" | awk '{print $2}')
+            CHART_VERSION="${BASE_VERSION}-${{ inputs.short-sha }}"
+
+            helm package "${chart_dir}" --version "${CHART_VERSION}" -d ./dist
+
+            CHART_REF="oci://${{ env.REGISTRY }}/helm/${CHART_NAME}"
+            if helm show chart "${CHART_REF}" --version "${CHART_VERSION}" > /dev/null 2>&1; then
+              echo "Chart ${CHART_NAME}:${CHART_VERSION} already exists, skipping"
+            else
+              helm push "./dist/${CHART_NAME}-${CHART_VERSION}.tgz" "oci://${{ env.REGISTRY }}/helm"
+              echo "Published ${CHART_NAME}:${CHART_VERSION}"
+            fi
+          done
+
+          # Publish umbrella chart (used by CI pipeline helm deploy)
           BASE_VERSION=$(grep '^version:' helm/cath-service/Chart.yaml | awk '{print $2}')
           CHART_VERSION="${BASE_VERSION}-${{ inputs.short-sha }}"
           echo "CHART_VERSION=${CHART_VERSION}" >> "$GITHUB_ENV"
 
-          mkdir -p ./dist
           helm package helm/cath-service --version "${CHART_VERSION}" -d ./dist
 
-      - name: Push chart to OCI registry
-        run: |
           CHART_REF="oci://${{ env.REGISTRY }}/helm/cath-service"
-
           if helm show chart "${CHART_REF}" --version "${CHART_VERSION}" > /dev/null 2>&1; then
-            echo "Chart version ${CHART_VERSION} already exists, skipping push"
+            echo "Chart cath-service:${CHART_VERSION} already exists, skipping"
           else
-            helm push "./dist/cath-service-${CHART_VERSION}.tgz" \
-              "oci://${{ env.REGISTRY }}/helm"
+            helm push "./dist/cath-service-${CHART_VERSION}.tgz" "oci://${{ env.REGISTRY }}/helm"
+            echo "Published cath-service:${CHART_VERSION}"
           fi
 
       - name: Output publish summary
         run: |
           echo "### Helm Chart Publish Summary :package:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Chart:** \`cath-service\`" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** \`${CHART_VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Registry:** \`oci://${{ env.REGISTRY }}/helm\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Charts published:**" >> $GITHUB_STEP_SUMMARY
+          for chart_dir in apps/*/helm; do
+            CHART_NAME=$(grep '^name:' "${chart_dir}/Chart.yaml" | awk '{print $2}')
+            echo "- \`${CHART_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "- \`cath-service\` (umbrella)" >> $GITHUB_STEP_SUMMARY

@@ -95,8 +95,7 @@ describe("generateLondonAdministrativeCourtDailyCauseListPdf", () => {
 
     expect(renderLondonAdminCourt).toHaveBeenCalledWith(mockHearingList, {
       locale: "en",
-      displayFrom: contentDate,
-      displayTo: contentDate,
+      contentDate: contentDate,
       lastReceivedDate: expect.any(String)
     });
   });

@@ -44,7 +44,7 @@ export const en = {
     {
       title: "Manage List Types",
       description: "View, create and update list type configuration",
-      href: "/view-list-types"
+      href: "/manage-list-types"
     },
     {
       title: "Configure List Type",
