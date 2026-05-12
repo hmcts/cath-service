@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
+const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
+
 vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
 }));
@@ -15,6 +17,10 @@ vi.mock("@hmcts/location", () => ({
 
 vi.mock("@hmcts/notifications", () => ({
   sendPublicationNotifications: vi.fn()
+}));
+
+vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
+  sendThirdPartyPublications: mockSendThirdPartyPublications
 }));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -34,6 +40,7 @@ describe("publication-processor", async () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSendThirdPartyPublications.mockResolvedValue(undefined);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
       friendlyName: "Civil And Family Daily Cause List"
@@ -438,6 +445,55 @@ describe("publication-processor", async () => {
           pdfFilePath: "/generated/pdf/path"
         })
       );
+    });
+
+    it("passes isUpdate: false by default", async () => {
+      await processPublication({ ...baseParams, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ isUpdate: false }));
+    });
+
+    it("passes isUpdate: true when isUpdate is true in params", async () => {
+      await processPublication({ ...baseParams, skipNotifications: true, isUpdate: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ isUpdate: true }));
+    });
+
+    it("does not call sendThirdPartyPublications when skipThirdPartyPush is true", async () => {
+      await processPublication({ ...baseParams, skipThirdPartyPush: true });
+
+      expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
+    });
+
+    it("passes generated pdfPath to sendThirdPartyPublications", async () => {
+      vi.mocked(generateCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/generated/publication.pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      await processPublication({ ...baseParams, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: "/generated/publication.pdf" }));
+    });
+
+    it("passes undefined pdfPath to sendThirdPartyPublications when PDF generation is skipped", async () => {
+      await processPublication({ ...baseParams, jsonData: undefined, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: undefined }));
+    });
+
+    it("forwards flatFilePath to sendThirdPartyPublications when provided", async () => {
+      await processPublication({ ...baseParams, jsonData: undefined, skipNotifications: true, flatFilePath: "/tmp/artefact.xlsx" });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: "/tmp/artefact.xlsx" }));
+    });
+
+    it("forwards undefined flatFilePath to sendThirdPartyPublications when not provided", async () => {
+      await processPublication({ ...baseParams, skipNotifications: true });
+
+      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: undefined }));
     });
   });
 });

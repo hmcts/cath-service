@@ -452,7 +452,7 @@ describe("manual-upload-summary page", () => {
     it("should save file, create database record, and redirect to success page", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
 
       const session = {
         manualUploadForm: { locationId: "1" },
@@ -584,7 +584,7 @@ describe("manual-upload-summary page", () => {
     it("should send notifications on successful upload", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(getLocationById).mockResolvedValue({
         locationId: 1,
         name: "Test Crown Court",
@@ -631,7 +631,7 @@ describe("manual-upload-summary page", () => {
 
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(getLocationById).mockResolvedValue(null);
 
       const session = {
@@ -664,7 +664,7 @@ describe("manual-upload-summary page", () => {
 
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(getLocationById).mockResolvedValue({
         locationId: 1,
         name: "Test Crown Court",
@@ -702,7 +702,7 @@ describe("manual-upload-summary page", () => {
     it("should redirect to Welsh success page when lng=cy", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendPublicationNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
@@ -769,7 +769,7 @@ describe("manual-upload-summary page", () => {
 
       vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendPublicationNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
@@ -804,7 +804,7 @@ describe("manual-upload-summary page", () => {
     it("should determine isFlatFile correctly for non-JSON files", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendPublicationNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,
@@ -844,7 +844,7 @@ describe("manual-upload-summary page", () => {
 
       vi.mocked(getManualUpload).mockResolvedValue(noFileNameUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendPublicationNotifications).mockResolvedValue({
         totalSubscriptions: 0,
         sent: 0,

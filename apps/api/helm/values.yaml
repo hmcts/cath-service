@@ -22,3 +22,7 @@ nodejs:
           alias: AZURE_CLIENT_ID
         - name: app-pip-data-management-scope
           alias: AZURE_SCOPE
+        - name: xhibit-s3-access-key
+          alias: AWS_ACCESS_KEY_ID
+        - name: xhibit-s3-access-key-secret
+          alias: AWS_SECRET_ACCESS_KEY

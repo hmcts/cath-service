@@ -57,3 +57,8 @@ nodejs:
           alias: B2C_CLIENT_ID
         - name: auto-pip-stg-pip-frontend-stg-pwd
           alias: B2C_CLIENT_SECRET
+        # Third-party push secrets (Courtel)
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE

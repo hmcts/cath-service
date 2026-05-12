@@ -41,6 +41,7 @@
       "@hmcts/list-search-config": ["libs/list-search-config/src"],
       "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
       "@hmcts/pdf-generation": ["libs/pdf-generation/src"],
+      "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"]
     },
