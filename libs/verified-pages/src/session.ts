@@ -5,6 +5,7 @@ declare module "express-session" {
       pendingListTypeIds?: number[];
       pendingLanguage?: string;
       confirmationComplete?: boolean;
+      listUpdateComplete?: boolean;
       confirmedLocations?: string[];
       subscriptionToRemove?: string;
       caseNameSearch?: string;

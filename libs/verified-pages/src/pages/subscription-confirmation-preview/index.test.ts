@@ -259,6 +259,7 @@ describe("subscription-confirmation-preview", () => {
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toBeUndefined();
+      expect(mockReq.session?.emailSubscriptions?.confirmedLocations).toEqual(["100"]);
       expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
     });
 

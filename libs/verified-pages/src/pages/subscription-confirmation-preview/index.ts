@@ -277,7 +277,6 @@ const postHandler = async (req: Request, res: Response) => {
     }
     delete req.session.emailSubscriptions.pendingListTypeIds;
     delete req.session.emailSubscriptions.pendingLanguage;
-    delete req.session.emailSubscriptions.confirmedLocations;
     delete req.session.emailSubscriptions.confirmedCaseSubscriptions;
     req.session.emailSubscriptions.confirmationComplete = true;
 

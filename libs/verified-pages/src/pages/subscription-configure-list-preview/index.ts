@@ -95,8 +95,9 @@ const postHandler = async (req: Request, res: Response) => {
     }
     delete req.session.emailSubscriptions.pendingListTypeIds;
     delete req.session.emailSubscriptions.pendingLanguage;
+    req.session.emailSubscriptions.listUpdateComplete = true;
 
-    return res.redirect("/subscription-confirmed");
+    return res.redirect("/subscription-configure-list-confirmed");
   }
 
   res.redirect("/subscription-configure-list-preview");

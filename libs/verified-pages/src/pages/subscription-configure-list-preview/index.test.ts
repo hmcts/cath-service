@@ -100,7 +100,8 @@ describe("subscription-configure-list-preview", () => {
       expect(replaceSubscriptionListTypes).toHaveBeenCalledWith("user-123", [1, 2], "ENGLISH");
       expect(mockReq.session?.emailSubscriptions?.pendingListTypeIds).toBeUndefined();
       expect(mockReq.session?.emailSubscriptions?.pendingLanguage).toBeUndefined();
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+      expect(mockReq.session?.emailSubscriptions?.listUpdateComplete).toBe(true);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-configure-list-confirmed");
     });
 
     it("should remove a list type from session and redirect back to GET on remove-list-type", async () => {
@@ -141,7 +142,7 @@ describe("subscription-configure-list-preview", () => {
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(replaceSubscriptionListTypes).not.toHaveBeenCalled();
-      expect(mockRes.redirect).not.toHaveBeenCalledWith("/subscription-confirmed");
+      expect(mockRes.redirect).not.toHaveBeenCalledWith("/subscription-configure-list-confirmed");
       expect(mockRes.render).toHaveBeenCalledWith("subscription-configure-list-preview/index", expect.objectContaining({ listTypes: [] }));
     });
 

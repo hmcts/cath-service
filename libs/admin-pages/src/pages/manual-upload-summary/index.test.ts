@@ -93,7 +93,6 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-import { getLocationById } from "@hmcts/location";
 import { createArtefact, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import { getManualUpload } from "../../manual-upload/storage.js";

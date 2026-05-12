@@ -17,12 +17,10 @@ function buildCaseKey(userId: string): string {
   return `${CASE_KEY_PREFIX}${userId}`;
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup
 export async function savePendingSubscriptions(redisClient: any, userId: string, locationIds: string[]): Promise<void> {
   await redisClient.set(buildKey(userId), JSON.stringify(locationIds), { EX: TTL_SECONDS });
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup
 export async function getPendingSubscriptions(redisClient: any, userId: string): Promise<string[] | null> {
   const value = await redisClient.get(buildKey(userId));
   if (!value) return null;
@@ -38,17 +36,14 @@ export async function getPendingSubscriptions(redisClient: any, userId: string):
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup
 export async function deletePendingSubscriptions(redisClient: any, userId: string): Promise<void> {
   await redisClient.del(buildKey(userId));
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup
 export async function savePendingCaseSubscriptions(redisClient: any, userId: string, subscriptions: CaseSubscription[]): Promise<void> {
   await redisClient.set(buildCaseKey(userId), JSON.stringify(subscriptions), { EX: TTL_SECONDS });
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup
 export async function getPendingCaseSubscriptions(redisClient: any, userId: string): Promise<CaseSubscription[] | null> {
   const value = await redisClient.get(buildCaseKey(userId));
   if (!value) return null;
@@ -62,7 +57,6 @@ export async function getPendingCaseSubscriptions(redisClient: any, userId: stri
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Redis client type varies by version/setup
 export async function deletePendingCaseSubscriptions(redisClient: any, userId: string): Promise<void> {
   await redisClient.del(buildCaseKey(userId));
 }

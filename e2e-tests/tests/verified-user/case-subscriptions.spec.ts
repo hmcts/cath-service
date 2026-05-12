@@ -66,7 +66,7 @@ test.describe("Case Subscriptions", () => {
     await expect(page).toHaveURL(/\/account-home/);
   });
 
-  test.afterEach(async ({}, testInfo) => {
+  test.afterEach(async (_, testInfo) => {
     const caseData = testCaseDataMap.get(testInfo.testId);
     if (caseData) {
       await deleteTestCaseData(caseData);

@@ -13,6 +13,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const confirmedLocationIds = req.session.emailSubscriptions.confirmedLocations || [];
+  delete req.session.emailSubscriptions.confirmedLocations;
 
   const confirmedLocations = (
     await Promise.all(
