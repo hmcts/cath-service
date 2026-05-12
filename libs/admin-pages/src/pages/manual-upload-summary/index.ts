@@ -148,6 +148,8 @@ const postHandler = async (req: Request, res: Response) => {
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
       provenance: Provenance.MANUAL_UPLOAD,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
       displayFrom,
       displayTo,
       isUpdate,

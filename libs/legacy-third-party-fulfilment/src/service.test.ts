@@ -16,7 +16,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 vi.mock("./push/headers.js", () => ({
-  buildPushHeaders: vi.fn().mockReturnValue({ "x-provenance": "test" })
+  buildPushHeaders: vi.fn().mockResolvedValue({ "x-provenance": "test" })
 }));
 
 vi.mock("./push/retry.js", () => ({

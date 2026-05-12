@@ -48,12 +48,11 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-        # Third-party push secrets - disabled until secrets are added to the cath Key Vault
-        # - name: auto-pip-stg-courtel-api
-        #   alias: COURTEL_API_URL
-        # - name: courtel-certificate
-        #   alias: COURTEL_CERTIFICATE
-
+        # Third-party push secrets (Courtel)
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE
         # Azure AD B2C secrets (media user account management)
         - name: b2c-tenant-id
           alias: AZURE_B2C_TENANT_ID

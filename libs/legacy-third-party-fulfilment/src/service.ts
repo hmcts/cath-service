@@ -72,7 +72,7 @@ export async function sendThirdPartyPublications(params: ThirdPartyPushParams): 
   }
 
   const location = await getLocationWithDetails(Number.parseInt(locationId, 10));
-  const headers = buildPushHeaders({ artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location });
+  const headers = await buildPushHeaders({ artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location });
   const body = jsonData != null ? JSON.stringify(jsonData) : null;
 
   console.info(`${logPrefix} Sending third-party push for artefactId ${artefactId} to ${secrets.url}`);
@@ -95,7 +95,7 @@ export async function sendThirdPartyDeletion(params: ThirdPartyDeletionParams): 
   }
 
   const location = await getLocationWithDetails(Number.parseInt(locationId, 10));
-  const headers = buildPushHeaders({ artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location });
+  const headers = await buildPushHeaders({ artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location });
 
   console.info(`${logPrefix} Sending third-party deletion for artefactId ${artefactId} to ${secrets.url}`);
   const result = await pushWithRetry(secrets.url, secrets.certPem, headers, null, logPrefix);

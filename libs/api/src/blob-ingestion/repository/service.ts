@@ -105,6 +105,10 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
         locale: request.language === "WELSH" ? "cy" : "en",
         jsonData: request.hearing_list as CauseListData,
         provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
+        sensitivity: request.sensitivity,
+        language: request.language,
+        displayFrom: new Date(request.display_from),
+        displayTo: new Date(request.display_to),
         isUpdate,
         logPrefix: "[blob-ingestion]"
       }).catch((error) => {

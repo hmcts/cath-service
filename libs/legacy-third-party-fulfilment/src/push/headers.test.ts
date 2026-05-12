@@ -2,8 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { PushHeaderParams } from "./headers.js";
 import { buildPushHeaders } from "./headers.js";
 
-vi.mock("@hmcts/list-types-common", () => ({
-  getListTypeName: vi.fn((id: number) => (id === 99 ? "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" : undefined))
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn((args: { where: { id: number } }) => (args.where.id === 99 ? { name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } : null))
+    }
+  }
 }));
 
 const contentDate = new Date("2024-03-15T10:00:00.000Z");
@@ -36,8 +40,8 @@ const baseParams: PushHeaderParams = {
 };
 
 describe("buildPushHeaders", () => {
-  it("returns all 12 required headers with correct values", () => {
-    const headers = buildPushHeaders(baseParams);
+  it("returns all 12 required headers with correct values", async () => {
+    const headers = await buildPushHeaders(baseParams);
 
     expect(Object.keys(headers)).toHaveLength(12);
 
@@ -45,42 +49,42 @@ describe("buildPushHeaders", () => {
     expect(headers["x-source-artefact-id"]).toBe("artefact-abc-123");
     expect(headers["x-type"]).toBe("LIST");
     expect(headers["x-list-type"]).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
-    expect(headers["x-content-date"]).toBe("2024-03-15T10:00:00.000Z");
+    expect(headers["x-content-date"]).toBe("2024-03-15");
     expect(headers["x-sensitivity"]).toBe("PUBLIC");
     expect(headers["x-language"]).toBe("ENGLISH");
-    expect(headers["x-display-from"]).toBe("2024-03-15T00:00:00.000Z");
-    expect(headers["x-display-to"]).toBe("2024-03-22T00:00:00.000Z");
+    expect(headers["x-display-from"]).toBe("2024-03-15");
+    expect(headers["x-display-to"]).toBe("2024-03-22");
     expect(headers["x-location-name"]).toBe("Birmingham Crown Court");
     expect(headers["x-location-jurisdiction"]).toBe("Crown");
     expect(headers["x-location-region"]).toBe("Midlands");
   });
 
-  it("date fields are ISO strings", () => {
-    const headers = buildPushHeaders(baseParams);
+  it("date fields are date-only strings (YYYY-MM-DD)", async () => {
+    const headers = await buildPushHeaders(baseParams);
 
-    expect(headers["x-content-date"]).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    expect(headers["x-display-from"]).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    expect(headers["x-display-to"]).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(headers["x-content-date"]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(headers["x-display-from"]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(headers["x-display-to"]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it("falls back to empty string when location is undefined", () => {
-    const headers = buildPushHeaders({ ...baseParams, location: undefined });
+  it("falls back to empty string when location is undefined", async () => {
+    const headers = await buildPushHeaders({ ...baseParams, location: undefined });
 
     expect(headers["x-location-name"]).toBe("");
     expect(headers["x-location-jurisdiction"]).toBe("");
     expect(headers["x-location-region"]).toBe("");
   });
 
-  it("falls back to empty string when location is null", () => {
-    const headers = buildPushHeaders({ ...baseParams, location: null });
+  it("falls back to empty string when location is null", async () => {
+    const headers = await buildPushHeaders({ ...baseParams, location: null });
 
     expect(headers["x-location-name"]).toBe("");
     expect(headers["x-location-jurisdiction"]).toBe("");
     expect(headers["x-location-region"]).toBe("");
   });
 
-  it("falls back to empty string when location has empty regions and subJurisdictions", () => {
-    const headers = buildPushHeaders({
+  it("falls back to empty string when location has empty regions and subJurisdictions", async () => {
+    const headers = await buildPushHeaders({
       ...baseParams,
       location: {
         locationId: 2,
@@ -96,8 +100,8 @@ describe("buildPushHeaders", () => {
     expect(headers["x-location-region"]).toBe("");
   });
 
-  it("always uses LIST for x-type and falls back to String(listTypeId) for x-list-type when list type name is unknown", () => {
-    const headers = buildPushHeaders({ ...baseParams, listTypeId: 1234 });
+  it("always uses LIST for x-type and falls back to String(listTypeId) for x-list-type when list type name is unknown", async () => {
+    const headers = await buildPushHeaders({ ...baseParams, listTypeId: 1234 });
 
     expect(headers["x-type"]).toBe("LIST");
     expect(headers["x-list-type"]).toBe("1234");

@@ -1,5 +1,5 @@
-import { getListTypeName } from "@hmcts/list-types-common";
 import type { LocationDetails } from "@hmcts/location";
+import { prisma } from "@hmcts/postgres-prisma";
 
 export interface PushHeaderParams {
   artefactId: string;
@@ -13,21 +13,29 @@ export interface PushHeaderParams {
   location?: LocationDetails | null;
 }
 
-export function buildPushHeaders(params: PushHeaderParams): Record<string, string> {
+function toDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export async function buildPushHeaders(params: PushHeaderParams): Promise<Record<string, string>> {
   const { artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location } = params;
 
-  const listTypeName = getListTypeName(listTypeId) ?? String(listTypeId);
+  const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+  const listTypeName = listType?.name ?? String(listTypeId);
 
   return {
     "x-provenance": provenance,
     "x-source-artefact-id": artefactId,
     "x-type": "LIST",
     "x-list-type": listTypeName,
-    "x-content-date": contentDate.toISOString(),
+    "x-content-date": toDateString(contentDate),
     "x-sensitivity": sensitivity,
     "x-language": language,
-    "x-display-from": displayFrom.toISOString(),
-    "x-display-to": displayTo.toISOString(),
+    "x-display-from": toDateString(displayFrom),
+    "x-display-to": toDateString(displayTo),
     "x-location-name": location?.name ?? "",
     "x-location-jurisdiction": location?.subJurisdictions?.[0]?.jurisdictionName ?? "",
     "x-location-region": location?.regions?.[0]?.name ?? ""
