@@ -1,32 +1,31 @@
 import * as appInsights from "applicationinsights";
 
 export class MonitoringService {
-  private client: appInsights.TelemetryClient;
+  private client?: appInsights.TelemetryClient;
 
   constructor(
     connectionString: string,
     serviceName: string,
     private readonly logger: Logger = console
   ) {
+    // Set cloud role name via environment variable before setup (required for AI v3)
+    process.env.APPLICATIONINSIGHTS_ROLE_NAME = serviceName;
+
     appInsights
       .setup(connectionString)
-      .setAutoDependencyCorrelation(true)
       .setAutoCollectRequests(true)
       .setAutoCollectPerformance(true, true)
       .setAutoCollectExceptions(true)
       .setAutoCollectDependencies(true)
       .setAutoCollectConsole(true, true)
       .setUseDiskRetryCaching(true)
-      .setDistributedTracingMode(appInsights.DistributedTracingModes.AI_AND_W3C)
       .start();
-
-    appInsights.defaultClient.context.tags[appInsights.defaultClient.context.keys.cloudRole] = serviceName;
 
     this.client = appInsights.defaultClient;
   }
 
   trackRequest(options: TrackRequestOptions): void {
-    this.client.trackRequest({
+    this.client?.trackRequest({
       name: options.name,
       url: options.url,
       duration: options.duration,
@@ -39,7 +38,7 @@ export class MonitoringService {
   trackException(error: Error, properties?: Record<string, any>): void {
     this.logger.error(error.message, { error, ...properties });
 
-    this.client.trackException({
+    this.client?.trackException({
       exception: error,
       properties
     });
@@ -48,14 +47,14 @@ export class MonitoringService {
   trackEvent(name: string, properties?: Record<string, any>): void {
     this.logger.info(`Event: ${name}`, properties);
 
-    this.client.trackEvent({
+    this.client?.trackEvent({
       name,
       properties
     });
   }
 
   trackMetric(name: string, value: number, properties?: Record<string, any>): void {
-    this.client.trackMetric({
+    this.client?.trackMetric({
       name,
       value,
       properties
@@ -63,7 +62,8 @@ export class MonitoringService {
   }
 
   flush(): Promise<void> {
-    return this.client.flush();
+    this.client?.flush();
+    return Promise.resolve();
   }
 }
 

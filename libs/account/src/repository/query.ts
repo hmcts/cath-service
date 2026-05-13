@@ -1,4 +1,4 @@
-import { prisma } from "@hmcts/postgres";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { UpdateUserInput, User } from "./model.js";
 
 export async function createUser(input: User) {
@@ -9,8 +9,7 @@ export async function createUser(input: User) {
       surname: input.surname,
       userProvenance: input.userProvenance,
       userProvenanceId: input.userProvenanceId,
-      role: input.role,
-      lastSignedInDate: new Date()
+      role: input.role
     }
   });
 }
@@ -38,7 +37,9 @@ export async function updateUser(userProvenanceId: string, input: UpdateUserInpu
     where: { userProvenanceId },
     data: {
       ...(input.role && { role: input.role }),
-      ...(input.lastSignedInDate && { lastSignedInDate: input.lastSignedInDate })
+      ...(input.lastSignedInDate && { lastSignedInDate: input.lastSignedInDate }),
+      ...(input.firstName && { firstName: input.firstName }),
+      ...(input.surname && { surname: input.surname })
     }
   });
 }

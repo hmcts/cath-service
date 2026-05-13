@@ -128,8 +128,7 @@ export const GET = async (req: Request, res: Response) => {
       locale,
       listTypeId,
       listTitle,
-      displayFrom: artefact.displayFrom,
-      displayTo: artefact.displayTo,
+      contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString()
     });
 

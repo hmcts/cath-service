@@ -1,6 +1,57 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as queries from "../../list-type/queries.js";
 import { getHandler } from "./index.js";
+
+vi.mock("../../list-type/queries.js");
+
+const mockDbListTypes = [
+  {
+    id: 1,
+    name: "CIVIL_DAILY_CAUSE_LIST",
+    friendlyName: "Civil Daily Cause List",
+    welshFriendlyName: null,
+    shortenedFriendlyName: null,
+    url: null,
+    defaultSensitivity: null,
+    allowedProvenance: "CFT_IDAM",
+    isNonStrategic: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    subJurisdictions: []
+  },
+  {
+    id: 8,
+    name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    friendlyName: "Civil and Family Daily Cause List",
+    welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
+    shortenedFriendlyName: null,
+    url: null,
+    defaultSensitivity: null,
+    allowedProvenance: "CFT_IDAM",
+    isNonStrategic: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    subJurisdictions: []
+  },
+  {
+    id: 3,
+    name: "CRIME_DAILY_LIST",
+    friendlyName: "Crime Daily List",
+    welshFriendlyName: null,
+    shortenedFriendlyName: null,
+    url: null,
+    defaultSensitivity: null,
+    allowedProvenance: "CRIME_IDAM",
+    isNonStrategic: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    subJurisdictions: []
+  }
+];
 
 describe("manage-list-types page", () => {
   let req: Partial<Request>;
@@ -16,6 +67,8 @@ describe("manage-list-types page", () => {
     res = {
       render: vi.fn()
     };
+
+    vi.mocked(queries.findAllListTypes).mockResolvedValue(mockDbListTypes as any);
   });
 
   describe("GET", () => {
@@ -60,7 +113,6 @@ describe("manage-list-types page", () => {
       expect(listTypes).toBeDefined();
       expect(listTypes.length).toBeGreaterThan(0);
 
-      // Verify alphabetical order
       for (let i = 0; i < listTypes.length - 1; i++) {
         expect(listTypes[i].name.localeCompare(listTypes[i + 1].name)).toBeLessThanOrEqual(0);
       }
@@ -83,14 +135,24 @@ describe("manage-list-types page", () => {
       });
     });
 
-    it("should map all mock list types", async () => {
+    it("should use the technical name when friendlyName is absent", async () => {
+      vi.mocked(queries.findAllListTypes).mockResolvedValue([{ ...mockDbListTypes[0], friendlyName: null } as any]);
+
       await getHandler(req as Request, res as Response);
 
       const renderCall = (res.render as any).mock.calls[0];
       const listTypes = renderCall[1].listTypes;
 
-      // We expect 23 list types from mock-list-types.ts
-      expect(listTypes.length).toBe(23);
+      expect(listTypes[0].name).toBe("CIVIL_DAILY_CAUSE_LIST");
+    });
+
+    it("should map all db list types from findAllListTypes", async () => {
+      await getHandler(req as Request, res as Response);
+
+      const renderCall = (res.render as any).mock.calls[0];
+      const listTypes = renderCall[1].listTypes;
+
+      expect(listTypes.length).toBe(mockDbListTypes.length);
     });
   });
 });

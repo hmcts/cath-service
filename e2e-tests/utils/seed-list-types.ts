@@ -1,169 +1,126 @@
-import { prisma } from "@hmcts/postgres";
+import { seedListTypes as seedListTypesApi } from "./test-support-api.js";
 
-interface ListTypeData {
-  id: number;
-  name: string;
-  englishFriendlyName: string;
-  welshFriendlyName: string;
-  provenance: string;
-  urlPath?: string;
-  isNonStrategic: boolean;
-  defaultSensitivity: string;
-}
-
-const listTypes: ListTypeData[] = [
+const BASE_LIST_TYPES = [
   {
-    id: 1,
     name: "CIVIL_DAILY_CAUSE_LIST",
-    englishFriendlyName: "Civil Daily Cause List",
+    friendlyName: "Civil Daily Cause List",
     welshFriendlyName: "Civil Daily Cause List",
+    url: "civil-daily-cause-list",
+    defaultSensitivity: "Public",
     provenance: "CFT_IDAM",
-    urlPath: "civil-daily-cause-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    isNonStrategic: false
   },
   {
-    id: 2,
     name: "FAMILY_DAILY_CAUSE_LIST",
-    englishFriendlyName: "Family Daily Cause List",
+    friendlyName: "Family Daily Cause List",
     welshFriendlyName: "Family Daily Cause List",
+    url: "family-daily-cause-list",
+    defaultSensitivity: "Private",
     provenance: "CFT_IDAM",
-    urlPath: "family-daily-cause-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Private"
+    isNonStrategic: false
   },
   {
-    id: 3,
     name: "CRIME_DAILY_LIST",
-    englishFriendlyName: "Crime Daily List",
+    friendlyName: "Crime Daily List",
     welshFriendlyName: "Crime Daily List",
-    provenance: "CFT_IDAM",
-    urlPath: "crime-daily-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    url: "crime-daily-list",
+    defaultSensitivity: "Public",
+    provenance: "CRIME_IDAM",
+    isNonStrategic: false
   },
   {
-    id: 4,
     name: "MAGISTRATES_PUBLIC_LIST",
-    englishFriendlyName: "Magistrates Public List",
+    friendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",
-    provenance: "CFT_IDAM",
-    urlPath: "magistrates-public-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    url: "magistrates-public-list",
+    defaultSensitivity: "Public",
+    provenance: "CRIME_IDAM",
+    isNonStrategic: false
   },
   {
-    id: 5,
     name: "CROWN_WARNED_LIST",
-    englishFriendlyName: "Crown Warned List",
+    friendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
-    provenance: "CFT_IDAM",
-    urlPath: "crown-warned-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    url: "crown-warned-list",
+    defaultSensitivity: "Public",
+    provenance: "CRIME_IDAM",
+    isNonStrategic: false
   },
   {
-    id: 6,
     name: "CROWN_DAILY_LIST",
-    englishFriendlyName: "Crown Daily List",
+    friendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
-    provenance: "CFT_IDAM",
-    urlPath: "crown-daily-cause-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    url: "crown-daily-cause-list",
+    defaultSensitivity: "Public",
+    provenance: "CRIME_IDAM",
+    isNonStrategic: false
   },
   {
-    id: 7,
     name: "CROWN_FIRM_LIST",
-    englishFriendlyName: "Crown Firm List",
+    friendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
-    provenance: "CFT_IDAM",
-    urlPath: "crown-firm-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    url: "crown-firm-list",
+    defaultSensitivity: "Public",
+    provenance: "CRIME_IDAM",
+    isNonStrategic: false
   },
   {
-    id: 8,
     name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    englishFriendlyName: "Civil and Family Daily Cause List",
+    friendlyName: "Civil and Family Daily Cause List",
     welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
+    url: "civil-and-family-daily-cause-list",
+    defaultSensitivity: "Public",
     provenance: "CFT_IDAM",
-    urlPath: "civil-and-family-daily-cause-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public"
+    isNonStrategic: false
   },
   {
-    id: 9,
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
-    englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
+    friendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
-    provenance: "MANUAL_UPLOAD",
-    urlPath: "care-standards-tribunal-weekly-hearing-list",
-    isNonStrategic: true,
-    defaultSensitivity: "Public"
+    url: "care-standards-tribunal-weekly-hearing-list",
+    defaultSensitivity: "Public",
+    provenance: "CFT_IDAM",
+    isNonStrategic: true
+  },
+  {
+    name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    friendlyName: "London Administrative Court Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Llundain",
+    url: "london-administrative-court-daily-cause-list",
+    defaultSensitivity: "Public",
+    provenance: "CFT_IDAM",
+    isNonStrategic: true
+  },
+  {
+    name: "COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST",
+    friendlyName: "Court of Appeal (Civil Division) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
+    url: "court-of-appeal-civil-division-daily-cause-list",
+    defaultSensitivity: "Public",
+    provenance: "CFT_IDAM",
+    isNonStrategic: true
   }
 ];
 
-export async function seedListTypes() {
+export async function seedListTypes(prefix: string) {
   console.log("Seeding list types...");
 
-  const allSubJurisdictions = await (prisma as any).subJurisdiction.findMany();
+  try {
+    // Seed base (unprefixed) list types first - required for API endpoints that use hardcoded list type names
+    await seedListTypesApi(BASE_LIST_TYPES, true);
 
-  if (allSubJurisdictions.length === 0) {
-    throw new Error("No sub-jurisdictions found. Please ensure sub-jurisdictions are seeded first.");
+    // Seed prefixed list types for test isolation
+    const prefixedListTypes = BASE_LIST_TYPES.map((lt) => ({
+      ...lt,
+      name: `${prefix}${lt.name}`,
+      friendlyName: `${prefix}${lt.friendlyName}`
+    }));
+
+    const result = await seedListTypesApi(prefixedListTypes, true);
+    console.log(`Seeded ${result.seeded} list types with prefix: ${prefix}`);
+    return result;
+  } catch (error) {
+    console.error("Error seeding list types:", error);
+    throw error;
   }
-
-  let seededCount = 0;
-  let skippedCount = 0;
-
-  for (const listType of listTypes) {
-    const existing = await (prisma as any).listType.findUnique({
-      where: { name: listType.name }
-    });
-
-    if (existing) {
-      // Update existing list type to ensure correct defaultSensitivity
-      await (prisma as any).listType.update({
-        where: { name: listType.name },
-        data: {
-          friendlyName: listType.englishFriendlyName,
-          welshFriendlyName: listType.welshFriendlyName,
-          shortenedFriendlyName: listType.englishFriendlyName,
-          url: listType.urlPath || "",
-          defaultSensitivity: listType.defaultSensitivity,
-          allowedProvenance: listType.provenance,
-          isNonStrategic: listType.isNonStrategic
-        }
-      });
-      skippedCount++;
-      continue;
-    }
-
-    try {
-      await (prisma as any).listType.create({
-        data: {
-          name: listType.name,
-          friendlyName: listType.englishFriendlyName,
-          welshFriendlyName: listType.welshFriendlyName,
-          shortenedFriendlyName: listType.englishFriendlyName,
-          url: listType.urlPath || "",
-          defaultSensitivity: listType.defaultSensitivity,
-          allowedProvenance: listType.provenance,
-          isNonStrategic: listType.isNonStrategic,
-          subJurisdictions: {
-            create: allSubJurisdictions.map((sj: any) => ({
-              subJurisdictionId: sj.subJurisdictionId
-            }))
-          }
-        }
-      });
-
-      seededCount++;
-    } catch (error) {
-      console.error(`Failed to seed list type "${listType.name}":`, error);
-      throw error;
-    }
-  }
-
-  console.log(`Seeded ${seededCount} list types (${skippedCount} already existed)`);
 }

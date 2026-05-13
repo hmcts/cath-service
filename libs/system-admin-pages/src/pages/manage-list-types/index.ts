@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { mockListTypes } from "@hmcts/list-types-common";
 import type { Request, RequestHandler, Response } from "express";
+import { findAllListTypes } from "../../list-type/queries.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -8,10 +8,10 @@ export const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
 
-  const listTypes = mockListTypes
+  const listTypes = (await findAllListTypes())
     .map((listType) => ({
       id: listType.id,
-      name: listType.englishFriendlyName,
+      name: listType.friendlyName || listType.name,
       configureUrl: `/list-search-config/${listType.id}`
     }))
     .sort((a, b) => a.name.localeCompare(b.name));

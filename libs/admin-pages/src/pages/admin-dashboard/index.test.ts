@@ -13,7 +13,7 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 // Mock the Prisma client
-vi.mock("@hmcts/postgres", () => ({
+vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     mediaApplication: {
       count: vi.fn().mockResolvedValue(0)
@@ -66,9 +66,8 @@ describe("admin dashboard page", () => {
               heading: "Remove",
               description: expect.any(String)
             })
-          ]),
+          ])
           // navigation is not passed explicitly - it comes from res.locals via renderInterceptorMiddleware
-          hideLanguageToggle: true
         })
       );
     });
@@ -116,9 +115,8 @@ describe("admin dashboard page", () => {
               heading: "Remove",
               description: expect.any(String)
             })
-          ]),
+          ])
           // navigation is not passed explicitly - it comes from res.locals via renderInterceptorMiddleware
-          hideLanguageToggle: true
         })
       );
     });

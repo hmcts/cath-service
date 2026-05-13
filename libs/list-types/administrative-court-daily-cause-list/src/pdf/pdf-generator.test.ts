@@ -95,8 +95,7 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       listTypeId: 22,
       listTitle: "Bristol and Cardiff Administrative Court Daily Cause List",
-      displayFrom: contentDate,
-      displayTo: contentDate,
+      contentDate: contentDate,
       lastReceivedDate: expect.any(String)
     });
   });

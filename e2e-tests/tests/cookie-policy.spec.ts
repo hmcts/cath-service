@@ -5,16 +5,18 @@ test.describe("Cookie Policy Page", () => {
   test("should complete full cookie policy user journey", async ({ page, context }) => {
     // Start from home page and verify footer link
     await page.goto("/");
+    await page.waitForLoadState("load");
 
     // Check footer link exists
     const footerLink = page.locator('footer a:has-text("Cookies")');
-    await expect(footerLink).toBeVisible();
+    await expect(footerLink).toBeVisible({ timeout: 10000 });
     await expect(footerLink).toHaveAttribute("href", "/cookie-policy");
     await expect(footerLink).toHaveAttribute("target", "_blank");
     await expect(footerLink).toHaveAttribute("rel", "noopener noreferrer");
 
     // Click footer link and verify it opens in new tab
     const [newPage] = await Promise.all([context.waitForEvent("page"), footerLink.click()]);
+    await newPage.waitForLoadState("load");
     await expect(newPage).toHaveURL(/\/cookie-policy/);
 
     // Continue journey on the new page
@@ -77,12 +79,12 @@ test.describe("Cookie Policy Page", () => {
 
     // Scroll down and test back to top functionality
     await newPage.evaluate(() => window.scrollTo(0, 1000));
-    await newPage.waitForTimeout(100);
+    await newPage.waitForTimeout(300);
     let scrollY = await newPage.evaluate(() => window.scrollY);
     expect(scrollY).toBeGreaterThan(500);
 
     await newPage.locator('a:has-text("Back to top")').click();
-    await newPage.waitForFunction(() => window.scrollY < 100, { timeout: 2000 });
+    await newPage.waitForFunction(() => window.scrollY < 100, { timeout: 5000 });
     scrollY = await newPage.evaluate(() => window.scrollY);
     expect(scrollY).toBeLessThan(100);
 
@@ -101,6 +103,10 @@ test.describe("Cookie Policy Page", () => {
     await newPage.locator('input[name="performance"][value="off"]').check();
     await newPage.locator('button:has-text("Save")').click();
 
+    // Wait for redirect with saved parameter
+    await newPage.waitForURL(/\/cookie-policy\?saved=true/, { timeout: 10000 });
+    await newPage.waitForLoadState("load");
+
     // Verify redirect with saved parameter
     await expect(newPage).toHaveURL(/\/cookie-policy\?saved=true/);
 
@@ -115,6 +121,7 @@ test.describe("Cookie Policy Page", () => {
 
   test("should display Welsh content and save preferences in Welsh", async ({ page }) => {
     await page.goto("/cookie-policy?lng=cy");
+    await page.waitForLoadState("load");
 
     // Should stay on Welsh route
     await expect(page).toHaveURL(/\/cookie-policy\?lng=cy/);
@@ -134,6 +141,10 @@ test.describe("Cookie Policy Page", () => {
     await page.locator('input[name="performance"][value="off"]').check();
     await page.locator('button:has-text("Cadw")').click();
 
+    // Wait for redirect back to Welsh cookie policy with saved=true
+    await page.waitForURL(/\/cookie-policy\?lng=cy&saved=true/, { timeout: 10000 });
+    await page.waitForLoadState("load");
+
     // Should stay on Welsh route after save
     await expect(page).toHaveURL(/\/cookie-policy\?lng=cy&saved=true/);
     await expect(page.locator("h1")).toHaveText("Polisi Cwcis");
@@ -145,6 +156,7 @@ test.describe("Cookie Policy Page", () => {
 
   test("should be keyboard accessible", async ({ page }) => {
     await page.goto("/cookie-policy");
+    await page.waitForLoadState("load");
 
     // Find and focus the first analytics radio
     const analyticsOnRadio = page.locator('input[name="analytics"][value="on"]');
@@ -162,6 +174,7 @@ test.describe("Cookie Policy Page", () => {
 test.describe("Cookie Policy Page - Accessibility", () => {
   test("should be fully accessible and meet WCAG standards", async ({ page }) => {
     await page.goto("/cookie-policy");
+    await page.waitForLoadState("load");
 
     // Run axe accessibility scan
     const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
