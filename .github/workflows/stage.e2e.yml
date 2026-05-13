@@ -16,12 +16,6 @@ on:
 jobs:
   e2e-test:
     name: E2E Tests
-    permissions:
-      contents: read
-      checks: write
-      pull-requests: write
-      actions: read
-      id-token: write
     uses: ./.github/workflows/job.e2e-test.yml
     with:
       urls: ${{ inputs.urls }}
