@@ -227,14 +227,10 @@ test.describe("Subscription Notifications", () => {
       expect(govNotifyEmail.body).toContain("Manage your subscriptions");
       expect(govNotifyEmail.body).toContain("Unsubscribe");
 
-      // Check for PDF download link (GOV.UK Notify document service)
-      // Note: PDF links may not be present in all environments depending on Notify template configuration
+      // Verify email contains PDF download link (GOV.UK Notify document service)
       const hasPdfLink = GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN.test(govNotifyEmail.body);
-      if (hasPdfLink) {
-        console.log("PDF download link found in email body");
-      } else {
-        console.log("Note: No PDF download link found in email body (may not be configured in this environment)");
-      }
+      expect(hasPdfLink).toBe(true);
+      console.log("PDF download link found in email body");
 
       // Verify email delivery status
       expect(govNotifyEmail.status).toMatch(/delivered|sending|pending|created|permanent-failure/);
