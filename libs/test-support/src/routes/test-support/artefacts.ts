@@ -52,15 +52,24 @@ export const POST = async (req: Request, res: Response) => {
     });
 
     if (input.caseNumber || input.caseName) {
-      await prisma.listSearchConfig.upsert({
-        where: { listTypeId: input.listTypeId },
-        create: {
-          listTypeId: input.listTypeId,
-          caseNumberFieldName: "case_number",
-          caseNameFieldName: "case_name"
-        },
-        update: {}
-      });
+      // Try to create ListSearchConfig if it doesn't exist
+      // Catch unique constraint error (P2002) since another request may have created it
+      try {
+        await prisma.listSearchConfig.upsert({
+          where: { listTypeId: input.listTypeId },
+          create: {
+            listTypeId: input.listTypeId,
+            caseNumberFieldName: "case_number",
+            caseNameFieldName: "case_name"
+          },
+          update: {}
+        });
+      } catch (error) {
+        // Ignore P2002 unique constraint error - record already exists
+        if (!(error instanceof Error) || !error.message.includes("Unique constraint")) {
+          throw error;
+        }
+      }
 
       await prisma.artefactSearch.create({
         data: {

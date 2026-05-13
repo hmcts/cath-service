@@ -158,9 +158,11 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(errorSummary).toBeVisible();
     await expect(page.getByText(/at least one subscription must be selected/i)).toBeVisible();
 
-    // STEP 9: Test select-all functionality
-    const selectAllCheckbox = page.getByRole("checkbox", { name: /select all/i }).first();
-    await selectAllCheckbox.check();
+    // STEP 9: Test select-all functionality for court subscriptions
+    // Note: Use click() instead of check() to trigger JavaScript event handler
+    // Target the court subscriptions "select all" specifically since we created location subscriptions
+    const selectAllCourtCheckbox = page.getByRole("checkbox", { name: /select all court subscriptions/i });
+    await selectAllCourtCheckbox.click();
 
     // Verify all individual checkboxes are checked
     const checkbox1 = page.getByRole("checkbox", { name: new RegExp(`Select ${location1.name}`) }).first();
@@ -171,8 +173,8 @@ test.describe("Bulk Unsubscribe", () => {
     await expect(checkbox2).toBeChecked();
     await expect(checkbox3).toBeChecked();
 
-    // Uncheck select-all
-    await selectAllCheckbox.uncheck();
+    // Uncheck select-all (click again to toggle)
+    await selectAllCourtCheckbox.click();
     await expect(checkbox1).not.toBeChecked();
     await expect(checkbox2).not.toBeChecked();
     await expect(checkbox3).not.toBeChecked();

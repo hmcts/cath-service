@@ -428,6 +428,18 @@ export async function deleteTestFlatFile(artefactId: string): Promise<{ deleted:
   return callTestSupportApi<{ deleted: boolean }>("DELETE", "/test-support/flat-files", { artefactId });
 }
 
+export interface FlatFileInfo {
+  exists: boolean;
+  artefactId: string;
+  filename?: string;
+  sizeBytes?: number;
+  createdAt?: string;
+}
+
+export async function checkFlatFileExists(artefactId: string): Promise<FlatFileInfo> {
+  return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
+}
+
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
   const url = `${WEB_BASE_URL}/test-support/flat-files`;

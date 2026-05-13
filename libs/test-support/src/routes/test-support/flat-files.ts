@@ -10,6 +10,41 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
+export const GET = async (req: Request, res: Response) => {
+  try {
+    const { artefactId } = req.query as { artefactId: string };
+
+    if (!artefactId) {
+      return res.status(400).json({ error: "artefactId query parameter is required" });
+    }
+
+    // Find any file matching the artefactId
+    try {
+      const files = await fs.readdir(STORAGE_BASE);
+      for (const file of files) {
+        if (file.startsWith(artefactId)) {
+          const filePath = path.join(STORAGE_BASE, file);
+          const stats = await fs.stat(filePath);
+          return res.json({
+            exists: true,
+            artefactId,
+            filename: file,
+            sizeBytes: stats.size,
+            createdAt: stats.birthtime.toISOString()
+          });
+        }
+      }
+    } catch {
+      // Storage directory might not exist
+    }
+
+    return res.json({ exists: false, artefactId });
+  } catch (error) {
+    console.error("Error checking flat file:", error);
+    return res.status(500).json({ error: "Failed to check flat file" });
+  }
+};
+
 export const POST = async (req: Request, res: Response) => {
   try {
     const { artefactId, content, extension } = req.body as {
