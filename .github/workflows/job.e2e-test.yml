@@ -78,11 +78,39 @@ jobs:
             echo "API URL: ${API_URL}"
           fi
 
-      - name: Azure login
-        uses: azure/login@v3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      - name: Setup Azure workload identity
+        run: |
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "::error::ACTIONS_ID_TOKEN_REQUEST_TOKEN is not set. Ensure id-token: write is granted at all workflow levels in the call chain."
+            exit 1
+          fi
+
+          OIDC_TOKEN=$(curl -sS -f -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" | jq -r '.value')
+
+          if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
+            echo "::error::OIDC token fetch returned empty or null. Response from token endpoint was invalid."
+            exit 1
+          fi
+
+          AZURE_CLIENT_ID_VALUE="${{ secrets.AZURE_CLIENT_ID }}"
+          if [ -z "$AZURE_CLIENT_ID_VALUE" ]; then
+            echo "::error::AZURE_CLIENT_ID secret is not set or is empty."
+            exit 1
+          fi
+
+          AZURE_TENANT_ID_VALUE="${{ secrets.AZURE_TENANT_ID }}"
+          if [ -z "$AZURE_TENANT_ID_VALUE" ]; then
+            echo "::error::AZURE_TENANT_ID secret is not set or is empty."
+            exit 1
+          fi
+
+          TOKEN_FILE=$(mktemp)
+          echo "$OIDC_TOKEN" > "$TOKEN_FILE"
+          echo "AZURE_FEDERATED_TOKEN_FILE=$TOKEN_FILE" >> $GITHUB_ENV
+          echo "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
+          echo "Workload identity env vars set: AZURE_FEDERATED_TOKEN_FILE=$TOKEN_FILE AZURE_CLIENT_ID=*** AZURE_TENANT_ID=***"
 
       - name: Run E2E tests
         id: e2e-tests
