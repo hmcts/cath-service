@@ -70,6 +70,12 @@ jobs:
     name: E2E
     needs: [smoke-test-stage, deploy-stage]
     if: always() && needs.deploy-stage.result == 'success' && needs.smoke-test-stage.result == 'success'
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      actions: read
+      id-token: write
     uses: ./.github/workflows/stage.e2e.yml
     with:
       urls: ${{ needs.deploy-stage.outputs.urls }}
