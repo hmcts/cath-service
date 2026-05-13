@@ -34,6 +34,7 @@ export const POST = async (req: Request, res: Response) => {
 
     const artefact = await prisma.artefact.create({
       data: {
+        type: input.type || "LIST",
         locationId: input.locationId,
         listTypeId: input.listTypeId,
         contentDate: new Date(input.contentDate),
