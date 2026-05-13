@@ -24,7 +24,22 @@ jobs:
       checks: write
       pull-requests: write
       actions: read
-      id-token: write
+    env:
+      SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
+      SSO_TEST_SYSTEM_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_PWD }}
+      SSO_TEST_LOCAL_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_USER }}
+      SSO_TEST_LOCAL_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_PWD }}
+      SSO_TEST_CTSC_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_USER }}
+      SSO_TEST_CTSC_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_PWD }}
+      SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
+      SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
+      CFT_VALID_TEST_ACCOUNT: ${{ secrets.CFT_VALID_TEST_ACCOUNT }}
+      CFT_VALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_VALID_TEST_ACCOUNT_PASSWORD }}
+      CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
+      CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
+      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
+      AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
+      AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
 
     steps:
       - name: Checkout code
@@ -77,40 +92,6 @@ jobs:
             echo "CATH_SERVICE_API_URL=${API_URL}" >> $GITHUB_ENV
             echo "API URL: ${API_URL}"
           fi
-
-      - name: Setup Azure workload identity
-        run: |
-          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
-            echo "::error::ACTIONS_ID_TOKEN_REQUEST_TOKEN is not set. Ensure id-token: write is granted at all workflow levels in the call chain."
-            exit 1
-          fi
-
-          OIDC_TOKEN=$(curl -sS -f -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" | jq -r '.value')
-
-          if [ -z "$OIDC_TOKEN" ] || [ "$OIDC_TOKEN" = "null" ]; then
-            echo "::error::OIDC token fetch returned empty or null. Response from token endpoint was invalid."
-            exit 1
-          fi
-
-          AZURE_CLIENT_ID_VALUE="${{ secrets.AZURE_CLIENT_ID }}"
-          if [ -z "$AZURE_CLIENT_ID_VALUE" ]; then
-            echo "::error::AZURE_CLIENT_ID secret is not set or is empty."
-            exit 1
-          fi
-
-          AZURE_TENANT_ID_VALUE="${{ secrets.AZURE_TENANT_ID }}"
-          if [ -z "$AZURE_TENANT_ID_VALUE" ]; then
-            echo "::error::AZURE_TENANT_ID secret is not set or is empty."
-            exit 1
-          fi
-
-          TOKEN_FILE=$(mktemp)
-          echo "$OIDC_TOKEN" > "$TOKEN_FILE"
-          echo "AZURE_FEDERATED_TOKEN_FILE=$TOKEN_FILE" >> $GITHUB_ENV
-          echo "AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
-          echo "Workload identity env vars set: AZURE_FEDERATED_TOKEN_FILE=$TOKEN_FILE AZURE_CLIENT_ID=*** AZURE_TENANT_ID=***"
 
       - name: Run E2E tests
         id: e2e-tests
