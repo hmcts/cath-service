@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../../generated/prisma"
 }
 
 datasource db {
@@ -23,6 +23,7 @@ model Artefact {
   noMatch           Boolean           @default(false) @map("no_match")
   ingestionLogs     IngestionLog[]
   artefactSearches  ArtefactSearch[]
+  listType          ListType          @relation(fields: [listTypeId], references: [id])
 
   @@map("artefact")
 }
@@ -109,4 +110,3 @@ model LegacyThirdPartySubscription {
   @@index([listTypeId])
   @@map("legacy_third_party_subscription")
 }
-

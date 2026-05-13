@@ -35,11 +35,9 @@
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/config": ["libs/api/src/config"],
       "@hmcts/subscriptions": ["libs/subscriptions/src"],
-      "@hmcts/subscriptions/config": ["libs/subscriptions/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
       "@hmcts/notifications": ["libs/notifications/src"],
       "@hmcts/list-search-config": ["libs/list-search-config/src"],
-      "@hmcts/list-search-config/config": ["libs/list-search-config/src/config"],
       "@hmcts/pdf-generation": ["libs/pdf-generation/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"]

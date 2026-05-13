@@ -492,15 +492,71 @@ export * from "./my-feature/service.js";
 // Module configuration for app registration
 export const pageRoutes = { path: path.join(__dirname, "pages") };
 export const apiRoutes = { path: path.join(__dirname, "routes") };
-export const prismaSchemas = path.join(__dirname, "../prisma");
 export const assets = path.join(__dirname, "assets/");
 ```
 
 6. **Register module in applications**:
    - **For web app** (if module has pages): Add import and route to `apps/web/src/app.ts`
    - **For API app** (if module has routes): Add import and route to `apps/api/src/app.ts`
-   - **For database schemas** (if module has prisma): Add import to `apps/postgres/src/index.ts`
+   - **For database schemas**: Add to `libs/postgres-prisma/prisma/schema/{feature-name}.prisma` (see Database Schema Management section)
    - **Add dependency** to relevant app package.json files: `"@hmcts/my-feature": "workspace:*"`
+
+### Database Schema Management
+
+All Prisma schemas are centralized in **`libs/postgres-prisma/prisma/schema/`** with one file per feature domain.
+
+**Schema Organization:**
+```
+libs/postgres-prisma/
+├── prisma.config.ts            # Points to prisma/schema directory
+└── prisma/
+    └── schema/                 # All .prisma files live here
+        ├── base.prisma         # Datasource and generator config
+        ├── audit-log.prisma    # Audit log models
+        ├── location.prisma     # Location models
+        ├── subscription.prisma # Subscription models
+        └── ...                 # One file per domain
+```
+
+**Adding a New Schema File:**
+
+1. Create your schema in `libs/postgres-prisma/prisma/schema/{feature-name}.prisma`:
+```prisma
+// libs/postgres-prisma/prisma/schema/my-feature.prisma
+
+model MyFeature {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("my_feature")
+}
+```
+
+2. Generate the Prisma client:
+```bash
+yarn db:generate
+```
+
+3. Use in your services:
+```typescript
+import { prisma } from "@hmcts/postgres-prisma";
+
+const feature = await prisma.myFeature.findUnique({ where: { id } });
+```
+
+**Schema Naming Conventions:**
+- **File names**: kebab-case (`audit-log.prisma`, `list-search-config.prisma`)
+- **Models**: PascalCase (`User`, `CaseDocument`)
+- **Tables**: singular snake_case via `@@map("user")`
+- **Fields**: camelCase in code, snake_case in DB via `@map`
+
+**Important Notes:**
+- **Never create `prisma/` directories in feature modules** - all schemas are centralized
+- **Prisma automatically merges** all `.prisma` files in the schema directory
+- **One schema per domain** keeps models organized and maintainable
+- **Migrations apply to all schemas** - run `yarn db:migrate:dev` from the root
 
 ## 🧪 Testing Strategy
 

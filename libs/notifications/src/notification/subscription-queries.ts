@@ -13,12 +13,16 @@ export interface SubscriptionWithUser {
 }
 
 export async function findActiveSubscriptionsByLocation(locationId: number): Promise<SubscriptionWithUser[]> {
-  const subscriptions = await prisma.subscription.findMany({
+  return prisma.subscription.findMany({
     where: {
       searchType: "LOCATION_ID",
       searchValue: locationId.toString()
     },
-    include: {
+    select: {
+      subscriptionId: true,
+      userId: true,
+      searchType: true,
+      searchValue: true,
       user: {
         select: {
           email: true,
@@ -28,6 +32,4 @@ export async function findActiveSubscriptionsByLocation(locationId: number): Pro
       }
     }
   });
-
-  return subscriptions;
 }

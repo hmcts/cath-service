@@ -1,5 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 
+// Mock data
+const mockSubJurisdictions = [
+  { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
+  { subJurisdictionId: 2, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 2 },
+  { subJurisdictionId: 3, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 5 },
+  { subJurisdictionId: 4, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 3 },
+  { subJurisdictionId: 5, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
+  { subJurisdictionId: 6, name: "Immigration Tribunal", welshName: "Tribiwnlys Mewnfudo", jurisdictionId: 4 },
+  { subJurisdictionId: 7, name: "Social Security Tribunal", welshName: "Tribiwnlys Nawdd Cymdeithasol", jurisdictionId: 4 },
+  { subJurisdictionId: 8, name: "Tax Tribunal", welshName: "Tribiwnlys Treth", jurisdictionId: 4 },
+  { subJurisdictionId: 9, name: "Mental Health Tribunal", welshName: "Tribiwnlys Iechyd Meddwl", jurisdictionId: 4 },
+  { subJurisdictionId: 10, name: "Single Justice Procedure", welshName: "Gweithdrefn Ynad Unigol", jurisdictionId: 6 }
+];
+
 // Mock the queries module to prevent Prisma initialization
 vi.mock("../repository/queries.js", () => ({
   getAllJurisdictions: vi.fn(() =>
@@ -22,19 +36,9 @@ vi.mock("../repository/queries.js", () => ({
       { regionId: 6, name: "National", welshName: "Cenedlaethol" }
     ])
   ),
-  getAllSubJurisdictions: vi.fn(() =>
-    Promise.resolve([
-      { subJurisdictionId: 1, name: "Civil Court", welshName: "Llys Sifil", jurisdictionId: 1 },
-      { subJurisdictionId: 2, name: "Crown Court", welshName: "Llys y Goron", jurisdictionId: 2 },
-      { subJurisdictionId: 3, name: "Magistrates Court", welshName: "Llys Ynadon", jurisdictionId: 5 },
-      { subJurisdictionId: 4, name: "Family Court", welshName: "Llys Teulu", jurisdictionId: 3 },
-      { subJurisdictionId: 5, name: "Employment Tribunal", welshName: "Tribiwnlys Cyflogaeth", jurisdictionId: 4 },
-      { subJurisdictionId: 6, name: "Immigration Tribunal", welshName: "Tribiwnlys Mewnfudo", jurisdictionId: 4 },
-      { subJurisdictionId: 7, name: "Social Security Tribunal", welshName: "Tribiwnlys Nawdd Cymdeithasol", jurisdictionId: 4 },
-      { subJurisdictionId: 8, name: "Tax Tribunal", welshName: "Tribiwnlys Treth", jurisdictionId: 4 },
-      { subJurisdictionId: 9, name: "Mental Health Tribunal", welshName: "Tribiwnlys Iechyd Meddwl", jurisdictionId: 4 },
-      { subJurisdictionId: 10, name: "Single Justice Procedure", welshName: "Gweithdrefn Ynad Unigol", jurisdictionId: 6 }
-    ])
+  getAllSubJurisdictions: vi.fn(() => Promise.resolve(mockSubJurisdictions)),
+  getSubJurisdictionsByJurisdiction: vi.fn((jurisdictionId: number) =>
+    Promise.resolve(mockSubJurisdictions.filter((sj) => sj.jurisdictionId === jurisdictionId))
   )
 }));
 

@@ -52,7 +52,11 @@ describe("subscription-queries", () => {
         searchType: "LOCATION_ID",
         searchValue: "1"
       },
-      include: {
+      select: {
+        subscriptionId: true,
+        userId: true,
+        searchType: true,
+        searchValue: true,
         user: {
           select: {
             email: true,

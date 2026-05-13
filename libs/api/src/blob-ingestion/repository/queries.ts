@@ -25,6 +25,15 @@ export async function getIngestionLogsByDateRange(startDate: Date, endDate: Date
     },
     orderBy: {
       timestamp: "desc"
+    },
+    select: {
+      id: true,
+      timestamp: true,
+      sourceSystem: true,
+      courtId: true,
+      status: true,
+      errorMessage: true,
+      artefactId: true
     }
   });
 
@@ -49,7 +58,16 @@ export async function getRecentErrorLogs(limit = 10): Promise<IngestionLog[]> {
     orderBy: {
       timestamp: "desc"
     },
-    take: limit
+    take: limit,
+    select: {
+      id: true,
+      timestamp: true,
+      sourceSystem: true,
+      courtId: true,
+      status: true,
+      errorMessage: true,
+      artefactId: true
+    }
   });
 
   return logs.map((log) => ({

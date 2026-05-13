@@ -10,10 +10,9 @@
     }
   },
   "scripts": {
-    "build": "yarn collate && prisma generate --no-hints && tsc",
-    "collate": "tsx src/collate-schema.ts",
-    "db:generate": "yarn collate && prisma generate --no-hints",
-    "generate": "yarn collate && prisma generate --no-hints",
+    "build": "prisma generate --no-hints && tsc",
+    "dev": "concurrently -n tsc,prisma -r \"tsc --watch\" \"nodemon --watch prisma --ext prisma --exec 'prisma generate --no-hints && mkdir -p dist && touch dist/.prisma-generated'\"",
+    "generate": "prisma generate --no-hints",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
@@ -21,13 +20,13 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
-    "@prisma/adapter-pg": "7.2.0",
-    "@prisma/client": "7.2.0",
-    "pg": "8.19.0"
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
+    "pg": "8.20.0"
   },
   "devDependencies": {
-    "@types/pg": "8.11.11",
-    "glob": "13.0.6",
-    "prisma": "7.2.0"
+    "@types/pg": "8.20.0",
+    "nodemon": "3.1.14",
+    "prisma": "7.8.0"
   }
 }

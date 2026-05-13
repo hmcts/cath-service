@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getLocationById } from "@hmcts/location";
+import { getLocationsByIds } from "@hmcts/location";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -14,14 +14,10 @@ const getHandler = async (req: Request, res: Response) => {
 
   const confirmedLocationIds = req.session.emailSubscriptions.confirmedLocations || [];
 
-  const confirmedLocations = (
-    await Promise.all(
-      confirmedLocationIds.map(async (id: string) => {
-        const location = await getLocationById(Number.parseInt(id, 10));
-        return location ? (locale === "cy" ? location.welshName : location.name) : null;
-      })
-    )
-  ).filter(Boolean);
+  const locationIds = confirmedLocationIds.map((id: string) => Number.parseInt(id, 10));
+  const locations = await getLocationsByIds(locationIds);
+
+  const confirmedLocations = locations.map((location) => (locale === "cy" ? location.welshName : location.name));
 
   delete req.session.emailSubscriptions.confirmationComplete;
   delete req.session.emailSubscriptions.confirmedLocations;

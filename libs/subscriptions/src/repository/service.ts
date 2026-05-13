@@ -1,5 +1,5 @@
-import { getLocationById } from "@hmcts/location";
-import { validateLocationId } from "../validation/validation.js";
+import { getLocationsByIds } from "@hmcts/location";
+import { validateLocationId, validateLocationIds } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
   createSubscriptionRecord,
@@ -115,7 +115,7 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
   }
 
   // Validate all location IDs before performing any mutations
-  const validationResults = await Promise.all(toAdd.map((locationId) => validateLocationId(locationId.toString())));
+  const validationResults = await validateLocationIds(toAdd.map((locationId) => locationId.toString()));
 
   const invalidLocations = toAdd.filter((_, index) => !validationResults[index]);
   if (invalidLocations.length > 0) {
@@ -137,18 +137,23 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
   const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
 
-  const dtos = await Promise.all(
-    subscriptions.map(async (sub) => {
+  const locationIds = subscriptions.map((sub) => Number.parseInt(sub.searchValue, 10)).filter((id) => !Number.isNaN(id));
+  const locations = await getLocationsByIds(locationIds);
+
+  const locationMap = new Map(locations.map((loc) => [loc.locationId, loc]));
+
+  const dtos = subscriptions
+    .map((sub) => {
       const locationId = Number.parseInt(sub.searchValue, 10);
-      const location = await getLocationById(locationId);
+      const location = locationMap.get(locationId);
       if (!location) {
         return null;
       }
       return mapSubscriptionToDto(sub, location, locale);
     })
-  );
+    .filter((dto): dto is SubscriptionDto => dto !== null);
 
-  return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
+  return dtos;
 }
 
 export async function getCaseSubscriptionsByUserId(_userId: string, _locale = "en") {
@@ -168,18 +173,23 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
 
   const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
 
-  const dtos = await Promise.all(
-    subscriptions.map(async (sub) => {
+  const locationIds = subscriptions.map((sub) => Number.parseInt(sub.searchValue, 10)).filter((id) => !Number.isNaN(id));
+  const locations = await getLocationsByIds(locationIds);
+
+  const locationMap = new Map(locations.map((loc) => [loc.locationId, loc]));
+
+  const dtos = subscriptions
+    .map((sub) => {
       const locationId = Number.parseInt(sub.searchValue, 10);
-      const location = await getLocationById(locationId);
+      const location = locationMap.get(locationId);
       if (!location) {
         return null;
       }
       return mapSubscriptionToDto(sub, location, locale);
     })
-  );
+    .filter((dto): dto is SubscriptionDto => dto !== null);
 
-  return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
+  return dtos;
 }
 
 export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {

@@ -1,12 +1,3 @@
-generator client {
-  provider = "prisma-client-js"
-  output   = "../../../apps/postgres/generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
 model AuditLog {
   id             String   @id @default(cuid())
   timestamp      DateTime @default(now())

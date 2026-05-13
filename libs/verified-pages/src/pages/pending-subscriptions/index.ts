@@ -1,5 +1,5 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getLocationById } from "@hmcts/location";
+import { getLocationsByIds } from "@hmcts/location";
 import { getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
@@ -28,19 +28,13 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const pendingLocations = (
-    await Promise.all(
-      pendingLocationIds.map(async (id: string) => {
-        const location = await getLocationById(Number.parseInt(id, 10));
-        return location
-          ? {
-              locationId: id,
-              name: locale === "cy" ? location.welshName : location.name
-            }
-          : null;
-      })
-    )
-  ).filter(Boolean);
+  const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+  const locations = await getLocationsByIds(locationIds);
+
+  const pendingLocations = locations.map((location) => ({
+    locationId: location.locationId.toString(),
+    name: locale === "cy" ? location.welshName : location.name
+  }));
 
   if (!res.locals.navigation) {
     res.locals.navigation = {};
@@ -113,19 +107,13 @@ const postHandler = async (req: Request, res: Response) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-      const pendingLocations = (
-        await Promise.all(
-          pendingLocationIds.map(async (id: string) => {
-            const location = await getLocationById(Number.parseInt(id, 10));
-            return location
-              ? {
-                  locationId: id,
-                  name: locale === "cy" ? location.welshName : location.name
-                }
-              : null;
-          })
-        )
-      ).filter(Boolean);
+      const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+      const locations = await getLocationsByIds(locationIds);
+
+      const pendingLocations = locations.map((location) => ({
+        locationId: location.locationId.toString(),
+        name: locale === "cy" ? location.welshName : location.name
+      }));
 
       if (!res.locals.navigation) {
         res.locals.navigation = {};
