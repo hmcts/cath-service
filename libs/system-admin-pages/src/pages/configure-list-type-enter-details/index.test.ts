@@ -99,7 +99,7 @@ describe("enter-details page", () => {
         defaultSensitivity: "Private",
         allowedProvenance: "CFT_IDAM,PI_AAD",
         isNonStrategic: true,
-        subJurisdictions: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
+        subJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
       };
       vi.mocked(findListTypeById).mockResolvedValue(existingData as any);
       const req = { session: {}, query: { id: "1" } } as unknown as Request;
@@ -122,7 +122,7 @@ describe("enter-details page", () => {
         defaultSensitivity: "Private",
         allowedProvenance: "CFT_IDAM,PI_AAD",
         isNonStrategic: true,
-        subJurisdictions: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
+        subJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1 } }, { subJurisdiction: { subJurisdictionId: 2 } }]
       };
       vi.mocked(findListTypeById).mockResolvedValue(existingData as any);
       const req = { session: {}, query: { id: "1" } } as unknown as Request;

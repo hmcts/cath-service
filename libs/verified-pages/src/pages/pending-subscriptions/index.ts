@@ -1,13 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getLocationById } from "@hmcts/location";
-import { Prisma } from "@hmcts/postgres-prisma";
-import {
-  createCaseSubscription,
-  deletePendingCaseSubscriptions,
-  deletePendingSubscriptions,
-  savePendingCaseSubscriptions,
-  savePendingSubscriptions
-} from "@hmcts/subscriptions";
+import { getLocationsByIds } from "@hmcts/location";
+import { getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -72,7 +65,19 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const pendingLocations = await fetchLocations();
+  const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+  const locations = await getLocationsByIds(locationIds);
+
+  const pendingLocations = locations.map((location) => ({
+    locationId: location.locationId.toString(),
+    name: locale === "cy" ? location.welshName : location.name
+  }));
+
+  if (!res.locals.navigation) {
+    res.locals.navigation = {};
+  }
+  res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
   const isPlural = pendingLocations.length > 1;
 
   res.render("pending-subscriptions/index", {
@@ -159,59 +164,11 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   if (action === "confirm") {
-    if (pendingCaseSubscriptions?.length) {
-      if (!req.user?.id) {
-        return res.redirect("/sign-in");
-      }
-
-      if (!req.session.emailSubscriptions) {
-        req.session.emailSubscriptions = {};
-      }
-
-      if (pendingLocationIds.length > 0) {
-        // Defer case subscription creation to confirmation-preview so the user
-        // can review both case and location subscriptions together.
-        req.session.emailSubscriptions.confirmedCaseSubscriptions = pendingCaseSubscriptions;
-        delete req.session.emailSubscriptions.pendingCaseSubscriptions;
-        delete req.session.emailSubscriptions.caseSearchResults;
-
-        if (req.user?.id) {
-          await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
-        }
-
-        req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
-        delete req.session.emailSubscriptions.pendingSubscriptions;
-
-        if (req.user?.id) {
-          await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
-        }
-
-        return res.redirect("/subscription-add-list");
-      }
-
-      // Case-only: create immediately and redirect to confirmation.
-      for (const sub of pendingCaseSubscriptions) {
-        try {
-          await createCaseSubscription(req.user.id, sub.searchType, sub.searchValue, sub.caseName, sub.caseNumber);
-        } catch (error) {
-          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-            // Already subscribed — treat as success and continue
-          } else {
-            throw error;
-          }
-        }
-      }
-
-      delete req.session.emailSubscriptions.pendingCaseSubscriptions;
-      delete req.session.emailSubscriptions.caseSearchResults;
-
-      if (req.user?.id) {
-        await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
-      }
-
-      req.session.emailSubscriptions.confirmationComplete = true;
-      return res.redirect("/subscription-confirmed");
+    if (!req.user?.id) {
+      return res.redirect("/sign-in");
     }
+
+    const userId = req.user.id;
 
     if (pendingLocationIds.length === 0) {
       return res.redirect("/location-name-search");
@@ -220,14 +177,50 @@ const postHandler = async (req: Request, res: Response) => {
     if (!req.session.emailSubscriptions) {
       req.session.emailSubscriptions = {};
     }
-    req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
-    delete req.session.emailSubscriptions.pendingSubscriptions;
 
-    if (req.user?.id) {
-      await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
+    try {
+      const existingSubscriptions = await getAllSubscriptionsByUserId(userId);
+      const existingLocationIds = existingSubscriptions
+        .filter((sub): sub is { locationId: number } => "locationId" in sub)
+        .map((sub) => sub.locationId.toString());
+      const allLocationIds = [...new Set([...existingLocationIds, ...pendingLocationIds])];
+
+      await replaceUserSubscriptions(userId, allLocationIds);
+
+      req.session.emailSubscriptions.confirmationComplete = true;
+      req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
+      delete req.session.emailSubscriptions.pendingSubscriptions;
+
+      res.redirect("/subscription-confirmed");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+      const locations = await getLocationsByIds(locationIds);
+
+      const pendingLocations = locations.map((location) => ({
+        locationId: location.locationId.toString(),
+        name: locale === "cy" ? location.welshName : location.name
+      }));
+
+      if (!res.locals.navigation) {
+        res.locals.navigation = {};
+      }
+      res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+      const isPlural = pendingLocations.length > 1;
+
+      res.render("pending-subscriptions/index", {
+        ...t,
+        errors: {
+          titleText: t.errorSummaryTitle,
+          errorList: [{ text: errorMessage }]
+        },
+        locations: pendingLocations,
+        isPlural,
+        confirmButton: isPlural ? t.confirmButtonPlural : t.confirmButton
+      });
     }
-
-    res.redirect("/subscription-add-list");
   }
 };
 

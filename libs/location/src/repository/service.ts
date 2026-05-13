@@ -1,4 +1,4 @@
-import { getAllLocations, type Location } from "./queries.js";
+import { getAllLocations, type Location, searchLocationsByName } from "./queries.js";
 
 export type { Location } from "./queries.js";
 
@@ -8,8 +8,11 @@ export async function searchLocations(query: string, language: "en" | "cy"): Pro
   }
 
   const searchTerm = query.toLowerCase().trim();
-  const locations = await getAllLocations(language);
 
+  // Use database search with contains (case-insensitive)
+  const locations = await searchLocationsByName(searchTerm, language);
+
+  // Separate starts-with from partial matches for better UX
   const startsWithMatches: Location[] = [];
   const partialMatches: Location[] = [];
 
@@ -19,22 +22,10 @@ export async function searchLocations(query: string, language: "en" | "cy"): Pro
 
     if (lowerLocationName.startsWith(searchTerm)) {
       startsWithMatches.push(location);
-    } else if (lowerLocationName.includes(searchTerm)) {
+    } else {
       partialMatches.push(location);
     }
   }
-
-  startsWithMatches.sort((a, b) => {
-    const nameA = language === "cy" ? a.welshName : a.name;
-    const nameB = language === "cy" ? b.welshName : b.name;
-    return nameA.localeCompare(nameB);
-  });
-
-  partialMatches.sort((a, b) => {
-    const nameA = language === "cy" ? a.welshName : a.name;
-    const nameB = language === "cy" ? b.welshName : b.name;
-    return nameA.localeCompare(nameB);
-  });
 
   return [...startsWithMatches, ...partialMatches];
 }
@@ -46,18 +37,8 @@ export async function getLocationsGroupedByLetter(
     subJurisdictions?: number[];
   }
 ): Promise<Record<string, Location[]>> {
-  let locations = await getAllLocations(language);
-
-  // Apply filters if provided
-  if (filters) {
-    if (filters.regions && filters.regions.length > 0) {
-      locations = locations.filter((location) => location.regions.some((regionId) => filters.regions!.includes(regionId)));
-    }
-
-    if (filters.subJurisdictions && filters.subJurisdictions.length > 0) {
-      locations = locations.filter((location) => location.subJurisdictions.some((subJurisdictionId) => filters.subJurisdictions!.includes(subJurisdictionId)));
-    }
-  }
+  // Pass filters to database query instead of filtering in JavaScript
+  const locations = await getAllLocations(language, filters);
 
   const grouped: Record<string, Location[]> = {};
 

@@ -1,5 +1,5 @@
-import { getLocationById } from "@hmcts/location";
-import { validateLocationId } from "../validation/validation.js";
+import { getLocationsByIds } from "@hmcts/location";
+import { validateLocationId, validateLocationIds } from "../validation/validation.js";
 import {
   countSubscriptionsByUserId,
   createCaseSubscriptionRecord,
@@ -145,7 +145,7 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
   }
 
   // Validate all location IDs before performing any mutations
-  const validationResults = await Promise.all(toAdd.map((locationId) => validateLocationId(locationId.toString())));
+  const validationResults = await validateLocationIds(toAdd.map((locationId) => locationId.toString()));
 
   const invalidLocations = toAdd.filter((_, index) => !validationResults[index]);
   if (invalidLocations.length > 0) {
@@ -164,21 +164,34 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
   };
 }
 
-export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
-  const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
+async function mapSubscriptionsToDto(
+  subscriptions: Array<{
+    subscriptionId: string;
+    searchValue: string;
+    dateAdded: Date;
+  }>,
+  locale: string
+): Promise<SubscriptionDto[]> {
+  const locationIds = subscriptions.map((sub) => Number.parseInt(sub.searchValue, 10)).filter((id) => !Number.isNaN(id));
+  const locations = await getLocationsByIds(locationIds);
 
-  const dtos = await Promise.all(
-    subscriptions.map(async (sub) => {
+  const locationMap = new Map(locations.map((loc) => [loc.locationId, loc]));
+
+  return subscriptions
+    .map((sub) => {
       const locationId = Number.parseInt(sub.searchValue, 10);
-      const location = await getLocationById(locationId);
+      const location = locationMap.get(locationId);
       if (!location) {
         return null;
       }
       return mapSubscriptionToDto(sub, location, locale);
     })
-  );
+    .filter((dto): dto is SubscriptionDto => dto !== null);
+}
 
-  return dtos.filter((dto): dto is CourtSubscriptionDto => dto !== null);
+export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
+  const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
+  return mapSubscriptionsToDto(subscriptions, locale);
 }
 
 interface CaseSubscriptionDto {
@@ -217,30 +230,8 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
     return [];
   }
 
-  const subscriptions = await findSubscriptionsByIds(subscriptionIds, userId);
-
-  const dtos = await Promise.all(
-    subscriptions.map(async (sub): Promise<SubscriptionDto | null> => {
-      if (sub.searchType === "LOCATION_ID") {
-        const locationId = Number.parseInt(sub.searchValue, 10);
-        const location = await getLocationById(locationId);
-        if (!location) {
-          return null;
-        }
-        return mapSubscriptionToDto(sub, location, locale);
-      }
-
-      return {
-        subscriptionId: sub.subscriptionId,
-        type: "case",
-        caseName: sub.caseName,
-        caseNumber: sub.caseNumber,
-        dateAdded: sub.dateAdded
-      };
-    })
-  );
-
-  return dtos.filter((dto): dto is SubscriptionDto => dto !== null);
+  const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
+  return mapSubscriptionsToDto(subscriptions, locale);
 }
 
 export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {
