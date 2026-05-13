@@ -53,6 +53,7 @@ describe("createArtefact", () => {
   it("should create a new artefact when no existing artefact is found", async () => {
     const artefactData = {
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      type: "LIST",
       locationId: "1",
       listTypeId: 6,
       contentDate: new Date("2025-10-23"),
@@ -342,6 +343,7 @@ describe("createArtefact", () => {
       artefactId: "550e8400-e29b-41d4-a716-446655440010",
       locationId: "1",
       listTypeId: 6,
+      type: "LIST",
       contentDate,
       sensitivity: "PUBLIC",
       language: "ENGLISH",
