@@ -1,12 +1,3 @@
-generator client {
-  provider = "prisma-client-js"
-  output   = "../../../apps/postgres/generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
 model Region {
   regionId  Int    @id @map("region_id")
   name      String @unique
@@ -67,6 +58,7 @@ model ListType {
   deletedAt             DateTime? @map("deleted_at")
 
   subJurisdictions ListTypeSubJurisdiction[]
+  artefacts        Artefact[]
 
   @@map("list_types")
 }

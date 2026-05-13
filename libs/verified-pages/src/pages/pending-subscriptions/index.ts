@@ -1,13 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { getLocationById } from "@hmcts/location";
+import { getLocationsByIds } from "@hmcts/location";
 import { Prisma } from "@hmcts/postgres-prisma";
-import {
-  createCaseSubscription,
-  deletePendingCaseSubscriptions,
-  deletePendingSubscriptions,
-  savePendingCaseSubscriptions,
-  savePendingSubscriptions
-} from "@hmcts/subscriptions";
+import { createCaseSubscription } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -16,6 +10,7 @@ const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
 
+  // Merge confirmed case subscriptions into pending if present
   if (req.session.emailSubscriptions?.confirmedCaseSubscriptions?.length) {
     const merged = [...req.session.emailSubscriptions.confirmedCaseSubscriptions, ...(req.session.emailSubscriptions.pendingCaseSubscriptions || [])];
     const seen = new Set<string>();
@@ -38,28 +33,28 @@ const getHandler = async (req: Request, res: Response) => {
   }
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-  const fetchLocations = async () => {
-    if (pendingLocationIds.length === 0) return [];
-    return (
-      await Promise.all(
-        pendingLocationIds.map(async (id: string) => {
-          const location = await getLocationById(Number.parseInt(id, 10));
-          return location ? { locationId: id, name: locale === "cy" ? location.welshName : location.name } : null;
-        })
-      )
-    ).filter(Boolean) as { locationId: string; name: string }[];
-  };
+  // Fetch location data if there are pending location IDs
+  let pendingLocations: { locationId: string; name: string }[] = [];
+  if (pendingLocationIds.length > 0) {
+    const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+    const locations = await getLocationsByIds(locationIds);
+    pendingLocations = locations.map((location) => ({
+      locationId: location.locationId.toString(),
+      name: locale === "cy" ? location.welshName : location.name
+    }));
+  }
 
+  // If there are case subscriptions, render with them (and any locations)
   if (pendingCaseSubscriptions?.length) {
-    const locations = await fetchLocations();
     return res.render("pending-subscriptions/index", {
       ...t,
-      locations,
+      locations: pendingLocations,
       pendingCaseSubscriptions,
-      confirmButton: locations.length > 0 ? t.confirmButton : t.confirmSubscription
+      confirmButton: pendingLocations.length > 0 ? t.confirmButton : t.confirmSubscription
     });
   }
 
+  // If no locations and no cases, show error
   if (pendingLocationIds.length === 0) {
     return res.render("pending-subscriptions/index", {
       ...t,
@@ -72,9 +67,8 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const pendingLocations = await fetchLocations();
+  // Render with just locations
   const isPlural = pendingLocations.length > 1;
-
   res.render("pending-subscriptions/index", {
     ...t,
     locations: pendingLocations,
@@ -104,15 +98,6 @@ const postHandler = async (req: Request, res: Response) => {
       updated.splice(caseIndex, 1);
     }
     req.session.emailSubscriptions.pendingCaseSubscriptions = updated;
-
-    if (req.user?.id) {
-      if (updated.length > 0) {
-        await savePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id, updated);
-      } else {
-        await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
-      }
-    }
-
     return res.redirect("/pending-subscriptions");
   }
 
@@ -127,14 +112,6 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.emailSubscriptions.confirmedLocations = confirmedLocations.filter((id: string) => id !== locationId);
 
     if (updatedPending.length === 0) {
-      if (req.user?.id) {
-        await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
-      }
-
-      if (pendingCaseSubscriptions?.length) {
-        return res.redirect("/pending-subscriptions");
-      }
-
       if (!res.locals.navigation) {
         res.locals.navigation = {};
       }
@@ -151,45 +128,36 @@ const postHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (req.user?.id) {
-      await savePendingSubscriptions(req.app.locals.redisClient, req.user.id, updatedPending);
-    }
-
     return res.redirect("/pending-subscriptions");
   }
 
   if (action === "confirm") {
-    if (pendingCaseSubscriptions?.length) {
-      if (!req.user?.id) {
-        return res.redirect("/sign-in");
-      }
+    if (!req.user?.id) {
+      return res.redirect("/sign-in");
+    }
 
-      if (!req.session.emailSubscriptions) {
-        req.session.emailSubscriptions = {};
-      }
+    if (!req.session.emailSubscriptions) {
+      req.session.emailSubscriptions = {};
+    }
 
-      if (pendingLocationIds.length > 0) {
-        // Defer case subscription creation to confirmation-preview so the user
-        // can review both case and location subscriptions together.
+    const hasCases = pendingCaseSubscriptions && pendingCaseSubscriptions.length > 0;
+    const hasLocations = pendingLocationIds.length > 0;
+
+    // If there are case subscriptions
+    if (hasCases) {
+      // If also locations, move both to confirmed state and go to list type selection
+      if (hasLocations) {
         req.session.emailSubscriptions.confirmedCaseSubscriptions = pendingCaseSubscriptions;
         delete req.session.emailSubscriptions.pendingCaseSubscriptions;
         delete req.session.emailSubscriptions.caseSearchResults;
 
-        if (req.user?.id) {
-          await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
-        }
-
         req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
         delete req.session.emailSubscriptions.pendingSubscriptions;
-
-        if (req.user?.id) {
-          await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
-        }
 
         return res.redirect("/subscription-add-list");
       }
 
-      // Case-only: create immediately and redirect to confirmation.
+      // Case-only: create immediately and redirect to confirmation
       for (const sub of pendingCaseSubscriptions) {
         try {
           await createCaseSubscription(req.user.id, sub.searchType, sub.searchValue, sub.caseName, sub.caseNumber);
@@ -205,29 +173,19 @@ const postHandler = async (req: Request, res: Response) => {
       delete req.session.emailSubscriptions.pendingCaseSubscriptions;
       delete req.session.emailSubscriptions.caseSearchResults;
 
-      if (req.user?.id) {
-        await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
-      }
-
       req.session.emailSubscriptions.confirmationComplete = true;
       return res.redirect("/subscription-confirmed");
     }
 
-    if (pendingLocationIds.length === 0) {
-      return res.redirect("/location-name-search");
+    // If only locations, move to confirmed and go to list type selection
+    if (hasLocations) {
+      req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
+      delete req.session.emailSubscriptions.pendingSubscriptions;
+      return res.redirect("/subscription-add-list");
     }
 
-    if (!req.session.emailSubscriptions) {
-      req.session.emailSubscriptions = {};
-    }
-    req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
-    delete req.session.emailSubscriptions.pendingSubscriptions;
-
-    if (req.user?.id) {
-      await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
-    }
-
-    res.redirect("/subscription-add-list");
+    // No subscriptions at all
+    return res.redirect("/location-name-search");
   }
 };
 

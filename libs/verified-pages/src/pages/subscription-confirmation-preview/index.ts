@@ -266,7 +266,9 @@ const postHandler = async (req: Request, res: Response) => {
     }
 
     const existingSubscriptions = await getAllSubscriptionsByUserId(userId);
-    const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId.toString());
+    const existingLocationIds = existingSubscriptions
+      .filter((sub) => "locationId" in sub && typeof sub.locationId === "number")
+      .map((sub) => (sub as { locationId: number }).locationId.toString());
     const allLocationIds = [...new Set([...existingLocationIds, ...resolvedLocationIds])];
     await replaceUserSubscriptions(userId, allLocationIds);
 
