@@ -134,15 +134,20 @@ export async function replaceUserSubscriptions(userId: string, newLocationIds: s
   };
 }
 
-export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
-  const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
-
+async function mapSubscriptionsToDto(
+  subscriptions: Array<{
+    subscriptionId: string;
+    searchValue: string;
+    dateAdded: Date;
+  }>,
+  locale: string
+): Promise<SubscriptionDto[]> {
   const locationIds = subscriptions.map((sub) => Number.parseInt(sub.searchValue, 10)).filter((id) => !Number.isNaN(id));
   const locations = await getLocationsByIds(locationIds);
 
   const locationMap = new Map(locations.map((loc) => [loc.locationId, loc]));
 
-  const dtos = subscriptions
+  return subscriptions
     .map((sub) => {
       const locationId = Number.parseInt(sub.searchValue, 10);
       const location = locationMap.get(locationId);
@@ -152,8 +157,11 @@ export async function getAllSubscriptionsByUserId(userId: string, locale = "en")
       return mapSubscriptionToDto(sub, location, locale);
     })
     .filter((dto): dto is SubscriptionDto => dto !== null);
+}
 
-  return dtos;
+export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
+  const subscriptions = await findSubscriptionsWithLocationByUserId(userId);
+  return mapSubscriptionsToDto(subscriptions, locale);
 }
 
 export async function getCaseSubscriptionsByUserId(_userId: string, _locale = "en") {
@@ -172,24 +180,7 @@ export async function getSubscriptionDetailsForConfirmation(subscriptionIds: str
   }
 
   const subscriptions = await findSubscriptionsWithLocationByIds(subscriptionIds, userId);
-
-  const locationIds = subscriptions.map((sub) => Number.parseInt(sub.searchValue, 10)).filter((id) => !Number.isNaN(id));
-  const locations = await getLocationsByIds(locationIds);
-
-  const locationMap = new Map(locations.map((loc) => [loc.locationId, loc]));
-
-  const dtos = subscriptions
-    .map((sub) => {
-      const locationId = Number.parseInt(sub.searchValue, 10);
-      const location = locationMap.get(locationId);
-      if (!location) {
-        return null;
-      }
-      return mapSubscriptionToDto(sub, location, locale);
-    })
-    .filter((dto): dto is SubscriptionDto => dto !== null);
-
-  return dtos;
+  return mapSubscriptionsToDto(subscriptions, locale);
 }
 
 export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId: string) {

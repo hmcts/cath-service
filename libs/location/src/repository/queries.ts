@@ -8,6 +8,46 @@ export interface LocationFilters {
   subJurisdictions?: number[];
 }
 
+const LOCATION_SELECT = {
+  locationId: true,
+  name: true,
+  welshName: true,
+  locationRegions: {
+    select: {
+      region: {
+        select: {
+          regionId: true
+        }
+      }
+    }
+  },
+  locationSubJurisdictions: {
+    select: {
+      subJurisdiction: {
+        select: {
+          subJurisdictionId: true
+        }
+      }
+    }
+  }
+} as const;
+
+function mapToLocation(loc: {
+  locationId: number;
+  name: string;
+  welshName: string;
+  locationRegions: Array<{ region: { regionId: number } }>;
+  locationSubJurisdictions: Array<{ subJurisdiction: { subJurisdictionId: number } }>;
+}): Location {
+  return {
+    locationId: loc.locationId,
+    name: loc.name,
+    welshName: loc.welshName,
+    regions: loc.locationRegions.map((lr) => lr.region.regionId),
+    subJurisdictions: loc.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
+  };
+}
+
 export async function getAllLocations(language: "en" | "cy", filters?: LocationFilters): Promise<Location[]> {
   const sortField = language === "cy" ? "welshName" : "name";
 
@@ -38,38 +78,10 @@ export async function getAllLocations(language: "en" | "cy", filters?: LocationF
     orderBy: {
       [sortField]: "asc"
     },
-    select: {
-      locationId: true,
-      name: true,
-      welshName: true,
-      locationRegions: {
-        select: {
-          region: {
-            select: {
-              regionId: true
-            }
-          }
-        }
-      },
-      locationSubJurisdictions: {
-        select: {
-          subJurisdiction: {
-            select: {
-              subJurisdictionId: true
-            }
-          }
-        }
-      }
-    }
+    select: LOCATION_SELECT
   });
 
-  return locations.map((loc) => ({
-    locationId: loc.locationId,
-    name: loc.name,
-    welshName: loc.welshName,
-    regions: loc.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: loc.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
-  }));
+  return locations.map(mapToLocation);
 }
 
 export async function searchLocationsByName(query: string, language: "en" | "cy"): Promise<Location[]> {
@@ -87,38 +99,10 @@ export async function searchLocationsByName(query: string, language: "en" | "cy"
     orderBy: {
       [sortField]: "asc"
     },
-    select: {
-      locationId: true,
-      name: true,
-      welshName: true,
-      locationRegions: {
-        select: {
-          region: {
-            select: {
-              regionId: true
-            }
-          }
-        }
-      },
-      locationSubJurisdictions: {
-        select: {
-          subJurisdiction: {
-            select: {
-              subJurisdictionId: true
-            }
-          }
-        }
-      }
-    }
+    select: LOCATION_SELECT
   });
 
-  return locations.map((loc) => ({
-    locationId: loc.locationId,
-    name: loc.name,
-    welshName: loc.welshName,
-    regions: loc.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: loc.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
-  }));
+  return locations.map(mapToLocation);
 }
 
 export async function getLocationById(id: number): Promise<Location | undefined> {
@@ -127,42 +111,14 @@ export async function getLocationById(id: number): Promise<Location | undefined>
       locationId: id,
       deletedAt: null
     },
-    select: {
-      locationId: true,
-      name: true,
-      welshName: true,
-      locationRegions: {
-        select: {
-          region: {
-            select: {
-              regionId: true
-            }
-          }
-        }
-      },
-      locationSubJurisdictions: {
-        select: {
-          subJurisdiction: {
-            select: {
-              subJurisdictionId: true
-            }
-          }
-        }
-      }
-    }
+    select: LOCATION_SELECT
   });
 
   if (!location) {
     return undefined;
   }
 
-  return {
-    locationId: location.locationId,
-    name: location.name,
-    welshName: location.welshName,
-    regions: location.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: location.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
-  };
+  return mapToLocation(location);
 }
 
 export async function getLocationsByIds(ids: number[]): Promise<Location[]> {
@@ -173,38 +129,10 @@ export async function getLocationsByIds(ids: number[]): Promise<Location[]> {
       },
       deletedAt: null
     },
-    select: {
-      locationId: true,
-      name: true,
-      welshName: true,
-      locationRegions: {
-        select: {
-          region: {
-            select: {
-              regionId: true
-            }
-          }
-        }
-      },
-      locationSubJurisdictions: {
-        select: {
-          subJurisdiction: {
-            select: {
-              subJurisdictionId: true
-            }
-          }
-        }
-      }
-    }
+    select: LOCATION_SELECT
   });
 
-  return locations.map((location) => ({
-    locationId: location.locationId,
-    name: location.name,
-    welshName: location.welshName,
-    regions: location.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: location.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
-  }));
+  return locations.map(mapToLocation);
 }
 
 export async function getAllJurisdictions(): Promise<Jurisdiction[]> {
