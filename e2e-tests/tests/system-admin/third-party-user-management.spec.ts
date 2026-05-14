@@ -109,7 +109,7 @@ test.describe("Third Party User Management", () => {
     const uniqueName = `${getTestPrefix()}Sub Test Corp`;
     const testUser = await createTestThirdPartyUser({ name: uniqueName });
 
-    await page.goto(`/third-party-users/${testUser.id}`);
+    await page.goto(`/third-party-users/${testUser.id}/manage`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage user");
     await expect(page.locator(".govuk-summary-list")).toContainText(testUser.name);
 
@@ -169,7 +169,7 @@ test.describe("Third Party User Management", () => {
     const uniqueName = `${getTestPrefix()}Delete Test Corp`;
     const testUser = await createTestThirdPartyUser({ name: uniqueName });
 
-    await page.goto(`/third-party-users/${testUser.id}`);
+    await page.goto(`/third-party-users/${testUser.id}/manage`);
 
     // Navigate to delete (govukButton with href renders with role="button")
     await page.getByRole("button", { name: "Delete user" }).click();
@@ -194,7 +194,7 @@ test.describe("Third Party User Management", () => {
     // Select No - should redirect back to manage user
     await page.locator('input[value="no"]').check();
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}`);
+    await page.waitForURL(`**/third-party-users/${testUser.id}/manage`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage user");
 
     // Go back to delete and confirm Yes

@@ -79,7 +79,7 @@ describe("third-party-users delete page", () => {
 
       // Assert
       expect(deleteThirdPartyUser).not.toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/manage");
     });
 
     it("should delete user and redirect to success page when Yes is selected", async () => {

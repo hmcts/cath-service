@@ -56,7 +56,7 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   if (confirmDelete === "no") {
-    return res.redirect(`/third-party-users/${id}${lngParam}`);
+    return res.redirect(`/third-party-users/${id}/manage${lngParam}`);
   }
 
   await deleteThirdPartyUser(id);
