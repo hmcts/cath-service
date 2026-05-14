@@ -173,7 +173,7 @@ test.describe("Third Party User Management", () => {
 
     // Navigate to delete (govukButton with href renders with role="button")
     await page.getByRole("button", { name: "Delete user" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/delete`);
+    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/confirmation`);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Are you sure you want to delete");
 
     // Test accessibility
@@ -199,7 +199,7 @@ test.describe("Third Party User Management", () => {
 
     // Go back to delete and confirm Yes
     await page.getByRole("button", { name: "Delete user" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/delete`);
+    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/confirmation`);
     await page.locator('input[value="yes"]').check();
     await page.getByRole("button", { name: "Continue" }).click();
 
