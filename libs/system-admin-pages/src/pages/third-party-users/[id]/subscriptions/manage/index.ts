@@ -35,7 +35,10 @@ export const getHandler = async (req: Request, res: Response) => {
   if (!session.thirdPartySubscriptions || session.thirdPartySubscriptions.userId !== id) {
     const existing: Record<string, string> = {};
     for (const sub of user.subscriptions) {
-      existing[sub.listType] = sub.sensitivity;
+      const listType = mockListTypes.find((lt) => lt.id === sub.listTypeId);
+      if (listType) {
+        existing[listType.name] = sub.sensitivity;
+      }
     }
     session.thirdPartySubscriptions = { userId: id, pending: existing };
   }

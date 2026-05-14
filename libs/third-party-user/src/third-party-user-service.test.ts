@@ -7,6 +7,13 @@ import {
   updateThirdPartySubscriptions
 } from "./third-party-user-service.js";
 
+vi.mock("@hmcts/list-types-common", () => ({
+  mockListTypes: [
+    { id: 1, name: "CIVIL_DAILY_CAUSE_LIST" },
+    { id: 2, name: "FAMILY_DAILY_CAUSE_LIST" }
+  ]
+}));
+
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     thirdPartyUser: {
@@ -107,8 +114,8 @@ describe("third-party-user-service", () => {
       expect(mockTx.thirdPartySubscription.deleteMany).toHaveBeenCalledWith({ where: { thirdPartyUserId: "user-1" } });
       expect(mockTx.thirdPartySubscription.createMany).toHaveBeenCalledWith({
         data: [
-          { thirdPartyUserId: "user-1", listType: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" },
-          { thirdPartyUserId: "user-1", listType: "FAMILY_DAILY_CAUSE_LIST", sensitivity: "PRIVATE" }
+          { thirdPartyUserId: "user-1", listTypeId: 1, sensitivity: "PUBLIC" },
+          { thirdPartyUserId: "user-1", listTypeId: 2, sensitivity: "PRIVATE" }
         ]
       });
     });
@@ -125,7 +132,7 @@ describe("third-party-user-service", () => {
       await updateThirdPartySubscriptions("user-1", { CIVIL_DAILY_CAUSE_LIST: "UNSELECTED", FAMILY_DAILY_CAUSE_LIST: "PUBLIC" });
 
       expect(mockTx.thirdPartySubscription.createMany).toHaveBeenCalledWith({
-        data: [{ thirdPartyUserId: "user-1", listType: "FAMILY_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" }]
+        data: [{ thirdPartyUserId: "user-1", listTypeId: 2, sensitivity: "PUBLIC" }]
       });
     });
 
