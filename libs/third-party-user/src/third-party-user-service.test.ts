@@ -7,13 +7,6 @@ import {
   updateThirdPartySubscriptions
 } from "./third-party-user-service.js";
 
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    { id: 1, name: "CIVIL_DAILY_CAUSE_LIST" },
-    { id: 2, name: "FAMILY_DAILY_CAUSE_LIST" }
-  ]
-}));
-
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     thirdPartyUser: {
@@ -105,6 +98,12 @@ describe("third-party-user-service", () => {
         thirdPartySubscription: {
           deleteMany: vi.fn(),
           createMany: vi.fn()
+        },
+        listType: {
+          findMany: vi.fn().mockResolvedValue([
+            { id: 1, name: "CIVIL_DAILY_CAUSE_LIST" },
+            { id: 2, name: "FAMILY_DAILY_CAUSE_LIST" }
+          ])
         }
       };
       vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as never));
@@ -125,6 +124,9 @@ describe("third-party-user-service", () => {
         thirdPartySubscription: {
           deleteMany: vi.fn(),
           createMany: vi.fn()
+        },
+        listType: {
+          findMany: vi.fn().mockResolvedValue([{ id: 2, name: "FAMILY_DAILY_CAUSE_LIST" }])
         }
       };
       vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as never));
@@ -141,6 +143,9 @@ describe("third-party-user-service", () => {
         thirdPartySubscription: {
           deleteMany: vi.fn(),
           createMany: vi.fn()
+        },
+        listType: {
+          findMany: vi.fn().mockResolvedValue([])
         }
       };
       vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as never));

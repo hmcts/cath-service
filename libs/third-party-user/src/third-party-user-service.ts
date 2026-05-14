@@ -1,4 +1,3 @@
-import { mockListTypes } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function findAllThirdPartyUsers() {
@@ -26,17 +25,27 @@ export async function createThirdPartyUser(name: string) {
 }
 
 export async function updateThirdPartySubscriptions(userId: string, subscriptions: Record<string, string>) {
+  const entries = Object.entries(subscriptions).filter(([, sensitivity]) => sensitivity !== "UNSELECTED" && sensitivity !== "");
+
   await prisma.$transaction(async (tx) => {
     await tx.thirdPartySubscription.deleteMany({ where: { thirdPartyUserId: userId } });
 
-    const entries = Object.entries(subscriptions).filter(([, sensitivity]) => sensitivity !== "UNSELECTED" && sensitivity !== "");
     if (entries.length > 0) {
+      const listTypeNames = entries.map(([name]) => name);
+      const listTypes = await tx.listType.findMany({
+        where: { name: { in: listTypeNames } },
+        select: { id: true, name: true }
+      });
+      const listTypeIdByName = new Map(listTypes.map((lt) => [lt.name, lt.id]));
+
       await tx.thirdPartySubscription.createMany({
-        data: entries.map(([listTypeName, sensitivity]) => ({
-          thirdPartyUserId: userId,
-          listTypeId: mockListTypes.find((lt) => lt.name === listTypeName)!.id,
-          sensitivity
-        }))
+        data: entries
+          .filter(([listTypeName]) => listTypeIdByName.has(listTypeName))
+          .map(([listTypeName, sensitivity]) => ({
+            thirdPartyUserId: userId,
+            listTypeId: listTypeIdByName.get(listTypeName)!,
+            sensitivity
+          }))
       });
     }
   });
