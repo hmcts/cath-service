@@ -95,7 +95,9 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-users/${id}/subscriptions/manage?page=${nextPage}${lngParam ? `&lng=cy` : ""}`);
   }
 
-  const beforeSubscriptions = user.subscriptions.map((s) => `${s.listType}:${s.sensitivity}`).join(", ");
+  const beforeSubscriptions = user.subscriptions
+    .map((s) => `${mockListTypes.find((lt) => lt.id === s.listTypeId)?.name ?? s.listTypeId}:${s.sensitivity}`)
+    .join(", ");
   const afterSubscriptions = Object.entries(session.thirdPartySubscriptions.pending)
     .map(([lt, sens]) => `${lt}:${sens}`)
     .join(", ");
