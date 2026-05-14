@@ -8,10 +8,7 @@ import {
 } from "./third-party-user-service.js";
 
 vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    { id: 1, name: "CIVIL_DAILY_CAUSE_LIST" },
-    { id: 2, name: "FAMILY_DAILY_CAUSE_LIST" }
-  ]
+  getListTypeId: (name: string) => ({ CIVIL_DAILY_CAUSE_LIST: 1, FAMILY_DAILY_CAUSE_LIST: 2 })[name]
 }));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
