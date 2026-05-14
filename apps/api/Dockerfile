@@ -1,7 +1,6 @@
 # ---- Base image ----
 FROM hmctspublic.azurecr.io/base/node:22-alpine AS base
 USER root
-RUN apk add --no-cache chromium
 RUN npm install -g corepack
 RUN corepack enable
 COPY --chown=hmcts:hmcts . .

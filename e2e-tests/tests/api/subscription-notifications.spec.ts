@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";

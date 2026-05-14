@@ -123,14 +123,6 @@ interface SendNotificationsResult {
 export async function sendPublicationNotificationsForArtefact(params: SendNotificationsParams): Promise<SendNotificationsResult> {
   const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, locale, logPrefix = "[Publication]" } = params;
 
-  console.log(`${logPrefix} [debug] sendPublicationNotificationsForArtefact called:`, {
-    artefactId,
-    locationId,
-    listTypeId,
-    hasPdfFilePath: !!pdfFilePath,
-    pdfFilePath
-  });
-
   try {
     const locationIdNum = Number.parseInt(locationId, 10);
     if (Number.isNaN(locationIdNum)) {

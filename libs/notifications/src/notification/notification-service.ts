@@ -128,13 +128,6 @@ async function processUserNotification(
     const userName = buildUserName(subscription.user.firstName, subscription.user.surname);
     const emailData = await buildEmailTemplateData(event, userName, listTypeName, caseValue);
 
-    console.log("[notification-debug] processUserNotification: sending email:", {
-      userId: subscription.userId,
-      templateId: emailData.templateId,
-      hasPdfBuffer: !!emailData.pdfBuffer,
-      pdfBufferSize: emailData.pdfBuffer?.length
-    });
-
     const emailResult = await sendEmail({
       emailAddress: subscription.user.email!,
       templateParameters: emailData.templateParameters,

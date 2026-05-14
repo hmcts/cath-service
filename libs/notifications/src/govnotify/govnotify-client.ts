@@ -59,12 +59,6 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
   const notifyClient = new NotifyClient(getApiKey());
   const templateId = params.templateId || getTemplateId();
 
-  console.log("[notification-debug] sendEmailInternal:", {
-    templateId,
-    hasPdfBuffer: !!params.pdfBuffer,
-    pdfBufferSize: params.pdfBuffer?.length
-  });
-
   try {
     // Build personalisation with optional PDF link
     const personalisation: Record<string, unknown> = { ...params.templateParameters };
