@@ -121,7 +121,7 @@ test.describe("Third Party User Management", () => {
 
     // Navigate to subscriptions (govukButton with href renders with role="button")
     await page.getByRole("button", { name: "Manage subscriptions" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions**`);
+    await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions/manage**`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage subscriptions");
 
     // Test Welsh on subscriptions page
