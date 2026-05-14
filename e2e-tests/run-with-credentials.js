@@ -97,23 +97,31 @@ async function loadCredentialsFromAzure() {
   }
 }
 
+function credentialsAlreadyInEnvironment() {
+  return Object.values(SECRET_MAPPINGS).every((envVar) => !!process.env[envVar]);
+}
+
 async function runPlaywright() {
   const args = process.argv.slice(2);
 
-  // Load credentials from Azure Key Vault (works both locally and in CI via workload identity)
   console.log(process.env.CI === 'true' ? 'ℹ️  Running in CI' : 'ℹ️  Running locally');
   console.log('');
 
-  try {
-    const credentials = await loadCredentialsFromAzure();
+  if (credentialsAlreadyInEnvironment()) {
+    console.log('✅ Test credentials already present in environment, skipping Key Vault fetch');
+    console.log('');
+  } else {
+    try {
+      const credentials = await loadCredentialsFromAzure();
 
-    // Set credentials as environment variables for Playwright
-    for (const [key, value] of Object.entries(credentials)) {
-      process.env[key] = value;
+      // Set credentials as environment variables for Playwright
+      for (const [key, value] of Object.entries(credentials)) {
+        process.env[key] = value;
+      }
+    } catch (error) {
+      console.error('Failed to load credentials from Key Vault:', error.message);
+      process.exit(1);
     }
-  } catch (error) {
-    console.error('Failed to load credentials from Key Vault:', error.message);
-    process.exit(1);
   }
 
   // Spawn Playwright with all environment variables
