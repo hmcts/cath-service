@@ -5,6 +5,7 @@ nodejs:
   ingressHost: cath-api.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-api:latest'
   environment:
+    NODE_ENV: 'production'
     POSTGRES_DATABASE: cath
   keyVaults:
     cath:

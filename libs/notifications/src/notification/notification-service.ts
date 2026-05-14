@@ -15,11 +15,12 @@ import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
-import { type CaseSummary, getListTypeName, type ListTypeName } from "@hmcts/list-types-common";
+import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
+import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
@@ -45,7 +46,7 @@ interface EmailBuilderConfig {
 const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
 const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
 
-const EMAIL_BUILDER_REGISTRY: Partial<Record<ListTypeName, EmailBuilderConfig>> = {
+const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
     extract: extractCivilFamilySummary as SummaryExtractor,
     format: formatCivilFamilySummaryForEmail
@@ -96,6 +97,11 @@ interface EmailTemplateData {
 }
 
 export async function sendPublicationNotifications(event: PublicationEvent): Promise<NotificationResult> {
+  const listTypeName =
+    event.listTypeId === undefined
+      ? undefined
+      : (await prisma.listType.findUnique({ where: { id: event.listTypeId }, select: { name: true } }).catch(() => null))?.name;
+
   const validation = validatePublicationEvent(event);
   if (!validation.valid) {
     throw new Error(`Invalid publication event: ${validation.errors.join(", ")}`);
@@ -112,12 +118,12 @@ export async function sendPublicationNotifications(event: PublicationEvent): Pro
     return { totalSubscriptions: 0, sent: 0, failed: 0, skipped: 0, errors: [] };
   }
 
-  const results = await Promise.allSettled(subscriptions.map((subscription) => processUserNotification(subscription, event)));
+  const results = await Promise.allSettled(subscriptions.map((subscription) => processUserNotification(subscription, event, listTypeName)));
 
   return aggregateResults(results, subscriptions.length);
 }
 
-async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent): Promise<UserNotificationResult> {
+async function processUserNotification(subscription: SubscriptionWithUser, event: PublicationEvent, listTypeName?: string): Promise<UserNotificationResult> {
   try {
     const validationResult = await validateUserEmail(subscription, event.publicationId);
     if (validationResult) {
@@ -132,7 +138,7 @@ async function processUserNotification(subscription: SubscriptionWithUser, event
     });
 
     const userName = buildUserName(subscription.user.firstName, subscription.user.surname);
-    const emailData = await buildEmailTemplateData(event, userName);
+    const emailData = await buildEmailTemplateData(event, userName, listTypeName);
 
     const emailResult = await sendEmail({
       emailAddress: subscription.user.email!,
@@ -175,8 +181,7 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
   return { status: "skipped", error: `User ${subscription.userId}: ${reason}` };
 }
 
-async function buildEmailTemplateData(event: PublicationEvent, userName: string): Promise<EmailTemplateData> {
-  const listTypeName = event.listTypeId !== undefined ? getListTypeName(event.listTypeId) : undefined;
+async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {

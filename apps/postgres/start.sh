@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
+echo "Starting CaTH Postgres migration runner..."
 echo "Loading /mnt/secrets..."
 
 if [ -d "/mnt/secrets" ]; then
@@ -26,6 +27,10 @@ if [ -d "/mnt/secrets" ]; then
     fi
   done
 fi
+
+echo "Resolving any failed migrations..."
+printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;" | \
+  npx prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
 
 echo "Running database migrations..."
 npx prisma migrate deploy --config=./prisma.config.ts

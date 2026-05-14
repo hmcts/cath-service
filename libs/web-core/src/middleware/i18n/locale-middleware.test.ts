@@ -128,7 +128,10 @@ describe("translationMiddleware", () => {
 
   it("should inject English translations into res.locals", () => {
     const middleware = translationMiddleware(translations);
-    const req = { query: {} } as Request;
+    const req = {
+      query: {},
+      isAuthenticated: () => false
+    } as unknown as Request;
     const res = {
       locals: { locale: "en" }
     } as unknown as Response;
@@ -145,7 +148,10 @@ describe("translationMiddleware", () => {
 
   it("should inject Welsh translations into res.locals", () => {
     const middleware = translationMiddleware(translations);
-    const req = { query: {} } as Request;
+    const req = {
+      query: {},
+      isAuthenticated: () => false
+    } as unknown as Request;
     const res = {
       locals: { locale: "cy" }
     } as unknown as Response;
@@ -162,7 +168,10 @@ describe("translationMiddleware", () => {
 
   it("should handle missing locale gracefully", () => {
     const middleware = translationMiddleware(translations);
-    const req = { query: {} } as Request;
+    const req = {
+      query: {},
+      isAuthenticated: () => false
+    } as unknown as Request;
     const res = {
       locals: {}
     } as unknown as Response;
@@ -177,7 +186,10 @@ describe("translationMiddleware", () => {
 
   it("should preserve existing query parameters when switching language", () => {
     const middleware = translationMiddleware(translations);
-    const req = { query: { locationId: "9", filter: "active" } } as unknown as Request;
+    const req = {
+      query: { locationId: "9", filter: "active" },
+      isAuthenticated: () => false
+    } as unknown as Request;
     const res = {
       locals: { locale: "en" }
     } as unknown as Response;
@@ -188,6 +200,102 @@ describe("translationMiddleware", () => {
     expect(res.locals.languageToggle.link).toContain("locationId=9");
     expect(res.locals.languageToggle.link).toContain("filter=active");
     expect(res.locals.languageToggle.link).toContain("lng=cy");
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should not set language toggle for SYSTEM_ADMIN users", () => {
+    const middleware = translationMiddleware(translations);
+    const req = {
+      query: {},
+      isAuthenticated: () => true,
+      user: { role: "SYSTEM_ADMIN" }
+    } as unknown as Request;
+    const res = {
+      locals: { locale: "en" }
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.welcome).toBe("Welcome");
+    expect(res.locals.languageToggle).toBeUndefined();
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should not set language toggle for INTERNAL_ADMIN_CTSC users", () => {
+    const middleware = translationMiddleware(translations);
+    const req = {
+      query: {},
+      isAuthenticated: () => true,
+      user: { role: "INTERNAL_ADMIN_CTSC" }
+    } as unknown as Request;
+    const res = {
+      locals: { locale: "en" }
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.welcome).toBe("Welcome");
+    expect(res.locals.languageToggle).toBeUndefined();
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should not set language toggle for INTERNAL_ADMIN_LOCAL users", () => {
+    const middleware = translationMiddleware(translations);
+    const req = {
+      query: {},
+      isAuthenticated: () => true,
+      user: { role: "INTERNAL_ADMIN_LOCAL" }
+    } as unknown as Request;
+    const res = {
+      locals: { locale: "en" }
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.welcome).toBe("Welcome");
+    expect(res.locals.languageToggle).toBeUndefined();
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should set language toggle for VERIFIED users", () => {
+    const middleware = translationMiddleware(translations);
+    const req = {
+      query: {},
+      isAuthenticated: () => true,
+      user: { role: "VERIFIED" }
+    } as unknown as Request;
+    const res = {
+      locals: { locale: "en" }
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.welcome).toBe("Welcome");
+    expect(res.locals.languageToggle).toBeDefined();
+    expect(res.locals.languageToggle.link).toBe("?lng=cy");
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should set language toggle for unauthenticated users", () => {
+    const middleware = translationMiddleware(translations);
+    const req = {
+      query: {},
+      isAuthenticated: () => false
+    } as unknown as Request;
+    const res = {
+      locals: { locale: "en" }
+    } as unknown as Response;
+    const next = vi.fn();
+
+    middleware(req, res, next);
+
+    expect(res.locals.welcome).toBe("Welcome");
+    expect(res.locals.languageToggle).toBeDefined();
+    expect(res.locals.languageToggle.link).toBe("?lng=cy");
     expect(next).toHaveBeenCalled();
   });
 });

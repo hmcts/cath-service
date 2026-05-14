@@ -40,8 +40,8 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .last-successful-sha
-          key: last-successful-docker-build-sha
-          restore-keys: last-successful-docker-build-sha
+          key: last-successful-docker-build-sha-${{ inputs.change-id }}
+          restore-keys: last-successful-docker-build-sha-${{ inputs.change-id }}
 
       - name: Read SHA
         id: get-sha
@@ -147,3 +147,18 @@ jobs:
           image-tags: |
             ${{ steps.tags.outputs.tag1 }}
             ${{ steps.tags.outputs.tag2 }}
+
+  save-build-sha:
+    name: Save Build SHA
+    runs-on: ubuntu-latest
+    needs: [build-and-publish, generate-metadata]
+    if: always() && (needs.build-and-publish.result == 'success' || needs.build-and-publish.result == 'skipped')
+    steps:
+      - name: Save SHA to file
+        run: echo "${{ github.sha }}" > .last-successful-sha
+
+      - name: Cache the SHA
+        uses: actions/cache/save@v5
+        with:
+          path: .last-successful-sha
+          key: last-successful-docker-build-sha-${{ inputs.change-id }}

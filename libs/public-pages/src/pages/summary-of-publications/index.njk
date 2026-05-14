@@ -33,16 +33,16 @@
           <li style="margin-bottom: 15px;">
             {% if publication.isFlatFile %}
               <a href="/hearing-lists/{{ publication.locationId }}/{{ publication.id }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
-                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+                {{ publication.displayName }} - {{ publication.languageLabel }}
               </a>
               <span> (opens in a new window)</span>
             {% elif publication.urlPath %}
               <a href="/{{ publication.urlPath }}?artefactId={{ publication.id }}" class="govuk-link">
-                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+                {{ publication.displayName }} - {{ publication.languageLabel }}
               </a>
             {% else %}
               <a href="/publication/{{ publication.id }}" class="govuk-link">
-                {{ publication.listTypeName }} {{ publication.formattedDate }} - {{ publication.languageLabel }}
+                {{ publication.displayName }} - {{ publication.languageLabel }}
               </a>
             {% endif %}
           </li>
