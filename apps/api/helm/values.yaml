@@ -7,6 +7,7 @@ nodejs:
   environment:
     NODE_ENV: 'production'
     POSTGRES_DATABASE: cath
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
   keyVaults:
     cath:
       secrets:
