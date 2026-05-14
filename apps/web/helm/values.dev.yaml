@@ -1,6 +1,6 @@
 # Local Development Helm Values
-# This file is automatically used when running locally (not in Kubernetes/Azure)
-# It references the pip-ss-kv-stg Key Vault with -dev suffixed secrets
+# This file is used when LOCAL_DEV=true is set in .env (local development only)
+# It references the cath Key Vault with -dev suffixed SSO secrets
 # For pipeline deployments, see values.yaml
 
 nodejs:
@@ -21,8 +21,8 @@ nodejs:
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
-    # Local development uses pip-ss-kv-stg with -dev suffixed secrets
-    pip-ss-kv-stg:
+    # Local development uses cath Key Vault with -dev suffixed SSO secrets
+    cath:
       secrets:
         # SSO secrets for local development
         - name: sso-client-id-dev
