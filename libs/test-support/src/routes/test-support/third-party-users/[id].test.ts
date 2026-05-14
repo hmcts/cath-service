@@ -39,9 +39,7 @@ describe("third-party-users/[id] routes", () => {
         id: "user1",
         name: "Test Corp",
         createdAt: new Date(),
-        subscriptions: [
-          { id: "sub1", listType: "LIST_A", sensitivity: "PUBLIC" }
-        ]
+        subscriptions: [{ id: "sub1", listType: "LIST_A", sensitivity: "PUBLIC" }]
       };
       vi.mocked(prisma.thirdPartyUser.findUnique).mockResolvedValue(mockUser as any);
 
