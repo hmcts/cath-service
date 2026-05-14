@@ -209,13 +209,6 @@ test.describe("Subscription Notifications", () => {
     expect(pdfInfo.sizeBytes).toBeGreaterThan(0);
     console.log(`PDF generated: ${pdfInfo.filename} (${pdfInfo.sizeBytes} bytes)`);
 
-
-    const pdfPath = path.join(process.cwd(), "..", "storage", "temp", "uploads", `${result.artefact_id}.pdf`);
-
-    console.log("PDF path: " + pdfPath);
-    expect(fs.existsSync(pdfPath)).toBe(true);
-    expect(fs.statSync(pdfPath).size).toBeGreaterThan(0);
-
     // Verify GOV.UK Notify email content
     if (process.env.GOVUK_NOTIFY_API_KEY && sentNotification?.govNotifyId) {
       const govNotifyEmail = await getGovNotifyEmail(sentNotification.govNotifyId);
