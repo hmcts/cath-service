@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler } from "./index.js";
 
-describe("third-party-users subscriptions confirmation page", () => {
+describe("third-party-users subscriptions success page", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 
@@ -13,18 +13,18 @@ describe("third-party-users subscriptions confirmation page", () => {
   });
 
   describe("getHandler", () => {
-    it("should render the confirmation page in English", async () => {
+    it("should render the success page in English", async () => {
       // Act
       await getHandler(req as Request, res as Response);
 
       // Assert
       expect(res.render).toHaveBeenCalledWith(
-        "third-party-users/[id]/subscriptions/confirmation/index",
+        "third-party-users/[id]/subscriptions/success/index",
         expect.objectContaining({ panelTitle: "Third Party Subscriptions Updated" })
       );
     });
 
-    it("should render the confirmation page in Welsh", async () => {
+    it("should render the success page in Welsh", async () => {
       // Arrange
       req.query = { lng: "cy" };
 
@@ -33,7 +33,7 @@ describe("third-party-users subscriptions confirmation page", () => {
 
       // Assert
       expect(res.render).toHaveBeenCalledWith(
-        "third-party-users/[id]/subscriptions/confirmation/index",
+        "third-party-users/[id]/subscriptions/success/index",
         expect.objectContaining({ panelTitle: "Diweddarwyd Tanysgrifiadau Trydydd Parti" })
       );
     });

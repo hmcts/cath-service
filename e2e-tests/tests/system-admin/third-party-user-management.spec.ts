@@ -157,7 +157,7 @@ test.describe("Third Party User Management", () => {
     }
 
     // Check confirmation
-    await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions/confirmation`);
+    await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions/success`);
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third Party Subscriptions Updated");
     await expect(page.getByRole("link", { name: "Manage third party users" })).toBeVisible();
 

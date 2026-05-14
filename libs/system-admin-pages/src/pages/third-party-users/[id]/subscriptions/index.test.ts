@@ -163,7 +163,7 @@ describe("third-party-users subscriptions page", () => {
 
       // Assert
       expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-1", { CIVIL_DAILY_CAUSE_LIST: "PUBLIC", FAMILY_DAILY_CAUSE_LIST: "PRIVATE" });
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/subscriptions/confirmation");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/subscriptions/success");
     });
 
     it("should set audit metadata on save", async () => {

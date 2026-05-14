@@ -107,7 +107,7 @@ export const postHandler = async (req: Request, res: Response) => {
     entityInfo: `User: ${user.name}, Before: [${beforeSubscriptions}], After: [${afterSubscriptions}]`
   };
 
-  res.redirect(`/third-party-users/${id}/subscriptions/confirmation${lngParam}`);
+  res.redirect(`/third-party-users/${id}/subscriptions/success${lngParam}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
