@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
@@ -11,8 +13,6 @@ import {
   waitForNotifications
 } from "../../utils/notification-helpers.js";
 import { checkFlatFileExists, deleteTestArtefacts, type FlatFileInfo } from "../../utils/test-support-api.js";
-import path from "node:path";
-import fs from "node:fs";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
