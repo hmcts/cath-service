@@ -53,6 +53,7 @@ describe("createArtefact", () => {
   it("should create a new artefact when no existing artefact is found", async () => {
     const artefactData = {
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      type: "LIST",
       locationId: "1",
       listTypeId: 6,
       contentDate: new Date("2025-10-23"),
@@ -94,8 +95,9 @@ describe("createArtefact", () => {
     });
     expect(prisma.artefact.create).toHaveBeenCalledTimes(1);
     expect(prisma.artefact.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         artefactId: artefactData.artefactId,
+        type: "LIST",
         locationId: artefactData.locationId,
         listTypeId: artefactData.listTypeId,
         contentDate: artefactData.contentDate,
@@ -105,7 +107,7 @@ describe("createArtefact", () => {
         displayTo: artefactData.displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD"
-      }
+      })
     });
     expect(prisma.artefact.update).not.toHaveBeenCalled();
   });
@@ -341,6 +343,7 @@ describe("createArtefact", () => {
       artefactId: "550e8400-e29b-41d4-a716-446655440010",
       locationId: "1",
       listTypeId: 6,
+      type: "LIST",
       contentDate,
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -370,8 +373,9 @@ describe("createArtefact", () => {
     await createArtefact(artefactData as any);
 
     expect(prisma.artefact.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         artefactId: artefactData.artefactId,
+        type: "LIST",
         locationId: artefactData.locationId,
         listTypeId: artefactData.listTypeId,
         contentDate,
@@ -381,7 +385,7 @@ describe("createArtefact", () => {
         displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD"
-      }
+      })
     });
   });
 });

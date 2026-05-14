@@ -65,6 +65,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
   const artefact = await prisma.artefact.create({
     data: {
       artefactId: data.artefactId,
+      type: data.type,
       locationId: data.locationId,
       listTypeId: data.listTypeId,
       contentDate: data.contentDate,
@@ -74,7 +75,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
       displayTo: data.displayTo,
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
-      noMatch: data.noMatch
+      noMatch: data.noMatch ?? false
     }
   });
   return artefact.artefactId;
@@ -91,6 +92,7 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
 
   return {
     artefactId: artefact.artefactId,
+    type: artefact.type,
     locationId: artefact.locationId,
     listTypeId: artefact.listTypeId,
     contentDate: artefact.contentDate,
@@ -118,6 +120,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
   return artefacts.map(
     (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
+      type: artefact.type,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,
@@ -145,6 +148,7 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
   return artefacts.map(
     (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
+      type: artefact.type,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,

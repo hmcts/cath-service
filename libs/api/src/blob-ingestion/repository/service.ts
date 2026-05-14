@@ -65,6 +65,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     // Create artefact in database (returns actual artefact ID - either new or existing)
     const artefactId = await createArtefact({
       artefactId: newArtefactId,
+      type: "LIST",
       locationId: request.court_id,
       listTypeId: validation.listTypeId,
       contentDate: new Date(request.content_date),

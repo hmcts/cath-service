@@ -24,7 +24,22 @@ jobs:
       checks: write
       pull-requests: write
       actions: read
-      id-token: write
+    env:
+      SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
+      SSO_TEST_SYSTEM_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_PWD }}
+      SSO_TEST_LOCAL_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_USER }}
+      SSO_TEST_LOCAL_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_PWD }}
+      SSO_TEST_CTSC_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_USER }}
+      SSO_TEST_CTSC_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_PWD }}
+      SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
+      SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
+      CFT_VALID_TEST_ACCOUNT: ${{ secrets.CFT_VALID_TEST_ACCOUNT }}
+      CFT_VALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_VALID_TEST_ACCOUNT_PASSWORD }}
+      CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
+      CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
+      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
+      AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
+      AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
 
     steps:
       - name: Checkout code
@@ -77,11 +92,6 @@ jobs:
             echo "CATH_SERVICE_API_URL=${API_URL}" >> $GITHUB_ENV
             echo "API URL: ${API_URL}"
           fi
-
-      - name: Azure login
-        uses: azure/login@v3
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
       - name: Run E2E tests
         id: e2e-tests
