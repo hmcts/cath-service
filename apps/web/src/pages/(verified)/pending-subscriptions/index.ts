@@ -1,0 +1,139 @@
+import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
+import { getLocationsByIds } from "@hmcts/location";
+import { getAllSubscriptionsByUserId, replaceUserSubscriptions } from "@hmcts/subscriptions";
+import { pendingSubscriptionsCy as cy, pendingSubscriptionsEn as en } from "@hmcts/verified-pages";
+import type { Request, RequestHandler, Response } from "express";
+
+const getHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+
+  const pendingLocationIds = req.session.emailSubscriptions?.pendingSubscriptions || [];
+
+  if (pendingLocationIds.length === 0) {
+    if (!res.locals.navigation) {
+      res.locals.navigation = {};
+    }
+    res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+    return res.render("pending-subscriptions/index", {
+      ...t,
+      errors: {
+        titleText: t.errorSummaryTitle,
+        errorList: [{ text: t.errorAtLeastOne, href: "#" }]
+      },
+      locations: [],
+      showBackToSearch: true
+    });
+  }
+
+  const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+  const locations = await getLocationsByIds(locationIds);
+
+  const pendingLocations = locations.map((location) => ({
+    locationId: location.locationId.toString(),
+    name: locale === "cy" ? location.welshName : location.name
+  }));
+
+  if (!res.locals.navigation) {
+    res.locals.navigation = {};
+  }
+  res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+  const isPlural = pendingLocations.length > 1;
+
+  res.render("pending-subscriptions/index", {
+    ...t,
+    locations: pendingLocations,
+    isPlural,
+    confirmButton: isPlural ? t.confirmButtonPlural : t.confirmButton
+  });
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+
+  if (!req.user?.id) {
+    return res.redirect("/sign-in");
+  }
+
+  const userId = req.user.id;
+  const { action, locationId } = req.body;
+
+  const pendingLocationIds = req.session.emailSubscriptions?.pendingSubscriptions || [];
+
+  if (action === "remove" && locationId) {
+    req.session.emailSubscriptions.pendingSubscriptions = pendingLocationIds.filter((id: string) => id !== locationId);
+
+    if (req.session.emailSubscriptions.pendingSubscriptions.length === 0) {
+      if (!res.locals.navigation) {
+        res.locals.navigation = {};
+      }
+      res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+      return res.render("pending-subscriptions/index", {
+        ...t,
+        errors: {
+          titleText: t.errorSummaryTitle,
+          errorList: [{ text: t.errorAtLeastOne, href: "#" }]
+        },
+        locations: [],
+        showBackToSearch: true
+      });
+    }
+
+    return res.redirect("/pending-subscriptions");
+  }
+
+  if (action === "confirm") {
+    if (pendingLocationIds.length === 0) {
+      return res.redirect("/location-name-search");
+    }
+
+    try {
+      const existingSubscriptions = await getAllSubscriptionsByUserId(userId);
+      const existingLocationIds = existingSubscriptions.map((sub) => sub.locationId.toString());
+      const allLocationIds = [...new Set([...existingLocationIds, ...pendingLocationIds])];
+
+      await replaceUserSubscriptions(userId, allLocationIds);
+
+      req.session.emailSubscriptions.confirmationComplete = true;
+      req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
+      delete req.session.emailSubscriptions.pendingSubscriptions;
+
+      res.redirect("/subscription-confirmed");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      const locationIds = pendingLocationIds.map((id: string) => Number.parseInt(id, 10));
+      const locations = await getLocationsByIds(locationIds);
+
+      const pendingLocations = locations.map((location) => ({
+        locationId: location.locationId.toString(),
+        name: locale === "cy" ? location.welshName : location.name
+      }));
+
+      if (!res.locals.navigation) {
+        res.locals.navigation = {};
+      }
+      res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
+
+      const isPlural = pendingLocations.length > 1;
+
+      res.render("pending-subscriptions/index", {
+        ...t,
+        errors: {
+          titleText: t.errorSummaryTitle,
+          errorList: [{ text: errorMessage }]
+        },
+        locations: pendingLocations,
+        isPlural,
+        confirmButton: isPlural ? t.confirmButtonPlural : t.confirmButton
+      });
+    }
+  }
+};
+
+export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
+export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];

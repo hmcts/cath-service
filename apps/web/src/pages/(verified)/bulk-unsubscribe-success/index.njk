@@ -1,0 +1,31 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block pageTitle %}
+  {{ successTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+<div class="parent-box">
+
+  <div class="govuk-panel govuk-panel--confirmation" role="status" aria-live="polite">
+    <h1 class="govuk-panel__title">
+      {{ successHeading }}
+    </h1>
+  </div>
+
+  <p class="govuk-body">{{ successIntro }}</p>
+
+  <ul class="govuk-list govuk-list--bullet">
+    <li>
+      <a href="{{ linkAddSubscription }}" class="govuk-link">{{ successLinkAddSubscription }}</a>
+    </li>
+    <li>
+      <a href="{{ linkManageSubscriptions }}" class="govuk-link">{{ successLinkManageSubscriptions }}</a>
+    </li>
+    <li>
+      <a href="{{ linkFindCourt }}" class="govuk-link">{{ successLinkFindCourt }}</a>
+    </li>
+  </ul>
+
+</div>
+{% endblock %}

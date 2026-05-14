@@ -14,11 +14,11 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts-cft/cloud-native-platform": "2.1.0",
+    "@hmcts-cft/simple-router": "2.1.0",
     "@hmcts/blob-ingestion": "workspace:*",
-    "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
-    "@hmcts/simple-router": "workspace:*",
     "@hmcts/test-support": "workspace:*",
     "compression": "1.8.1",
     "config": "4.4.1",

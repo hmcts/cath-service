@@ -1,0 +1,61 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if error %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: error
+          }
+        ]
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <p class="govuk-body">
+      <a href="{{ factLinkUrl }}" class="govuk-link">{{ factLinkText }}</a> {{ factAdditionalText }}
+    </p>
+
+    {% if cautionMessage %}
+      <div class="govuk-body">{{ cautionMessage | safe }}</div>
+    {% endif %}
+
+    {% if publications.length > 0 %}
+      <p class="govuk-body">{{ selectListMessage }}</p>
+      <ul class="govuk-list">
+        {% for publication in publications %}
+          <li style="margin-bottom: 15px;">
+            {% if publication.isFlatFile %}
+              <a href="/hearing-lists/{{ publication.locationId }}/{{ publication.id }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+                {{ publication.displayName }} - {{ publication.languageLabel }}
+              </a>
+              <span> (opens in a new window)</span>
+            {% elif publication.urlPath %}
+              <a href="/{{ publication.urlPath }}?artefactId={{ publication.id }}" class="govuk-link">
+                {{ publication.displayName }} - {{ publication.languageLabel }}
+              </a>
+            {% else %}
+              <a href="/publication/{{ publication.id }}" class="govuk-link">
+                {{ publication.displayName }} - {{ publication.languageLabel }}
+              </a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% if noListMessage %}
+        <div class="govuk-body">{{ noListMessage | safe }}</div>
+      {% elif not error %}
+        <p class="govuk-body">{{ noPublicationsMessage }}</p>
+      {% endif %}
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

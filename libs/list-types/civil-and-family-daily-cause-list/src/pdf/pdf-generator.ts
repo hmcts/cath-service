@@ -34,8 +34,8 @@ export async function generateCauseListPdf(options: PdfGenerationOptions): Promi
 
     const translations = await loadTranslations(
       options.locale,
-      () => import("../pages/en.js"),
-      () => import("../pages/cy.js")
+      () => import("../locales/en.js"),
+      () => import("../locales/cy.js")
     );
 
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";

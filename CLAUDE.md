@@ -94,12 +94,15 @@ The web and API applications use explicit imports to register modules, enabling 
 
 1. **Create module structure**:
 ```bash
-mkdir -p libs/my-feature/src/pages      # Page controllers and templates
-mkdir -p libs/my-feature/src/routes     # API routes (optional)
-mkdir -p libs/my-feature/src/locales    # Shared translation files (optional)
-mkdir -p libs/my-feature/src/views      # Shared templates (optional)
-mkdir -p libs/my-feature/src/assets/css # Module styles (optional)
-mkdir -p libs/my-feature/src/assets/js  # Module scripts (optional)
+mkdir -p libs/my-feature/src/my-feature-page  # Content for pages (cy.ts, en.ts)
+mkdir -p libs/my-feature/src/routes           # API routes (optional)
+mkdir -p libs/my-feature/src/locales          # Shared translation files (optional)
+mkdir -p libs/my-feature/src/views            # Shared templates (optional)
+mkdir -p libs/my-feature/src/assets/css       # Module styles (optional)
+mkdir -p libs/my-feature/src/assets/js        # Module scripts (optional)
+
+# Pages live in apps, not libs
+mkdir -p apps/web/src/pages/my-feature-page   # Page controllers and templates
 ```
 
 2. **Create src/config.ts for module configuration**:
@@ -110,19 +113,27 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Module configuration for app registration
-export const pageRoutes = { path: path.join(__dirname, "pages") };
-export const apiRoutes = { path: path.join(__dirname, "routes") };
+// Module configuration for asset bundling
+export const moduleRoot = __dirname;
 export const assets = path.join(__dirname, "assets/");
+export const apiRoutes = { path: path.join(__dirname, "routes") }; // Only if you have API routes
 ```
 
-**Create src/index.ts for business logic exports**:
+**Create src/index.ts for business logic and content exports**:
 ```typescript
 // Business logic exports
 export * from "./my-feature/service.js";
+
+// Page content exports (for use in apps/web)
+export { cy as myFeaturePageCy } from "./my-feature-page/cy.js";
+export { en as myFeaturePageEn } from "./my-feature-page/en.js";
 ```
 
-**IMPORTANT**: Config exports (pageRoutes, apiRoutes, assets) must be in a separate `config.ts` file to avoid circular dependencies during Prisma client generation. Apps import config using the `/config` path (e.g., `@hmcts/my-feature/config`).
+**IMPORTANT**: 
+- Pages (controllers and templates) now live in `apps/web/src/pages/`
+- Content (cy.ts, en.ts) stays in `libs/*/src/` and is exported from index.ts
+- Config exports (moduleRoot, assets, apiRoutes) are in `config.ts` for asset bundling
+- Apps import config using the `/config` path (e.g., `@hmcts/my-feature/config`)
 
 3. **Package.json requirements**:
 ```json
@@ -141,22 +152,18 @@ export * from "./my-feature/service.js";
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
-  },
-  "peerDependencies": {
-    "express": "^5.2.0"
   }
 }
 ```
 
-**Note**: The `build:nunjucks` script is required if your module contains Nunjucks templates in the `pages/` directory.
+**Note**: Page templates (.njk files) are now in `apps/web/src/pages/` and are handled by the web app's build process, not the lib's build.
 
 3. **Create tsconfig.json**:
 ```json
@@ -188,19 +195,29 @@ export * from "./my-feature/service.js";
 
 ```typescript
 // apps/web/src/app.ts
-import { pageRoutes as myFeaturePages } from "@hmcts/my-feature/config";
+import { moduleRoot as myFeatureModuleRoot } from "@hmcts/my-feature/config";
 
-app.use(await createGovukFrontend(app, [myFeaturePages.path], { /* options */ }));
-app.use(await createSimpleRouter(myFeaturePages));
+// Add module to modulePaths for Nunjucks template discovery
+const modulePaths = [
+  __dirname,
+  webCoreModuleRoot,
+  myFeatureModuleRoot,
+  // ... other modules
+];
+
+await configureGovuk(app, modulePaths, { /* options */ });
+
+// Pages are auto-discovered from apps/web/src/pages/ - no manual registration needed
+// Just create your page at apps/web/src/pages/my-feature-page/index.ts
 
 // apps/web/vite.config.ts
 import { assets as myFeatureAssets } from "@hmcts/my-feature/config";
 const baseConfig = createBaseViteConfig([
   path.join(__dirname, "src"),
-  myFeatureAssets
+  myFeatureAssets  // Only if your lib has assets
 ]);
 
-// apps/api/src/app.ts
+// apps/api/src/app.ts (only if you have API routes)
 import { apiRoutes as myFeatureRoutes } from "@hmcts/my-feature/config";
 app.use(await createSimpleRouter(myFeatureRoutes));
 ```
@@ -212,15 +229,13 @@ libs/my-feature/
 ├── package.json
 ├── tsconfig.json
 └── src/
-    ├── routes/                 # API routes (auto-discovered)
-    │   └── my-api.ts           # API route file (if needed)
-    ├── pages/                  # Page routes (auto-discovered)
-    │   └── my-page/            # /my-page/ page
-    │       ├── cy.ts           # Page Welsh content
-    │       ├── en.ts           # Page English content
-    │       ├── index.ts        # Controller with GET/POST exports
-    │       ├── index.test.ts   # Unit tests for controller
-    │       └── index.njk       # Nunjucks template
+    ├── config.ts               # Module configuration (moduleRoot, assets)
+    ├── index.ts                # Business logic + content exports
+    ├── routes/                 # API routes (optional, auto-discovered)
+    │   └── my-api.ts           # API route file
+    ├── my-feature-page/        # Page content (exported from index.ts)
+    │   ├── cy.ts               # Welsh content
+    │   └── en.ts               # English content
     ├── locales/                # Shared i18n translations (optional)
     │   ├── en.ts               # English translations
     │   └── cy.ts               # Welsh translations
@@ -231,9 +246,25 @@ libs/my-feature/
         │   └── module.scss
         └── js/
             └── module.ts
+
+apps/web/src/pages/
+├── (auth)/                     # Route group (no URL prefix)
+├── (core)/                     # Route group (no URL prefix)
+├── my-feature-page/            # Regular route (/my-feature-page)
+│   ├── index.ts                # Controller (imports content from lib)
+│   ├── index.njk               # Nunjucks template
+│   └── index.test.ts           # Unit tests
+└── admin/                      # Regular directory (/admin/*)
+    └── dashboard/              # /admin/dashboard
 ```
 
-**NOTE**: Pages are registered through explicit imports in `apps/web/src/app.ts`. Routes are created based on file names within the `pages/` directory. For example, `my-page.ts` becomes `/my-page`. To create nested routes, use subdirectories (e.g., `pages/admin/my-page.ts` becomes `/admin/my-page`).
+**Architecture Notes**:
+- **Route Groups**: Directories with parentheses like `(auth)` organize code without affecting URLs
+- **Regular Directories**: Directories like `admin/` create URL prefixes (`/admin/*`)
+- **Content Separation**: cy.ts/en.ts stay in libs, controllers in apps import them
+- **Auto-Discovery**: All pages in `apps/web/src/pages/` are automatically registered
+- **Example**: `apps/web/src/pages/my-feature-page/index.ts` becomes `/my-feature-page`
+- **Nested Routes**: Use subdirectories (e.g., `admin/dashboard/` becomes `/admin/dashboard`)
 
 ## Database Schema Management
 
@@ -303,13 +334,15 @@ const location = await prisma.location.findMany();
 ### Page Controller Pattern
 
 ```typescript
-// libs/[module]/src/pages/[page-name].ts
+// apps/web/src/pages/my-page/index.ts
 import type { Request, Response } from "express";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
+import { myPageCy as cy, myPageEn as en } from "@hmcts/my-feature";
 
 export const GET = async (_req: Request, res: Response) => {
-  res.render("my-page", { en, cy });
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  
+  res.render("my-page", { en, cy, t });
 };
 
 export const POST = async (req: Request, res: Response) => {
@@ -317,10 +350,29 @@ export const POST = async (req: Request, res: Response) => {
 };
 ```
 
+**Content files in libs**:
+```typescript
+// libs/my-feature/src/my-page/cy.ts
+export const cy = {
+  title: "Teitl y Dudalen",
+  heading: "Pennawd"
+};
+
+// libs/my-feature/src/my-page/en.ts
+export const en = {
+  title: "Page Title",
+  heading: "Heading"
+};
+
+// libs/my-feature/src/index.ts
+export { cy as myPageCy } from "./my-page/cy.js";
+export { en as myPageEn } from "./my-page/en.js";
+```
+
 ### Nunjucks Template Pattern
 
 ```html
-<!-- libs/[my-module]/src/pages/[page-name].njk -->
+<!-- apps/web/src/pages/my-page/index.njk -->
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}

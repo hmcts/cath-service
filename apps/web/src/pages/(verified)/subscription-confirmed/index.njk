@@ -1,0 +1,32 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageTitle %}
+  {{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block page_content %}
+
+{{ govukPanel({
+  titleText: panelTitle,
+  classes: "govuk-panel--confirmation"
+}) }}
+
+<p class="govuk-body govuk-!-margin-top-6">
+  {{ continueText }} <a href="/account-home" class="govuk-link">{{ yourAccountLink }}</a> {{ inOrderTo }}:
+</p>
+
+<ul class="govuk-list govuk-list--bullet govuk-!-margin-top-4">
+  <li>
+    <a href="/location-name-search" class="govuk-link">{{ addNewSubscriptionLink }}</a>
+  </li>
+  <li>
+    <a href="/subscription-management" class="govuk-link">{{ manageSubscriptionsLink }}</a>
+  </li>
+  <li>
+    <a href="/search" class="govuk-link">{{ findCourtLink }}</a>
+  </li>
+</ul>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block backLink %}{% endblock %}
+
+{% block page_content %}
+{{ govukPanel({
+  titleText: bannerTitle
+}) }}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h2 class="govuk-heading-m govuk-!-margin-top-4">{{ sectionTitle }}</h2>
+
+    <p class="govuk-body">{{ bodyText1 }}</p>
+    <p class="govuk-body">{{ bodyText2 }}</p>
+    <p class="govuk-body">{{ bodyText3 }}</p>
+
+  </div>
+</div>
+{% endblock %}

@@ -982,6 +982,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hmcts-cft/cloud-native-platform@npm:2.1.0":
+  version: 2.1.0
+  resolution: "@hmcts-cft/cloud-native-platform@npm:2.1.0"
+  dependencies:
+    "@azure/identity": "npm:^4.2.1"
+    "@azure/keyvault-secrets": "npm:^4.7.0"
+    applicationinsights: "npm:3.14.0"
+    js-yaml: "npm:^4.1.0"
+  peerDependencies:
+    config: ^3.3.12 || ^4.0.0
+    express: ^5.1.0
+  checksum: 10c0/4fd75d7ce34fcdac78e719228a9115d218bd88e16e02cca93147fad876a15b788ce593674ac794656956371db973323be2f8b09d14e77bd80b601f59471c4a40
+  languageName: node
+  linkType: hard
+
+"@hmcts-cft/simple-router@npm:2.1.0":
+  version: 2.1.0
+  resolution: "@hmcts-cft/simple-router@npm:2.1.0"
+  peerDependencies:
+    express: ^5.1.0
+  checksum: 10c0/e8cf3701a59eb481b13dda5e906ade5a51d721d56ee923eac694f057db5aa37341e9f45f9a95d44b97b5cf5bdc9672ef1c8bebdc3b9b8a6df5d3ed340a0fee08
+  languageName: node
+  linkType: hard
+
 "@hmcts/account@npm:*, @hmcts/account@workspace:libs/account":
   version: 0.0.0-use.local
   resolution: "@hmcts/account@workspace:libs/account"
@@ -1035,11 +1059,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/api@workspace:apps/api"
   dependencies:
+    "@hmcts-cft/cloud-native-platform": "npm:2.1.0"
+    "@hmcts-cft/simple-router": "npm:2.1.0"
     "@hmcts/blob-ingestion": "workspace:*"
-    "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
-    "@hmcts/simple-router": "workspace:*"
     "@hmcts/test-support": "workspace:*"
     "@types/compression": "npm:1.8.1"
     "@types/cors": "npm:2.8.19"
@@ -1059,8 +1083,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/auth@workspace:libs/auth"
   dependencies:
+    "@hmcts-cft/cloud-native-platform": "npm:2.1.0"
     "@hmcts/account": "npm:*"
-    "@hmcts/cloud-native-platform": "workspace:*"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
@@ -1127,22 +1151,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/cloud-native-platform@workspace:*, @hmcts/cloud-native-platform@workspace:libs/cloud-native-platform":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/cloud-native-platform@workspace:libs/cloud-native-platform"
-  dependencies:
-    "@azure/identity": "npm:^4.2.1"
-    "@azure/keyvault-secrets": "npm:^4.7.0"
-    "@types/express": "npm:5.0.6"
-    "@types/js-yaml": "npm:^4.0.9"
-    applicationinsights: "npm:3.14.0"
-    js-yaml: "npm:^4.1.0"
-  peerDependencies:
-    config: ^3.3.12 || ^4.0.0
-    express: ^5.2.0
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/cookie-manager@npm:1.1.0":
   version: 1.1.0
   resolution: "@hmcts/cookie-manager@npm:1.1.0"
@@ -1173,7 +1181,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
-    "@hmcts/cloud-native-platform": "workspace:*"
+    "@hmcts-cft/cloud-native-platform": "npm:2.1.0"
     "@types/config": "npm:3.3.5"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.1"
@@ -1358,16 +1366,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/simple-router@workspace:*, @hmcts/simple-router@workspace:libs/simple-router":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/simple-router@workspace:libs/simple-router"
-  dependencies:
-    "@types/express": "npm:5.0.6"
-  peerDependencies:
-    express: ^5.2.0
-  languageName: unknown
-  linkType: soft
-
 "@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
   version: 0.0.0-use.local
   resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
@@ -1463,12 +1461,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/web@workspace:apps/web"
   dependencies:
+    "@hmcts-cft/cloud-native-platform": "npm:2.1.0"
+    "@hmcts-cft/simple-router": "npm:2.1.0"
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
-    "@hmcts/cloud-native-platform": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
@@ -1476,7 +1475,6 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
-    "@hmcts/simple-router": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/test-support": "workspace:*"
     "@hmcts/verified-pages": "workspace:*"
@@ -3233,13 +3231,6 @@ __metadata:
   version: 2.0.5
   resolution: "@types/http-errors@npm:2.0.5"
   checksum: 10c0/00f8140fbc504f47356512bd88e1910c2f07e04233d99c88c854b3600ce0523c8cd0ba7d1897667243282eb44c59abb9245959e2428b9de004f93937f52f7c15
-  languageName: node
-  linkType: hard
-
-"@types/js-yaml@npm:^4.0.9":
-  version: 4.0.9
-  resolution: "@types/js-yaml@npm:4.0.9"
-  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
   languageName: node
   linkType: hard
 

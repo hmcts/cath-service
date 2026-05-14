@@ -1,5 +1,5 @@
 import * as accountQuery from "@hmcts/account/repository/query";
-import * as cloudNative from "@hmcts/cloud-native-platform";
+import * as cloudNative from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as b2cConfig from "../../config/b2c-config.js";
@@ -7,7 +7,7 @@ import { GET, POST } from "./index.js";
 
 vi.mock("../../config/b2c-config.js");
 vi.mock("@hmcts/account/repository/query");
-vi.mock("@hmcts/cloud-native-platform");
+vi.mock("@hmcts-cft/cloud-native-platform");
 
 describe("B2C Callback Handler", () => {
   let mockReq: Partial<Request>;

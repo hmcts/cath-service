@@ -1,0 +1,65 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% if error %}
+      <div class="govuk-error-summary" data-module="govuk-error-summary">
+        <div class="govuk-error-summary__body">
+          <p>{{ error }}</p>
+        </div>
+      </div>
+      <p><a href="/media-applications" class="govuk-link">Back to applications list</a></p>
+    {% elif application %}
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: tableHeaders.name },
+            value: { text: application.name }
+          },
+          {
+            key: { text: tableHeaders.email },
+            value: { text: application.email }
+          },
+          {
+            key: { text: tableHeaders.employer },
+            value: { text: application.employer }
+          },
+          {
+            key: { text: tableHeaders.dateApplied },
+            value: { text: application.appliedDate | date('compact') }
+          },
+          {
+            key: { text: tableHeaders.proofOfId },
+            value: {
+              html: (
+                '<div style="display: flex; justify-content: space-between; align-items: center;"><span>' + proofOfIdFilename + ' ' + proofOfIdText + '</span><a href="/media-applications/' + application.id + '/proof-of-id" class="govuk-link" target="_blank" rel="noopener noreferrer" aria-label="Opens in new window">' + viewProofOfId + '</a></div>' if application.proofOfIdPath else fileNotAvailable
+              )
+            }
+          }
+        ]
+      }) }}
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+        <form action="/media-applications/{{ application.id }}/approve" method="get">
+          {{ govukButton({
+            text: approveButton,
+            classes: "govuk-button--primary"
+          }) }}
+        </form>
+
+        <form action="/media-applications/{{ application.id }}/reject-reasons" method="get">
+          {{ govukButton({
+            text: rejectButton,
+            classes: "govuk-button--warning"
+          }) }}
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

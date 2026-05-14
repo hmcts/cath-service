@@ -1,5 +1,5 @@
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
-import { trackException } from "@hmcts/cloud-native-platform";
+import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
 import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "../../config/b2c-config.js";
 import type { UserProfile } from "../../user-profile.js";

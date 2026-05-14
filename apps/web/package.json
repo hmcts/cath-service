@@ -20,12 +20,13 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts-cft/cloud-native-platform": "2.1.0",
+    "@hmcts-cft/simple-router": "2.1.0",
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/auth": "workspace:*",
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
-    "@hmcts/cloud-native-platform": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
@@ -33,7 +34,6 @@
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
-    "@hmcts/simple-router": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/test-support": "workspace:*",
     "@hmcts/verified-pages": "workspace:*",

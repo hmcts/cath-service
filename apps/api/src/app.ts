@@ -1,10 +1,10 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { apiRoutes as blobIngestionRoutes } from "@hmcts/blob-ingestion/config";
-import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts/cloud-native-platform";
 import { apiRoutes as locationRoutes } from "@hmcts/location/config";
 import { apiRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
-import { createSimpleRouter } from "@hmcts/simple-router";
+import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts-cft/cloud-native-platform";
+import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import compression from "compression";
 import cors from "cors";
 import type { Express } from "express";

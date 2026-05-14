@@ -1,5 +1,5 @@
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
-import { trackException } from "@hmcts/cloud-native-platform";
+import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
 import { getCrimeIdamConfig } from "../../config/crime-idam-config.js";
 import { exchangeCodeForToken, extractUserInfoFromToken } from "../../crime-idam/token-client.js";

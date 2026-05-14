@@ -1,1 +1,17 @@
 export { getFileForDownload, getFlatFileForDisplay } from "./flat-file/flat-file-service.js";
+export { cy as accountRequestSubmittedCy } from "./pages/account-request-submitted/cy.js";
+export { en as accountRequestSubmittedEn } from "./pages/account-request-submitted/en.js";
+export { cy as courtsTribunalsListCy } from "./pages/courts-tribunals-list/cy.js";
+export { en as courtsTribunalsListEn } from "./pages/courts-tribunals-list/en.js";
+export { cy as createMediaAccountCy } from "./pages/create-media-account/cy.js";
+export { en as createMediaAccountEn } from "./pages/create-media-account/en.js";
+export { cy as hearingListsCy } from "./pages/hearing-lists/cy.js";
+export { en as hearingListsEn } from "./pages/hearing-lists/en.js";
+export { cy as searchCy } from "./pages/search/cy.js";
+export { en as searchEn } from "./pages/search/en.js";
+export { cy as signInCy } from "./pages/sign-in/cy.js";
+export { en as signInEn } from "./pages/sign-in/en.js";
+export { cy as summaryOfPublicationsCy } from "./pages/summary-of-publications/cy.js";
+export { en as summaryOfPublicationsEn } from "./pages/summary-of-publications/en.js";
+export { cy as viewOptionCy } from "./pages/view-option/cy.js";
+export { en as viewOptionEn } from "./pages/view-option/en.js";

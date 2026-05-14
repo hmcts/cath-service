@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 vi.mock("@hmcts/account/repository/query");
-vi.mock("@hmcts/cloud-native-platform");
+vi.mock("@hmcts-cft/cloud-native-platform");
 vi.mock("../../crime-idam/token-client.js");
 vi.mock("../../config/crime-idam-config.js");
 vi.mock("../../role-service/index.js");
@@ -195,7 +195,7 @@ describe("crime-callback", () => {
       const { getCrimeIdamConfig } = await import("../../config/crime-idam-config.js");
       const { isRejectedCrimeRole } = await import("../../role-service/index.js");
       const { createOrUpdateUser } = await import("@hmcts/account/repository/query");
-      const { trackException } = await import("@hmcts/cloud-native-platform");
+      const { trackException } = await import("@hmcts-cft/cloud-native-platform");
 
       mockRequest.query = { code: "test-auth-code", state: "test-state-token" };
 

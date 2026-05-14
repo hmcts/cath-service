@@ -1,0 +1,269 @@
+import { randomUUID } from "node:crypto";
+import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
+import {
+  nonStrategicUploadSummaryCy as cy,
+  nonStrategicUploadSummaryEn as en,
+  getNonStrategicUpload,
+  LANGUAGE_LABELS,
+  SENSITIVITY_LABELS,
+  saveUploadedFile
+} from "@hmcts/admin-pages";
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
+import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
+import { getLocationById } from "@hmcts/location";
+import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
+import { findListTypeById } from "@hmcts/system-admin-pages";
+import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
+import type { Request, RequestHandler, Response } from "express";
+
+declare module "express-serve-static-core" {
+  interface Request {
+    auditMetadata?: {
+      shouldLog?: boolean;
+      action?: string;
+      entityInfo?: string;
+      [key: string]: string | number | boolean | undefined;
+    };
+  }
+}
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const uploadId = req.query.uploadId as string;
+
+  if (!uploadId) {
+    return res.status(400).send("Missing uploadId");
+  }
+
+  const uploadData = await getNonStrategicUpload(uploadId);
+
+  if (!uploadData) {
+    return res.status(404).send("Upload not found");
+  }
+
+  const locale = req.query.lng === "cy" ? "cy" : "en";
+  const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
+  let courtName = uploadData.locationId;
+  if (location) {
+    courtName = locale === "cy" ? location.welshName : location.name;
+  }
+
+  // Find list type by ID
+  const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
+  const listType = listTypeId ? await findListTypeById(listTypeId) : null;
+  let listTypeName = uploadData.listType;
+  if (listType) {
+    listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
+  }
+
+  res.render("non-strategic-upload-summary/index", {
+    pageTitle: lang.pageTitle,
+    heading: lang.heading,
+    subHeading: lang.subHeading,
+    courtName: lang.courtName,
+    file: lang.file,
+    listType: lang.listType,
+    hearingStartDate: lang.hearingStartDate,
+    sensitivity: lang.sensitivity,
+    language: lang.language,
+    displayFileDates: lang.displayFileDates,
+    change: lang.change,
+    confirmButton: lang.confirmButton,
+    data: {
+      courtName,
+      file: uploadData.fileName,
+      listType: listTypeName,
+      hearingStartDate: formatDate(uploadData.hearingStartDate),
+      sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
+      language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
+      displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
+    }
+  });
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const uploadId = req.query.uploadId as string;
+
+  if (!uploadId) {
+    return res.status(400).send("Missing uploadId");
+  }
+
+  try {
+    // Retrieve upload data from Redis
+    const uploadData = await getNonStrategicUpload(uploadId);
+
+    if (!uploadData) {
+      return res.status(404).send("Upload not found");
+    }
+
+    // Parse date inputs to Date objects
+    const contentDate = parseDate(uploadData.hearingStartDate);
+    const displayFrom = parseDate(uploadData.displayFrom);
+    const displayTo = parseDate(uploadData.displayTo);
+
+    if (!contentDate || !displayFrom || !displayTo) {
+      throw new Error("Invalid date format");
+    }
+
+    // Non-strategic publications should always have isFlatFile set to false
+    const listTypeId = Number.parseInt(uploadData.listType, 10);
+    const isFlatFile = false;
+
+    // Determine if the uploaded file needs conversion (Excel files need conversion to JSON)
+    const isExcelFile = !uploadData.fileName?.endsWith(".json");
+
+    // Store metadata in database (creates new or updates existing)
+    const artefactId = await createArtefact({
+      artefactId: randomUUID(),
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
+      displayFrom,
+      displayTo,
+      lastReceivedDate: new Date(),
+      isFlatFile,
+      provenance: Provenance.MANUAL_UPLOAD,
+      noMatch: false
+    });
+
+    // Save file to temporary storage with artefactId as filename (will overwrite if exists)
+    await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+
+    // If this is a non-strategic list and it's an Excel file,
+    // convert it to JSON (validation already done on upload page)
+    const selectedListType = await findListTypeById(listTypeId);
+    let jsonData: unknown;
+
+    if (isExcelFile && selectedListType?.isNonStrategic) {
+      const { convertExcelForListType, convertExcelForListTypeName, hasConverterForListType, hasConverterForListTypeName } = await import(
+        "@hmcts/list-types-common"
+      );
+
+      const listTypeName = selectedListType.name;
+      const canConvertById = hasConverterForListType(listTypeId);
+      const canConvertByName = !canConvertById && listTypeName ? hasConverterForListTypeName(listTypeName) : false;
+
+      if (canConvertById || canConvertByName) {
+        jsonData = canConvertById
+          ? await convertExcelForListType(listTypeId, uploadData.file)
+          : await convertExcelForListTypeName(listTypeName!, uploadData.file);
+        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
+
+        // Extract and store artefact search data from converted JSON
+        try {
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+        } catch (error) {
+          console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
+            artefactId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+    } else {
+      // Parse JSON data for JSON files
+      try {
+        jsonData = JSON.parse(uploadData.file.toString("utf8"));
+      } catch {
+        // Not valid JSON
+      }
+    }
+
+    // Generate PDF and send notifications using common processor
+    await processPublication({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      locale: uploadData.language === "WELSH" ? "cy" : "en",
+      jsonData,
+      provenance: Provenance.MANUAL_UPLOAD,
+      displayFrom,
+      displayTo,
+      logPrefix: "[Non-Strategic Upload]"
+    });
+
+    // Clear session data
+    delete req.session.nonStrategicUploadForm;
+    delete req.session.nonStrategicUploadSubmitted;
+
+    // Set success flag for success page validation
+    req.session.nonStrategicUploadConfirmed = true;
+
+    await saveSession(req.session);
+
+    // Get location and list type for audit log
+    const location = await getLocationById(Number(uploadData.locationId));
+    const listType = await findListTypeById(listTypeId);
+
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: "NON_STRATEGIC_UPLOAD",
+      entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.friendlyName || listTypeId}, File: ${uploadData.fileName}`
+    };
+
+    // Redirect to success page with language parameter
+    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+    res.redirect(`/non-strategic-upload-success${lng}`);
+  } catch (error) {
+    console.error("Upload processing error:", error);
+
+    // Keep session data and render error on the same page
+    const uploadData = await getNonStrategicUpload(uploadId);
+    if (!uploadData) {
+      return res.status(500).send("Error processing upload");
+    }
+
+    const locale = req.query.lng === "cy" ? "cy" : "en";
+    const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
+    let courtName = uploadData.locationId;
+    if (location) {
+      courtName = locale === "cy" ? location.welshName : location.name;
+    }
+
+    // Find list type by ID
+    const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
+    const listType = listTypeId ? await findListTypeById(listTypeId) : null;
+    let listTypeName = uploadData.listType;
+    if (listType) {
+      listTypeName = (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType;
+    }
+
+    // Extract error message from error object
+    const errorMessage = error instanceof Error ? error.message : "We could not process your upload. Please try again.";
+
+    return res.render("non-strategic-upload-summary/index", {
+      pageTitle: lang.pageTitle,
+      heading: lang.heading,
+      subHeading: lang.subHeading,
+      courtName: lang.courtName,
+      file: lang.file,
+      listType: lang.listType,
+      hearingStartDate: lang.hearingStartDate,
+      sensitivity: lang.sensitivity,
+      language: lang.language,
+      displayFileDates: lang.displayFileDates,
+      change: lang.change,
+      confirmButton: lang.confirmButton,
+      data: {
+        courtName,
+        file: uploadData.fileName,
+        listType: listTypeName,
+        hearingStartDate: formatDate(uploadData.hearingStartDate),
+        sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
+        language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
+        displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
+      },
+      errors: [{ text: errorMessage, href: "#" }]
+    });
+  }
+};
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

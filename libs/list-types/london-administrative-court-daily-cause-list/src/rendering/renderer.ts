@@ -1,7 +1,7 @@
 import { formatDisplayDate, formatLastUpdatedDateTime, normaliseHearings } from "@hmcts/list-types-common";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import type { LondonAdminCourtData, StandardHearing } from "../models/types.js";
-import { cy } from "../pages/cy.js";
-import { en } from "../pages/en.js";
 
 export interface RenderOptions {
   locale: string;

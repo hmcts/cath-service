@@ -1,0 +1,66 @@
+import { removeListSearchCy as cy, removeListSearchEn as en } from "@hmcts/admin-pages";
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { getLocationById } from "@hmcts/location";
+import { saveSession } from "@hmcts/web-core";
+import type { Request, RequestHandler, Response } from "express";
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+
+  res.render("remove-list-search/index", {
+    pageTitle: lang.pageTitle,
+    heading: lang.heading,
+    searchLabel: lang.searchLabel,
+    searchHint: lang.searchHint,
+    continueButton: lang.continueButton,
+    locationId: "",
+    locationName: ""
+  });
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const locale = req.query.lng === "cy" ? "cy" : "en";
+  const locationId = req.body.locationId || "";
+
+  if (!locationId) {
+    return res.render("remove-list-search/index", {
+      pageTitle: lang.pageTitle,
+      heading: lang.heading,
+      searchLabel: lang.searchLabel,
+      searchHint: lang.searchHint,
+      continueButton: lang.continueButton,
+      locationId: "",
+      locationName: "",
+      errors: [
+        {
+          text: lang.errorLocationRequired,
+          href: "#locationId"
+        }
+      ],
+      errorSummaryTitle: lang.errorSummaryTitle,
+      locationError: {
+        text: lang.errorLocationRequired
+      }
+    });
+  }
+
+  const location = await getLocationById(Number.parseInt(locationId, 10));
+  if (!location) {
+    return res.status(400).send("Invalid location");
+  }
+
+  req.session.removalData = {
+    locationId,
+    locationName: locale === "cy" ? location.welshName : location.name,
+    selectedArtefacts: []
+  };
+
+  await saveSession(req.session);
+
+  const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+  res.redirect(`/remove-list-search-results${lng}`);
+};
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

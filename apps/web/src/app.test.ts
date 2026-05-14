@@ -2,13 +2,13 @@ import type { Express } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock all dependencies before importing createApp
-vi.mock("@hmcts/cloud-native-platform", () => ({
+vi.mock("@hmcts-cft/cloud-native-platform", () => ({
   getPropertiesVolumeSecrets: vi.fn().mockResolvedValue({}),
   healthcheck: vi.fn(() => vi.fn()),
   monitoringMiddleware: vi.fn(() => vi.fn())
 }));
 
-vi.mock("@hmcts/simple-router", () => ({
+vi.mock("@hmcts-cft/simple-router", () => ({
   createSimpleRouter: vi.fn(() => Promise.resolve(vi.fn()))
 }));
 
@@ -126,7 +126,6 @@ vi.mock("@hmcts/verified-pages/config", () => ({
 }));
 
 vi.mock("@hmcts/web-core/config", () => ({
-  pageRoutes: { path: "/mock/web-core/pages" },
   moduleRoot: "/mock/web-core"
 }));
 
@@ -151,7 +150,7 @@ describe("Web Application", () => {
     });
 
     it("should configure properties volume", async () => {
-      const { getPropertiesVolumeSecrets } = await import("@hmcts/cloud-native-platform");
+      const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
       expect(getPropertiesVolumeSecrets).toHaveBeenCalled();
     });
 
@@ -161,12 +160,12 @@ describe("Web Application", () => {
     });
 
     it("should configure healthcheck middleware", async () => {
-      const { healthcheck } = await import("@hmcts/cloud-native-platform");
+      const { healthcheck } = await import("@hmcts-cft/cloud-native-platform");
       expect(healthcheck).toHaveBeenCalled();
     });
 
     it("should configure monitoring middleware", async () => {
-      const { monitoringMiddleware } = await import("@hmcts/cloud-native-platform");
+      const { monitoringMiddleware } = await import("@hmcts-cft/cloud-native-platform");
       expect(monitoringMiddleware).toHaveBeenCalled();
     });
 
@@ -206,19 +205,19 @@ describe("Web Application", () => {
     });
 
     it("should register web core page routes", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
       expect(createSimpleRouter).toHaveBeenCalled();
     });
 
     it("should register public pages routes", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalledTimes(16);
+      const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
+      expect(createSimpleRouter).toHaveBeenCalledTimes(4);
     });
 
     it("should register system-admin page routes", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(15);
+      expect(calls.length).toBeGreaterThanOrEqual(3);
     });
 
     it("should configure error handlers at the end", async () => {

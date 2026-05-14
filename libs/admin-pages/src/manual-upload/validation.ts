@@ -1,8 +1,8 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { type DateInput, parseDate } from "@hmcts/web-core";
-import type { en as manualUploadEn } from "../pages/manual-upload/en.js";
-import type { en as nonStrategicUploadEn } from "../pages/non-strategic-upload/en.js";
+import type { en as nonStrategicUploadEn } from "../non-strategic-upload/locales/en.js";
+import type { en as manualUploadEn } from "./locales/en.js";
 import type { UploadFormData, ValidationError } from "./model.js";
 
 export type { ValidationError };

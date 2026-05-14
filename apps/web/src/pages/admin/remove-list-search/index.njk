@@ -1,0 +1,48 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukInput({
+        id: "locationId",
+        name: "locationId",
+        label: {
+          text: searchLabel,
+          classes: "govuk-label--m"
+        },
+        hint: {
+          text: searchHint
+        },
+        value: locationName,
+        errorMessage: locationError,
+        attributes: {
+          "data-autocomplete": "true",
+          "data-location-id": locationId,
+          "data-locale": "en" if not lng or lng == "en" else "cy",
+          "data-search-label": searchLabel,
+          "data-no-results-message": "No results found"
+        }
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

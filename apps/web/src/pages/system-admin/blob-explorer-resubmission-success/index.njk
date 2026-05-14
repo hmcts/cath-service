@@ -1,0 +1,22 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {{ govukPanel({
+      titleText: successTitle,
+      html: successBanner,
+      classes: "govuk-panel--confirmation"
+    }) }}
+
+    <p class="govuk-body govuk-!-margin-top-6">{{ successNextSteps }}</p>
+
+    <p class="govuk-body">
+      <a href="/blob-explorer-locations" class="govuk-link">{{ successLinkToLocations }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

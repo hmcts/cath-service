@@ -20,8 +20,7 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:assets",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc && yarn build:assets",
     "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
     "dev": "tsc --watch",
     "test": "vitest run",

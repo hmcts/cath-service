@@ -1,0 +1,58 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% macro getError(errors, fieldId) -%}
+  {%- if errors -%}
+    {%- for error in errors -%}
+      {%- if error.href == fieldId -%}{{ error.text }}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+
+      {% set courtSearchErrorText = getError(errors, "#court-search") %}
+      <div class="govuk-form-group {% if courtSearchErrorText and courtSearchErrorText | length > 0 %}govuk-form-group--error{% endif %}">
+        <label class="govuk-label" for="court-search">
+          {{ courtNameLabel }}
+        </label>
+        {% if courtSearchErrorText and courtSearchErrorText | length > 0 %}
+          <p id="court-search-error" class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> {{ courtSearchErrorText }}
+          </p>
+        {% endif %}
+        <input
+          class="govuk-input {% if courtSearchErrorText and courtSearchErrorText | length > 0 %}govuk-input--error{% endif %}"
+          id="court-search"
+          name="locationId"
+          type="text"
+          data-autocomplete="true"
+          data-locale="{{ lng or 'en' }}"
+          data-search-label="{{ courtNameLabel }}"
+          aria-describedby="{% if courtSearchErrorText and courtSearchErrorText | length > 0 %}court-search-error{% endif %}"
+        />
+      </div>
+
+      {{ govukButton({
+        text: continueButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+// Business logic exports
 export { USER_ROLES } from "@hmcts/account";
 export { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "./config/b2c-config.js";
 export { getCftIdamConfig, isCftIdamConfigured } from "./config/cft-idam-config.js";
@@ -14,8 +15,20 @@ export { GET as b2cCallbackHandler, POST as b2cCallbackPostHandler } from "./pag
 export { GET as b2cForgotPasswordHandler } from "./pages/b2c-forgot-password/index.js";
 export { GET as b2cLoginHandler } from "./pages/b2c-login/index.js";
 export { GET as cftCallbackHandler } from "./pages/cft-callback/index.js";
+export { cy as cftRejectedCy } from "./pages/cft-rejected/cy.js";
+export { en as cftRejectedEn } from "./pages/cft-rejected/en.js";
 export { GET as crimeCallbackHandler } from "./pages/crime-callback/index.js";
+export { cy as crimeRejectedCy } from "./pages/crime-rejected/cy.js";
+export { en as crimeRejectedEn } from "./pages/crime-rejected/en.js";
+export { cy as passwordResetSuccessCy } from "./pages/password-reset-success/cy.js";
+export { en as passwordResetSuccessEn } from "./pages/password-reset-success/en.js";
+export { cy as sessionExpiredCy } from "./pages/session-expired/cy.js";
+export { en as sessionExpiredEn } from "./pages/session-expired/en.js";
+export { cy as sessionLoggedOutCy } from "./pages/session-logged-out/cy.js";
+export { en as sessionLoggedOutEn } from "./pages/session-logged-out/en.js";
 export { GET as ssoCallbackHandler } from "./pages/sso-callback/index.js";
+export { cy as ssoRejectedCy } from "./pages/sso-rejected/cy.js";
+export { en as ssoRejectedEn } from "./pages/sso-rejected/en.js";
 export { isRejectedCFTRole, isRejectedCrimeRole } from "./role-service/index.js";
 export { getTimeoutConfig, isSessionExpired, updateLastActivity } from "./session/timeout-tracker.js";
 export type { UserProfile } from "./user-profile.js";
