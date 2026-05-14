@@ -67,7 +67,7 @@ export const postHandler = async (req: Request, res: Response) => {
     entityInfo: `Name: ${user.name}, ID: ${id}`
   };
 
-  res.redirect(`/third-party-users/${id}/delete/confirmation${lngParam}`);
+  res.redirect(`/third-party-users/${id}/delete/success${lngParam}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

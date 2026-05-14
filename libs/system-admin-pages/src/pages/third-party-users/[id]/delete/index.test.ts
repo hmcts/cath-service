@@ -82,7 +82,7 @@ describe("third-party-users delete page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1");
     });
 
-    it("should delete user and redirect to confirmation when Yes is selected", async () => {
+    it("should delete user and redirect to success page when Yes is selected", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
       vi.mocked(deleteThirdPartyUser).mockResolvedValue(undefined);
@@ -93,7 +93,7 @@ describe("third-party-users delete page", () => {
 
       // Assert
       expect(deleteThirdPartyUser).toHaveBeenCalledWith("user-1");
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/delete/confirmation");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/delete/success");
     });
 
     it("should set audit metadata on delete", async () => {
@@ -113,7 +113,7 @@ describe("third-party-users delete page", () => {
       });
     });
 
-    it("should redirect to Welsh confirmation on delete with Welsh param", async () => {
+    it("should redirect to Welsh success page on delete with Welsh param", async () => {
       // Arrange
       req.query = { lng: "cy" };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
@@ -124,7 +124,7 @@ describe("third-party-users delete page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/delete/confirmation?lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/delete/success?lng=cy");
     });
   });
 });
