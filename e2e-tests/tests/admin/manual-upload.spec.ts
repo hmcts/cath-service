@@ -488,7 +488,7 @@ test.describe
       ]
     };
 
-    test("should generate a PDF after uploading a JSON publication", async ({ page }) => {
+    test("should generate a PDF after uploading a JSON publication @nightly", async ({ page }) => {
       await page.goto(`/manual-upload?locationId=${testLocationId}`);
       await page.waitForTimeout(1000);
 

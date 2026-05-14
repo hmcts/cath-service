@@ -227,6 +227,8 @@ test.describe("Subscription Notifications", () => {
       expect(govNotifyEmail.body).toContain("Manage your subscriptions");
       expect(govNotifyEmail.body).toContain("Unsubscribe");
 
+      expect(govNotifyEmail.body).toContain("Download the case list as a PDF");
+
       // Verify email contains PDF download link (GOV.UK Notify document service)
       const hasPdfLink = GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN.test(govNotifyEmail.body);
       expect(hasPdfLink).toBe(true);
