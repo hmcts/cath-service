@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler } from "./index.js";
 
-describe("third-party-users delete confirmation page", () => {
+describe("third-party-users delete success page", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 
@@ -13,13 +13,13 @@ describe("third-party-users delete confirmation page", () => {
   });
 
   describe("getHandler", () => {
-    it("should render the confirmation page in English", async () => {
+    it("should render the success page in English", async () => {
       // Act
       await getHandler(req as Request, res as Response);
 
       // Assert
       expect(res.render).toHaveBeenCalledWith(
-        "third-party-users/[id]/delete/confirmation/index",
+        "third-party-users/[id]/delete/success/index",
         expect.objectContaining({
           panelTitle: "Third party user deleted",
           panelBody: "The third party user and associated subscriptions have been removed"
@@ -27,7 +27,7 @@ describe("third-party-users delete confirmation page", () => {
       );
     });
 
-    it("should render the confirmation page in Welsh", async () => {
+    it("should render the success page in Welsh", async () => {
       // Arrange
       req.query = { lng: "cy" };
 
@@ -36,7 +36,7 @@ describe("third-party-users delete confirmation page", () => {
 
       // Assert
       expect(res.render).toHaveBeenCalledWith(
-        "third-party-users/[id]/delete/confirmation/index",
+        "third-party-users/[id]/delete/success/index",
         expect.objectContaining({ panelTitle: "Defnyddiwr trydydd parti wedi'i ddileu" })
       );
     });

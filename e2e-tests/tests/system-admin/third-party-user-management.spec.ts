@@ -203,8 +203,8 @@ test.describe("Third Party User Management", () => {
     await page.locator('input[value="yes"]').check();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // Check deletion confirmation
-    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/confirmation`);
+    // Check deletion success
+    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/success`);
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third party user deleted");
     await expect(page.getByRole("heading", { name: "What do you want to do next?" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Manage another third party user" })).toBeVisible();
