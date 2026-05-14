@@ -19,11 +19,11 @@ model ThirdPartyUser {
 model ThirdPartySubscription {
   id               String         @id @default(cuid())
   thirdPartyUserId String         @map("third_party_user_id")
-  listType         String         @map("list_type") @db.VarChar(100)
+  listTypeId       Int            @map("list_type_id")
   sensitivity      String         @db.VarChar(20)
 
   thirdPartyUser ThirdPartyUser @relation(fields: [thirdPartyUserId], references: [id], onDelete: Cascade)
 
-  @@unique([thirdPartyUserId, listType])
+  @@unique([thirdPartyUserId, listTypeId])
   @@map("third_party_subscription")
 }
