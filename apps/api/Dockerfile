@@ -1,8 +1,11 @@
 # ---- Base image ----
 FROM hmctspublic.azurecr.io/base/node:22-alpine AS base
 USER root
+RUN apk add --no-cache chromium
 RUN npm install -g corepack
 RUN corepack enable
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 COPY --chown=hmcts:hmcts . .
 USER hmcts
 
