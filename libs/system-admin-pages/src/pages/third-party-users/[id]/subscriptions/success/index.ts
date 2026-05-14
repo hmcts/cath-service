@@ -10,7 +10,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const t = language === "cy" ? cy : en;
   const lngParam = language === "cy" ? "?lng=cy" : "";
 
-  res.render("third-party-users/[id]/subscriptions/confirmation/index", {
+  res.render("third-party-users/[id]/subscriptions/success/index", {
     ...t,
     lngParam
   });
