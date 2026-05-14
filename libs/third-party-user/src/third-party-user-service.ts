@@ -1,4 +1,4 @@
-import { mockListTypes } from "@hmcts/list-types-common";
+import { getListTypeId } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function findAllThirdPartyUsers() {
@@ -34,7 +34,7 @@ export async function updateThirdPartySubscriptions(userId: string, subscription
       await tx.thirdPartySubscription.createMany({
         data: entries.map(([listTypeName, sensitivity]) => ({
           thirdPartyUserId: userId,
-          listTypeId: mockListTypes.find((lt) => lt.name === listTypeName)!.id,
+          listTypeId: getListTypeId(listTypeName)!,
           sensitivity
         }))
       });

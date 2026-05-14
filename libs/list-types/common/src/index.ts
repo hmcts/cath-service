@@ -26,7 +26,7 @@ export {
   formatCaseSummaryForEmail,
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
-export { getListTypeName, type ListTypeName } from "./list-type-ids.js";
+export { getListTypeId, getListTypeName, type ListTypeName } from "./list-type-ids.js";
 export { type ListType, mockListTypes } from "./mock-list-types.js";
 export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export {
