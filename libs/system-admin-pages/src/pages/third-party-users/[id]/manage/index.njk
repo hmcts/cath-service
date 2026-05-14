@@ -1,0 +1,49 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+  <a href="/third-party-users{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: { text: tableHeadings.name },
+          value: { text: name }
+        },
+        {
+          key: { text: tableHeadings.createdDate },
+          value: { text: createdAt }
+        },
+        {
+          key: { text: tableHeadings.subscriptionCount },
+          value: { text: subscriptionCount }
+        },
+        {
+          key: { text: tableHeadings.sensitivity },
+          value: { text: sensitivity }
+        }
+      ]
+    }) }}
+
+    {{ govukButton({
+      text: manageSubscriptionsButton,
+      href: "/third-party-users/" + userId + "/subscriptions" + lngParam
+    }) }}
+
+    {{ govukButton({
+      text: deleteUserButton,
+      href: "/third-party-users/" + userId + "/delete" + lngParam,
+      classes: "govuk-button--warning govuk-!-margin-left-3"
+    }) }}
+
+  </div>
+</div>
+{% endblock %}

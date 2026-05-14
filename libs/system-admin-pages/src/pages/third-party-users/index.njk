@@ -23,7 +23,7 @@
         {% set tableRows = (tableRows.push([
           { text: user.name },
           { text: user.createdAt },
-          { html: '<a href="/third-party-users/' + user.id + lngParam + '" class="govuk-link">' + manageLink + '</a>' }
+          { html: '<a href="/third-party-users/' + user.id + '/manage' + lngParam + '" class="govuk-link">' + manageLink + '</a>' }
         ]), tableRows) %}
       {% endfor %}
 
