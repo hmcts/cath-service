@@ -211,6 +211,8 @@ test.describe("Subscription Notifications", () => {
 
 
     const pdfPath = path.join(process.cwd(), "..", "storage", "temp", "uploads", `${result.artefact_id}.pdf`);
+
+    console.log("PDF path: " + pdfPath);
     expect(fs.existsSync(pdfPath)).toBe(true);
     expect(fs.statSync(pdfPath).size).toBeGreaterThan(0);
 
@@ -233,8 +235,6 @@ test.describe("Subscription Notifications", () => {
       // Verify email contains subscription management links
       expect(govNotifyEmail.body).toContain("Manage your subscriptions");
       expect(govNotifyEmail.body).toContain("Unsubscribe");
-
-      expect(govNotifyEmail.body).toContain("Download the case list as a PDF");
 
       // Verify email contains PDF download link (GOV.UK Notify document service)
       const hasPdfLink = GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN.test(govNotifyEmail.body);

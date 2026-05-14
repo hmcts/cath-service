@@ -86,6 +86,8 @@ export async function generateRcjStandardDailyCauseListPdf(options: PdfGeneratio
       };
     }
 
+    console.log(`Generated PDF for ID ${options.artefactId} with of size ${pdfResult.sizeBytes} bytes`);
+
     return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
   } catch (error) {
     return createPdfErrorResult(error);
