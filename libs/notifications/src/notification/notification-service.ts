@@ -196,7 +196,7 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
     });
 
     if (event.pdfFilePath) {
-      return buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
+      return await buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
     }
 
     return {
