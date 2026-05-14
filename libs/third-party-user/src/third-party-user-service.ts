@@ -1,3 +1,4 @@
+import { mockListTypes } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function findAllThirdPartyUsers() {
@@ -31,9 +32,9 @@ export async function updateThirdPartySubscriptions(userId: string, subscription
     const entries = Object.entries(subscriptions).filter(([, sensitivity]) => sensitivity !== "UNSELECTED" && sensitivity !== "");
     if (entries.length > 0) {
       await tx.thirdPartySubscription.createMany({
-        data: entries.map(([listType, sensitivity]) => ({
+        data: entries.map(([listTypeName, sensitivity]) => ({
           thirdPartyUserId: userId,
-          listType,
+          listTypeId: mockListTypes.find((lt) => lt.name === listTypeName)!.id,
           sensitivity
         }))
       });

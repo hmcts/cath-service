@@ -39,7 +39,7 @@ const mockUser = {
   id: "user-1",
   name: "Test Corp",
   createdAt: new Date(),
-  subscriptions: [{ id: "s1", thirdPartyUserId: "user-1", listType: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" }]
+  subscriptions: [{ id: "s1", thirdPartyUserId: "user-1", listTypeId: 1, sensitivity: "PUBLIC" }]
 };
 
 describe("third-party-users subscriptions page", () => {
