@@ -11,6 +11,8 @@ import {
   waitForNotifications
 } from "../../utils/notification-helpers.js";
 import { checkFlatFileExists, deleteTestArtefacts, type FlatFileInfo } from "../../utils/test-support-api.js";
+import path from "node:path";
+import fs from "node:fs";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
@@ -206,6 +208,11 @@ test.describe("Subscription Notifications", () => {
     expect(pdfInfo.filename).toContain(result.artefact_id);
     expect(pdfInfo.sizeBytes).toBeGreaterThan(0);
     console.log(`PDF generated: ${pdfInfo.filename} (${pdfInfo.sizeBytes} bytes)`);
+
+
+    const pdfPath = path.join(process.cwd(), "..", "storage", "temp", "uploads", `${result.artefact_id}.pdf`);
+    expect(fs.existsSync(pdfPath)).toBe(true);
+    expect(fs.statSync(pdfPath).size).toBeGreaterThan(0);
 
     // Verify GOV.UK Notify email content
     if (process.env.GOVUK_NOTIFY_API_KEY && sentNotification?.govNotifyId) {
