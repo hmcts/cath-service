@@ -333,6 +333,8 @@ async function processListTypeUserNotification(
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
 
+    console.log("email address: " + subscriber.user.email);
+    console.log("Template ID used for notification: " + emailData.templateId);
     const emailResult = await sendEmail({
       emailAddress: subscriber.user.email,
       templateParameters: emailData.templateParameters,
