@@ -80,10 +80,14 @@ describe("index page", () => {
       expect(callArgs.en.factLinkText).toBe("Find contact details and other information about courts and tribunals");
 
       expect(callArgs.cy.factSectionTitle).toBe("Dod o hyd i lys neu dribiwnlys");
-      expect(callArgs.cy.factSectionText).toBe("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
-      expect(callArgs.cy.factSectionTextSuffix).toBe(" yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.");
+      expect(callArgs.cy.factSectionText).toBe(
+        "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr a rhai tribiwnlysoedd heb eu datganoli yn yr Alban."
+      );
+      expect(callArgs.cy.factSectionTextSuffix).toBe("");
       expect(callArgs.cy.factLinkUrl).toBe("https://www.gov.uk/find-court-tribunal");
-      expect(callArgs.cy.factLinkText).toBe("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
+      expect(callArgs.cy.factLinkText).toBe(
+        "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr a rhai tribiwnlysoedd heb eu datganoli yn yr Alban."
+      );
     });
 
     it("should include Before you start section content", async () => {

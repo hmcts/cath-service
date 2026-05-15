@@ -12,10 +12,12 @@ export const cy = {
   welshAvailableLink: "Saesneg (English)",
   continueButton: "Parhau",
   factSectionTitle: "Dod o hyd i lys neu dribiwnlys",
-  factSectionText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-  factSectionTextSuffix: " yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  factSectionText:
+    "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  factSectionTextSuffix: "",
   factLinkUrl: "https://www.gov.uk/find-court-tribunal",
-  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkText:
+    "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   beforeYouStartTitle: "Cyn i chi ddechrau",
   scotlandNorthernIrelandTitle: "Os ydych yn byw yn Yr Alban neu Gogledd Iwerddon",
   contactText: "Cysylltwch â:",

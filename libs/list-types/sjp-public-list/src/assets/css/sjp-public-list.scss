@@ -1,0 +1,28 @@
+// MoJ sortable table styles
+// Replicates @ministryofjustice/frontend sortable-table component styling
+
+[data-module="moj-sortable-table"] [aria-sort] button,
+[data-module="moj-sortable-table"] [aria-sort] button:hover {
+  display: inline-flex;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border-width: 0;
+  color: #005ea5;
+  background-color: transparent;
+  box-shadow: 0 0 0 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  align-items: center;
+}
+
+[data-module="moj-sortable-table"] [aria-sort] button:focus {
+  outline: none;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+}

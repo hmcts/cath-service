@@ -5,12 +5,32 @@ import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-typ
 // Test data matching ListTypeInfo interface
 const testListTypes: ListTypeInfo[] = [
   { id: 1, name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: "Civil Daily Cause List" },
-  { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" }
+  { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
+  { id: 26, name: "SJP_DELTA_PRESS_LIST", friendlyName: "Single Justice Procedure Press List (New cases)" },
+  { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" }
 ];
 
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   validateCivilFamilyCauseList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0.0"
+  })
+}));
+
+// Mock the dynamic import for @hmcts/sjp-press-list (used by both SJP_PRESS_LIST and SJP_DELTA_PRESS_LIST)
+vi.mock("@hmcts/sjp-press-list", () => ({
+  validateSjpPressList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0.0"
+  })
+}));
+
+// Mock the dynamic import for @hmcts/sjp-public-list (used by both SJP_PUBLIC_LIST and SJP_DELTA_PUBLIC_LIST)
+vi.mock("@hmcts/sjp-public-list", () => ({
+  validateSjpPublicList: vi.fn().mockReturnValue({
     isValid: true,
     errors: [],
     schemaVersion: "1.0.0"
@@ -99,6 +119,18 @@ describe("list-type-validator", () => {
       const result = await validateListTypeJson("abc", {}, testListTypes);
 
       expect(result.isValid).toBe(false);
+    });
+
+    it("should validate SJP_DELTA_PRESS_LIST using the sjp-press-list package alias", async () => {
+      const result = await validateListTypeJson("26", { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should validate SJP_DELTA_PUBLIC_LIST using the sjp-public-list package alias", async () => {
+      const result = await validateListTypeJson("27", { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
     });
   });
 });

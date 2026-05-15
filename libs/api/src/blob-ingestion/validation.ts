@@ -4,7 +4,7 @@ import { Language, Sensitivity } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./repository/model.js";
 
-const MAX_BLOB_SIZE = 10 * 1024 * 1024; // 10MB default
+const MAX_BLOB_SIZE = 100 * 1024 * 1024; // 100MB default
 const ALLOWED_PROVENANCES = ["XHIBIT", "MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM"];
 
 export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {

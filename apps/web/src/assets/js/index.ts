@@ -1,7 +1,9 @@
 import { initListTypeSensitivity } from "@hmcts/admin-pages/src/assets/js/list-type-sensitivity.js";
 import "@hmcts/auth/src/assets/js/session-timeout.js";
 import cookieManager from "@hmcts/cookie-manager";
+import { initSjpFilterSearch } from "@hmcts/list-types-common/src/assets/js/sjp-filter-search.js";
 import { initTableSearch } from "@hmcts/list-types-common/src/assets/js/table-search.js";
+import { initSortableTable } from "@hmcts/sjp-public-list/src/assets/js/sortable-table.js";
 import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
 import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
 import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
@@ -19,6 +21,8 @@ if (document.readyState === "loading") {
     initBackToTop();
     initListTypeSensitivity();
     initTableSearch();
+    initSortableTable();
+    initSjpFilterSearch();
   });
 } else {
   void initSearchAutocomplete().catch((error) => {
@@ -28,6 +32,8 @@ if (document.readyState === "loading") {
   initBackToTop();
   initListTypeSensitivity();
   initTableSearch();
+  initSortableTable();
+  initSjpFilterSearch();
 }
 
 const config = {
