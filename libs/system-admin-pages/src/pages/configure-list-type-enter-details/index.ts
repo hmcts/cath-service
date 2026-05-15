@@ -27,7 +27,7 @@ const getHandler = async (req: Request, res: Response) => {
           defaultSensitivity: existingListType.defaultSensitivity || "",
           allowedProvenance: existingListType.allowedProvenance.split(","),
           isNonStrategic: existingListType.isNonStrategic,
-          subJurisdictionIds: existingListType.subJurisdictions.map((sj) => sj.subJurisdictionId),
+          subJurisdictionIds: existingListType.subJurisdictions.map((sj) => sj.subJurisdiction.subJurisdictionId),
           editId
         };
         session.configureListType = formData;

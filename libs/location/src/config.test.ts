@@ -3,28 +3,6 @@ import { describe, expect, it } from "vitest";
 import * as config from "./config.js";
 
 describe("Location Module Config", () => {
-  describe("prismaSchemas", () => {
-    it("should export prismaSchemas as a string", () => {
-      expect(typeof config.prismaSchemas).toBe("string");
-    });
-
-    it("should point to the prisma directory", () => {
-      expect(config.prismaSchemas).toContain("prisma");
-    });
-
-    it("should be an absolute path", () => {
-      expect(path.isAbsolute(config.prismaSchemas)).toBe(true);
-    });
-
-    it("should end with prisma directory", () => {
-      expect(config.prismaSchemas.endsWith("prisma")).toBe(true);
-    });
-
-    it("should be within the location module", () => {
-      expect(config.prismaSchemas).toContain("location");
-    });
-  });
-
   describe("moduleRoot", () => {
     it("should export moduleRoot as a string", () => {
       expect(typeof config.moduleRoot).toBe("string");
@@ -76,19 +54,8 @@ describe("Location Module Config", () => {
   });
 
   describe("Path Relationships", () => {
-    it("should have prismaSchemas as sibling to moduleRoot", () => {
-      const moduleParent = path.dirname(config.moduleRoot);
-      const schemaParent = path.dirname(config.prismaSchemas);
-      expect(moduleParent).toBe(schemaParent);
-    });
-
     it("should have apiRoutes.path as child of moduleRoot", () => {
       expect(config.apiRoutes.path.startsWith(config.moduleRoot)).toBe(true);
-    });
-
-    it("should have correct relative path from moduleRoot to prismaSchemas", () => {
-      const relativePath = path.relative(config.moduleRoot, config.prismaSchemas);
-      expect(relativePath).toBe(path.join("..", "prisma"));
     });
 
     it("should have correct relative path from moduleRoot to apiRoutes", () => {

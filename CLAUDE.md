@@ -113,7 +113,6 @@ const __dirname = path.dirname(__filename);
 // Module configuration for app registration
 export const pageRoutes = { path: path.join(__dirname, "pages") };
 export const apiRoutes = { path: path.join(__dirname, "routes") };
-export const prismaSchemas = path.join(__dirname, "../prisma");
 export const assets = path.join(__dirname, "assets/");
 ```
 
@@ -123,7 +122,7 @@ export const assets = path.join(__dirname, "assets/");
 export * from "./my-feature/service.js";
 ```
 
-**IMPORTANT**: Config exports (pageRoutes, apiRoutes, prismaSchemas, assets) must be in a separate `config.ts` file to avoid circular dependencies during Prisma client generation. Apps import config using the `/config` path (e.g., `@hmcts/my-feature/config`).
+**IMPORTANT**: Config exports (pageRoutes, apiRoutes, assets) must be in a separate `config.ts` file to avoid circular dependencies during Prisma client generation. Apps import config using the `/config` path (e.g., `@hmcts/my-feature/config`).
 
 3. **Package.json requirements**:
 ```json
@@ -204,10 +203,6 @@ const baseConfig = createBaseViteConfig([
 // apps/api/src/app.ts
 import { apiRoutes as myFeatureRoutes } from "@hmcts/my-feature/config";
 app.use(await createSimpleRouter(myFeatureRoutes));
-
-// apps/postgres/src/schema-discovery.ts
-import { prismaSchemas as myFeatureSchemas } from "@hmcts/my-feature/config";
-const schemaPaths = [myFeatureSchemas, /* other schemas */];
 ```
 
 ### Module Structure
@@ -216,8 +211,6 @@ const schemaPaths = [myFeatureSchemas, /* other schemas */];
 libs/my-feature/
 ├── package.json
 ├── tsconfig.json
-├── prisma/                     # Prisma schema (optional)
-│   └── schema.prisma           # Prisma schema file
 └── src/
     ├── routes/                 # API routes (auto-discovered)
     │   └── my-api.ts           # API route file (if needed)
@@ -241,6 +234,71 @@ libs/my-feature/
 ```
 
 **NOTE**: Pages are registered through explicit imports in `apps/web/src/app.ts`. Routes are created based on file names within the `pages/` directory. For example, `my-page.ts` becomes `/my-page`. To create nested routes, use subdirectories (e.g., `pages/admin/my-page.ts` becomes `/admin/my-page`).
+
+## Database Schema Management
+
+All Prisma schemas are centralized in **`libs/postgres-prisma/prisma/schema/`** with one file per feature domain.
+
+### Schema Organization
+
+```
+libs/postgres-prisma/
+├── prisma.config.ts            # Points to prisma/schema directory
+└── prisma/
+    └── schema/                 # All .prisma files live here
+        ├── base.prisma         # Datasource and generator config
+        ├── audit-log.prisma    # Audit log models
+        ├── location.prisma     # Location models
+        ├── subscription.prisma # Subscription models
+        └── ...                 # One file per domain
+```
+
+### Adding a New Schema File
+
+1. **Create feature schema file** in `libs/postgres-prisma/prisma/schema/`:
+
+```prisma
+// libs/postgres-prisma/prisma/schema/my-feature.prisma
+
+model MyFeature {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("my_feature")
+}
+```
+
+2. **Run Prisma generate** to update the client:
+
+```bash
+yarn db:generate
+```
+
+### Schema Naming Conventions
+
+- **File names**: kebab-case (`audit-log.prisma`, `list-search-config.prisma`)
+- **Models**: PascalCase (`User`, `CaseDocument`)
+- **Tables**: singular snake_case via `@@map("user")`
+- **Fields**: camelCase in code, snake_case in DB via `@map`
+
+### Using the Prisma Client
+
+```typescript
+import { prisma } from "@hmcts/postgres-prisma";
+
+// All models from all schema files are available
+const user = await prisma.user.findUnique({ where: { id } });
+const location = await prisma.location.findMany();
+```
+
+### Important Notes
+
+- **Never create `prisma/` directories in feature modules** - all schemas go in `libs/postgres-prisma/prisma/schema/`
+- **Prisma automatically merges** all `.prisma` files in the schema directory
+- **One schema per domain** keeps models organized and maintainable
+- **Migrations apply to all schemas** - run `yarn db:migrate:dev` from the root
 
 ### Page Controller Pattern
 

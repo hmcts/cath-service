@@ -13,30 +13,22 @@ vi.mock("@hmcts/location", () => ({
     locationId: id,
     name: `Location ${id}`,
     welshName: `Lleoliad ${id}`
-  }))
+  })),
+  getLocationsByIds: vi.fn((ids) =>
+    ids.map((id: number) => ({
+      locationId: id,
+      name: `Location ${id}`,
+      welshName: `Lleoliad ${id}`,
+      regions: [],
+      subJurisdictions: []
+    }))
+  )
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  savePendingSubscriptions: vi.fn(),
-  deletePendingSubscriptions: vi.fn(),
-  savePendingCaseSubscriptions: vi.fn(),
-  deletePendingCaseSubscriptions: vi.fn(),
-  createCaseSubscription: vi.fn()
+  getAllSubscriptionsByUserId: vi.fn(() => []),
+  replaceUserSubscriptions: vi.fn()
 }));
-
-vi.mock("@hmcts/postgres-prisma", () => ({
-  Prisma: {
-    PrismaClientKnownRequestError: class PrismaClientKnownRequestError extends Error {
-      code: string;
-      constructor(message: string, { code }: { code: string }) {
-        super(message);
-        this.code = code;
-      }
-    }
-  }
-}));
-
-import { createCaseSubscription, deletePendingCaseSubscriptions, deletePendingSubscriptions, savePendingCaseSubscriptions } from "@hmcts/subscriptions";
 
 describe("pending-subscriptions", () => {
   let mockReq: Partial<Request>;
@@ -149,21 +141,6 @@ describe("pending-subscriptions", () => {
       );
     });
 
-    it("should redirect when removing last location but case subscriptions still exist", async () => {
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: ["456"],
-          pendingCaseSubscriptions: [{ caseName: "Smith v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Smith v Jones" }]
-        }
-      } as any;
-      mockReq.body = { action: "remove", locationId: "456" };
-
-      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
-      expect(mockRes.render).not.toHaveBeenCalled();
-    });
-
     it("should initialize emailSubscriptions in session when removing and session has no emailSubscriptions", async () => {
       mockReq.session = {} as any;
       mockReq.body = { action: "remove", locationId: "456" };
@@ -179,51 +156,20 @@ describe("pending-subscriptions", () => {
       );
     });
 
-    it("should remove case subscription by index when action is remove-case", async () => {
-      const pendingCaseSubscriptions = [
-        { caseName: "Adams v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Adams v Jones" },
-        { caseName: "Brown v Crown", caseNumber: "AB-456", searchType: "CASE_NAME" as const, searchValue: "Brown v Crown" }
-      ];
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          pendingCaseSubscriptions
-        }
-      } as any;
-      mockReq.body = { action: "remove-case", caseIndex: "0" };
-
-      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockReq.session?.emailSubscriptions?.pendingCaseSubscriptions).toEqual([
-        { caseName: "Brown v Crown", caseNumber: "AB-456", searchType: "CASE_NAME", searchValue: "Brown v Crown" }
-      ]);
-      expect(savePendingCaseSubscriptions).toHaveBeenCalledWith(mockReq.app?.locals.redisClient, "user123", [
-        { caseName: "Brown v Crown", caseNumber: "AB-456", searchType: "CASE_NAME", searchValue: "Brown v Crown" }
-      ]);
-      expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
-    });
-
-    it("should delete case subscriptions from Redis when removing the last one", async () => {
-      const pendingCaseSubscriptions = [{ caseName: "Adams v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Adams v Jones" }];
-      mockReq.session = {
-        emailSubscriptions: { pendingSubscriptions: [], pendingCaseSubscriptions }
-      } as any;
-      mockReq.body = { action: "remove-case", caseIndex: "0" };
-
-      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(deletePendingCaseSubscriptions).toHaveBeenCalledWith(mockReq.app?.locals.redisClient, "user123");
-      expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
-    });
-
     it("should confirm subscriptions when action is confirm", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(replaceUserSubscriptions).mockResolvedValue({ added: 2, removed: 0 });
+
       mockReq.body = { action: "confirm" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
+      expect(replaceUserSubscriptions).toHaveBeenCalledWith("user123", ["456", "789"]);
+      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
       expect(mockReq.session?.emailSubscriptions?.confirmedLocations).toEqual(["456", "789"]);
       expect(mockReq.session?.emailSubscriptions?.pendingSubscriptions).toBeUndefined();
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-add-list");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
     });
 
     it("should redirect when confirming with no pending subscriptions", async () => {
@@ -235,130 +181,69 @@ describe("pending-subscriptions", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/location-name-search");
     });
 
-    it("should create case subscriptions and redirect to subscription-confirmed when pendingCaseSubscriptions present", async () => {
-      const pendingCaseSubscriptions = [
-        {
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          searchType: "CASE_NAME" as const,
-          searchValue: "Smith v Jones"
-        },
-        {
-          caseName: "Brown v Crown",
-          caseNumber: "AB-456",
-          searchType: "CASE_NAME" as const,
-          searchValue: "Brown v Crown"
-        }
-      ];
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          pendingCaseSubscriptions
-        }
-      } as any;
-      mockReq.body = { action: "confirm" };
-      vi.mocked(createCaseSubscription).mockResolvedValue(undefined);
+    it("should handle errors during subscription creation and render error page", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(replaceUserSubscriptions).mockRejectedValue(new Error("Database connection failed"));
 
-      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(createCaseSubscription).toHaveBeenCalledTimes(2);
-      expect(createCaseSubscription).toHaveBeenCalledWith("user123", "CASE_NAME", "Smith v Jones", "Smith v Jones", "AB-123");
-      expect(createCaseSubscription).toHaveBeenCalledWith("user123", "CASE_NAME", "Brown v Crown", "Brown v Crown", "AB-456");
-      expect(deletePendingCaseSubscriptions).toHaveBeenCalledWith(mockReq.app?.locals.redisClient, "user123");
-      expect(mockReq.session?.emailSubscriptions?.pendingCaseSubscriptions).toBeUndefined();
-      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
-    });
-
-    it("should redirect to subscription-confirmed even when all subscriptions already exist (P2002)", async () => {
-      const { Prisma } = await import("@hmcts/postgres-prisma");
-      const pendingCaseSubscriptions = [
-        {
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          searchType: "CASE_NAME" as const,
-          searchValue: "Smith v Jones"
-        }
-      ];
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          pendingCaseSubscriptions
-        }
-      } as any;
-      mockReq.body = { action: "confirm" };
-      vi.mocked(createCaseSubscription).mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002" }));
-
-      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
-      expect(mockRes.render).not.toHaveBeenCalled();
-    });
-
-    it("should defer case subscriptions and redirect to /subscription-add-list when confirming with pending location subscriptions", async () => {
-      const pendingCaseSubscriptions = [
-        {
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          searchType: "CASE_NAME" as const,
-          searchValue: "Smith v Jones"
-        }
-      ];
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: ["456", "789"],
-          pendingCaseSubscriptions
-        }
-      } as any;
       mockReq.body = { action: "confirm" };
 
       await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(createCaseSubscription).not.toHaveBeenCalled();
-      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toEqual(pendingCaseSubscriptions);
-      expect(mockReq.session?.emailSubscriptions?.pendingCaseSubscriptions).toBeUndefined();
-      expect(deletePendingCaseSubscriptions).toHaveBeenCalledWith(mockReq.app?.locals.redisClient, "user123");
-      expect(deletePendingSubscriptions).toHaveBeenCalledWith(mockReq.app?.locals.redisClient, "user123");
-      expect(mockReq.session?.emailSubscriptions?.confirmedLocations).toEqual(["456", "789"]);
-      expect(mockReq.session?.emailSubscriptions?.pendingSubscriptions).toBeUndefined();
-      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-add-list");
-    });
-  });
-
-  describe("GET with case subscription", () => {
-    it("should render with 'Confirm subscriptions' button when only case subscriptions are pending", async () => {
-      const pendingCaseSubscriptions = [
-        {
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          searchType: "CASE_NAME" as const,
-          searchValue: "Smith v Jones"
-        }
-      ];
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          pendingCaseSubscriptions
-        }
-      } as any;
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
         expect.objectContaining({
-          pendingCaseSubscriptions,
-          confirmButton: "Confirm subscriptions"
+          errors: expect.objectContaining({
+            errorList: expect.arrayContaining([expect.objectContaining({ text: "Database connection failed" })])
+          }),
+          locations: expect.any(Array),
+          isPlural: true
         })
       );
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it("should render with 'Continue' button when both case and location subscriptions are pending", async () => {
-      const pendingCaseSubscriptions = [{ caseName: "Smith v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Smith v Jones" }];
+    it("should merge existing subscriptions with pending when confirming", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([
+        { subscriptionId: "sub-1", type: "court", courtOrTribunalName: "Existing Court", locationId: 999, dateAdded: new Date() }
+      ] as any);
+      vi.mocked(replaceUserSubscriptions).mockResolvedValue({ added: 2, removed: 0 });
+
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(replaceUserSubscriptions).toHaveBeenCalledWith("user123", ["999", "456", "789"]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should redirect to sign-in when no user is present", async () => {
+      mockReq.user = undefined;
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should set confirmationComplete flag in session after successful confirmation", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(replaceUserSubscriptions).mockResolvedValue({ added: 2, removed: 0 });
+
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
+    });
+
+    it("should merge pendingSubscriptions and confirmedLocations for display", async () => {
       mockReq.session = {
         emailSubscriptions: {
           pendingSubscriptions: ["456"],
-          pendingCaseSubscriptions
+          confirmedLocations: ["789"]
         }
       } as any;
 
@@ -367,117 +252,22 @@ describe("pending-subscriptions", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
         expect.objectContaining({
-          pendingCaseSubscriptions,
-          confirmButton: "Continue"
+          locations: expect.arrayContaining([expect.objectContaining({ locationId: "456" }), expect.objectContaining({ locationId: "789" })])
         })
       );
     });
 
-    it("should show confirmedLocations alongside new case subscription when returning from confirmation-preview", async () => {
-      const pendingCaseSubscriptions = [{ caseName: "Smith v Jones", caseNumber: "AB-123", searchType: "CASE_NAME" as const, searchValue: "Smith v Jones" }];
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          confirmedLocations: ["456"],
-          pendingCaseSubscriptions
-        }
-      } as any;
+    it("should handle Welsh locale for location names", async () => {
+      mockRes.locals = { locale: "cy" };
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
       expect(mockRes.render).toHaveBeenCalledWith(
         "pending-subscriptions/index",
         expect.objectContaining({
-          locations: expect.arrayContaining([expect.objectContaining({ locationId: "456" })]),
-          pendingCaseSubscriptions,
-          confirmButton: "Continue"
+          locations: expect.arrayContaining([expect.objectContaining({ name: "Lleoliad 456" }), expect.objectContaining({ name: "Lleoliad 789" })])
         })
       );
-    });
-
-    it("should merge confirmedCaseSubscriptions into pending when returning after adding a new case subscription", async () => {
-      const existingCase = { caseName: "Old Case", caseNumber: "AB-000", searchType: "CASE_NAME" as const, searchValue: "Old Case" };
-      const newCase = { caseName: "New Case", caseNumber: "AB-999", searchType: "CASE_NAME" as const, searchValue: "New Case" };
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          confirmedCaseSubscriptions: [existingCase],
-          pendingCaseSubscriptions: [newCase]
-        }
-      } as any;
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "pending-subscriptions/index",
-        expect.objectContaining({
-          pendingCaseSubscriptions: [existingCase, newCase]
-        })
-      );
-      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toBeUndefined();
-    });
-
-    it("should deduplicate case subscriptions when the same case is added again", async () => {
-      const existingCase = { caseName: "Old Case", caseNumber: "AB-000", searchType: "CASE_NAME" as const, searchValue: "Old Case" };
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          confirmedCaseSubscriptions: [existingCase],
-          pendingCaseSubscriptions: [existingCase]
-        }
-      } as any;
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "pending-subscriptions/index",
-        expect.objectContaining({
-          pendingCaseSubscriptions: [existingCase]
-        })
-      );
-    });
-
-    it("should deduplicate case subscriptions when the same case is added via a different search type", async () => {
-      const confirmedCase = { caseName: "Smith v Jones", caseNumber: "AB-000", searchType: "CASE_NUMBER" as const, searchValue: "AB-000" };
-      const pendingCase = { caseName: "Smith v Jones", caseNumber: "AB-000", searchType: "CASE_NAME" as const, searchValue: "Smith v Jones" };
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: [],
-          confirmedCaseSubscriptions: [confirmedCase],
-          pendingCaseSubscriptions: [pendingCase]
-        }
-      } as any;
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "pending-subscriptions/index",
-        expect.objectContaining({
-          pendingCaseSubscriptions: [confirmedCase]
-        })
-      );
-    });
-
-    it("should show confirmedCaseSubscriptions alongside new location subscription when returning after adding a location", async () => {
-      const existingCase = { caseName: "Old Case", caseNumber: "AB-000", searchType: "CASE_NAME" as const, searchValue: "Old Case" };
-      mockReq.session = {
-        emailSubscriptions: {
-          pendingSubscriptions: ["789"],
-          confirmedLocations: ["456"],
-          confirmedCaseSubscriptions: [existingCase]
-        }
-      } as any;
-
-      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
-
-      expect(mockRes.render).toHaveBeenCalledWith(
-        "pending-subscriptions/index",
-        expect.objectContaining({
-          locations: expect.arrayContaining([expect.objectContaining({ locationId: "456" }), expect.objectContaining({ locationId: "789" })]),
-          pendingCaseSubscriptions: [existingCase]
-        })
-      );
-      expect(mockReq.session?.emailSubscriptions?.confirmedCaseSubscriptions).toBeUndefined();
     });
   });
 });

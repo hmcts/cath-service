@@ -52,11 +52,11 @@ vi.mock("@hmcts/system-admin-pages", () => ({
   findNonStrategicListTypes: vi.fn(() =>
     Promise.resolve([
       {
-        id: 3,
-        name: "SJP_PUBLIC_LIST",
-        friendlyName: "SJP Public List",
-        shortenedFriendlyName: "SJP Public List",
-        welshFriendlyName: "Rhestr Gyhoeddus SJP",
+        id: 9,
+        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        friendlyName: "Care Standards Tribunal Weekly Hearing List",
+        shortenedFriendlyName: "CST Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
         isNonStrategic: true
       },
       {
@@ -68,11 +68,11 @@ vi.mock("@hmcts/system-admin-pages", () => ({
         isNonStrategic: true
       },
       {
-        id: 9,
-        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
-        friendlyName: "Care Standards Tribunal Weekly Hearing List",
-        shortenedFriendlyName: "CST Weekly Hearing List",
-        welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
+        id: 3,
+        name: "SJP_PUBLIC_LIST",
+        friendlyName: "SJP Public List",
+        shortenedFriendlyName: "SJP Public List",
+        welshFriendlyName: "Rhestr Gyhoeddus SJP",
         isNonStrategic: true
       }
     ])

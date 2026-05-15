@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import { findAllSubJurisdictions } from "../../list-type/queries.js";
+import { findSubJurisdictionsByIds } from "../../list-type/queries.js";
 import { saveListType } from "../../list-type/service.js";
 import type { ListTypeSession } from "../../list-type/types.js";
 import * as cy from "./cy.js";
@@ -16,8 +16,7 @@ const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
 
-  const allSubJurisdictions = await findAllSubJurisdictions();
-  const selectedSubJurisdictions = allSubJurisdictions.filter((sj) => session.configureListType!.subJurisdictionIds!.includes(sj.subJurisdictionId));
+  const selectedSubJurisdictions = await findSubJurisdictionsByIds(session.configureListType.subJurisdictionIds || []);
 
   const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 
@@ -58,8 +57,7 @@ const postHandler = async (req: Request, res: Response) => {
     const language = req.query.lng === "cy" ? "cy" : "en";
     const content = language === "cy" ? cy : en;
 
-    const allSubJurisdictions = await findAllSubJurisdictions();
-    const selectedSubJurisdictions = allSubJurisdictions.filter((sj) => session.configureListType!.subJurisdictionIds!.includes(sj.subJurisdictionId));
+    const selectedSubJurisdictions = await findSubJurisdictionsByIds(session.configureListType?.subJurisdictionIds || []);
 
     const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 

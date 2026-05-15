@@ -23,7 +23,8 @@ async function fetchListTypeGroups(userId: string, locale: string): Promise<List
     return [];
   }
 
-  const locations = await Promise.all(subscriptions.map((s) => getLocationById(s.locationId)));
+  const courtSubscriptions = subscriptions.filter((s) => "locationId" in s && typeof s.locationId === "number");
+  const locations = await Promise.all(courtSubscriptions.map((s) => getLocationById((s as { locationId: number }).locationId)));
   const subJurisdictionIds = [...new Set(locations.flatMap((l) => l?.subJurisdictions ?? []))];
 
   if (subJurisdictionIds.length === 0) {

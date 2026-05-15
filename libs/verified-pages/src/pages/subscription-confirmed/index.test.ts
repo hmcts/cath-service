@@ -13,7 +13,16 @@ vi.mock("@hmcts/location", () => ({
     locationId: id,
     name: `Location ${id}`,
     welshName: `Lleoliad ${id}`
-  }))
+  })),
+  getLocationsByIds: vi.fn((ids) =>
+    ids.map((id: number) => ({
+      locationId: id,
+      name: `Location ${id}`,
+      welshName: `Lleoliad ${id}`,
+      regions: [],
+      subJurisdictions: []
+    }))
+  )
 }));
 
 describe("subscription-confirmed", () => {

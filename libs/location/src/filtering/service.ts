@@ -1,4 +1,4 @@
-import { getAllJurisdictions, getAllRegions, getAllSubJurisdictions } from "../repository/queries.js";
+import { getAllJurisdictions, getAllRegions, getSubJurisdictionsByJurisdiction } from "../repository/queries.js";
 
 export interface JurisdictionItem {
   value: string;
@@ -61,12 +61,11 @@ export async function buildSubJurisdictionItemsByJurisdiction(
   locale: "en" | "cy"
 ): Promise<Record<number, SubJurisdictionItem[]>> {
   const allJurisdictions = await getAllJurisdictions();
-  const allSubJurisdictions = await getAllSubJurisdictions();
 
   const subJurisdictionItemsByJurisdiction: Record<number, SubJurisdictionItem[]> = {};
 
-  allJurisdictions.forEach((jurisdiction) => {
-    const subJurisdictionsForJurisdiction = allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdiction.jurisdictionId);
+  for (const jurisdiction of allJurisdictions) {
+    const subJurisdictionsForJurisdiction = await getSubJurisdictionsByJurisdiction(jurisdiction.jurisdictionId);
 
     subJurisdictionItemsByJurisdiction[jurisdiction.jurisdictionId] = subJurisdictionsForJurisdiction
       .map((sub) => ({
@@ -75,12 +74,12 @@ export async function buildSubJurisdictionItemsByJurisdiction(
         checked: selectedSubJurisdictions.includes(sub.subJurisdictionId)
       }))
       .sort((a, b) => a.text.localeCompare(b.text));
-  });
+  }
 
   return subJurisdictionItemsByJurisdiction;
 }
 
 export async function getSubJurisdictionsForJurisdiction(jurisdictionId: number): Promise<number[]> {
-  const allSubJurisdictions = await getAllSubJurisdictions();
-  return allSubJurisdictions.filter((sub) => sub.jurisdictionId === jurisdictionId).map((sub) => sub.subJurisdictionId);
+  const subJurisdictions = await getSubJurisdictionsByJurisdiction(jurisdictionId);
+  return subJurisdictions.map((sub) => sub.subJurisdictionId);
 }

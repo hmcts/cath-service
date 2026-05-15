@@ -3,8 +3,7 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@hmcts/publication", () => ({
-  getArtefactSummariesByLocation: vi.fn(),
-  getArtefactType: vi.fn()
+  getArtefactSummariesByLocation: vi.fn()
 }));
 
 const { GET } = await import("./index.js");
@@ -42,12 +41,12 @@ describe("blob-explorer-publications page", () => {
           artefactId: "abc-123",
           listType: "Civil Daily Cause List",
           displayFrom: "2024-01-01T00:00:00Z",
-          displayTo: "2024-01-02T00:00:00Z"
+          displayTo: "2024-01-02T00:00:00Z",
+          isFlatFile: true
         }
       ];
 
       vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
-      vi.mocked(publication.getArtefactType).mockResolvedValue("flat-file");
 
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -90,12 +89,12 @@ describe("blob-explorer-publications page", () => {
           artefactId: "flat-123",
           listType: "Test List",
           displayFrom: "2024-01-01T00:00:00Z",
-          displayTo: "2024-01-02T00:00:00Z"
+          displayTo: "2024-01-02T00:00:00Z",
+          isFlatFile: true
         }
       ];
 
       vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
-      vi.mocked(publication.getArtefactType).mockResolvedValue("flat-file");
 
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -120,12 +119,12 @@ describe("blob-explorer-publications page", () => {
           artefactId: "json-123",
           listType: "Test List",
           displayFrom: "2024-01-01T00:00:00Z",
-          displayTo: "2024-01-02T00:00:00Z"
+          displayTo: "2024-01-02T00:00:00Z",
+          isFlatFile: false
         }
       ];
 
       vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
-      vi.mocked(publication.getArtefactType).mockResolvedValue("json");
 
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -165,12 +164,12 @@ describe("blob-explorer-publications page", () => {
           artefactId: "abc-123",
           listType: "Test List",
           displayFrom: "2024-01-15T10:30:00Z",
-          displayTo: "2024-01-16T15:45:00Z"
+          displayTo: "2024-01-16T15:45:00Z",
+          isFlatFile: true
         }
       ];
 
       vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
-      vi.mocked(publication.getArtefactType).mockResolvedValue("flat-file");
 
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -196,12 +195,12 @@ describe("blob-explorer-publications page", () => {
           artefactId: '<script>alert("XSS")</script>',
           listType: "Test List",
           displayFrom: "2024-01-01T00:00:00Z",
-          displayTo: "2024-01-02T00:00:00Z"
+          displayTo: "2024-01-02T00:00:00Z",
+          isFlatFile: false
         }
       ];
 
       vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
-      vi.mocked(publication.getArtefactType).mockResolvedValue("json");
 
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -223,12 +222,12 @@ describe("blob-explorer-publications page", () => {
           artefactId: "test id with spaces & special=chars",
           listType: "Test List",
           displayFrom: "2024-01-01T00:00:00Z",
-          displayTo: "2024-01-02T00:00:00Z"
+          displayTo: "2024-01-02T00:00:00Z",
+          isFlatFile: false
         }
       ];
 
       vi.mocked(publication.getArtefactSummariesByLocation).mockResolvedValue(mockPublications);
-      vi.mocked(publication.getArtefactType).mockResolvedValue("json");
 
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
