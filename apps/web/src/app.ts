@@ -33,6 +33,7 @@ import {
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
+import { restorePendingSubscriptionsMiddleware } from "@hmcts/subscriptions";
 import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
@@ -59,7 +60,8 @@ import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const chartPath = path.join(__dirname, "../helm/values.yaml");
+const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
@@ -89,7 +91,9 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
+  const redisClient = await getRedisClient(config);
+  app.use(expressSessionRedis({ redisConnection: redisClient }));
+  app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -136,6 +140,9 @@ export async function createApp(): Promise<Express> {
 
   // Session timeout tracking for authenticated users
   app.use(sessionTimeoutMiddleware);
+
+  // Restore pending subscriptions from Redis when user logs back in
+  app.use(restorePendingSubscriptionsMiddleware());
 
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);

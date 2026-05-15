@@ -4298,7 +4298,6 @@ __metadata:
     notifications-node-client: "npm:^8.2.1"
     passport: "npm:0.7.0"
     passport-azure-ad: "npm:4.3.5"
-    puppeteer: "npm:^24.36.1"
     supertest: "npm:7.2.2"
     tsx: "npm:4.21.0"
     turbo: "npm:2.9.6"
@@ -7981,7 +7980,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"puppeteer@npm:24.42.0, puppeteer@npm:^24.36.1":
+"puppeteer@npm:24.42.0":
   version: 24.42.0
   resolution: "puppeteer@npm:24.42.0"
   dependencies:
