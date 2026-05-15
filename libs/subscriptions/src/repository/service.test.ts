@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as validation from "../validation/validation.js";
 import * as queries from "./queries.js";
 import {
+  createCaseSubscription,
   createMultipleSubscriptions,
   createSubscription,
   deleteSubscriptionsByIds,
@@ -12,9 +13,11 @@ import {
   removeSubscription,
   replaceUserSubscriptions
 } from "./service.js";
+import * as listTypeService from "./subscription-list-type-service.js";
 
 vi.mock("./queries.js");
 vi.mock("../validation/validation.js");
+vi.mock("./subscription-list-type-service.js");
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
@@ -98,6 +101,8 @@ describe("Subscription Service", () => {
 
       vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
       vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
 
       const result = await removeSubscription(subscriptionId, userId);
 
@@ -128,6 +133,33 @@ describe("Subscription Service", () => {
 
       await expect(removeSubscription(subscriptionId, userId)).rejects.toThrow("Subscription not found");
       expect(queries.deleteSubscriptionRecord).toHaveBeenCalledWith(subscriptionId, userId);
+    });
+
+    it("should call prune with removed location ID and remaining location IDs", async () => {
+      const subscription = { subscriptionId, userId, searchType: "LOCATION_ID", searchValue: "456", dateAdded: new Date() };
+      const remainingSubscription = { subscriptionId: "sub2", userId, searchType: "LOCATION_ID", searchValue: "789", dateAdded: new Date() };
+
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([remainingSubscription]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
+
+      await removeSubscription(subscriptionId, userId);
+
+      expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(userId, [456], [789]);
+    });
+
+    it("should call prune with empty remaining when last subscription is removed", async () => {
+      const subscription = { subscriptionId, userId, searchType: "LOCATION_ID", searchValue: "456", dateAdded: new Date() };
+
+      vi.mocked(queries.findSubscriptionById).mockResolvedValue(subscription);
+      vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
+
+      await removeSubscription(subscriptionId, userId);
+
+      expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(userId, [456], []);
     });
   });
 
@@ -388,10 +420,58 @@ describe("Subscription Service", () => {
   });
 
   describe("getCaseSubscriptionsByUserId", () => {
-    it("should return empty array as case subscriptions are not yet implemented", async () => {
+    it("should return mapped case subscriptions for a user", async () => {
+      const dateAdded = new Date();
+      const mockSubscriptions = [
+        {
+          subscriptionId: "sub1",
+          userId: "user-123",
+          searchType: "CASE_NAME",
+          searchValue: "Smith v Jones",
+          caseName: "Smith v Jones",
+          caseNumber: "AB-123",
+          dateAdded
+        }
+      ];
+
+      vi.spyOn(queries, "findCaseSubscriptionsByUserId").mockResolvedValue(mockSubscriptions as any);
+
+      const result = await getCaseSubscriptionsByUserId("user-123");
+
+      expect(result).toEqual([
+        {
+          subscriptionId: "sub1",
+          caseName: "Smith v Jones",
+          caseNumber: "AB-123",
+          dateAdded
+        }
+      ]);
+    });
+
+    it("should return empty array when no case subscriptions exist", async () => {
+      vi.spyOn(queries, "findCaseSubscriptionsByUserId").mockResolvedValue([]);
+
       const result = await getCaseSubscriptionsByUserId("user-123");
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("createCaseSubscription", () => {
+    it("should call createCaseSubscriptionRecord with correct arguments", async () => {
+      vi.spyOn(queries, "createCaseSubscriptionRecord").mockResolvedValue({} as any);
+
+      await createCaseSubscription("user-123", "CASE_NAME", "Smith v Jones", "Smith v Jones", "AB-123");
+
+      expect(queries.createCaseSubscriptionRecord).toHaveBeenCalledWith("user-123", "CASE_NAME", "Smith v Jones", "Smith v Jones", "AB-123");
+    });
+
+    it("should pass null caseNumber when provided", async () => {
+      vi.spyOn(queries, "createCaseSubscriptionRecord").mockResolvedValue({} as any);
+
+      await createCaseSubscription("user-123", "CASE_NUMBER", "CD-456", "R v Doe", null);
+
+      expect(queries.createCaseSubscriptionRecord).toHaveBeenCalledWith("user-123", "CASE_NUMBER", "CD-456", "R v Doe", null);
     });
   });
 
@@ -481,12 +561,14 @@ describe("Subscription Service", () => {
   });
 
   describe("getSubscriptionDetailsForConfirmation", () => {
-    const mockSubscriptions = [
+    const mockCourtSubscriptions = [
       {
         subscriptionId: "sub-1",
         userId: "user-123",
         searchType: "LOCATION_ID",
         searchValue: "1",
+        caseName: null,
+        caseNumber: null,
         dateAdded: new Date("2024-01-01")
       },
       {
@@ -494,12 +576,14 @@ describe("Subscription Service", () => {
         userId: "user-123",
         searchType: "LOCATION_ID",
         searchValue: "2",
+        caseName: null,
+        caseNumber: null,
         dateAdded: new Date("2024-01-02")
       }
     ];
 
-    it("should return subscription details with location information", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+    it("should return court subscription details with location information", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCourtSubscriptions as any);
       vi.mocked(getLocationById).mockImplementation(async (id) => {
         if (id === 1) {
           return {
@@ -538,15 +622,76 @@ describe("Subscription Service", () => {
       ]);
     });
 
+    it("should return case subscription details without location lookup", async () => {
+      const mockCaseSubscriptions = [
+        {
+          subscriptionId: "sub-3",
+          userId: "user-123",
+          searchType: "CASE_NAME",
+          searchValue: "Smith v Jones",
+          caseName: "Smith v Jones",
+          caseNumber: "AB-123",
+          dateAdded: new Date("2024-01-03")
+        }
+      ];
+
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCaseSubscriptions as any);
+
+      const result = await getSubscriptionDetailsForConfirmation(["sub-3"], "user-123", "en");
+
+      expect(result).toEqual([
+        {
+          subscriptionId: "sub-3",
+          type: "case",
+          caseName: "Smith v Jones",
+          caseNumber: "AB-123",
+          dateAdded: new Date("2024-01-03")
+        }
+      ]);
+      expect(getLocationById).not.toHaveBeenCalled();
+    });
+
+    it("should return both case and court subscription details when mixed", async () => {
+      const mockMixed = [
+        {
+          subscriptionId: "sub-1",
+          userId: "user-123",
+          searchType: "LOCATION_ID",
+          searchValue: "1",
+          caseName: null,
+          caseNumber: null,
+          dateAdded: new Date("2024-01-01")
+        },
+        {
+          subscriptionId: "sub-3",
+          userId: "user-123",
+          searchType: "CASE_NAME",
+          searchValue: "Smith v Jones",
+          caseName: "Smith v Jones",
+          caseNumber: "AB-123",
+          dateAdded: new Date("2024-01-03")
+        }
+      ];
+
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockMixed as any);
+      vi.mocked(getLocationById).mockResolvedValue({ locationId: 1, name: "Birmingham Crown Court", welshName: null } as any);
+
+      const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-3"], "user-123", "en");
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({ type: "court", courtOrTribunalName: "Birmingham Crown Court" });
+      expect(result[1]).toMatchObject({ type: "case", caseName: "Smith v Jones", caseNumber: "AB-123" });
+    });
+
     it("should return empty array when no subscription IDs provided", async () => {
       const result = await getSubscriptionDetailsForConfirmation([], "user-123");
 
       expect(result).toEqual([]);
-      expect(queries.findSubscriptionsWithLocationByIds).not.toHaveBeenCalled();
+      expect(queries.findSubscriptionsByIds).not.toHaveBeenCalled();
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCourtSubscriptions as any);
       vi.mocked(getLocationById).mockImplementation(async (id) => {
         if (id === 1) {
           return {
@@ -560,15 +705,21 @@ describe("Subscription Service", () => {
 
       const result = await getSubscriptionDetailsForConfirmation(["sub-1"], "user-123", "cy");
 
-      expect(result[0].courtOrTribunalName).toBe("Welsh Birmingham Crown Court");
+      expect((result[0] as any).courtOrTribunalName).toBe("Welsh Birmingham Crown Court");
     });
   });
 
   describe("deleteSubscriptionsByIds", () => {
     const mockUserId = "user-123";
 
-    it("should delete subscriptions in a transaction when user owns them", async () => {
+    it("should delete subscriptions when user owns them", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "100", dateAdded: new Date() },
+        { subscriptionId: "sub-2", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "200", dateAdded: new Date() }
+      ] as any);
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(2);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
 
       const result = await deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId);
 
@@ -581,31 +732,70 @@ describe("Subscription Service", () => {
     });
 
     it("should throw error when count does not match (some subscriptions do not exist or user does not own them)", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([]);
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(1);
 
       await expect(deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
-      expect(queries.deleteSubscriptionsByIds).toHaveBeenCalledWith(["sub-1", "sub-2"], mockUserId);
     });
 
-    it("should handle transaction rollback on database error", async () => {
+    it("should handle database error", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "100", dateAdded: new Date() }
+      ] as any);
       vi.mocked(queries.deleteSubscriptionsByIds).mockRejectedValue(new Error("Database connection failed"));
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Database connection failed");
     });
 
-    it("should delete correct subscriptions with proper where clause", async () => {
-      const subscriptionIds = ["sub-1", "sub-2", "sub-3"];
-      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(3);
-
-      await deleteSubscriptionsByIds(subscriptionIds, mockUserId);
-
-      expect(queries.deleteSubscriptionsByIds).toHaveBeenCalledWith(subscriptionIds, mockUserId);
-    });
-
     it("should throw error when no subscriptions match deletion criteria", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([]);
       vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(0);
 
       await expect(deleteSubscriptionsByIds(["sub-1"], mockUserId)).rejects.toThrow("Unauthorized: User does not own all selected subscriptions");
+    });
+
+    it("should call prune with removed and remaining location IDs", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "100", dateAdded: new Date() },
+        { subscriptionId: "sub-2", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "200", dateAdded: new Date() }
+      ] as any);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(2);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([
+        { subscriptionId: "sub-3", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "300", dateAdded: new Date() }
+      ]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
+
+      await deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId);
+
+      expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(mockUserId, [100, 200], [300]);
+    });
+
+    it("should call prune with empty remaining when all subscriptions are deleted", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "100", dateAdded: new Date() }
+      ] as any);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(1);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
+
+      await deleteSubscriptionsByIds(["sub-1"], mockUserId);
+
+      expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(mockUserId, [100], []);
+    });
+
+    it("should delete mixed case and court subscriptions when user owns them all", async () => {
+      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue([
+        { subscriptionId: "sub-1", userId: mockUserId, searchType: "LOCATION_ID", searchValue: "100", dateAdded: new Date() },
+        { subscriptionId: "sub-2", userId: mockUserId, searchType: "CASE_NAME", searchValue: "Smith v Jones", dateAdded: new Date() }
+      ] as any);
+      vi.mocked(queries.deleteSubscriptionsByIds).mockResolvedValue(2);
+      vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(listTypeService.pruneStaleListTypesForUser).mockResolvedValue(undefined);
+
+      const result = await deleteSubscriptionsByIds(["sub-1", "sub-2"], mockUserId);
+
+      expect(result).toBe(2);
+      expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(mockUserId, [100], []);
     });
   });
 });

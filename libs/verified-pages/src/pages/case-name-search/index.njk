@@ -1,0 +1,57 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {% if errors %}Error: {% endif %}{{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: "/add-email-subscription"
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errors.titleText,
+        errorList: errors.errorList
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <form method="post" novalidate>
+
+      {{ govukInput({
+        id: "caseName",
+        name: "caseName",
+        classes: "govuk-!-width-three-quarters",
+        label: {
+          text: caseNameLabel,
+          classes: "govuk-visually-hidden"
+        },
+        hint: {
+          text: caseNameHint
+        },
+        errorMessage: errors and { text: errors.inlineError if errors.inlineError else errors.errorList[0].text },
+        value: caseName
+      }) }}
+
+      {{ govukButton({
+        text: continueButton,
+        type: "submit"
+      }) }}
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

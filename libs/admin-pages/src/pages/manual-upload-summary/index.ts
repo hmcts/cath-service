@@ -125,7 +125,6 @@ const postHandler = async (req: Request, res: Response) => {
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
     await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
-    // Extract and store artefact search data for JSON files
     let jsonData: unknown;
     if (!isFlatFile) {
       try {

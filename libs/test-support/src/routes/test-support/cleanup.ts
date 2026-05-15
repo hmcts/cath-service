@@ -56,6 +56,17 @@ export const DELETE = async (req: Request, res: Response) => {
     });
     results.subscriptions += subscriptionByValueResult.count;
 
+    // Delete subscriptions by LOCATION_ID where locationId is a prefixed location
+    if (testLocationIds.length > 0) {
+      const subscriptionByLocationResult = await prisma.subscription.deleteMany({
+        where: {
+          searchType: "LOCATION_ID",
+          searchValue: { in: testLocationIds }
+        }
+      });
+      results.subscriptions += subscriptionByLocationResult.count;
+    }
+
     // Delete users with prefix email
     const userResult = await prisma.user.deleteMany({
       where: { email: { startsWith: prefix } }

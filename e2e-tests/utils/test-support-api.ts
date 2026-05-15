@@ -58,6 +58,8 @@ interface CreateArtefactInput {
   displayTo?: string;
   isFlatFile?: boolean;
   provenance?: string;
+  caseNumber?: string;
+  caseName?: string;
 }
 
 interface CreateArtefactResponse {
@@ -424,6 +426,18 @@ export async function uploadTestFlatFile(input: UploadFlatFileInput): Promise<Up
 
 export async function deleteTestFlatFile(artefactId: string): Promise<{ deleted: boolean }> {
   return callTestSupportApi<{ deleted: boolean }>("DELETE", "/test-support/flat-files", { artefactId });
+}
+
+export interface FlatFileInfo {
+  exists: boolean;
+  artefactId: string;
+  filename?: string;
+  sizeBytes?: number;
+  createdAt?: string;
+}
+
+export async function checkFlatFileExists(artefactId: string): Promise<FlatFileInfo> {
+  return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
 }
 
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {

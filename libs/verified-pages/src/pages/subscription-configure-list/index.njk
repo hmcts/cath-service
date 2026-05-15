@@ -1,0 +1,102 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {% if errors %}Error: {% endif %}{{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: "/subscription-management"
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errors.titleText,
+        errorList: errors.errorList
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <p class="govuk-body">{{ description }}</p>
+
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if listTypeGroups.length == 0 %}
+      <p class="govuk-body">{{ noListTypes }}</p>
+    {% else %}
+      <form method="post" novalidate>
+
+        <table class="govuk-table" id="list-types-table">
+          <tbody class="govuk-table__body">
+            {% for group in listTypeGroups %}
+              {% for item in group.items %}
+                <tr class="govuk-table__row">
+                  {% if loop.first %}
+                    <th scope="row" class="govuk-table__header govuk-!-font-size-27">{{ group.letter }}</th>
+                  {% else %}
+                    <th scope="row" aria-hidden="true" class="govuk-table__header"></th>
+                  {% endif %}
+                  <td class="govuk-table__cell">
+                    <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                      <input type="checkbox"
+                             class="govuk-checkboxes__input list-item"
+                             id="listType_{{ item.listTypeId }}"
+                             value="{{ item.listTypeId }}"
+                             name="selectedListTypes"
+                             {% if item.checked %}checked{% endif %} />
+                      <label class="govuk-label govuk-checkboxes__label"
+                             for="listType_{{ item.listTypeId }}">
+                        <span class="govuk-visually-hidden">Select {{ item.name }}</span>
+                      </label>
+                    </div>
+                  </td>
+                  <td class="govuk-table__cell govuk-!-font-size-19">{{ item.name }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <h2 class="govuk-heading-m">{{ userSelections }}</h2>
+        <div class="selection-counter-box govuk-!-padding-top-3 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2 govuk-!-margin-bottom-4" style="background-color: #f3f2f1;">
+          <p class="govuk-body"><span id="selectionCount">0</span> {{ selected }}</p>
+        </div>
+
+        {{ govukButton({
+          text: continueButton,
+          type: "submit"
+        }) }}
+
+      </form>
+    {% endif %}
+
+  </div>
+</div>
+
+<script nonce="{{ cspNonce }}">
+  document.querySelectorAll('.list-item').forEach(function(item) {
+    item.addEventListener('click', calculateChecked);
+  });
+
+  function calculateChecked() {
+    var checkedBoxes = document.querySelectorAll('input[name="selectedListTypes"]:checked').length;
+    document.getElementById('selectionCount').innerText = checkedBoxes.toString();
+  }
+
+  calculateChecked();
+</script>
+{% endblock %}

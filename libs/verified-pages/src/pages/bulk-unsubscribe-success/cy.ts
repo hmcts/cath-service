@@ -5,7 +5,7 @@ export const cy = {
   successLinkAddSubscription: "ychwanegu tanysgrifiad e-bost newydd",
   successLinkManageSubscriptions: "rheoli eich tanysgrifiadau e-bost cyfredol",
   successLinkFindCourt: "dod o hyd i lys neu dribiwnlys",
-  linkAddSubscription: "/location-name-search",
+  linkAddSubscription: "/add-email-subscription",
   linkManageSubscriptions: "/subscription-management",
   linkFindCourt: "/court-and-tribunal-hearings"
 };

@@ -13,6 +13,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const confirmedLocationIds = req.session.emailSubscriptions.confirmedLocations || [];
+  delete req.session.emailSubscriptions.confirmedLocations;
 
   const confirmedLocations = (
     await Promise.all(
@@ -22,9 +23,6 @@ const getHandler = async (req: Request, res: Response) => {
       })
     )
   ).filter(Boolean);
-
-  delete req.session.emailSubscriptions.confirmationComplete;
-  delete req.session.emailSubscriptions.confirmedLocations;
 
   if (!res.locals.navigation) {
     res.locals.navigation = {};
