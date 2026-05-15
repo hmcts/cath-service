@@ -11,6 +11,7 @@ import {
   findSubscriptionByUserAndLocation,
   findSubscriptionsByIds,
   findSubscriptionsByUserId,
+  findSubscriptionsWithLocationByIds,
   findSubscriptionsWithLocationByUserId,
   searchByCaseName,
   searchByCaseNumber
@@ -178,7 +179,7 @@ async function mapSubscriptionsToDto(
   const locationMap = new Map(locations.map((loc) => [loc.locationId, loc]));
 
   return subscriptions
-    .map((sub) => {
+    .map((sub): CourtSubscriptionDto | null => {
       const locationId = Number.parseInt(sub.searchValue, 10);
       const location = locationMap.get(locationId);
       if (!location) {
@@ -186,7 +187,7 @@ async function mapSubscriptionsToDto(
       }
       return mapSubscriptionToDto(sub, location, locale);
     })
-    .filter((dto): dto is SubscriptionDto => dto !== null);
+    .filter((dto): dto is CourtSubscriptionDto => dto !== null);
 }
 
 export async function getAllSubscriptionsByUserId(userId: string, locale = "en") {
