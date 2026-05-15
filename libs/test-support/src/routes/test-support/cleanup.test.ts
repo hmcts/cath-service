@@ -111,7 +111,7 @@ describe("cleanup routes", () => {
       // Assert
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_",
-        deleted: 12,
+        deleted: 13,
         details: {
           artefacts: 3,
           subscriptions: 4,
