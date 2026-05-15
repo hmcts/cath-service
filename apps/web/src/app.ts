@@ -3,17 +3,6 @@ import { fileURLToPath } from "node:url";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot, pageRoutes as adminCourtRoutes } from "@hmcts/administrative-court-daily-cause-list/config";
-import {
-  authNavigationMiddleware,
-  b2cCallbackHandler,
-  b2cCallbackPostHandler,
-  b2cForgotPasswordHandler,
-  cftCallbackHandler,
-  configurePassport,
-  crimeCallbackHandler,
-  sessionTimeoutMiddleware,
-  ssoCallbackHandler
-} from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import {
   moduleRoot as careStandardsTribunalModuleRoot,
@@ -64,6 +53,20 @@ const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
   const { default: config } = await import("config");
+
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const {
+    authNavigationMiddleware,
+    b2cCallbackHandler,
+    b2cCallbackPostHandler,
+    b2cForgotPasswordHandler,
+    cftCallbackHandler,
+    configurePassport,
+    crimeCallbackHandler,
+    sessionTimeoutMiddleware,
+    ssoCallbackHandler
+  } = await import("@hmcts/auth");
 
   const app = express();
   app.set("trust proxy", 1);
