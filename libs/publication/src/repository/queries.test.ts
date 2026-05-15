@@ -1168,7 +1168,7 @@ describe("getLatestSjpArtefacts", () => {
       {
         artefactId: "sjp-1",
         locationId: "123",
-        listTypeId: 10, // SJP_PRESS_LIST
+        listTypeId: 24, // SJP_PRESS_LIST
         contentDate: new Date("2025-10-25"),
         sensitivity: "PRIVATE",
         language: "ENGLISH",
@@ -1183,7 +1183,7 @@ describe("getLatestSjpArtefacts", () => {
       {
         artefactId: "sjp-2",
         locationId: "456",
-        listTypeId: 11, // SJP_PUBLIC_LIST
+        listTypeId: 25, // SJP_PUBLIC_LIST
         contentDate: new Date("2025-10-24"),
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -1203,16 +1203,16 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [10, 11] }
+        listTypeId: { in: [24, 25, 26, 27] }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10
     });
     expect(result).toHaveLength(2);
     expect(result[0].artefactId).toBe("sjp-1");
-    expect(result[0].listTypeId).toBe(10);
+    expect(result[0].listTypeId).toBe(24);
     expect(result[1].artefactId).toBe("sjp-2");
-    expect(result[1].listTypeId).toBe(11);
+    expect(result[1].listTypeId).toBe(25);
   });
 
   it("should return empty array when no SJP artefacts found", async () => {
@@ -1227,7 +1227,7 @@ describe("getLatestSjpArtefacts", () => {
     const mockArtefacts = Array.from({ length: 15 }, (_, i) => ({
       artefactId: `sjp-${i}`,
       locationId: "123",
-      listTypeId: i % 2 === 0 ? 10 : 11,
+      listTypeId: i % 2 === 0 ? 24 : 25,
       contentDate: new Date("2025-10-25"),
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -1246,7 +1246,7 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [10, 11] }
+        listTypeId: { in: [24, 25, 26, 27] }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10

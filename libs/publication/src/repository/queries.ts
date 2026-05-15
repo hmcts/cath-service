@@ -3,8 +3,10 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
 import type { Artefact } from "./model.js";
 
-const SJP_PRESS_LIST_ID = 10;
-const SJP_PUBLIC_LIST_ID = 11;
+const SJP_PRESS_LIST_ID = 24;
+const SJP_PUBLIC_LIST_ID = 25;
+const SJP_DELTA_PRESS_LIST_ID = 26;
+const SJP_DELTA_PUBLIC_LIST_ID = 27;
 
 export interface ArtefactSummary {
   artefactId: string;
@@ -284,7 +286,7 @@ export async function getArtefactListTypeId(artefactId: string): Promise<number 
 export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   const artefacts = await prisma.artefact.findMany({
     where: {
-      listTypeId: { in: [SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID] }
+      listTypeId: { in: [SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID, SJP_DELTA_PRESS_LIST_ID, SJP_DELTA_PUBLIC_LIST_ID] }
     },
     orderBy: { lastReceivedDate: "desc" },
     take: 10

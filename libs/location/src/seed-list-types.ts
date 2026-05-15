@@ -30,8 +30,9 @@ export async function seedListTypes() {
         throw new Error(`No sub-jurisdictions resolved for list type "${listType.name}"`);
       }
 
-      await (prisma as any).listType.create({
-        data: {
+      const upserted = await (prisma as any).listType.upsert({
+        where: { name: listType.name },
+        create: {
           name: listType.name,
           friendlyName: listType.englishFriendlyName,
           welshFriendlyName: listType.welshFriendlyName,
@@ -39,14 +40,34 @@ export async function seedListTypes() {
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,
-          isNonStrategic: listType.isNonStrategic,
-          subJurisdictions: {
-            create: relevantSubJurisdictions.map((sj: any) => ({
-              subJurisdictionId: sj.subJurisdictionId
-            }))
-          }
+          isNonStrategic: listType.isNonStrategic
+        },
+        update: {
+          friendlyName: listType.englishFriendlyName,
+          welshFriendlyName: listType.welshFriendlyName,
+          shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
+          url: listType.urlPath || "",
+          defaultSensitivity: listType.defaultSensitivity,
+          allowedProvenance: listType.provenance,
+          isNonStrategic: listType.isNonStrategic
         }
       });
+
+      for (const sj of relevantSubJurisdictions) {
+        await (prisma as any).listTypeSubJurisdiction.upsert({
+          where: {
+            listTypeId_subJurisdictionId: {
+              listTypeId: upserted.id,
+              subJurisdictionId: sj.subJurisdictionId
+            }
+          },
+          create: {
+            listTypeId: upserted.id,
+            subJurisdictionId: sj.subJurisdictionId
+          },
+          update: {}
+        });
+      }
     } catch (error) {
       console.error(`Failed to seed list type "${listType.name}":`, error);
       throw error;
