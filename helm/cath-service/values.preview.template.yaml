@@ -19,7 +19,6 @@ cath-web:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
     ingressHost: "{{ .Release.Name }}-web.dev.platform.hmcts.net"
-    aadIdentityName: cath
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.dev.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
@@ -27,29 +26,6 @@ cath-web:
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
-    keyVaults:
-      pip-ss-kv:
-        secrets:
-          - name: sso-client-id
-            alias: SSO_CLIENT_ID
-          - name: sso-client-secret
-            alias: SSO_CLIENT_SECRET
-          - name: sso-issuer-url
-            alias: SSO_IDENTITY_METADATA
-          - name: sso-sg-system-admin
-            alias: SSO_SYSTEM_ADMIN_GROUP_ID
-          - name: sso-sg-admin-ctsc
-            alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
-          - name: sso-sg-admin-local
-            alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
-          - name: cft-idam-client-secret
-            alias: CFT_IDAM_CLIENT_SECRET
-          - name: app-pip-b2c-id
-            alias: B2C_CLIENT_ID
-          - name: app-pip-b2c-pwd
-            alias: B2C_CLIENT_SECRET
-          - name: b2c-tenant-id
-            alias: B2C_TENANT_ID
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
