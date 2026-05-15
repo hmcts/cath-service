@@ -33,8 +33,6 @@ import {
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import { restorePendingSubscriptionsMiddleware } from "@hmcts/subscriptions";
-import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
@@ -142,6 +140,9 @@ export async function createApp(): Promise<Express> {
   app.use(sessionTimeoutMiddleware);
 
   // Restore pending subscriptions from Redis when user logs back in
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { restorePendingSubscriptionsMiddleware } = await import("@hmcts/subscriptions");
   app.use(restorePendingSubscriptionsMiddleware());
 
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
@@ -189,6 +190,9 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
   // Register audit log middleware to capture all system admin actions
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { auditLogMiddleware } = await import("@hmcts/system-admin-pages");
   app.use(auditLogMiddleware());
 
   // Register file upload middleware for system admin pages
