@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { en } from "./create-media-account/en.js";
 import { validateForm } from "./validation.js";
+
+const en = {
+  errorFullNameBlank: "Enter your full name",
+  errorFullNameWhiteSpace: "Full name cannot start with whitespace",
+  errorFullNameDoubleWhiteSpace: "Full name cannot contain double whitespace",
+  errorFullNameWithoutWhiteSpace: "Enter your full name (first and last name)",
+  errorEmailBlank: "Enter your email address",
+  errorEmailStartWithWhiteSpace: "Email cannot start with whitespace",
+  errorEmailDoubleWhiteSpace: "Email cannot contain double whitespace",
+  errorEmailInvalid: "Enter a valid email address",
+  errorEmployerBlank: "Enter your employer",
+  errorEmployerWhiteSpace: "Employer cannot start with whitespace",
+  errorEmployerDoubleWhiteSpace: "Employer cannot contain double whitespace",
+  errorFileSize: "File must be smaller than 2MB",
+  errorFileBlank: "Select a file",
+  errorFileType: "File must be a JPG, JPEG, PNG or PDF",
+  errorTermsRequired: "You must accept the terms and conditions"
+};
 
 describe("validateForm", () => {
   it("should return no errors for valid form data", () => {
