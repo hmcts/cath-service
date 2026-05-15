@@ -520,3 +520,47 @@ export async function createOrGetListType(input: CreateListTypeInput): Promise<L
   // Map 'id' to 'listTypeId' for backwards compatibility
   return { ...created, listTypeId: created.id };
 }
+
+// Third Party Users
+interface CreateThirdPartyUserInput {
+  name: string;
+}
+
+interface ThirdPartyUserRecord {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+interface ThirdPartyUserWithSubscriptions extends ThirdPartyUserRecord {
+  subscriptions: Array<{
+    id: string;
+    listType: string;
+    sensitivity: string;
+  }>;
+}
+
+export async function createTestThirdPartyUser(data: CreateThirdPartyUserInput): Promise<ThirdPartyUserRecord> {
+  return callTestSupportApi<ThirdPartyUserRecord>("POST", "/test-support/third-party-users", data);
+}
+
+export async function getTestThirdPartyUsers(): Promise<ThirdPartyUserRecord[]> {
+  return callTestSupportApi<ThirdPartyUserRecord[]>("GET", "/test-support/third-party-users");
+}
+
+export async function getTestThirdPartyUser(id: string): Promise<ThirdPartyUserWithSubscriptions> {
+  return callTestSupportApi<ThirdPartyUserWithSubscriptions>("GET", `/test-support/third-party-users/${id}`);
+}
+
+export async function deleteTestThirdPartyUser(id: string): Promise<void> {
+  return callTestSupportApi<void>("DELETE", `/test-support/third-party-users/${id}`);
+}
+
+export async function deleteTestThirdPartyUsers(ids: string[]): Promise<{ deleted: number }> {
+  return callTestSupportApi<{ deleted: number }>("DELETE", "/test-support/third-party-users", { ids });
+}
+
+export async function findTestThirdPartyUserByName(name: string): Promise<ThirdPartyUserRecord | null> {
+  const users = await getTestThirdPartyUsers();
+  return (users.find((u) => u.name === name) as ThirdPartyUserRecord) || null;
+}

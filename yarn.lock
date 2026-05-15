@@ -1430,7 +1430,9 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
+    "@hmcts/third-party-user": "workspace:*"
     "@hmcts/web-core": "workspace:*"
+    "@launchdarkly/node-server-sdk": "npm:^9.7.0"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
     "@types/papaparse": "npm:5.5.2"
@@ -1447,6 +1449,17 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:
     "@prisma/client": "*"
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/third-party-user@workspace:*, @hmcts/third-party-user@workspace:libs/third-party-user":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/third-party-user@workspace:libs/third-party-user"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+  peerDependencies:
     express: ^5.2.0
   languageName: unknown
   linkType: soft
@@ -1599,6 +1612,34 @@ __metadata:
   version: 4.4.2
   resolution: "@js-sdsl/ordered-map@npm:4.4.2"
   checksum: 10c0/cc7e15dc4acf6d9ef663757279600bab70533d847dcc1ab01332e9e680bd30b77cdf9ad885cc774276f51d98b05a013571c940e5b360985af5eb798dc1a2ee2b
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-sdk-common@npm:2.24.2":
+  version: 2.24.2
+  resolution: "@launchdarkly/js-sdk-common@npm:2.24.2"
+  checksum: 10c0/9928ff69f9e8a35a0368127aa811d8855fe5f8e5838f80f62df5c486589f155d5482be5ffa149737be4da2412475a1f13a13bb468697f22812aa915f7ffd5312
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-server-sdk-common@npm:2.18.5":
+  version: 2.18.5
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.18.5"
+  dependencies:
+    "@launchdarkly/js-sdk-common": "npm:2.24.2"
+    semver: "npm:7.5.4"
+  checksum: 10c0/15f8b45d58fbb9cee29c0e7c6d97c2ddab4d651873ec09aad36893b04adecd5bdd9e5acdc52a4a555058891913286f26db1798959a92e71ec2879d09de706cb3
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/node-server-sdk@npm:^9.7.0":
+  version: 9.10.12
+  resolution: "@launchdarkly/node-server-sdk@npm:9.10.12"
+  dependencies:
+    "@launchdarkly/js-server-sdk-common": "npm:2.18.5"
+    https-proxy-agent: "npm:^7.0.6"
+    launchdarkly-eventsource: "npm:2.2.0"
+  checksum: 10c0/54178fafd10882d73b407c640373e4316ef6a34f375741dc50f1ef7b1a02bfc8dd3f483a9d4c7182b194bd7f12d4676846636c5a19b33ab1de93e09b8537c41c
   languageName: node
   linkType: hard
 
@@ -6370,6 +6411,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"launchdarkly-eventsource@npm:2.2.0":
+  version: 2.2.0
+  resolution: "launchdarkly-eventsource@npm:2.2.0"
+  checksum: 10c0/fce94e58ef5eb560349b2f5405276c01b86d83afc3f7149c6e58ce4fcdf69f1ef8c97c9800bedf0986b41fa7a1f14740aee804d8c74f9fc81b6cf22f4bd5a7f1
+  languageName: node
+  linkType: hard
+
 "lazystream@npm:^1.0.0":
   version: 1.0.1
   resolution: "lazystream@npm:1.0.1"
@@ -6591,7 +6639,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:6.0.0":
+"lru-cache@npm:6.0.0, lru-cache@npm:^6.0.0":
   version: 6.0.0
   resolution: "lru-cache@npm:6.0.0"
   dependencies:
@@ -8353,6 +8401,17 @@ __metadata:
   dependencies:
     xmlchars: "npm:^2.2.0"
   checksum: 10c0/b7476c41dbe1c3a89907d2546fecfba234de5e66743ef914cde2603f47b19bed09732ab51b528ad0f98b958369d8be72b6f5af5c9cfad69972a73d061f0b3952
+  languageName: node
+  linkType: hard
+
+"semver@npm:7.5.4":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: "npm:^6.0.0"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/5160b06975a38b11c1ab55950cb5b8a23db78df88275d3d8a42ccf1f29e55112ac995b3a26a522c36e3b5f76b0445f1eef70d696b8c7862a2b4303d7b0e7609e
   languageName: node
   linkType: hard
 

@@ -23,6 +23,9 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     },
     mediaApplication: {
       deleteMany: vi.fn()
+    },
+    thirdPartyUser: {
+      deleteMany: vi.fn()
     }
   }
 }));
@@ -100,6 +103,7 @@ describe("cleanup routes", () => {
       vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 2 } as any);
       vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 1 } as any);
       vi.mocked(prisma.mediaApplication.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 1 } as any);
 
       // Act
       await DELETE(mockRequest as Request, mockResponse as Response);
@@ -107,14 +111,15 @@ describe("cleanup routes", () => {
       // Assert
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_",
-        deleted: 12,
+        deleted: 13,
         details: {
           artefacts: 3,
           subscriptions: 4,
           users: 1,
           locations: 2,
           listTypes: 1,
-          mediaApplications: 1
+          mediaApplications: 1,
+          thirdPartyUsers: 1
         }
       });
     });
@@ -130,6 +135,7 @@ describe("cleanup routes", () => {
       vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.mediaApplication.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 0 } as any);
 
       // Act
       await DELETE(mockRequest as Request, mockResponse as Response);
@@ -145,7 +151,8 @@ describe("cleanup routes", () => {
           users: 0,
           locations: 0,
           listTypes: 0,
-          mediaApplications: 0
+          mediaApplications: 0,
+          thirdPartyUsers: 0
         }
       });
     });
@@ -161,6 +168,7 @@ describe("cleanup routes", () => {
       vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.mediaApplication.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 0 } as any);
 
       // Act
       await DELETE(mockRequest as Request, mockResponse as Response);
@@ -169,10 +177,35 @@ describe("cleanup routes", () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           details: expect.objectContaining({
-            subscriptions: 0
+            subscriptions: 0,
+            thirdPartyUsers: 0
           })
         })
       );
+    });
+
+    it("should cleanup third party users with both underscore and hyphenated prefixes", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+
+      vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.mediaApplication.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 2 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert - verify deleteMany was called with OR clause for both underscore and hyphen prefixes
+      expect(prisma.thirdPartyUser.deleteMany).toHaveBeenCalledWith({
+        where: {
+          OR: [{ name: { startsWith: "E2E_123_" } }, { name: { startsWith: "E2E-123-" } }]
+        }
+      });
     });
 
     it("should return 500 on database error", async () => {
