@@ -1,8 +1,10 @@
-import { SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
 import type { Artefact } from "./model.js";
+
+const SJP_PRESS_LIST_ID = 10;
+const SJP_PUBLIC_LIST_ID = 11;
 
 export interface ArtefactSummary {
   artefactId: string;

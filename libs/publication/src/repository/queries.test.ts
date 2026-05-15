@@ -39,27 +39,6 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-vi.mock("@hmcts/list-types-common", () => ({
-  SJP_PRESS_LIST_ID: 10,
-  SJP_PUBLIC_LIST_ID: 11,
-  mockListTypes: [
-    {
-      id: 1,
-      name: "CIVIL_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Civil Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Sifil",
-      provenance: "CFT_IDAM"
-    },
-    {
-      id: 2,
-      name: "FAMILY_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Family Daily Cause List",
-      welshFriendlyName: "Rhestr Achosion Dyddiol Teulu",
-      provenance: "CFT_IDAM"
-    }
-  ]
-}));
-
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
