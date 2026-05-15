@@ -1,11 +1,11 @@
-import { initListTypeSensitivity } from "@hmcts/admin-pages/src/assets/js/list-type-sensitivity.js";
-import "@hmcts/auth/src/assets/js/session-timeout.js";
 import cookieManager from "@hmcts/cookie-manager";
-import { initTableSearch } from "@hmcts/list-types-common/src/assets/js/table-search.js";
-import { initBackToTop } from "@hmcts/web-core/src/assets/js/back-to-top.js";
-import { initFilterPanel } from "@hmcts/web-core/src/assets/js/filter-panel.js";
-import { initSearchAutocomplete } from "@hmcts/web-core/src/assets/js/search-autocomplete.js";
 import { initAll } from "govuk-frontend";
+import { initBackToTop } from "./back-to-top.js";
+import { initFilterPanel } from "./filter-panel.js";
+import { initListTypeSensitivity } from "./list-type-sensitivity.js";
+import { initSearchAutocomplete } from "./search-autocomplete.js";
+import "./session-timeout.js";
+import { initTableSearch } from "./table-search.js";
 
 initAll();
 

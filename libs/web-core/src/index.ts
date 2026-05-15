@@ -1,6 +1,5 @@
 import "./types/express.js";
 
-export type { AssetOptions } from "./assets/assets.js";
 export { cy as accessibilityStatementCy } from "./locales/accessibility-statement/cy.js";
 // Page locale exports
 export { en as accessibilityStatementEn } from "./locales/accessibility-statement/en.js";
