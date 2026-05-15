@@ -180,5 +180,94 @@ describe("pending-subscriptions", () => {
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/location-name-search");
     });
+
+    it("should handle errors during subscription creation and render error page", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(replaceUserSubscriptions).mockRejectedValue(new Error("Database connection failed"));
+
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "pending-subscriptions/index",
+        expect.objectContaining({
+          errors: expect.objectContaining({
+            errorList: expect.arrayContaining([expect.objectContaining({ text: "Database connection failed" })])
+          }),
+          locations: expect.any(Array),
+          isPlural: true
+        })
+      );
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should merge existing subscriptions with pending when confirming", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([
+        { subscriptionId: "sub-1", type: "court", courtOrTribunalName: "Existing Court", locationId: 999, dateAdded: new Date() }
+      ] as any);
+      vi.mocked(replaceUserSubscriptions).mockResolvedValue({ added: 2, removed: 0 });
+
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(replaceUserSubscriptions).toHaveBeenCalledWith("user123", ["999", "456", "789"]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should redirect to sign-in when no user is present", async () => {
+      mockReq.user = undefined;
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should set confirmationComplete flag in session after successful confirmation", async () => {
+      const { getAllSubscriptionsByUserId, replaceUserSubscriptions } = await import("@hmcts/subscriptions");
+      vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(replaceUserSubscriptions).mockResolvedValue({ added: 2, removed: 0 });
+
+      mockReq.body = { action: "confirm" };
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
+    });
+
+    it("should merge pendingSubscriptions and confirmedLocations for display", async () => {
+      mockReq.session = {
+        emailSubscriptions: {
+          pendingSubscriptions: ["456"],
+          confirmedLocations: ["789"]
+        }
+      } as any;
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "pending-subscriptions/index",
+        expect.objectContaining({
+          locations: expect.arrayContaining([expect.objectContaining({ locationId: "456" }), expect.objectContaining({ locationId: "789" })])
+        })
+      );
+    });
+
+    it("should handle Welsh locale for location names", async () => {
+      mockRes.locals = { locale: "cy" };
+
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "pending-subscriptions/index",
+        expect.objectContaining({
+          locations: expect.arrayContaining([expect.objectContaining({ name: "Lleoliad 456" }), expect.objectContaining({ name: "Lleoliad 789" })])
+        })
+      );
+    });
   });
 });
