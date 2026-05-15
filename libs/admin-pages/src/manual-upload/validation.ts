@@ -1,13 +1,31 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { type DateInput, parseDate } from "@hmcts/web-core";
-import type { en as nonStrategicUploadEn } from "../non-strategic-upload/locales/en.js";
-import type { en as manualUploadEn } from "./locales/en.js";
 import type { UploadFormData, ValidationError } from "./model.js";
 
 export type { ValidationError };
 
-type ErrorMessages = typeof manualUploadEn.errorMessages | typeof nonStrategicUploadEn.errorMessages;
+interface ErrorMessages {
+  fileRequired: string;
+  fileType: string;
+  fileSize: string;
+  courtRequired: string;
+  courtTooShort: string;
+  displayFromRequired: string;
+  displayFromInvalid: string;
+  displayToRequired: string;
+  displayToInvalid: string;
+  displayToBeforeFrom: string;
+  listTypeRequired: string;
+  languageRequired: string;
+  sensitivityRequired: string;
+  hearingStartDateRequired: string;
+  hearingStartDateInvalid: string;
+}
+
+interface UploadContent {
+  errorMessages: ErrorMessages;
+}
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const MIN_LOCATION_NAME_LENGTH = 3;
@@ -172,18 +190,14 @@ async function validateUploadForm(
   return errors;
 }
 
-export async function validateManualUploadForm(
-  body: UploadFormData,
-  file: Express.Multer.File | undefined,
-  t: typeof manualUploadEn
-): Promise<ValidationError[]> {
+export async function validateManualUploadForm(body: UploadFormData, file: Express.Multer.File | undefined, t: UploadContent): Promise<ValidationError[]> {
   return validateUploadForm(body, file, t.errorMessages, /\.(csv|doc|docx|htm|html|json|pdf)$/i, true);
 }
 
 export async function validateNonStrategicUploadForm(
   body: UploadFormData,
   file: Express.Multer.File | undefined,
-  t: typeof nonStrategicUploadEn
+  t: UploadContent
 ): Promise<ValidationError[]> {
   return validateUploadForm(body, file, t.errorMessages, /\.xlsx$/i, false);
 }

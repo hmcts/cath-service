@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { addSubJurisdictionCy as cy, addSubJurisdictionEn as en } from "@hmcts/system-admin-pages";
+import { createSubJurisdiction, getAllJurisdictions, type JurisdictionOption, validateSubJurisdictionData } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { createSubJurisdiction, getAllJurisdictions, type JurisdictionOption } from "../../reference-data-upload/repository/sub-jurisdiction-repository.js";
-import { validateSubJurisdictionData } from "../../reference-data-upload/validation/sub-jurisdiction-validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";

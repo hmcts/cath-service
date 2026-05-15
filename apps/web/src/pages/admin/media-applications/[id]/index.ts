@@ -1,6 +1,8 @@
-import { APPLICATION_STATUS, mediaApplicationDetailCy as cy, mediaApplicationDetailEn as en, getApplicationById } from "@hmcts/admin-pages";
+import { APPLICATION_STATUS, getApplicationById } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;

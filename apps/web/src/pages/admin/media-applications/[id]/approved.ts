@@ -1,6 +1,8 @@
-import { mediaApplicationApprovedCy as approvedCy, mediaApplicationApprovedEn as approvedEn, getApplicationById } from "@hmcts/admin-pages";
+import { getApplicationById } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { cy as approvedCy } from "./approved-cy.js";
+import { en as approvedEn } from "./approved-en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? approvedCy : approvedEn;

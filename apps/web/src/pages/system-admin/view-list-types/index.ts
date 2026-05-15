@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import * as cy from "@hmcts/system-admin-pages";
-import * as en from "@hmcts/system-admin-pages";
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findAllListTypes } from "../../list-type/queries.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
@@ -10,7 +10,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   const listTypes = await findAllListTypes();
 
-  const listTypesData = listTypes.map((listType) => ({
+  const listTypesData = listTypes.map((listType: Awaited<ReturnType<typeof findAllListTypes>>[0]) => ({
     id: listType.id,
     name: listType.name,
     friendlyName: listType.friendlyName || "",
@@ -20,7 +20,7 @@ const getHandler = async (req: Request, res: Response) => {
     defaultSensitivity: listType.defaultSensitivity || "",
     allowedProvenance: listType.allowedProvenance,
     isNonStrategic: listType.isNonStrategic,
-    subJurisdictions: listType.subJurisdictions.map((sj) => sj.subJurisdiction.name).join(", ")
+    subJurisdictions: listType.subJurisdictions.map((sj: (typeof listType.subJurisdictions)[0]) => sj.subJurisdiction.name).join(", ")
   }));
 
   const yesText = language === "cy" ? cy.yesText : en.yesText;
@@ -28,7 +28,7 @@ const getHandler = async (req: Request, res: Response) => {
   const editText = language === "cy" ? cy.editText : en.editText;
   const deleteText = language === "cy" ? cy.deleteText : en.deleteText;
 
-  const tableRows = listTypesData.map((listType) => [
+  const tableRows = listTypesData.map((listType: (typeof listTypesData)[0]) => [
     { text: listType.name },
     { text: listType.friendlyName },
     { text: listType.welshFriendlyName },

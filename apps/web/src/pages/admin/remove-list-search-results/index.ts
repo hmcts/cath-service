@@ -1,10 +1,12 @@
-import { removeListSearchResultsCy as cy, removeListSearchResultsEn as en, LANGUAGE_LABELS, SENSITIVITY_LABELS } from "@hmcts/admin-pages";
+import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { getArtefactsByLocation } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 function formatDateString(date: Date): string {
   return date.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });

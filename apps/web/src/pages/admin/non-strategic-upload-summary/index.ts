@@ -1,14 +1,9 @@
 import { randomUUID } from "node:crypto";
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
-import {
-  nonStrategicUploadSummaryCy as cy,
-  nonStrategicUploadSummaryEn as en,
-  getNonStrategicUpload,
-  LANGUAGE_LABELS,
-  SENSITIVITY_LABELS,
-  saveUploadedFile
-} from "@hmcts/admin-pages";
+import { getNonStrategicUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import { getLocationById } from "@hmcts/location";

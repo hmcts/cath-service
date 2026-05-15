@@ -1,18 +1,12 @@
-import {
-  manualUploadCy as cy,
-  manualUploadEn as en,
-  LANGUAGE_LABELS,
-  SENSITIVITY_LABELS,
-  storeManualUpload,
-  type UploadFormData,
-  validateManualUploadForm
-} from "@hmcts/admin-pages";
+import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeManualUpload, type UploadFormData, validateManualUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
 import { findStrategicListTypes } from "@hmcts/system-admin-pages";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 async function getListTypes() {
   const strategicListTypes = await findStrategicListTypes();

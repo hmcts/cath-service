@@ -1,5 +1,6 @@
-import { accountRequestSubmittedCy as cy, accountRequestSubmittedEn as en } from "@hmcts/public-pages";
 import type { Request, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const locale = (req.query.lng as string) || "en";

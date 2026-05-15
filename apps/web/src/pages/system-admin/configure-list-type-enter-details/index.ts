@@ -1,10 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import type { ListTypeFormData, ListTypeSession } from "@hmcts/system-admin-pages";
 import * as cy from "@hmcts/system-admin-pages";
 import * as en from "@hmcts/system-admin-pages";
+import { findListTypeById, findListTypeByName, validateListTypeDetails } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findListTypeById, findListTypeByName } from "../../list-type/queries.js";
-import type { ListTypeFormData, ListTypeSession } from "../../list-type/types.js";
-import { validateListTypeDetails } from "../../list-type/validation.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;

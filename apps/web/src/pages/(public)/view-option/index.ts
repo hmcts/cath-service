@@ -1,5 +1,6 @@
-import { viewOptionCy as cy, viewOptionEn as en } from "@hmcts/public-pages";
 import type { Request, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface ViewOptionError {
   text: string;

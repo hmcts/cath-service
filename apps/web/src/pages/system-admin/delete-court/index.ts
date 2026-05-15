@@ -1,8 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationWithDetails } from "@hmcts/location";
-import { deleteCourtCy as cy, deleteCourtEn as en } from "@hmcts/system-admin-pages";
+import { validateLocationSelected } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { validateLocationSelected } from "../../delete-court/validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface DeleteCourtSession {
   deleteCourt?: {

@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { deleteThirdPartyUserCy as cy, deleteThirdPartyUserEn as en } from "@hmcts/system-admin-pages";
+import { deleteThirdPartyUser, findThirdPartyUserById, validateThirdPartyUserRadioSelection as validateRadioSelection } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { deleteThirdPartyUser, findThirdPartyUserById } from "../../third-party-user/queries.js";
-import { validateRadioSelection } from "../../third-party-user/validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface DeleteThirdPartyUserSession {
   deleteThirdPartyUser?: {

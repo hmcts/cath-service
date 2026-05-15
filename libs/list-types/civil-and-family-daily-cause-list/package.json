@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks && yarn build:pdf-templates",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:nunjucks": "mkdir -p dist/pdf && cd src/pdf && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pdf/$(dirname {}) && cp {} ../../dist/pdf/{}' \\;",
     "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
     "dev": "tsc --watch",
     "test": "vitest run",

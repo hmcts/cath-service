@@ -1,8 +1,13 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core";
-import { referenceDataUploadCy as cy, referenceDataUploadEn as en } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import type { ValidationError } from "../../reference-data-upload/model.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+interface ValidationError {
+  text: string;
+  href: string;
+}
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 

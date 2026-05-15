@@ -1,7 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { createThirdPartyUserSummaryCy as cy, createThirdPartyUserSummaryEn as en } from "@hmcts/system-admin-pages";
+import { createThirdPartyUser } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { createThirdPartyUser } from "../../third-party-user/queries.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface CreateThirdPartyUserSession {
   createThirdPartyUser?: {

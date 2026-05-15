@@ -1,6 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { listSearchConfigSuccessCy as cy, listSearchConfigSuccessEn as en } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;

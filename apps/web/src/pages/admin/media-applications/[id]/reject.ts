@@ -1,8 +1,10 @@
-import { getApplicationById, rejectApplication, mediaApplicationRejectCy as rejectCy, mediaApplicationRejectEn as rejectEn } from "@hmcts/admin-pages";
+import { getApplicationById, rejectApplication } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { extractNotifyError, sendMediaRejectionEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy as rejectCy } from "./reject-cy.js";
+import { en as rejectEn } from "./reject-en.js";
 
 const MAX_REASON_LENGTH = 10000;
 

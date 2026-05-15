@@ -1,11 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { referenceDataUploadSummaryCy as cy, referenceDataUploadSummaryEn as en } from "@hmcts/system-admin-pages";
+import type { UploadSessionData } from "@hmcts/system-admin-pages";
+import { enrichLocationData, parseCsv, upsertLocations, validateLocationData } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import type { UploadSessionData } from "../../reference-data-upload/model.js";
-import { parseCsv } from "../../reference-data-upload/parsers/csv-parser.js";
-import { upsertLocations } from "../../reference-data-upload/repository/upload-repository.js";
-import { enrichLocationData } from "../../reference-data-upload/services/enrichment-service.js";
-import { validateLocationData } from "../../reference-data-upload/validation/validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
@@ -109,7 +107,7 @@ const postHandler = async (req: Request, res: Response) => {
   const parseResult = parseCsv(fileBuffer);
 
   if (!parseResult.success) {
-    req.session.uploadErrors = parseResult.errors.map((err) => ({
+    req.session.uploadErrors = parseResult.errors.map((err: string) => ({
       text: err,
       href: "#file"
     }));

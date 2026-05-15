@@ -1,6 +1,7 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
-import { bulkUnsubscribeSuccessCy as cy, bulkUnsubscribeSuccessEn as en } from "@hmcts/verified-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";

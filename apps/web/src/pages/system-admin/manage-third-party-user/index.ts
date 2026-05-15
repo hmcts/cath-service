@@ -1,7 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { manageThirdPartyUserCy as cy, manageThirdPartyUserEn as en } from "@hmcts/system-admin-pages";
+import { findThirdPartyUserById, getHighestSensitivity } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findThirdPartyUserById, getHighestSensitivity } from "../../third-party-user/queries.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";

@@ -1,7 +1,9 @@
-import { getApplicationById, mediaApplicationRejectReasonsCy as rejectReasonsCy, mediaApplicationRejectReasonsEn as rejectReasonsEn } from "@hmcts/admin-pages";
+import { getApplicationById } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy as rejectReasonsCy } from "./reject-reasons-cy.js";
+import { en as rejectReasonsEn } from "./reject-reasons-en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? rejectReasonsCy : rejectReasonsEn;
@@ -59,7 +61,7 @@ const postHandler = async (req: Request, res: Response) => {
       continueButton: lang.continueButton,
       id,
       selectedReasons: req.body,
-      errors: [{ text: lang.errorMessages.selectAtLeast, href: "#notAccredited" }],
+      errors: [{ text: lang.errorMessages.selectAtLeastOne, href: "#notAccredited" }],
       hideLanguageToggle: true
     });
   }

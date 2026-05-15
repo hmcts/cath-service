@@ -1,10 +1,11 @@
-import { removeListConfirmationCy as cy, removeListConfirmationEn as en } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 declare module "express-serve-static-core" {
   interface Request {

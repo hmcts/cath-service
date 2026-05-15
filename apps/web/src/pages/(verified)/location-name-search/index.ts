@@ -10,8 +10,9 @@ import {
   getSubJurisdictionsForJurisdiction,
   type Location
 } from "@hmcts/location";
-import { locationNameSearchCy as cy, locationNameSearchEn as en } from "@hmcts/verified-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface TableRow {
   letter: string;

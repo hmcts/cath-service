@@ -1,9 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getArtefactSummariesByLocation } from "@hmcts/publication";
 import "@hmcts/web-core";
-import { blobExplorerPublicationsCy as cy, blobExplorerPublicationsEn as en } from "@hmcts/system-admin-pages";
+import { escapeHtml, formatDateTime } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { escapeHtml, formatDateTime } from "../../services/formatting.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 

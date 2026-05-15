@@ -1,9 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { manageThirdPartySubscriptionsCy as cy, manageThirdPartySubscriptionsEn as en } from "@hmcts/system-admin-pages";
+import { findAllListTypes, findThirdPartyUserById, updateThirdPartySubscriptions, validateSensitivity } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findAllListTypes } from "../../list-type/queries.js";
-import { findThirdPartyUserById, updateThirdPartySubscriptions } from "../../third-party-user/queries.js";
-import { validateSensitivity } from "../../third-party-user/validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface ManageThirdPartyUserSession {
   manageThirdPartyUser?: {

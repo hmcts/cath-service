@@ -1,9 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { deleteLocationMetadata } from "@hmcts/location";
-import { locationMetadataDeleteConfirmationCy as cy, locationMetadataDeleteConfirmationEn as en } from "@hmcts/system-admin-pages";
+import type { LocationMetadataSession } from "@hmcts/system-admin-pages";
+import { validateDeleteCourtRadioSelection as validateRadioSelection } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { validateRadioSelection } from "../../delete-court/validation.js";
-import type { LocationMetadataSession } from "../location-metadata-session.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";

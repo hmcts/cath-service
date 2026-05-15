@@ -1,18 +1,13 @@
 import { randomUUID } from "node:crypto";
-import {
-  manualUploadSummaryCy as cy,
-  manualUploadSummaryEn as en,
-  getManualUpload,
-  LANGUAGE_LABELS,
-  SENSITIVITY_LABELS,
-  saveUploadedFile
-} from "@hmcts/admin-pages";
+import { getManualUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 declare module "express-serve-static-core" {
   interface Request {

@@ -1,6 +1,8 @@
-import { getApplicationById, mediaApplicationRejectedCy as rejectedCy, mediaApplicationRejectedEn as rejectedEn } from "@hmcts/admin-pages";
+import { getApplicationById } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { cy as rejectedCy } from "./rejected-cy.js";
+import { en as rejectedEn } from "./rejected-en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? rejectedCy : rejectedEn;

@@ -1,10 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import type { ListTypeSession } from "@hmcts/system-admin-pages";
 import * as cy from "@hmcts/system-admin-pages";
 import * as en from "@hmcts/system-admin-pages";
+import { findSubJurisdictionsByIds, saveListType } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findSubJurisdictionsByIds } from "../../list-type/queries.js";
-import { saveListType } from "../../list-type/service.js";
-import type { ListTypeSession } from "../../list-type/types.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;

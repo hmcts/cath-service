@@ -1,8 +1,9 @@
-import { removeListSearchCy as cy, removeListSearchEn as en } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;

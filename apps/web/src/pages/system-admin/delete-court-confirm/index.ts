@@ -1,9 +1,15 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationWithDetails, type LocationDetails } from "@hmcts/location";
-import { deleteCourtConfirmCy as cy, deleteCourtConfirmEn as en } from "@hmcts/system-admin-pages";
+import {
+  performLocationDeletion,
+  VALIDATION_ERROR_CODES,
+  type ValidationResult,
+  validateLocationForDeletion,
+  validateDeleteCourtRadioSelection as validateRadioSelection
+} from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { performLocationDeletion, VALIDATION_ERROR_CODES, type ValidationResult, validateLocationForDeletion } from "../../delete-court/service.js";
-import { validateRadioSelection } from "../../delete-court/validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface DeleteCourtSession {
   deleteCourt?: {

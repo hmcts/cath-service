@@ -1,5 +1,6 @@
-import { sessionExpiredCy as cy, sessionExpiredEn as en } from "@hmcts/auth";
 import type { Request, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 /**
  * Renders the session expired page

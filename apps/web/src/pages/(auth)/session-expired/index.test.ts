@@ -1,6 +1,7 @@
-import { sessionExpiredCy as cy, sessionExpiredEn as en } from "@hmcts/auth";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 import { GET } from "./index.js";
 
 describe("Session Expired Page", () => {

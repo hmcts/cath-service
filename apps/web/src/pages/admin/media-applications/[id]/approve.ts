@@ -1,8 +1,10 @@
-import { approveApplication, mediaApplicationApproveCy as approveCy, mediaApplicationApproveEn as approveEn, getApplicationById } from "@hmcts/admin-pages";
+import { approveApplication, getApplicationById } from "@hmcts/admin-pages";
 import { getGraphApiAccessToken, requireRole, USER_ROLES } from "@hmcts/auth";
 import { extractNotifyError, sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail } from "@hmcts/notification";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { cy as approveCy } from "./approve-cy.js";
+import { en as approveEn } from "./approve-en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? approveCy : approveEn;

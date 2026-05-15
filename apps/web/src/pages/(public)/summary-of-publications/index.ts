@@ -1,10 +1,11 @@
 import { getLocationById, getLocationMetadataByLocationId } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
-import { summaryOfPublicationsCy as cy, summaryOfPublicationsEn as en } from "@hmcts/public-pages";
 import { filterPublicationsForSummary, type ListType } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { formatDateAndLocale } from "@hmcts/web-core";
 import type { Request, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";

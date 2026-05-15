@@ -1,8 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { createLocationMetadata, getLocationMetadataByLocationId, updateLocationMetadata } from "@hmcts/location";
-import { locationMetadataManageCy as cy, locationMetadataManageEn as en } from "@hmcts/system-admin-pages";
+import type { LocationMetadataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import type { LocationMetadataSession } from "../location-metadata-session.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getLanguage = (req: Request) => (req.query.lng === "cy" ? "cy" : "en");
 const getContent = (language: "cy" | "en") => (language === "cy" ? cy : en);

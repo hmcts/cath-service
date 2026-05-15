@@ -1,7 +1,23 @@
 import type { MulterError } from "multer";
 import type { ValidationError } from "../media-application/repository/model.js";
-import type { cy } from "./create-media-account/cy.js";
-import type { en } from "./create-media-account/en.js";
+
+interface ValidationContent {
+  errorFullNameBlank: string;
+  errorFullNameWhiteSpace: string;
+  errorFullNameDoubleWhiteSpace: string;
+  errorFullNameWithoutWhiteSpace: string;
+  errorEmailBlank: string;
+  errorEmailStartWithWhiteSpace: string;
+  errorEmailDoubleWhiteSpace: string;
+  errorEmailInvalid: string;
+  errorEmployerBlank: string;
+  errorEmployerWhiteSpace: string;
+  errorEmployerDoubleWhiteSpace: string;
+  errorFileSize: string;
+  errorFileBlank: string;
+  errorFileType: string;
+  errorTermsRequired: string;
+}
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const FULL_NAME_REGEX = /^[a-zA-Z\s\-',.]+$/;
@@ -27,7 +43,7 @@ export function validateForm(
   termsAccepted: string | undefined,
   file: Express.Multer.File | undefined,
   fileUploadError: MulterError | Error | undefined,
-  content: typeof en | typeof cy
+  content: ValidationContent
 ): ValidationError[] {
   const errors: ValidationError[] = [];
 

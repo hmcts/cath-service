@@ -1,9 +1,7 @@
-import { createMediaAccountCy as cy, createMediaAccountEn as en } from "@hmcts/public-pages";
+import { createMediaApplication, type MulterRequest, saveIdProofFile, updateProofOfIdPath, validateForm } from "@hmcts/public-pages";
 import type { Request, Response } from "express";
-import type { MulterRequest } from "../../media-application/repository/model.js";
-import { createMediaApplication, updateProofOfIdPath } from "../../media-application/repository/query.js";
-import { saveIdProofFile } from "../../media-application/storage.js";
-import { validateForm } from "../validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 function saveSession(session: any): Promise<void> {
   return new Promise((resolve, reject) => {

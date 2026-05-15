@@ -3,8 +3,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Express, NextFunction, Request, Response } from "express";
 import nunjucks from "nunjucks";
-import type { AssetOptions } from "../../assets/assets.js";
-import { configureAssets } from "../../assets/configure-assets.js";
 import { localeMiddleware, renderInterceptorMiddleware, translationMiddleware } from "../i18n/locale-middleware.js";
 import { loadTranslationsFromMultiplePaths } from "../i18n/translation-loader.js";
 import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, timeFilter } from "./filters/index.js";
@@ -37,8 +35,6 @@ export async function configureGovuk(app: Express, paths: string[], options: Gov
     app.use(renderInterceptorMiddleware());
     app.use(translationMiddleware(translations));
   }
-
-  await configureAssets(app, env, options.assetOptions);
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     res.locals.pageUrl = req.path.startsWith("/") ? req.path.slice(1) : req.path;
@@ -92,5 +88,4 @@ function mergeConfigs(paths: string[]): {
 
 export interface GovukSetupOptions {
   nunjucksGlobals?: Record<string, unknown>;
-  assetOptions: AssetOptions;
 }

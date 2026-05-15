@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { createThirdPartyUserCy as cy, createThirdPartyUserEn as en } from "@hmcts/system-admin-pages";
+import { validateThirdPartyUserName } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { validateThirdPartyUserName } from "../../third-party-user/validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface CreateThirdPartyUserSession {
   createThirdPartyUser?: {

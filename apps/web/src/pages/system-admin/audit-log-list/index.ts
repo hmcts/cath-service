@@ -1,8 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { auditLogListCy as cy, auditLogListEn as en } from "@hmcts/system-admin-pages";
+import type { AuditLogFilters } from "@hmcts/system-admin-pages";
+import * as auditLogService from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import type { AuditLogFilters } from "../../audit-log/repository.js";
-import * as auditLogService from "../../audit-log/service.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 interface ValidationErrors {
   email?: { text: string; href: string };

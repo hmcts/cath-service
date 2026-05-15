@@ -1,8 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationsWithPublicationCount } from "@hmcts/publication";
 import "@hmcts/web-core";
-import { blobExplorerLocationsCy as cy, blobExplorerLocationsEn as en } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 

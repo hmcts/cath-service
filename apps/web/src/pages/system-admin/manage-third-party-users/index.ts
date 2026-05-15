@@ -1,7 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { manageThirdPartyUsersCy as cy, manageThirdPartyUsersEn as en } from "@hmcts/system-admin-pages";
+import { findAllThirdPartyUsers, getHighestSensitivity } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findAllThirdPartyUsers, getHighestSensitivity } from "../../third-party-user/queries.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (_req: Request, res: Response) => {
   const users = await findAllThirdPartyUsers();

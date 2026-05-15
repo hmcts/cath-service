@@ -8,8 +8,9 @@ import {
   getLocationsGroupedByLetter,
   getSubJurisdictionsForJurisdiction
 } from "@hmcts/location";
-import { courtsTribunalsListCy as cy, courtsTribunalsListEn as en } from "@hmcts/public-pages";
 import type { Request, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";

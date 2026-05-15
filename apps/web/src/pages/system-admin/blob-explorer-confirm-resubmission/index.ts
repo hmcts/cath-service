@@ -1,11 +1,12 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getArtefactMetadata } from "@hmcts/publication";
 import "@hmcts/web-core";
+import { formatDateTime } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { formatDateTime } from "../../services/formatting.js";
 import "../../types/session.js";
-import { blobExplorerConfirmResubmissionCy as cy, blobExplorerConfirmResubmissionEn as en } from "@hmcts/system-admin-pages";
-import { sendPublicationNotifications } from "../../services/service.js";
+import { sendPublicationNotifications } from "@hmcts/system-admin-pages";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 

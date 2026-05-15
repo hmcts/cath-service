@@ -1,7 +1,8 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getSubscriptionById } from "@hmcts/subscriptions";
-import { deleteSubscriptionCy as cy, deleteSubscriptionEn as en } from "@hmcts/verified-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

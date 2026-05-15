@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import * as cy from "@hmcts/system-admin-pages";
-import * as en from "@hmcts/system-admin-pages";
+import { findListTypeById, hasArtefactsForListType, softDeleteListType } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { findListTypeById, hasArtefactsForListType, softDeleteListType } from "../../list-type/queries.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";

@@ -1,7 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { auditLogDetailCy as cy, auditLogDetailEn as en } from "@hmcts/system-admin-pages";
+import * as auditLogService from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import * as auditLogService from "../../audit-log/service.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";

@@ -1,8 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { addRegionCy as cy, addRegionEn as en } from "@hmcts/system-admin-pages";
+import { createRegion, validateRegionData } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { createRegion } from "../../reference-data-upload/repository/region-repository.js";
-import { validateRegionData } from "../../reference-data-upload/validation/region-validation.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 export const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";

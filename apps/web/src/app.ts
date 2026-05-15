@@ -106,9 +106,6 @@ export async function createApp(): Promise<Express> {
     nunjucksGlobals: {
       gtm: config.get("gtm"),
       dynatrace: config.get("dynatrace")
-    },
-    assetOptions: {
-      distPath: path.join(__dirname, "../dist")
     }
   });
 
