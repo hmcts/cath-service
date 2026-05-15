@@ -496,9 +496,9 @@ __metadata:
   linkType: hard
 
 "@biomejs/cli-linux-arm64@npm:^2.3.6":
-  version: 2.4.13
-  resolution: "@biomejs/cli-linux-arm64@npm:2.4.13"
-  checksum: 10c0/70fdab9e0b12da86ad941e0ce2862e04080f76e922a4a82d0c4ad64842251f756efad2eb5d6173ab16210a08afc5468b9b52737ebc6cdfe95b4a823e57af2828
+  version: 2.4.15
+  resolution: "@biomejs/cli-linux-arm64@npm:2.4.15"
+  checksum: 10c0/47c15b68939f812d637e4d1e95f7e32614635ff654d0084f342d0ee391c2f13f9fe8f82ce73b60d45478dff76b3dbe167c33b1158da7a36e4fb9b5d8e4b11541
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
