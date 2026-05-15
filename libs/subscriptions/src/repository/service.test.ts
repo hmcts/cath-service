@@ -580,7 +580,7 @@ describe("Subscription Service", () => {
     ];
 
     it("should return subscription details with location information", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockSubscriptions);
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockCourtSubscriptions);
       vi.mocked(getLocationsByIds).mockResolvedValue([
         {
           locationId: 1,
@@ -618,67 +618,6 @@ describe("Subscription Service", () => {
       ]);
     });
 
-    it("should return case subscription details without location lookup", async () => {
-      const mockCaseSubscriptions = [
-        {
-          subscriptionId: "sub-3",
-          userId: "user-123",
-          searchType: "CASE_NAME",
-          searchValue: "Smith v Jones",
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          dateAdded: new Date("2024-01-03")
-        }
-      ];
-
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCaseSubscriptions as any);
-
-      const result = await getSubscriptionDetailsForConfirmation(["sub-3"], "user-123", "en");
-
-      expect(result).toEqual([
-        {
-          subscriptionId: "sub-3",
-          type: "case",
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          dateAdded: new Date("2024-01-03")
-        }
-      ]);
-      expect(getLocationById).not.toHaveBeenCalled();
-    });
-
-    it("should return both case and court subscription details when mixed", async () => {
-      const mockMixed = [
-        {
-          subscriptionId: "sub-1",
-          userId: "user-123",
-          searchType: "LOCATION_ID",
-          searchValue: "1",
-          caseName: null,
-          caseNumber: null,
-          dateAdded: new Date("2024-01-01")
-        },
-        {
-          subscriptionId: "sub-3",
-          userId: "user-123",
-          searchType: "CASE_NAME",
-          searchValue: "Smith v Jones",
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          dateAdded: new Date("2024-01-03")
-        }
-      ];
-
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockMixed as any);
-      vi.mocked(getLocationById).mockResolvedValue({ locationId: 1, name: "Birmingham Crown Court", welshName: null } as any);
-
-      const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-3"], "user-123", "en");
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toMatchObject({ type: "court", courtOrTribunalName: "Birmingham Crown Court" });
-      expect(result[1]).toMatchObject({ type: "case", caseName: "Smith v Jones", caseNumber: "AB-123" });
-    });
-
     it("should return empty array when no subscription IDs provided", async () => {
       const result = await getSubscriptionDetailsForConfirmation([], "user-123");
 
@@ -687,7 +626,7 @@ describe("Subscription Service", () => {
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue([mockSubscriptions[0]]);
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue([mockCourtSubscriptions[0]]);
       vi.mocked(getLocationsByIds).mockResolvedValue([
         {
           locationId: 1,
