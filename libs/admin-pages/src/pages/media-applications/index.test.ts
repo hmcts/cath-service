@@ -66,8 +66,7 @@ describe("media-applications list page", () => {
         },
         viewLink: "View",
         noApplications: "There are no pending applications.",
-        applications: mockApplications,
-        hideLanguageToggle: true
+        applications: mockApplications
       });
     });
 
@@ -99,8 +98,7 @@ describe("media-applications list page", () => {
         },
         viewLink: "Gweld",
         noApplications: "Nid oes ceisiadau yn disgwyl.",
-        applications: mockApplications,
-        hideLanguageToggle: true
+        applications: mockApplications
       });
     });
 
@@ -127,8 +125,7 @@ describe("media-applications list page", () => {
       expect(renderSpy).toHaveBeenCalledWith("media-applications/index", {
         pageTitle: "Select application to assess",
         error: "Unable to load applications. Please try again later.",
-        applications: [],
-        hideLanguageToggle: true
+        applications: []
       });
     });
 

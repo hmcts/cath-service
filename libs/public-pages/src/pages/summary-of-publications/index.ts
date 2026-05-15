@@ -65,13 +65,18 @@ export const GET = async (req: Request, res: Response) => {
     // Get language label based on publication language
     const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
+    const formattedDate = formatDateAndLocale(artefact.contentDate.toISOString(), locale);
+    const weekCommencingText = listType?.name === "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST" ? ` ${t.forWeekCommencing}` : "";
+    const displayName = `${listTypeName}${weekCommencingText} ${formattedDate}`;
+
     return {
       id: artefact.artefactId,
       listTypeName,
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,
       language: artefact.language,
-      formattedDate: formatDateAndLocale(artefact.contentDate.toISOString(), locale),
+      formattedDate,
+      displayName,
       languageLabel,
       urlPath: listType?.url,
       isFlatFile: artefact.isFlatFile,

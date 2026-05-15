@@ -77,17 +77,23 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn()
+    createArtefact: vi.fn(),
+    processPublication: vi.fn()
   };
 });
 
-vi.mock("@hmcts/notifications", () => ({
-  sendPublicationNotifications: vi.fn()
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn(({ where: { id } }: any) => {
+        if (id === 6) return Promise.resolve({ name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List" });
+        return Promise.resolve(null);
+      })
+    }
+  }
 }));
 
-import { getLocationById } from "@hmcts/location";
-import { sendPublicationNotifications } from "@hmcts/notifications";
-import { createArtefact } from "@hmcts/publication";
+import { createArtefact, processPublication } from "@hmcts/publication";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
 import { getManualUpload } from "../../manual-upload/storage.js";
 
@@ -174,8 +180,7 @@ describe("manual-upload-summary page", () => {
           language: "Language",
           displayFileDates: "Display file dates",
           change: "Change",
-          confirmButton: "Confirm",
-          hideLanguageToggle: true
+          confirmButton: "Confirm"
         })
       );
     });
@@ -219,8 +224,7 @@ describe("manual-upload-summary page", () => {
           language: "Iaith",
           displayFileDates: "Dangos dyddiadau ffeil",
           change: "Newid",
-          confirmButton: "Cadarnhau",
-          hideLanguageToggle: true
+          confirmButton: "Cadarnhau"
         })
       );
     });
@@ -572,22 +576,10 @@ describe("manual-upload-summary page", () => {
       expect(req.session.manualUploadForm).toEqual({ locationId: "1" });
     });
 
-    it("should send notifications on successful upload", async () => {
+    it("should trigger publication processing on successful upload", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(getLocationById).mockResolvedValue({
-        locationId: 1,
-        name: "Test Crown Court",
-        welshName: "Test Crown Court CY"
-      });
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
-        totalSubscriptions: 5,
-        sent: 5,
-        failed: 0,
-        skipped: 0,
-        errors: []
-      });
 
       const session = {
         save: vi.fn((callback) => callback())
@@ -605,102 +597,21 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(sendPublicationNotifications).toHaveBeenCalledWith({
-        publicationId: "test-artefact-id-123",
-        locationId: "1",
-        locationName: "Test Crown Court",
-        hearingListName: "Crown Daily List",
-        publicationDate: expect.any(Date),
-        listTypeId: 6,
-        jsonData: undefined, // Not a JSON upload in this test
-        pdfFilePath: undefined // PDF generation not triggered for this list type
-      });
-    });
-
-    it("should continue upload even if location not found for notifications", async () => {
-      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(getLocationById).mockResolvedValue(null);
-
-      const session = {
-        save: vi.fn((callback) => callback())
-      };
-
-      const req = {
-        query: { uploadId: "test-upload-id" },
-        session
-      } as unknown as Request;
-
-      const res = {
-        redirect: vi.fn(),
-        render: vi.fn()
-      } as unknown as Response;
-
-      await callHandler(POST, req, res);
-
-      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-      expect(consoleWarnSpy).toHaveBeenCalledWith("[Manual Upload] Location not found for notifications:", {
-        locationId: "1"
-      });
-      expect(sendPublicationNotifications).not.toHaveBeenCalled();
-
-      consoleWarnSpy.mockRestore();
-    });
-
-    it("should continue upload even if notifications fail", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue();
-      vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(getLocationById).mockResolvedValue({
-        locationId: 1,
-        name: "Test Crown Court",
-        welshName: "Test Crown Court CY"
-      });
-      vi.mocked(sendPublicationNotifications).mockRejectedValue(new Error("Notification service down"));
-
-      const session = {
-        save: vi.fn((callback) => callback())
-      };
-
-      const req = {
-        query: { uploadId: "test-upload-id" },
-        session
-      } as unknown as Request;
-
-      const res = {
-        redirect: vi.fn(),
-        render: vi.fn()
-      } as unknown as Response;
-
-      await callHandler(POST, req, res);
-
-      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[Manual Upload] Failed to send notifications:",
+      expect(processPublication).toHaveBeenCalledWith(
         expect.objectContaining({
-          artefactId: "test-artefact-id-123"
+          artefactId: "test-artefact-id-123",
+          locationId: "1",
+          listTypeId: 6,
+          jsonData: undefined,
+          logPrefix: "[Manual Upload]"
         })
       );
-
-      consoleErrorSpy.mockRestore();
     });
 
     it("should redirect to Welsh success page when lng=cy", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
-        totalSubscriptions: 0,
-        sent: 0,
-        failed: 0,
-        skipped: 0,
-        errors: []
-      });
 
       const session = {
         save: vi.fn((callback) => callback())
@@ -761,13 +672,6 @@ describe("manual-upload-summary page", () => {
       vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
-        totalSubscriptions: 0,
-        sent: 0,
-        failed: 0,
-        skipped: 0,
-        errors: []
-      });
 
       const session = {
         save: vi.fn((callback) => callback())
@@ -796,13 +700,6 @@ describe("manual-upload-summary page", () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
-        totalSubscriptions: 0,
-        sent: 0,
-        failed: 0,
-        skipped: 0,
-        errors: []
-      });
 
       const session = {
         save: vi.fn((callback) => callback())
@@ -836,13 +733,6 @@ describe("manual-upload-summary page", () => {
       vi.mocked(getManualUpload).mockResolvedValue(noFileNameUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue();
       vi.mocked(createArtefact).mockResolvedValue("test-artefact-id-123");
-      vi.mocked(sendPublicationNotifications).mockResolvedValue({
-        totalSubscriptions: 0,
-        sent: 0,
-        failed: 0,
-        skipped: 0,
-        errors: []
-      });
 
       const session = {
         save: vi.fn((callback) => callback())

@@ -4,6 +4,7 @@ export const cy = {
   sjpName: "Gweithdrefn Un Ynad",
   noPublicationsMessage: "Mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau i'r llys hwn",
   selectListMessage: "Dewiswch y rhestr rydych chi am ei gweld o'r ddolen(nau) isod:",
+  forWeekCommencing: "ar gyfer yr wythnos yn dechrau ar",
   languageEnglish: "Saesneg (English)",
   languageWelsh: "Cymraeg (Welsh)",
   factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",

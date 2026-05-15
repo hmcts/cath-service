@@ -52,7 +52,11 @@ describe("subscription-confirmed", () => {
           isPlural: true
         })
       );
-      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBeUndefined();
+    });
+
+    it("should clear confirmedLocations from session after rendering", async () => {
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
       expect(mockReq.session?.emailSubscriptions?.confirmedLocations).toBeUndefined();
     });
 

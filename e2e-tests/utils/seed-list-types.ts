@@ -25,7 +25,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Crime Daily List",
     url: "crime-daily-list",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     isNonStrategic: false
   },
   {
@@ -34,7 +34,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Magistrates Public List",
     url: "magistrates-public-list",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     isNonStrategic: false
   },
   {
@@ -43,7 +43,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Crown Warned List",
     url: "crown-warned-list",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     isNonStrategic: false
   },
   {
@@ -52,7 +52,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Crown Daily List",
     url: "crown-daily-cause-list",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     isNonStrategic: false
   },
   {
@@ -61,7 +61,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Crown Firm List",
     url: "crown-firm-list",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: "CRIME_IDAM",
     isNonStrategic: false
   },
   {
@@ -79,7 +79,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     url: "care-standards-tribunal-weekly-hearing-list",
     defaultSensitivity: "Public",
-    provenance: "MANUAL_UPLOAD",
+    provenance: "CFT_IDAM",
     isNonStrategic: true
   },
   {
@@ -88,7 +88,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Llundain",
     url: "london-administrative-court-daily-cause-list",
     defaultSensitivity: "Public",
-    provenance: "MANUAL_UPLOAD",
+    provenance: "CFT_IDAM",
     isNonStrategic: true
   },
   {
@@ -97,7 +97,7 @@ const BASE_LIST_TYPES = [
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
     url: "court-of-appeal-civil-division-daily-cause-list",
     defaultSensitivity: "Public",
-    provenance: "MANUAL_UPLOAD",
+    provenance: "CFT_IDAM",
     isNonStrategic: true
   }
 ];

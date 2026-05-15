@@ -361,7 +361,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.locator("body")).toContainText("Smith v Jones");
 
     // Test Welsh translation
-    await page.getByRole("link", { name: "Cymraeg" }).click();
+    await page.locator(".app-language-toggle a").click();
     await page.waitForLoadState("networkidle");
     await expect(page.locator("body")).toContainText("Rhestr ar gyfer 15 Ionawr 2026");
     await expect(page.locator("body")).toContainText("Diweddarwyd ddiwethaf");
@@ -394,7 +394,7 @@ test.describe("Summary of Publications Page", () => {
     await page.waitForSelector("h1.govuk-heading-l");
 
     // Find and click the Welsh language toggle
-    const languageToggle = page.locator(".language");
+    const languageToggle = page.locator(".app-language-toggle a");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toContainText("Cymraeg");
 
@@ -442,7 +442,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.getByText(/mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau/i)).toBeVisible();
 
     // Verify language toggle still shows English option
-    const languageToggle = page.locator(".language");
+    const languageToggle = page.locator(".app-language-toggle a");
     await expect(languageToggle).toContainText("English");
   });
 

@@ -111,7 +111,7 @@ describe("media-application reject-reasons page", () => {
       });
     });
 
-    it("should load previously selected reasons from session", async () => {
+    it("should clear stale session data and render with no pre-selected reasons", async () => {
       mockRequest.session = {
         rejectionReasons: {
           notAccredited: "on",
@@ -136,6 +136,7 @@ describe("media-application reject-reasons page", () => {
       const handler = GET[1];
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
+      expect(mockRequest.session.rejectionReasons).toBeUndefined();
       expect(renderSpy).toHaveBeenCalledWith("media-applications/[id]/reject-reasons", {
         pageTitle: "Why are you rejecting this application?",
         selectAllText: "Select all that apply.",
@@ -147,11 +148,7 @@ describe("media-application reject-reasons page", () => {
         },
         continueButton: "Continue",
         id: "app-123",
-        selectedReasons: {
-          notAccredited: "on",
-          invalidId: "on",
-          selectedReasons: ["notAccredited", "invalidId"]
-        },
+        selectedReasons: {},
         hideLanguageToggle: true
       });
     });

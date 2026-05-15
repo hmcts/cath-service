@@ -1,4 +1,3 @@
-export { mockListTypes, SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID } from "@hmcts/list-types-common";
 export { extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {

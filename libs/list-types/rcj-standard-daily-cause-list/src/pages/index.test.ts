@@ -106,8 +106,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         locale: "en",
         listTypeId: 10,
         listTitle: expect.any(String),
-        displayFrom: mockArtefact.displayFrom,
-        displayTo: mockArtefact.displayTo,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
       });
       const renderCall = vi.mocked(res.render).mock.calls[0];

@@ -24,9 +24,14 @@ export async function seedListTypes() {
 
   for (const listType of listTypeData) {
     try {
-      await (prisma as any).listType.upsert({
-        where: { name: listType.name },
-        create: {
+      const relevantSubJurisdictions = allSubJurisdictions.filter((sj: any) => listType.subJurisdictionIds.includes(sj.subJurisdictionId));
+
+      if (relevantSubJurisdictions.length === 0) {
+        throw new Error(`No sub-jurisdictions resolved for list type "${listType.name}"`);
+      }
+
+      await (prisma as any).listType.create({
+        data: {
           name: listType.name,
           friendlyName: listType.englishFriendlyName,
           welshFriendlyName: listType.welshFriendlyName,
@@ -36,19 +41,10 @@ export async function seedListTypes() {
           allowedProvenance: listType.provenance,
           isNonStrategic: listType.isNonStrategic,
           subJurisdictions: {
-            create: allSubJurisdictions.map((sj: any) => ({
+            create: relevantSubJurisdictions.map((sj: any) => ({
               subJurisdictionId: sj.subJurisdictionId
             }))
           }
-        },
-        update: {
-          friendlyName: listType.englishFriendlyName,
-          welshFriendlyName: listType.welshFriendlyName,
-          shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
-          url: listType.urlPath || "",
-          defaultSensitivity: listType.defaultSensitivity,
-          allowedProvenance: listType.provenance,
-          isNonStrategic: listType.isNonStrategic
         }
       });
     } catch (error) {

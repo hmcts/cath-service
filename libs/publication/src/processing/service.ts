@@ -2,12 +2,17 @@ import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCa
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
-import { getListTypeName, type ListTypeName } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
-import { sendPublicationNotifications } from "@hmcts/notifications";
+import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
+import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
-import { mockListTypes } from "../index.js";
+import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
+
+const LOCALE_TO_LANGUAGE: Record<string, string> = {
+  en: "ENGLISH",
+  cy: "WELSH"
+};
 
 interface GeneratePdfParams {
   artefactId: string;
@@ -44,14 +49,12 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeId: p.listTypeId });
 
-const PDF_GENERATOR_REGISTRY: Partial<Record<ListTypeName, PdfGenerator>> = {
+const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCauseListPdf({ ...p, jsonData: p.jsonData as CauseListData }),
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: (p) =>
     generateCareStandardsTribunalWeeklyHearingListPdf({
       ...p,
-      jsonData: p.jsonData as CareStandardsTribunalHearingList,
-      displayFrom: p.displayFrom!,
-      displayTo: p.displayTo!
+      jsonData: p.jsonData as CareStandardsTribunalHearingList
     }),
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardGenerator,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardGenerator,
@@ -73,13 +76,13 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<ListTypeName, PdfGenerator>> = {
 export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
   const { listTypeId, artefactId, logPrefix = "[Publication]" } = params;
 
-  const listTypeName = getListTypeName(listTypeId);
-  const generator = listTypeName ? PDF_GENERATOR_REGISTRY[listTypeName] : undefined;
-  if (!generator) {
-    return {};
-  }
-
   try {
+    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+    const generator = listType ? PDF_GENERATOR_REGISTRY[listType.name] : undefined;
+    if (!generator) {
+      return {};
+    }
+
     const pdfResult = await generator(params);
 
     if (pdfResult.success && pdfResult.pdfPath) {
@@ -105,6 +108,7 @@ interface SendNotificationsParams {
   contentDate: Date;
   jsonData?: unknown;
   pdfFilePath?: string;
+  locale?: string;
   logPrefix?: string;
 }
 
@@ -117,7 +121,7 @@ interface SendNotificationsResult {
 }
 
 export async function sendPublicationNotificationsForArtefact(params: SendNotificationsParams): Promise<SendNotificationsResult> {
-  const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, logPrefix = "[Publication]" } = params;
+  const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, locale, logPrefix = "[Publication]" } = params;
 
   try {
     const locationIdNum = Number.parseInt(locationId, 10);
@@ -132,10 +136,20 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       return { success: false };
     }
 
-    const listType = mockListTypes.find((lt) => lt.id === listTypeId);
-    const listTypeFriendlyName = listType?.englishFriendlyName || `LIST_TYPE_${listTypeId}`;
+    let listTypeFriendlyName = `LIST_TYPE_${listTypeId}`;
+    try {
+      const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { friendlyName: true } });
+      if (listType?.friendlyName) {
+        listTypeFriendlyName = listType.friendlyName;
+      }
+    } catch (error) {
+      console.warn(`${logPrefix} List type lookup failed, using fallback name:`, {
+        listTypeId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
 
-    const result = await sendPublicationNotifications({
+    const result = await sendLocationAndCaseSubscriptionNotifications(artefactId, {
       publicationId: artefactId,
       locationId,
       locationName: location.name,
@@ -152,6 +166,36 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
         return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
       });
       console.error(`${logPrefix} Notification errors:`, { count: result.errors.length, errors: sanitizedErrors });
+    }
+
+    if (locale) {
+      const language = LOCALE_TO_LANGUAGE[locale] ?? "ENGLISH";
+      try {
+        const listTypeResult = await sendListTypePublicationNotifications(
+          {
+            publicationId: artefactId,
+            locationId,
+            locationName: location.name,
+            hearingListName: listTypeFriendlyName,
+            publicationDate: contentDate,
+            listTypeId,
+            language,
+            jsonData,
+            pdfFilePath
+          },
+          result.notifiedUserIds
+        );
+
+        if (listTypeResult.errors.length > 0) {
+          const sanitizedErrors = listTypeResult.errors.map((error) => {
+            const errorStr = typeof error === "string" ? error : JSON.stringify(error);
+            return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
+          });
+          console.error(`${logPrefix} List type notification errors:`, { count: listTypeResult.errors.length, errors: sanitizedErrors });
+        }
+      } catch (error) {
+        console.error(`${logPrefix} Failed to send list type notifications:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
+      }
     }
 
     return {
@@ -207,6 +251,15 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   const result: ProcessPublicationResult = {};
 
   if (jsonData) {
+    try {
+      await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+    } catch (error) {
+      console.error(`${logPrefix} Failed to extract artefact search data:`, {
+        artefactId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+
     const pdfResult = await generatePublicationPdf({
       artefactId,
       listTypeId,
@@ -233,6 +286,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       contentDate,
       jsonData,
       pdfFilePath: result.pdfPath,
+      locale,
       logPrefix
     });
 

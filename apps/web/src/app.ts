@@ -10,6 +10,7 @@ import {
   b2cForgotPasswordHandler,
   cftCallbackHandler,
   configurePassport,
+  crimeCallbackHandler,
   sessionTimeoutMiddleware,
   ssoCallbackHandler
 } from "@hmcts/auth";
@@ -44,7 +45,6 @@ import {
   moduleRoot as sjpPublicListModuleRoot,
   pageRoutes as sjpPublicListRoutes
 } from "@hmcts/sjp-public-list/config";
-import { auditLogMiddleware } from "@hmcts/system-admin-pages";
 import {
   apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
@@ -70,7 +70,8 @@ import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const chartPath = path.join(__dirname, "../helm/values.yaml");
+const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
@@ -87,6 +88,7 @@ export async function createApp(): Promise<Express> {
   app.use(
     configureHelmet({
       cftIdamUrl: process.env.CFT_IDAM_URL,
+      crimeIdamUrl: process.env.CRIME_IDAM_BASE_URL,
       b2cCustomDomain: process.env.B2C_CUSTOM_DOMAIN,
       b2cTenantName: process.env.B2C_TENANT_NAME
     })
@@ -99,7 +101,9 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
+  const redisClient = await getRedisClient(config);
+  app.use(expressSessionRedis({ redisConnection: redisClient }));
+  app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -151,11 +155,20 @@ export async function createApp(): Promise<Express> {
   // Session timeout tracking for authenticated users
   app.use(sessionTimeoutMiddleware);
 
+  // Restore pending subscriptions from Redis when user logs back in
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { restorePendingSubscriptionsMiddleware } = await import("@hmcts/subscriptions");
+  app.use(restorePendingSubscriptionsMiddleware());
+
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);
 
   // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
   app.get("/cft-login/return", cftCallbackHandler);
+
+  // Manual route registration for Crime IDAM callback (maintains /crime-login/return URL for external Crime IDAM config)
+  app.get("/crime-login/return", crimeCallbackHandler);
 
   // Manual route registration for B2C callback (maintains /login/return URL for Azure B2C config)
   // Supports both GET (response_mode=query) and POST (response_mode=form_post)
@@ -197,6 +210,9 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
   // Register audit log middleware to capture all system admin actions
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { auditLogMiddleware } = await import("@hmcts/system-admin-pages");
   app.use(auditLogMiddleware());
 
   // Register file upload middleware for system admin pages

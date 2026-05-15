@@ -13,6 +13,7 @@
       "@hmcts/web-core/vite": ["libs/web-core/src/assets/vite-config"],
       "@hmcts/account": ["libs/account/src"],
       "@hmcts/account/repository/query": ["libs/account/src/repository/query"],
+      "@hmcts/account/repository/service": ["libs/account/src/repository/service"],
       "@hmcts/admin-pages": ["libs/admin-pages/src"],
       "@hmcts/auth": ["libs/auth/src"],
       "@hmcts/cloud-native-platform": ["libs/cloud-native-platform/src"],

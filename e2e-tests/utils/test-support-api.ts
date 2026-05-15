@@ -58,6 +58,8 @@ interface CreateArtefactInput {
   displayTo?: string;
   isFlatFile?: boolean;
   provenance?: string;
+  caseNumber?: string;
+  caseName?: string;
 }
 
 interface CreateArtefactResponse {
@@ -426,6 +428,18 @@ export async function deleteTestFlatFile(artefactId: string): Promise<{ deleted:
   return callTestSupportApi<{ deleted: boolean }>("DELETE", "/test-support/flat-files", { artefactId });
 }
 
+export interface FlatFileInfo {
+  exists: boolean;
+  artefactId: string;
+  filename?: string;
+  sizeBytes?: number;
+  createdAt?: string;
+}
+
+export async function checkFlatFileExists(artefactId: string): Promise<FlatFileInfo> {
+  return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
+}
+
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
   const url = `${WEB_BASE_URL}/test-support/flat-files`;
@@ -439,6 +453,20 @@ export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promi
     throw new Error(`Web flat file upload failed: ${response.status} ${error}`);
   }
   return response.json();
+}
+
+export async function getLatestArtefactByLocationAndListType(locationId: number, listTypeId: number) {
+  const artefacts = (await getTestArtefacts({ locationId: locationId.toString() })) as {
+    artefactId: string;
+    listTypeId: number;
+    lastReceivedDate: string;
+  }[];
+
+  const matching = artefacts
+    .filter((a) => a.listTypeId === listTypeId)
+    .sort((a, b) => new Date(b.lastReceivedDate).getTime() - new Date(a.lastReceivedDate).getTime());
+
+  return matching[0] ?? null;
 }
 
 export async function deleteTestFlatFileFromWeb(artefactId: string): Promise<{ deleted: boolean }> {

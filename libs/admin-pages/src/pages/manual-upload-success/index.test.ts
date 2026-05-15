@@ -70,8 +70,7 @@ describe("manual-upload-success page", () => {
           nextStepsHeading: "What do you want to do next?",
           uploadAnotherLink: "Upload another file",
           removeFileLink: "Remove file",
-          homeLink: "Home",
-          hideLanguageToggle: true
+          homeLink: "Home"
         })
       );
       expect(req.session.uploadConfirmed).toBe(true);
@@ -103,8 +102,7 @@ describe("manual-upload-success page", () => {
           nextStepsHeading: "Beth yr ydych eisiau ei wneud nesaf?",
           uploadAnotherLink: "uwchlwytho ffeil arall",
           removeFileLink: "Dileu ffeil",
-          homeLink: "Tudalen hafan",
-          hideLanguageToggle: true
+          homeLink: "Tudalen hafan"
         })
       );
     });

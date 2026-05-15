@@ -4,6 +4,7 @@ export const en = {
   sjpName: "Single Justice Procedure",
   noPublicationsMessage: "Sorry, no lists found for this court",
   selectListMessage: "Select the list you want to view from the link(s) below:",
+  forWeekCommencing: "for week commencing",
   languageEnglish: "English (Saesneg)",
   languageWelsh: "Welsh (Cymraeg)",
   factLinkText: "Find contact details and other information about courts and tribunals",

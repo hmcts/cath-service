@@ -86,8 +86,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const { header, dailyHearings, futureJudgments } = renderCourtOfAppealCivil(jsonData, {
       locale,
-      displayFrom: artefact.displayFrom,
-      displayTo: artefact.displayTo,
+      contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString()
     });
 
