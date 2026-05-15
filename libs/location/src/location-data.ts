@@ -76,6 +76,20 @@ export const locationData: {
       welshName: "Canolfan Llysoedd Cyfun Newcastle",
       regions: [4],
       subJurisdictions: [1, 4]
+    },
+    {
+      locationId: 11,
+      name: "Birmingham Crown Court",
+      welshName: "Llys y Goron Birmingham",
+      regions: [2],
+      subJurisdictions: [4]
+    },
+    {
+      locationId: 12,
+      name: "Birmingham Magistrates' Court",
+      welshName: "Llys Ynadon Birmingham",
+      regions: [2],
+      subJurisdictions: [7]
     }
   ],
   regions: [
@@ -155,7 +169,7 @@ export const locationData: {
       subJurisdictionId: 4,
       name: "Crown Court",
       welshName: "Llys y Goron",
-      jurisdictionId: 1
+      jurisdictionId: 3
     },
     {
       subJurisdictionId: 5,
@@ -179,6 +193,12 @@ export const locationData: {
       subJurisdictionId: 8,
       name: "Social Security and Child Support",
       welshName: "Nawdd Cymdeithasol a Chynhaliaeth Plant",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 9,
+      name: "Care Standards Tribunal",
+      welshName: "Tribiwnlys Safonau Gofal",
       jurisdictionId: 4
     }
   ]

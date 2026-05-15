@@ -7,5 +7,6 @@ export const cy = {
   inOrderTo: "er mwyn",
   addNewSubscriptionLink: "ychwanegu tanysgrifiad e-bost newydd",
   manageSubscriptionsLink: "rheoli eich tanysgrifiadau e-bost cyfredol",
-  findCourtLink: "dod o hyd i lys neu dribiwnlys"
+  findCourtLink: "dod o hyd i lys neu dribiwnlys",
+  selectListTypeLink: "dewis pa fath o restr i'w derbyn"
 };

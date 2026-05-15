@@ -31,6 +31,7 @@ describe("session-timeout client-side", () => {
     document.cookie.split(";").forEach((cookie) => {
       const name = cookie.split("=")[0].trim();
       if (name) {
+        // biome-ignore lint/suspicious/noDocumentCookie: test teardown requires direct cookie expiry
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
       }
     });
@@ -82,6 +83,7 @@ describe("session-timeout client-side", () => {
 
     it("should create modal with Welsh content when locale cookie is cy", () => {
       document.body.dataset.authenticated = "true";
+      // biome-ignore lint/suspicious/noDocumentCookie: test setup requires direct cookie assignment
       document.cookie = "locale=cy";
 
       initSessionTimeout();
@@ -172,6 +174,7 @@ describe("session-timeout client-side", () => {
 
     it("should redirect to Welsh session-expired when locale is cy", () => {
       document.body.dataset.authenticated = "true";
+      // biome-ignore lint/suspicious/noDocumentCookie: test setup requires direct cookie assignment
       document.cookie = "locale=cy";
 
       initSessionTimeout();

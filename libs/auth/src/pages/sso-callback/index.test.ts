@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import type { Request, Response } from "express";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 // Mock passport
@@ -19,9 +19,13 @@ vi.mock("@hmcts/account/repository/query", () => ({
 describe("SSO Return handler", () => {
   const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const { createOrUpdateUser } = await import("@hmcts/account/repository/query");
+    vi.mocked(createOrUpdateUser).mockResolvedValue({ userId: "db-user-id" } as any);
+  });
+
+  afterEach(() => {
     vi.clearAllMocks();
-    vi.mocked(createOrUpdateUser).mockResolvedValue({} as any);
   });
 
   it("should redirect to /auth/login when no user data", async () => {

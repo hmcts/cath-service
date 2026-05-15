@@ -11,6 +11,10 @@
 {% block page_content %}
 <div class="parent-box">
 
+  <style nonce="{{ cspNonce }}">
+    .govuk-tabs__tab { font-weight: bold; }
+  </style>
+
   {% if errors %}
     {{ govukErrorSummary({
       titleText: errorSummaryTitle,
@@ -33,10 +37,9 @@
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
                 <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
                 <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 160px; vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 60px; vertical-align: middle;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -55,8 +58,7 @@
               {% for subscription in caseSubscriptions %}
                 <tr class="govuk-table__row">
                   <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber }}</td>
                   <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
                   <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
                     <div class="govuk-checkboxes__item govuk-checkboxes--small">
@@ -87,8 +89,8 @@
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
                 <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 160px; vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 60px; vertical-align: middle;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -136,10 +138,9 @@
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
                 <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCaseName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderPartyName }}</th>
                 <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderReferenceNumber }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 160px; vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 60px; vertical-align: middle;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"
@@ -158,8 +159,7 @@
               {% for subscription in caseSubscriptions %}
                 <tr class="govuk-table__row">
                   <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.partyName }}</td>
-                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.referenceNumber }}</td>
+                  <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.caseNumber }}</td>
                   <td class="govuk-table__cell" style="vertical-align: middle;">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
                   <td class="govuk-table__cell govuk-table__cell--numeric" style="vertical-align: middle;">
                     <div class="govuk-checkboxes__item govuk-checkboxes--small">
@@ -191,8 +191,8 @@
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
                 <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderCourtName }}</th>
-                <th scope="col" class="govuk-table__header" style="vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="vertical-align: middle;">
+                <th scope="col" class="govuk-table__header" style="width: 160px; vertical-align: middle;">{{ tableHeaderDateAdded }}</th>
+                <th scope="col" class="govuk-table__header govuk-table__header--numeric" style="width: 60px; vertical-align: middle;">
                   <div class="govuk-checkboxes__item govuk-checkboxes--small">
                     <input
                       class="govuk-checkboxes__input select-all-checkbox"

@@ -89,7 +89,9 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
+  const redisClient = await getRedisClient(config);
+  app.use(expressSessionRedis({ redisConnection: redisClient }));
+  app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -136,6 +138,12 @@ export async function createApp(): Promise<Express> {
 
   // Session timeout tracking for authenticated users
   app.use(sessionTimeoutMiddleware);
+
+  // Restore pending subscriptions from Redis when user logs back in
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { restorePendingSubscriptionsMiddleware } = await import("@hmcts/subscriptions");
+  app.use(restorePendingSubscriptionsMiddleware());
 
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);

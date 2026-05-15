@@ -101,6 +101,7 @@ jobs:
       # GOV.UK Notify Configuration (for notification E2E tests)
       GOVUK_NOTIFY_API_KEY: ${{ secrets.GOVUK_NOTIFY_API_KEY }}
       GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION }}
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY }}
 
     steps:
       - name: Checkout

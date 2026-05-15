@@ -2,6 +2,11 @@ import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 import type { CreateArtefactInput } from "../../types.js";
 
+interface CreateArtefactWithSearchInput extends CreateArtefactInput {
+  caseNumber?: string;
+  caseName?: string;
+}
+
 export const GET = async (req: Request, res: Response) => {
   try {
     const { locationId, provenance } = req.query;
@@ -21,7 +26,7 @@ export const GET = async (req: Request, res: Response) => {
 
 export const POST = async (req: Request, res: Response) => {
   try {
-    const input = req.body as CreateArtefactInput;
+    const input = req.body as CreateArtefactWithSearchInput;
 
     if (!input.locationId || !input.listTypeId || !input.contentDate) {
       return res.status(400).json({
@@ -45,6 +50,35 @@ export const POST = async (req: Request, res: Response) => {
         provenance: input.provenance || "MANUAL_UPLOAD"
       }
     });
+
+    if (input.caseNumber || input.caseName) {
+      // Try to create ListSearchConfig if it doesn't exist
+      // Catch unique constraint error (P2002) since another request may have created it
+      try {
+        await prisma.listSearchConfig.upsert({
+          where: { listTypeId: input.listTypeId },
+          create: {
+            listTypeId: input.listTypeId,
+            caseNumberFieldName: "case_number",
+            caseNameFieldName: "case_name"
+          },
+          update: {}
+        });
+      } catch (error) {
+        // Ignore P2002 unique constraint error - record already exists
+        if (!(error instanceof Error) || !error.message.includes("Unique constraint")) {
+          throw error;
+        }
+      }
+
+      await prisma.artefactSearch.create({
+        data: {
+          artefactId: artefact.artefactId,
+          caseNumber: input.caseNumber ?? "",
+          caseName: input.caseName ?? ""
+        }
+      });
+    }
 
     return res.status(201).json({
       artefactId: artefact.artefactId,
