@@ -7,6 +7,7 @@ export const cy = {
     sensitivity: "Sensitifrwydd"
   },
   manageSubscriptionsButton: "Rheoli tanysgrifiadau",
+  manageOauthConfigButton: "Rheoli ffurfweddiad OAuth",
   deleteUserButton: "Dileu Defnyddiwr",
   userNotFound: "Heb ddod o hyd i'r defnyddiwr trydydd parti.",
   back: "Yn ôl"

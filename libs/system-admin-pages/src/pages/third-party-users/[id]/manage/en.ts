@@ -7,6 +7,7 @@ export const en = {
     sensitivity: "Sensitivity"
   },
   manageSubscriptionsButton: "Manage subscriptions",
+  manageOauthConfigButton: "Manage OAuth configuration",
   deleteUserButton: "Delete user",
   userNotFound: "Third party user not found.",
   back: "Back"

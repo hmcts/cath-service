@@ -1456,6 +1456,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/third-party-user@workspace:libs/third-party-user"
   dependencies:
+    "@azure/identity": "npm:^4.2.1"
+    "@azure/keyvault-secrets": "npm:^4.7.0"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
   peerDependencies:

@@ -1,0 +1,55 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block backLink %}
+  <a href="/third-party-users/{{ userId }}/manage{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukInput({
+        id: "scope",
+        name: "scope",
+        label: { text: scopeLabel },
+        value: data.scope,
+        errorMessage: errors | selectattr("href", "==", "#scope") | first | default(null)
+      }) }}
+
+      {{ govukInput({
+        id: "clientId",
+        name: "clientId",
+        label: { text: clientIdLabel },
+        value: data.clientId,
+        errorMessage: errors | selectattr("href", "==", "#clientId") | first | default(null)
+      }) }}
+
+      {{ govukInput({
+        id: "clientSecret",
+        name: "clientSecret",
+        label: { text: clientSecretLabel },
+        value: data.clientSecret,
+        errorMessage: errors | selectattr("href", "==", "#clientSecret") | first | default(null)
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}
