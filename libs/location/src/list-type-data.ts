@@ -7,6 +7,7 @@ export interface ListTypeData {
   urlPath?: string;
   isNonStrategic: boolean;
   defaultSensitivity: string;
+  subJurisdictionIds: number[];
 }
 
 export const listTypeData: ListTypeData[] = [
@@ -18,7 +19,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "civil-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 2,
@@ -28,7 +30,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "family-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "Private"
+    defaultSensitivity: "Private",
+    subJurisdictionIds: [2]
   },
   {
     id: 3,
@@ -38,7 +41,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crime-daily-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 4,
@@ -48,7 +52,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [7]
   },
   {
     id: 5,
@@ -58,7 +63,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-warned-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 6,
@@ -68,7 +74,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 7,
@@ -78,7 +85,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-firm-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   },
   {
     id: 8,
@@ -88,7 +96,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "civil-and-family-daily-cause-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1, 2]
   },
   {
     id: 9,
@@ -98,7 +107,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [9]
   },
   // RCJ Standard Format
   {
@@ -109,7 +119,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "civil-courts-rcj-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 11,
@@ -119,7 +130,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "county-court-central-london-civil-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 12,
@@ -129,7 +141,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "court-of-appeal-criminal-division-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [5]
   },
   {
     id: 13,
@@ -139,7 +152,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "family-division-high-court-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [2]
   },
   {
     id: 14,
@@ -149,7 +163,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "kings-bench-division-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 15,
@@ -159,7 +174,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "kings-bench-masters-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 16,
@@ -169,7 +185,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "mayor-city-civil-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 17,
@@ -179,7 +196,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "senior-courts-costs-office-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   // RCJ Special Format - London Administrative Court
   {
@@ -190,7 +208,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "london-administrative-court-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   // RCJ Special Format - Court of Appeal Civil
   {
@@ -201,7 +220,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "court-of-appeal-civil-division-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [5]
   },
   // Administrative Courts
   {
@@ -212,7 +232,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "birmingham-administrative-court-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 21,
@@ -222,7 +243,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "leeds-administrative-court-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 22,
@@ -232,7 +254,8 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "bristol-cardiff-administrative-court-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   },
   {
     id: 23,
@@ -242,6 +265,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CFT_IDAM",
     urlPath: "manchester-administrative-court-daily-cause-list",
     isNonStrategic: true,
-    defaultSensitivity: "Public"
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [1]
   }
 ];

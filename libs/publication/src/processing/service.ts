@@ -5,9 +5,15 @@ import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPd
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
-import { sendPublicationNotifications } from "@hmcts/notifications";
+import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
+
+const LOCALE_TO_LANGUAGE: Record<string, string> = {
+  en: "ENGLISH",
+  cy: "WELSH"
+};
 
 interface GeneratePdfParams {
   artefactId: string;
@@ -103,6 +109,7 @@ interface SendNotificationsParams {
   contentDate: Date;
   jsonData?: unknown;
   pdfFilePath?: string;
+  locale?: string;
   logPrefix?: string;
 }
 
@@ -115,7 +122,7 @@ interface SendNotificationsResult {
 }
 
 export async function sendPublicationNotificationsForArtefact(params: SendNotificationsParams): Promise<SendNotificationsResult> {
-  const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, logPrefix = "[Publication]" } = params;
+  const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, locale, logPrefix = "[Publication]" } = params;
 
   try {
     const locationIdNum = Number.parseInt(locationId, 10);
@@ -143,7 +150,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       });
     }
 
-    const result = await sendPublicationNotifications({
+    const result = await sendLocationAndCaseSubscriptionNotifications(artefactId, {
       publicationId: artefactId,
       locationId,
       locationName: location.name,
@@ -160,6 +167,36 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
         return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
       });
       console.error(`${logPrefix} Notification errors:`, { count: result.errors.length, errors: sanitizedErrors });
+    }
+
+    if (locale) {
+      const language = LOCALE_TO_LANGUAGE[locale] ?? "ENGLISH";
+      try {
+        const listTypeResult = await sendListTypePublicationNotifications(
+          {
+            publicationId: artefactId,
+            locationId,
+            locationName: location.name,
+            hearingListName: listTypeFriendlyName,
+            publicationDate: contentDate,
+            listTypeId,
+            language,
+            jsonData,
+            pdfFilePath
+          },
+          result.notifiedUserIds
+        );
+
+        if (listTypeResult.errors.length > 0) {
+          const sanitizedErrors = listTypeResult.errors.map((error) => {
+            const errorStr = typeof error === "string" ? error : JSON.stringify(error);
+            return errorStr.replace(/\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[REDACTED_EMAIL]");
+          });
+          console.error(`${logPrefix} List type notification errors:`, { count: listTypeResult.errors.length, errors: sanitizedErrors });
+        }
+      } catch (error) {
+        console.error(`${logPrefix} Failed to send list type notifications:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
+      }
     }
 
     return {
@@ -225,6 +262,15 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   const result: ProcessPublicationResult = {};
 
   if (jsonData) {
+    try {
+      await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+    } catch (error) {
+      console.error(`${logPrefix} Failed to extract artefact search data:`, {
+        artefactId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+
     const pdfResult = await generatePublicationPdf({
       artefactId,
       listTypeId,
@@ -251,6 +297,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       contentDate,
       jsonData,
       pdfFilePath: result.pdfPath,
+      locale,
       logPrefix
     });
 

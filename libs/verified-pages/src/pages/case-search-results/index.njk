@@ -1,0 +1,83 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {% if errors %}Error: {% endif %}{{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: searchSource or "/add-email-subscription"
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errors.titleText,
+        errorList: errors.errorList
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    <p class="govuk-body govuk-!-font-weight-bold">{{ results | length }} {{ resultsFound }}</p>
+
+    <form method="post" novalidate>
+      <fieldset class="govuk-fieldset">
+        <legend class="govuk-fieldset__legend govuk-visually-hidden">{{ heading }}</legend>
+
+        {% if errors %}
+          <p id="selectedCase-error" class="govuk-error-message">
+            <span class="govuk-visually-hidden">Error:</span> {{ errors.errorList[0].text }}
+          </p>
+        {% endif %}
+
+        <table class="govuk-table govuk-!-width-three-quarters">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th class="govuk-table__header" scope="col">{{ columnSelect }}</th>
+              <th class="govuk-table__header" scope="col">{{ columnCaseName }}</th>
+              <th class="govuk-table__header govuk-table__header--numeric" scope="col">{{ columnReferenceNumber }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for result in results %}
+              {% set value = (result.caseName or "") + "|||" + (result.caseNumber or "") %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">
+                  <div class="govuk-checkboxes__item govuk-checkboxes--small">
+                    <input class="govuk-checkboxes__input {% if errors %}govuk-checkboxes__input--error{% endif %}"
+                           id="selectedCase-{{ loop.index }}"
+                           name="selectedCase"
+                           type="checkbox"
+                           value="{{ value }}">
+                    <label class="govuk-label govuk-checkboxes__label" for="selectedCase-{{ loop.index }}">
+                      <span class="govuk-visually-hidden">{{ result.caseName or result.caseNumber }}</span>
+                    </label>
+                  </div>
+                </td>
+                <td class="govuk-table__cell govuk-!-padding-top-3">{{ result.caseName }}</td>
+                <td class="govuk-table__cell govuk-table__cell--numeric govuk-!-padding-top-3">{{ result.caseNumber }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </fieldset>
+
+      {{ govukButton({
+        text: continueButton,
+        type: "submit"
+      }) }}
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

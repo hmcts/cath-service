@@ -93,8 +93,9 @@ describe("cleanup routes", () => {
       vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 3 } as any);
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ userId: "user1" }] as any);
       vi.mocked(prisma.subscription.deleteMany)
-        .mockResolvedValueOnce({ count: 2 } as any)
-        .mockResolvedValueOnce({ count: 1 } as any);
+        .mockResolvedValueOnce({ count: 2 } as any) // user subscriptions
+        .mockResolvedValueOnce({ count: 1 } as any) // subscriptions by searchValue prefix
+        .mockResolvedValueOnce({ count: 1 } as any); // subscriptions by LOCATION_ID
       vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 1 } as any);
       vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 2 } as any);
       vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 1 } as any);
@@ -106,10 +107,10 @@ describe("cleanup routes", () => {
       // Assert
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_",
-        deleted: 11,
+        deleted: 12,
         details: {
           artefacts: 3,
-          subscriptions: 3,
+          subscriptions: 4,
           users: 1,
           locations: 2,
           listTypes: 1,

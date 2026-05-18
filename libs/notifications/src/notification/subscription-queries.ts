@@ -12,11 +12,21 @@ export interface SubscriptionWithUser {
   };
 }
 
+export interface ListTypeSubscriberWithUser {
+  userId: string;
+  user: {
+    email: string;
+    firstName: string | null;
+    surname: string | null;
+  };
+}
+
 export async function findActiveSubscriptionsByLocation(locationId: number): Promise<SubscriptionWithUser[]> {
-  const subscriptions = await prisma.subscription.findMany({
+  return prisma.subscription.findMany({
     where: {
       searchType: "LOCATION_ID",
-      searchValue: locationId.toString()
+      searchValue: locationId.toString(),
+      user: { subscriptionListTypes: { none: {} } }
     },
     include: {
       user: {
@@ -28,6 +38,77 @@ export async function findActiveSubscriptionsByLocation(locationId: number): Pro
       }
     }
   });
+}
 
-  return subscriptions;
+export interface CaseSubscriberWithUser {
+  subscriptionId: string;
+  userId: string;
+  user: {
+    email: string;
+    firstName: string | null;
+    surname: string | null;
+  };
+}
+
+export async function findActiveSubscriptionsByCaseNumber(caseNumber: string): Promise<CaseSubscriberWithUser[]> {
+  return prisma.subscription.findMany({
+    where: {
+      searchType: "CASE_NUMBER",
+      searchValue: caseNumber
+    },
+    include: {
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
+}
+
+export async function findActiveSubscriptionsByCaseName(caseName: string): Promise<CaseSubscriberWithUser[]> {
+  return prisma.subscription.findMany({
+    where: {
+      searchType: "CASE_NAME",
+      searchValue: { equals: caseName, mode: "insensitive" }
+    },
+    include: {
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
+}
+
+export async function findCaseSubscriptionsByUserIds(userIds: string[]): Promise<{ userId: string; searchValue: string }[]> {
+  if (userIds.length === 0) return [];
+  return prisma.subscription.findMany({
+    where: { userId: { in: userIds }, searchType: { in: ["CASE_NUMBER", "CASE_NAME"] } },
+    select: { userId: true, searchValue: true }
+  });
+}
+
+export async function findListTypeSubscribersByListTypeAndLanguage(listTypeId: number, language: string): Promise<ListTypeSubscriberWithUser[]> {
+  return prisma.subscriptionListType.findMany({
+    where: {
+      listTypeIds: { has: listTypeId },
+      listLanguage: { has: language }
+    },
+    select: {
+      userId: true,
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
 }

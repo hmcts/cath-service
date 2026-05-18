@@ -5,7 +5,7 @@ export const en = {
   successLinkAddSubscription: "add a new email subscription",
   successLinkManageSubscriptions: "manage your current email subscriptions",
   successLinkFindCourt: "find a court or tribunal",
-  linkAddSubscription: "/location-name-search",
+  linkAddSubscription: "/add-email-subscription",
   linkManageSubscriptions: "/subscription-management",
   linkFindCourt: "/court-and-tribunal-hearings"
 };

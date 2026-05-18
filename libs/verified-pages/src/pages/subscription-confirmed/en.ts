@@ -7,5 +7,6 @@ export const en = {
   inOrderTo: "in order to",
   addNewSubscriptionLink: "add a new email subscription",
   manageSubscriptionsLink: "manage your current email subscriptions",
-  findCourtLink: "find a court or tribunal"
+  findCourtLink: "find a court or tribunal",
+  selectListTypeLink: "select which list type to receive"
 };

@@ -100,6 +100,45 @@ describe("location-name-search", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
     });
 
+    it("should merge new selections with existing pending subscriptions", async () => {
+      mockReq.body = { locationIds: "789" };
+      mockReq.session = {
+        emailSubscriptions: { pendingSubscriptions: ["123", "456"] },
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any;
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session.emailSubscriptions?.pendingSubscriptions).toEqual(["123", "456", "789"]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
+    });
+
+    it("should merge confirmed locations into pending subscriptions on return", async () => {
+      mockReq.body = { locationIds: "789" };
+      mockReq.session = {
+        emailSubscriptions: { confirmedLocations: ["123", "456"] },
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any;
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session.emailSubscriptions?.pendingSubscriptions).toEqual(["123", "456", "789"]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
+    });
+
+    it("should deduplicate when adding a location already in pending subscriptions", async () => {
+      mockReq.body = { locationIds: "123" };
+      mockReq.session = {
+        emailSubscriptions: { pendingSubscriptions: ["123", "456"] },
+        save: vi.fn((callback: (err: Error | null) => void) => callback(null))
+      } as any;
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockReq.session.emailSubscriptions?.pendingSubscriptions).toEqual(["123", "456"]);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/pending-subscriptions");
+    });
+
     it("should handle no selection", async () => {
       mockReq.body = {};
       mockReq.session = {
