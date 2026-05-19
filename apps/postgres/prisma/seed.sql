@@ -7,6 +7,9 @@ VALUES
   (6, 'TEST_LIST_TYPE_6', 'Test List Type 6', 'MANUAL_UPLOAD', NOW())
 ON CONFLICT (id) DO UPDATE SET updated_at = NOW();
 
+-- Reset the sequence so new inserts don't conflict with manual IDs
+SELECT setval('list_types_id_seq', (SELECT MAX(id) FROM list_types));
+
 -- Seed test artefacts for locationId 9 (used in E2E tests)
 -- Using fixed UUIDs so they're consistent across runs
 INSERT INTO artefact (artefact_id, location_id, list_type_id, content_date, sensitivity, language, display_from, display_to, last_received_date, provenance, is_flat_file, superseded_count, no_match)
