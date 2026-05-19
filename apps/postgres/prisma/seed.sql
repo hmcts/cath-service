@@ -1,17 +1,4 @@
--- Seed list types required for artefacts (required for foreign key constraint)
-INSERT INTO list_types (id, name, friendly_name, allowed_provenance, updated_at)
-VALUES
-  (1, 'TEST_LIST_TYPE_1', 'Test List Type 1', 'MANUAL_UPLOAD', NOW()),
-  (2, 'TEST_LIST_TYPE_2', 'Test List Type 2', 'MANUAL_UPLOAD', NOW()),
-  (6, 'TEST_LIST_TYPE_6', 'Test List Type 6', 'MANUAL_UPLOAD', NOW())
-ON CONFLICT (id) DO NOTHING;
-
--- Seed test artefacts for locationId 9 (used in E2E tests)
--- Using fixed UUIDs so they're consistent across runs
-
-INSERT INTO artefact (artefact_id, location_id, list_type_id, content_date, sensitivity, language, display_from, display_to, last_received_date, provenance, is_flat_file, superseded_count, no_match)
-VALUES
-  ('11111111-1111-1111-1111-111111111111', '9', 6, '2025-01-15', 'PUBLIC', 'ENGLISH', '2025-01-01', '2026-01-01', '2025-01-15T10:00:00Z', 'MANUAL_UPLOAD', false, 0, false),
-  ('22222222-2222-2222-2222-222222222222', '9', 1, '2025-01-16', 'PUBLIC', 'ENGLISH', '2025-01-01', '2026-01-01', '2025-01-16T10:00:00Z', 'MANUAL_UPLOAD', true, 0, false),
-  ('33333333-3333-3333-3333-333333333333', '9', 2, '2025-01-17', 'PUBLIC', 'ENGLISH', '2025-01-01', '2026-01-01', '2025-01-17T10:00:00Z', 'MANUAL_UPLOAD', true, 0, false)
-ON CONFLICT (artefact_id) DO NOTHING;
+-- Note: Artefacts reference list_types via FK constraint
+-- List types are created by test-support routes during E2E tests
+-- Artefacts are created by individual tests as needed
+-- This seed file intentionally left minimal to avoid conflicts
