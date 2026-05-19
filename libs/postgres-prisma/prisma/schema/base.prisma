@@ -23,6 +23,7 @@ model Artefact {
   noMatch           Boolean           @default(false) @map("no_match")
   ingestionLogs     IngestionLog[]
   artefactSearches  ArtefactSearch[]
+  listType          ListType          @relation(fields: [listTypeId], references: [id])
 
   @@map("artefact")
 }

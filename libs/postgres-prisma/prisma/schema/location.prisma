@@ -58,6 +58,7 @@ model ListType {
   deletedAt             DateTime? @map("deleted_at")
 
   subJurisdictions ListTypeSubJurisdiction[]
+  artefacts        Artefact[]
 
   @@map("list_types")
 }

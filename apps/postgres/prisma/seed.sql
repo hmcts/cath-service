@@ -1,3 +1,11 @@
+-- Seed list types required for artefacts (required for foreign key constraint)
+INSERT INTO list_types (id, name, friendly_name, allowed_provenance, updated_at)
+VALUES
+  (1, 'TEST_LIST_TYPE_1', 'Test List Type 1', 'MANUAL_UPLOAD', NOW()),
+  (2, 'TEST_LIST_TYPE_2', 'Test List Type 2', 'MANUAL_UPLOAD', NOW()),
+  (6, 'TEST_LIST_TYPE_6', 'Test List Type 6', 'MANUAL_UPLOAD', NOW())
+ON CONFLICT (id) DO NOTHING;
+
 -- Seed test artefacts for locationId 9 (used in E2E tests)
 -- Using fixed UUIDs so they're consistent across runs
 
