@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { mockListTypes } from "@hmcts/list-types-common";
+import { prisma } from "@hmcts/postgres-prisma";
 import { findThirdPartyUserById, updateThirdPartySubscriptions } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
 import type { Session } from "express-session";
@@ -31,11 +31,17 @@ export const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-users${lngParam}`);
   }
 
+  const listTypes = await prisma.listType.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true }
+  });
+
   const session = req.session as ThirdPartySubscriptionsSession;
   if (!session.thirdPartySubscriptions || session.thirdPartySubscriptions.userId !== id) {
     const existing: Record<string, string> = {};
     for (const sub of user.subscriptions) {
-      const listType = mockListTypes.find((lt) => lt.id === sub.listTypeId);
+      const listType = listTypes.find((lt) => lt.id === sub.listTypeId);
       if (listType) {
         existing[listType.name] = sub.sensitivity;
       }
@@ -44,8 +50,8 @@ export const getHandler = async (req: Request, res: Response) => {
   }
 
   const useDropdown = !(await isFeatureEnabled(LD_FLAG_RADIO_BUTTONS, req.user?.id ?? "anonymous"));
-  const totalPages = Math.ceil(mockListTypes.length / PAGE_SIZE);
-  const pageListTypes = mockListTypes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(listTypes.length / PAGE_SIZE);
+  const pageListTypes = listTypes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   res.render("third-party-users/[id]/subscriptions/manage/index", {
     ...t,
@@ -72,12 +78,18 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-users${lngParam}`);
   }
 
+  const listTypes = await prisma.listType.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true }
+  });
+
   const session = req.session as ThirdPartySubscriptionsSession;
   if (!session.thirdPartySubscriptions) {
     session.thirdPartySubscriptions = { userId: id, pending: {} };
   }
 
-  const pageListTypes = mockListTypes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageListTypes = listTypes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   for (const listType of pageListTypes) {
     const value = req.body[listType.name] as string | undefined;
     if (value && value !== "UNSELECTED" && value !== "") {
@@ -87,7 +99,7 @@ export const postHandler = async (req: Request, res: Response) => {
     }
   }
 
-  const totalPages = Math.ceil(mockListTypes.length / PAGE_SIZE);
+  const totalPages = Math.ceil(listTypes.length / PAGE_SIZE);
   const isLastPage = page >= totalPages;
 
   if (!isLastPage) {
@@ -95,8 +107,9 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-users/${id}/subscriptions/manage?page=${nextPage}${lngParam ? `&lng=cy` : ""}`);
   }
 
+  const listTypeNameById = new Map(listTypes.map((lt) => [lt.id, lt.name]));
   const beforeSubscriptions = user.subscriptions
-    .map((s) => `${mockListTypes.find((lt) => lt.id === s.listTypeId)?.name ?? s.listTypeId}:${s.sensitivity}`)
+    .map((s) => `${listTypeNameById.get(s.listTypeId) ?? s.listTypeId}:${s.sensitivity}`)
     .join(", ");
   const afterSubscriptions = Object.entries(session.thirdPartySubscriptions.pending)
     .map(([lt, sens]) => `${lt}:${sens}`)

@@ -7,25 +7,15 @@ vi.mock("@hmcts/third-party-user", () => ({
   updateThirdPartySubscriptions: vi.fn()
 }));
 
-vi.mock("@hmcts/list-types-common", () => ({
-  mockListTypes: [
-    {
-      id: 1,
-      name: "CIVIL_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Civil Daily Cause List",
-      welshFriendlyName: "Civil Daily Cause List",
-      provenance: "CFT_IDAM",
-      isNonStrategic: false
-    },
-    {
-      id: 2,
-      name: "FAMILY_DAILY_CAUSE_LIST",
-      englishFriendlyName: "Family Daily Cause List",
-      welshFriendlyName: "Family Daily Cause List",
-      provenance: "CFT_IDAM",
-      isNonStrategic: false
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findMany: vi.fn().mockResolvedValue([
+        { id: 1, name: "CIVIL_DAILY_CAUSE_LIST" },
+        { id: 2, name: "FAMILY_DAILY_CAUSE_LIST" }
+      ])
     }
-  ]
+  }
 }));
 
 vi.mock("../../../../../feature-flags/launch-darkly.js", () => ({

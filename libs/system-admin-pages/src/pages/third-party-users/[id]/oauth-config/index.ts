@@ -1,4 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { prisma } from "@hmcts/postgres-prisma";
 import { createKeyVaultSecretName, findThirdPartyUserById, getSecret } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
@@ -21,7 +22,9 @@ export const getHandler = async (req: Request, res: Response) => {
   const lngParam = language === "cy" ? "?lng=cy" : "";
   const { id } = req.params;
 
-  const user = await findThirdPartyUserById(id);
+  const user =
+    (await findThirdPartyUserById(id)) ??
+    (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
   if (!user) {
     return res.redirect(`/third-party-users${lngParam}`);
   }

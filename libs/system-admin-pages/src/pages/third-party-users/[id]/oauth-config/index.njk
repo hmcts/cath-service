@@ -26,7 +26,7 @@
         name: "scope",
         label: { text: scopeLabel },
         value: data.scope,
-        errorMessage: errors | selectattr("href", "==", "#scope") | first | default(null)
+        errorMessage: errors | default([]) | selectattr("href", "==", "#scope") | first | default(null)
       }) }}
 
       {{ govukInput({
@@ -34,7 +34,7 @@
         name: "clientId",
         label: { text: clientIdLabel },
         value: data.clientId,
-        errorMessage: errors | selectattr("href", "==", "#clientId") | first | default(null)
+        errorMessage: errors | default([]) | selectattr("href", "==", "#clientId") | first | default(null)
       }) }}
 
       {{ govukInput({
@@ -42,7 +42,7 @@
         name: "clientSecret",
         label: { text: clientSecretLabel },
         value: data.clientSecret,
-        errorMessage: errors | selectattr("href", "==", "#clientSecret") | first | default(null)
+        errorMessage: errors | default([]) | selectattr("href", "==", "#clientSecret") | first | default(null)
       }) }}
 
       {{ govukButton({

@@ -52,6 +52,10 @@
         {{ manageSubscriptionsButton }}
       </a>
 
+      <a href="/third-party-users/{{ user.id }}/oauth-config{{ '?lng=cy' if locale == 'cy' else '' }}" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+        {{ manageOauthConfigButton }}
+      </a>
+
       <a href="/delete-third-party-user?id={{ user.id }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-button govuk-button--warning" data-module="govuk-button">
         {{ deleteUserButton }}
       </a>
