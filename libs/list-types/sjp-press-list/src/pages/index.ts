@@ -150,7 +150,14 @@ function matchesPostcodeFilter(postcode: string, selectedPostcodes: string[]): b
 
 function isLondonPostcode(postcode: string): boolean {
   for (const area of LONDON_POSTCODE_AREAS) {
-    if (postcode.startsWith(area)) return true;
+    if (postcode.startsWith(area)) {
+      // Single-letter areas (E, N, W) must be followed by a digit to avoid
+      // matching non-London postcodes like NE (Newcastle), EH (Edinburgh), WR (Worcester)
+      if (area.length === 1 && !/^\d/.test(postcode.slice(1))) {
+        continue;
+      }
+      return true;
+    }
   }
   return false;
 }

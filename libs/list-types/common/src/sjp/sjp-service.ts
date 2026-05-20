@@ -288,9 +288,13 @@ const LONDON_POSTCODES = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
  * Checks if the postcode starts with any London postcode area
  */
 function isLondonPostcode(postcode: string): boolean {
-  // Check if postcode starts with any London area code
   for (const area of LONDON_POSTCODES) {
     if (postcode.startsWith(area)) {
+      // Single-letter areas (E, N, W) must be followed by a digit to avoid
+      // matching non-London postcodes like NE (Newcastle), EH (Edinburgh), WR (Worcester)
+      if (area.length === 1 && !/^\d/.test(postcode.slice(1))) {
+        continue;
+      }
       return true;
     }
   }
