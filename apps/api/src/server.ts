@@ -11,6 +11,15 @@ async function startServer() {
     ENABLE_TEST_SUPPORT: process.env.ENABLE_TEST_SUPPORT
   });
 
+  // Log ALL environment variables that contain "PG" or "POSTGRES"
+  console.log("[SERVER] All PG/POSTGRES env vars:");
+  Object.keys(process.env)
+    .filter((k) => k.includes("PG") || k.includes("POSTGRES"))
+    .forEach((key) => {
+      const val = process.env[key];
+      console.log(`[SERVER]   ${key}:`, typeof val, typeof val === "object" ? JSON.stringify(val) : val?.substring(0, 50) || "undefined");
+    });
+
   try {
     console.log("[SERVER] Creating app...");
     const app = await createApp();
