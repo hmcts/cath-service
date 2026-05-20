@@ -41,6 +41,11 @@ let pool: pg.Pool;
 let adapter: PrismaPg;
 
 try {
+  // Validate DATABASE_URL before creating pool
+  if (typeof process.env.DATABASE_URL !== "string") {
+    throw new Error(`DATABASE_URL must be a string, got: ${typeof process.env.DATABASE_URL}`);
+  }
+
   const poolConfig = {
     connectionString: process.env.DATABASE_URL
   };
@@ -54,7 +59,16 @@ try {
     console.log(`[PRISMA]   ${key}:`, typeof value, typeof value === "object" ? JSON.stringify(value) : value);
   }
 
-  pool = new pg.Pool(poolConfig);
+  // Create pool with explicit config to prevent pg from auto-reading env vars
+  pool = new pg.Pool({
+    connectionString: String(process.env.DATABASE_URL),
+    // Explicitly set these to undefined to prevent pg from reading PGHOST, PGUSER, etc.
+    host: undefined,
+    port: undefined,
+    database: undefined,
+    user: undefined,
+    password: undefined
+  });
   console.log("[PRISMA] Connection pool created successfully");
 
   // Add event handlers to the pool for debugging
