@@ -11,13 +11,18 @@ if (process.env.POSTGRES_HOST && process.env.POSTGRES_USER && process.env.POSTGR
 
 process.env.DATABASE_URL ??= "postgresql://hmcts@localhost:5433/postgres";
 
-console.log("[PRISMA] Initializing Prisma client");
+console.log("[PRISMA] ========== INITIALIZING PRISMA CLIENT ==========");
+console.log("[PRISMA] Stack trace:", new Error().stack);
 console.log("[PRISMA] DATABASE_URL:", process.env.DATABASE_URL ? `${process.env.DATABASE_URL.substring(0, 30)}...` : "not set");
 console.log("[PRISMA] DATABASE_URL type:", typeof process.env.DATABASE_URL);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
+
+if (globalForPrisma.prisma) {
+  console.log("[PRISMA] WARNING: Reusing existing global Prisma client");
+}
 
 // Create connection pool
 console.log("[PRISMA] Creating pg connection pool...");
