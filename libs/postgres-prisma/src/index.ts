@@ -59,16 +59,29 @@ try {
     console.log(`[PRISMA]   ${key}:`, typeof value, typeof value === "object" ? JSON.stringify(value) : value);
   }
 
-  // Create pool with explicit config to prevent pg from auto-reading env vars
-  pool = new pg.Pool({
-    connectionString: String(process.env.DATABASE_URL),
-    // Explicitly set these to undefined to prevent pg from reading PGHOST, PGUSER, etc.
-    host: undefined,
-    port: undefined,
-    database: undefined,
-    user: undefined,
-    password: undefined
+  // Parse connectionString manually to avoid any object conversion issues
+  const url = new URL(process.env.DATABASE_URL);
+  const poolOptions = {
+    host: url.hostname,
+    port: Number.parseInt(url.port || "5432", 10),
+    database: url.pathname.slice(1), // Remove leading /
+    user: url.username || undefined,
+    password: url.password || undefined,
+    // Include SSL mode if present in query params
+    ...(url.searchParams.get("sslmode") === "require" ? { ssl: { rejectUnauthorized: false } } : {})
+  };
+
+  console.log("[PRISMA] Parsed pool options:", {
+    host: poolOptions.host,
+    port: poolOptions.port,
+    database: poolOptions.database,
+    user: poolOptions.user,
+    password: poolOptions.password ? "[REDACTED]" : undefined,
+    ssl: poolOptions.ssl ? "enabled" : "disabled"
   });
+
+  // Create pool with explicit parsed params instead of connectionString
+  pool = new pg.Pool(poolOptions);
   console.log("[PRISMA] Connection pool created successfully");
 
   // Add event handlers to the pool for debugging
