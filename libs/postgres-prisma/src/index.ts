@@ -93,15 +93,41 @@ try {
   pool.on("error", (err) => {
     console.error("[PRISMA] Pool error on idle client:", err);
     console.error("[PRISMA] At error - DATABASE_URL type:", typeof process.env.DATABASE_URL);
+    console.error("[PRISMA] At error - pool options:", JSON.stringify(pool.options, null, 2));
   });
 
-  pool.on("acquire", () => {
+  pool.on("acquire", (client) => {
     console.log("[PRISMA] Pool acquired client");
+    console.log("[PRISMA] Client connection params types:", {
+      host: typeof (client as any).host,
+      port: typeof (client as any).port,
+      database: typeof (client as any).database,
+      user: typeof (client as any).user
+    });
   });
 
-  pool.on("connect", () => {
+  pool.on("connect", (client) => {
     console.log("[PRISMA] Pool created new connection");
     console.log("[PRISMA] Total connections:", pool.totalCount, "Idle:", pool.idleCount);
+
+    // Log the actual connection parameters being used
+    const connParams = (client as any).connectionParameters;
+    if (connParams) {
+      console.log("[PRISMA] Connection params types:", {
+        host: typeof connParams.host,
+        port: typeof connParams.port,
+        database: typeof connParams.database,
+        user: typeof connParams.user,
+        password: typeof connParams.password
+      });
+      console.log("[PRISMA] Connection params values:", {
+        host: connParams.host,
+        port: connParams.port,
+        database: connParams.database,
+        user: connParams.user,
+        password: connParams.password ? "[REDACTED]" : undefined
+      });
+    }
   });
 
   // Create driver adapter
