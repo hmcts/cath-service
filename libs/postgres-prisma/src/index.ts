@@ -45,8 +45,22 @@ try {
     connectionString: process.env.DATABASE_URL
   };
   console.log("[PRISMA] Pool config:", JSON.stringify(poolConfig, null, 2));
+
+  // Log any PG* environment variables that pg.Pool might auto-read
+  const pgEnvVars = Object.keys(process.env).filter((k) => k.startsWith("PG"));
+  console.log("[PRISMA] PG* environment variables found:", pgEnvVars);
+  for (const key of pgEnvVars) {
+    const value = process.env[key];
+    console.log(`[PRISMA]   ${key}:`, typeof value, typeof value === "object" ? JSON.stringify(value) : value);
+  }
+
   pool = new pg.Pool(poolConfig);
   console.log("[PRISMA] Connection pool created successfully");
+
+  // Add error handler to the pool
+  pool.on("error", (err) => {
+    console.error("[PRISMA] Unexpected error on idle client:", err);
+  });
 
   // Create driver adapter
   console.log("[PRISMA] Creating Prisma adapter...");
