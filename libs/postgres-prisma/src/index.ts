@@ -1,5 +1,3 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
 import { PrismaClient } from "../generated/prisma/client.js";
 
 // Construct DATABASE_URL from individual env vars if available
@@ -11,171 +9,22 @@ if (process.env.POSTGRES_HOST && process.env.POSTGRES_USER && process.env.POSTGR
 
 process.env.DATABASE_URL ??= "postgresql://hmcts@localhost:5433/postgres";
 
-console.log("[PRISMA] ========== INITIALIZING PRISMA CLIENT ==========");
-console.log("[PRISMA] Stack trace:", new Error().stack);
+console.log("[PRISMA] Initializing Prisma client");
 console.log("[PRISMA] DATABASE_URL:", process.env.DATABASE_URL ? `${process.env.DATABASE_URL.substring(0, 30)}...` : "not set");
-console.log("[PRISMA] DATABASE_URL type:", typeof process.env.DATABASE_URL);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-if (globalForPrisma.prisma) {
-  console.log("[PRISMA] WARNING: Reusing existing global Prisma client");
-}
-
-// Create connection pool
-console.log("[PRISMA] Creating pg connection pool...");
-console.log("[PRISMA] Connection string type:", typeof process.env.DATABASE_URL);
-console.log("[PRISMA] Connection string value:", process.env.DATABASE_URL ? `${process.env.DATABASE_URL.substring(0, 30)}...` : "undefined");
-
-// Check all POSTGRES_* env vars that might interfere
-console.log("[PRISMA] Environment variables:");
-console.log("[PRISMA]   POSTGRES_HOST:", typeof process.env.POSTGRES_HOST, process.env.POSTGRES_HOST);
-console.log("[PRISMA]   POSTGRES_USER:", typeof process.env.POSTGRES_USER, process.env.POSTGRES_USER);
-console.log("[PRISMA]   POSTGRES_PASSWORD:", typeof process.env.POSTGRES_PASSWORD, process.env.POSTGRES_PASSWORD ? "[REDACTED]" : undefined);
-console.log("[PRISMA]   POSTGRES_PORT:", typeof process.env.POSTGRES_PORT, process.env.POSTGRES_PORT);
-console.log("[PRISMA]   POSTGRES_DATABASE:", typeof process.env.POSTGRES_DATABASE, process.env.POSTGRES_DATABASE);
-console.log("[PRISMA]   PGHOST:", typeof process.env.PGHOST, process.env.PGHOST);
-console.log("[PRISMA]   PGUSER:", typeof process.env.PGUSER, process.env.PGUSER);
-console.log("[PRISMA]   PGPASSWORD:", typeof process.env.PGPASSWORD, process.env.PGPASSWORD ? "[REDACTED]" : undefined);
-console.log("[PRISMA]   PGPORT:", typeof process.env.PGPORT, process.env.PGPORT);
-console.log("[PRISMA]   PGDATABASE:", typeof process.env.PGDATABASE, process.env.PGDATABASE);
-
-let pool: pg.Pool;
-let adapter: PrismaPg;
-
-try {
-  // Validate DATABASE_URL before creating pool
-  if (typeof process.env.DATABASE_URL !== "string") {
-    throw new Error(`DATABASE_URL must be a string, got: ${typeof process.env.DATABASE_URL}`);
-  }
-
-  // Explicitly delete PG* environment variables to prevent pg from auto-reading them
-  // This ensures pg only uses the explicit parameters we provide
-  const pgEnvVars = Object.keys(process.env).filter((k) => k.startsWith("PG"));
-  console.log("[PRISMA] Found PG* environment variables, will unset them:", pgEnvVars);
-  for (const key of pgEnvVars) {
-    const value = process.env[key];
-    console.log(`[PRISMA]   ${key}:`, typeof value, typeof value === "object" ? JSON.stringify(value) : value);
-    delete process.env[key];
-  }
-
-  // Parse connectionString manually to avoid any object conversion issues
-  const url = new URL(process.env.DATABASE_URL);
-  const poolOptions: {
-    host: string;
-    port: number;
-    database: string;
-    user?: string;
-    password?: string;
-    ssl?: { rejectUnauthorized: boolean };
-  } = {
-    host: url.hostname,
-    port: Number.parseInt(url.port || "5432", 10),
-    database: url.pathname.slice(1) // Remove leading /
-  };
-
-  // Only add user if it exists and is non-empty
-  if (url.username) {
-    poolOptions.user = url.username;
-  }
-
-  // Only add password if it exists and is non-empty
-  if (url.password) {
-    poolOptions.password = url.password;
-  }
-
-  // Include SSL mode if present in query params
-  if (url.searchParams.get("sslmode") === "require") {
-    poolOptions.ssl = { rejectUnauthorized: false };
-  }
-
-  console.log("[PRISMA] Parsed pool options:", {
-    host: poolOptions.host,
-    port: poolOptions.port,
-    database: poolOptions.database,
-    user: poolOptions.user,
-    password: poolOptions.password ? "[REDACTED]" : undefined,
-    ssl: poolOptions.ssl ? "enabled" : "disabled"
-  });
-
-  // Create pool with explicit parsed params instead of connectionString
-  pool = new pg.Pool(poolOptions);
-  console.log("[PRISMA] Connection pool created successfully");
-
-  // Add event handlers to the pool for debugging
-  pool.on("error", (err) => {
-    console.error("[PRISMA] Pool error on idle client:", err);
-    console.error("[PRISMA] At error - DATABASE_URL type:", typeof process.env.DATABASE_URL);
-    console.error("[PRISMA] At error - pool options:", JSON.stringify(pool.options, null, 2));
-  });
-
-  pool.on("acquire", (client) => {
-    console.log("[PRISMA] Pool acquired client");
-    console.log("[PRISMA] Client connection params types:", {
-      host: typeof (client as any).host,
-      port: typeof (client as any).port,
-      database: typeof (client as any).database,
-      user: typeof (client as any).user
-    });
-  });
-
-  pool.on("connect", (client) => {
-    console.log("[PRISMA] Pool created new connection");
-    console.log("[PRISMA] Total connections:", pool.totalCount, "Idle:", pool.idleCount);
-
-    // Log the actual connection parameters being used
-    const connParams = (client as any).connectionParameters;
-    if (connParams) {
-      console.log("[PRISMA] Connection params types:", {
-        host: typeof connParams.host,
-        port: typeof connParams.port,
-        database: typeof connParams.database,
-        user: typeof connParams.user,
-        password: typeof connParams.password
-      });
-      console.log("[PRISMA] Connection params values:", {
-        host: connParams.host,
-        port: connParams.port,
-        database: connParams.database,
-        user: connParams.user,
-        password: connParams.password ? "[REDACTED]" : undefined
-      });
-    }
-  });
-
-  // Create driver adapter
-  console.log("[PRISMA] Creating Prisma adapter...");
-  console.log("[PRISMA] Pool internal config:", {
-    options: pool.options,
-    totalCount: pool.totalCount,
-    idleCount: pool.idleCount,
-    waitingCount: pool.waitingCount
-  });
-  adapter = new PrismaPg(pool);
-  console.log("[PRISMA] Adapter created successfully");
-  console.log("[PRISMA] Adapter type:", typeof adapter);
-} catch (error) {
-  console.error("[PRISMA] Failed to initialize Prisma:");
-  console.error("[PRISMA] Error type:", error?.constructor?.name);
-  console.error("[PRISMA] Error message:", error instanceof Error ? error.message : String(error));
-  console.error("[PRISMA] Error stack:", error instanceof Error ? error.stack : "No stack");
-  console.error("[PRISMA] DATABASE_URL at error:", process.env.DATABASE_URL);
-  console.error("[PRISMA] DATABASE_URL type at error:", typeof process.env.DATABASE_URL);
-  throw error;
-}
-
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    adapter,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"]
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-console.log("[PRISMA] Prisma client initialized successfully");
+console.log("[PRISMA] Prisma client initialized");
 
 export type { PrismaClient } from "../generated/prisma/client.js";
 export * from "../generated/prisma/client.js";
