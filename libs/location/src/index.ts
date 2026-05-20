@@ -30,7 +30,6 @@ export {
   getAllRegions,
   getAllSubJurisdictions,
   getLocationById,
-  getLocationsByIds,
   getLocationWithDetails,
   getSubJurisdictionsByJurisdiction,
   hasActiveArtefacts,

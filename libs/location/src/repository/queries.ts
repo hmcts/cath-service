@@ -3,106 +3,38 @@ import type { Jurisdiction, Location, Region, SubJurisdiction } from "./model.js
 
 export type { Location };
 
-export interface LocationFilters {
-  regions?: number[];
-  subJurisdictions?: number[];
-}
-
-const LOCATION_SELECT = {
-  locationId: true,
-  name: true,
-  welshName: true,
-  locationRegions: {
-    select: {
-      region: {
-        select: {
-          regionId: true
+export async function getAllLocations(language: "en" | "cy"): Promise<Location[]> {
+  const locations = await prisma.location.findMany({
+    where: {
+      deletedAt: null
+    },
+    include: {
+      locationRegions: {
+        include: {
+          region: true
+        }
+      },
+      locationSubJurisdictions: {
+        include: {
+          subJurisdiction: true
         }
       }
     }
-  },
-  locationSubJurisdictions: {
-    select: {
-      subJurisdiction: {
-        select: {
-          subJurisdictionId: true
-        }
-      }
-    }
-  }
-} as const;
+  });
 
-function mapToLocation(loc: {
-  locationId: number;
-  name: string;
-  welshName: string;
-  locationRegions: Array<{ region: { regionId: number } }>;
-  locationSubJurisdictions: Array<{ subJurisdiction: { subJurisdictionId: number } }>;
-}): Location {
-  return {
+  const mapped: Location[] = locations.map((loc: any) => ({
     locationId: loc.locationId,
     name: loc.name,
     welshName: loc.welshName,
-    regions: loc.locationRegions.map((lr) => lr.region.regionId),
-    subJurisdictions: loc.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.subJurisdictionId)
-  };
-}
+    regions: loc.locationRegions.map((lr: any) => lr.region.regionId),
+    subJurisdictions: loc.locationSubJurisdictions.map((lsj: any) => lsj.subJurisdiction.subJurisdictionId)
+  }));
 
-export async function getAllLocations(language: "en" | "cy", filters?: LocationFilters): Promise<Location[]> {
-  const sortField = language === "cy" ? "welshName" : "name";
-
-  const locations = await prisma.location.findMany({
-    where: {
-      deletedAt: null,
-      ...(filters?.regions &&
-        filters.regions.length > 0 && {
-          locationRegions: {
-            some: {
-              regionId: {
-                in: filters.regions
-              }
-            }
-          }
-        }),
-      ...(filters?.subJurisdictions &&
-        filters.subJurisdictions.length > 0 && {
-          locationSubJurisdictions: {
-            some: {
-              subJurisdictionId: {
-                in: filters.subJurisdictions
-              }
-            }
-          }
-        })
-    },
-    orderBy: {
-      [sortField]: "asc"
-    },
-    select: LOCATION_SELECT
+  return mapped.sort((a, b) => {
+    const nameA = language === "cy" ? a.welshName : a.name;
+    const nameB = language === "cy" ? b.welshName : b.name;
+    return nameA.localeCompare(nameB);
   });
-
-  return locations.map(mapToLocation);
-}
-
-export async function searchLocationsByName(query: string, language: "en" | "cy"): Promise<Location[]> {
-  const sortField = language === "cy" ? "welshName" : "name";
-  const searchField = language === "cy" ? "welshName" : "name";
-
-  const locations = await prisma.location.findMany({
-    where: {
-      deletedAt: null,
-      [searchField]: {
-        contains: query,
-        mode: "insensitive"
-      }
-    },
-    orderBy: {
-      [sortField]: "asc"
-    },
-    select: LOCATION_SELECT
-  });
-
-  return locations.map(mapToLocation);
 }
 
 export async function getLocationById(id: number): Promise<Location | undefined> {
@@ -111,75 +43,82 @@ export async function getLocationById(id: number): Promise<Location | undefined>
       locationId: id,
       deletedAt: null
     },
-    select: LOCATION_SELECT
+    include: {
+      locationRegions: {
+        include: {
+          region: true
+        }
+      },
+      locationSubJurisdictions: {
+        include: {
+          subJurisdiction: true
+        }
+      }
+    }
   });
 
   if (!location) {
     return undefined;
   }
 
-  return mapToLocation(location);
-}
-
-export async function getLocationsByIds(ids: number[]): Promise<Location[]> {
-  const locations = await prisma.location.findMany({
-    where: {
-      locationId: {
-        in: ids
-      },
-      deletedAt: null
-    },
-    select: LOCATION_SELECT
-  });
-
-  return locations.map(mapToLocation);
+  return {
+    locationId: location.locationId,
+    name: location.name,
+    welshName: location.welshName,
+    regions: location.locationRegions.map((lr: any) => lr.region.regionId),
+    subJurisdictions: location.locationSubJurisdictions.map((lsj: any) => lsj.subJurisdiction.subJurisdictionId)
+  };
 }
 
 export async function getAllJurisdictions(): Promise<Jurisdiction[]> {
-  return prisma.jurisdiction.findMany({
-    orderBy: { jurisdictionId: "asc" },
-    select: {
-      jurisdictionId: true,
-      name: true,
-      welshName: true
-    }
+  const jurisdictions = await prisma.jurisdiction.findMany({
+    orderBy: { jurisdictionId: "asc" }
   });
+
+  return jurisdictions.map((j: any) => ({
+    jurisdictionId: j.jurisdictionId,
+    name: j.name,
+    welshName: j.welshName
+  }));
 }
 
 export async function getAllRegions(): Promise<Region[]> {
-  return prisma.region.findMany({
-    orderBy: { regionId: "asc" },
-    select: {
-      regionId: true,
-      name: true,
-      welshName: true
-    }
+  const regions = await prisma.region.findMany({
+    orderBy: { regionId: "asc" }
   });
+
+  return regions.map((r: any) => ({
+    regionId: r.regionId,
+    name: r.name,
+    welshName: r.welshName
+  }));
 }
 
 export async function getAllSubJurisdictions(): Promise<SubJurisdiction[]> {
-  return prisma.subJurisdiction.findMany({
-    orderBy: { subJurisdictionId: "asc" },
-    select: {
-      subJurisdictionId: true,
-      name: true,
-      welshName: true,
-      jurisdictionId: true
-    }
+  const subJurisdictions = await prisma.subJurisdiction.findMany({
+    orderBy: { subJurisdictionId: "asc" }
   });
+
+  return subJurisdictions.map((sj: any) => ({
+    subJurisdictionId: sj.subJurisdictionId,
+    name: sj.name,
+    welshName: sj.welshName,
+    jurisdictionId: sj.jurisdictionId
+  }));
 }
 
 export async function getSubJurisdictionsByJurisdiction(jurisdictionId: number): Promise<SubJurisdiction[]> {
-  return prisma.subJurisdiction.findMany({
+  const subJurisdictions = await prisma.subJurisdiction.findMany({
     where: { jurisdictionId },
-    orderBy: { subJurisdictionId: "asc" },
-    select: {
-      subJurisdictionId: true,
-      name: true,
-      welshName: true,
-      jurisdictionId: true
-    }
+    orderBy: { subJurisdictionId: "asc" }
   });
+
+  return subJurisdictions.map((sj: any) => ({
+    subJurisdictionId: sj.subJurisdictionId,
+    name: sj.name,
+    welshName: sj.welshName,
+    jurisdictionId: sj.jurisdictionId
+  }));
 }
 
 export async function getLocationWithDetails(locationId: number): Promise<import("./model.js").LocationDetails | null> {
@@ -188,32 +127,17 @@ export async function getLocationWithDetails(locationId: number): Promise<import
       locationId,
       deletedAt: null
     },
-    select: {
-      locationId: true,
-      name: true,
-      welshName: true,
+    include: {
       locationRegions: {
-        select: {
-          region: {
-            select: {
-              name: true,
-              welshName: true
-            }
-          }
+        include: {
+          region: true
         }
       },
       locationSubJurisdictions: {
-        select: {
+        include: {
           subJurisdiction: {
-            select: {
-              name: true,
-              welshName: true,
-              jurisdiction: {
-                select: {
-                  name: true,
-                  welshName: true
-                }
-              }
+            include: {
+              jurisdiction: true
             }
           }
         }
