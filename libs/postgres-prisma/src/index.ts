@@ -77,29 +77,8 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: [
-      { emit: "event", level: "query" },
-      { emit: "event", level: "error" },
-      { emit: "event", level: "info" },
-      { emit: "event", level: "warn" }
-    ]
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"]
   });
-
-prisma.$on("query" as any, (e: any) => {
-  console.log("[PRISMA-QUERY]", e.query.substring(0, 100), "duration:", e.duration + "ms");
-});
-
-prisma.$on("error" as any, (e: any) => {
-  console.error("[PRISMA-ERROR]", e);
-});
-
-prisma.$on("info" as any, (e: any) => {
-  console.log("[PRISMA-INFO]", e.message);
-});
-
-prisma.$on("warn" as any, (e: any) => {
-  console.warn("[PRISMA-WARN]", e.message);
-});
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
