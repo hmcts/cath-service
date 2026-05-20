@@ -6,6 +6,16 @@ import { generateTestPrefix, setTestPrefix } from "./utils/test-prefix.js";
 import { checkTestSupportHealth } from "./utils/test-support-api.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null) {
+    return JSON.stringify(error);
+  }
+  return String(error);
+}
+
 async function globalSetup(_config: FullConfig) {
   try {
     // Step 1: Generate and store test prefix for this run
@@ -30,7 +40,7 @@ async function globalSetup(_config: FullConfig) {
           console.log(`Attempt ${i + 1}/${maxRetries}: Database migrations pending...`);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = getErrorMessage(error);
         console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for API... (${message})`);
       }
 
