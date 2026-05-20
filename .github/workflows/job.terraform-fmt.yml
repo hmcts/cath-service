@@ -32,3 +32,8 @@ jobs:
         uses: hmcts/cnp-githubactions-library/terraform-fmt@main
         with:
           working-directory: ${{ inputs.working-directory }}
+
+      - name: Terraform Format Check (Bootstrap)
+        uses: hmcts/cnp-githubactions-library/terraform-fmt@main
+        with:
+          working-directory: infrastructure/bootstrap
