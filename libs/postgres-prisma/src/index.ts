@@ -57,15 +57,36 @@ try {
   pool = new pg.Pool(poolConfig);
   console.log("[PRISMA] Connection pool created successfully");
 
-  // Add error handler to the pool
+  // Add event handlers to the pool for debugging
   pool.on("error", (err) => {
-    console.error("[PRISMA] Unexpected error on idle client:", err);
+    console.error("[PRISMA] Pool error on idle client:", err);
+    console.error("[PRISMA] At error - DATABASE_URL type:", typeof process.env.DATABASE_URL);
+  });
+
+  pool.on("acquire", () => {
+    console.log("[PRISMA] Pool acquired client");
+  });
+
+  pool.on("connect", (client) => {
+    console.log("[PRISMA] Pool created new connection");
+    console.log("[PRISMA] At new connection - DATABASE_URL type:", typeof process.env.DATABASE_URL);
+    console.log("[PRISMA] At new connection - connectionString:", client.connectionParameters?.connectionString?.substring(0, 30));
+    console.log("[PRISMA] At new connection - host:", typeof client.connectionParameters?.host, client.connectionParameters?.host);
+    console.log("[PRISMA] At new connection - user:", typeof client.connectionParameters?.user, client.connectionParameters?.user);
+    console.log("[PRISMA] At new connection - database:", typeof client.connectionParameters?.database, client.connectionParameters?.database);
   });
 
   // Create driver adapter
   console.log("[PRISMA] Creating Prisma adapter...");
+  console.log("[PRISMA] Pool internal config:", {
+    options: pool.options,
+    totalCount: pool.totalCount,
+    idleCount: pool.idleCount,
+    waitingCount: pool.waitingCount
+  });
   adapter = new PrismaPg(pool);
   console.log("[PRISMA] Adapter created successfully");
+  console.log("[PRISMA] Adapter type:", typeof adapter);
 } catch (error) {
   console.error("[PRISMA] Failed to initialize Prisma:");
   console.error("[PRISMA] Error type:", error?.constructor?.name);
