@@ -12,7 +12,7 @@ process.env.DATABASE_URL ??= "postgresql://hmcts@localhost:5433/postgres";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  schema: path.join(__dirname, "../../libs/postgres-prisma/prisma/schema"),
+  schema: path.join(__dirname, "../../libs/postgres-prisma/prisma"),
   migrations: {
     path: path.join(__dirname, "prisma", "migrations")
   },

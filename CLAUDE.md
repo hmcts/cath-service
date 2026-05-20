@@ -237,28 +237,27 @@ libs/my-feature/
 
 ## Database Schema Management
 
-All Prisma schemas are centralized in **`libs/postgres-prisma/prisma/schema/`** with one file per feature domain.
+All Prisma schemas are centralized in **`libs/postgres-prisma/prisma/`** with one file per feature domain.
 
 ### Schema Organization
 
 ```
 libs/postgres-prisma/
-├── prisma.config.ts            # Points to prisma/schema directory
+├── prisma.config.ts            # Datasource configuration
 └── prisma/
-    └── schema/                 # All .prisma files live here
-        ├── base.prisma         # Datasource and generator config
-        ├── audit-log.prisma    # Audit log models
-        ├── location.prisma     # Location models
-        ├── subscription.prisma # Subscription models
-        └── ...                 # One file per domain
+    ├── base.prisma             # Datasource and generator config
+    ├── audit-log.prisma        # Audit log models
+    ├── location.prisma         # Location models
+    ├── subscription.prisma     # Subscription models
+    └── ...                     # One file per domain
 ```
 
 ### Adding a New Schema File
 
-1. **Create feature schema file** in `libs/postgres-prisma/prisma/schema/`:
+1. **Create feature schema file** in `libs/postgres-prisma/prisma/`:
 
 ```prisma
-// libs/postgres-prisma/prisma/schema/my-feature.prisma
+// libs/postgres-prisma/prisma/my-feature.prisma
 
 model MyFeature {
   id        String   @id @default(cuid())
@@ -295,8 +294,8 @@ const location = await prisma.location.findMany();
 
 ### Important Notes
 
-- **Never create `prisma/` directories in feature modules** - all schemas go in `libs/postgres-prisma/prisma/schema/`
-- **Prisma automatically merges** all `.prisma` files in the schema directory
+- **Never create `prisma/` directories in feature modules** - all schemas go in `libs/postgres-prisma/prisma/`
+- **Prisma automatically merges** all `.prisma` files in the prisma directory
 - **One schema per domain** keeps models organized and maintainable
 - **Migrations apply to all schemas** - run `yarn db:migrate:dev` from the root
 
