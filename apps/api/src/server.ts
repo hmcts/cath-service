@@ -3,7 +3,9 @@ import { createApp } from "./app.js";
 const PORT = process.env.API_PORT || 3001;
 
 async function startServer() {
-  console.log("[SERVER] Starting server...");
+  console.log("[SERVER] ==================== STARTING SERVER ====================");
+  console.log("[SERVER] Process PID:", process.pid);
+  console.log("[SERVER] Node version:", process.version);
   console.log("[SERVER] Environment:", {
     NODE_ENV: process.env.NODE_ENV,
     PORT,
@@ -11,14 +13,24 @@ async function startServer() {
     ENABLE_TEST_SUPPORT: process.env.ENABLE_TEST_SUPPORT
   });
 
-  // Log ALL environment variables that contain "PG" or "POSTGRES"
+  // Log ALL environment variables that contain "PG" or "POSTGRES" with detailed type info
   console.log("[SERVER] All PG/POSTGRES env vars:");
   Object.keys(process.env)
     .filter((k) => k.includes("PG") || k.includes("POSTGRES"))
     .forEach((key) => {
       const val = process.env[key];
-      console.log(`[SERVER]   ${key}:`, typeof val, typeof val === "object" ? JSON.stringify(val) : val?.substring(0, 50) || "undefined");
+      console.log(`[SERVER]   ${key}:`, {
+        type: typeof val,
+        isObject: typeof val === "object" && val !== null,
+        isArray: Array.isArray(val),
+        value: typeof val === "object" ? JSON.stringify(val) : (val?.substring(0, 50) || "undefined")
+      });
     });
+
+  // Force load postgres-prisma to see initialization logs
+  console.log("[SERVER] About to import @hmcts/postgres-prisma...");
+  const { prisma } = await import("@hmcts/postgres-prisma");
+  console.log("[SERVER] @hmcts/postgres-prisma imported, prisma client available");
 
   try {
     console.log("[SERVER] Creating app...");
