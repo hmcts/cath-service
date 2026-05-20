@@ -24,13 +24,28 @@ console.log("[PRISMA] Creating pg connection pool...");
 console.log("[PRISMA] Connection string type:", typeof process.env.DATABASE_URL);
 console.log("[PRISMA] Connection string value:", process.env.DATABASE_URL ? `${process.env.DATABASE_URL.substring(0, 30)}...` : "undefined");
 
+// Check all POSTGRES_* env vars that might interfere
+console.log("[PRISMA] Environment variables:");
+console.log("[PRISMA]   POSTGRES_HOST:", typeof process.env.POSTGRES_HOST, process.env.POSTGRES_HOST);
+console.log("[PRISMA]   POSTGRES_USER:", typeof process.env.POSTGRES_USER, process.env.POSTGRES_USER);
+console.log("[PRISMA]   POSTGRES_PASSWORD:", typeof process.env.POSTGRES_PASSWORD, process.env.POSTGRES_PASSWORD ? "[REDACTED]" : undefined);
+console.log("[PRISMA]   POSTGRES_PORT:", typeof process.env.POSTGRES_PORT, process.env.POSTGRES_PORT);
+console.log("[PRISMA]   POSTGRES_DATABASE:", typeof process.env.POSTGRES_DATABASE, process.env.POSTGRES_DATABASE);
+console.log("[PRISMA]   PGHOST:", typeof process.env.PGHOST, process.env.PGHOST);
+console.log("[PRISMA]   PGUSER:", typeof process.env.PGUSER, process.env.PGUSER);
+console.log("[PRISMA]   PGPASSWORD:", typeof process.env.PGPASSWORD, process.env.PGPASSWORD ? "[REDACTED]" : undefined);
+console.log("[PRISMA]   PGPORT:", typeof process.env.PGPORT, process.env.PGPORT);
+console.log("[PRISMA]   PGDATABASE:", typeof process.env.PGDATABASE, process.env.PGDATABASE);
+
 let pool: pg.Pool;
 let adapter: PrismaPg;
 
 try {
-  pool = new pg.Pool({
+  const poolConfig = {
     connectionString: process.env.DATABASE_URL
-  });
+  };
+  console.log("[PRISMA] Pool config:", JSON.stringify(poolConfig, null, 2));
+  pool = new pg.Pool(poolConfig);
   console.log("[PRISMA] Connection pool created successfully");
 
   // Create driver adapter
