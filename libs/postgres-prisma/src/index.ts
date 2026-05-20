@@ -66,15 +66,33 @@ try {
 
   // Parse connectionString manually to avoid any object conversion issues
   const url = new URL(process.env.DATABASE_URL);
-  const poolOptions = {
+  const poolOptions: {
+    host: string;
+    port: number;
+    database: string;
+    user?: string;
+    password?: string;
+    ssl?: { rejectUnauthorized: boolean };
+  } = {
     host: url.hostname,
     port: Number.parseInt(url.port || "5432", 10),
-    database: url.pathname.slice(1), // Remove leading /
-    user: url.username || undefined,
-    password: url.password || undefined,
-    // Include SSL mode if present in query params
-    ...(url.searchParams.get("sslmode") === "require" ? { ssl: { rejectUnauthorized: false } } : {})
+    database: url.pathname.slice(1) // Remove leading /
   };
+
+  // Only add user if it exists and is non-empty
+  if (url.username) {
+    poolOptions.user = url.username;
+  }
+
+  // Only add password if it exists and is non-empty
+  if (url.password) {
+    poolOptions.password = url.password;
+  }
+
+  // Include SSL mode if present in query params
+  if (url.searchParams.get("sslmode") === "require") {
+    poolOptions.ssl = { rejectUnauthorized: false };
+  }
 
   console.log("[PRISMA] Parsed pool options:", {
     host: poolOptions.host,
