@@ -51,17 +51,14 @@ try {
     throw new Error(`DATABASE_URL must be a string, got: ${typeof process.env.DATABASE_URL}`);
   }
 
-  const poolConfig = {
-    connectionString: process.env.DATABASE_URL
-  };
-  console.log("[PRISMA] Pool config:", JSON.stringify(poolConfig, null, 2));
-
-  // Log any PG* environment variables that pg.Pool might auto-read
+  // Explicitly delete PG* environment variables to prevent pg from auto-reading them
+  // This ensures pg only uses the explicit parameters we provide
   const pgEnvVars = Object.keys(process.env).filter((k) => k.startsWith("PG"));
-  console.log("[PRISMA] PG* environment variables found:", pgEnvVars);
+  console.log("[PRISMA] Found PG* environment variables, will unset them:", pgEnvVars);
   for (const key of pgEnvVars) {
     const value = process.env[key];
     console.log(`[PRISMA]   ${key}:`, typeof value, typeof value === "object" ? JSON.stringify(value) : value);
+    delete process.env[key];
   }
 
   // Parse connectionString manually to avoid any object conversion issues
