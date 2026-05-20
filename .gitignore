@@ -58,6 +58,7 @@ lcov.info
 .mcp.env
 .claude/claude.env
 .claude/analytics
+**/.claude/hooks/run.log
 
 /storage/temp
 /apps/postgres/.claude
