@@ -67,16 +67,9 @@ try {
     console.log("[PRISMA] Pool acquired client");
   });
 
-  pool.on("connect", (client) => {
+  pool.on("connect", () => {
     console.log("[PRISMA] Pool created new connection");
-    console.log("[PRISMA] At new connection - DATABASE_URL type:", typeof process.env.DATABASE_URL);
-    const params = (client as any).connectionParameters;
-    if (params) {
-      console.log("[PRISMA] Connection params - host:", typeof params.host, params.host);
-      console.log("[PRISMA] Connection params - user:", typeof params.user, params.user);
-      console.log("[PRISMA] Connection params - database:", typeof params.database, params.database);
-      console.log("[PRISMA] Connection params - port:", typeof params.port, params.port);
-    }
+    console.log("[PRISMA] Total connections:", pool.totalCount, "Idle:", pool.idleCount);
   });
 
   // Create driver adapter
