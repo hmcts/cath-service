@@ -201,7 +201,7 @@ describe("SJP Press List Controller", () => {
         expect.objectContaining({
           cases: [],
           pagination: expect.any(Object),
-          filters: { searchQuery: undefined, postcodes: [], prosecutors: [] },
+          filters: { postcodes: [], prosecutors: [] },
           errors: undefined,
           dataSource: "Manual Upload"
         })
@@ -213,7 +213,6 @@ describe("SJP Press List Controller", () => {
         query: {
           artefactId: "test-123",
           page: "1",
-          search: "Smith",
           postcode: "SW1A",
           prosecutor: "CPS"
         }
@@ -245,7 +244,7 @@ describe("SJP Press List Controller", () => {
       expect(res.render).toHaveBeenCalledWith(
         "sjp-press-list",
         expect.objectContaining({
-          filters: { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }
+          filters: { postcodes: ["SW1A"], prosecutors: ["CPS"] }
         })
       );
     });
@@ -299,7 +298,6 @@ describe("SJP Press List Controller", () => {
       const req = mockRequest({
         body: {
           artefactId: "test-123",
-          search: "  Smith  ",
           postcode: "SW1A",
           prosecutor: "CPS"
         }
@@ -308,28 +306,27 @@ describe("SJP Press List Controller", () => {
 
       await postHandler(req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123&search=Smith&postcode=SW1A&prosecutor=CPS");
+      expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123&postcode=SW1A&prosecutor=CPS");
     });
 
-    it("should trim search query whitespace", async () => {
+    it("should trim postcode whitespace", async () => {
       const req = mockRequest({
         body: {
           artefactId: "test-123",
-          search: "  test query  "
+          postcode: "  M1  "
         }
       });
       const res = mockResponse();
 
       await postHandler(req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123&search=test+query");
+      expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123&postcode=M1");
     });
 
     it("should skip empty filter parameters", async () => {
       const req = mockRequest({
         body: {
           artefactId: "test-123",
-          search: "",
           postcode: undefined,
           prosecutor: null
         }

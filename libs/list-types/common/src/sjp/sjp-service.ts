@@ -48,7 +48,6 @@ export interface SjpCasePress extends Omit<SjpCasePublic, "offence"> {
 }
 
 export interface SjpSearchFilters {
-  searchQuery?: string;
   postcodes?: string[];
   prosecutors?: string[];
 }
@@ -159,11 +158,6 @@ export async function getSjpListById(artefactId: string): Promise<SjpListMetadat
  */
 function applyFilters(cases: SjpCasePress[], filters: SjpSearchFilters): SjpCasePress[] {
   let filteredCases = cases;
-
-  if (filters.searchQuery) {
-    const query = filters.searchQuery.toLowerCase();
-    filteredCases = filteredCases.filter((c) => c.name.toLowerCase().includes(query) || c.reference?.toLowerCase().includes(query));
-  }
 
   if (filters.postcodes && filters.postcodes.length > 0) {
     filteredCases = filteredCases.filter((c) => {

@@ -255,26 +255,6 @@ describe("getSjpPublicCases", () => {
     });
   });
 
-  it("should apply search filter by name", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
-
-    const result = await getSjpPublicCases("list-1", { searchQuery: "john" }, 1);
-
-    expect(result.cases).toHaveLength(1);
-    expect(result.cases[0].name).toBe("John Doe");
-  });
-
-  it("should apply search filter by reference", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
-
-    const result = await getSjpPublicCases("list-1", { searchQuery: "ref123" }, 1);
-
-    expect(result.cases).toHaveLength(1);
-    expect(result.cases[0].name).toBe("John Doe");
-  });
-
   it("should apply postcode filter", async () => {
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
@@ -413,16 +393,6 @@ describe("getSjpPressCases", () => {
     expect(result.cases[0].address).toBeDefined();
   });
 
-  it("should apply filters to press cases", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
-
-    const result = await getSjpPressCases("list-1", { searchQuery: "john" }, 1);
-
-    expect(result.cases).toHaveLength(1);
-    expect(result.cases[0].name).toBe("John Doe");
-  });
-
   it("should preserve original order for press cases", async () => {
     const cases: SjpCasePress[] = [
       { ...mockPressCases[0], name: "Zoe Brown" },
@@ -458,23 +428,6 @@ describe("getAllSjpPressCases", () => {
 
     expect(result.cases).toHaveLength(250);
     expect(result.totalCases).toBe(250);
-  });
-
-  it("should apply filters to all cases", async () => {
-    const manyCases: SjpCasePress[] = [
-      { ...mockPressCases[0], name: "John Doe" },
-      { ...mockPressCases[1], name: "Jane Smith" },
-      { ...mockPressCases[0], name: "John Adams", caseId: "case-3" }
-    ];
-
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(extractPressCases).mockReturnValue(manyCases);
-
-    const result = await getAllSjpPressCases("list-1", { searchQuery: "john" });
-
-    expect(result.cases).toHaveLength(2);
-    expect(result.cases[0].name).toBe("John Doe");
-    expect(result.cases[1].name).toBe("John Adams");
   });
 
   it("should preserve original order for all cases", async () => {

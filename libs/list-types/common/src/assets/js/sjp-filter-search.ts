@@ -1,4 +1,4 @@
-const SEARCH_INPUT_ID = "search";
+const SEARCH_INPUT_ID = "filter-search";
 const POSTCODE_CHECKBOX_ID = "postcodes-checkbox";
 const PROSECUTOR_CHECKBOX_ID = "prosecutor-checkbox";
 

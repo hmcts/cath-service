@@ -56,7 +56,6 @@ export const GET = async (req: Request, res: Response) => {
   const selectedPostcodes = parseQueryAsStringArray(req.query.postcode);
 
   const filters = {
-    searchQuery: req.query.search as string | undefined,
     postcodes: selectedPostcodes.length > 0 ? selectedPostcodes : undefined,
     prosecutors: selectedProsecutors.length > 0 ? selectedProsecutors : undefined
   };
@@ -90,7 +89,6 @@ export const GET = async (req: Request, res: Response) => {
     londonPostcodes: postcodeData.londonPostcodes,
     pagination,
     filters: {
-      searchQuery: filters.searchQuery,
       postcodes: selectedPostcodes,
       prosecutors: selectedProsecutors
     },
@@ -101,18 +99,8 @@ export const GET = async (req: Request, res: Response) => {
 
 export const POST = async (req: Request, res: Response) => {
   const artefactId = req.body.artefactId as string;
-
-  const filters = {
-    searchQuery: req.body.search?.trim(),
-    postcodes: req.body.postcode,
-    prosecutors: req.body.prosecutor
-  };
-
-  // Build query parameters
   const queryParams = new URLSearchParams({ artefactId });
-  if (filters.searchQuery) queryParams.set("search", filters.searchQuery);
-  appendArrayToParams(queryParams, "postcode", filters.postcodes, true);
-  appendArrayToParams(queryParams, "prosecutor", filters.prosecutors);
-
+  appendArrayToParams(queryParams, "postcode", req.body.postcode, true);
+  appendArrayToParams(queryParams, "prosecutor", req.body.prosecutor);
   res.redirect(`${req.path}?${queryParams.toString()}`);
 };

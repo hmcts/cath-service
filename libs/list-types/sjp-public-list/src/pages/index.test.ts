@@ -127,7 +127,7 @@ describe("SJP Public List Controller", () => {
       await GET(req, res);
 
       expect(getSjpListById).toHaveBeenCalledWith("test-123");
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: undefined, postcodes: undefined, prosecutors: undefined }, 2, "", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { postcodes: undefined, prosecutors: undefined }, 2, "", "asc");
       expect(getUniqueProsecutors).toHaveBeenCalledWith("test-123");
       expect(getUniquePostcodes).toHaveBeenCalledWith("test-123");
       expect(calculatePagination).toHaveBeenCalledWith(2, 300, 1000);
@@ -143,7 +143,7 @@ describe("SJP Public List Controller", () => {
           hasLondonPostcodes: true,
           londonPostcodes: ["SW1A"],
           pagination: expect.any(Object),
-          filters: { searchQuery: undefined, postcodes: [], prosecutors: [] },
+          filters: { postcodes: [], prosecutors: [] },
           sortBy: "",
           sortOrder: "asc"
         })
@@ -155,7 +155,6 @@ describe("SJP Public List Controller", () => {
         query: {
           artefactId: "test-123",
           page: "1",
-          search: "Smith",
           postcode: "SW1A",
           prosecutor: "CPS"
         }
@@ -186,7 +185,7 @@ describe("SJP Public List Controller", () => {
 
       await GET(req, res);
 
-      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { searchQuery: "Smith", postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1, "", "asc");
+      expect(getSjpPublicCases).toHaveBeenCalledWith("test-123", { postcodes: ["SW1A"], prosecutors: ["CPS"] }, 1, "", "asc");
     });
 
     it("should handle custom sort parameters", async () => {
@@ -358,7 +357,6 @@ describe("SJP Public List Controller", () => {
       const req = mockRequest({
         body: {
           artefactId: "test-123",
-          search: "  Smith  ",
           postcode: "  SW1A  ",
           prosecutor: "CPS"
         }
@@ -367,14 +365,13 @@ describe("SJP Public List Controller", () => {
 
       await POST(req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/sjp-public-list?artefactId=test-123&search=Smith&postcode=SW1A&prosecutor=CPS");
+      expect(res.redirect).toHaveBeenCalledWith("/sjp-public-list?artefactId=test-123&postcode=SW1A&prosecutor=CPS");
     });
 
-    it("should trim search query and postcode whitespace", async () => {
+    it("should trim postcode whitespace", async () => {
       const req = mockRequest({
         body: {
           artefactId: "test-123",
-          search: "  test query  ",
           postcode: "  M1  "
         }
       });
@@ -382,14 +379,13 @@ describe("SJP Public List Controller", () => {
 
       await POST(req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/sjp-public-list?artefactId=test-123&search=test+query&postcode=M1");
+      expect(res.redirect).toHaveBeenCalledWith("/sjp-public-list?artefactId=test-123&postcode=M1");
     });
 
     it("should skip empty filter parameters", async () => {
       const req = mockRequest({
         body: {
           artefactId: "test-123",
-          search: "",
           postcode: "  ",
           prosecutor: undefined
         }

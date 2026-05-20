@@ -70,7 +70,6 @@ const getHandler = async (req: Request, res: Response) => {
       londonPostcodes,
       pagination: calculatePagination(page, filteredCases.length, CASES_PER_PAGE),
       filters: {
-        searchQuery: filters.searchQuery,
         postcodes: filters.postcodes || [],
         prosecutors: filters.prosecutors || []
       },
@@ -86,13 +85,8 @@ const getHandler = async (req: Request, res: Response) => {
 const postHandler = async (req: Request, res: Response) => {
   const artefactId = req.body.artefactId as string;
   const queryParams = new URLSearchParams({ artefactId });
-
-  if (req.body.search?.trim()) {
-    queryParams.set("search", req.body.search.trim());
-  }
   appendArrayToParams(queryParams, "postcode", req.body.postcode, true);
   appendArrayToParams(queryParams, "prosecutor", req.body.prosecutor);
-
   res.redirect(`${req.path}?${queryParams.toString()}`);
 };
 
@@ -120,7 +114,6 @@ function parseFiltersFromQuery(query: Request["query"]): Filters {
   const prosecutors = parseQueryAsStringArray(query.prosecutor);
 
   return {
-    searchQuery: query.search as string | undefined,
     postcodes: postcodes.length > 0 ? postcodes : undefined,
     prosecutors: prosecutors.length > 0 ? prosecutors : undefined
   };
@@ -134,11 +127,6 @@ function parseQueryAsStringArray(param: string | ParsedQs | (string | ParsedQs)[
 
 function applyFilters(cases: PressCase[], filters: Filters): PressCase[] {
   let result = [...cases];
-
-  if (filters.searchQuery) {
-    const query = filters.searchQuery.toLowerCase();
-    result = result.filter((c) => c.name.toLowerCase().includes(query) || c.reference?.toLowerCase().includes(query));
-  }
 
   if (filters.postcodes?.length) {
     result = result.filter((c) => c.postcode && matchesPostcodeFilter(c.postcode, filters.postcodes!));
@@ -211,7 +199,6 @@ function appendArrayToParams(params: URLSearchParams, key: string, values: strin
 }
 
 interface Filters {
-  searchQuery?: string;
   postcodes?: string[];
   prosecutors?: string[];
 }
