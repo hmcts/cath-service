@@ -15,6 +15,13 @@ export {
   getLocationMetadataByLocationId,
   updateLocationMetadata
 } from "./repository/location-metadata-service.js";
+export {
+  LOCATION_REFERENCE_PROVENANCES,
+  LOCATION_REFERENCE_TYPES,
+  type LocationReferenceProvenance,
+  type LocationReferenceType
+} from "./repository/location-reference-model.js";
+export { getLocationByProvenanceLocationId } from "./repository/location-reference-queries.js";
 export type {
   CreateLocationMetadataInput,
   Jurisdiction,

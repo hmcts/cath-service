@@ -134,7 +134,6 @@ export const cy = {
       "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd â'r bwriad o gynorthwyo â chywirdeb adroddiadau ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig a gynhwysir ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y caiff ei ddefnyddio.",
     provenanceLabels: {
       MANUAL_UPLOAD: "Llwytho â Llaw",
-      XHIBIT: "XHIBIT",
       SNL: "SNL",
       COMMON_PLATFORM: "Platfform Cyffredin"
     }

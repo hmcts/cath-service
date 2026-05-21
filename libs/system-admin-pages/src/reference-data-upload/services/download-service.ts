@@ -14,7 +14,8 @@ export async function generateReferenceDataCsv(): Promise<string> {
           include: {
             subJurisdiction: true
           }
-        }
+        },
+        locationReferences: true
       },
       orderBy: {
         locationId: "asc"
@@ -26,6 +27,10 @@ export async function generateReferenceDataCsv(): Promise<string> {
 
       const regionNames = location.locationRegions.map((lr: any) => lr.region.name).join(";");
 
+      const provenances = location.locationReferences.map((lr: any) => lr.provenance).join(";");
+      const provenanceLocationIds = location.locationReferences.map((lr: any) => lr.provenanceLocationId).join(";");
+      const provenanceLocationTypes = location.locationReferences.map((lr: any) => lr.provenanceLocationType).join(";");
+
       return {
         LOCATION_ID: location.locationId,
         LOCATION_NAME: location.name,
@@ -33,7 +38,10 @@ export async function generateReferenceDataCsv(): Promise<string> {
         EMAIL: location.email || "",
         CONTACT_NO: location.contactNo || "",
         SUB_JURISDICTION_NAME: subJurisdictionNames,
-        REGION_NAME: regionNames
+        REGION_NAME: regionNames,
+        PROVENANCE: provenances,
+        PROVENANCE_LOCATION_ID: provenanceLocationIds,
+        PROVENANCE_LOCATION_TYPE: provenanceLocationTypes
       };
     });
 

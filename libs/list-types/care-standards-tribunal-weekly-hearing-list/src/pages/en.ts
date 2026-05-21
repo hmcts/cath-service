@@ -28,7 +28,6 @@ export const en = {
     "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
   provenanceLabels: {
     MANUAL_UPLOAD: "Manual Upload",
-    XHIBIT: "XHIBIT",
     SNL: "SNL",
     COMMON_PLATFORM: "Common Platform"
   }

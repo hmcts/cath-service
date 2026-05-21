@@ -1,15 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BlobIngestionRequest } from "./repository/model.js";
 import { validateBlobRequest } from "./validation.js";
 
 vi.mock("@hmcts/location", () => ({
-  getLocationById: vi.fn((id: number) => {
-    // Return a Promise to match actual function signature
-    if (id === 123) {
-      return Promise.resolve({ id: 123, name: "Test Court" });
-    }
-    return Promise.resolve(undefined);
-  })
+  getLocationById: vi.fn(),
+  getLocationByProvenanceLocationId: vi.fn()
 }));
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
@@ -27,7 +22,8 @@ vi.mock("@hmcts/system-admin-pages", () => ({
         id: 1,
         name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
         friendlyName: "Civil and Family Daily Cause List",
-        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu"
+        welshFriendlyName: "Rhestr Achosion Dyddiol Sifil a Theulu",
+        locationType: "VENUE"
       }
     ])
   )
@@ -36,7 +32,7 @@ vi.mock("@hmcts/system-admin-pages", () => ({
 describe("validateBlobRequest", () => {
   const validRequest: BlobIngestionRequest = {
     court_id: "123",
-    provenance: "XHIBIT",
+    provenance: "MANUAL_UPLOAD",
     content_date: "2025-01-25",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
@@ -45,6 +41,18 @@ describe("validateBlobRequest", () => {
     display_to: "2025-01-25T17:00:00Z",
     hearing_list: { courtLists: [] }
   };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const { getLocationById, getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationById).mockImplementation((id: number) => {
+      if (id === 123) {
+        return Promise.resolve({ locationId: 123, name: "Test Court", welshName: "Llys Prawf", regions: [], subJurisdictions: [] });
+      }
+      return Promise.resolve(undefined);
+    });
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
+  });
 
   it("should validate a complete valid request", async () => {
     const result = await validateBlobRequest(validRequest, 1000);
@@ -77,7 +85,7 @@ describe("validateBlobRequest", () => {
     expect(result.isValid).toBe(false);
     expect(result.errors).toContainEqual({
       field: "provenance",
-      message: "Invalid provenance. Allowed values: XHIBIT, MANUAL_UPLOAD, SNL, COMMON_PLATFORM"
+      message: "Invalid provenance. Allowed values: MANUAL_UPLOAD, SNL, COMMON_PLATFORM, CP_CATH, PDDA"
     });
   });
 
@@ -262,5 +270,93 @@ describe("validateBlobRequest", () => {
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.locationExists).toBe(true);
+  });
+
+  it("should accept CP_CATH as a valid provenance", async () => {
+    const { getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
+
+    const request = { ...validRequest, provenance: "CP_CATH", court_id: "cp-cath-999" };
+    const result = await validateBlobRequest(request, 1000);
+
+    expect(result.errors.some((e) => e.field === "provenance")).toBe(false);
+  });
+
+  it("should accept PDDA as a valid provenance", async () => {
+    const { getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
+
+    const request = { ...validRequest, provenance: "PDDA", court_id: "pdda-999" };
+    const result = await validateBlobRequest(request, 1000);
+
+    expect(result.errors.some((e) => e.field === "provenance")).toBe(false);
+  });
+
+  it("should resolve external provenance location ID when provenance is SNL", async () => {
+    const { getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue({
+      locationId: 456,
+      name: "SNL Court",
+      welshName: "Llys SNL",
+      regions: [],
+      subJurisdictions: []
+    });
+
+    const request = { ...validRequest, provenance: "SNL", court_id: "snl-456" };
+    const result = await validateBlobRequest(request, 1000);
+
+    expect(result.locationExists).toBe(true);
+    expect(result.resolvedLocationId).toBe("456");
+    expect(getLocationByProvenanceLocationId).toHaveBeenCalledWith("SNL", "snl-456", "VENUE");
+  });
+
+  it("should set locationExists=false when external provenance location ID not found", async () => {
+    const { getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
+
+    const request = { ...validRequest, provenance: "SNL", court_id: "unknown-snl-id" };
+    const result = await validateBlobRequest(request, 1000);
+
+    expect(result.isValid).toBe(true);
+    expect(result.locationExists).toBe(false);
+    expect(result.resolvedLocationId).toBeUndefined();
+  });
+
+  it("should not call getLocationById for external provenances", async () => {
+    const { getLocationById, getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
+
+    const request = { ...validRequest, provenance: "COMMON_PLATFORM", court_id: "cp-123" };
+    await validateBlobRequest(request, 1000);
+
+    expect(getLocationById).not.toHaveBeenCalled();
+    expect(getLocationByProvenanceLocationId).toHaveBeenCalledWith("COMMON_PLATFORM", "cp-123", "VENUE");
+  });
+
+  it("should use getLocationById for internal provenances like MANUAL_UPLOAD", async () => {
+    const { getLocationById, getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationById).mockResolvedValue(undefined);
+
+    const request = { ...validRequest, provenance: "MANUAL_UPLOAD", court_id: "123" };
+    await validateBlobRequest(request, 1000);
+
+    expect(getLocationByProvenanceLocationId).not.toHaveBeenCalled();
+    expect(getLocationById).toHaveBeenCalledWith(123);
+  });
+
+  it("should return resolvedLocationId equal to court_id for internal provenances when location exists", async () => {
+    const { getLocationById } = await import("@hmcts/location");
+    vi.mocked(getLocationById).mockResolvedValue({
+      locationId: 123,
+      name: "Test Court",
+      welshName: "Llys Prawf",
+      regions: [],
+      subJurisdictions: []
+    });
+
+    const request = { ...validRequest, court_id: "123" };
+    const result = await validateBlobRequest(request, 1000);
+
+    expect(result.resolvedLocationId).toBe("123");
   });
 });

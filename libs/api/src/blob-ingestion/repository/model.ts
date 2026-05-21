@@ -35,6 +35,7 @@ export interface BlobValidationResult {
   errors: ValidationError[];
   locationExists: boolean;
   listTypeId?: number;
+  resolvedLocationId?: string;
 }
 
 export interface IngestionLog {

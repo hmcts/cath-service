@@ -1,11 +1,12 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
-import { getLocationById } from "@hmcts/location";
+import { getLocationById, getLocationByProvenanceLocationId } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./repository/model.js";
 
 const MAX_BLOB_SIZE = 10 * 1024 * 1024; // 10MB default
-const ALLOWED_PROVENANCES = ["XHIBIT", "MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM"];
+const ALLOWED_PROVENANCES = ["MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
+const EXTERNAL_PROVENANCES = ["SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
 
 export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
   const errors: ValidationError[] = [];
@@ -47,6 +48,7 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
 
   // Map list type name to ID for internal validation
   let listTypeId: string | undefined;
+  let listTypeLocationType: string | undefined;
   const listTypes = await findAllListTypes();
   if (request.list_type) {
     const listType = listTypes.find((lt) => lt.name === request.list_type);
@@ -57,6 +59,7 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
       });
     } else {
       listTypeId = listType.id.toString();
+      listTypeLocationType = listType.locationType ?? undefined;
     }
   }
 
@@ -118,15 +121,26 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
 
   // Location validation - check if location exists in master reference data
   let locationExists = false;
+  let resolvedLocationId: string | undefined;
+
   if (request.court_id) {
-    const locationId = Number.parseInt(request.court_id, 10);
-    if (Number.isNaN(locationId)) {
-      errors.push({ field: "court_id", message: "court_id must be a valid number" });
-    } else {
-      const location = await getLocationById(locationId);
+    if (EXTERNAL_PROVENANCES.includes(request.provenance)) {
+      const location = await getLocationByProvenanceLocationId(request.provenance, request.court_id, listTypeLocationType);
       locationExists = !!location;
-      // Note: We don't add an error if location doesn't exist
-      // This is handled by setting no_match=true
+      if (location) {
+        resolvedLocationId = location.locationId.toString();
+      }
+    } else {
+      const locationId = Number.parseInt(request.court_id, 10);
+      if (Number.isNaN(locationId)) {
+        errors.push({ field: "court_id", message: "court_id must be a valid number" });
+      } else {
+        const location = await getLocationById(locationId);
+        locationExists = !!location;
+        if (location) {
+          resolvedLocationId = locationId.toString();
+        }
+      }
     }
   }
 
@@ -160,7 +174,8 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     isValid: errors.length === 0,
     errors,
     locationExists,
-    listTypeId: listTypeId ? Number.parseInt(listTypeId, 10) : undefined
+    listTypeId: listTypeId ? Number.parseInt(listTypeId, 10) : undefined,
+    resolvedLocationId
   };
 }
 
