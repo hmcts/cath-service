@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ pdfTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ pdfTitle }}</h1>
+
+    <p class="bold header-date">{{ t.listFor }} {{ contentDate }}</p>
+    <p class="header-date">{{ t.published }}: {{ publishedDateTime }}</p>
+  </div>
+
+  <h2>{{ t.casesReadyForHearing }}</h2>
+
+  {% if cases.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t.nameHeader }}</th>
+          <th>{{ t.postcodeHeader }}</th>
+          <th>{{ t.offenceHeader }}</th>
+          <th>{{ t.prosecutorHeader }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for case in cases %}
+          <tr>
+            <td>{{ case.name }}</td>
+            <td>{{ case.postcode }}</td>
+            <td>{{ case.offence }}</td>
+            <td>{{ case.prosecutor }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noCasesFound }}</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>

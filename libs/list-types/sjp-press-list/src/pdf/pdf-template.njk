@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ listTitle }}</title>
+  <style>
+    {{ pdfStyles | safe }}
+    .defendant-card {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #b1b4b6;
+      page-break-inside: avoid;
+    }
+    .defendant-card:last-child {
+      border-bottom: none;
+    }
+    .summary-list {
+      margin: 0 0 10px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .summary-list dt {
+      font-weight: 700;
+      display: inline;
+    }
+    .summary-list dt::after {
+      content: ": ";
+    }
+    .summary-list dd {
+      display: inline;
+      margin: 0;
+    }
+    .summary-list .row {
+      margin-bottom: 5px;
+    }
+    .offence-section {
+      margin-top: 10px;
+      padding-left: 15px;
+      border-left: 3px solid #b1b4b6;
+    }
+    .offence-item {
+      margin-bottom: 10px;
+    }
+    .restriction-tag {
+      font-weight: 700;
+      color: #d4351c;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <div class="info-box">
+      <h3>{{ t.importantInfoTitle }}</h3>
+      <p>{{ t.importantInfoContent }}</p>
+      <p><a href="#">{{ t.mediaProtocolLink }}</a></p>
+    </div>
+
+    <p class="header-date">{{ t.listFor }} {{ contentDate }}</p>
+    <p class="header-date">{{ t.published }}: {{ publishedDateTime }}</p>
+  </div>
+
+  {% if cases.length > 0 %}
+    {% for case in cases %}
+      <div class="defendant-card">
+        <div class="summary-list">
+          <div class="row"><dt>{{ t.nameHeader }}</dt><dd>{{ case.name }}</dd></div>
+          {% if case.formattedDob %}
+            <div class="row"><dt>{{ t.dobHeader }}</dt><dd>{{ case.formattedDob }}</dd></div>
+          {% endif %}
+          {% if case.reference %}
+            <div class="row"><dt>{{ t.referenceHeader }}</dt><dd>{{ case.reference }}</dd></div>
+          {% endif %}
+          {% if case.address %}
+            <div class="row"><dt>{{ t.addressHeader }}</dt><dd>{{ case.address }}</dd></div>
+          {% endif %}
+          <div class="row"><dt>{{ t.prosecutorHeader }}</dt><dd>{{ case.prosecutor }}</dd></div>
+        </div>
+
+        {% if case.offences.length > 0 %}
+          <div class="offence-section">
+            {% for offence in case.offences %}
+              <div class="offence-item">
+                {% if offence.reportingRestriction %}
+                  <p class="restriction-tag">{{ t.reportingRestrictionHeader }}</p>
+                {% endif %}
+                <p><strong>{{ t.offenceHeader }}:</strong> {{ offence.offenceTitle }}</p>
+                {% if offence.offenceWording %}
+                  <p>{{ offence.offenceWording }}</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>{{ t.noCasesFound }}</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks && yarn build:assets && yarn build:schemas",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\; && cd ../.. && mkdir -p dist/pdf && cd src/pdf && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pdf/$(dirname {}) && cp {} ../../dist/pdf/{}' \\;",
     "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
     "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
@@ -27,7 +27,11 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
+    "@hmcts/publication": "workspace:*",
+    "luxon": "3.7.2",
+    "nunjucks": "3.2.4"
   },
   "devDependencies": {
     "@types/node": "24.10.4",

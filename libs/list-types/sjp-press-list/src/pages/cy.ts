@@ -45,6 +45,10 @@ export const cy = {
     errorNotVerified: "Rhaid i chi fod yn ddefnyddiwr dilysedig i gael mynediad at restrau'r wasg",
     factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
     factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban."
+    factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+    cautionNote:
+      "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn ffurfiol yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
+    cautionReporting:
+      "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd wedi'i bwriadu i gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio."
   }
 };

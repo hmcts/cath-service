@@ -1,15 +1,20 @@
 export const cy = {
   SJP_PUBLIC_LIST: {
-    title: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Rhestr Lawn)"
+    title: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Rhestr Lawn)",
+    pdfTitle: "Rhestr Gyhoeddus Gweithdrefn Un Ynad (Rhestr Lawn)"
   },
   SJP_DELTA_PUBLIC_LIST: {
-    title: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Achosion Newydd)"
+    title: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Achosion Newydd)",
+    pdfTitle: "Rhestr Gyhoeddus Gweithdrefn Un Ynad (Achosion Newydd)"
   },
   common: {
     listContaining: "Rhestr sy'n cynnwys",
     casesText: "case(s)",
     generatedOn: "a gynhyrchwyd ar",
     at: "am",
+    listFor: "Rhestr ar gyfer",
+    published: "Cyhoeddwyd",
+    casesReadyForHearing: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad",
     filterTitle: "Hidlydd",
     selectedFilters: "Hidlwyr a ddewiswyd",
     searchLabel: "Chwilio ffiltrau",
@@ -35,6 +40,10 @@ export const cy = {
     errorInvalidPostcode: "Rhowch god post dilys",
     factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
     factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-    factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban."
+    factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+    cautionNote:
+      "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn ffurfiol yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
+    cautionReporting:
+      "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd wedi'i bwriadu i gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio."
   }
 };

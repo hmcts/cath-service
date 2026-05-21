@@ -1223,6 +1223,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/excel-generation@workspace:*, @hmcts/excel-generation@workspace:libs/excel-generation":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/excel-generation@workspace:libs/excel-generation"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.1.7"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/list-search-config@workspace:*, @hmcts/list-search-config@workspace:libs/list-search-config":
   version: 0.0.0-use.local
   resolution: "@hmcts/list-search-config@workspace:libs/list-search-config"
@@ -1362,6 +1374,7 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/excel-generation": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -1369,6 +1382,8 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/sjp-press-list": "workspace:*"
+    "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:5.9.3"
@@ -1417,8 +1432,12 @@ __metadata:
   resolution: "@hmcts/sjp-press-list@workspace:libs/list-types/sjp-press-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
@@ -1431,8 +1450,12 @@ __metadata:
   resolution: "@hmcts/sjp-public-list@workspace:libs/list-types/sjp-public-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:5.9.3"
     vitest: "npm:4.0.16"
   peerDependencies:
