@@ -18,7 +18,7 @@ const ENDPOINT = `${API_BASE_URL}/v1/publication`;
 function createValidPayload(locationId: number, locationName: string) {
   return {
     court_id: locationId.toString(),
-    provenance: "PDDA",
+    provenance: "MANUAL_UPLOAD",
     content_date: "2024-12-01",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
