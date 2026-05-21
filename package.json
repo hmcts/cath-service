@@ -49,7 +49,6 @@
     "@biomejs/cli-linux-arm64": "^2.3.6",
     "@types/jsonwebtoken": "9.0.10",
     "@types/node": "24.10.4",
-    "@types/passport-azure-ad": "4.3.6",
     "@types/supertest": "7.2.0",
     "@vitest/coverage-v8": "4.1.7",
     "@vitest/ui": "4.1.7",
@@ -83,7 +82,7 @@
     "jsonwebtoken": "9.0.3",
     "jwks-rsa": "4.0.1",
     "notifications-node-client": "^8.2.1",
-    "passport": "0.7.0",
-    "passport-azure-ad": "4.3.5"
+    "openid-client": "6.8.4",
+    "passport": "0.7.0"
   }
 }

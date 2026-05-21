@@ -294,7 +294,7 @@ For local development, configuration is split between Azure Key Vault (for sensi
 **Secrets loaded from Azure Key Vault** (requires `az login`):
 - `SSO_CLIENT_ID` - Azure AD application client ID
 - `SSO_CLIENT_SECRET` - Azure AD application client secret
-- `SSO_IDENTITY_METADATA` - OpenID Connect metadata endpoint
+- `SSO_ISSUER_URL` - Azure AD issuer URL
 - `SSO_SYSTEM_ADMIN_GROUP_ID` - System admin Azure AD group ID
 - `SSO_INTERNAL_ADMIN_CTSC_GROUP_ID` - CTSC admin Azure AD group ID
 - `SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID` - Local admin Azure AD group ID
@@ -332,7 +332,7 @@ SSO_ALLOW_HTTP_REDIRECT=true
 |------------------------|---------------------|-------------|
 | `sso-client-id` | `SSO_CLIENT_ID` | Azure AD application client ID |
 | `sso-client-secret` | `SSO_CLIENT_SECRET` | Azure AD application client secret |
-| `sso-config-endpoint` | `SSO_IDENTITY_METADATA` | OpenID Connect metadata endpoint |
+| `sso-issuer-url` | `SSO_ISSUER_URL` | Azure AD issuer URL |
 | `sso-sg-system-admin` | `SSO_SYSTEM_ADMIN_GROUP_ID` | System admin Azure AD group ID |
 | `sso-sg-admin-ctsc` | `SSO_INTERNAL_ADMIN_CTSC_GROUP_ID` | CTSC admin Azure AD group ID |
 | `sso-sg-admin-local` | `SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID` | Local admin Azure AD group ID |
