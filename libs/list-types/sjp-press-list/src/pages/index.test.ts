@@ -249,6 +249,37 @@ describe("SJP Press List Controller", () => {
       );
     });
 
+    it("should pass showFilter=true to template when showFilter query param is set", async () => {
+      const req = mockRequest({
+        query: { artefactId: "test-123", showFilter: "true" }
+      });
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+        artefactId: "test-123",
+        locationId: "1",
+        contentDate: new Date("2025-01-20"),
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+      vi.mocked(determineListType).mockReturnValue("press");
+      vi.mocked(extractPressCases).mockReturnValue(mockCases);
+      vi.mocked(calculatePagination).mockReturnValue({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 1,
+        itemsPerPage: 1000,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
+      });
+
+      await getHandler(req, res);
+
+      expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.objectContaining({ showFilter: true }));
+    });
+
     it("should use Welsh translations when locale is cy", async () => {
       const req = mockRequest({
         query: { artefactId: "test-123" }

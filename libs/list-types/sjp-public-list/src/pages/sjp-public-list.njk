@@ -24,12 +24,12 @@
     </p>
 
     <p class="govuk-body">
-      {{ listContaining }} {{ list.caseCount }} {{ casesText }}
+      {{ listContaining }} {{ totalCases }} {{ casesText }}
       {{ generatedOn }} {{ list.generatedAt | date }} {{ at }} {{ list.generatedAt | time12 }}.
     </p>
 
     <button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button" id="filter-toggle">
-      {% if (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}{{ hideFilters }}{% else %}{{ showFilters }}{% endif %}
+      {% if showFilter or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}{{ hideFilters }}{% else %}{{ showFilters }}{% endif %}
     </button>
 
     {% if pagination.totalPages > 1 %}
@@ -63,7 +63,7 @@
     {% endif %}
 
     <div class="moj-filter-layout">
-      <div class="filter-form layout-width-two-filters {% if not ((filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0)) %}hidden{% endif %}" id="filter-panel">
+      <div class="filter-form layout-width-two-filters {% if not (showFilter or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0)) %}hidden{% endif %}" id="filter-panel">
         <form method="post" class="moj-filter-layout__filter" autocomplete="off">
           <input type="hidden" name="artefactId" value="{{ list.artefactId }}">
 
@@ -79,7 +79,7 @@
           {# Selected Filters Section - Always visible #}
           <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
             <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFilters }}</h3>
-            <a href="?artefactId={{ list.artefactId }}" class="govuk-link">{{ clearFilters }}</a>
+            <a href="?artefactId={{ list.artefactId }}&showFilter=true" class="govuk-link">{{ clearFilters }}</a>
 
             {% if (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}
             <div class="filter-tags govuk-!-margin-top-4">

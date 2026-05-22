@@ -23,6 +23,7 @@ const getHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
   const artefactId = req.query.artefactId as string;
   const page = Number.parseInt(req.query.page as string, 10) || 1;
+  const showFilter = req.query.showFilter === "true";
 
   if (!artefactId) {
     return res.status(400).render("errors/400", { en, cy, locale });
@@ -73,6 +74,7 @@ const getHandler = async (req: Request, res: Response) => {
         postcodes: filters.postcodes || [],
         prosecutors: filters.prosecutors || []
       },
+      showFilter,
       errors: undefined,
       dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance
     });
