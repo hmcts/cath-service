@@ -48,6 +48,13 @@ jobs:
             --resource-group "$RESOURCE_GROUP" \
             --query "[0].value" -o tsv)
 
+          # Break any existing lease on the blob before we can upload
+          az storage blob lease break \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --blob-name "$BLOB" \
+            --account-key "$ACCOUNT_KEY" 2>/dev/null || echo "No lease to break (ok)"
+
           # Download current state
           az storage blob download \
             --account-name "$STORAGE_ACCOUNT" \
