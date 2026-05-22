@@ -114,3 +114,56 @@ describe("getSsoConfig", () => {
     expect(ssoConfig.clientSecret).toBe("");
   });
 });
+
+describe("isSsoConfigured", () => {
+  let originalEnv: NodeJS.ProcessEnv;
+
+  beforeEach(() => {
+    originalEnv = { ...process.env };
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it("should return false when NODE_ENV is development and ENABLE_SSO is not set", async () => {
+    process.env.NODE_ENV = "development";
+    delete process.env.ENABLE_SSO;
+
+    const { isSsoConfigured } = await import("./sso-config.js");
+
+    expect(isSsoConfigured()).toBe(false);
+  });
+
+  it("should return true when all required config values are present", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.SSO_ISSUER_URL = "https://login.microsoftonline.com/tenant/v2.0";
+    process.env.SSO_CLIENT_ID = "client-123";
+    process.env.SSO_CLIENT_SECRET = "secret-456";
+    process.env.BASE_URL = "https://example.com";
+    process.env.SSO_SYSTEM_ADMIN_GROUP_ID = "group-1";
+    process.env.SSO_INTERNAL_ADMIN_CTSC_GROUP_ID = "group-2";
+    process.env.SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID = "group-3";
+
+    const { isSsoConfigured } = await import("./sso-config.js");
+
+    expect(isSsoConfigured()).toBe(true);
+  });
+
+  it("should return false when issuerUrl is missing", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.SSO_ISSUER_URL;
+    process.env.SSO_CLIENT_ID = "client-123";
+    process.env.SSO_CLIENT_SECRET = "secret-456";
+
+    const config = await import("config");
+    vi.mocked(config.default.get).mockImplementation(() => {
+      throw new Error("Not found");
+    });
+
+    const { isSsoConfigured } = await import("./sso-config.js");
+
+    expect(isSsoConfigured()).toBe(false);
+  });
+});
