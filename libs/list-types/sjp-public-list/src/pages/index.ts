@@ -42,6 +42,7 @@ export const GET = async (req: Request, res: Response) => {
   const page = Number.parseInt(req.query.page as string, 10) || 1;
   const sortBy = (req.query.sortBy as string) || "";
   const sortOrder = (req.query.sortOrder as string) || "asc";
+  const showFilter = req.query.showFilter === "true";
 
   if (!artefactId) {
     return res.status(400).render("errors/400", {
@@ -96,6 +97,7 @@ export const GET = async (req: Request, res: Response) => {
     list,
     cases,
     casesRows,
+    totalCases,
     prosecutors,
     postcodeAreas: postcodeData.postcodes,
     hasLondonPostcodes: postcodeData.hasLondonPostcodes,
@@ -107,7 +109,8 @@ export const GET = async (req: Request, res: Response) => {
     },
     sortBy,
     sortOrder,
-    downloadDisclaimerUrl
+    downloadDisclaimerUrl,
+    showFilter
   });
 };
 

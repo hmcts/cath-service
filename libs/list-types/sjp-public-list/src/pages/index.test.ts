@@ -146,6 +146,7 @@ describe("SJP Public List Controller", () => {
           list: mockList,
           cases: mockCases,
           casesRows: [[{ text: "J Doe" }, { text: "SW1A" }, { text: "Speeding" }, { text: "CPS" }]],
+          totalCases: 300,
           prosecutors: ["CPS", "DVLA"],
           postcodeAreas: ["SW1A", "M1"],
           hasLondonPostcodes: true,
@@ -390,6 +391,39 @@ describe("SJP Public List Controller", () => {
           downloadDisclaimerUrl: null
         })
       );
+    });
+
+    it("should pass showFilter=true to template when showFilter query param is set", async () => {
+      const req = mockRequest({
+        query: { artefactId: "test-123", showFilter: "true" }
+      });
+      const res = mockResponse();
+
+      vi.mocked(getSjpListById).mockResolvedValue({
+        artefactId: "test-123",
+        listType: "public",
+        contentDate: new Date("2025-01-20"),
+        publicationDate: new Date("2025-01-20T09:00:00Z"),
+        caseCount: 10,
+        locationId: 1
+      });
+
+      vi.mocked(getSjpPublicCases).mockResolvedValue({ cases: [], totalCases: 0 });
+      vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
+      vi.mocked(getUniquePostcodes).mockResolvedValue({ postcodes: [], hasLondonPostcodes: false, londonPostcodes: [] });
+      vi.mocked(calculatePagination).mockReturnValue({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 1000,
+        hasNext: false,
+        hasPrevious: false,
+        pageNumbers: [1]
+      });
+
+      await GET(req, res);
+
+      expect(res.render).toHaveBeenCalledWith("sjp-public-list", expect.objectContaining({ showFilter: true }));
     });
 
     it("should use Welsh translations when locale is cy", async () => {

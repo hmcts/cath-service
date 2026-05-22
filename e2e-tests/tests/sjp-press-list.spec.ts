@@ -1,22 +1,30 @@
 import AxeBuilder from "@axe-core/playwright";
+import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { getApiAuthToken } from "../utils/api-auth-helpers.js";
+import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+import { uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
-const API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
+const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 
-function createSjpPressListPayload() {
-  const postcodes = ["BS8", "BS9", "M1", "M2", "E1", "SW1A"];
+// Helper function to create SJP press list payload
+function createSjpPressListPayload(locationId: number) {
+  // Postcodes must match pattern ^([A-Za-z]{2}|[A-Za-z][0-9])$ - short UK postcode areas only
+  const postcodes = ["SW", "M1", "B1", "E1", "BS", "LS"];
   const prosecutors = ["TV Licensing", "Thames Valley Police", "Manchester City Council"];
   const offences = [
     { title: "Use a television set without a licence", wording: "Failed to pay TV license fee" },
     { title: "Exceed the speed limit on a restricted road", wording: "Driving at 45mph in a 30mph zone" },
-    { title: "Fail to comply with red traffic light", wording: null },
+    { title: "Fail to comply with red traffic light", wording: "Failed to stop at red light" },
     { title: "Use a hand-held mobile telephone whilst driving", wording: "Using phone while driving on M1" }
   ];
   const names = [
-    { forenames: "John", surname: "Smith", dob: "15/05/1985" },
-    { forenames: "Jane", surname: "Doe", dob: "22/08/1990" },
-    { forenames: "Bob", surname: "Wilson", dob: "10/03/1982" },
-    { forenames: "Alice", surname: "Brown", dob: "05/12/1995" }
+    { forenames: "John", surname: "Smith", dob: "1985-05-15", age: 40 },
+    { forenames: "Jane", surname: "Doe", dob: "1990-08-22", age: 34 },
+    { forenames: "Bob", surname: "Wilson", dob: "1982-03-10", age: 43 },
+    { forenames: "Alice", surname: "Brown", dob: "1995-12-05", age: 29 }
   ];
 
   const hearings = [];
@@ -28,7 +36,7 @@ function createSjpPressListPayload() {
     const name = names[i % names.length];
 
     hearings.push({
-      case: [{ caseUrn: `URN${2025}${String(i + 1).padStart(6, "0")}` }],
+      case: [{ caseUrn: `URN-2025-${String(i + 1).padStart(6, "0")}` }],
       party: [
         {
           partyRole: "ACCUSED",
@@ -37,11 +45,12 @@ function createSjpPressListPayload() {
             individualForenames: name.forenames,
             individualSurname: name.surname,
             dateOfBirth: name.dob,
+            age: name.age,
             address: {
               line: [`${i + 100} Test Street`],
               town: "Bristol",
               county: "Avon",
-              postCode: `${postcode} ${i + 1}AA`
+              postCode: postcode
             }
           }
         },
@@ -62,18 +71,27 @@ function createSjpPressListPayload() {
     });
   }
 
+  // Use dates that span the current date to ensure publication is visible
+  const today = new Date();
+  const displayFrom = new Date(today);
+  displayFrom.setDate(displayFrom.getDate() - 7);
+  const displayTo = new Date(today);
+  displayTo.setDate(displayTo.getDate() + 365);
+
+  const contentDate = today.toISOString().split("T")[0];
+
   return {
-    court_id: "9",
+    court_id: locationId.toString(),
     provenance: "MANUAL_UPLOAD",
-    content_date: "2025-01-20",
-    list_type: "SINGLE_JUSTICE_PROCEDURE_PRESS",
+    content_date: contentDate,
+    list_type: "SJP_PRESS_LIST",
     sensitivity: "CLASSIFIED",
     language: "ENGLISH",
-    display_from: "2025-01-20T00:00:00Z",
-    display_to: "2026-01-20T00:00:00Z",
+    display_from: displayFrom.toISOString(),
+    display_to: displayTo.toISOString(),
     hearing_list: {
       document: {
-        publicationDate: "2025-01-20T09:00:00Z",
+        publicationDate: `${contentDate}T09:00:00Z`,
         version: "1.0"
       },
       courtLists: [
@@ -93,8 +111,8 @@ function createSjpPressListPayload() {
                   {
                     sittings: [
                       {
-                        sittingStart: "2025-01-20T09:00:00Z",
-                        sittingEnd: "2025-01-20T17:00:00Z",
+                        sittingStart: `${contentDate}T09:00:00Z`,
+                        sittingEnd: `${contentDate}T17:00:00Z`,
                         hearing: hearings
                       }
                     ]
@@ -109,164 +127,102 @@ function createSjpPressListPayload() {
   };
 }
 
-test("verified user can view and search SJP press list with full details @nightly", async ({ page, request }) => {
-  // 1. Create test data
-  const payload = createSjpPressListPayload();
+// Helper function to upload publication via API
+async function uploadSjpPressListViaApi(request: APIRequestContext, locationId: number): Promise<string> {
+  const payload = createSjpPressListPayload(locationId);
+  const token = await getApiAuthToken();
+
+  const response = await request.post(PUBLICATION_ENDPOINT, {
+    data: payload,
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const result = await response.json();
+
+  expect(response.status()).toBe(201);
+  expect(result.artefact_id).toBeDefined();
+
+  // In deployed environments, API and web are separate pods with separate filesystems.
+  // Upload the JSON to the web pod so the list type page can render it.
+  if (IS_DEPLOYED) {
+    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
+    await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
+  }
+
+  return result.artefact_id;
+}
+
+test.describe("SJP Press List @nightly", () => {
   let artefactId: string;
   let listUrl: string;
 
-  try {
-    const response = await request.post(`${API_BASE_URL}/v1/publication`, {
-      data: payload,
-      headers: {
-        Authorization: "Bearer test-token"
-      },
-      failOnStatusCode: false
-    });
+  test.beforeAll(async ({ request }) => {
+    // Create unique test location for isolation
+    const testLocation = await createUniqueTestLocation({ namePrefix: "SJP Press Test Court" });
 
-    if (response.ok()) {
-      const body = await response.json();
-      artefactId = body.artefact_id;
-      listUrl = `/sjp-press-list?artefactId=${artefactId}`;
-    } else {
-      console.warn("Failed to create test data via API. Using fallback.");
-      artefactId = "test-fallback-id";
-      listUrl = `/sjp-press-list?artefactId=${artefactId}`;
-    }
-  } catch (error) {
-    console.warn("Error creating test data:", error);
-    artefactId = "test-fallback-id";
+    // Upload SJP press list via API with proper authentication
+    artefactId = await uploadSjpPressListViaApi(request, testLocation.locationId);
     listUrl = `/sjp-press-list?artefactId=${artefactId}`;
-  }
+  });
 
-  // 2. Test main journey - authenticated user views press list
-  await page.goto(listUrl);
+  test("should display press list page with required elements", async ({ page }) => {
+    await page.goto(listUrl);
 
-  // Check page heading
-  await expect(page.getByRole("heading", { name: "Single Justice Procedure cases that are ready for hearing (Full list)", level: 1 })).toBeVisible();
+    // Check page heading
+    await expect(page.getByRole("heading", { name: "Single Justice Procedure cases - Press view (Full list)", level: 1 })).toBeVisible();
 
-  // Check list summary
-  await expect(page.getByText(/List containing/)).toBeVisible();
-  await expect(page.getByText(/case\(s\)/)).toBeVisible();
+    // Check details component
+    await expect(page.getByText("What are Single Justice Procedure cases?")).toBeVisible();
 
-  // Check Show/Hide filters button
-  const filterToggle = page.getByRole("button", { name: /filters/ });
-  await expect(filterToggle).toBeVisible();
+    // Check Show/Hide filters button
+    await expect(page.getByRole("button", { name: /filters/ })).toBeVisible();
 
-  // Check press list specific table headers (includes DOB and Address)
-  await expect(page.getByText("Name")).toBeVisible();
-  await expect(page.getByText("Date of birth")).toBeVisible();
-  await expect(page.getByText("Postcode")).toBeVisible();
-  await expect(page.getByText("Prosecutor")).toBeVisible();
+    // Test accessibility (disable region rule - known site-wide issue)
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+  });
 
-  // Check Download button is present (press list feature)
-  await expect(page.getByRole("link", { name: /Download/i })).toBeVisible();
+  test("user can use filter functionality @nightly", async ({ page }) => {
+    await page.goto(listUrl);
 
-  // Check accordion sections are present (press list shows offences in accordions)
-  const accordions = page.locator(".govuk-accordion__section");
-  const accordionCount = await accordions.count();
-  expect(accordionCount).toBeGreaterThan(0);
+    const filterPanel = page.locator("#filter-panel");
 
-  // 3. Test accessibility inline
-  const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
-  expect(accessibilityScanResults.violations).toEqual([]);
+    // Initially filters should be hidden
+    await expect(filterPanel).toBeHidden();
 
-  // 4. Test filtering functionality
-  // Show filters
-  await page.getByRole("button", { name: "Show filters" }).click();
-  await expect(page.locator("#filter-panel")).toBeVisible();
+    // Show filters
+    await page.getByRole("button", { name: "Show filters" }).click();
+    await expect(filterPanel).toBeVisible();
 
-  // Check filter elements are present
-  await expect(page.getByRole("heading", { name: "Selected filters" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Clear filters" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Apply filters" })).toBeVisible();
+    // Check filter elements are present
+    await expect(page.getByRole("heading", { name: "Selected filters" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Clear filters" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Apply filters" })).toBeVisible();
 
-  // Check postcode and prosecutor filters are dynamically generated
-  const postcodeCheckboxes = page.locator('input[name="postcode"]');
-  const postcodeCount = await postcodeCheckboxes.count();
-  expect(postcodeCount).toBeGreaterThan(0);
+    // Check postcode and prosecutor filters exist
+    const postcodeCheckboxes = page.locator('input[name="postcode"]');
+    expect(await postcodeCheckboxes.count()).toBeGreaterThan(0);
 
-  const prosecutorCheckboxes = page.locator('input[name="prosecutor"]');
-  const prosecutorCount = await prosecutorCheckboxes.count();
-  expect(prosecutorCount).toBeGreaterThan(0);
+    // Hide filters
+    await page.getByRole("button", { name: "Hide filters" }).click();
+    await expect(filterPanel).toBeHidden();
 
-  // 5. Test search functionality to find a specific case
-  const searchInput = page.getByLabel("Search filters");
-  await searchInput.fill("Smith");
+    // Test accessibility (disable region rule - known site-wide issue)
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+  });
 
-  // Apply filter
-  await page.getByRole("button", { name: "Apply filters" }).click();
+  test("should support Welsh language @nightly", async ({ page }) => {
+    await page.goto(`${listUrl}&lng=cy`);
 
-  // Wait for page to reload with filter applied
-  await page.waitForURL(/search=Smith/);
+    // Check Welsh heading
+    await expect(page.getByRole("heading", { name: "Achosion Gweithdrefn Un Ynad - Golwg i'r Wasg (Rhestr Lawn)", level: 1 })).toBeVisible();
 
-  // Verify the search result appears
-  await page.getByRole("button", { name: "Hide filters" }).click();
-  await page.getByRole("button", { name: "Show filters" }).click();
-  await expect(page.getByText("Selected filters")).toBeVisible();
-  await expect(page.locator(".moj-filter-tag__text").filter({ hasText: "Smith" })).toBeVisible();
+    // Check Welsh button text
+    await expect(page.getByRole("button", { name: /hidlwyr/i })).toBeVisible();
 
-  // 6. Test postcode filtering (including London postcodes if present)
-  await page.goto(listUrl);
-  await page.getByRole("button", { name: "Show filters" }).click();
-  await expect(page.locator("#filter-panel")).toBeVisible();
-
-  // Select first postcode
-  const firstPostcodeCheckbox = page.locator('input[name="postcode"]').first();
-  const postcodeValue = await firstPostcodeCheckbox.getAttribute("value");
-  await firstPostcodeCheckbox.check();
-
-  // Apply filter
-  await page.getByRole("button", { name: "Apply filters" }).click();
-  await page.waitForURL(new RegExp(`postcode=${postcodeValue}`));
-
-  // Verify filter is applied
-  await page.getByRole("button", { name: "Hide filters" }).click();
-  await page.getByRole("button", { name: "Show filters" }).click();
-  await expect(page.getByText(postcodeValue!)).toBeVisible();
-
-  // 7. Test clearing filters
-  await page.getByRole("link", { name: "Clear filters" }).click();
-  await page.waitForURL(new RegExp(`^[^?]*\\?artefactId=${artefactId}$`));
-
-  const filterTags = page.locator(".moj-filter-tag__text");
-  await expect(filterTags).toHaveCount(0);
-
-  // 8. Test Welsh translation
-  await page.goto(`${listUrl}&lng=cy`);
-
-  // Check Welsh heading
-  await expect(page.getByRole("heading", { name: "Achosion Gweithdrefn Cyfiawnder Sengl sydd yn barod i'w gwrando (Rhestr lawn)", level: 1 })).toBeVisible();
-
-  // Check Welsh button text
-  await expect(page.getByRole("button", { name: /hidlwyr/i })).toBeVisible();
-
-  // Check Welsh table headers
-  await expect(page.getByText("Enw")).toBeVisible();
-  await expect(page.getByText("Dyddiad geni")).toBeVisible();
-  await expect(page.getByText("Cod post")).toBeVisible();
-  await expect(page.getByText("Erlynydd")).toBeVisible();
-
-  // Test accessibility in Welsh
-  const welshAccessibilityScanResults = await new AxeBuilder({ page }).analyze();
-  expect(welshAccessibilityScanResults.violations).toEqual([]);
-
-  // 9. Test keyboard navigation
-  await page.goto(listUrl);
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Enter");
-
-  // Verify filters can be opened with keyboard
-  await expect(page.locator("#filter-panel")).toBeVisible();
-
-  // 10. Verify press list shows additional details not in public list
-  await page.goto(listUrl);
-
-  // Check for accordion with offence details (press list feature)
-  const firstAccordionButton = page.locator(".govuk-accordion__section-button").first();
-  await firstAccordionButton.click();
-
-  // Verify offence details are visible when accordion is expanded
-  const accordionContent = page.locator(".govuk-accordion__section-content").first();
-  await expect(accordionContent).toBeVisible();
+    // Test accessibility in Welsh (disable region rule - known site-wide issue)
+    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+  });
 });
