@@ -1,0 +1,100 @@
+name: One-Shot - Create Bootstrap State Containers
+
+# This workflow creates the dedicated Azure Blob Storage containers needed for
+# bootstrap Terraform state isolation. Run once and delete this file.
+#
+# Context: Bootstrap Terraform jobs were sharing the same state container as
+# main infrastructure jobs, causing bootstrap to see main infra resources as
+# orphaned and plan to destroy them. This fix gives bootstrap its own container.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-stg-container:
+    name: Create STG Bootstrap Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (STG)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+
+      - name: Create tfstate-stg-bootstrap container
+        run: |
+          az account set --subscription DTS-SHAREDSERVICES-STG
+          KEY=$(az storage account keys list \
+            --account-name sdsstatestg \
+            --resource-group jenkins-state-stg \
+            --query '[0].value' -o tsv)
+          az storage container create \
+            --account-name sdsstatestg \
+            --name tfstate-stg-bootstrap \
+            --account-key "$KEY"
+          echo "Created tfstate-stg-bootstrap in sdsstatestg"
+
+  create-demo-container:
+    name: Create DEMO Bootstrap Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (DEMO)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
+
+      - name: Create tfstate-demo-bootstrap container
+        run: |
+          az account set --subscription DTS-SHAREDSERVICES-DEMO
+          KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query '[0].value' -o tsv)
+          az storage container create \
+            --account-name sdsstatedemo \
+            --name tfstate-demo-bootstrap \
+            --account-key "$KEY"
+          echo "Created tfstate-demo-bootstrap in sdsstatedemo"
+
+  create-ithc-container:
+    name: Create ITHC Bootstrap Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (ITHC)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
+
+      - name: Create tfstate-ithc-bootstrap container
+        run: |
+          az account set --subscription DTS-SHAREDSERVICES-ITHC
+          KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query '[0].value' -o tsv)
+          az storage container create \
+            --account-name sdsstateithc \
+            --name tfstate-ithc-bootstrap \
+            --account-key "$KEY"
+          echo "Created tfstate-ithc-bootstrap in sdsstateithc"
+
+  create-test-container:
+    name: Create TEST Bootstrap Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (TEST)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+
+      - name: Create tfstate-test-bootstrap container
+        run: |
+          az account set --subscription DTS-SHAREDSERVICES-TEST
+          KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query '[0].value' -o tsv)
+          az storage container create \
+            --account-name sdsstatetest \
+            --name tfstate-test-bootstrap \
+            --account-key "$KEY"
+          echo "Created tfstate-test-bootstrap in sdsstatetest"

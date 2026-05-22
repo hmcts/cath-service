@@ -41,6 +41,7 @@ jobs:
       aks-subscription: DTS-SHAREDSERVICES-STG
       storage-account: nonprod
       working-directory: infrastructure/bootstrap
+      state-store-container-name: tfstate-stg-bootstrap
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
@@ -55,6 +56,7 @@ jobs:
       aks-subscription: DTS-SHAREDSERVICES-DEMO
       storage-account: nonprod
       working-directory: infrastructure/bootstrap
+      state-store-container-name: tfstate-demo-bootstrap
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
@@ -69,6 +71,7 @@ jobs:
       aks-subscription: DTS-SHAREDSERVICES-ITHC
       storage-account: nonprod
       working-directory: infrastructure/bootstrap
+      state-store-container-name: tfstate-ithc-bootstrap
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
@@ -83,6 +86,7 @@ jobs:
       aks-subscription: DTS-SHAREDSERVICES-TEST
       storage-account: nonprod
       working-directory: infrastructure/bootstrap
+      state-store-container-name: tfstate-test-bootstrap
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}

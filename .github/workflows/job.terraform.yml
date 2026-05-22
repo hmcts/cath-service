@@ -47,6 +47,11 @@ on:
         required: false
         type: string
         default: "infrastructure"
+      state-store-container-name:
+        required: false
+        type: string
+        default: ""
+        description: "Override the state store container name (default: tfstate-{environment})"
       post-plan-to-pr:
         required: false
         type: boolean
@@ -72,7 +77,7 @@ jobs:
       storage-account: ${{ inputs.storage-account }}
       state-store-resource-group: jenkins-state-${{ inputs.environment }}
       state-store-account-name: sdsstate${{ inputs.environment }}
-      state-store-container-name: tfstate-${{ inputs.environment }}
+      state-store-container-name: ${{ inputs.state-store-container-name != '' && inputs.state-store-container-name || format('tfstate-{0}', inputs.environment) }}
       working-directory: ${{ inputs.working-directory }}
       plan-only: ${{ inputs.plan-only }}
       post-plan-to-pr: ${{ inputs.post-plan-to-pr }}
