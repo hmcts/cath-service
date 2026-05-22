@@ -33,7 +33,7 @@ jobs:
 
   bootstrap-stg:
     name: Bootstrap STG
-    needs: [terraform-fmt]
+    needs: [terraform]
     uses: ./.github/workflows/job.terraform.yml
     with:
       environment: stg
