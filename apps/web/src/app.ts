@@ -9,8 +9,10 @@ import {
   pageRoutes as careStandardsTribunalRoutes
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
+import { moduleRoot as civilDailyCauseListModuleRoot, pageRoutes as civilDailyCauseListRoutes } from "@hmcts/civil-daily-cause-list/config";
 import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as familyDailyCauseListModuleRoot, pageRoutes as familyDailyCauseListRoutes } from "@hmcts/family-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot, pageRoutes as londonAdminRoutes } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -107,6 +109,8 @@ export async function createApp(): Promise<Express> {
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
     civilFamilyCauseListModuleRoot,
+    civilDailyCauseListModuleRoot,
+    familyDailyCauseListModuleRoot,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
     civilAppealModuleRoot,
@@ -176,6 +180,8 @@ export async function createApp(): Promise<Express> {
 
   // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
+  app.use(await createSimpleRouter(civilDailyCauseListRoutes));
+  app.use(await createSimpleRouter(familyDailyCauseListRoutes));
   app.use(await createSimpleRouter(careStandardsTribunalRoutes));
   app.use(await createSimpleRouter(rcjStandardRoutes));
   app.use(await createSimpleRouter(londonAdminRoutes));

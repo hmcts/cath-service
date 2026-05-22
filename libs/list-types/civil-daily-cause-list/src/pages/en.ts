@@ -1,0 +1,27 @@
+export const en = {
+  title: "Civil Daily Cause List",
+  listDate: "List for date:",
+  lastUpdated: "Last updated:",
+  publishedAt: "Published at:",
+  venueAddress: "Venue address",
+  openJusticeTitle: "Open justice",
+  openJusticeText: "The open justice principle means courts and tribunals should, where possible, be open for the public and press to observe.",
+  dataSource: "Data source",
+  time: "Time",
+  caseRef: "Case ref",
+  caseName: "Case name",
+  caseType: "Case type",
+  hearingType: "Hearing type",
+  location: "Location",
+  duration: "Duration",
+  applicant: "Applicant",
+  respondent: "Respondent",
+  noHearings: "No hearings today",
+  linkToTop: "Back to top",
+  judiciary: "Judiciary",
+  errorTitle: "Publication not available",
+  errorMessage:
+    "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
+  error403Title: "Access Denied",
+  error403Message: "You do not have permission to view this publication."
+};

@@ -1,0 +1,27 @@
+export const cy = {
+  title: "Rhestr Achosion Dyddiol Teulu",
+  listDate: "Rhestr ar gyfer dyddiad:",
+  lastUpdated: "Diweddarwyd ddiwethaf:",
+  publishedAt: "Cyhoeddwyd am:",
+  venueAddress: "Cyfeiriad y lleoliad",
+  openJusticeTitle: "Cyfiawnder agored",
+  openJusticeText: "Mae egwyddor cyfiawnder agored yn golygu y dylai llysoedd a thribiwnlysoedd, lle bo modd, fod yn agored i'r cyhoedd a'r wasg eu gwylio.",
+  dataSource: "Ffynhonnell data",
+  time: "Amser",
+  caseRef: "Cyfeirnod yr achos",
+  caseName: "Enw'r achos",
+  caseType: "Math o achos",
+  hearingType: "Math o wrandawiad",
+  location: "Lleoliad",
+  duration: "Hyd",
+  applicant: "Ceisydd",
+  respondent: "Atebydd",
+  noHearings: "Dim gwrandawiadau heddiw",
+  linkToTop: "Yn ôl i'r brig",
+  judiciary: "Barnwriaeth",
+  errorTitle: "Cyhoeddiad ddim ar gael",
+  errorMessage:
+    "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
+  error403Title: "Mynediad wedi'i Wrthod",
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+};
