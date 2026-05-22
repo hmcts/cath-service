@@ -17,8 +17,6 @@ jobs:
     name: State Fix (${{ inputs.subscription }})
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Azure login (DEMO)
         if: inputs.subscription == 'demo'
         uses: azure/login@v2
@@ -37,15 +35,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
 
-      - uses: hashicorp/setup-terraform@v3
-
-      - name: Fix bootstrap Terraform state
-        working-directory: infrastructure/bootstrap
+      - name: Remove orphaned module.key_vault resources from state
         run: |
           ENV="${{ inputs.subscription }}"
           STORAGE_ACCOUNT="sdsstate${ENV}"
           CONTAINER="tfstate-${ENV}"
-          STATE_KEY="cath-service/${ENV}/terraform.tfstate"
+          BLOB="cath-service/${ENV}/terraform.tfstate"
           RESOURCE_GROUP="jenkins-state-${ENV}"
 
           ACCOUNT_KEY=$(az storage account keys list \
@@ -53,29 +48,55 @@ jobs:
             --resource-group "$RESOURCE_GROUP" \
             --query "[0].value" -o tsv)
 
-          # Init with backend config
-          terraform init \
-            -backend-config="storage_account_name=${STORAGE_ACCOUNT}" \
-            -backend-config="container_name=${CONTAINER}" \
-            -backend-config="key=${STATE_KEY}" \
-            -backend-config="resource_group_name=${RESOURCE_GROUP}" \
-            -backend-config="access_key=${ACCOUNT_KEY}"
+          # Download current state
+          az storage blob download \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --blob-name "$BLOB" \
+            --file /tmp/state.json \
+            --account-key "$ACCOUNT_KEY"
 
-          # Remove orphaned module.key_vault resources from state
-          # (these are cath-{env} KVs that exist in Azure but SP can't delete them)
-          terraform state rm 'module.key_vault' 2>/dev/null || echo "module.key_vault not in state (ok)"
+          echo "Resources before fix:"
+          python3 -c "
+          import json
+          with open('/tmp/state.json') as f:
+              state = json.load(f)
+          for r in state.get('resources', []):
+              print(f\"  {r.get('module','root')}.{r['type']}.{r['name']}\")
+          "
 
-          # Import the existing cath-bootstrap-{env}-kv into state
-          # (created in a previous apply run but not tracked in state)
-          case "$ENV" in
-            demo) KV_ID="/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-bootstrap-demo-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-demo-kv" ;;
-            test) KV_ID="/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-bootstrap-test-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-test-kv" ;;
-            ithc) KV_ID="/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/cath-bootstrap-ithc-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-ithc-kv" ;;
-          esac
+          # Remove module.key_vault resources (orphaned cath-{env} KV - SP can't delete it)
+          python3 -c "
+          import json
+          with open('/tmp/state.json') as f:
+              state = json.load(f)
+          before = len(state['resources'])
+          state['resources'] = [
+              r for r in state['resources']
+              if r.get('module', '') != 'module.key_vault'
+          ]
+          after = len(state['resources'])
+          print(f'Removed {before - after} module.key_vault resources')
+          with open('/tmp/state-fixed.json', 'w') as f:
+              json.dump(state, f, indent=2)
+          "
 
-          terraform state show 'module.key_vault_bootstrap.azurerm_key_vault.kv' 2>/dev/null \
-            && echo "KV already in state, skipping import" \
-            || terraform import 'module.key_vault_bootstrap.azurerm_key_vault.kv' "$KV_ID"
+          echo "Resources after fix:"
+          python3 -c "
+          import json
+          with open('/tmp/state-fixed.json') as f:
+              state = json.load(f)
+          for r in state.get('resources', []):
+              print(f\"  {r.get('module','root')}.{r['type']}.{r['name']}\")
+          "
 
-          echo "State fix complete. Current state:"
-          terraform state list
+          # Upload fixed state
+          az storage blob upload \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --name "$BLOB" \
+            --file /tmp/state-fixed.json \
+            --account-key "$ACCOUNT_KEY" \
+            --overwrite
+
+          echo "State updated successfully"
