@@ -1,0 +1,81 @@
+name: Terraform Bootstrap State Fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      subscription:
+        description: "Environment to fix (demo, test, ithc)"
+        required: true
+        type: choice
+        options:
+          - demo
+          - test
+          - ithc
+
+jobs:
+  state-fix:
+    name: State Fix (${{ inputs.subscription }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (DEMO)
+        if: inputs.subscription == 'demo'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
+
+      - name: Azure login (TEST)
+        if: inputs.subscription == 'test'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+
+      - name: Azure login (ITHC)
+        if: inputs.subscription == 'ithc'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Fix bootstrap Terraform state
+        working-directory: infrastructure/bootstrap
+        run: |
+          ENV="${{ inputs.subscription }}"
+          STORAGE_ACCOUNT="sdsstate${ENV}"
+          CONTAINER="tfstate-${ENV}"
+          STATE_KEY="cath-service/${ENV}/terraform.tfstate"
+          RESOURCE_GROUP="jenkins-state-${ENV}"
+
+          ACCOUNT_KEY=$(az storage account keys list \
+            --account-name "$STORAGE_ACCOUNT" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "[0].value" -o tsv)
+
+          # Init with backend config
+          terraform init \
+            -backend-config="storage_account_name=${STORAGE_ACCOUNT}" \
+            -backend-config="container_name=${CONTAINER}" \
+            -backend-config="key=${STATE_KEY}" \
+            -backend-config="resource_group_name=${RESOURCE_GROUP}" \
+            -backend-config="access_key=${ACCOUNT_KEY}"
+
+          # Remove orphaned module.key_vault resources from state
+          # (these are cath-{env} KVs that exist in Azure but SP can't delete them)
+          terraform state rm 'module.key_vault' 2>/dev/null || echo "module.key_vault not in state (ok)"
+
+          # Import the existing cath-bootstrap-{env}-kv into state
+          # (created in a previous apply run but not tracked in state)
+          case "$ENV" in
+            demo) KV_ID="/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-bootstrap-demo-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-demo-kv" ;;
+            test) KV_ID="/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-bootstrap-test-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-test-kv" ;;
+            ithc) KV_ID="/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/cath-bootstrap-ithc-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-ithc-kv" ;;
+          esac
+
+          terraform state show 'module.key_vault_bootstrap.azurerm_key_vault.kv' 2>/dev/null \
+            && echo "KV already in state, skipping import" \
+            || terraform import 'module.key_vault_bootstrap.azurerm_key_vault.kv' "$KV_ID"
+
+          echo "State fix complete. Current state:"
+          terraform state list
