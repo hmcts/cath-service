@@ -20,13 +20,8 @@ const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<SjpJson> {
   contentDate: Date;
-  listTypeId: number;
+  listTypeName: string;
 }
-
-const LIST_TITLE_MAP: Record<number, string> = {
-  25: "SJP_PUBLIC_LIST",
-  27: "SJP_DELTA_PUBLIC_LIST"
-};
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
@@ -35,7 +30,6 @@ function formatDate(date: Date): string {
 export async function generateSjpPublicListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
   try {
     const cases = extractPublicCases(options.jsonData);
-    const listTypeKey = LIST_TITLE_MAP[options.listTypeId] || "SJP_PUBLIC_LIST";
 
     const translations = await loadTranslations(
       options.locale,
@@ -43,7 +37,7 @@ export async function generateSjpPublicListPdf(options: PdfGenerationOptions): P
       () => import("../pages/cy.js")
     );
 
-    const listTypeTranslations = translations[listTypeKey] as Record<string, string>;
+    const listTypeTranslations = translations[options.listTypeName] as Record<string, string>;
     const t = translations.common as Record<string, string>;
     const pdfTitle = listTypeTranslations?.pdfTitle || "";
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";

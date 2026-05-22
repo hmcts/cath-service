@@ -40,7 +40,7 @@ describe("generateSjpPublicListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeId: 25
+      listTypeName: "SJP_PUBLIC_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -60,7 +60,7 @@ describe("generateSjpPublicListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeId: 25
+      listTypeName: "SJP_PUBLIC_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -78,7 +78,7 @@ describe("generateSjpPublicListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeId: 25
+      listTypeName: "SJP_PUBLIC_LIST"
     });
 
     expect(result.success).toBe(false);

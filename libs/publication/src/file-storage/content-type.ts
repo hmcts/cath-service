@@ -4,7 +4,8 @@ const CONTENT_TYPE_MAP: Record<string, string> = {
   ".doc": "application/msword",
   ".html": "text/html",
   ".htm": "text/html",
-  ".csv": "text/csv"
+  ".csv": "text/csv",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 };
 
 export function getContentTypeFromExtension(extension: string | null | undefined): string {

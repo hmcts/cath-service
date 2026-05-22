@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
@@ -56,6 +56,10 @@ const getHandler = async (req: Request, res: Response) => {
     const paginatedCases = paginateCases(filteredCases, page);
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
+    const pdfExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.pdf`));
+    const excelExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.xlsx`));
+    const downloadDisclaimerUrl = pdfExists || excelExists ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+
     res.render("sjp-press-list", {
       ...t.common,
       title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
@@ -74,7 +78,8 @@ const getHandler = async (req: Request, res: Response) => {
         prosecutors: filters.prosecutors || []
       },
       errors: undefined,
-      dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance
+      dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance,
+      downloadDisclaimerUrl
     });
   } catch (error) {
     console.error("Error rendering SJP press list:", error);
@@ -202,6 +207,15 @@ function appendArrayToParams(params: URLSearchParams, key: string, values: strin
     if (value) {
       params.append(key, value);
     }
+  }
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
   }
 }
 

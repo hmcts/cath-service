@@ -21,6 +21,7 @@ const LOCALE_TO_LANGUAGE: Record<string, string> = {
 interface GeneratePdfParams {
   artefactId: string;
   listTypeId: number;
+  listTypeName: string;
   contentDate: Date;
   locale: string;
   locationId: string;
@@ -109,7 +110,7 @@ export async function generatePublicationExcel(artefactId: string, listTypeId: n
   }
 }
 
-export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
+export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "listTypeName">): Promise<GeneratePdfResult> {
   const { listTypeId, artefactId, logPrefix = "[Publication]" } = params;
 
   try {
@@ -119,7 +120,7 @@ export async function generatePublicationPdf(params: GeneratePdfParams): Promise
       return {};
     }
 
-    const pdfResult = await generator(params);
+    const pdfResult = await generator({ ...params, listTypeName: listType.name });
 
     if (pdfResult.success && pdfResult.pdfPath) {
       return {

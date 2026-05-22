@@ -40,7 +40,7 @@ describe("generateSjpPressListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeId: 24
+      listTypeName: "SJP_PRESS_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -60,7 +60,7 @@ describe("generateSjpPressListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeId: 24
+      listTypeName: "SJP_PRESS_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -78,7 +78,7 @@ describe("generateSjpPressListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
-      listTypeId: 24
+      listTypeName: "SJP_PRESS_LIST"
     });
 
     expect(result.success).toBe(false);

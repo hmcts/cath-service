@@ -1,5 +1,6 @@
 import { extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
+import { SJP_PRESS_LIST_HEADERS } from "./excel-headers.js";
 import { CELL_BORDER, DATA_ALIGNMENT, DATA_FONT, HEADER_ALIGNMENT, HEADER_FILL, HEADER_FONT } from "./excel-styles.js";
 
 export async function generateSjpPressListExcel(json: SjpJson): Promise<Buffer> {
@@ -11,21 +12,21 @@ export async function generateSjpPressListExcel(json: SjpJson): Promise<Buffer> 
   const worksheet = workbook.addWorksheet("SJP Press List");
 
   const columns: Array<{ header: string; key: string; width: number }> = [
-    { header: "Address", key: "address", width: 40 },
-    { header: "Case URN", key: "caseUrn", width: 20 },
-    { header: "Date of Birth", key: "dateOfBirth", width: 25 },
-    { header: "Defendant Name", key: "defendantName", width: 30 }
+    { header: SJP_PRESS_LIST_HEADERS.address, key: "address", width: 40 },
+    { header: SJP_PRESS_LIST_HEADERS.caseUrn, key: "caseUrn", width: 20 },
+    { header: SJP_PRESS_LIST_HEADERS.dateOfBirth, key: "dateOfBirth", width: 25 },
+    { header: SJP_PRESS_LIST_HEADERS.defendantName, key: "defendantName", width: 30 }
   ];
 
   for (let i = 1; i <= maxOffences; i++) {
     columns.push(
-      { header: `Offence ${i} Press Restriction Requested`, key: `offence${i}Restriction`, width: 35 },
-      { header: `Offence ${i} Title`, key: `offence${i}Title`, width: 35 },
-      { header: `Offence ${i} Wording`, key: `offence${i}Wording`, width: 45 }
+      { header: SJP_PRESS_LIST_HEADERS.offenceRestriction(i), key: `offence${i}Restriction`, width: 35 },
+      { header: SJP_PRESS_LIST_HEADERS.offenceTitle(i), key: `offence${i}Title`, width: 35 },
+      { header: SJP_PRESS_LIST_HEADERS.offenceWording(i), key: `offence${i}Wording`, width: 45 }
     );
   }
 
-  columns.push({ header: "Prosecutor Name", key: "prosecutorName", width: 30 });
+  columns.push({ header: SJP_PRESS_LIST_HEADERS.prosecutorName, key: "prosecutorName", width: 30 });
 
   worksheet.columns = columns;
 

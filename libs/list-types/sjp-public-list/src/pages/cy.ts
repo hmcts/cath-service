@@ -44,6 +44,26 @@ export const cy = {
     cautionNote:
       "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn ffurfiol yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
     cautionReporting:
-      "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd wedi'i bwriadu i gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio."
+      "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd wedi'i bwriadu i gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio.",
+    downloadCopy: "Lawrlwytho copi"
+  },
+  disclaimer: {
+    pageTitle: "Telerau ac amodau",
+    disclaimerText:
+      "Fel defnyddiwr dilysedig o wasanaeth gwrandawiadau'r llys a'r tribiwnlys, rydych wedi'ch awdurdodi i lawrlwytho'r ffeil hon sy'n cynnwys data personol gwarchodedig.",
+    responsibility:
+      "Eich cyfrifoldeb chi yw sicrhau eich bod yn cydymffurfio ag unrhyw gyfyngiadau GDPR a/neu gyfyngiadau adrodd ynghylch cynnwys y ffeil hon.",
+    checkboxLabel: "Ticiwch y blwch hwn i gytuno â'r telerau ac amodau uchod",
+    continueButton: "Parhau",
+    errorTitle: "Mae problem wedi codi",
+    errorCheckbox: "Rhaid i chi gytuno â'r telerau ac amodau"
+  },
+  downloadFiles: {
+    pageTitle: "Lawrlwytho eich ffeil",
+    saveInstructions: "Cadwch eich ffeil yn rhywle y gallwch ddod o hyd iddi. Efallai y bydd angen i chi ei hargraffu neu ei dangos i rywun yn ddiweddarach.",
+    downloadPdfLink: "Lawrlwythwch y PDF hwn",
+    downloadExcelLink: "Lawrlwythwch y daenlen Microsoft Excel hon",
+    toDevice: "i'ch dyfais",
+    contactInfo: "Os oes gennych unrhyw gwestiynau, ffoniwch 0300 303 0656."
   }
 };

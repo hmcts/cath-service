@@ -1,12 +1,13 @@
 import { extractPublicCases, type SjpJson } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
+import { SJP_PUBLIC_LIST_HEADERS } from "./excel-headers.js";
 import { CELL_BORDER, DATA_ALIGNMENT, DATA_FONT, HEADER_ALIGNMENT, HEADER_FILL, HEADER_FONT } from "./excel-styles.js";
 
 const COLUMNS = [
-  { header: "Name", key: "name", width: 30 },
-  { header: "Postcode", key: "postcode", width: 15 },
-  { header: "Offence", key: "offence", width: 40 },
-  { header: "Prosecutor", key: "prosecutor", width: 30 }
+  { header: SJP_PUBLIC_LIST_HEADERS.name, key: "name", width: 30 },
+  { header: SJP_PUBLIC_LIST_HEADERS.postcode, key: "postcode", width: 15 },
+  { header: SJP_PUBLIC_LIST_HEADERS.offence, key: "offence", width: 40 },
+  { header: SJP_PUBLIC_LIST_HEADERS.prosecutor, key: "prosecutor", width: 30 }
 ];
 
 export async function generateSjpPublicListExcel(json: SjpJson): Promise<Buffer> {

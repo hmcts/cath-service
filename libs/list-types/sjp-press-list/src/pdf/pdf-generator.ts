@@ -14,19 +14,15 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { SJP_PRESS_LIST_PDF_STYLES } from "./pdf-styles.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<SjpJson> {
   contentDate: Date;
-  listTypeId: number;
+  listTypeName: string;
 }
-
-const LIST_TITLE_MAP: Record<number, string> = {
-  24: "SJP_PRESS_LIST",
-  26: "SJP_DELTA_PRESS_LIST"
-};
 
 function formatDateOfBirth(dob: Date | null): string {
   if (!dob) return "";
@@ -36,7 +32,6 @@ function formatDateOfBirth(dob: Date | null): string {
 export async function generateSjpPressListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
   try {
     const cases = extractPressCases(options.jsonData);
-    const listTypeKey = LIST_TITLE_MAP[options.listTypeId] || "SJP_PRESS_LIST";
 
     const translations = await loadTranslations(
       options.locale,
@@ -45,7 +40,7 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
     );
 
     const t = translations.common as Record<string, string>;
-    const listTitle = (translations[listTypeKey] as Record<string, string>)?.title || "";
+    const listTitle = (translations[options.listTypeName] as Record<string, string>)?.title || "";
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
     const published = formatLastUpdatedDateTime(options.jsonData.document.publicationDate, options.locale);
 
@@ -62,7 +57,7 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
       cases: formattedCases,
       t,
       dataSource: provenanceLabel,
-      pdfStyles: PDF_BASE_STYLES
+      pdfStyles: PDF_BASE_STYLES + SJP_PRESS_LIST_PDF_STYLES
     });
 
     const pdfResult = await generatePdfFromHtml(html);

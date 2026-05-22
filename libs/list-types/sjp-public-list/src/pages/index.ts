@@ -1,8 +1,17 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
 import type { Request, Response } from "express";
 import type { ParsedQs } from "qs";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
+const STORAGE_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 /**
  * Parses query parameter as string array, filtering out non-string values
@@ -74,6 +83,10 @@ export const GET = async (req: Request, res: Response) => {
     { text: caseItem.prosecutor || "" }
   ]);
 
+  const pdfExists = await fileExists(path.join(STORAGE_DIR, `${artefactId}.pdf`));
+  const excelExists = await fileExists(path.join(STORAGE_DIR, `${artefactId}.xlsx`));
+  const downloadDisclaimerUrl = pdfExists || excelExists ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+
   res.render("sjp-public-list", {
     ...t.common,
     title: req.path.includes("delta") ? t.SJP_DELTA_PUBLIC_LIST.title : t.SJP_PUBLIC_LIST.title,
@@ -93,7 +106,8 @@ export const GET = async (req: Request, res: Response) => {
       prosecutors: selectedProsecutors
     },
     sortBy,
-    sortOrder
+    sortOrder,
+    downloadDisclaimerUrl
   });
 };
 
@@ -104,3 +118,12 @@ export const POST = async (req: Request, res: Response) => {
   appendArrayToParams(queryParams, "prosecutor", req.body.prosecutor);
   res.redirect(`${req.path}?${queryParams.toString()}`);
 };
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
