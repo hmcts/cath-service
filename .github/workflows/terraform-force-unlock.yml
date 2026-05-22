@@ -22,16 +22,6 @@ jobs:
     name: Force Unlock (${{ inputs.subscription }})
     runs-on: ubuntu-latest
     steps:
-      - name: Select Azure credentials
-        id: creds
-        run: |
-          case "${{ inputs.subscription }}" in
-            demo) echo "secret_name=AZURE_CREDENTIALS_SDS_DEMO" >> $GITHUB_OUTPUT ;;
-            test) echo "secret_name=AZURE_CREDENTIALS_SDS_TEST" >> $GITHUB_OUTPUT ;;
-            ithc) echo "secret_name=AZURE_CREDENTIALS_SDS_ITHC" >> $GITHUB_OUTPUT ;;
-            stg)  echo "secret_name=AZURE_CREDENTIALS_SDS_STG"  >> $GITHUB_OUTPUT ;;
-          esac
-
       - name: Azure login (DEMO)
         if: inputs.subscription == 'demo'
         uses: azure/login@v2
@@ -67,18 +57,24 @@ jobs:
           echo "Blob: $BLOB"
           echo "Lock ID: ${{ inputs.lock-id }}"
 
-          # Break the infinite lease
+          # Get storage account key (SP has Contributor role on the storage account)
+          ACCOUNT_KEY=$(az storage account keys list \
+            --account-name "$STORAGE_ACCOUNT" \
+            --resource-group "jenkins-state-${{ inputs.subscription }}" \
+            --query "[0].value" -o tsv)
+
+          # Break the infinite lease using account key auth
           az storage blob lease break \
             --account-name "$STORAGE_ACCOUNT" \
             --container-name "$CONTAINER" \
             --blob-name "$BLOB" \
-            --auth-mode login
+            --account-key "$ACCOUNT_KEY"
 
           echo "Lease broken. Verifying..."
           az storage blob show \
             --account-name "$STORAGE_ACCOUNT" \
             --container-name "$CONTAINER" \
             --name "$BLOB" \
-            --auth-mode login \
+            --account-key "$ACCOUNT_KEY" \
             --query "{leaseState:properties.leaseState, leaseStatus:properties.leaseStatus}" \
             -o table
