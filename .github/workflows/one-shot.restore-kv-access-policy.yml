@@ -1,0 +1,36 @@
+name: One-Shot - Restore KV Access Policy
+
+# The erroneous bootstrap destroy run wiped all access policies from cath-kv-stg.
+# This restores the CI service principal access policy so Terraform can manage secrets.
+# Run once then delete this file.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restore-access-policy:
+    name: Restore CI SP access policy on cath-kv-stg
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (STG)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+
+      - name: Get CI service principal object ID
+        id: sp
+        run: |
+          CLIENT_ID=$(az account show --query user.name -o tsv)
+          SP_OID=$(az ad sp show --id "$CLIENT_ID" --query id -o tsv)
+          echo "oid=$SP_OID" >> "$GITHUB_OUTPUT"
+          echo "CI SP OID: $SP_OID"
+
+      - name: Restore access policy on cath-kv-stg
+        run: |
+          az keyvault set-policy \
+            --name cath-kv-stg \
+            --object-id ${{ steps.sp.outputs.oid }} \
+            --secret-permissions get list set delete recover backup restore purge \
+            --key-permissions get list update create import delete recover backup restore purge \
+            --certificate-permissions get list update create import delete recover backup restore purge managecontacts manageissuers getissuers listissuers setissuers deleteissuers
+          echo "Access policy restored on cath-kv-stg for OID ${{ steps.sp.outputs.oid }}"
