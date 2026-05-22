@@ -12,7 +12,6 @@ dotenv.config({ path: path.join(__dirname, "../../../.env") });
 
 const { createApp } = await import("./app.js");
 
-
 const PORT = process.env.API_PORT || 3001;
 
 async function startServer() {
