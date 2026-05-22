@@ -16,6 +16,7 @@ resource "azurerm_resource_group" "rg" {
 module "key_vault" {
   source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
 
+  name                    = "${var.product}-bootstrap-${var.env}-kv"
   product                 = var.product
   env                     = var.env
   object_id               = var.ci_service_principal_object_id
