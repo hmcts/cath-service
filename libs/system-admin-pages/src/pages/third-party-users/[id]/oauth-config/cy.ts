@@ -13,5 +13,6 @@ export const cy = {
   scopeRequired: "Rhowch gwmpas",
   clientIdRequired: "Rhowch ID y cleient",
   clientSecretRequired: "Rhowch gyfrinach y cleient",
+  cancelButton: "Canslo",
   back: "Yn ôl"
 };

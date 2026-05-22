@@ -5,7 +5,7 @@
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% block backLink %}
-  <a href="/third-party-users/{{ userId }}/manage{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+  <a href="/manage-third-party-user?id={{ userId }}{{ lngParam | replace("?", "&") }}" class="govuk-back-link">{{ back }}</a>
 {% endblock %}
 
 {% block content %}
@@ -66,6 +66,12 @@
 
       {{ govukButton({
         text: buttonText
+      }) }}
+
+      {{ govukButton({
+        text: cancelButton,
+        classes: "govuk-button--secondary",
+        href: "/manage-third-party-user?id=" + userId + (lngParam | replace("?", "&"))
       }) }}
     </form>
 
