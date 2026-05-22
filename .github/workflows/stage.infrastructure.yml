@@ -86,17 +86,3 @@ jobs:
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
-
-  bootstrap-prod:
-    name: Bootstrap PROD
-    needs: [terraform-fmt]
-    uses: ./.github/workflows/job.terraform.yml
-    with:
-      environment: prod
-      subscription: DTS-SHAREDSERVICES-PROD
-      aks-subscription: DTS-SHAREDSERVICES-PROD
-      storage-account: prod
-      working-directory: infrastructure/bootstrap
-      plan-only: ${{ inputs.plan-only }}
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_PROD }}
