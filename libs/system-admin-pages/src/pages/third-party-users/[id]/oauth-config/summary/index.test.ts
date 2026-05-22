@@ -8,12 +8,22 @@ vi.mock("@hmcts/third-party-user", () => ({
   setSecret: vi.fn()
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    legacyThirdPartyUser: {
+      findUnique: vi.fn()
+    }
+  }
+}));
+
 import { findThirdPartyUserById, setSecret } from "@hmcts/third-party-user";
 
 const mockUser = { id: "user-1", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
 
 const mockOauthConfig = {
   userId: "user-1",
+  destinationUrl: "https://dest.example.com",
+  tokenUrl: "https://token.example.com",
   scope: "openid",
   clientId: "my-client-id",
   clientSecret: "my-secret"
@@ -95,7 +105,7 @@ describe("third-party-users oauth-config summary page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/third-party-users");
     });
 
-    it("should write secrets to Key Vault and redirect to success", async () => {
+    it("should write all secrets to Key Vault", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
       vi.mocked(setSecret).mockResolvedValue(undefined);
@@ -104,6 +114,8 @@ describe("third-party-users oauth-config summary page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
+      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-destination-url", "https://dest.example.com");
+      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-token-url", "https://token.example.com");
       expect(setSecret).toHaveBeenCalledWith("third-party-user-1-scope", "openid");
       expect(setSecret).toHaveBeenCalledWith("third-party-user-1-client-id", "my-client-id");
       expect(setSecret).toHaveBeenCalledWith("third-party-user-1-client-secret", "my-secret");

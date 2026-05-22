@@ -15,6 +15,20 @@
     {{ govukSummaryList({
       rows: [
         {
+          key: { text: destinationUrlLabel },
+          value: { text: config.destinationUrl },
+          actions: {
+            items: [{ href: "/third-party-users/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: destinationUrlLabel }]
+          }
+        },
+        {
+          key: { text: tokenUrlLabel },
+          value: { text: config.tokenUrl },
+          actions: {
+            items: [{ href: "/third-party-users/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: tokenUrlLabel }]
+          }
+        },
+        {
           key: { text: scopeLabel },
           value: { text: config.scope },
           actions: {
@@ -30,7 +44,7 @@
         },
         {
           key: { text: clientSecretLabel },
-          value: { text: config.clientSecret },
+          value: { text: "••••••••" },
           actions: {
             items: [{ href: "/third-party-users/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: clientSecretLabel }]
           }

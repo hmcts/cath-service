@@ -27,3 +27,10 @@ model ThirdPartySubscription {
   @@unique([thirdPartyUserId, listTypeId])
   @@map("third_party_subscription")
 }
+
+model ThirdPartySecret {
+  name  String @id @db.VarChar(255)
+  value String @db.VarChar(1000)
+
+  @@map("third_party_secret")
+}

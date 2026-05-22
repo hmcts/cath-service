@@ -1,6 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/password-input/macro.njk" import govukPasswordInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% block backLink %}
@@ -21,6 +22,24 @@
     <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
     <form method="post" novalidate>
+      <input type="hidden" name="isExisting" value="{{ isExisting }}">
+
+      {{ govukInput({
+        id: "destinationUrl",
+        name: "destinationUrl",
+        label: { text: destinationUrlLabel },
+        value: data.destinationUrl,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#destinationUrl") | first | default(null)
+      }) }}
+
+      {{ govukInput({
+        id: "tokenUrl",
+        name: "tokenUrl",
+        label: { text: tokenUrlLabel },
+        value: data.tokenUrl,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#tokenUrl") | first | default(null)
+      }) }}
+
       {{ govukInput({
         id: "scope",
         name: "scope",
@@ -37,7 +56,7 @@
         errorMessage: errors | default([]) | selectattr("href", "==", "#clientId") | first | default(null)
       }) }}
 
-      {{ govukInput({
+      {{ govukPasswordInput({
         id: "clientSecret",
         name: "clientSecret",
         label: { text: clientSecretLabel },
@@ -46,7 +65,7 @@
       }) }}
 
       {{ govukButton({
-        text: continueButton
+        text: buttonText
       }) }}
     </form>
 

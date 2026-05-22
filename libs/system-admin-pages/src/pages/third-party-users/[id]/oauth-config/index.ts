@@ -10,6 +10,8 @@ type Language = "en" | "cy";
 interface ThirdPartyOauthConfigSession {
   thirdPartyOauthConfig?: {
     userId: string;
+    destinationUrl: string;
+    tokenUrl: string;
     scope: string;
     clientId: string;
     clientSecret: string;
@@ -29,17 +31,25 @@ export const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-users${lngParam}`);
   }
 
-  const [scope, clientId, clientSecret] = await Promise.all([
+  const [destinationUrl, tokenUrl, scope, clientId, clientSecret] = await Promise.all([
+    getSecret(createKeyVaultSecretName(id, "destination-url")),
+    getSecret(createKeyVaultSecretName(id, "token-url")),
     getSecret(createKeyVaultSecretName(id, "scope")),
     getSecret(createKeyVaultSecretName(id, "client-id")),
     getSecret(createKeyVaultSecretName(id, "client-secret"))
   ]);
 
+  const isExisting = !!(destinationUrl || tokenUrl || scope || clientId || clientSecret);
+
   res.render("third-party-users/[id]/oauth-config/index", {
     ...t,
     lngParam,
     userId: user.id,
+    isExisting,
+    buttonText: isExisting ? t.updateButton : t.createButton,
     data: {
+      destinationUrl: destinationUrl ?? "",
+      tokenUrl: tokenUrl ?? "",
       scope: scope ?? "",
       clientId: clientId ?? "",
       clientSecret: clientSecret ?? ""
@@ -53,9 +63,18 @@ export const postHandler = async (req: Request, res: Response) => {
   const lngParam = language === "cy" ? "?lng=cy" : "";
   const { id } = req.params;
 
-  const { scope, clientId, clientSecret } = req.body as { scope: string; clientId: string; clientSecret: string };
+  const { destinationUrl, tokenUrl, scope, clientId, clientSecret } = req.body as {
+    destinationUrl: string;
+    tokenUrl: string;
+    scope: string;
+    clientId: string;
+    clientSecret: string;
+  };
+  const isExisting = req.body.isExisting === "true";
 
   const errors: Array<{ text: string; href: string }> = [];
+  if (!destinationUrl?.trim()) errors.push({ text: t.destinationUrlRequired, href: "#destinationUrl" });
+  if (!tokenUrl?.trim()) errors.push({ text: t.tokenUrlRequired, href: "#tokenUrl" });
   if (!scope?.trim()) errors.push({ text: t.scopeRequired, href: "#scope" });
   if (!clientId?.trim()) errors.push({ text: t.clientIdRequired, href: "#clientId" });
   if (!clientSecret?.trim()) errors.push({ text: t.clientSecretRequired, href: "#clientSecret" });
@@ -65,13 +84,17 @@ export const postHandler = async (req: Request, res: Response) => {
       ...t,
       lngParam,
       userId: id,
+      isExisting,
+      buttonText: isExisting ? t.updateButton : t.createButton,
       errors,
-      data: { scope, clientId, clientSecret }
+      data: { destinationUrl, tokenUrl, scope, clientId, clientSecret }
     });
   }
 
   (req.session as ThirdPartyOauthConfigSession).thirdPartyOauthConfig = {
     userId: id,
+    destinationUrl: destinationUrl.trim(),
+    tokenUrl: tokenUrl.trim(),
     scope: scope.trim(),
     clientId: clientId.trim(),
     clientSecret: clientSecret.trim()

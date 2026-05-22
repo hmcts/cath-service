@@ -8,6 +8,14 @@ vi.mock("@hmcts/third-party-user", () => ({
   getSecret: vi.fn()
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    legacyThirdPartyUser: {
+      findUnique: vi.fn()
+    }
+  }
+}));
+
 import { findThirdPartyUserById, getSecret } from "@hmcts/third-party-user";
 
 const mockUser = { id: "user-1", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
@@ -34,7 +42,7 @@ describe("third-party-users oauth-config form page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/third-party-users");
     });
 
-    it("should render form with empty values when no secrets exist", async () => {
+    it("should render form with empty values and Create button when no secrets exist", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
       vi.mocked(getSecret).mockResolvedValue(undefined);
@@ -47,15 +55,22 @@ describe("third-party-users oauth-config form page", () => {
         "third-party-users/[id]/oauth-config/index",
         expect.objectContaining({
           pageTitle: "Configure OAuth credentials",
-          data: { scope: "", clientId: "", clientSecret: "" }
+          isExisting: false,
+          buttonText: "Create",
+          data: { destinationUrl: "", tokenUrl: "", scope: "", clientId: "", clientSecret: "" }
         })
       );
     });
 
-    it("should pre-populate form with existing secret values", async () => {
+    it("should pre-populate form with existing values including actual secret with Update button", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
-      vi.mocked(getSecret).mockResolvedValueOnce("existing-scope").mockResolvedValueOnce("existing-client-id").mockResolvedValueOnce("existing-client-secret");
+      vi.mocked(getSecret)
+        .mockResolvedValueOnce("https://example.com/destination")
+        .mockResolvedValueOnce("https://example.com/token")
+        .mockResolvedValueOnce("existing-scope")
+        .mockResolvedValueOnce("existing-client-id")
+        .mockResolvedValueOnce("existing-client-secret");
 
       // Act
       await getHandler(req as Request, res as Response);
@@ -64,7 +79,15 @@ describe("third-party-users oauth-config form page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-users/[id]/oauth-config/index",
         expect.objectContaining({
-          data: { scope: "existing-scope", clientId: "existing-client-id", clientSecret: "existing-client-secret" }
+          isExisting: true,
+          buttonText: "Update",
+          data: {
+            destinationUrl: "https://example.com/destination",
+            tokenUrl: "https://example.com/token",
+            scope: "existing-scope",
+            clientId: "existing-client-id",
+            clientSecret: "existing-client-secret"
+          }
         })
       );
     });
@@ -73,7 +96,7 @@ describe("third-party-users oauth-config form page", () => {
   describe("postHandler", () => {
     it("should re-render with errors when all fields are empty", async () => {
       // Arrange
-      req.body = { scope: "", clientId: "", clientSecret: "" };
+      req.body = { destinationUrl: "", tokenUrl: "", scope: "", clientId: "", clientSecret: "", isExisting: "false" };
 
       // Act
       await postHandler(req as Request, res as Response);
@@ -83,18 +106,20 @@ describe("third-party-users oauth-config form page", () => {
         "third-party-users/[id]/oauth-config/index",
         expect.objectContaining({
           errors: [
+            { text: "Enter a destination URL", href: "#destinationUrl" },
+            { text: "Enter a token URL", href: "#tokenUrl" },
             { text: "Enter a scope", href: "#scope" },
             { text: "Enter a client ID", href: "#clientId" },
             { text: "Enter a client secret", href: "#clientSecret" }
           ],
-          data: { scope: "", clientId: "", clientSecret: "" }
+          data: { destinationUrl: "", tokenUrl: "", scope: "", clientId: "", clientSecret: "" }
         })
       );
     });
 
     it("should re-render with error when scope is missing", async () => {
       // Arrange
-      req.body = { scope: "", clientId: "cid", clientSecret: "csecret" };
+      req.body = { destinationUrl: "https://dest.example.com", tokenUrl: "https://token.example.com", scope: "", clientId: "cid", clientSecret: "csecret", isExisting: "false" };
 
       // Act
       await postHandler(req as Request, res as Response);
@@ -110,7 +135,14 @@ describe("third-party-users oauth-config form page", () => {
 
     it("should store session data and redirect to summary on valid submission", async () => {
       // Arrange
-      req.body = { scope: "openid", clientId: "my-client-id", clientSecret: "my-secret" };
+      req.body = {
+        destinationUrl: "https://dest.example.com",
+        tokenUrl: "https://token.example.com",
+        scope: "openid",
+        clientId: "my-client-id",
+        clientSecret: "my-secret",
+        isExisting: "false"
+      };
 
       // Act
       await postHandler(req as Request, res as Response);
@@ -118,6 +150,8 @@ describe("third-party-users oauth-config form page", () => {
       // Assert
       expect((req.session as any).thirdPartyOauthConfig).toEqual({
         userId: "user-1",
+        destinationUrl: "https://dest.example.com",
+        tokenUrl: "https://token.example.com",
         scope: "openid",
         clientId: "my-client-id",
         clientSecret: "my-secret"
@@ -128,7 +162,14 @@ describe("third-party-users oauth-config form page", () => {
     it("should redirect with Welsh param when language is cy", async () => {
       // Arrange
       req.query = { lng: "cy" };
-      req.body = { scope: "openid", clientId: "my-client-id", clientSecret: "my-secret" };
+      req.body = {
+        destinationUrl: "https://dest.example.com",
+        tokenUrl: "https://token.example.com",
+        scope: "openid",
+        clientId: "my-client-id",
+        clientSecret: "my-secret",
+        isExisting: "false"
+      };
 
       // Act
       await postHandler(req as Request, res as Response);

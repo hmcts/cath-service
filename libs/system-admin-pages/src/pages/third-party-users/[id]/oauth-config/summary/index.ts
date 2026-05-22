@@ -10,6 +10,8 @@ type Language = "en" | "cy";
 interface ThirdPartyOauthConfigSession {
   thirdPartyOauthConfig?: {
     userId: string;
+    destinationUrl: string;
+    tokenUrl: string;
     scope: string;
     clientId: string;
     clientSecret: string;
@@ -53,6 +55,8 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   await Promise.all([
+    setSecret(createKeyVaultSecretName(id, "destination-url"), config.destinationUrl),
+    setSecret(createKeyVaultSecretName(id, "token-url"), config.tokenUrl),
     setSecret(createKeyVaultSecretName(id, "scope"), config.scope),
     setSecret(createKeyVaultSecretName(id, "client-id"), config.clientId),
     setSecret(createKeyVaultSecretName(id, "client-secret"), config.clientSecret)

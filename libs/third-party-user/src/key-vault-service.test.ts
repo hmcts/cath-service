@@ -15,6 +15,17 @@ vi.mock("@azure/keyvault-secrets", () => ({
   }
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    thirdPartySecret: {
+      findUnique: vi.fn(),
+      upsert: vi.fn()
+    }
+  }
+}));
+
+import { prisma } from "@hmcts/postgres-prisma";
+
 describe("key-vault-service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,19 +48,41 @@ describe("key-vault-service", () => {
     it("should create secret name for client-secret", () => {
       expect(createKeyVaultSecretName("user-123", "client-secret")).toBe("third-party-user-123-client-secret");
     });
+
+    it("should create secret name for destination-url", () => {
+      expect(createKeyVaultSecretName("user-123", "destination-url")).toBe("third-party-user-123-destination-url");
+    });
+
+    it("should create secret name for token-url", () => {
+      expect(createKeyVaultSecretName("user-123", "token-url")).toBe("third-party-user-123-token-url");
+    });
   });
 
   describe("getSecret", () => {
-    it("should return undefined when vault is not configured", async () => {
+    it("should return value from database when vault is not configured", async () => {
       // Arrange
       delete process.env.THIRD_PARTY_KEY_VAULT;
+      vi.mocked(prisma.thirdPartySecret.findUnique).mockResolvedValue({ name: "some-secret", value: "db-value" });
+
+      // Act
+      const result = await getSecret("some-secret");
+
+      // Assert
+      expect(result).toBe("db-value");
+      expect(prisma.thirdPartySecret.findUnique).toHaveBeenCalledWith({ where: { name: "some-secret" } });
+      expect(mockGetSecret).not.toHaveBeenCalled();
+    });
+
+    it("should return undefined when vault is not configured and secret not in database", async () => {
+      // Arrange
+      delete process.env.THIRD_PARTY_KEY_VAULT;
+      vi.mocked(prisma.thirdPartySecret.findUnique).mockResolvedValue(null);
 
       // Act
       const result = await getSecret("some-secret");
 
       // Assert
       expect(result).toBeUndefined();
-      expect(mockGetSecret).not.toHaveBeenCalled();
     });
 
     it("should return secret value when vault is configured", async () => {
@@ -63,6 +96,7 @@ describe("key-vault-service", () => {
       // Assert
       expect(result).toBe("my-secret-value");
       expect(mockGetSecret).toHaveBeenCalledWith("some-secret");
+      expect(prisma.thirdPartySecret.findUnique).not.toHaveBeenCalled();
     });
 
     it("should return undefined when secret retrieval throws", async () => {
@@ -91,14 +125,20 @@ describe("key-vault-service", () => {
   });
 
   describe("setSecret", () => {
-    it("should no-op when vault is not configured", async () => {
+    it("should upsert to database when vault is not configured", async () => {
       // Arrange
       delete process.env.THIRD_PARTY_KEY_VAULT;
+      vi.mocked(prisma.thirdPartySecret.upsert).mockResolvedValue({ name: "some-secret", value: "some-value" });
 
       // Act
       await setSecret("some-secret", "some-value");
 
       // Assert
+      expect(prisma.thirdPartySecret.upsert).toHaveBeenCalledWith({
+        where: { name: "some-secret" },
+        update: { value: "some-value" },
+        create: { name: "some-secret", value: "some-value" }
+      });
       expect(mockSetSecret).not.toHaveBeenCalled();
     });
 
@@ -112,6 +152,7 @@ describe("key-vault-service", () => {
 
       // Assert
       expect(mockSetSecret).toHaveBeenCalledWith("some-secret", "some-value");
+      expect(prisma.thirdPartySecret.upsert).not.toHaveBeenCalled();
     });
   });
 });
