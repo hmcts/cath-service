@@ -240,8 +240,8 @@ test.describe("SJP Public List @nightly", () => {
     await page.getByRole("link", { name: "Clear filters" }).click();
     await expect(page).toHaveURL(/artefactId=/);
 
-    // Verify filters are cleared (need to show filters again after clearing)
-    await page.getByRole("button", { name: "Show filters" }).click();
+    // Verify filters are cleared (filter panel stays expanded after clearing)
+    await expect(page.locator("#filter-panel")).toBeVisible();
     await expect(page.locator(".filter-tag")).toHaveCount(0);
 
     // Test accessibility (disable region rule - known site-wide issue)
