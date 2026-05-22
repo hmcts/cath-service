@@ -52,7 +52,7 @@ jobs:
           az storage blob download \
             --account-name "$STORAGE_ACCOUNT" \
             --container-name "$CONTAINER" \
-            --blob-name "$BLOB" \
+            --name "$BLOB" \
             --file /tmp/state.json \
             --account-key "$ACCOUNT_KEY"
 
