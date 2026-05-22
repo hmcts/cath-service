@@ -1,0 +1,111 @@
+name: Fix STG Terraform State - Remove old key vault secrets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-state:
+    name: Remove old azurerm_key_vault_secret resources from STG state
+    runs-on: ubuntu-latest
+    environment: stg
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Remove old key_vault_secret resources from STG state
+        run: |
+          STORAGE_ACCOUNT="sdsstatestg"
+          CONTAINER="tfstate-stg"
+          BLOB="cath-service/stg/terraform.tfstate"
+          RESOURCE_GROUP="jenkins-state-stg"
+
+          ACCOUNT_KEY=$(az storage account keys list \
+            --account-name "$STORAGE_ACCOUNT" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "[0].value" -o tsv)
+
+          # Break any existing lease
+          az storage blob lease break \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --blob-name "$BLOB" \
+            --account-key "$ACCOUNT_KEY" 2>/dev/null || echo "No lease to break (ok)"
+
+          # Download current state
+          az storage blob download \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --name "$BLOB" \
+            --file /tmp/stg-state.json \
+            --account-key "$ACCOUNT_KEY"
+
+          # Show resources before fix
+          echo "=== Resources BEFORE fix ==="
+          python3 -c "
+          import json
+          with open('/tmp/stg-state.json') as f:
+              state = json.load(f)
+          for r in state['resources']:
+              print(r.get('module', '(root)'), r['type'], r['name'])
+          "
+
+          # Remove azurerm_key_vault_secret resources that reference the old cath-stg KV
+          # These will be recreated by Terraform pointing to the new application_key_vault
+          python3 -c "
+          import json
+          with open('/tmp/stg-state.json') as f:
+              state = json.load(f)
+
+          removed = []
+          kept = []
+          for r in state['resources']:
+              if r['type'] == 'azurerm_key_vault_secret':
+                  # Check if any instance references cath-stg KV
+                  old_kv = False
+                  for inst in r.get('instances', []):
+                      kv_id = inst.get('attributes', {}).get('key_vault_id', '')
+                      if 'cath-stg' in kv_id and 'cath-kv-stg' not in kv_id:
+                          old_kv = True
+                          break
+                  if old_kv:
+                      removed.append(f\"{r.get('module', '(root)')}.{r['type']}.{r['name']}\")
+                  else:
+                      kept.append(r)
+              else:
+                  kept.append(r)
+
+          state['resources'] = kept
+          print('Removed resources:')
+          for name in removed:
+              print(' -', name)
+          print(f'Total removed: {len(removed)}')
+
+          with open('/tmp/stg-state-fixed.json', 'w') as f:
+              json.dump(state, f, indent=2)
+          "
+
+          # Show resources after fix
+          echo "=== Resources AFTER fix ==="
+          python3 -c "
+          import json
+          with open('/tmp/stg-state-fixed.json') as f:
+              state = json.load(f)
+          for r in state['resources']:
+              print(r.get('module', '(root)'), r['type'], r['name'])
+          "
+
+          # Upload fixed state
+          az storage blob upload \
+            --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$CONTAINER" \
+            --name "$BLOB" \
+            --file /tmp/stg-state-fixed.json \
+            --account-key "$ACCOUNT_KEY" \
+            --overwrite
+
+          echo "State fixed successfully"
