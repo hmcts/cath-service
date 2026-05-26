@@ -24,9 +24,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const lngParam = language === "cy" ? "?lng=cy" : "";
   const { id } = req.params;
 
-  const user =
-    (await findThirdPartyUserById(id)) ??
-    (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
+  const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
   if (!user) {
     return res.redirect(`/third-party-users${lngParam}`);
   }

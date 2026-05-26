@@ -47,9 +47,7 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-users/${id}/oauth-config${lngParam}`);
   }
 
-  const user =
-    (await findThirdPartyUserById(id)) ??
-    (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true, name: true } }));
+  const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true, name: true } }));
   if (!user) {
     return res.redirect(`/third-party-users${lngParam}`);
   }

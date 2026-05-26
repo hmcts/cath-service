@@ -119,7 +119,14 @@ describe("third-party-users oauth-config form page", () => {
 
     it("should re-render with error when scope is missing", async () => {
       // Arrange
-      req.body = { destinationUrl: "https://dest.example.com", tokenUrl: "https://token.example.com", scope: "", clientId: "cid", clientSecret: "csecret", isExisting: "false" };
+      req.body = {
+        destinationUrl: "https://dest.example.com",
+        tokenUrl: "https://token.example.com",
+        scope: "",
+        clientId: "cid",
+        clientSecret: "csecret",
+        isExisting: "false"
+      };
 
       // Act
       await postHandler(req as Request, res as Response);

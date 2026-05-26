@@ -108,9 +108,7 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   const listTypeNameById = new Map(listTypes.map((lt) => [lt.id, lt.name]));
-  const beforeSubscriptions = user.subscriptions
-    .map((s) => `${listTypeNameById.get(s.listTypeId) ?? s.listTypeId}:${s.sensitivity}`)
-    .join(", ");
+  const beforeSubscriptions = user.subscriptions.map((s) => `${listTypeNameById.get(s.listTypeId) ?? s.listTypeId}:${s.sensitivity}`).join(", ");
   const afterSubscriptions = Object.entries(session.thirdPartySubscriptions.pending)
     .map(([lt, sens]) => `${lt}:${sens}`)
     .join(", ");
