@@ -15,7 +15,6 @@ dotenv.config({ path: path.join(__dirname, "../../../.env") });
 
 const { createApp } = await import("./app.js");
 
-
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
