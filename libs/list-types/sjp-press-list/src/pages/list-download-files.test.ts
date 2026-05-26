@@ -1,4 +1,4 @@
-import type { Request, RequestHandler, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./list-download-files.js";
 
@@ -7,9 +7,21 @@ vi.mock("node:fs/promises", () => ({
     stat: vi.fn()
   }
 }));
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    artefact: {
+      findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
+    }
+  }
+}));
 
 import fs from "node:fs/promises";
+import { prisma } from "@hmcts/postgres-prisma";
 
+const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
 
 describe("List Download Files Controller", () => {
@@ -141,5 +153,129 @@ describe("List Download Files Controller", () => {
         locale: "cy"
       })
     );
+  });
+});
+
+describe("List Download Files requireVerifiedWithProvenance middleware", () => {
+  const mockNext = vi.fn() as unknown as NextFunction;
+
+  const mockRequest = (overrides?: Partial<Request>) =>
+    ({
+      query: {},
+      body: {},
+      path: "/sjp-press-list/list-download-files",
+      originalUrl: "/sjp-press-list/list-download-files",
+      session: {},
+      ...overrides
+    }) as unknown as Request;
+
+  const mockResponse = () => {
+    const res = {} as Response;
+    res.status = vi.fn().mockReturnValue(res);
+    res.render = vi.fn().mockReturnValue(res);
+    res.redirect = vi.fn().mockReturnValue(res);
+    res.locals = { locale: "en" };
+    return res;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should redirect to sign-in when user is not verified", async () => {
+    const req = mockRequest({
+      query: { artefactId: "12345678-1234-1234-1234-123456789abc" },
+      user: { role: "BASIC" }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it("should redirect to sign-in when user has no provenance", async () => {
+    const req = mockRequest({
+      query: { artefactId: "12345678-1234-1234-1234-123456789abc" },
+      user: { role: "VERIFIED", provenance: undefined }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+  });
+
+  it("should redirect to sign-in when artefactId is invalid", async () => {
+    const req = mockRequest({
+      query: { artefactId: "invalid" },
+      user: { role: "VERIFIED", provenance: "PI_AAD" }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+  });
+
+  it("should redirect to sign-in when artefact is not found", async () => {
+    const req = mockRequest({
+      query: { artefactId: "12345678-1234-1234-1234-123456789abc" },
+      user: { role: "VERIFIED", provenance: "PI_AAD" }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+  });
+
+  it("should redirect to sign-in when list type not found", async () => {
+    const req = mockRequest({
+      query: { artefactId: "12345678-1234-1234-1234-123456789abc" },
+      user: { role: "VERIFIED", provenance: "PI_AAD" }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+  });
+
+  it("should redirect to sign-in when provenance does not match", async () => {
+    const req = mockRequest({
+      query: { artefactId: "12345678-1234-1234-1234-123456789abc" },
+      user: { role: "VERIFIED", provenance: "CRIME_IDAM" }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+  });
+
+  it("should call next when provenance matches", async () => {
+    const req = mockRequest({
+      query: { artefactId: "12345678-1234-1234-1234-123456789abc" },
+      user: { role: "VERIFIED", provenance: "PI_AAD" }
+    } as Partial<Request>);
+    const res = mockResponse();
+
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+
+    await middleware(req, res, mockNext);
+
+    expect(mockNext).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
   });
 });
