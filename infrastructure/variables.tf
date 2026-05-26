@@ -1,5 +1,5 @@
 variable "env" {
-  description = "Environment name (e.g., stg, prod)"
+  description = "Environment name (e.g., demo, test, ithc, stg)"
   type        = string
 }
 
@@ -39,6 +39,12 @@ variable "common_tags" {
 
 variable "product_group_name" {
   description = "AD group name for Key Vault access"
+  type        = string
+  default     = "DTS SDS Developers"
+}
+
+variable "active_directory_group" {
+  description = "AD group name for bootstrap Key Vault access"
   type        = string
   default     = "DTS SDS Developers"
 }

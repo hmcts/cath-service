@@ -18,8 +18,47 @@ jobs:
     name: Terraform Format
     uses: ./.github/workflows/job.terraform-fmt.yml
 
+  terraform-demo:
+    name: Terraform Demo
+    needs: [terraform-fmt]
+    uses: ./.github/workflows/job.terraform.yml
+    with:
+      environment: demo
+      subscription: DTS-SHAREDSERVICES-DEMO
+      aks-subscription: DTS-SHAREDSERVICES-DEMO
+      storage-account: nonprod
+      plan-only: ${{ inputs.plan-only }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
+
+  terraform-test:
+    name: Terraform Test
+    needs: [terraform-fmt]
+    uses: ./.github/workflows/job.terraform.yml
+    with:
+      environment: test
+      subscription: DTS-SHAREDSERVICES-TEST
+      aks-subscription: DTS-SHAREDSERVICES-TEST
+      storage-account: nonprod
+      plan-only: ${{ inputs.plan-only }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+
+  terraform-ithc:
+    name: Terraform ITHC
+    needs: [terraform-fmt]
+    uses: ./.github/workflows/job.terraform.yml
+    with:
+      environment: ithc
+      subscription: DTS-SHAREDSERVICES-ITHC
+      aks-subscription: DTS-SHAREDSERVICES-ITHC
+      storage-account: nonprod
+      plan-only: ${{ inputs.plan-only }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
+
   terraform:
-    name: Terraform
+    name: Terraform STG
     needs: [terraform-fmt]
     uses: ./.github/workflows/job.terraform.yml
     with:
@@ -28,4 +67,5 @@ jobs:
       aks-subscription: DTS-SHAREDSERVICES-STG
       storage-account: nonprod
       plan-only: ${{ inputs.plan-only }}
-    secrets: inherit
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}

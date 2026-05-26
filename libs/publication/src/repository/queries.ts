@@ -3,6 +3,11 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
 import type { Artefact } from "./model.js";
 
+const SJP_PRESS_LIST_ID = 24;
+const SJP_PUBLIC_LIST_ID = 25;
+const SJP_DELTA_PRESS_LIST_ID = 26;
+const SJP_DELTA_PUBLIC_LIST_ID = 27;
+
 export interface ArtefactSummary {
   artefactId: string;
   listType: string;
@@ -276,6 +281,33 @@ export async function getArtefactListTypeId(artefactId: string): Promise<number 
   });
 
   return artefact?.listTypeId ?? null;
+}
+
+export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
+  const artefacts = await prisma.artefact.findMany({
+    where: {
+      listTypeId: { in: [SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID, SJP_DELTA_PRESS_LIST_ID, SJP_DELTA_PUBLIC_LIST_ID] }
+    },
+    orderBy: { lastReceivedDate: "desc" },
+    take: 10
+  });
+
+  return artefacts.map(
+    (artefact: (typeof artefacts)[number]): Artefact => ({
+      artefactId: artefact.artefactId,
+      locationId: artefact.locationId,
+      listTypeId: artefact.listTypeId,
+      contentDate: artefact.contentDate,
+      sensitivity: artefact.sensitivity,
+      language: artefact.language,
+      displayFrom: artefact.displayFrom,
+      displayTo: artefact.displayTo,
+      lastReceivedDate: artefact.lastReceivedDate,
+      isFlatFile: artefact.isFlatFile,
+      provenance: artefact.provenance,
+      noMatch: artefact.noMatch
+    })
+  );
 }
 
 export async function createArtefactSearch(artefactId: string, caseNumber: string | null, caseName: string | null) {
