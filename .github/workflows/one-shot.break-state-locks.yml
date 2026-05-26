@@ -15,23 +15,35 @@ jobs:
 
       - name: Break Demo State Lock
         run: |
+          echo "Fetching storage account key for sdsstatedemo..."
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          if [ -z "$STORAGE_KEY" ]; then
+            echo "ERROR: Could not retrieve storage account key"
+            exit 1
+          fi
+
           echo "Attempting to break demo state lock..."
           az storage blob lease break \
             --account-name sdsstatedemo \
             --container-name tfstate-demo \
             --blob-name "cath-service/demo/terraform.tfstate" \
-            --auth-mode login \
+            --account-key "$STORAGE_KEY" \
           && echo "Demo lock broken successfully" \
-          || echo "WARNING: Failed to break demo lock (may not exist)"
+          || echo "WARNING: Failed to break demo lock (blob may not exist yet)"
 
           echo "Current blob lease state:"
           az storage blob show \
             --account-name sdsstatedemo \
             --container-name tfstate-demo \
             --name "cath-service/demo/terraform.tfstate" \
-            --auth-mode login \
+            --account-key "$STORAGE_KEY" \
             --query "properties.lease" \
-            --output json || echo "Could not query blob state"
+            --output json || echo "Could not query blob state (blob may not exist)"
 
   break-locks-test:
     name: Break Test State Lock
@@ -44,23 +56,35 @@ jobs:
 
       - name: Break Test State Lock
         run: |
+          echo "Fetching storage account key for sdsstatetest..."
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          if [ -z "$STORAGE_KEY" ]; then
+            echo "ERROR: Could not retrieve storage account key"
+            exit 1
+          fi
+
           echo "Attempting to break test state lock..."
           az storage blob lease break \
             --account-name sdsstatetest \
             --container-name tfstate-test \
             --blob-name "cath-service/test/terraform.tfstate" \
-            --auth-mode login \
+            --account-key "$STORAGE_KEY" \
           && echo "Test lock broken successfully" \
-          || echo "WARNING: Failed to break test lock (may not exist)"
+          || echo "WARNING: Failed to break test lock (blob may not exist yet)"
 
           echo "Current blob lease state:"
           az storage blob show \
             --account-name sdsstatetest \
             --container-name tfstate-test \
             --name "cath-service/test/terraform.tfstate" \
-            --auth-mode login \
+            --account-key "$STORAGE_KEY" \
             --query "properties.lease" \
-            --output json || echo "Could not query blob state"
+            --output json || echo "Could not query blob state (blob may not exist)"
 
   break-locks-ithc:
     name: Break ITHC State Lock
@@ -73,20 +97,32 @@ jobs:
 
       - name: Break ITHC State Lock
         run: |
+          echo "Fetching storage account key for sdsstateithc..."
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          if [ -z "$STORAGE_KEY" ]; then
+            echo "ERROR: Could not retrieve storage account key"
+            exit 1
+          fi
+
           echo "Attempting to break ithc state lock..."
           az storage blob lease break \
             --account-name sdsstateithc \
             --container-name tfstate-ithc \
             --blob-name "cath-service/ithc/terraform.tfstate" \
-            --auth-mode login \
+            --account-key "$STORAGE_KEY" \
           && echo "ITHC lock broken successfully" \
-          || echo "WARNING: Failed to break ithc lock (may not exist)"
+          || echo "WARNING: Failed to break ithc lock (blob may not exist yet)"
 
           echo "Current blob lease state:"
           az storage blob show \
             --account-name sdsstateithc \
             --container-name tfstate-ithc \
             --name "cath-service/ithc/terraform.tfstate" \
-            --auth-mode login \
+            --account-key "$STORAGE_KEY" \
             --query "properties.lease" \
-            --output json || echo "Could not query blob state"
+            --output json || echo "Could not query blob state (blob may not exist)"
