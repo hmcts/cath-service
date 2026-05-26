@@ -1,7 +1,13 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationsByIds } from "@hmcts/location";
 import { Prisma } from "@hmcts/postgres-prisma";
-import { createCaseSubscription } from "@hmcts/subscriptions";
+import {
+  createCaseSubscription,
+  deletePendingCaseSubscriptions,
+  deletePendingSubscriptions,
+  savePendingCaseSubscriptions,
+  savePendingSubscriptions
+} from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -98,6 +104,15 @@ const postHandler = async (req: Request, res: Response) => {
       updated.splice(caseIndex, 1);
     }
     req.session.emailSubscriptions.pendingCaseSubscriptions = updated;
+
+    if (req.user?.id) {
+      if (updated.length > 0) {
+        await savePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id, updated);
+      } else {
+        await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
+      }
+    }
+
     return res.redirect("/pending-subscriptions");
   }
 
@@ -112,6 +127,14 @@ const postHandler = async (req: Request, res: Response) => {
     req.session.emailSubscriptions.confirmedLocations = confirmedLocations.filter((id: string) => id !== locationId);
 
     if (updatedPending.length === 0) {
+      if (req.user?.id) {
+        await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
+      }
+
+      if (pendingCaseSubscriptions?.length) {
+        return res.redirect("/pending-subscriptions");
+      }
+
       if (!res.locals.navigation) {
         res.locals.navigation = {};
       }
@@ -126,6 +149,10 @@ const postHandler = async (req: Request, res: Response) => {
         locations: [],
         showBackToSearch: true
       });
+    }
+
+    if (req.user?.id) {
+      await savePendingSubscriptions(req.app.locals.redisClient, req.user.id, updatedPending);
     }
 
     return res.redirect("/pending-subscriptions");
@@ -151,8 +178,12 @@ const postHandler = async (req: Request, res: Response) => {
         delete req.session.emailSubscriptions.pendingCaseSubscriptions;
         delete req.session.emailSubscriptions.caseSearchResults;
 
+        await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
+
         req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
         delete req.session.emailSubscriptions.pendingSubscriptions;
+
+        await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
 
         return res.redirect("/subscription-add-list");
       }
@@ -161,7 +192,7 @@ const postHandler = async (req: Request, res: Response) => {
       for (const sub of pendingCaseSubscriptions) {
         try {
           await createCaseSubscription(req.user.id, sub.searchType, sub.searchValue, sub.caseName, sub.caseNumber);
-        } catch (error) {
+        } catch (error: unknown) {
           if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
             // Already subscribed — treat as success and continue
           } else {
@@ -173,6 +204,8 @@ const postHandler = async (req: Request, res: Response) => {
       delete req.session.emailSubscriptions.pendingCaseSubscriptions;
       delete req.session.emailSubscriptions.caseSearchResults;
 
+      await deletePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id);
+
       req.session.emailSubscriptions.confirmationComplete = true;
       return res.redirect("/subscription-confirmed");
     }
@@ -181,6 +214,9 @@ const postHandler = async (req: Request, res: Response) => {
     if (hasLocations) {
       req.session.emailSubscriptions.confirmedLocations = pendingLocationIds;
       delete req.session.emailSubscriptions.pendingSubscriptions;
+
+      await deletePendingSubscriptions(req.app.locals.redisClient, req.user.id);
+
       return res.redirect("/subscription-add-list");
     }
 
