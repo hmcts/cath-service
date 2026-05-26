@@ -1,0 +1,119 @@
+name: One-Shot - Fix RG State
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-rg-state-demo:
+    name: Fix RG State - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+
+      - name: Azure Login (Demo)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
+
+      - name: Fix Demo RG State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-demo" \
+            -backend-config="storage_account_name=sdsstatedemo" \
+            -backend-config="container_name=tfstate-demo" \
+            -backend-config="key=cath-service/demo/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove the stale azurerm_resource_group.rg binding (currently points to cath-bootstrap-demo-rg instead of cath-demo)
+          terraform state rm azurerm_resource_group.rg \
+          && echo "Demo RG state removed successfully" \
+          || echo "WARNING: azurerm_resource_group.rg not found in demo state (may already be fixed)"
+
+  fix-rg-state-test:
+    name: Fix RG State - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+
+      - name: Azure Login (Test)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+
+      - name: Fix Test RG State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove the stale azurerm_resource_group.rg binding (currently points to cath-bootstrap-test-rg instead of cath-test)
+          terraform state rm azurerm_resource_group.rg \
+          && echo "Test RG state removed successfully" \
+          || echo "WARNING: azurerm_resource_group.rg not found in test state (may already be fixed)"
+
+  fix-rg-state-ithc:
+    name: Fix RG State - ITHC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+
+      - name: Azure Login (ITHC)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
+
+      - name: Fix ITHC RG State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-ithc" \
+            -backend-config="storage_account_name=sdsstateithc" \
+            -backend-config="container_name=tfstate-ithc" \
+            -backend-config="key=cath-service/ithc/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove the stale azurerm_resource_group.rg binding (currently points to cath-bootstrap-ithc-rg instead of cath-ithc)
+          terraform state rm azurerm_resource_group.rg \
+          && echo "ITHC RG state removed successfully" \
+          || echo "WARNING: azurerm_resource_group.rg not found in ithc state (may already be fixed)"
