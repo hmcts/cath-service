@@ -18,10 +18,10 @@ locals {
   # Pre-existing Redis caches created outside of Terraform state.
   # Used to import them into state on first run. Remove once all envs have been applied successfully.
   existing_redis_ids = {
-    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-cache-demo/providers/Microsoft.Cache/Redis/cath-cath-demo"
-    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-cache-test/providers/Microsoft.Cache/Redis/cath-cath-test"
-    ithc = "/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/cath-cache-ithc/providers/Microsoft.Cache/Redis/cath-cath-ithc"
-    stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-cache-stg/providers/Microsoft.Cache/Redis/cath-cath-stg"
+    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-cache-demo/providers/Microsoft.Cache/redis/cath-cath-demo"
+    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-cache-test/providers/Microsoft.Cache/redis/cath-cath-test"
+    ithc = "/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/cath-cache-ithc/providers/Microsoft.Cache/redis/cath-cath-ithc"
+    stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-cache-stg/providers/Microsoft.Cache/redis/cath-cath-stg"
   }
 
 }
