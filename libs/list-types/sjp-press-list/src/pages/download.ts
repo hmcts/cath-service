@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { prisma } from "@hmcts/postgres-prisma";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,10 +17,31 @@ const CONTENT_TYPE_MAP: Record<string, string> = {
   ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 };
 
-const requireVerified: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user?.role === "VERIFIED") return next();
-  req.session.returnTo = req.originalUrl;
-  res.redirect("/sign-in");
+const requireVerifiedWithProvenance: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.role !== "VERIFIED" || !req.user.provenance) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const artefactId = req.query.artefactId as string;
+  if (!artefactId || !UUID_REGEX.test(artefactId)) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const artefact = await prisma.artefact.findUnique({ where: { artefactId } });
+  if (!artefact) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
+  if (!dbListType || !dbListType.allowedProvenance.split(",").includes(req.user.provenance)) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  next();
 };
 
 const getHandler = async (req: Request, res: Response) => {
@@ -53,4 +75,4 @@ const getHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const GET: RequestHandler[] = [requireVerified, getHandler];
+export const GET: RequestHandler[] = [requireVerifiedWithProvenance, getHandler];

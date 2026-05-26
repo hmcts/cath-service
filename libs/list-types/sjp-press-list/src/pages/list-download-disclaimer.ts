@@ -1,13 +1,35 @@
+import { prisma } from "@hmcts/postgres-prisma";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const requireVerified: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-  if (req.user?.role === "VERIFIED") return next();
-  req.session.returnTo = req.originalUrl;
-  res.redirect("/sign-in");
+const requireVerifiedWithProvenance: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.role !== "VERIFIED" || !req.user.provenance) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const artefactId = (req.query.artefactId || req.body?.artefactId) as string;
+  if (!artefactId || !UUID_REGEX.test(artefactId)) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const artefact = await prisma.artefact.findUnique({ where: { artefactId } });
+  if (!artefact) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
+  if (!dbListType || !dbListType.allowedProvenance.split(",").includes(req.user.provenance)) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  next();
 };
 
 const getHandler = async (req: Request, res: Response) => {
@@ -52,5 +74,5 @@ const postHandler = async (req: Request, res: Response) => {
   res.redirect(`${prefix}/list-download-files?artefactId=${artefactId}`);
 };
 
-export const GET: RequestHandler[] = [requireVerified, getHandler];
-export const POST: RequestHandler[] = [requireVerified, postHandler];
+export const GET: RequestHandler[] = [requireVerifiedWithProvenance, getHandler];
+export const POST: RequestHandler[] = [requireVerifiedWithProvenance, postHandler];

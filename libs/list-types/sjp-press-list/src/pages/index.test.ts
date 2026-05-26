@@ -8,6 +8,9 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
       findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
     }
   }
 }));
@@ -27,8 +30,8 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { validateSjpPressList } from "../validation/json-validator.js";
 
 describe("SJP Press List Controller", () => {
-  const getHandler = GET;
-  const postHandler = POST;
+  const getHandler = GET[1];
+  const postHandler = POST[1];
 
   const mockRequest = (overrides?: Partial<Request>) =>
     ({
