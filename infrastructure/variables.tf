@@ -43,6 +43,12 @@ variable "product_group_name" {
   default     = "DTS SDS Developers"
 }
 
+variable "active_directory_group" {
+  description = "AD group name for bootstrap Key Vault access"
+  type        = string
+  default     = "DTS SDS Developers"
+}
+
 variable "jenkins_AAD_objectId" {
   description = "Object ID of the Jenkins/CI service principal for Key Vault access"
   type        = string

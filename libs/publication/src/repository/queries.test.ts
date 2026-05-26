@@ -12,6 +12,7 @@ import {
   getArtefactsByIds,
   getArtefactsByLocation,
   getArtefactType,
+  getLatestSjpArtefacts,
   getLocationsWithPublicationCount
 } from "./queries.js";
 
@@ -1154,6 +1155,103 @@ describe("getArtefactListTypeId", () => {
     const result = await getArtefactListTypeId("another-artefact");
 
     expect(result).toBe(5);
+  });
+});
+
+describe("getLatestSjpArtefacts", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return latest SJP artefacts ordered by lastReceivedDate desc", async () => {
+    const mockArtefacts = [
+      {
+        artefactId: "sjp-1",
+        locationId: "123",
+        listTypeId: 24, // SJP_PRESS_LIST
+        contentDate: new Date("2025-10-25"),
+        sensitivity: "PRIVATE",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-20"),
+        displayTo: new Date("2025-10-30"),
+        lastReceivedDate: new Date("2025-10-26"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      },
+      {
+        artefactId: "sjp-2",
+        locationId: "456",
+        listTypeId: 25, // SJP_PUBLIC_LIST
+        contentDate: new Date("2025-10-24"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-22"),
+        displayTo: new Date("2025-10-28"),
+        lastReceivedDate: new Date("2025-10-25"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      }
+    ] as any;
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+
+    const result = await getLatestSjpArtefacts();
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: {
+        listTypeId: { in: [24, 25, 26, 27] }
+      },
+      orderBy: { lastReceivedDate: "desc" },
+      take: 10
+    });
+    expect(result).toHaveLength(2);
+    expect(result[0].artefactId).toBe("sjp-1");
+    expect(result[0].listTypeId).toBe(24);
+    expect(result[1].artefactId).toBe("sjp-2");
+    expect(result[1].listTypeId).toBe(25);
+  });
+
+  it("should return empty array when no SJP artefacts found", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([]);
+
+    const result = await getLatestSjpArtefacts();
+
+    expect(result).toEqual([]);
+  });
+
+  it("should limit results to 10 artefacts", async () => {
+    const mockArtefacts = Array.from({ length: 15 }, (_, i) => ({
+      artefactId: `sjp-${i}`,
+      locationId: "123",
+      listTypeId: i % 2 === 0 ? 24 : 25,
+      contentDate: new Date("2025-10-25"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-20"),
+      displayTo: new Date("2025-10-30"),
+      lastReceivedDate: new Date(`2025-10-${25 - i}`),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
+      noMatch: false
+    }));
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as any);
+
+    const result = await getLatestSjpArtefacts();
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: {
+        listTypeId: { in: [24, 25, 26, 27] }
+      },
+      orderBy: { lastReceivedDate: "desc" },
+      take: 10
+    });
+    expect(result).toHaveLength(15); // Prisma mock returns all, but the query specifies take: 10
   });
 });
 
