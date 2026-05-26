@@ -4,7 +4,7 @@ module "postgresql" {
   }
 
   source        = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
-  name          = "cath-${var.env}-${var.env}"
+  name          = "cath-${var.env}"
   env           = var.env
   product       = var.product
   component     = var.component

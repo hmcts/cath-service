@@ -24,14 +24,6 @@ locals {
     stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-cache-stg/providers/Microsoft.Cache/Redis/cath-cath-stg"
   }
 
-  # Pre-existing PostgreSQL flexible servers created outside of Terraform state.
-  # Used to import them into state on first run. Remove once all envs have been applied successfully.
-  existing_postgres_ids = {
-    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-demo-data-demo/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-demo-demo"
-    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-test-data-test/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-test-test"
-    ithc = "/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/cath-ithc-data-ithc/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-ithc-ithc"
-    stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-stg-data-stg/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-stg-stg"
-  }
 }
 
 import {
@@ -49,12 +41,6 @@ import {
 import {
   for_each = contains(keys(local.existing_redis_ids), var.env) ? toset([local.existing_redis_ids[var.env]]) : toset([])
   to       = module.redis.azurerm_redis_cache.redis
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_postgres_ids), var.env) ? toset([local.existing_postgres_ids[var.env]]) : toset([])
-  to       = module.postgresql.azurerm_postgresql_flexible_server.pgsql_server
   id       = each.value
 }
 
