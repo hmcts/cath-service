@@ -3,12 +3,18 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
 import { validateSjpPressList } from "../validation/json-validator.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+const PROVENANCE_LABELS: Record<string, string> = {
+  MANUAL_UPLOAD: "Manual Upload",
+  XHIBIT: "XHIBIT",
+  SNL: "SNL",
+  COMMON_PLATFORM: "Common Platform"
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,9 +63,10 @@ const getHandler = async (req: Request, res: Response) => {
     const paginatedCases = paginateCases(filteredCases, page);
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
+    const isVerifiedUser = req.user?.role === "VERIFIED";
     const pdfExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.pdf`));
     const excelExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.xlsx`));
-    const downloadDisclaimerUrl = pdfExists || excelExists ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+    const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
 
     res.render("sjp-press-list", {
       ...t.common,

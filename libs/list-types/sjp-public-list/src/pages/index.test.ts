@@ -315,9 +315,10 @@ describe("SJP Public List Controller", () => {
       );
     });
 
-    it("should pass downloadDisclaimerUrl when files exist", async () => {
+    it("should pass downloadDisclaimerUrl when files exist and user is verified", async () => {
       const req = mockRequest({
-        query: { artefactId: "test-123" }
+        query: { artefactId: "test-123" },
+        user: { role: "VERIFIED" } as any
       });
       const res = mockResponse();
 

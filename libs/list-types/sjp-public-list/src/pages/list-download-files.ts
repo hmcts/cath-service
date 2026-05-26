@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -12,7 +12,13 @@ const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
 const STORAGE_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const GET = async (req: Request, res: Response) => {
+const requireVerified: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.role === "VERIFIED") return next();
+  req.session.returnTo = req.originalUrl;
+  res.redirect("/sign-in");
+};
+
+const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const artefactId = req.query.artefactId as string;
 
@@ -74,3 +80,5 @@ function formatFileSize(bytes: number): string {
   const mb = kb / 1024;
   return `${mb.toFixed(1)}MB`;
 }
+
+export const GET: RequestHandler[] = [requireVerified, getHandler];

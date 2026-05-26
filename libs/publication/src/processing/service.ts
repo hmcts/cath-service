@@ -116,7 +116,7 @@ export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "li
   try {
     const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
     const generator = listType ? PDF_GENERATOR_REGISTRY[listType.name] : undefined;
-    if (!generator) {
+    if (!generator || !listType) {
       return {};
     }
 

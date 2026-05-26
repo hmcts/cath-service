@@ -11,10 +11,6 @@ vi.mock("@hmcts/pdf-generation", () => ({
   generatePdfFromHtml: vi.fn()
 }));
 
-vi.mock("@hmcts/publication", () => ({
-  PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload" }
-}));
-
 import fs from "node:fs/promises";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { generateSjpPressListPdf } from "./pdf-generator.js";

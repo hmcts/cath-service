@@ -13,8 +13,14 @@ import {
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import { SJP_PRESS_LIST_PDF_STYLES } from "./pdf-styles.js";
+
+const PROVENANCE_LABELS: Record<string, string> = {
+  MANUAL_UPLOAD: "Manual Upload",
+  XHIBIT: "XHIBIT",
+  SNL: "SNL",
+  COMMON_PLATFORM: "Common Platform"
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

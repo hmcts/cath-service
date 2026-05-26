@@ -21,12 +21,6 @@ vi.mock("@hmcts/list-types-common", async () => {
   };
 });
 vi.mock("../validation/json-validator.js");
-vi.mock("@hmcts/publication", () => ({
-  PROVENANCE_LABELS: {
-    MANUAL: "Manual Upload",
-    API: "API Upload"
-  }
-}));
 
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
@@ -178,7 +172,7 @@ describe("SJP Press List Controller", () => {
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
-        provenance: "MANUAL"
+        provenance: "MANUAL_UPLOAD"
       } as never);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });

@@ -84,9 +84,10 @@ export const GET = async (req: Request, res: Response) => {
     { text: caseItem.prosecutor || "" }
   ]);
 
+  const isVerifiedUser = req.user?.role === "VERIFIED";
   const pdfExists = await fileExists(path.join(STORAGE_DIR, `${artefactId}.pdf`));
   const excelExists = await fileExists(path.join(STORAGE_DIR, `${artefactId}.xlsx`));
-  const downloadDisclaimerUrl = pdfExists || excelExists ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+  const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
 
   res.render("sjp-public-list", {
     ...t.common,

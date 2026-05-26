@@ -1,5 +1,5 @@
 // SJP Press List Module
 
-export type { ValidationResult } from "@hmcts/publication";
 export { generateSjpPressListPdf } from "./pdf/pdf-generator.js";
+export type { ValidationResult } from "./validation/json-validator.js";
 export { validateSjpPressList } from "./validation/json-validator.js";

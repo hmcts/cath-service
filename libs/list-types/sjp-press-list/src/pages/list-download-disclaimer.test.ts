@@ -1,6 +1,9 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./list-download-disclaimer.js";
+
+const getHandler = GET[GET.length - 1] as RequestHandler;
+const postHandler = POST[POST.length - 1] as RequestHandler;
 
 describe("List Download Disclaimer Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>
@@ -29,7 +32,7 @@ describe("List Download Disclaimer Controller", () => {
       const req = mockRequest({ query: {} });
       const res = mockResponse();
 
-      await GET(req, res);
+      await getHandler(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.render).toHaveBeenCalledWith("errors/400", expect.any(Object));
@@ -39,7 +42,7 @@ describe("List Download Disclaimer Controller", () => {
       const req = mockRequest({ query: { artefactId: "not-a-uuid" } });
       const res = mockResponse();
 
-      await GET(req, res);
+      await getHandler(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.render).toHaveBeenCalledWith("errors/400", expect.any(Object));
@@ -49,7 +52,7 @@ describe("List Download Disclaimer Controller", () => {
       const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc" } });
       const res = mockResponse();
 
-      await GET(req, res);
+      await getHandler(req, res, () => {});
 
       expect(res.render).toHaveBeenCalledWith(
         "list-download-disclaimer",
@@ -65,7 +68,7 @@ describe("List Download Disclaimer Controller", () => {
       const res = mockResponse();
       res.locals.locale = "cy";
 
-      await GET(req, res);
+      await getHandler(req, res, () => {});
 
       expect(res.render).toHaveBeenCalledWith(
         "list-download-disclaimer",
@@ -82,7 +85,7 @@ describe("List Download Disclaimer Controller", () => {
       const req = mockRequest({ body: {} });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(400);
     });
@@ -93,7 +96,7 @@ describe("List Download Disclaimer Controller", () => {
       });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res, () => {});
 
       expect(res.render).toHaveBeenCalledWith(
         "list-download-disclaimer",
@@ -110,7 +113,7 @@ describe("List Download Disclaimer Controller", () => {
       });
       const res = mockResponse();
 
-      await POST(req, res);
+      await postHandler(req, res, () => {});
 
       expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list/list-download-files?artefactId=12345678-1234-1234-1234-123456789abc");
     });

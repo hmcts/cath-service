@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./list-download-files.js";
 
@@ -9,6 +9,8 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 import fs from "node:fs/promises";
+
+const handler = GET[GET.length - 1] as RequestHandler;
 
 describe("List Download Files Controller", () => {
   const mockRequest = (overrides?: Partial<Request>) =>
@@ -35,7 +37,7 @@ describe("List Download Files Controller", () => {
     const req = mockRequest({ query: {} });
     const res = mockResponse();
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.render).toHaveBeenCalledWith("errors/400", expect.any(Object));
@@ -45,7 +47,7 @@ describe("List Download Files Controller", () => {
     const req = mockRequest({ query: { artefactId: "invalid" } });
     const res = mockResponse();
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(400);
   });
@@ -54,7 +56,7 @@ describe("List Download Files Controller", () => {
     const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc" } });
     const res = mockResponse();
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.render).toHaveBeenCalledWith("errors/404", expect.any(Object));
@@ -71,7 +73,7 @@ describe("List Download Files Controller", () => {
       return Promise.reject(new Error("ENOENT"));
     });
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.render).toHaveBeenCalledWith(
       "list-download-files",
@@ -102,7 +104,7 @@ describe("List Download Files Controller", () => {
       return Promise.reject(new Error("ENOENT"));
     });
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.render).toHaveBeenCalledWith(
       "list-download-files",
@@ -130,7 +132,7 @@ describe("List Download Files Controller", () => {
 
     vi.mocked(fs.stat).mockResolvedValue({ size: 1024 } as any);
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.render).toHaveBeenCalledWith(
       "list-download-files",

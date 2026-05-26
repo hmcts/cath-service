@@ -1,8 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getContentTypeFromExtension } from "@hmcts/publication";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,8 +11,18 @@ const STORAGE_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_TYPES = new Set(["pdf", "xlsx"]);
+const CONTENT_TYPE_MAP: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+};
 
-export const GET = async (req: Request, res: Response) => {
+const requireVerified: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.role === "VERIFIED") return next();
+  req.session.returnTo = req.originalUrl;
+  res.redirect("/sign-in");
+};
+
+const getHandler = async (req: Request, res: Response) => {
   const artefactId = req.query.artefactId as string;
   const type = req.query.type as string;
 
@@ -32,7 +41,7 @@ export const GET = async (req: Request, res: Response) => {
 
   try {
     const fileBuffer = await fs.readFile(filePath);
-    const contentType = getContentTypeFromExtension(`.${type}`);
+    const contentType = CONTENT_TYPE_MAP[`.${type}`] || "application/octet-stream";
 
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
@@ -43,3 +52,5 @@ export const GET = async (req: Request, res: Response) => {
     return res.status(404).json({ error: "File not found" });
   }
 };
+
+export const GET: RequestHandler[] = [requireVerified, getHandler];

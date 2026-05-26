@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./download.js";
 
@@ -8,11 +8,9 @@ vi.mock("node:fs/promises", () => ({
   }
 }));
 
-vi.mock("@hmcts/publication", () => ({
-  getContentTypeFromExtension: vi.fn().mockReturnValue("application/pdf")
-}));
-
 import fs from "node:fs/promises";
+
+const handler = GET[GET.length - 1] as RequestHandler;
 
 describe("Download Route", () => {
   const mockRequest = (overrides?: Partial<Request>) =>
@@ -38,7 +36,7 @@ describe("Download Route", () => {
     const req = mockRequest({ query: {} });
     const res = mockResponse();
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid request" });
@@ -48,7 +46,7 @@ describe("Download Route", () => {
     const req = mockRequest({ query: { artefactId: "not-valid", type: "pdf" } });
     const res = mockResponse();
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid request" });
@@ -58,7 +56,7 @@ describe("Download Route", () => {
     const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc", type: "exe" } });
     const res = mockResponse();
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid request" });
@@ -71,7 +69,7 @@ describe("Download Route", () => {
 
     vi.mocked(fs.readFile).mockResolvedValue(mockBuffer);
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
     expect(res.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="12345678-1234-1234-1234-123456789abc.pdf"');
@@ -84,7 +82,7 @@ describe("Download Route", () => {
 
     vi.mocked(fs.readFile).mockRejectedValue(new Error("ENOENT"));
 
-    await GET(req, res);
+    await handler(req, res, () => {});
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ error: "File not found" });
