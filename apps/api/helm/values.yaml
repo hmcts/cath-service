@@ -7,6 +7,8 @@ nodejs:
   environment:
     NODE_ENV: 'production'
     POSTGRES_DATABASE: cath
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
   keyVaults:
     cath:
       secrets:
@@ -22,3 +24,5 @@ nodejs:
           alias: AZURE_CLIENT_ID
         - name: app-pip-data-management-scope
           alias: AZURE_SCOPE
+        - name: govuk-notify-api-key
+          alias: GOVUK_NOTIFY_API_KEY

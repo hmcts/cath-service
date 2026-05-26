@@ -58,6 +58,10 @@ export async function rejectApplication(id: string): Promise<void> {
   }
 
   await updateApplicationStatus(id, APPLICATION_STATUS.REJECTED);
+
+  if (application.proofOfIdPath) {
+    await deleteProofOfIdFile(application.proofOfIdPath);
+  }
 }
 
 export async function deleteProofOfIdFile(filePath: string): Promise<void> {

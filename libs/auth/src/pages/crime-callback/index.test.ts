@@ -29,7 +29,7 @@ describe("crime-callback", () => {
       query: {},
       session: mockSession,
       sessionID: "test-session-id",
-      login: vi.fn((user, callback) => callback(null)),
+      login: vi.fn((_user, callback) => callback(null)),
       user: undefined
     };
 

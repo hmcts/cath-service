@@ -293,7 +293,7 @@ describe("media-application service", () => {
   });
 
   describe("rejectApplication", () => {
-    it("should reject application without deleting file", async () => {
+    it("should reject application and delete proof of ID file", async () => {
       const mockApplication = {
         id: "1",
         name: "John Doe",
@@ -309,10 +309,34 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.REJECTED
       });
+      vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
       await rejectApplication("1");
 
       expect(queries.getApplicationById).toHaveBeenCalledWith("1");
+      expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.REJECTED);
+      expect(fs.unlink).toHaveBeenCalledWith("/tmp/file.pdf");
+    });
+
+    it("should reject application without deleting file when proofOfIdPath is null", async () => {
+      const mockApplication = {
+        id: "1",
+        name: "John Doe",
+        email: "john@example.com",
+        employer: "Test Employer",
+        proofOfIdPath: null,
+        status: APPLICATION_STATUS.PENDING,
+        appliedDate: new Date()
+      };
+
+      vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(queries.updateApplicationStatus).mockResolvedValue({
+        ...mockApplication,
+        status: APPLICATION_STATUS.REJECTED
+      });
+
+      await rejectApplication("1");
+
       expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.REJECTED);
       expect(fs.unlink).not.toHaveBeenCalled();
     });

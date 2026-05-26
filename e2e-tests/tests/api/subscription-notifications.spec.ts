@@ -10,9 +10,41 @@ import {
   getGovNotifyEmail,
   waitForNotifications
 } from "../../utils/notification-helpers.js";
+import { checkFlatFileExists, deleteTestArtefacts, type FlatFileInfo } from "../../utils/test-support-api.js";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
+
+// GOV.UK Notify document download links pattern
+const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/;
+
+async function waitForPdfGeneration(artefactId: string, maxRetries = 15, delayMs = 1000): Promise<FlatFileInfo> {
+  for (let i = 0; i < maxRetries; i++) {
+    const pdfInfo = await checkFlatFileExists(artefactId);
+    if (pdfInfo.exists && pdfInfo.sizeBytes && pdfInfo.sizeBytes > 0) {
+      return pdfInfo;
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  // Return the last check result even if PDF not found
+  return checkFlatFileExists(artefactId);
+}
+
+function generatePublicationDates(daysFromNow = 1) {
+  const now = new Date();
+  const contentDate = new Date(now.getTime() + daysFromNow * 24 * 60 * 60 * 1000);
+  const displayTo = new Date(contentDate.getTime() + 24 * 60 * 60 * 1000);
+
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+  const formatDateTime = (d: Date) => d.toISOString();
+
+  return {
+    contentDate: formatDate(contentDate),
+    displayFrom: formatDateTime(contentDate),
+    displayTo: formatDateTime(displayTo),
+    formattedContentDate: contentDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+  };
+}
 
 function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: string, displayTo: string, locationId: number, locationName: string) {
   return {
@@ -116,14 +148,26 @@ test.describe("Subscription Notifications", () => {
   });
 
   test.afterEach(async ({ request: _ }) => {
+    // Clean up test-specific data that doesn't use the prefix system:
+    // - Users: created with real CFT_IDAM email (not prefixed)
+    // - Subscriptions/Notifications: linked to non-prefixed users
+    // - Artefacts: some tests use non-prefixed locations (e.g., locationId 999)
+    // Note: Locations ARE cleaned up by global-teardown via prefix-based deletion
     await cleanupTestNotifications(testData.publicationIds);
     await cleanupTestSubscriptions(testData.subscriptionIds);
     await cleanupTestUsers(testData.userIds);
+
+    if (testData.publicationIds.length > 0) {
+      await deleteTestArtefacts({ artefactIds: testData.publicationIds });
+    }
 
     testData.userIds = [];
     testData.subscriptionIds = [];
     testData.publicationIds = [];
   });
+
+  // Note: Location cleanup is handled by global-teardown.ts via prefix-based deletion
+  // (createUniqueTestLocation uses prefixName, so global teardown will clean it up)
 
   test("notification delivery to single and multiple subscribers", async ({ request }) => {
     // PART 1: Test single subscriber notification with email content verification
@@ -133,11 +177,9 @@ test.describe("Subscription Notifications", () => {
     const subscription1 = await createTestSubscription(testUser1.userId, testLocationId);
     testData.subscriptionIds.push(subscription1.subscriptionId);
 
-    // Upload publication via API
-    const contentDate = "2025-06-15";
-    const displayFrom = "2025-06-15T00:00:00Z";
-    const displayTo = "2025-06-16T23:59:59Z";
-    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo, testLocationId, testLocationName);
+    // Upload publication via API with dynamic dates (always in the future)
+    const dates1 = generatePublicationDates(1);
+    const payload = createCivilFamilyCauseListPayload(dates1.contentDate, dates1.displayFrom, dates1.displayTo, testLocationId, testLocationName);
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
@@ -158,6 +200,13 @@ test.describe("Subscription Notifications", () => {
     const sentNotification = notifications.find((n) => n.status === "Sent" || n.status === "Failed");
     expect(sentNotification).toBeDefined();
 
+    // Verify PDF was generated for the publication (may take time as it's async)
+    const pdfInfo = await waitForPdfGeneration(result.artefact_id);
+    expect(pdfInfo.exists).toBe(true);
+    expect(pdfInfo.filename).toContain(result.artefact_id);
+    expect(pdfInfo.sizeBytes).toBeGreaterThan(0);
+    console.log(`PDF generated: ${pdfInfo.filename} (${pdfInfo.sizeBytes} bytes)`);
+
     // Verify GOV.UK Notify email content
     if (process.env.GOVUK_NOTIFY_API_KEY && sentNotification?.govNotifyId) {
       const govNotifyEmail = await getGovNotifyEmail(sentNotification.govNotifyId);
@@ -168,7 +217,7 @@ test.describe("Subscription Notifications", () => {
       // Verify email contains list type and court information
       expect(govNotifyEmail.body).toContain("Civil and Family Daily Cause List");
       expect(govNotifyEmail.body).toContain(testLocationName);
-      expect(govNotifyEmail.body).toContain("15 June 2025");
+      expect(govNotifyEmail.body).toContain(dates1.formattedContentDate);
 
       // Verify email contains Special Category Data warning
       expect(govNotifyEmail.body).toContain("Special Category Data");
@@ -177,6 +226,11 @@ test.describe("Subscription Notifications", () => {
       // Verify email contains subscription management links
       expect(govNotifyEmail.body).toContain("Manage your subscriptions");
       expect(govNotifyEmail.body).toContain("Unsubscribe");
+
+      // Verify email contains PDF download link (GOV.UK Notify document service)
+      const hasPdfLink = GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN.test(govNotifyEmail.body);
+      expect(hasPdfLink).toBe(true);
+      console.log("PDF download link found in email body");
 
       // Verify email delivery status
       expect(govNotifyEmail.status).toMatch(/delivered|sending|pending|created|permanent-failure/);
@@ -189,11 +243,9 @@ test.describe("Subscription Notifications", () => {
     const subscription2 = await createTestSubscription(testUser2.userId, testLocationId);
     testData.subscriptionIds.push(subscription2.subscriptionId);
 
-    // Upload second publication
-    const contentDate2 = "2025-06-20";
-    const displayFrom2 = "2025-06-20T00:00:00Z";
-    const displayTo2 = "2025-06-21T23:59:59Z";
-    const payload2 = createCivilFamilyCauseListPayload(contentDate2, displayFrom2, displayTo2, testLocationId, testLocationName);
+    // Upload second publication with different dates
+    const dates2 = generatePublicationDates(2);
+    const payload2 = createCivilFamilyCauseListPayload(dates2.contentDate, dates2.displayFrom, dates2.displayTo, testLocationId, testLocationName);
 
     const apiResponse2 = await request.post(ENDPOINT, {
       data: payload2,
@@ -223,11 +275,8 @@ test.describe("Subscription Notifications", () => {
 
   test("no notifications sent when no subscriptions exist for location @nightly", async ({ request }) => {
     // Upload to location with no subscriptions (locationId 999)
-    const contentDate = "2025-07-05";
-    const displayFrom = "2025-07-05T00:00:00Z";
-    const displayTo = "2025-07-06T23:59:59Z";
-
-    const payload = createCivilFamilyCauseListPayload(contentDate, displayFrom, displayTo, 999, "Non-existent Court");
+    const dates = generatePublicationDates(3);
+    const payload = createCivilFamilyCauseListPayload(dates.contentDate, dates.displayFrom, dates.displayTo, 999, "Non-existent Court");
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {

@@ -3,17 +3,6 @@ import { fileURLToPath } from "node:url";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot, pageRoutes as adminCourtRoutes } from "@hmcts/administrative-court-daily-cause-list/config";
-import {
-  authNavigationMiddleware,
-  b2cCallbackHandler,
-  b2cCallbackPostHandler,
-  b2cForgotPasswordHandler,
-  cftCallbackHandler,
-  configurePassport,
-  crimeCallbackHandler,
-  sessionTimeoutMiddleware,
-  ssoCallbackHandler
-} from "@hmcts/auth";
 import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
 import {
   moduleRoot as careStandardsTribunalModuleRoot,
@@ -33,7 +22,18 @@ import {
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { createSimpleRouter } from "@hmcts/simple-router";
-import { auditLogMiddleware } from "@hmcts/system-admin-pages";
+import {
+  deltaPageRoutes as sjpDeltaPressListRoutes,
+  assets as sjpPressListAssets,
+  moduleRoot as sjpPressListModuleRoot,
+  pageRoutes as sjpPressListRoutes
+} from "@hmcts/sjp-press-list/config";
+import {
+  deltaPageRoutes as sjpDeltaPublicListRoutes,
+  assets as sjpPublicListAssets,
+  moduleRoot as sjpPublicListModuleRoot,
+  pageRoutes as sjpPublicListRoutes
+} from "@hmcts/sjp-public-list/config";
 import {
   apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
@@ -59,11 +59,26 @@ import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const chartPath = path.join(__dirname, "../helm/values.yaml");
+const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
   const { default: config } = await import("config");
+
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const {
+    authNavigationMiddleware,
+    b2cCallbackHandler,
+    b2cCallbackPostHandler,
+    b2cForgotPasswordHandler,
+    cftCallbackHandler,
+    configurePassport,
+    crimeCallbackHandler,
+    sessionTimeoutMiddleware,
+    ssoCallbackHandler
+  } = await import("@hmcts/auth");
 
   const app = express();
   app.set("trust proxy", 1);
@@ -89,7 +104,9 @@ export async function createApp(): Promise<Express> {
       }
     })
   );
-  app.use(expressSessionRedis({ redisConnection: await getRedisClient(config) }));
+  const redisClient = await getRedisClient(config);
+  app.use(expressSessionRedis({ redisConnection: redisClient }));
+  app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
   configurePassport(app);
@@ -102,13 +119,17 @@ export async function createApp(): Promise<Express> {
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
     civilFamilyCauseListModuleRoot,
+    sjpPressListModuleRoot,
+    sjpPublicListModuleRoot,
+    sjpPublicListAssets,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
-    verifiedPagesModuleRoot
+    verifiedPagesModuleRoot,
+    sjpPressListAssets
   ];
 
   await configureGovuk(app, modulePaths, {
@@ -136,6 +157,12 @@ export async function createApp(): Promise<Express> {
 
   // Session timeout tracking for authenticated users
   app.use(sessionTimeoutMiddleware);
+
+  // Restore pending subscriptions from Redis when user logs back in
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { restorePendingSubscriptionsMiddleware } = await import("@hmcts/subscriptions");
+  app.use(restorePendingSubscriptionsMiddleware());
 
   // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
   app.get("/sso/return", ssoCallbackHandler);
@@ -166,6 +193,10 @@ export async function createApp(): Promise<Express> {
   // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
   app.use(await createSimpleRouter(careStandardsTribunalRoutes));
+  app.use(await createSimpleRouter(sjpPressListRoutes));
+  app.use(await createSimpleRouter(sjpDeltaPressListRoutes));
+  app.use(await createSimpleRouter(sjpPublicListRoutes));
+  app.use(await createSimpleRouter(sjpDeltaPublicListRoutes));
   app.use(await createSimpleRouter(rcjStandardRoutes));
   app.use(await createSimpleRouter(londonAdminRoutes));
   app.use(await createSimpleRouter(civilAppealRoutes));
@@ -182,6 +213,9 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
 
   // Register audit log middleware to capture all system admin actions
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  const { auditLogMiddleware } = await import("@hmcts/system-admin-pages");
   app.use(auditLogMiddleware());
 
   // Register file upload middleware for system admin pages

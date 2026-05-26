@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+
 interface PdfGenerationResult {
   success: boolean;
   pdfBuffer?: Buffer;
@@ -16,6 +18,19 @@ const PDF_OPTIONS = {
   }
 };
 
+const CHROMIUM_PATHS = [
+  process.env.PUPPETEER_EXECUTABLE_PATH,
+  "/usr/bin/chromium-browser", // Alpine Linux (apk add chromium)
+  "/usr/bin/chromium" // Alpine Linux alternative
+];
+
+function findChromiumExecutable(): string | undefined {
+  for (const chromiumPath of CHROMIUM_PATHS) {
+    if (chromiumPath && existsSync(chromiumPath)) return chromiumPath;
+  }
+  return undefined;
+}
+
 export async function generatePdfFromHtml(html: string): Promise<PdfGenerationResult> {
   // Dynamically import puppeteer to avoid ESM/CJS issues in tests
   const puppeteer = await import("puppeteer");
@@ -24,6 +39,7 @@ export async function generatePdfFromHtml(html: string): Promise<PdfGenerationRe
   try {
     browser = await puppeteer.default.launch({
       headless: true,
+      executablePath: findChromiumExecutable(),
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
     });
 

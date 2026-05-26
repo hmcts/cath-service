@@ -12,6 +12,10 @@ vi.mock("puppeteer", () => ({
   }
 }));
 
+vi.mock("node:fs", () => ({
+  existsSync: vi.fn().mockReturnValue(false)
+}));
+
 describe("generatePdfFromHtml", () => {
   beforeEach(() => {
     vi.clearAllMocks();

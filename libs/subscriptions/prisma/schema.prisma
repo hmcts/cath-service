@@ -12,6 +12,8 @@ model Subscription {
 	userId         String   @map("user_id") @db.Uuid
 	searchType     String   @map("search_type") @db.VarChar(50)
 	searchValue    String   @map("search_value")
+	caseName       String?  @map("case_name")
+	caseNumber     String?  @map("case_number")
 	dateAdded      DateTime @default(now()) @map("date_added")
 
 	user                  User                   @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
@@ -21,4 +23,16 @@ model Subscription {
 	@@index([userId], name: "idx_subscription_user")
 	@@index([searchType, searchValue], name: "idx_subscription_search")
 	@@map("subscription")
+}
+
+model SubscriptionListType {
+  subscriptionListTypeId String   @id @default(uuid()) @map("subscription_list_type_id") @db.Uuid
+  userId                 String   @unique @map("user_id") @db.Uuid
+  listTypeIds            Int[]    @map("list_type_ids")
+  listLanguage           String[] @map("list_language")
+  dateAdded              DateTime @default(now()) @map("date_added")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("subscription_list_type")
 }

@@ -97,21 +97,43 @@ async function loadCredentialsFromAzure() {
   }
 }
 
+function checkExistingCredentials() {
+  // Check if all required credentials are already set as environment variables
+  const requiredEnvVars = Object.values(SECRET_MAPPINGS);
+  const missingVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+  if (missingVars.length === 0) {
+    console.log('✅ All required credentials already set in environment');
+    console.log('');
+    console.log('SSO Credentials:');
+    console.log(`  - System Admin: ${process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL}`);
+    console.log(`  - Local Admin: ${process.env.SSO_TEST_LOCAL_ADMIN_EMAIL}`);
+    console.log(`  - CTSC Admin: ${process.env.SSO_TEST_CTSC_ADMIN_EMAIL}`);
+    console.log(`  - No Roles User: ${process.env.SSO_TEST_NO_ROLES_EMAIL}`);
+    console.log('');
+    console.log('CFT IDAM Credentials:');
+    console.log(`  - Valid Account: ${process.env.CFT_VALID_TEST_ACCOUNT}`);
+    console.log(`  - Invalid Account: ${process.env.CFT_INVALID_TEST_ACCOUNT}`);
+    console.log('');
+    return true;
+  }
+
+  return false;
+}
+
 async function runPlaywright() {
   const args = process.argv.slice(2);
 
   console.log(process.env.CI === 'true' ? 'ℹ️  Running in CI' : 'ℹ️  Running locally');
   console.log('');
 
-  const requiredEnvVars = Object.values(SECRET_MAPPINGS);
-  const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-
-  if (missingEnvVars.length === 0) {
-    console.log('✅ Using pre-loaded credentials from environment variables');
-    console.log('');
-  } else {
+  // Check if credentials are already set (e.g., from GitHub Actions secrets)
+  if (!checkExistingCredentials()) {
+    // Load credentials from Azure Key Vault (works both locally and in CI via workload identity)
     try {
       const credentials = await loadCredentialsFromAzure();
+
+      // Set credentials as environment variables for Playwright
       for (const [key, value] of Object.entries(credentials)) {
         process.env[key] = value;
       }

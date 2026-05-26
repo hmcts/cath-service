@@ -130,6 +130,20 @@ vi.mock("@hmcts/web-core/config", () => ({
   moduleRoot: "/mock/web-core"
 }));
 
+vi.mock("@hmcts/sjp-press-list/config", () => ({
+  pageRoutes: { path: "/mock/sjp-press-list/pages", prefix: "/sjp-press-list" },
+  deltaPageRoutes: { path: "/mock/sjp-press-list/pages-delta", prefix: "/sjp-delta-press-list" },
+  moduleRoot: "/mock/sjp-press-list",
+  assets: "/mock/sjp-press-list/assets"
+}));
+
+vi.mock("@hmcts/sjp-public-list/config", () => ({
+  pageRoutes: { path: "/mock/sjp-public-list/pages", prefix: "/sjp-public-list" },
+  deltaPageRoutes: { path: "/mock/sjp-public-list/pages-delta", prefix: "/sjp-delta-public-list" },
+  moduleRoot: "/mock/sjp-public-list",
+  assets: "/mock/sjp-public-list/assets"
+}));
+
 describe("Web Application", () => {
   let app: Express;
 
@@ -212,13 +226,13 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalledTimes(16);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(20);
     });
 
     it("should register system-admin page routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(15);
+      expect(calls.length).toBeGreaterThanOrEqual(18);
     });
 
     it("should configure error handlers at the end", async () => {
