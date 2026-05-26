@@ -45,6 +45,7 @@ export const cy = {
       "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn ffurfiol yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
     cautionReporting:
       "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd wedi'i bwriadu i gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio.",
+    dataSourceLabel: "Ffynhonnell data",
     downloadCopy: "Lawrlwytho copi"
   },
   disclaimer: {
