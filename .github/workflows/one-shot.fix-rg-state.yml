@@ -23,9 +23,18 @@ jobs:
           terraform version
 
       - name: Azure Login (Demo)
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
 
       - name: Fix Demo RG State
         working-directory: infrastructure
@@ -62,9 +71,18 @@ jobs:
           terraform version
 
       - name: Azure Login (Test)
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
 
       - name: Fix Test RG State
         working-directory: infrastructure
@@ -101,9 +119,18 @@ jobs:
           terraform version
 
       - name: Azure Login (ITHC)
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
 
       - name: Fix ITHC RG State
         working-directory: infrastructure
