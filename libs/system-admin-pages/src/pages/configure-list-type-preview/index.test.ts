@@ -24,7 +24,7 @@ vi.mock("@hmcts/auth", () => ({
 }));
 
 vi.mock("../../list-type/queries.js", () => ({
-  findAllSubJurisdictions: vi.fn()
+  findSubJurisdictionsByIds: vi.fn()
 }));
 
 vi.mock("../../list-type/service.js", () => ({
@@ -32,7 +32,7 @@ vi.mock("../../list-type/service.js", () => ({
 }));
 
 const { GET, POST } = await import("./index.js");
-const { findAllSubJurisdictions } = await import("../../list-type/queries.js");
+const { findSubJurisdictionsByIds } = await import("../../list-type/queries.js");
 const { saveListType } = await import("../../list-type/service.js");
 
 describe("preview page", () => {
@@ -55,7 +55,9 @@ describe("preview page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(findAllSubJurisdictions).mockResolvedValue(mockSubJurisdictions as any);
+    vi.mocked(findSubJurisdictionsByIds).mockImplementation(async (ids: number[]) => {
+      return mockSubJurisdictions.filter((sj) => ids.includes(sj.subJurisdictionId)) as any;
+    });
   });
 
   describe("GET", () => {
@@ -66,7 +68,7 @@ describe("preview page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(findAllSubJurisdictions).toHaveBeenCalled();
+      expect(findSubJurisdictionsByIds).toHaveBeenCalledWith([1, 2]);
       expect(res.render).toHaveBeenCalledWith(
         "configure-list-type-preview/index",
         expect.objectContaining({

@@ -19,10 +19,11 @@ vi.mock("./queries.js");
 vi.mock("../validation/validation.js");
 vi.mock("./subscription-list-type-service.js");
 vi.mock("@hmcts/location", () => ({
-  getLocationById: vi.fn()
+  getLocationById: vi.fn(),
+  getLocationsByIds: vi.fn()
 }));
 
-import { getLocationById } from "@hmcts/location";
+import { getLocationById, getLocationsByIds } from "@hmcts/location";
 
 describe("Subscription Service", () => {
   beforeEach(() => {
@@ -222,7 +223,7 @@ describe("Subscription Service", () => {
       const newLocationIds = ["789", "101"];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
-      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
+      vi.mocked(validation.validateLocationIds).mockResolvedValue([true]);
       vi.mocked(queries.deleteSubscriptionRecord).mockResolvedValue(1);
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub3",
@@ -244,7 +245,7 @@ describe("Subscription Service", () => {
       const newLocationIds = ["456", "789"];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
-      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
+      vi.mocked(validation.validateLocationIds).mockResolvedValue([true, true]);
       vi.mocked(queries.createSubscriptionRecord).mockResolvedValue({
         subscriptionId: "sub1",
         userId,
@@ -291,16 +292,15 @@ describe("Subscription Service", () => {
       const newLocationIds = [...Array.from({ length: 48 }, (_, i) => `${i}`), "456", "789", "101"];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue(existingSubscriptions);
-      vi.mocked(validation.validateLocationId).mockResolvedValue(true);
 
       await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow("Maximum 50 subscriptions allowed");
     });
 
     it("should throw error for invalid location ID", async () => {
-      const newLocationIds = ["456", "invalid"];
+      const newLocationIds = ["456", "789"];
 
       vi.mocked(queries.findSubscriptionsByUserId).mockResolvedValue([]);
-      vi.mocked(validation.validateLocationId).mockResolvedValue(false);
+      vi.mocked(validation.validateLocationIds).mockResolvedValue([true, false]);
 
       await expect(replaceUserSubscriptions(userId, newLocationIds)).rejects.toThrow("Invalid location ID");
     });
@@ -344,23 +344,22 @@ describe("Subscription Service", () => {
 
     it("should return all subscriptions with location details in English", async () => {
       vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
-      vi.mocked(getLocationById).mockImplementation(async (id) => {
-        if (id === 1) {
-          return {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          } as any;
+      vi.mocked(getLocationsByIds).mockResolvedValue([
+        {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court",
+          regions: [],
+          subJurisdictions: []
+        },
+        {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null,
+          regions: [],
+          subJurisdictions: []
         }
-        if (id === 2) {
-          return {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          } as any;
-        }
-        return null;
-      });
+      ]);
 
       const result = await getAllSubscriptionsByUserId(mockUserId, "en");
 
@@ -382,27 +381,27 @@ describe("Subscription Service", () => {
       ]);
 
       expect(queries.findSubscriptionsWithLocationByUserId).toHaveBeenCalledWith(mockUserId);
+      expect(getLocationsByIds).toHaveBeenCalledWith([1, 2]);
     });
 
     it("should return subscriptions with Welsh names when locale is cy", async () => {
       vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
-      vi.mocked(getLocationById).mockImplementation(async (id) => {
-        if (id === 1) {
-          return {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          } as any;
+      vi.mocked(getLocationsByIds).mockResolvedValue([
+        {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court",
+          regions: [],
+          subJurisdictions: []
+        },
+        {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null,
+          regions: [],
+          subJurisdictions: []
         }
-        if (id === 2) {
-          return {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          } as any;
-        }
-        return null;
-      });
+      ]);
 
       const result = await getAllSubscriptionsByUserId(mockUserId, "cy");
 
@@ -496,23 +495,22 @@ describe("Subscription Service", () => {
 
     it("should return court subscriptions with location details", async () => {
       vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
-      vi.mocked(getLocationById).mockImplementation(async (id) => {
-        if (id === 1) {
-          return {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          } as any;
+      vi.mocked(getLocationsByIds).mockResolvedValue([
+        {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court",
+          regions: [],
+          subJurisdictions: []
+        },
+        {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null,
+          regions: [],
+          subJurisdictions: []
         }
-        if (id === 2) {
-          return {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          } as any;
-        }
-        return null;
-      });
+      ]);
 
       const result = await getCourtSubscriptionsByUserId(mockUserId, "en");
 
@@ -536,23 +534,22 @@ describe("Subscription Service", () => {
 
     it("should use Welsh names when locale is cy", async () => {
       vi.mocked(queries.findSubscriptionsWithLocationByUserId).mockResolvedValue(mockSubscriptions);
-      vi.mocked(getLocationById).mockImplementation(async (id) => {
-        if (id === 1) {
-          return {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          } as any;
+      vi.mocked(getLocationsByIds).mockResolvedValue([
+        {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court",
+          regions: [],
+          subJurisdictions: []
+        },
+        {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null,
+          regions: [],
+          subJurisdictions: []
         }
-        if (id === 2) {
-          return {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          } as any;
-        }
-        return null;
-      });
+      ]);
 
       const result = await getCourtSubscriptionsByUserId(mockUserId, "cy");
 
@@ -582,25 +579,24 @@ describe("Subscription Service", () => {
       }
     ];
 
-    it("should return court subscription details with location information", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCourtSubscriptions as any);
-      vi.mocked(getLocationById).mockImplementation(async (id) => {
-        if (id === 1) {
-          return {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          } as any;
+    it("should return subscription details with location information", async () => {
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue(mockCourtSubscriptions);
+      vi.mocked(getLocationsByIds).mockResolvedValue([
+        {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court",
+          regions: [],
+          subJurisdictions: []
+        },
+        {
+          locationId: 2,
+          name: "Manchester Crown Court",
+          welshName: null,
+          regions: [],
+          subJurisdictions: []
         }
-        if (id === 2) {
-          return {
-            locationId: 2,
-            name: "Manchester Crown Court",
-            welshName: null
-          } as any;
-        }
-        return null;
-      });
+      ]);
 
       const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-2"], "user-123", "en");
 
@@ -622,67 +618,6 @@ describe("Subscription Service", () => {
       ]);
     });
 
-    it("should return case subscription details without location lookup", async () => {
-      const mockCaseSubscriptions = [
-        {
-          subscriptionId: "sub-3",
-          userId: "user-123",
-          searchType: "CASE_NAME",
-          searchValue: "Smith v Jones",
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          dateAdded: new Date("2024-01-03")
-        }
-      ];
-
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCaseSubscriptions as any);
-
-      const result = await getSubscriptionDetailsForConfirmation(["sub-3"], "user-123", "en");
-
-      expect(result).toEqual([
-        {
-          subscriptionId: "sub-3",
-          type: "case",
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          dateAdded: new Date("2024-01-03")
-        }
-      ]);
-      expect(getLocationById).not.toHaveBeenCalled();
-    });
-
-    it("should return both case and court subscription details when mixed", async () => {
-      const mockMixed = [
-        {
-          subscriptionId: "sub-1",
-          userId: "user-123",
-          searchType: "LOCATION_ID",
-          searchValue: "1",
-          caseName: null,
-          caseNumber: null,
-          dateAdded: new Date("2024-01-01")
-        },
-        {
-          subscriptionId: "sub-3",
-          userId: "user-123",
-          searchType: "CASE_NAME",
-          searchValue: "Smith v Jones",
-          caseName: "Smith v Jones",
-          caseNumber: "AB-123",
-          dateAdded: new Date("2024-01-03")
-        }
-      ];
-
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockMixed as any);
-      vi.mocked(getLocationById).mockResolvedValue({ locationId: 1, name: "Birmingham Crown Court", welshName: null } as any);
-
-      const result = await getSubscriptionDetailsForConfirmation(["sub-1", "sub-3"], "user-123", "en");
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toMatchObject({ type: "court", courtOrTribunalName: "Birmingham Crown Court" });
-      expect(result[1]).toMatchObject({ type: "case", caseName: "Smith v Jones", caseNumber: "AB-123" });
-    });
-
     it("should return empty array when no subscription IDs provided", async () => {
       const result = await getSubscriptionDetailsForConfirmation([], "user-123");
 
@@ -691,17 +626,16 @@ describe("Subscription Service", () => {
     });
 
     it("should use Welsh names when locale is cy", async () => {
-      vi.mocked(queries.findSubscriptionsByIds).mockResolvedValue(mockCourtSubscriptions as any);
-      vi.mocked(getLocationById).mockImplementation(async (id) => {
-        if (id === 1) {
-          return {
-            locationId: 1,
-            name: "Birmingham Crown Court",
-            welshName: "Welsh Birmingham Crown Court"
-          } as any;
+      vi.mocked(queries.findSubscriptionsWithLocationByIds).mockResolvedValue([mockCourtSubscriptions[0]]);
+      vi.mocked(getLocationsByIds).mockResolvedValue([
+        {
+          locationId: 1,
+          name: "Birmingham Crown Court",
+          welshName: "Welsh Birmingham Crown Court",
+          regions: [],
+          subJurisdictions: []
         }
-        return null;
-      });
+      ]);
 
       const result = await getSubscriptionDetailsForConfirmation(["sub-1"], "user-123", "cy");
 
