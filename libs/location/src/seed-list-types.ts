@@ -1,41 +1,21 @@
 import { prisma } from "@hmcts/postgres-prisma";
 import { listTypeData } from "./list-type-data.js";
 
-async function shouldSeed(): Promise<boolean> {
-  // Only seed in local development, not in CI or production
+export async function seedListTypes() {
+  console.log("Checking if list type data seeding is needed...");
+
   if (process.env.NODE_ENV === "production") {
     console.log("Skipping list type seed: NODE_ENV is production");
-    return false;
+    return;
   }
 
   if (process.env.CI === "true") {
     console.log("Skipping list type seed: Running in CI environment");
-    return false;
-  }
-
-  // Check if list types table is empty
-  const listTypeCount = await (prisma as any).listType.count();
-
-  // Only seed if table is empty
-  if (listTypeCount > 0) {
-    console.log("Skipping list type seed: Table already contains data");
-    return false;
-  }
-
-  return true;
-}
-
-export async function seedListTypes() {
-  console.log("Checking if list type data seeding is needed...");
-
-  const needsSeeding = await shouldSeed();
-  if (!needsSeeding) {
     return;
   }
 
   console.log("Seeding list types...");
 
-  // Get all sub-jurisdictions to link list types
   const allSubJurisdictions = await (prisma as any).subJurisdiction.findMany();
 
   if (allSubJurisdictions.length === 0) {
@@ -50,23 +30,44 @@ export async function seedListTypes() {
         throw new Error(`No sub-jurisdictions resolved for list type "${listType.name}"`);
       }
 
-      await (prisma as any).listType.create({
-        data: {
+      const upserted = await (prisma as any).listType.upsert({
+        where: { name: listType.name },
+        create: {
           name: listType.name,
           friendlyName: listType.englishFriendlyName,
           welshFriendlyName: listType.welshFriendlyName,
-          shortenedFriendlyName: listType.englishFriendlyName,
+          shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,
-          isNonStrategic: listType.isNonStrategic,
-          subJurisdictions: {
-            create: relevantSubJurisdictions.map((sj: any) => ({
-              subJurisdictionId: sj.subJurisdictionId
-            }))
-          }
+          isNonStrategic: listType.isNonStrategic
+        },
+        update: {
+          friendlyName: listType.englishFriendlyName,
+          welshFriendlyName: listType.welshFriendlyName,
+          shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
+          url: listType.urlPath || "",
+          defaultSensitivity: listType.defaultSensitivity,
+          allowedProvenance: listType.provenance,
+          isNonStrategic: listType.isNonStrategic
         }
       });
+
+      for (const sj of relevantSubJurisdictions) {
+        await (prisma as any).listTypeSubJurisdiction.upsert({
+          where: {
+            listTypeId_subJurisdictionId: {
+              listTypeId: upserted.id,
+              subJurisdictionId: sj.subJurisdictionId
+            }
+          },
+          create: {
+            listTypeId: upserted.id,
+            subJurisdictionId: sj.subJurisdictionId
+          },
+          update: {}
+        });
+      }
     } catch (error) {
       console.error(`Failed to seed list type "${listType.name}":`, error);
       throw error;

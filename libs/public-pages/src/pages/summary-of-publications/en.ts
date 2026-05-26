@@ -1,6 +1,7 @@
 export const en = {
   titlePrefix: "What do you want to view from",
   titleSuffix: "?",
+  sjpName: "Single Justice Procedure",
   noPublicationsMessage: "Sorry, no lists found for this court",
   selectListMessage: "Select the list you want to view from the link(s) below:",
   forWeekCommencing: "for week commencing",

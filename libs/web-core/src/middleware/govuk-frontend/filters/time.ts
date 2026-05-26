@@ -6,3 +6,14 @@ export const timeFilter = (value: Date | string) => {
     minute: "2-digit"
   });
 };
+
+export const time12Filter = (value: Date | string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  const options: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    hour12: true,
+    ...(date.getMinutes() !== 0 && { minute: "2-digit" })
+  };
+  return date.toLocaleTimeString("en-GB", options).replace(/\s/g, "").toLowerCase();
+};

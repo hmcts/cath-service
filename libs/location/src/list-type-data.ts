@@ -7,6 +7,7 @@ export interface ListTypeData {
   urlPath?: string;
   isNonStrategic: boolean;
   defaultSensitivity: string;
+  shortenedFriendlyName?: string;
   subJurisdictionIds: number[];
 }
 
@@ -171,7 +172,7 @@ export const listTypeData: ListTypeData[] = [
     name: "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
     englishFriendlyName: "King's Bench Masters Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Meistri Mainc y Brenin",
-    provenance: "CFT_IDAM",
+    provenance: "MANUAL_UPLOAD",
     urlPath: "kings-bench-masters-daily-cause-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
@@ -267,5 +268,53 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [1]
+  },
+  {
+    id: 24,
+    name: "SJP_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List (Full list)",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-press-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    shortenedFriendlyName: "SJP Press List (Full list)",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 25,
+    name: "SJP_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List (Full list)",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-public-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SJP Public List (Full list)",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 26,
+    name: "SJP_DELTA_PRESS_LIST",
+    englishFriendlyName: "Single Justice Procedure Press List (New cases)",
+    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl (Achosion Newydd)",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-delta-press-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    shortenedFriendlyName: "SJP Press List (New cases)",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 27,
+    name: "SJP_DELTA_PUBLIC_LIST",
+    englishFriendlyName: "Single Justice Procedure Public List (New cases)",
+    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl (Achosion Newydd)",
+    provenance: "COMMON_PLATFORM",
+    urlPath: "sjp-delta-public-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SJP Public List (New cases)",
+    subJurisdictionIds: [7]
   }
 ];
