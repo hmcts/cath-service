@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { timeFilter } from "./time.js";
+import { time12Filter, timeFilter } from "./time.js";
 
 describe("timeFilter", () => {
   it("should format time in 24-hour format", () => {
@@ -47,5 +47,23 @@ describe("timeFilter", () => {
   it("should handle late evening times", () => {
     const date = new Date("2024-03-15T23:59:00");
     expect(timeFilter(date)).toBe("23:59");
+  });
+});
+
+describe("time12Filter", () => {
+  it("should omit minutes when time is on the hour", () => {
+    expect(time12Filter(new Date("2024-03-15T11:00:00"))).toBe("11am");
+    expect(time12Filter(new Date("2024-03-15T13:00:00"))).toBe("1pm");
+  });
+
+  it("should include minutes when time is not on the hour", () => {
+    expect(time12Filter(new Date("2024-03-15T11:30:00"))).toBe("11:30am");
+    expect(time12Filter(new Date("2024-03-15T13:45:00"))).toBe("1:45pm");
+  });
+
+  it("should return empty string for invalid values", () => {
+    expect(time12Filter(null as unknown as Date)).toBe("");
+    expect(time12Filter(undefined as unknown as Date)).toBe("");
+    expect(time12Filter("")).toBe("");
   });
 });

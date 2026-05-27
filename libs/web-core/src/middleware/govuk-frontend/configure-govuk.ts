@@ -7,7 +7,7 @@ import type { AssetOptions } from "../../assets/assets.js";
 import { configureAssets } from "../../assets/configure-assets.js";
 import { localeMiddleware, renderInterceptorMiddleware, translationMiddleware } from "../i18n/locale-middleware.js";
 import { loadTranslationsFromMultiplePaths } from "../i18n/translation-loader.js";
-import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, timeFilter } from "./filters/index.js";
+import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, time12Filter, timeFilter } from "./filters/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,6 +52,7 @@ export async function configureGovuk(app: Express, paths: string[], options: Gov
 function addFilters(env: nunjucks.Environment): void {
   env.addFilter("date", dateFilter);
   env.addFilter("time", timeFilter);
+  env.addFilter("time12", time12Filter);
   env.addFilter("currency", currencyFilter);
   env.addFilter("kebabCase", kebabCaseFilter);
   env.addFilter("govukErrorSummary", govukErrorSummaryFilter);

@@ -29,6 +29,7 @@ export {
   getArtefactsByIds,
   getArtefactsByLocation,
   getArtefactType,
+  getLatestSjpArtefacts,
   getLocationsWithPublicationCount,
   type LocationWithPublicationCount
 } from "./repository/queries.js";

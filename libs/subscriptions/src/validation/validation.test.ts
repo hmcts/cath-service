@@ -1,7 +1,7 @@
 import * as location from "@hmcts/location";
 import { describe, expect, it, vi } from "vitest";
 import * as queries from "../repository/queries.js";
-import { validateDuplicateSubscription, validateLocationId } from "./validation.js";
+import { validateDuplicateSubscription, validateLocationId, validateLocationIds } from "./validation.js";
 
 vi.mock("@hmcts/location");
 vi.mock("../repository/queries.js");
@@ -37,6 +37,65 @@ describe("Validation Functions", () => {
       const result = await validateLocationId("invalid");
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe("validateLocationIds", () => {
+    it("should return all true for valid location IDs", async () => {
+      vi.mocked(location.getLocationsByIds).mockResolvedValue([
+        { locationId: 1, name: "Court 1", welshName: "Llys 1", regions: [], subJurisdictions: [] },
+        { locationId: 2, name: "Court 2", welshName: "Llys 2", regions: [], subJurisdictions: [] },
+        { locationId: 3, name: "Court 3", welshName: "Llys 3", regions: [], subJurisdictions: [] }
+      ]);
+
+      const result = await validateLocationIds(["1", "2", "3"]);
+
+      expect(result).toEqual([true, true, true]);
+      expect(location.getLocationsByIds).toHaveBeenCalledWith([1, 2, 3]);
+    });
+
+    it("should return mixed results for partially valid IDs", async () => {
+      vi.mocked(location.getLocationsByIds).mockResolvedValue([
+        { locationId: 1, name: "Court 1", welshName: "Llys 1", regions: [], subJurisdictions: [] },
+        { locationId: 3, name: "Court 3", welshName: "Llys 3", regions: [], subJurisdictions: [] }
+      ]);
+
+      const result = await validateLocationIds(["1", "2", "3"]);
+
+      expect(result).toEqual([true, false, true]);
+    });
+
+    it("should return false for invalid location IDs", async () => {
+      vi.mocked(location.getLocationsByIds).mockResolvedValue([]);
+
+      const result = await validateLocationIds(["999", "998"]);
+
+      expect(result).toEqual([false, false]);
+    });
+
+    it("should handle non-numeric IDs", async () => {
+      vi.mocked(location.getLocationsByIds).mockResolvedValue([{ locationId: 1, name: "Court 1", welshName: "Llys 1", regions: [], subJurisdictions: [] }]);
+
+      const result = await validateLocationIds(["1", "invalid", "notanumber"]);
+
+      expect(result).toEqual([true, false, false]);
+      expect(location.getLocationsByIds).toHaveBeenCalledWith([1]);
+    });
+
+    it("should return empty array for empty input", async () => {
+      vi.mocked(location.getLocationsByIds).mockResolvedValue([]);
+
+      const result = await validateLocationIds([]);
+
+      expect(result).toEqual([]);
+    });
+
+    it("should handle duplicate IDs", async () => {
+      vi.mocked(location.getLocationsByIds).mockResolvedValue([{ locationId: 1, name: "Court 1", welshName: "Llys 1", regions: [], subJurisdictions: [] }]);
+
+      const result = await validateLocationIds(["1", "1", "1"]);
+
+      expect(result).toEqual([true, true, true]);
     });
   });
 

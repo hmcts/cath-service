@@ -34,6 +34,8 @@
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/simple-router": "workspace:*",
+    "@hmcts/sjp-press-list": "workspace:*",
+    "@hmcts/sjp-public-list": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/test-support": "workspace:*",
     "@hmcts/verified-pages": "workspace:*",
@@ -66,7 +68,7 @@
     "nodemon": "3.1.14",
     "sass": "1.99.0",
     "supertest": "7.2.2",
-    "vite": "7.3.2",
+    "vite": "7.3.3",
     "vite-plugin-static-copy": "3.4.0"
   }
 }

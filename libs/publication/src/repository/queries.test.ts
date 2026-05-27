@@ -12,6 +12,7 @@ import {
   getArtefactsByIds,
   getArtefactsByLocation,
   getArtefactType,
+  getLatestSjpArtefacts,
   getLocationsWithPublicationCount
 } from "./queries.js";
 
@@ -276,14 +277,16 @@ describe("createArtefact", () => {
       language: "ENGLISH",
       displayFrom: new Date("2025-10-22"),
       displayTo: new Date("2025-10-28"),
+      lastReceivedDate: new Date(),
       isFlatFile: true,
-      provenance: "MANUAL_UPLOAD"
+      provenance: "MANUAL_UPLOAD",
+      noMatch: false
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
     vi.mocked(prisma.artefact.create).mockRejectedValue(new Error("Database connection error"));
 
-    await expect(createArtefact(artefactData)).rejects.toThrow("Database connection error");
+    await expect(createArtefact(artefactData as any)).rejects.toThrow("Database connection error");
   });
 
   it("should create an artefact with different list type IDs", async () => {
@@ -301,8 +304,10 @@ describe("createArtefact", () => {
         language: "ENGLISH",
         displayFrom: new Date("2025-10-20"),
         displayTo: new Date("2025-10-30"),
+        lastReceivedDate: new Date(),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD"
+        provenance: "MANUAL_UPLOAD",
+        noMatch: false
       };
 
       vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -431,7 +436,21 @@ describe("getArtefactsByLocation", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: { locationId: "123" },
-      orderBy: { contentDate: "desc" }
+      orderBy: { contentDate: "desc" },
+      select: {
+        artefactId: true,
+        locationId: true,
+        listTypeId: true,
+        contentDate: true,
+        sensitivity: true,
+        language: true,
+        displayFrom: true,
+        displayTo: true,
+        lastReceivedDate: true,
+        isFlatFile: true,
+        provenance: true,
+        noMatch: true
+      }
     });
     expect(result).toHaveLength(2);
     expect(result[0].artefactId).toBe("550e8400-e29b-41d4-a716-446655440000");
@@ -480,6 +499,20 @@ describe("getArtefactsByIds", () => {
         artefactId: {
           in: ["550e8400-e29b-41d4-a716-446655440000"]
         }
+      },
+      select: {
+        artefactId: true,
+        locationId: true,
+        listTypeId: true,
+        contentDate: true,
+        sensitivity: true,
+        language: true,
+        displayFrom: true,
+        displayTo: true,
+        lastReceivedDate: true,
+        isFlatFile: true,
+        provenance: true,
+        noMatch: true
       }
     });
     expect(result).toHaveLength(1);
@@ -602,7 +635,6 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
       noMatch: false
     } as any;
 
@@ -611,7 +643,21 @@ describe("getArtefactById", () => {
     const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440000");
 
     expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" }
+      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" },
+      select: {
+        artefactId: true,
+        locationId: true,
+        listTypeId: true,
+        contentDate: true,
+        sensitivity: true,
+        language: true,
+        displayFrom: true,
+        displayTo: true,
+        lastReceivedDate: true,
+        isFlatFile: true,
+        provenance: true,
+        noMatch: true
+      }
     });
     expect(result).toEqual({
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
@@ -635,7 +681,21 @@ describe("getArtefactById", () => {
     const result = await getArtefactById("non-existent-id");
 
     expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "non-existent-id" }
+      where: { artefactId: "non-existent-id" },
+      select: {
+        artefactId: true,
+        locationId: true,
+        listTypeId: true,
+        contentDate: true,
+        sensitivity: true,
+        language: true,
+        displayFrom: true,
+        displayTo: true,
+        lastReceivedDate: true,
+        isFlatFile: true,
+        provenance: true,
+        noMatch: true
+      }
     });
     expect(result).toBeNull();
   });
@@ -653,7 +713,6 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "API",
-      supersededCount: 5,
       noMatch: true
     } as any;
 
@@ -687,68 +746,57 @@ describe("getArtefactSummariesByLocation", () => {
     const mockArtefacts = [
       {
         artefactId: "550e8400-e29b-41d4-a716-446655440000",
-        locationId: "123",
-        listTypeId: 1,
-        contentDate: new Date("2025-10-25"),
-        sensitivity: "PUBLIC",
-        language: "ENGLISH",
         displayFrom: new Date("2025-10-20T10:00:00.000Z"),
         displayTo: new Date("2025-10-30T16:00:00.000Z"),
-        lastReceivedDate: new Date(),
         isFlatFile: false,
-        provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        listType: {
+          friendlyName: "Civil Daily Cause List"
+        }
       },
       {
         artefactId: "550e8400-e29b-41d4-a716-446655440001",
-        locationId: "123",
-        listTypeId: 2,
-        contentDate: new Date("2025-10-24"),
-        sensitivity: "PRIVATE",
-        language: "WELSH",
         displayFrom: new Date("2025-10-22T09:00:00.000Z"),
         displayTo: new Date("2025-10-28T17:00:00.000Z"),
-        lastReceivedDate: new Date(),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
-      }
-    ] as any;
-
-    const mockListTypes = [
-      {
-        id: 1,
-        friendlyName: "Civil Daily Cause List"
-      },
-      {
-        id: 2,
-        friendlyName: "Family Daily Cause List"
+        listType: {
+          friendlyName: "Family Daily Cause List"
+        }
       }
     ] as any;
 
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
-    vi.mocked(prisma.listType.findMany).mockResolvedValue(mockListTypes);
 
     const result = await getArtefactSummariesByLocation("123");
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: { locationId: "123" },
-      orderBy: { displayFrom: "desc" }
+      orderBy: { displayFrom: "desc" },
+      select: {
+        artefactId: true,
+        displayFrom: true,
+        displayTo: true,
+        isFlatFile: true,
+        listType: {
+          select: {
+            friendlyName: true
+          }
+        }
+      }
     });
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
       listType: "Civil Daily Cause List",
       displayFrom: "2025-10-20T10:00:00.000Z",
-      displayTo: "2025-10-30T16:00:00.000Z"
+      displayTo: "2025-10-30T16:00:00.000Z",
+      isFlatFile: false
     });
     expect(result[1]).toEqual({
       artefactId: "550e8400-e29b-41d4-a716-446655440001",
       listType: "Family Daily Cause List",
       displayFrom: "2025-10-22T09:00:00.000Z",
-      displayTo: "2025-10-28T17:00:00.000Z"
+      displayTo: "2025-10-28T17:00:00.000Z",
+      isFlatFile: true
     });
   });
 
@@ -803,11 +851,11 @@ describe("getArtefactMetadata", () => {
       language: "ENGLISH",
       displayFrom: new Date("2025-10-20T10:00:00.000Z"),
       displayTo: new Date("2025-10-30T16:00:00.000Z"),
-      lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      listType: {
+        friendlyName: "Civil Daily Cause List"
+      }
     } as any;
 
     const mockLocation = {
@@ -818,19 +866,30 @@ describe("getArtefactMetadata", () => {
       subJurisdictions: [1]
     };
 
-    const mockListType = {
-      id: 1,
-      friendlyName: "Civil Daily Cause List"
-    } as any;
-
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation);
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
 
     expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" }
+      where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" },
+      select: {
+        artefactId: true,
+        locationId: true,
+        listTypeId: true,
+        contentDate: true,
+        sensitivity: true,
+        language: true,
+        displayFrom: true,
+        displayTo: true,
+        isFlatFile: true,
+        provenance: true,
+        listType: {
+          select: {
+            friendlyName: true
+          }
+        }
+      }
     });
     expect(getLocationById).toHaveBeenCalledWith(123);
     expect(result).toEqual({
@@ -1157,6 +1216,103 @@ describe("getArtefactListTypeId", () => {
   });
 });
 
+describe("getLatestSjpArtefacts", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return latest SJP artefacts ordered by lastReceivedDate desc", async () => {
+    const mockArtefacts = [
+      {
+        artefactId: "sjp-1",
+        locationId: "123",
+        listTypeId: 24, // SJP_PRESS_LIST
+        contentDate: new Date("2025-10-25"),
+        sensitivity: "PRIVATE",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-20"),
+        displayTo: new Date("2025-10-30"),
+        lastReceivedDate: new Date("2025-10-26"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      },
+      {
+        artefactId: "sjp-2",
+        locationId: "456",
+        listTypeId: 25, // SJP_PUBLIC_LIST
+        contentDate: new Date("2025-10-24"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-10-22"),
+        displayTo: new Date("2025-10-28"),
+        lastReceivedDate: new Date("2025-10-25"),
+        isFlatFile: true,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      }
+    ] as any;
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts);
+
+    const result = await getLatestSjpArtefacts();
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: {
+        listTypeId: { in: [24, 25, 26, 27] }
+      },
+      orderBy: { lastReceivedDate: "desc" },
+      take: 10
+    });
+    expect(result).toHaveLength(2);
+    expect(result[0].artefactId).toBe("sjp-1");
+    expect(result[0].listTypeId).toBe(24);
+    expect(result[1].artefactId).toBe("sjp-2");
+    expect(result[1].listTypeId).toBe(25);
+  });
+
+  it("should return empty array when no SJP artefacts found", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([]);
+
+    const result = await getLatestSjpArtefacts();
+
+    expect(result).toEqual([]);
+  });
+
+  it("should limit results to 10 artefacts", async () => {
+    const mockArtefacts = Array.from({ length: 15 }, (_, i) => ({
+      artefactId: `sjp-${i}`,
+      locationId: "123",
+      listTypeId: i % 2 === 0 ? 24 : 25,
+      contentDate: new Date("2025-10-25"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2025-10-20"),
+      displayTo: new Date("2025-10-30"),
+      lastReceivedDate: new Date(`2025-10-${25 - i}`),
+      isFlatFile: true,
+      provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
+      noMatch: false
+    }));
+
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as any);
+
+    const result = await getLatestSjpArtefacts();
+
+    expect(prisma.artefact.findMany).toHaveBeenCalledWith({
+      where: {
+        listTypeId: { in: [24, 25, 26, 27] }
+      },
+      orderBy: { lastReceivedDate: "desc" },
+      take: 10
+    });
+    expect(result).toHaveLength(15); // Prisma mock returns all, but the query specifies take: 10
+  });
+});
+
 describe("createArtefactSearch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1313,7 +1469,7 @@ describe("findArtefactSearchByArtefactId", () => {
     const result = await findArtefactSearchByArtefactId("artefact-xyz-999");
 
     expect(result).toEqual(mockArtefactSearch);
-    expect(result.artefactId).toBe("artefact-xyz-999");
+    expect(result?.artefactId).toBe("artefact-xyz-999");
   });
 });
 
