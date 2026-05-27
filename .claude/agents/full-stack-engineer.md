@@ -113,10 +113,12 @@ apps/
         └── routes/            # API endpoints
 
 libs/
+└── postgres-prisma
+    ├── prisma
+        ├── schema             # Prisma schemas
 └── [feature]/
     ├── package.json           # Module metadata and scripts
     ├── tsconfig.json          # TypeScript configuration
-    ├── prisma/                # Prisma schema (optional)
     └── src/
         ├── config.ts          # Module configuration exports
         ├── index.ts           # Business logic exports
@@ -145,7 +147,7 @@ The web and API applications use explicit imports to register modules, enabling 
 
 To avoid circular dependencies during Prisma client generation, module configuration MUST be separated from business logic exports:
 
-- **`src/config.ts`** - Module configuration exports (pageRoutes, apiRoutes, prismaSchemas, assets)
+- **`src/config.ts`** - Module configuration exports (pageRoutes, apiRoutes, assets)
 - **`src/index.ts`** - Business logic exports only (services, utilities, types)
 
 **Module configuration structure:**
@@ -164,9 +166,6 @@ export const moduleRoot = __dirname;  // Commonly needed for path resolution
 
 // Optional - only if module has API routes
 export const apiRoutes = { path: path.join(__dirname, "routes") };
-
-// Optional - only if module has Prisma schema
-export const prismaSchemas = path.join(__dirname, "../prisma");
 
 // Optional - custom exports for specific needs (e.g., file upload routes)
 export const fileUploadRoutes = ["/manual-upload", "/non-strategic-upload"];
@@ -215,13 +214,32 @@ const baseConfig = createBaseViteConfig([
 // apps/api/src/app.ts
 import { apiRoutes as myFeatureRoutes } from "@hmcts/my-feature/config";
 app.use(await createSimpleRouter(myFeatureRoutes));
-
-// apps/postgres/src/schema-discovery.ts
-import { prismaSchemas as myFeatureSchemas } from "@hmcts/my-feature/config";
-const schemaPaths = [myFeatureSchemas, /* other schemas */];
 ```
 
 **NOTE**: By default all pages and routes are mounted at root level. To namespace routes, create subdirectories under `pages/`. E.g. `pages/admin/` for `/admin/*` routes.
+
+### Database Schema Management
+
+All Prisma schemas are centralized in `libs/postgres-prisma/prisma/schema/` with one file per feature domain.
+
+**Schema Organization:**
+```
+libs/postgres-prisma/
+├── prisma.config.ts            # Points to prisma/schema directory
+└── prisma/
+    └── schema/                 # All .prisma files live here
+        ├── base.prisma         # Datasource and generator config
+        ├── audit-log.prisma    # Audit log models
+        ├── location.prisma     # Location models
+        └── ...                 # One file per domain
+```
+
+**Adding a New Schema:**
+1. Create `libs/postgres-prisma/prisma/schema/{feature-name}.prisma` (kebab-case)
+2. Run `yarn db:generate` to update the Prisma client
+3. All models are available via `import { prisma } from "@hmcts/postgres-prisma"`
+
+**Never create `prisma/` directories in feature modules** - all schemas are centralized in `@hmcts/postgres-prisma`.
 
 ### Implementation Patterns
 
