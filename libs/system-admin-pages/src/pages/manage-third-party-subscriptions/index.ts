@@ -60,7 +60,6 @@ const getHandler = async (req: Request, res: Response) => {
 
 const postHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
   const session = req.session as ManageThirdPartyUserSession;
 
   if (!session.manageThirdPartyUser) {

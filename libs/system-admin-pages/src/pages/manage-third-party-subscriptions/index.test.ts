@@ -156,10 +156,7 @@ describe("manage-third-party-subscriptions page", () => {
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(res.render).toHaveBeenCalledWith(
-        "manage-third-party-subscriptions/index",
-        expect.objectContaining({ useRadioButtons: true })
-      );
+      expect(res.render).toHaveBeenCalledWith("manage-third-party-subscriptions/index", expect.objectContaining({ useRadioButtons: true }));
     });
   });
 
@@ -209,9 +206,7 @@ describe("manage-third-party-subscriptions page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [
-        { listTypeId: 1, channel: "API", sensitivity: "PUBLIC" }
-      ]);
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1, channel: "API", sensitivity: "PUBLIC" }]);
     });
 
     it("should handle no sensitivities selected", async () => {
