@@ -112,7 +112,8 @@ postgresql:
   flexibleserver: cath-dev
   setup:
     databases:
-      - name: "{{ .Release.Name }}"
+      "${RELEASE_NAME}":
+        name: "${RELEASE_NAME}"
 
 # Redis cache configuration
 redis:
