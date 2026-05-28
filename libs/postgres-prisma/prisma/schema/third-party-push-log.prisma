@@ -1,14 +1,5 @@
-generator client {
-  provider = "prisma-client-js"
-  output   = "../../../apps/postgres/generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
 model ThirdPartyPushLog {
-  id         String   @id @default(uuid()) @db.Uuid
+  id         String   @id @default(uuid()) @map("id") @db.Uuid
   artefactId String   @map("artefact_id") @db.VarChar(255)
   listTypeId Int      @map("list_type_id")
   type       String   @db.VarChar(20)
