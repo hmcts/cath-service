@@ -101,6 +101,7 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       lastReceivedDate: true,
       isFlatFile: true,
       provenance: true,
+      supersededCount: true,
       noMatch: true
     }
   });

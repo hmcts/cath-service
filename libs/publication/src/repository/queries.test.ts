@@ -635,6 +635,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
       noMatch: false
     } as any;
 
@@ -656,6 +657,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
+        supersededCount: true,
         noMatch: true
       }
     });
@@ -695,6 +697,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
+        supersededCount: true,
         noMatch: true
       }
     });
@@ -714,6 +717,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "API",
+      supersededCount: 5,
       noMatch: true
     } as any;
 
