@@ -52,7 +52,8 @@ export async function searchUsers(filters: UserSearchFilters, page: number = 1):
   }
 
   if (filters.provenances && filters.provenances.length > 0) {
-    whereClause.userProvenance = { in: filters.provenances };
+    const expandedProvenances = filters.provenances.flatMap((p) => (p === "B2C_IDAM" ? ["B2C_IDAM", "PI_AAD"] : [p]));
+    whereClause.userProvenance = { in: expandedProvenances };
   }
 
   const [users, totalCount] = await Promise.all([
