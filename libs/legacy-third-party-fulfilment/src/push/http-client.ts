@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import http from "node:http";
 import https from "node:https";
 import path from "node:path";
 
@@ -53,8 +54,10 @@ export async function executePush(
   pdfPath?: string,
   flatFilePath?: string
 ): Promise<{ statusCode: number; success: boolean }> {
-  const agent = new https.Agent({ ca: certPem, rejectUnauthorized: true });
   const parsedUrl = new URL(url);
+  const isHttps = parsedUrl.protocol === "https:";
+
+  const agent = isHttps ? new https.Agent({ ca: certPem, rejectUnauthorized: true }) : undefined;
 
   let bodyBuffer: Buffer;
   const requestHeaders: Record<string, string | number> = { ...headers };
@@ -76,9 +79,9 @@ export async function executePush(
 
   requestHeaders["Content-Length"] = bodyBuffer.byteLength;
 
-  const options: https.RequestOptions = {
+  const options: http.RequestOptions = {
     hostname: parsedUrl.hostname,
-    port: parsedUrl.port || 443,
+    port: parsedUrl.port || (isHttps ? 443 : 80),
     path: parsedUrl.pathname + parsedUrl.search,
     method: "POST",
     headers: requestHeaders,
@@ -86,8 +89,10 @@ export async function executePush(
     timeout: REQUEST_TIMEOUT_MS
   };
 
+  const transport = isHttps ? https : http;
+
   return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
+    const req = transport.request(options, (res) => {
       // Drain the response body to free the socket
       res.resume();
 

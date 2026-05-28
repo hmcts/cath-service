@@ -238,6 +238,8 @@ describe("non-strategic-upload-summary page", () => {
           locationId: "123",
           listTypeId: 6,
           locale: "en",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
           provenance: "MANUAL_UPLOAD",
           logPrefix: "[Non-Strategic Upload]"
         })
@@ -277,7 +279,9 @@ describe("non-strategic-upload-summary page", () => {
 
       expect(processPublication).toHaveBeenCalledWith(
         expect.objectContaining({
-          locale: "cy"
+          locale: "cy",
+          sensitivity: "PUBLIC",
+          language: "WELSH"
         })
       );
     });
