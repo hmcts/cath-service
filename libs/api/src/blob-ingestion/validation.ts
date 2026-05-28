@@ -10,7 +10,6 @@ const ALLOWED_PROVENANCES = ["XHIBIT", "MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM"
 export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
   const errors: ValidationError[] = [];
 
-  // Size validation
   if (rawBodySize > MAX_BLOB_SIZE) {
     errors.push({
       field: "body",
