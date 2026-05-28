@@ -1,0 +1,30 @@
+name: One-Shot - Break Terraform State Locks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  break-locks-test:
+    name: Break Test State Lock
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (Test)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+
+      - name: Break Test State Lock
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          az storage blob lease break \
+            --account-name sdsstatetest \
+            --container-name tfstate-test \
+            --blob-name "cath-service/test/terraform.tfstate" \
+            --account-key "$STORAGE_KEY" \
+          && echo "Test lock broken successfully" \
+          || echo "WARNING: No lock to break on test"
