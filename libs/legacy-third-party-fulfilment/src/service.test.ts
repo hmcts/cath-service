@@ -126,6 +126,17 @@ describe("sendThirdPartyPublications", () => {
     const [, , , , , , forwardedFlatFilePath] = vi.mocked(pushWithRetry).mock.calls[0];
     expect(forwardedFlatFilePath).toBeUndefined();
   });
+
+  it("logs warning when writePushLog fails", async () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockPushLogCreate.mockRejectedValue(new Error("DB write failed"));
+
+    await sendThirdPartyPublications(BASE_PARAMS);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to write push log:"), "DB write failed");
+    consoleWarnSpy.mockRestore();
+  });
 });
 
 describe("sendThirdPartyDeletion", () => {
@@ -151,5 +162,16 @@ describe("sendThirdPartyDeletion", () => {
   it("logs push type as DELETION", async () => {
     await sendThirdPartyDeletion(BASE_PARAMS);
     expect(mockPushLogCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ type: "DELETION" }) }));
+  });
+
+  it("logs warning when writePushLog fails", async () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockPushLogCreate.mockRejectedValue(new Error("DB write failed"));
+
+    await sendThirdPartyDeletion(BASE_PARAMS);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to write push log:"), "DB write failed");
+    consoleWarnSpy.mockRestore();
   });
 });

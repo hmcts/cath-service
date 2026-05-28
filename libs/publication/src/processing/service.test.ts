@@ -784,5 +784,16 @@ describe("publication-processor", async () => {
 
       expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: undefined }));
     });
+
+    it("logs error when sendThirdPartyPublications rejects", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      mockSendThirdPartyPublications.mockRejectedValue(new Error("Third-party service down"));
+
+      await processPublication({ ...baseParams, skipNotifications: true, jsonData: undefined });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Third-party push failed:", expect.any(Error));
+      consoleErrorSpy.mockRestore();
+    });
   });
 });
