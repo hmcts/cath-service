@@ -15,6 +15,7 @@ interface ThirdPartyOauthConfigSession {
     scope: string;
     clientId: string;
     clientSecret: string;
+    isExisting: boolean;
   };
 }
 
@@ -27,6 +28,24 @@ export const getHandler = async (req: Request, res: Response) => {
   const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
   if (!user) {
     return res.redirect(`/third-party-users${lngParam}`);
+  }
+
+  const sessionConfig = (req.session as ThirdPartyOauthConfigSession).thirdPartyOauthConfig;
+  if (sessionConfig && sessionConfig.userId === id) {
+    return res.render("third-party-users/[id]/oauth-config/index", {
+      ...t,
+      lngParam,
+      userId: user.id,
+      isExisting: sessionConfig.isExisting,
+      buttonText: sessionConfig.isExisting ? t.updateButton : t.createButton,
+      data: {
+        destinationUrl: sessionConfig.destinationUrl,
+        tokenUrl: sessionConfig.tokenUrl,
+        scope: sessionConfig.scope,
+        clientId: sessionConfig.clientId,
+        clientSecret: sessionConfig.clientSecret
+      }
+    });
   }
 
   const [destinationUrl, tokenUrl, scope, clientId, clientSecret] = await Promise.all([
@@ -95,7 +114,8 @@ export const postHandler = async (req: Request, res: Response) => {
     tokenUrl: tokenUrl.trim(),
     scope: scope.trim(),
     clientId: clientId.trim(),
-    clientSecret: clientSecret.trim()
+    clientSecret: clientSecret.trim(),
+    isExisting
   };
 
   res.redirect(`/third-party-users/${id}/oauth-config/summary${lngParam}`);

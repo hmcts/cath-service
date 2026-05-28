@@ -15,6 +15,7 @@ interface ThirdPartyOauthConfigSession {
     scope: string;
     clientId: string;
     clientSecret: string;
+    isExisting: boolean;
   };
 }
 

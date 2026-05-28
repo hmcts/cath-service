@@ -91,6 +91,40 @@ describe("third-party-users oauth-config form page", () => {
         })
       );
     });
+
+    it("should pre-populate form with session values when returning from summary via Change link", async () => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
+      (req.session as any).thirdPartyOauthConfig = {
+        userId: "user-1",
+        destinationUrl: "https://session.example.com/destination",
+        tokenUrl: "https://session.example.com/token",
+        scope: "session-scope",
+        clientId: "session-client-id",
+        clientSecret: "session-client-secret",
+        isExisting: false
+      };
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(getSecret).not.toHaveBeenCalled();
+      expect(res.render).toHaveBeenCalledWith(
+        "third-party-users/[id]/oauth-config/index",
+        expect.objectContaining({
+          isExisting: false,
+          buttonText: "Create",
+          data: {
+            destinationUrl: "https://session.example.com/destination",
+            tokenUrl: "https://session.example.com/token",
+            scope: "session-scope",
+            clientId: "session-client-id",
+            clientSecret: "session-client-secret"
+          }
+        })
+      );
+    });
   });
 
   describe("postHandler", () => {
@@ -161,7 +195,8 @@ describe("third-party-users oauth-config form page", () => {
         tokenUrl: "https://token.example.com",
         scope: "openid",
         clientId: "my-client-id",
-        clientSecret: "my-secret"
+        clientSecret: "my-secret",
+        isExisting: false
       });
       expect(res.redirect).toHaveBeenCalledWith("/third-party-users/user-1/oauth-config/summary");
     });
