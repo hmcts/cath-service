@@ -52,10 +52,27 @@ describe("list-type-queries", () => {
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
         where: { deletedAt: null },
         orderBy: { name: "asc" },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          friendlyName: true,
+          welshFriendlyName: true,
+          shortenedFriendlyName: true,
+          url: true,
+          defaultSensitivity: true,
+          allowedProvenance: true,
+          isNonStrategic: true,
+          deletedAt: true,
           subJurisdictions: {
-            include: {
-              subJurisdiction: true
+            select: {
+              subJurisdiction: {
+                select: {
+                  subJurisdictionId: true,
+                  name: true,
+                  welshName: true,
+                  jurisdictionId: true
+                }
+              }
             }
           }
         }
@@ -77,10 +94,27 @@ describe("list-type-queries", () => {
 
       expect(prisma.listType.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          friendlyName: true,
+          welshFriendlyName: true,
+          shortenedFriendlyName: true,
+          url: true,
+          defaultSensitivity: true,
+          allowedProvenance: true,
+          isNonStrategic: true,
+          deletedAt: true,
           subJurisdictions: {
-            include: {
-              subJurisdiction: true
+            select: {
+              subJurisdiction: {
+                select: {
+                  subJurisdictionId: true,
+                  name: true,
+                  welshName: true,
+                  jurisdictionId: true
+                }
+              }
             }
           }
         }
@@ -105,7 +139,11 @@ describe("list-type-queries", () => {
       const result = await findListTypeByName("TEST_LIST");
 
       expect(prisma.listType.findUnique).toHaveBeenCalledWith({
-        where: { name: "TEST_LIST" }
+        where: { name: "TEST_LIST" },
+        select: {
+          id: true,
+          name: true
+        }
       });
       expect(result).toEqual(mockListType);
     });
@@ -130,7 +168,12 @@ describe("list-type-queries", () => {
       const result = await findAllSubJurisdictions();
 
       expect(prisma.subJurisdiction.findMany).toHaveBeenCalledWith({
-        orderBy: { name: "asc" }
+        orderBy: { name: "asc" },
+        select: {
+          subJurisdictionId: true,
+          name: true,
+          welshName: true
+        }
       });
       expect(result).toEqual(mockSubJurisdictions);
     });
@@ -221,7 +264,14 @@ describe("list-type-queries", () => {
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
         where: { isNonStrategic: true, deletedAt: null },
-        orderBy: { shortenedFriendlyName: "asc" }
+        orderBy: { shortenedFriendlyName: "asc" },
+        select: {
+          id: true,
+          name: true,
+          friendlyName: true,
+          shortenedFriendlyName: true,
+          defaultSensitivity: true
+        }
       });
       expect(result).toEqual(mockNonStrategicLists);
     });
@@ -239,7 +289,14 @@ describe("list-type-queries", () => {
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
         where: { isNonStrategic: false, deletedAt: null },
-        orderBy: { shortenedFriendlyName: "asc" }
+        orderBy: { shortenedFriendlyName: "asc" },
+        select: {
+          id: true,
+          name: true,
+          friendlyName: true,
+          shortenedFriendlyName: true,
+          defaultSensitivity: true
+        }
       });
       expect(result).toEqual(mockStrategicLists);
     });

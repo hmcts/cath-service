@@ -4,10 +4,27 @@ export async function findAllListTypes() {
   return prisma.listType.findMany({
     where: { deletedAt: null },
     orderBy: { name: "asc" },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      friendlyName: true,
+      welshFriendlyName: true,
+      shortenedFriendlyName: true,
+      url: true,
+      defaultSensitivity: true,
+      allowedProvenance: true,
+      isNonStrategic: true,
+      deletedAt: true,
       subJurisdictions: {
-        include: {
-          subJurisdiction: true
+        select: {
+          subJurisdiction: {
+            select: {
+              subJurisdictionId: true,
+              name: true,
+              welshName: true,
+              jurisdictionId: true
+            }
+          }
         }
       }
     }
@@ -17,10 +34,27 @@ export async function findAllListTypes() {
 export async function findListTypeById(id: number) {
   return prisma.listType.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      friendlyName: true,
+      welshFriendlyName: true,
+      shortenedFriendlyName: true,
+      url: true,
+      defaultSensitivity: true,
+      allowedProvenance: true,
+      isNonStrategic: true,
+      deletedAt: true,
       subJurisdictions: {
-        include: {
-          subJurisdiction: true
+        select: {
+          subJurisdiction: {
+            select: {
+              subJurisdictionId: true,
+              name: true,
+              welshName: true,
+              jurisdictionId: true
+            }
+          }
         }
       }
     }
@@ -29,13 +63,36 @@ export async function findListTypeById(id: number) {
 
 export async function findListTypeByName(name: string) {
   return prisma.listType.findUnique({
-    where: { name }
+    where: { name },
+    select: {
+      id: true,
+      name: true
+    }
   });
 }
 
 export async function findAllSubJurisdictions() {
   return prisma.subJurisdiction.findMany({
-    orderBy: { name: "asc" }
+    orderBy: { name: "asc" },
+    select: {
+      subJurisdictionId: true,
+      name: true,
+      welshName: true
+    }
+  });
+}
+
+export async function findSubJurisdictionsByIds(ids: number[]) {
+  return prisma.subJurisdiction.findMany({
+    where: {
+      subJurisdictionId: { in: ids }
+    },
+    orderBy: { name: "asc" },
+    select: {
+      subJurisdictionId: true,
+      name: true,
+      welshName: true
+    }
   });
 }
 
@@ -113,14 +170,28 @@ interface UpdateListTypeData {
 export async function findNonStrategicListTypes() {
   return prisma.listType.findMany({
     where: { isNonStrategic: true, deletedAt: null },
-    orderBy: { shortenedFriendlyName: "asc" }
+    orderBy: { shortenedFriendlyName: "asc" },
+    select: {
+      id: true,
+      name: true,
+      friendlyName: true,
+      shortenedFriendlyName: true,
+      defaultSensitivity: true
+    }
   });
 }
 
 export async function findStrategicListTypes() {
   return prisma.listType.findMany({
     where: { isNonStrategic: false, deletedAt: null },
-    orderBy: { shortenedFriendlyName: "asc" }
+    orderBy: { shortenedFriendlyName: "asc" },
+    select: {
+      id: true,
+      name: true,
+      friendlyName: true,
+      shortenedFriendlyName: true,
+      defaultSensitivity: true
+    }
   });
 }
 

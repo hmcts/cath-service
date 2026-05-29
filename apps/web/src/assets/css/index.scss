@@ -9,6 +9,8 @@
 @use "@hmcts/system-admin-pages/src/assets/css/dashboard.scss";
 @use "@hmcts/verified-pages/src/assets/css/verified-pages.scss" as verified;
 @use "@hmcts/auth/src/assets/css/session-timeout.scss";
+@use "@hmcts/sjp-press-list/src/assets/css/sjp-filters.scss";
+@use "@hmcts/sjp-public-list/src/assets/css/sjp-public-list.scss";
 
 .govuk-service-navigation__navigation-end {
   margin-left: auto !important;

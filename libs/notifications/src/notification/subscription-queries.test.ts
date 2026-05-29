@@ -55,7 +55,11 @@ describe("subscription-queries", () => {
           searchValue: "1",
           user: { subscriptionListTypes: { none: {} } }
         },
-        include: {
+        select: {
+          subscriptionId: true,
+          userId: true,
+          searchType: true,
+          searchValue: true,
           user: {
             select: {
               email: true,
@@ -92,7 +96,9 @@ describe("subscription-queries", () => {
           searchType: "CASE_NUMBER",
           searchValue: "AB-123"
         },
-        include: {
+        select: {
+          subscriptionId: true,
+          userId: true,
           user: {
             select: {
               email: true,
@@ -138,7 +144,9 @@ describe("subscription-queries", () => {
           searchType: "CASE_NAME",
           searchValue: { equals: "Smith v Jones", mode: "insensitive" }
         },
-        include: {
+        select: {
+          subscriptionId: true,
+          userId: true,
           user: {
             select: {
               email: true,
