@@ -443,6 +443,7 @@ describe("getArtefactsByLocation", () => {
       orderBy: { contentDate: "desc" },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -506,6 +507,7 @@ describe("getArtefactsByIds", () => {
       },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -650,6 +652,7 @@ describe("getArtefactById", () => {
       where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -688,6 +691,7 @@ describe("getArtefactById", () => {
       where: { artefactId: "non-existent-id" },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
