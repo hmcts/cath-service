@@ -3,7 +3,7 @@ import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNo
 
 vi.mock("node:fs/promises", () => ({
   default: {
-    stat: vi.fn(),
+    stat: vi.fn().mockRejectedValue(new Error("ENOENT: no such file or directory")),
     readFile: vi.fn()
   }
 }));
@@ -12,6 +12,33 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   extractCaseSummary: vi.fn().mockReturnValue([{ caseReference: "123", parties: "Smith v Jones" }]),
   formatCaseSummaryForEmail: vi.fn().mockReturnValue("Case 123 - Smith v Jones")
 }));
+
+vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
+}));
+
+vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
+}));
+
+vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
+}));
+
+vi.mock("@hmcts/london-administrative-court-daily-cause-list", () => ({
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
+}));
+
+vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
+}));
+
+vi.mock("@hmcts/list-types-common", () => ({}));
 
 vi.mock("../govnotify/govnotify-client.js", () => ({
   sendEmail: vi.fn().mockResolvedValue({
@@ -26,7 +53,11 @@ vi.mock("../govnotify/template-config.js", () => ({
     ListType: "Daily Cause List",
     content_date: "1 January 2025",
     start_page_link: "https://example.com",
-    subscription_page_link: "https://example.com"
+    subscription_page_link: "https://example.com",
+    display_case_num: "no",
+    case_num: "",
+    display_case_urn: "no",
+    case_urn: ""
   }),
   buildEnhancedTemplateParameters: vi.fn().mockReturnValue({
     locations: "Test Court",
@@ -35,9 +66,14 @@ vi.mock("../govnotify/template-config.js", () => ({
     start_page_link: "https://example.com",
     subscription_page_link: "https://example.com",
     display_summary: "yes",
-    summary_of_cases: "Case 123 - Smith v Jones"
+    summary_of_cases: "Case 123 - Smith v Jones",
+    display_case_num: "no",
+    case_num: "",
+    display_case_urn: "no",
+    case_urn: ""
   }),
-  getSubscriptionTemplateIdForListType: vi.fn().mockReturnValue("template-id-123")
+  getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
+  isSjpListType: vi.fn().mockReturnValue(false)
 }));
 
 vi.mock("./subscription-queries.js", () => ({
