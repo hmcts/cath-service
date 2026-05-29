@@ -4,6 +4,18 @@ import {
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
 import {
+  extractCaseSummary as extractUtaacSummary,
+  formatCaseSummaryForEmail as formatUtaacSummaryForEmail
+} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtlcSummary,
+  formatCaseSummaryForEmail as formatUtlcSummaryForEmail
+} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtccSummary,
+  formatCaseSummaryForEmail as formatUtccSummaryForEmail
+} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
+import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
@@ -83,7 +95,19 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtccSummary as SummaryExtractor,
+    format: formatUtccSummaryForEmail
+  },
+  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtlcSummary as SummaryExtractor,
+    format: formatUtlcSummaryForEmail
+  },
+  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtaacSummary as SummaryExtractor,
+    format: formatUtaacSummaryForEmail
+  }
 };
 
 export interface NotificationResult {

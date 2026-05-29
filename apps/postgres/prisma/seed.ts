@@ -63,6 +63,22 @@ async function main() {
     }
   }
 
+  // Seed ListSearchConfig for UTCC (ID 28), UTLC (ID 29), UTAAC (ID 30)
+  const listSearchConfigs = [
+    { listTypeId: 28, caseNumberFieldName: "caseReference", caseNameFieldName: "caseName" },
+    { listTypeId: 29, caseNumberFieldName: "caseReference", caseNameFieldName: "caseName" },
+    { listTypeId: 30, caseNumberFieldName: "caseReferenceNumber", caseNameFieldName: "caseName" }
+  ];
+
+  for (const config of listSearchConfigs) {
+    await prisma.listSearchConfig.upsert({
+      where: { listTypeId: config.listTypeId },
+      create: config,
+      update: {}
+    });
+    console.log(`Upserted ListSearchConfig for listTypeId ${config.listTypeId}`);
+  }
+
   console.log("Seed completed successfully!");
 }
 
