@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
+  "description": "Schema for Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["time", "caseReference", "caseName", "judges", "members", "hearingType", "venue"],
+    "properties": {
+      "time": {
+        "title": "Time",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["10:00am"]
+      },
+      "caseReference": {
+        "title": "Case Reference",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["UTTC/2025/0001"]
+      },
+      "caseName": {
+        "title": "Case Name",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Smith v HMRC"]
+      },
+      "judges": {
+        "title": "Judge(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Judge Smith"]
+      },
+      "members": {
+        "title": "Member(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Member Jones"]
+      },
+      "hearingType": {
+        "title": "Hearing Type",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Substantive hearing"]
+      },
+      "venue": {
+        "title": "Venue",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Field House"]
+      },
+      "additionalInformation": {
+        "title": "Additional Information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Remote hearing"]
+      }
+    }
+  }
+}

@@ -73,6 +73,21 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list/config", () => ({
   pageRoutes: { path: "/mock/care-standards-tribunal/pages" }
 }));
 
+vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utcc",
+  pageRoutes: { path: "/mock/utcc/pages" }
+}));
+
+vi.mock("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utlc",
+  pageRoutes: { path: "/mock/utlc/pages" }
+}));
+
+vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utaac",
+  pageRoutes: { path: "/mock/utaac/pages" }
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   moduleRoot: "/mock/civil-family",
   pageRoutes: { path: "/mock/civil-family/pages" }

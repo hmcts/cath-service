@@ -90,6 +90,27 @@ export const locationData: {
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
       subJurisdictions: [7]
+    },
+    {
+      locationId: 13,
+      name: "Upper Tribunal Tax and Chancery Chamber",
+      welshName: "[TRANSLATE: Upper Tribunal Tax and Chancery Chamber]",
+      regions: [7],
+      subJurisdictions: [10]
+    },
+    {
+      locationId: 14,
+      name: "Upper Tribunal Lands Chamber",
+      welshName: "[TRANSLATE: Upper Tribunal Lands Chamber]",
+      regions: [7],
+      subJurisdictions: [11]
+    },
+    {
+      locationId: 15,
+      name: "Upper Tribunal Administrative Appeals Chamber",
+      welshName: "[TRANSLATE: Upper Tribunal Administrative Appeals Chamber]",
+      regions: [1],
+      subJurisdictions: [12]
     }
   ],
   regions: [
@@ -122,6 +143,11 @@ export const locationData: {
       regionId: 6,
       name: "Yorkshire",
       welshName: "Swydd Efrog"
+    },
+    {
+      regionId: 7,
+      name: "National",
+      welshName: "[TRANSLATE: National]"
     }
   ],
   jurisdictions: [
@@ -199,6 +225,24 @@ export const locationData: {
       subJurisdictionId: 9,
       name: "Care Standards Tribunal",
       welshName: "Tribiwnlys Safonau Gofal",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 10,
+      name: "Upper Tribunal Tax and Chancery Chamber",
+      welshName: "[TRANSLATE: Upper Tribunal Tax and Chancery Chamber]",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 11,
+      name: "Upper Tribunal Lands Chamber",
+      welshName: "[TRANSLATE: Upper Tribunal Lands Chamber]",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 12,
+      name: "Upper Tribunal Administrative Appeals Chamber",
+      welshName: "[TRANSLATE: Upper Tribunal Administrative Appeals Chamber]",
       jurisdictionId: 4
     }
   ]
