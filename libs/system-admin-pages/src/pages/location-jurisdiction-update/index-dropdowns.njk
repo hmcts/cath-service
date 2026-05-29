@@ -1,0 +1,57 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ locationName }}</h1>
+    <h2 class="govuk-heading-m">{{ title }}</h2>
+
+    <form method="post" novalidate>
+      {% for item in allData %}
+        {% if item.type == "Sub-Jurisdiction" %}
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="sub-{{ item.id }}">{{ item.name }}</label>
+            <select class="govuk-select" id="sub-{{ item.id }}" name="subJurisdictionIds">
+              <option value="">—</option>
+              <option value="{{ item.id }}" {% if item.id in currentSubJurisdictionIds %}selected{% endif %}>{{ item.name }}</option>
+            </select>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      {% for item in allData %}
+        {% if item.type == "Region" %}
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="region-{{ item.id }}">{{ item.name }}</label>
+            <select class="govuk-select" id="region-{{ item.id }}" name="regionIds">
+              <option value="">—</option>
+              <option value="{{ item.id }}" {% if item.id in currentRegionIds %}selected{% endif %}>{{ item.name }}</option>
+            </select>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: confirmButton
+        }) }}
+        <a href="{{ cancelHref }}" role="button" draggable="false" class="govuk-button govuk-button--warning" data-module="govuk-button">
+          {{ cancelButton }}
+        </a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

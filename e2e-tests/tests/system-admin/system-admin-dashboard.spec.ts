@@ -17,21 +17,20 @@ test.describe
       await expect(heading).toBeVisible();
       await expect(heading).toHaveText("System Admin Dashboard");
 
-      // Verify all 10 admin tiles are displayed
+      // Verify all 9 admin tiles are displayed
       const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(10);
+      await expect(tiles).toHaveCount(9);
 
       // Verify correct tile titles and hrefs
       const tileData = [
-        { title: "Upload Reference Data", href: "/upload-reference-data" },
+        { title: "Reference Data", href: "/reference-data" },
         { title: "Delete Court", href: "/delete-court" },
         { title: "Manage Third Party Users", href: "/manage-third-party-users" },
         { title: "User Management", href: "/user-management" },
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-list" },
-        { title: "Manage Location Metadata", href: "/location-metadata-search" },
-        { title: "Manage List Types", href: "/view-list-types" },
+        { title: "Manage List Types", href: "/manage-list-types" },
         { title: "Configure List Type", href: "/configure-list-type-enter-details" }
       ];
 
@@ -43,28 +42,28 @@ test.describe
 
       // Verify tile descriptions are displayed
       const descriptions = page.locator(".admin-tile__description");
-      await expect(descriptions).toHaveCount(10);
+      await expect(descriptions).toHaveCount(9);
 
       // Verify 2-column grid layout
       const gridColumns = page.locator(".govuk-grid-column-one-half");
-      await expect(gridColumns).toHaveCount(10);
+      await expect(gridColumns).toHaveCount(9);
 
       // Accessibility check
       const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Navigate to Upload Reference Data page
-      await page.click('a:has-text("Upload Reference Data")');
-      await page.waitForURL("**/reference-data-upload");
-      const uploadHeading = page.locator("h1");
-      await expect(uploadHeading).toBeVisible();
-      await expect(uploadHeading).toHaveText("Manually upload a csv file");
+      // Navigate to Reference Data landing page
+      await page.click('a:has-text("Reference Data")');
+      await page.waitForURL("**/reference-data");
+      const referenceDataHeading = page.locator("h1");
+      await expect(referenceDataHeading).toBeVisible();
+      await expect(referenceDataHeading).toHaveText("What do you want to do?");
     });
 
     test("dashboard is keyboard accessible @nightly", async ({ page }) => {
       // Verify tiles are focusable
       const tileLinks = page.locator("a.admin-tile");
-      await expect(tileLinks).toHaveCount(10);
+      await expect(tileLinks).toHaveCount(9);
 
       // Verify first tile is visible and focusable
       const firstTile = tileLinks.first();
