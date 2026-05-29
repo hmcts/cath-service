@@ -306,6 +306,7 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   return artefacts.map(
     (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
+      type: artefact.type,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,
