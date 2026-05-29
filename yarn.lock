@@ -1215,6 +1215,60 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.1.7"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/upper-tribunal-lands-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.1.7"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.1.7"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/verified-pages@workspace:*, @hmcts/verified-pages@workspace:libs/verified-pages":
   version: 0.0.0-use.local
   resolution: "@hmcts/verified-pages@workspace:libs/verified-pages"

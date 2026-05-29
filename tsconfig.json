@@ -47,7 +47,16 @@
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
       "@hmcts/third-party-user": ["libs/third-party-user/src"],
-      "@hmcts/third-party-user/config": ["libs/third-party-user/src/config"]
+      "@hmcts/third-party-user/config": ["libs/third-party-user/src/config"],
+      "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": [
+        "libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/src"
+      ],
+      "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": [
+        "libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list/src"
+      ],
+      "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": [
+        "libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/src"
+      ]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
