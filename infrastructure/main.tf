@@ -1,6 +1,13 @@
 locals {
   bootstrap_prefix = "${var.product}-bootstrap-${var.env}"
 
+  # Pre-existing cath-{env} resource groups created by earlier pipeline runs.
+  # These were not in state after the one-shot cleanup, so we import them here.
+  existing_rg_ids = {
+    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-demo"
+    stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-stg"
+  }
+
   # Pre-existing bootstrap resource groups and KVs created outside of Terraform state.
   # Used to import them into state on first run. Remove once all envs have been applied successfully.
   existing_bootstrap_rg_ids = {
@@ -47,6 +54,12 @@ locals {
     stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/managed-identities-stg-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-stg-mi"
   }
 
+}
+
+import {
+  for_each = contains(keys(local.existing_rg_ids), var.env) ? toset([local.existing_rg_ids[var.env]]) : toset([])
+  to       = azurerm_resource_group.rg
+  id       = each.value
 }
 
 import {
