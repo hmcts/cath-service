@@ -47,10 +47,8 @@ jobs:
             -backend-config="key=cath-service/stg/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove all stale module.key_vault and module.application_key_vault resources.
-          # module.key_vault is removed from config (renamed to module.application_key_vault).
-          # module.application_key_vault now manages cath-ss-kv-{env} as a fresh vault.
-          # Remove stale secrets that were removed from config.
+          # Remove all stale entries so Terraform can re-import cleanly.
+          # Secrets pointed to old cath-kv-stg; KV/MI/RG need re-import via main.tf import blocks.
           for resource in \
             azurerm_key_vault_secret.postgres_host \
             azurerm_key_vault_secret.postgres_user \
@@ -75,7 +73,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
-            "azurerm_resource_group.app_kv_rg"; do
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from STG state" \
               || echo "WARNING: $resource not found in STG state (may already be removed)"
@@ -125,6 +124,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
@@ -138,7 +147,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
-            "azurerm_resource_group.app_kv_rg"; do
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Demo state" \
               || echo "WARNING: $resource not found in Demo state (may already be removed)"
@@ -188,6 +198,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
@@ -201,7 +221,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
-            "azurerm_resource_group.app_kv_rg"; do
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Test state" \
               || echo "WARNING: $resource not found in Test state (may already be removed)"
@@ -251,6 +272,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
@@ -264,7 +295,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
-            "azurerm_resource_group.app_kv_rg"; do
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from ITHC state" \
               || echo "WARNING: $resource not found in ITHC state (may already be removed)"
