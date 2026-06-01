@@ -77,10 +77,11 @@ locals {
   }
 
   # Pre-existing managed identities for cath-ss-kv-{env} created by earlier pipeline runs.
-  # Only envs where the KV/MI already exists in Azure. test/ithc will be created fresh by Terraform.
   existing_ss_kv_mi_ids = {
     demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/managed-identities-demo-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-demo-mi"
     stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/managed-identities-stg-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-stg-mi"
+    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/managed-identities-test-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-test-mi"
+    ithc = "/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/managed-identities-ithc-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-ithc-mi"
   }
 
 }
