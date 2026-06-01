@@ -32,6 +32,14 @@ locals {
     ithc = "/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/managed-identities-ithc-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-ithc-mi"
   }
 
+  # Application KV was previously created in cath-{env} RG. These import blocks remap it to
+  # the new dedicated app_kv_rg (cath-kv-{env}) in state, avoiding destroy+recreate.
+  # Remove once all envs have been successfully applied.
+  existing_app_kv_ids = {
+    stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-stg/providers/Microsoft.KeyVault/vaults/cath-kv-stg"
+    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-demo/providers/Microsoft.KeyVault/vaults/cath-kv-demo"
+  }
+
 }
 
 import {
@@ -55,6 +63,12 @@ import {
 import {
   for_each = contains(keys(local.existing_app_kv_mi_ids), var.env) ? toset([local.existing_app_kv_mi_ids[var.env]]) : toset([])
   to       = module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]
+  id       = each.value
+}
+
+import {
+  for_each = contains(keys(local.existing_app_kv_ids), var.env) ? toset([local.existing_app_kv_ids[var.env]]) : toset([])
+  to       = module.application_key_vault.azurerm_key_vault.kv
   id       = each.value
 }
 
