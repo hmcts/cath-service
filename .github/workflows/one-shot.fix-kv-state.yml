@@ -49,8 +49,9 @@ jobs:
 
           # Remove stale resources from state:
           # - secrets: CI SP lacks get/delete on cath-kv-stg (access policies not yet applied)
-          # - diagnostic setting: cath-stg RG has a delete lock, so Terraform can't remove it;
-          #   removing from state lets Terraform recreate it in the new cath-kv-stg RG instead
+          # - application_key_vault KV: was imported into state pointing to old cath-stg RG;
+          #   removing lets Terraform create fresh in new cath-kv-stg RG (avoids destroy which
+          #   fails due to delete lock on cath-stg RG)
           for resource in \
             azurerm_key_vault_secret.postgres_host \
             azurerm_key_vault_secret.postgres_user \
@@ -62,6 +63,7 @@ jobs:
             azurerm_key_vault_secret.redis_access_key \
             azurerm_key_vault_secret.redis_url \
             azurerm_key_vault_secret.app_insights_connection_string \
+            "module.application_key_vault.azurerm_key_vault.kv" \
             "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
             "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
