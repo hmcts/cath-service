@@ -1,0 +1,135 @@
+name: One-Shot - Fix KV State
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/one-shot.fix-kv-state.yml'
+
+jobs:
+  fix-kv-state-stg:
+    name: Fix KV State - STG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (STG)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix STG KV State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatestg \
+            --resource-group jenkins-state-stg \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-stg" \
+            -backend-config="storage_account_name=sdsstatestg" \
+            -backend-config="container_name=tfstate-stg" \
+            -backend-config="key=cath-service/stg/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove stale secrets from state - the CI SP lacks secrets get/delete on cath-kv-stg
+          # because its access policies haven't been applied yet (chicken-and-egg).
+          # Removing from state allows the next run to: apply access policies first, then recreate secrets.
+          for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from STG state" \
+              || echo "WARNING: $resource not found in STG state (may already be removed)"
+          done
+
+  fix-kv-state-demo:
+    name: Fix KV State - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Demo)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Purge soft-deleted cath-demo Key Vault
+        run: |
+          # cath-demo KV is soft-deleted - purge it so Terraform can recreate it
+          az keyvault purge --name cath-demo --location uksouth \
+            && echo "Purged soft-deleted cath-demo KV" \
+            || echo "WARNING: cath-demo KV not in soft-deleted state (may already be purged or active)"
+
+      - name: Fix Demo KV State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-demo" \
+            -backend-config="storage_account_name=sdsstatedemo" \
+            -backend-config="container_name=tfstate-demo" \
+            -backend-config="key=cath-service/demo/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove module.key_vault resources from state - the cath-demo KV was soft-deleted,
+          # after purging above, Terraform will recreate it fresh.
+          for resource in \
+            "module.key_vault.azurerm_key_vault.kv" \
+            "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]"; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from Demo state" \
+              || echo "WARNING: $resource not found in Demo state (may already be removed)"
+          done
