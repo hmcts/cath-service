@@ -1,13 +1,7 @@
-# Last updated: 2026-06-01 - retrigger with fixed keyvault.tf (no recover_soft_deleted_key_vault arg)
 name: One-Shot - Fix KV State
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/one-shot.fix-kv-state.yml'
 
 jobs:
   fix-kv-state-stg:
