@@ -129,9 +129,9 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           # Remove stale resources from demo state:
-          # - module.key_vault KV/policies: cath-demo is soft-deleted, remove so Terraform recreates fresh
-          # - module.application_key_vault diagnostic setting: was in old cath-demo RG, remove so it
-          #   gets recreated in new cath-kv-demo RG (CI SP lacks diagnosticSettings/delete permission)
+          # - module.key_vault KV/policies: cath-demo vault gone, remove so Terraform creates fresh
+          # - module.application_key_vault KV/policies/diagnostic: was in old cath-demo RG, remove so
+          #   Terraform creates fresh in new cath-kv-demo RG (CI SP lacks delete perms in cath-demo RG)
           for resource in \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
@@ -139,6 +139,7 @@ jobs:
             "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
             "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
             "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
             "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
