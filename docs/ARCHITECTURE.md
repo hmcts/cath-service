@@ -54,7 +54,7 @@ cath-service/
 │   ├── web/                    # Web frontend application
 │   │   └── src/
 │   │       └── modules.ts      # Module auto-discovery system
-│   └── postgres/               # Database schema and migrations
+│   └── postgres/               # Database migrations
 ├── libs/                       # Reusable packages (auto-discovered)
 │   ├── cloud-native-platform/  # Azure integration & monitoring
 │   ├── express-govuk-starter/  # GOV.UK Design System integration
@@ -121,7 +121,7 @@ The web application features an intelligent module discovery system that automat
 
 ### 2. REST API (`apps/api`)
 
-**Purpose**: Backend API service for data operations
+**Purpose**: Backend API service for data operations.
 
 **Key Technologies**:
 - Express 5.x
@@ -144,22 +144,19 @@ The web application features an intelligent module discovery system that automat
 └── [resource]/     # Additional resources
 ```
 
-### 3. Database Layer (`apps/postgres`)
+### 3. Database Layer (`libs/postgres-prisma`)
 
 **Purpose**: Data persistence and schema management
 
-**Database Schema**:
-- **User**: Authentication and user management
-- **Case**: Case management system
-- **Document**: File attachments
-- **CaseNote**: Audit trail
-- **UserSession**: Session persistence
+**Database Schema** (centralized in `libs/postgres-prisma/prisma/schema/`):
+- One `.prisma` file per domain (e.g., `location.prisma`, `subscription.prisma`, `audit-log.prisma`)
+- All schemas automatically merged by Prisma
 
 **Key Features**:
 - Prisma ORM with type-safe queries
 - Snake_case database naming convention
 - CamelCase TypeScript interface mapping
-- Automatic migrations
+- Automatic migrations (managed via `apps/postgres`)
 - Database connection pooling
 
 ### 4. Session Store (Redis)
