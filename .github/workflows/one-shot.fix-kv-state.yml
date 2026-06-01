@@ -31,6 +31,17 @@ jobs:
           subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
           "
 
+      - name: Move cath-kv-stg KV to dedicated RG
+        run: |
+          # Move cath-kv-stg from shared cath-stg RG to its own cath-kv-stg RG
+          # so Terraform can manage it there without triggering a destroy+recreate
+          az resource move \
+            --ids "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-stg/providers/Microsoft.KeyVault/vaults/cath-kv-stg" \
+            --destination-group "cath-kv-stg" \
+            --destination-subscription-id "74dacd4f-a248-45bb-a2f0-af700dc4cf68" \
+            && echo "Moved cath-kv-stg to cath-kv-stg RG" \
+            || echo "WARNING: Move failed or already in target RG"
+
       - name: Fix STG KV State
         working-directory: infrastructure
         run: |
@@ -47,11 +58,8 @@ jobs:
             -backend-config="key=cath-service/stg/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove stale resources from state:
-          # - secrets: CI SP lacks get/delete on cath-kv-stg (access policies not yet applied)
-          # - application_key_vault KV: was imported into state pointing to old cath-stg RG;
-          #   removing lets Terraform create fresh in new cath-kv-stg RG (avoids destroy which
-          #   fails due to delete lock on cath-stg RG)
+          # Remove stale resources from state so Terraform can re-import them
+          # at the correct new RG location via import blocks in main.tf
           for resource in \
             azurerm_key_vault_secret.postgres_host \
             azurerm_key_vault_secret.postgres_user \
@@ -101,12 +109,23 @@ jobs:
           subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
           "
 
-      - name: Purge soft-deleted cath-demo Key Vault
+      - name: Recover soft-deleted cath-demo Key Vault
         run: |
-          # cath-demo KV is soft-deleted - purge it so Terraform can recreate it
-          az keyvault purge --name cath-demo --location uksouth \
-            && echo "Purged soft-deleted cath-demo KV" \
-            || echo "WARNING: cath-demo KV not in soft-deleted state (may already be purged or active)"
+          # cath-demo KV is soft-deleted - recover it so Terraform can re-import and manage it
+          az keyvault recover --name cath-demo --location uksouth \
+            && echo "Recovered soft-deleted cath-demo KV" \
+            || echo "WARNING: cath-demo KV not in soft-deleted state (may already be active or purged)"
+
+      - name: Move cath-kv-demo KV to dedicated RG
+        run: |
+          # Move cath-kv-demo from shared cath-demo RG to its own cath-kv-demo RG
+          # so Terraform can manage it there without triggering a destroy+recreate
+          az resource move \
+            --ids "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-demo/providers/Microsoft.KeyVault/vaults/cath-kv-demo" \
+            --destination-group "cath-kv-demo" \
+            --destination-subscription-id "c68a4bed-4c3d-4956-af51-4ae164c1957c" \
+            && echo "Moved cath-kv-demo to cath-kv-demo RG" \
+            || echo "WARNING: Move failed or already in target RG"
 
       - name: Fix Demo KV State
         working-directory: infrastructure
@@ -124,10 +143,8 @@ jobs:
             -backend-config="key=cath-service/demo/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove stale resources from demo state:
-          # - module.key_vault KV/policies: cath-demo vault gone, remove so Terraform creates fresh
-          # - module.application_key_vault KV/policies/diagnostic: was in old cath-demo RG, remove so
-          #   Terraform creates fresh in new cath-kv-demo RG (CI SP lacks delete perms in cath-demo RG)
+          # Remove stale resources from state so Terraform can re-import them
+          # at the correct new RG location via import blocks in main.tf
           for resource in \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
