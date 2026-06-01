@@ -46,6 +46,13 @@ locals {
     demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/managed-identities-demo-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-demo-mi"
   }
 
+  # cath-demo KV is soft-deleted; import it so the provider recovers it instead of
+  # attempting a fresh create (which fails with SoftDeletedVaultDoesNotExist).
+  # Remove once demo has been successfully applied.
+  existing_key_vault_ids = {
+    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-demo/providers/Microsoft.KeyVault/vaults/cath-demo"
+  }
+
 }
 
 import {
@@ -81,6 +88,12 @@ import {
 import {
   for_each = contains(keys(local.existing_key_vault_mi_ids), var.env) ? toset([local.existing_key_vault_mi_ids[var.env]]) : toset([])
   to       = module.key_vault.azurerm_user_assigned_identity.managed_identity[0]
+  id       = each.value
+}
+
+import {
+  for_each = contains(keys(local.existing_key_vault_ids), var.env) ? toset([local.existing_key_vault_ids[var.env]]) : toset([])
+  to       = module.key_vault.azurerm_key_vault.kv
   id       = each.value
 }
 
