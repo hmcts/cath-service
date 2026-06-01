@@ -47,11 +47,10 @@ jobs:
             -backend-config="key=cath-service/stg/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove stale module.key_vault resources from state.
-          # module.key_vault is now cath-ss-kv-stg in cath-ss-kv-stg-rg (new name/RG),
-          # so old state entries pointing to cath-stg must be removed so Terraform
-          # creates fresh resources. Secrets are also removed as access policies
-          # are not yet applied on the new KV.
+          # Remove all stale module.key_vault and module.application_key_vault resources.
+          # module.key_vault is removed from config (renamed to module.application_key_vault).
+          # module.application_key_vault now manages cath-ss-kv-{env} as a fresh vault.
+          # Remove stale secrets that were removed from config.
           for resource in \
             azurerm_key_vault_secret.postgres_host \
             azurerm_key_vault_secret.postgres_user \
@@ -74,7 +73,9 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
             "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
-            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]"; do
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from STG state" \
               || echo "WARNING: $resource not found in STG state (may already be removed)"
@@ -123,10 +124,6 @@ jobs:
             -backend-config="key=cath-service/demo/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove all stale module.key_vault and module.application_key_vault resources.
-          # module.key_vault is now cath-ss-kv-demo in cath-ss-kv-demo-rg (new name/RG).
-          # module.application_key_vault KV was moved to cath-kv-demo RG and will be
-          # re-imported via import block in main.tf.
           for resource in \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
@@ -139,7 +136,9 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
             "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
-            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]"; do
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Demo state" \
               || echo "WARNING: $resource not found in Demo state (may already be removed)"
@@ -159,9 +158,18 @@ jobs:
           terraform version
 
       - name: Azure Login (Test)
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
 
       - name: Fix Test KV State
         working-directory: infrastructure
@@ -179,15 +187,21 @@ jobs:
             -backend-config="key=cath-service/test/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove stale module.key_vault resources. module.key_vault is now
-          # cath-ss-kv-test in cath-ss-kv-test-rg (new name/RG).
           for resource in \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
-            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]"; do
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Test state" \
               || echo "WARNING: $resource not found in Test state (may already be removed)"
@@ -236,15 +250,21 @@ jobs:
             -backend-config="key=cath-service/ithc/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove stale module.key_vault resources. module.key_vault is now
-          # cath-ss-kv-ithc in cath-ss-kv-ithc-rg (new name/RG).
           for resource in \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
-            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]"; do
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from ITHC state" \
               || echo "WARNING: $resource not found in ITHC state (may already be removed)"

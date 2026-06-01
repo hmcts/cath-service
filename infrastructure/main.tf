@@ -24,40 +24,6 @@ locals {
     stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-cache-stg/providers/Microsoft.Cache/redis/cath-cath-stg"
   }
 
-  # Pre-existing managed identities created by a prior Terraform run outside the current state.
-  # Used to import them into state on first run. Remove once all envs have been applied successfully.
-  existing_app_kv_mi_ids = {
-    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/managed-identities-demo-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-demo-mi"
-    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/managed-identities-test-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-test-mi"
-    ithc = "/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/managed-identities-ithc-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-ithc-mi"
-  }
-
-  # KVs moved from shared RGs to dedicated cath-kv-{env} RGs.
-  # Import them in the new RG location so Terraform sees no change needed.
-  # Remove once all envs have been applied successfully.
-  existing_app_kv_ids = {
-    stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-kv-stg/providers/Microsoft.KeyVault/vaults/cath-kv-stg"
-    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-kv-demo/providers/Microsoft.KeyVault/vaults/cath-kv-demo"
-  }
-
-  # Secrets removed from STG state during module.key_vault rename one-shot.
-  # Re-import them so Terraform does not attempt to recreate them.
-  # Remove once STG has been applied successfully.
-  existing_stg_secrets = {
-    stg = {
-      postgres_host                  = "https://cath-kv-stg.vault.azure.net/secrets/postgres-host/315396467ade4aee9850d8d47ecd6c85"
-      postgres_user                  = "https://cath-kv-stg.vault.azure.net/secrets/postgres-user/5c2a4b1517ce4c9ba8cce9fbbc2ae742"
-      postgres_password              = "https://cath-kv-stg.vault.azure.net/secrets/postgres-password/6ebc0ec655a345a6bdb0978c9652a3a6"
-      postgres_port                  = "https://cath-kv-stg.vault.azure.net/secrets/postgres-port/d5235b3478424e54a0b1cc8b960c6e08"
-      postgres_url                   = "https://cath-kv-stg.vault.azure.net/secrets/postgres-url/f305bbb0efc84c13a596d59a4053d674"
-      redis_host                     = "https://cath-kv-stg.vault.azure.net/secrets/redis-host/db7fae06085e4d289053c314c5b71b84"
-      redis_port                     = "https://cath-kv-stg.vault.azure.net/secrets/redis-port/c46df403f5584b87916c1323b800ae6c"
-      redis_access_key               = "https://cath-kv-stg.vault.azure.net/secrets/redis-access-key/24f1da50520c4660a8a917a9b580e26c"
-      redis_url                      = "https://cath-kv-stg.vault.azure.net/secrets/redis-url/c9a11a9938414f58bc6231f427473f8a"
-      app_insights_connection_string = "https://cath-kv-stg.vault.azure.net/secrets/app-insights-connection-string/b3430b377f6a4b479a01991590b63cba"
-    }
-  }
-
 }
 
 import {
@@ -78,86 +44,8 @@ import {
   id       = each.value
 }
 
-import {
-  for_each = contains(keys(local.existing_app_kv_mi_ids), var.env) ? toset([local.existing_app_kv_mi_ids[var.env]]) : toset([])
-  to       = module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_app_kv_ids), var.env) ? toset([local.existing_app_kv_ids[var.env]]) : toset([])
-  to       = module.application_key_vault.azurerm_key_vault.kv
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].postgres_host]) : toset([])
-  to       = azurerm_key_vault_secret.postgres_host
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].postgres_user]) : toset([])
-  to       = azurerm_key_vault_secret.postgres_user
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].postgres_password]) : toset([])
-  to       = azurerm_key_vault_secret.postgres_password
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].postgres_port]) : toset([])
-  to       = azurerm_key_vault_secret.postgres_port
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].postgres_url]) : toset([])
-  to       = azurerm_key_vault_secret.postgres_url
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].redis_host]) : toset([])
-  to       = azurerm_key_vault_secret.redis_host
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].redis_port]) : toset([])
-  to       = azurerm_key_vault_secret.redis_port
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].redis_access_key]) : toset([])
-  to       = azurerm_key_vault_secret.redis_access_key
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].redis_url]) : toset([])
-  to       = azurerm_key_vault_secret.redis_url
-  id       = each.value
-}
-
-import {
-  for_each = contains(keys(local.existing_stg_secrets), var.env) ? toset([local.existing_stg_secrets[var.env].app_insights_connection_string]) : toset([])
-  to       = azurerm_key_vault_secret.app_insights_connection_string
-  id       = each.value
-}
-
 resource "azurerm_resource_group" "rg" {
   name     = "${var.product}-${var.env}"
-  location = var.location
-  tags     = var.common_tags
-}
-
-resource "azurerm_resource_group" "app_kv_rg" {
-  name     = "${var.product}-kv-${var.env}"
   location = var.location
   tags     = var.common_tags
 }
