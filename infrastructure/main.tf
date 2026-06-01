@@ -76,6 +76,17 @@ locals {
     stg  = "/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-ss-kv-stg-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-stg"
   }
 
+  # Pre-existing postgres module data RGs created by earlier pipeline runs.
+  # The module manages its own RG internally (cath-{env}-data-{env}).
+  existing_postgres_rg_ids = {
+    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-test-data-test"
+  }
+
+  # Pre-existing postgres flexible servers created by earlier pipeline runs.
+  existing_postgres_server_ids = {
+    test = "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-test-data-test/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-test-test"
+  }
+
   # Pre-existing managed identities for cath-ss-kv-{env} created by earlier pipeline runs.
   existing_ss_kv_mi_ids = {
     demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/managed-identities-demo-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-demo-mi"
@@ -89,6 +100,18 @@ locals {
 import {
   for_each = contains(keys(local.existing_rg_ids), var.env) ? toset([local.existing_rg_ids[var.env]]) : toset([])
   to       = azurerm_resource_group.rg
+  id       = each.value
+}
+
+import {
+  for_each = contains(keys(local.existing_postgres_rg_ids), var.env) ? toset([local.existing_postgres_rg_ids[var.env]]) : toset([])
+  to       = module.postgresql.azurerm_resource_group.rg[0]
+  id       = each.value
+}
+
+import {
+  for_each = contains(keys(local.existing_postgres_server_ids), var.env) ? toset([local.existing_postgres_server_ids[var.env]]) : toset([])
+  to       = module.postgresql.azurerm_postgresql_flexible_server.pgsql_server
   id       = each.value
 }
 
