@@ -1,0 +1,116 @@
+model Region {
+  regionId  Int    @id @map("region_id")
+  name      String @unique
+  welshName String @unique @map("welsh_name")
+
+  locationRegions LocationRegion[]
+
+  @@map("region")
+}
+
+model Jurisdiction {
+  jurisdictionId  Int    @id @map("jurisdiction_id")
+  name            String @unique
+  welshName       String @unique @map("welsh_name")
+
+  subJurisdictions SubJurisdiction[]
+
+  @@map("jurisdiction")
+}
+
+model SubJurisdiction {
+  subJurisdictionId Int    @id @map("sub_jurisdiction_id")
+  name              String @unique
+  welshName         String @unique @map("welsh_name")
+  jurisdictionId    Int    @map("jurisdiction_id")
+
+  jurisdiction             Jurisdiction              @relation(fields: [jurisdictionId], references: [jurisdictionId])
+  locationSubJurisdictions LocationSubJurisdiction[]
+  listTypes                ListTypeSubJurisdiction[]
+
+  @@map("sub_jurisdiction")
+}
+
+model ListTypeSubJurisdiction {
+  id                Int @id @default(autoincrement())
+  listTypeId        Int @map("list_type_id")
+  subJurisdictionId Int @map("sub_jurisdiction_id")
+
+  listType        ListType        @relation(fields: [listTypeId], references: [id], onDelete: Cascade)
+  subJurisdiction SubJurisdiction @relation(fields: [subJurisdictionId], references: [subJurisdictionId])
+
+  @@unique([listTypeId, subJurisdictionId])
+  @@map("list_types_sub_jurisdictions")
+}
+
+model ListType {
+  id                    Int       @id @default(autoincrement())
+  name                  String    @unique @db.VarChar(1000)
+  friendlyName          String?   @map("friendly_name") @db.VarChar(1000)
+  welshFriendlyName     String?   @map("welsh_friendly_name") @db.VarChar(255)
+  shortenedFriendlyName String?   @map("shortened_friendly_name") @db.VarChar(255)
+  url                   String?   @db.VarChar(255)
+  defaultSensitivity    String?   @map("default_sensitivity") @db.VarChar(50)
+  allowedProvenance     String    @map("allowed_provenance") @db.VarChar(50)
+  isNonStrategic        Boolean   @default(false) @map("is_non_strategic")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
+
+  subJurisdictions ListTypeSubJurisdiction[]
+  artefacts        Artefact[]
+
+  @@map("list_types")
+}
+
+model Location {
+  locationId  Int       @id @map("location_id")
+  name        String    @unique
+  welshName   String    @unique @map("welsh_name")
+  email       String?
+  contactNo   String?   @map("contact_no")
+  deletedAt   DateTime? @map("deleted_at")
+
+  locationRegions          LocationRegion[]
+  locationSubJurisdictions LocationSubJurisdiction[]
+  locationMetadata         LocationMetadata?
+
+  @@map("location")
+}
+
+model LocationRegion {
+  locationId Int @map("location_id")
+  regionId   Int @map("region_id")
+
+  location Location @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+  region   Region   @relation(fields: [regionId], references: [regionId])
+
+  @@id([locationId, regionId])
+  @@map("location_region")
+}
+
+model LocationSubJurisdiction {
+  locationId        Int @map("location_id")
+  subJurisdictionId Int @map("sub_jurisdiction_id")
+
+  location        Location        @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+  subJurisdiction SubJurisdiction @relation(fields: [subJurisdictionId], references: [subJurisdictionId])
+
+  @@id([locationId, subJurisdictionId])
+  @@map("location_sub_jurisdiction")
+}
+
+model LocationMetadata {
+  locationMetadataId  String    @id @default(uuid()) @map("location_metadata_id")
+  locationId          Int       @unique @map("location_id")
+  cautionMessage      String?   @map("caution_message") @db.Text
+  welshCautionMessage String?   @map("welsh_caution_message") @db.Text
+  noListMessage       String?   @map("no_list_message") @db.Text
+  welshNoListMessage  String?   @map("welsh_no_list_message") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  location Location @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+
+  @@map("location_metadata")
+}

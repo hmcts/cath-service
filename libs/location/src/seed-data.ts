@@ -35,6 +35,8 @@ export async function seedLocationData() {
 
   const needsSeeding = await shouldSeed();
   if (!needsSeeding) {
+    // Seed list types even for existing DBs to pick up new entries added since initial seed
+    await seedListTypes();
     return;
   }
 

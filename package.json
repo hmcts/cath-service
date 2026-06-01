@@ -83,6 +83,7 @@
     "jwks-rsa": "4.0.1",
     "notifications-node-client": "^8.2.1",
     "openid-client": "6.8.4",
-    "passport": "0.7.0"
+    "passport": "0.7.0",
+    "pg": "8.20.0"
   }
 }

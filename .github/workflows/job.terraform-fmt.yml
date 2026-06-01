@@ -32,3 +32,4 @@ jobs:
         uses: hmcts/cnp-githubactions-library/terraform-fmt@main
         with:
           working-directory: ${{ inputs.working-directory }}
+

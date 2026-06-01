@@ -78,7 +78,7 @@ test.describe("Email Subscriptions - Location", () => {
     const protectedPages = ["/subscription-management", "/location-name-search", "/pending-subscriptions", "/subscription-confirmed"];
     for (const url of protectedPages) {
       await page.goto(url);
-      await expect(page).toHaveURL(/\/sign-in/);
+      await expect(page).toHaveURL(/\/sign-in/, { timeout: 10000 });
     }
 
     // Re-authenticate after testing protection
@@ -458,12 +458,15 @@ test.describe("Email Subscriptions - Case", () => {
     await expect(page.getByRole("link", { name: /select a case/i })).toBeVisible();
 
     // Step 5: Select the test case by its case name
-    await page.getByRole("checkbox", { name: new RegExp(caseData.caseName) }).check();
+    const caseCheckbox = page.getByRole("checkbox", { name: new RegExp(caseData.caseName) });
+    await caseCheckbox.waitFor({ state: "visible", timeout: 10000 });
+    await caseCheckbox.check();
     await page.getByRole("button", { name: /continue/i }).click();
-    await expect(page).toHaveURL("/pending-subscriptions");
+    await expect(page).toHaveURL("/pending-subscriptions", { timeout: 10000 });
 
     // Step 6: Verify pending subscriptions page shows the case
-    await expect(page.getByText(caseData.caseName)).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByText(caseData.caseName)).toBeVisible({ timeout: 10000 });
 
     // Check Welsh translation on pending-subscriptions using URL approach
     // (language toggle link not available on this page)

@@ -14,7 +14,8 @@
 #       aks-subscription: DTS-SHAREDSERVICES-STG
 #       storage-account: nonprod
 #       plan-only: true
-#     secrets: inherit
+#     secrets:
+#       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
 
 name: Terraform
 
@@ -46,6 +47,20 @@ on:
         required: false
         type: string
         default: "infrastructure"
+      state-store-container-name:
+        required: false
+        type: string
+        default: ""
+        description: "Override the state store container name (default: tfstate-{environment})"
+      post-plan-to-pr:
+        required: false
+        type: boolean
+        default: true
+        description: "Post plan output as a PR comment"
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+        description: "Azure service principal credentials JSON for the target subscription"
     outputs:
       plan-exitcode:
         description: "Terraform plan exit code (0=no changes, 2=changes)"
@@ -62,10 +77,11 @@ jobs:
       storage-account: ${{ inputs.storage-account }}
       state-store-resource-group: jenkins-state-${{ inputs.environment }}
       state-store-account-name: sdsstate${{ inputs.environment }}
-      state-store-container-name: tfstate-${{ inputs.environment }}
+      state-store-container-name: ${{ inputs.state-store-container-name != '' && inputs.state-store-container-name || format('tfstate-{0}', inputs.environment) }}
       working-directory: ${{ inputs.working-directory }}
       plan-only: ${{ inputs.plan-only }}
+      post-plan-to-pr: ${{ inputs.post-plan-to-pr }}
       helm-chart-path: helm/cath-service/Chart.yaml
       business-area: Cross-Cutting
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}

@@ -219,7 +219,7 @@ describe("Summary of Publications - GET handler", () => {
       expect(renderSpy).toHaveBeenCalledWith(
         "summary-of-publications/index",
         expect.objectContaining({
-          title: "Beth ydych chi eisiau edrych arno gan Gweithdrefn Ynad Unigol?"
+          title: "Beth ydych chi eisiau edrych arno gan Gweithdrefn Un Ynad?"
         })
       );
     });

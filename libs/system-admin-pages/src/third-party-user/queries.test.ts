@@ -43,7 +43,21 @@ describe("findAllThirdPartyUsers", () => {
     expect(result).toEqual(mockUsers);
     expect(prisma.legacyThirdPartyUser.findMany).toHaveBeenCalledWith({
       orderBy: { createdDate: "desc" },
-      include: { subscriptions: true }
+      select: {
+        id: true,
+        name: true,
+        createdDate: true,
+        subscriptions: {
+          select: {
+            id: true,
+            userId: true,
+            listTypeId: true,
+            channel: true,
+            sensitivity: true,
+            createdDate: true
+          }
+        }
+      }
     });
   });
 });
@@ -62,7 +76,21 @@ describe("findThirdPartyUserById", () => {
     expect(result).toEqual(mockUser);
     expect(prisma.legacyThirdPartyUser.findUnique).toHaveBeenCalledWith({
       where: { id: "1" },
-      include: { subscriptions: true }
+      select: {
+        id: true,
+        name: true,
+        createdDate: true,
+        subscriptions: {
+          select: {
+            id: true,
+            userId: true,
+            listTypeId: true,
+            channel: true,
+            sensitivity: true,
+            createdDate: true
+          }
+        }
+      }
     });
   });
 });
