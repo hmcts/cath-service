@@ -52,9 +52,10 @@ jobs:
             -backend-config="key=cath-service/stg/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove stale secrets from state - the CI SP lacks secrets get/delete on cath-kv-stg
-          # because its access policies haven't been applied yet (chicken-and-egg).
-          # Removing from state allows the next run to: apply access policies first, then recreate secrets.
+          # Remove stale resources from state:
+          # - secrets: CI SP lacks get/delete on cath-kv-stg (access policies not yet applied)
+          # - diagnostic setting: cath-stg RG has a delete lock, so Terraform can't remove it;
+          #   removing from state lets Terraform recreate it in the new cath-kv-stg RG instead
           for resource in \
             azurerm_key_vault_secret.postgres_host \
             azurerm_key_vault_secret.postgres_user \
@@ -65,7 +66,12 @@ jobs:
             azurerm_key_vault_secret.redis_port \
             azurerm_key_vault_secret.redis_access_key \
             azurerm_key_vault_secret.redis_url \
-            azurerm_key_vault_secret.app_insights_connection_string; do
+            azurerm_key_vault_secret.app_insights_connection_string \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from STG state" \
               || echo "WARNING: $resource not found in STG state (may already be removed)"
@@ -121,14 +127,22 @@ jobs:
             -backend-config="key=cath-service/demo/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-          # Remove module.key_vault resources from state - the cath-demo KV was soft-deleted,
-          # after purging above, Terraform will recreate it fresh.
+          # Remove stale resources from demo state:
+          # - module.key_vault KV/policies: cath-demo is soft-deleted, remove so Terraform recreates fresh
+          # - module.application_key_vault diagnostic setting: was in old cath-demo RG, remove so it
+          #   gets recreated in new cath-kv-demo RG (CI SP lacks diagnosticSettings/delete permission)
           for resource in \
             "module.key_vault.azurerm_key_vault.kv" \
             "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
             "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
-            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]"; do
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Demo state" \
               || echo "WARNING: $resource not found in Demo state (may already be removed)"

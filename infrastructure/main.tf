@@ -40,6 +40,12 @@ locals {
     demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-demo/providers/Microsoft.KeyVault/vaults/cath-kv-demo"
   }
 
+  # The module.key_vault MI was removed from demo state during state repair. Re-import it.
+  # Remove once demo has been successfully applied.
+  existing_key_vault_mi_ids = {
+    demo = "/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/managed-identities-demo-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-demo-mi"
+  }
+
 }
 
 import {
@@ -69,6 +75,12 @@ import {
 import {
   for_each = contains(keys(local.existing_app_kv_ids), var.env) ? toset([local.existing_app_kv_ids[var.env]]) : toset([])
   to       = module.application_key_vault.azurerm_key_vault.kv
+  id       = each.value
+}
+
+import {
+  for_each = contains(keys(local.existing_key_vault_mi_ids), var.env) ? toset([local.existing_key_vault_mi_ids[var.env]]) : toset([])
+  to       = module.key_vault.azurerm_user_assigned_identity.managed_identity[0]
   id       = each.value
 }
 
