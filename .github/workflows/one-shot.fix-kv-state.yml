@@ -48,7 +48,6 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           # Remove all stale entries so Terraform can re-import cleanly.
-          # Secrets pointed to old cath-kv-stg; KV/MI/RG need re-import via main.tf import blocks.
           for resource in \
             azurerm_key_vault_secret.postgres_host \
             azurerm_key_vault_secret.postgres_user \
@@ -74,7 +73,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
             "azurerm_resource_group.app_kv_rg" \
-            "azurerm_resource_group.ss_kv_rg"; do
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from STG state" \
               || echo "WARNING: $resource not found in STG state (may already be removed)"
@@ -148,7 +148,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
             "azurerm_resource_group.app_kv_rg" \
-            "azurerm_resource_group.ss_kv_rg"; do
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Demo state" \
               || echo "WARNING: $resource not found in Demo state (may already be removed)"
@@ -222,7 +223,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
             "azurerm_resource_group.app_kv_rg" \
-            "azurerm_resource_group.ss_kv_rg"; do
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from Test state" \
               || echo "WARNING: $resource not found in Test state (may already be removed)"
@@ -296,7 +298,8 @@ jobs:
             "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
             "azurerm_resource_group.app_kv_rg" \
-            "azurerm_resource_group.ss_kv_rg"; do
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
             terraform state rm "$resource" \
               && echo "Removed $resource from ITHC state" \
               || echo "WARNING: $resource not found in ITHC state (may already be removed)"
