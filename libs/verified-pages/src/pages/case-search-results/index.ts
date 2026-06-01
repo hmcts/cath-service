@@ -79,6 +79,10 @@ const postHandler = async (req: Request, res: Response) => {
 
   req.session.emailSubscriptions.pendingCaseSubscriptions = pendingCaseSubscriptions;
 
+  // Clear location subscriptions since we're doing a case-only flow
+  delete req.session.emailSubscriptions.pendingSubscriptions;
+  delete req.session.emailSubscriptions.confirmedLocations;
+
   if (req.user?.id) {
     await savePendingCaseSubscriptions(req.app.locals.redisClient, req.user.id, pendingCaseSubscriptions);
   }

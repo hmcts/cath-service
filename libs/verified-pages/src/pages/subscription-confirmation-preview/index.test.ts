@@ -393,5 +393,149 @@ describe("subscription-confirmation-preview", () => {
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in");
     });
+
+    it("should handle P2002 duplicate case subscription errors gracefully when no locations", async () => {
+      const { Prisma } = await import("@hmcts/postgres-prisma");
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: [],
+          confirmedCaseSubscriptions: [{ caseName: "Duplicate Case", caseNumber: "D/001", searchType: "CASE_NUMBER", searchValue: "D/001" }]
+        }
+      } as any;
+      vi.mocked(subscriptionsService.createCaseSubscription).mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002" })
+      );
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+      expect(mockReq.session?.emailSubscriptions?.confirmationComplete).toBe(true);
+    });
+
+    it("should handle P2002 duplicate case subscription errors gracefully with locations", async () => {
+      const { Prisma } = await import("@hmcts/postgres-prisma");
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [1],
+          pendingLanguage: "ENGLISH",
+          confirmedCaseSubscriptions: [{ caseName: "Duplicate Case", caseNumber: "D/001", searchType: "CASE_NUMBER", searchValue: "D/001" }]
+        }
+      } as any;
+      vi.mocked(subscriptionsService.createCaseSubscription).mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002" })
+      );
+      vi.mocked(subscriptionsService.getAllSubscriptionsByUserId).mockResolvedValue([]);
+      vi.mocked(subscriptionsService.getAllowedListTypeIdsForLocations).mockResolvedValue([1]);
+      vi.mocked(subscriptionsService.replaceUserSubscriptions).mockResolvedValue({ added: 1, removed: 0 });
+      vi.mocked(subscriptionsService.createSubscriptionListTypes).mockResolvedValue(undefined);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/subscription-confirmed");
+    });
+
+    it("should render error when confirming without list types or language", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [],
+          pendingLanguage: undefined
+        }
+      } as any;
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirmation-preview/index",
+        expect.objectContaining({
+          errors: expect.objectContaining({
+            errorList: expect.arrayContaining([expect.objectContaining({ href: "#" })])
+          })
+        })
+      );
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should render error when all confirmed locations are invalid", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { getLocationById } = await import("@hmcts/location");
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["999"],
+          pendingListTypeIds: [1],
+          pendingLanguage: "ENGLISH"
+        }
+      } as any;
+      vi.mocked(getLocationById).mockResolvedValue(null);
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([
+        {
+          id: 1,
+          name: "Test List",
+          friendlyName: "Test List",
+          welshFriendlyName: null,
+          shortenedFriendlyName: null,
+          url: null,
+          defaultSensitivity: null,
+          allowedProvenance: "MANUAL",
+          isNonStrategic: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null
+        }
+      ] as any);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirmation-preview/index",
+        expect.objectContaining({
+          locationRows: [],
+          errors: expect.objectContaining({
+            errorList: expect.arrayContaining([expect.objectContaining({ href: "#" })])
+          })
+        })
+      );
+    });
+
+    it("should render error when no valid list types after filtering by location", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { getLocationById } = await import("@hmcts/location");
+      mockReq.body = { action: "confirm" };
+      mockReq.session = {
+        emailSubscriptions: {
+          confirmedLocations: ["100"],
+          pendingListTypeIds: [99, 98],
+          pendingLanguage: "ENGLISH"
+        }
+      } as any;
+      vi.mocked(getLocationById).mockResolvedValue({
+        locationId: 100,
+        name: "Test Court",
+        welshName: "Llys Prawf",
+        subJurisdictions: [1],
+        regions: []
+      } as any);
+      vi.mocked(subscriptionsService.getAllowedListTypeIdsForLocations).mockResolvedValue([1, 2]);
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+
+      await POST[POST.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      expect(mockRes.render).toHaveBeenCalledWith(
+        "subscription-confirmation-preview/index",
+        expect.objectContaining({
+          listTypes: [],
+          errors: expect.objectContaining({
+            errorList: expect.arrayContaining([expect.objectContaining({ href: "#select-list-types-link" })])
+          })
+        })
+      );
+    });
   });
 });
