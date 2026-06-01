@@ -5,8 +5,20 @@ export async function findAllThirdPartyUsers() {
     orderBy: {
       createdDate: "desc"
     },
-    include: {
-      subscriptions: true
+    select: {
+      id: true,
+      name: true,
+      createdDate: true,
+      subscriptions: {
+        select: {
+          id: true,
+          userId: true,
+          listTypeId: true,
+          channel: true,
+          sensitivity: true,
+          createdDate: true
+        }
+      }
     }
   });
 }
@@ -14,8 +26,20 @@ export async function findAllThirdPartyUsers() {
 export async function findThirdPartyUserById(id: string) {
   return prisma.legacyThirdPartyUser.findUnique({
     where: { id },
-    include: {
-      subscriptions: true
+    select: {
+      id: true,
+      name: true,
+      createdDate: true,
+      subscriptions: {
+        select: {
+          id: true,
+          userId: true,
+          listTypeId: true,
+          channel: true,
+          sensitivity: true,
+          createdDate: true
+        }
+      }
     }
   });
 }

@@ -1,5 +1,5 @@
 variable "env" {
-  description = "Environment name (e.g., stg, prod)"
+  description = "Environment name (e.g., demo, test, ithc, stg)"
   type        = string
 }
 

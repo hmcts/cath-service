@@ -1,0 +1,154 @@
+name: One-Shot - Fix RG State
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/one-shot.fix-rg-state.yml'
+
+jobs:
+  fix-rg-state-demo:
+    name: Fix RG State - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Demo)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix Demo RG State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-demo" \
+            -backend-config="storage_account_name=sdsstatedemo" \
+            -backend-config="container_name=tfstate-demo" \
+            -backend-config="key=cath-service/demo/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove the stale azurerm_resource_group.rg binding (currently points to cath-bootstrap-demo-rg instead of cath-demo)
+          terraform state rm azurerm_resource_group.rg \
+          && echo "Demo RG state removed successfully" \
+          || echo "WARNING: azurerm_resource_group.rg not found in demo state (may already be fixed)"
+
+  fix-rg-state-test:
+    name: Fix RG State - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix Test RG State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove the stale azurerm_resource_group.rg binding (currently points to cath-bootstrap-test-rg instead of cath-test)
+          terraform state rm azurerm_resource_group.rg \
+          && echo "Test RG state removed successfully" \
+          || echo "WARNING: azurerm_resource_group.rg not found in test state (may already be fixed)"
+
+  fix-rg-state-ithc:
+    name: Fix RG State - ITHC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (ITHC)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix ITHC RG State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-ithc" \
+            -backend-config="storage_account_name=sdsstateithc" \
+            -backend-config="container_name=tfstate-ithc" \
+            -backend-config="key=cath-service/ithc/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove the stale azurerm_resource_group.rg binding (currently points to cath-bootstrap-ithc-rg instead of cath-ithc)
+          terraform state rm azurerm_resource_group.rg \
+          && echo "ITHC RG state removed successfully" \
+          || echo "WARNING: azurerm_resource_group.rg not found in ithc state (may already be fixed)"

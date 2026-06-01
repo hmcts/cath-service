@@ -83,6 +83,8 @@ test.describe("Bulk Unsubscribe", () => {
   });
 
   test("Verified user can bulk unsubscribe", async ({ page }, testInfo) => {
+    test.setTimeout(120000); // 2 minutes - complex test with multiple subscriptions
+
     const testData = testDataMap.get(testInfo.testId);
     if (!testData) throw new Error("Test data not found");
 

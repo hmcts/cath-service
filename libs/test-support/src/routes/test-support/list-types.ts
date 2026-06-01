@@ -54,35 +54,45 @@ export const POST = async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Each listType must have a name" });
       }
 
-      const existing = await (prisma as any).listType.findUnique({
-        where: { name: listType.name }
-      });
+      let existing = null;
+
+      if (listType.id) {
+        existing = await (prisma as any).listType.findUnique({
+          where: { id: listType.id }
+        });
+      }
+
+      if (!existing) {
+        existing = await (prisma as any).listType.findUnique({
+          where: { name: listType.name }
+        });
+      }
+
+      const updateData = {
+        name: listType.name,
+        friendlyName: listType.friendlyName || listType.name,
+        welshFriendlyName: listType.welshFriendlyName || listType.friendlyName || listType.name,
+        shortenedFriendlyName: listType.shortenedFriendlyName || listType.friendlyName || listType.name,
+        url: listType.url || "",
+        defaultSensitivity: listType.defaultSensitivity || "Public",
+        allowedProvenance: listType.provenance || "MANUAL_UPLOAD",
+        isNonStrategic: listType.isNonStrategic ?? false
+      };
 
       if (existing) {
         const updated = await (prisma as any).listType.update({
-          where: { name: listType.name },
-          data: {
-            friendlyName: listType.friendlyName || listType.name,
-            welshFriendlyName: listType.welshFriendlyName || listType.friendlyName || listType.name,
-            shortenedFriendlyName: listType.shortenedFriendlyName || listType.friendlyName || listType.name,
-            url: listType.url || "",
-            defaultSensitivity: listType.defaultSensitivity || "Public",
-            allowedProvenance: listType.provenance || "MANUAL_UPLOAD",
-            isNonStrategic: listType.isNonStrategic ?? false
-          }
+          where: { id: existing.id },
+          data: updateData
         });
         results.push(updated);
       } else {
         const createData: any = {
-          name: listType.name,
-          friendlyName: listType.friendlyName || listType.name,
-          welshFriendlyName: listType.welshFriendlyName || listType.friendlyName || listType.name,
-          shortenedFriendlyName: listType.shortenedFriendlyName || listType.friendlyName || listType.name,
-          url: listType.url || "",
-          defaultSensitivity: listType.defaultSensitivity || "Public",
-          allowedProvenance: listType.provenance || "MANUAL_UPLOAD",
-          isNonStrategic: listType.isNonStrategic ?? false
+          ...updateData
         };
+
+        if (listType.id) {
+          createData.id = listType.id;
+        }
 
         if (linkAllSubJurisdictions && allSubJurisdictions.length > 0) {
           createData.subJurisdictions = {
