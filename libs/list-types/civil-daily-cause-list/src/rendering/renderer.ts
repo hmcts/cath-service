@@ -103,15 +103,8 @@ function calculateDuration(sitting: Sitting): void {
   (sitting as any).time = formatTime(sitting.sittingStart);
 }
 
-function formatHearingChannel(sitting: Sitting, session: Session): void {
-  let channel = "";
-
-  if (sitting.channel && sitting.channel.length > 0) {
-    channel = sitting.channel.join(", ");
-  } else if (session.sessionChannel && session.sessionChannel.length > 0) {
-    channel = session.sessionChannel.join(", ");
-  }
-
+function formatHearingChannel(sitting: Sitting, _session: Session): void {
+  const channel = sitting.channel && sitting.channel.length > 0 ? sitting.channel.join(", ") : "";
   (sitting as any).caseHearingChannel = channel;
 }
 

@@ -13,6 +13,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const LIBS_DIR = path.join(__dirname, "../../libs");
 
 const baseConfig = createBaseViteConfig([
   path.join(__dirname, "src", "assets"),
@@ -27,6 +28,15 @@ const baseConfig = createBaseViteConfig([
 
 export default defineConfig(
   mergeConfig(baseConfig, {
+    resolve: {
+      alias: [
+        { find: /^@hmcts\/admin-pages\/src\/(.+)$/, replacement: `${LIBS_DIR}/admin-pages/src/$1` },
+        { find: /^@hmcts\/list-types-common\/src\/(.+)$/, replacement: `${LIBS_DIR}/list-types/common/src/$1` },
+        { find: /^@hmcts\/sjp-public-list\/src\/(.+)$/, replacement: `${LIBS_DIR}/list-types/sjp-public-list/src/$1` },
+        { find: /^@hmcts\/web-core\/src\/(.+)$/, replacement: `${LIBS_DIR}/web-core/src/$1` },
+        { find: /^@hmcts\/auth\/src\/(.+)$/, replacement: `${LIBS_DIR}/auth/src/$1` }
+      ]
+    },
     build: {
       rollupOptions: {
         input: {

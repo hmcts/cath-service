@@ -22,9 +22,11 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h1 class="govuk-heading-l">{{ t.title }}</h1>
+    <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.locationName }}</p>
+    <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
 
     <p class="govuk-body">
       {% for line in header.addressLines %}
@@ -32,19 +34,35 @@
       {% endfor %}
     </p>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listDate }} {{ header.contentDate }}</p>
-    <p class="govuk-body govuk-!-margin-bottom-1">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
 
-    <details class="govuk-details" data-module="govuk-details">
+    <details class="govuk-details" data-module="govuk-details" open>
       <summary class="govuk-details__summary">
         <span class="govuk-details__summary-text">
-          {{ t.openJusticeTitle }}
+          {{ t.importantInformation }}
         </span>
       </summary>
       <div class="govuk-details__text">
-        <p class="govuk-body">{{ t.openJusticeText }}</p>
+        <p class="govuk-body">{{ t.openJusticeIntro }}</p>
+        <p class="govuk-body">
+          {{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}
+        </p>
+        <p class="govuk-body">{{ t.openJusticeDecision }}</p>
+        <p class="govuk-body">{{ t.openJusticePrivate }}</p>
+        <p class="govuk-body">
+          {{ t.openJusticeMoreInfo }}
+          <a href="{{ t.openJusticeLink }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+            {{ t.openJusticeLinkText }}
+          </a>.
+        </p>
       </div>
     </details>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
+    </div>
 
     <div id="court-lists-container">
     {% for courtList in listData.courtLists %}
@@ -78,9 +96,6 @@
                 <h2 class="govuk-accordion__section-heading">
                   <span class="govuk-accordion__section-button">
                     {{ courtRoom.courtRoomName }}
-                    {% if session.formattedJudiciaries | length %}
-                      &mdash; {{ t.judiciary }}: {{ session.formattedJudiciaries }}
-                    {% endif %}
                   </span>
                 </h2>
               </div>
@@ -95,18 +110,16 @@
                 {% if not hasHearings %}
                   <p class="govuk-body">{{ t.noHearings }}</p>
                 {% else %}
-                  <table class="govuk-table">
+                  <table class="govuk-table" data-module="moj-sortable-table">
                     <thead class="govuk-table__head">
                       <tr class="govuk-table__row">
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.time }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.caseRef }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.caseName }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.caseType }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.hearingType }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.location }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.duration }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.applicant }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.respondent }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.time }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseId }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseName }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseType }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingType }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.location }}</th>
+                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.duration }}</th>
                       </tr>
                     </thead>
                     <tbody class="govuk-table__body">
@@ -140,13 +153,11 @@
                               <td class="govuk-table__cell no-wrap">{{ hearing.hearingType }}</td>
                               <td class="govuk-table__cell no-wrap">{{ sitting.caseHearingChannel }}</td>
                               <td class="govuk-table__cell no-wrap">{{ durationText }}</td>
-                              <td class="govuk-table__cell no-wrap">{{ case.applicant }}</td>
-                              <td class="govuk-table__cell no-wrap">{{ case.respondent }}</td>
                             </tr>
                             {% if case.formattedReportingRestriction | length %}
                               <tr class="govuk-table__row">
-                                <td class="govuk-table__cell" colspan="9">
-                                  {{ case.formattedReportingRestriction }}
+                                <td class="govuk-table__cell" colspan="7">
+                                  <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
                                 </td>
                               </tr>
                             {% endif %}
@@ -165,11 +176,11 @@
     </div>
 
     <p class="govuk-body govuk-!-margin-top-6">
-      <a href="#top" class="govuk-link">{{ t.linkToTop }}</a>
+      {{ t.dataSource }}: {{ dataSource }}
     </p>
 
-    <p class="govuk-body" style="font-size: 14px;">
-      {{ t.dataSource }}: {{ dataSource }}
+    <p class="govuk-body">
+      <a href="#top" class="govuk-link">{{ t.linkToTop }}</a>
     </p>
 
   </div>

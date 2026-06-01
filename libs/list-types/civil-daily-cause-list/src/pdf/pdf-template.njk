@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ t.title }}</title>
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
   <style>{{ pdfStyles | safe }}</style>
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ t.title }}</h1>
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
 
-    <p class="bold">{{ header.locationName }}</p>
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
 
     <div class="address">
       {% for line in header.addressLines %}
@@ -18,13 +18,17 @@
       {% endfor %}
     </div>
 
-    <p class="bold header-date">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
   </div>
 
   <div class="info-box">
-    <h3>{{ t.openJusticeTitle }}</h3>
-    <p>{{ t.openJusticeText }}</p>
+    <h3>{{ t.importantInformation }}</h3>
+    <p>{{ t.openJusticeIntro }}</p>
+    <p>{{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}</p>
+    <p>{{ t.openJusticeDecision }}</p>
+    <p>{{ t.openJusticePrivate }}</p>
+    <p>{{ t.openJusticeMoreInfo }} <a href="{{ t.openJusticeLink }}">{{ t.openJusticeLinkText }}</a>.</p>
   </div>
 
   {% for courtList in listData.courtLists %}
@@ -47,23 +51,18 @@
           <div class="court-room-section">
             <div class="section-heading">
               {{ courtRoom.courtRoomName }}
-              {% if session.formattedJudiciaries | length %}
-                &mdash; {{ t.judiciary }}: {{ session.formattedJudiciaries }}
-              {% endif %}
             </div>
 
             <table>
               <thead>
                 <tr>
                   <th class="no-wrap">{{ t.time }}</th>
-                  <th class="no-wrap">{{ t.caseRef }}</th>
+                  <th class="no-wrap">{{ t.caseId }}</th>
                   <th class="no-wrap">{{ t.caseName }}</th>
                   <th class="no-wrap">{{ t.caseType }}</th>
                   <th class="no-wrap">{{ t.hearingType }}</th>
                   <th class="no-wrap">{{ t.location }}</th>
                   <th class="no-wrap">{{ t.duration }}</th>
-                  <th class="no-wrap">{{ t.applicant }}</th>
-                  <th class="no-wrap">{{ t.respondent }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,12 +96,12 @@
                         <td class="no-wrap">{{ hearing.hearingType }}</td>
                         <td class="no-wrap">{{ sitting.caseHearingChannel }}</td>
                         <td class="no-wrap">{{ durationText }}</td>
-                        <td>{{ case.applicant }}</td>
-                        <td>{{ case.respondent }}</td>
                       </tr>
                       {% if case.formattedReportingRestriction | length %}
                         <tr class="restriction-row">
-                          <td colspan="9">{{ case.formattedReportingRestriction }}</td>
+                          <td colspan="7">
+                            <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
+                          </td>
                         </tr>
                       {% endif %}
                     {% endfor %}

@@ -1,6 +1,7 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
+import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
@@ -50,6 +51,7 @@ const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeId: p.listTypeId });
 
 const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
+  CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCauseListPdf({ ...p, jsonData: p.jsonData as CauseListData }),
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: (p) =>
     generateCareStandardsTribunalWeeklyHearingListPdf({
