@@ -64,6 +64,12 @@ resource "azurerm_resource_group" "rg" {
   tags     = var.common_tags
 }
 
+resource "azurerm_resource_group" "app_kv_rg" {
+  name     = "${var.product}-kv-${var.env}"
+  location = var.location
+  tags     = var.common_tags
+}
+
 resource "azurerm_resource_group" "bootstrap_rg" {
   name     = "${local.bootstrap_prefix}-rg"
   location = var.location
