@@ -4,18 +4,6 @@ import {
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
 import {
-  extractCaseSummary as extractUtaacSummary,
-  formatCaseSummaryForEmail as formatUtaacSummaryForEmail
-} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
-import {
-  extractCaseSummary as extractUtlcSummary,
-  formatCaseSummaryForEmail as formatUtlcSummaryForEmail
-} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
-import {
-  extractCaseSummary as extractUtccSummary,
-  formatCaseSummaryForEmail as formatUtccSummaryForEmail
-} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
-import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
@@ -34,6 +22,18 @@ import {
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
+import {
+  extractCaseSummary as extractUtaacSummary,
+  formatCaseSummaryForEmail as formatUtaacSummaryForEmail
+} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtlcSummary,
+  formatCaseSummaryForEmail as formatUtlcSummaryForEmail
+} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtccSummary,
+  formatCaseSummaryForEmail as formatUtccSummaryForEmail
+} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,

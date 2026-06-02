@@ -233,5 +233,106 @@ describe("Upper Tribunal (Lands Chamber) page controller", () => {
         })
       );
     });
+
+    it("should default to English locale when res.locals has no locale set", async () => {
+      // Arrange
+      const mockArtefact = {
+        artefactId: "test-artefact-123",
+        locationId: "9001",
+        listTypeId: 29,
+        contentDate: new Date("2026-01-15"),
+        displayFrom: new Date("2026-01-15"),
+        displayTo: new Date("2026-01-15"),
+        lastReceivedDate: new Date("2026-01-15T12:00:00Z"),
+        provenance: "MANUAL_UPLOAD"
+      };
+
+      const mockJsonData = [
+        {
+          time: "10:00am",
+          caseReference: "LC/2026/0001",
+          caseName: "Smith v Jones",
+          judges: "Judge Smith",
+          members: "Member Jones",
+          hearingType: "Substantive hearing",
+          venue: "Royal Courts of Justice",
+          modeOfHearing: "CVP"
+        }
+      ];
+      const mockRenderedData = {
+        header: {
+          listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing list",
+          hearingDate: "15 January 2026",
+          lastUpdatedDate: "15 January 2026",
+          lastUpdatedTime: "12pm"
+        },
+        hearings: []
+      };
+
+      req.query = { artefactId: "test-artefact-123" };
+      res.locals = {};
+
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
+      vi.mocked(renderUtlcDailyHearingListData).mockReturnValue(mockRenderedData);
+
+      // Act
+      await GET(req as Request, res as Response);
+
+      // Assert
+      expect(renderUtlcDailyHearingListData).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "en" }));
+      expect(res.render).toHaveBeenCalledWith("upper-tribunal-lands-chamber-daily-hearing-list", expect.any(Object));
+    });
+
+    it("should use the raw provenance value as data source when provenance is not in provenanceLabels", async () => {
+      // Arrange
+      const mockArtefact = {
+        artefactId: "test-artefact-123",
+        locationId: "9001",
+        listTypeId: 29,
+        contentDate: new Date("2026-01-15"),
+        displayFrom: new Date("2026-01-15"),
+        displayTo: new Date("2026-01-15"),
+        lastReceivedDate: new Date("2026-01-15T12:00:00Z"),
+        provenance: "UNKNOWN_SOURCE"
+      };
+
+      const mockJsonData = [
+        {
+          time: "10:00am",
+          caseReference: "LC/2026/0001",
+          caseName: "Smith v Jones",
+          judges: "Judge Smith",
+          members: "Member Jones",
+          hearingType: "Substantive hearing",
+          venue: "Royal Courts of Justice",
+          modeOfHearing: "CVP"
+        }
+      ];
+      const mockRenderedData = {
+        header: {
+          listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing list",
+          hearingDate: "15 January 2026",
+          lastUpdatedDate: "15 January 2026",
+          lastUpdatedTime: "12pm"
+        },
+        hearings: []
+      };
+
+      req.query = { artefactId: "test-artefact-123" };
+
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
+      vi.mocked(renderUtlcDailyHearingListData).mockReturnValue(mockRenderedData);
+
+      // Act
+      await GET(req as Request, res as Response);
+
+      // Assert
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      expect(renderCall[1]).toMatchObject({ dataSource: "UNKNOWN_SOURCE" });
+    });
   });
 });

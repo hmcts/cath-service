@@ -8,18 +8,6 @@ import {
   moduleRoot as careStandardsTribunalModuleRoot,
   pageRoutes as careStandardsTribunalRoutes
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
-import {
-  moduleRoot as utccModuleRoot,
-  pageRoutes as utccRoutes
-} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config";
-import {
-  moduleRoot as utlcModuleRoot,
-  pageRoutes as utlcRoutes
-} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config";
-import {
-  moduleRoot as utaacModuleRoot,
-  pageRoutes as utaacRoutes
-} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
@@ -52,6 +40,9 @@ import {
   moduleRoot as systemAdminModuleRoot,
   pageRoutes as systemAdminPageRoutes
 } from "@hmcts/system-admin-pages/config";
+import { moduleRoot as utaacModuleRoot, pageRoutes as utaacRoutes } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
+import { moduleRoot as utlcModuleRoot, pageRoutes as utlcRoutes } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config";
+import { moduleRoot as utccModuleRoot, pageRoutes as utccRoutes } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config";
 import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
 import {
   configureCookieManager,

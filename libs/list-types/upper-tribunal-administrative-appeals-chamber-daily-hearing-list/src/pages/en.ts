@@ -6,7 +6,8 @@ export const en = {
   at: "at",
   openingStatement: {
     detailsTitle: "Details",
-    listChangeNotice: "Lists are subject to change until 4:30pm. Any alterations after this time will be telephoned or emailed direct to the parties or their legal representatives.",
+    listChangeNotice:
+      "Lists are subject to change until 4:30pm. Any alterations after this time will be telephoned or emailed direct to the parties or their legal representatives.",
     englandAndWalesTitle: "England and Wales",
     englandAndWalesRemoteText: "Remote hearings via CVP and BT Meet Me",
     englandAndWalesCvpText:
