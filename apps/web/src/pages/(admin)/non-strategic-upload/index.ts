@@ -34,9 +34,9 @@ const LANGUAGE_OPTIONS = [{ value: "", text: "" }, ...Object.entries(LANGUAGE_LA
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
-const hasValue = (val: unknown) => val !== undefined && val !== null && val !== "" && String(val).trim() !== "";
+const hasValue = (val: any) => val !== undefined && val !== null && val !== "" && val.toString().trim() !== "";
 
-function parseDateInput(body: Record<string, string>, prefix: string) {
+function parseDateInput(body: any, prefix: string) {
   const day = body[`${prefix}-day`];
   const month = body[`${prefix}-month`];
   const year = body[`${prefix}-year`];
@@ -44,7 +44,7 @@ function parseDateInput(body: Record<string, string>, prefix: string) {
   return hasValue(day) || hasValue(month) || hasValue(year) ? { day: day || "", month: month || "", year: year || "" } : undefined;
 }
 
-function transformDateFields(body: Record<string, string>): UploadFormData {
+function transformDateFields(body: any): UploadFormData {
   return {
     locationId: body.locationId,
     locationName: body["court-display"],
