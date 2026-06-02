@@ -6,7 +6,7 @@
   "minItems": 1,
   "items": {
     "type": "object",
-    "required": ["time", "caseReference", "caseName", "judges", "members", "hearingType", "venue", "modeOfHearing"],
+    "required": ["time", "caseReference", "caseName"],
     "properties": {
       "time": {
         "title": "Time",
