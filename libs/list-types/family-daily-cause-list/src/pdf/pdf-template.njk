@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ t.title }}</title>
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
   <style>{{ pdfStyles | safe }}</style>
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ t.title }}</h1>
-
-    <p class="bold">{{ header.locationName }}</p>
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
 
     <div class="address">
       {% for line in header.addressLines %}
@@ -18,13 +16,17 @@
       {% endfor %}
     </div>
 
-    <p class="bold header-date">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
   </div>
 
   <div class="info-box">
-    <h3>{{ t.openJusticeTitle }}</h3>
-    <p>{{ t.openJusticeText }}</p>
+    <h3>{{ t.importantInformation }}</h3>
+    <p>{{ t.openJusticeIntro }}</p>
+    <p>{{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}</p>
+    <p>{{ t.openJusticeDecision }}</p>
+    <p>{{ t.openJusticePrivate }}</p>
+    <p>{{ t.openJusticeMoreInfo }} <a href="{{ t.openJusticeLink }}">{{ t.openJusticeLinkText }}</a>.</p>
   </div>
 
   {% for courtList in listData.courtLists %}
@@ -46,10 +48,7 @@
         {% for session in courtRoom.session %}
           <div class="court-room-section">
             <div class="section-heading">
-              {{ courtRoom.courtRoomName }}
-              {% if session.formattedJudiciaries | length %}
-                &mdash; {{ t.judiciary }}: {{ session.formattedJudiciaries }}
-              {% endif %}
+              {{ courtRoom.courtRoomName }}{% if session.formattedJudiciaries | length %}, {{ t.before }}: {{ session.formattedJudiciaries }}{% endif %}
             </div>
 
             <table>
@@ -102,7 +101,7 @@
                       </tr>
                       {% if case.formattedReportingRestriction | length %}
                         <tr class="restriction-row">
-                          <td colspan="9">{{ case.formattedReportingRestriction }}</td>
+                          <td colspan="9"><strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}</td>
                         </tr>
                       {% endif %}
                     {% endfor %}

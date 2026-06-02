@@ -1,9 +1,6 @@
 export const en = {
   title: "Civil Daily Cause List",
   pageTitle: "Civil Daily Cause List for",
-  factLinkText: "Find contact details and other information about courts and tribunals",
-  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   listFor: "List for",
   lastUpdated: "Last updated",
   importantInformation: "Important information",

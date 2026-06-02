@@ -22,9 +22,7 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h1 class="govuk-heading-l">{{ t.title }}</h1>
-
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.locationName }}</p>
+    <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
 
     <p class="govuk-body">
       {% for line in header.addressLines %}
@@ -32,17 +30,28 @@
       {% endfor %}
     </p>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listDate }} {{ header.contentDate }}</p>
-    <p class="govuk-body govuk-!-margin-bottom-1">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
 
-    <details class="govuk-details" data-module="govuk-details">
+    <details class="govuk-details" data-module="govuk-details" open>
       <summary class="govuk-details__summary">
         <span class="govuk-details__summary-text">
-          {{ t.openJusticeTitle }}
+          {{ t.importantInformation }}
         </span>
       </summary>
       <div class="govuk-details__text">
-        <p class="govuk-body">{{ t.openJusticeText }}</p>
+        <p class="govuk-body">{{ t.openJusticeIntro }}</p>
+        <p class="govuk-body">
+          {{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}
+        </p>
+        <p class="govuk-body">{{ t.openJusticeDecision }}</p>
+        <p class="govuk-body">{{ t.openJusticePrivate }}</p>
+        <p class="govuk-body">
+          {{ t.openJusticeMoreInfo }}
+          <a href="{{ t.openJusticeLink }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+            {{ t.openJusticeLinkText }}
+          </a>.
+        </p>
       </div>
     </details>
 
@@ -77,10 +86,7 @@
               <div class="govuk-accordion__section-header">
                 <h2 class="govuk-accordion__section-heading">
                   <span class="govuk-accordion__section-button">
-                    {{ courtRoom.courtRoomName }}
-                    {% if session.formattedJudiciaries | length %}
-                      &mdash; {{ t.judiciary }}: {{ session.formattedJudiciaries }}
-                    {% endif %}
+                    {{ courtRoom.courtRoomName }}{% if session.formattedJudiciaries | length %}, {{ t.before }}: {{ session.formattedJudiciaries }}{% endif %}
                   </span>
                 </h2>
               </div>
@@ -146,7 +152,7 @@
                             {% if case.formattedReportingRestriction | length %}
                               <tr class="govuk-table__row">
                                 <td class="govuk-table__cell" colspan="9">
-                                  {{ case.formattedReportingRestriction }}
+                                  <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
                                 </td>
                               </tr>
                             {% endif %}
@@ -164,12 +170,12 @@
     {% endfor %}
     </div>
 
-    <p class="govuk-body govuk-!-margin-top-6">
-      <a href="#top" class="govuk-link">{{ t.linkToTop }}</a>
-    </p>
-
     <p class="govuk-body" style="font-size: 14px;">
       {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+    <p class="govuk-body govuk-!-margin-top-6">
+      <a href="#top" class="govuk-link">{{ t.linkToTop }}</a>
     </p>
 
   </div>

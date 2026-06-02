@@ -1,12 +1,21 @@
 export const cy = {
   title: "Rhestr Achosion Dyddiol Teulu",
-  listDate: "Rhestr ar gyfer dyddiad:",
-  lastUpdated: "Diweddarwyd ddiwethaf:",
-  publishedAt: "Cyhoeddwyd am:",
-  venueAddress: "Cyfeiriad y lleoliad",
-  openJusticeTitle: "Cyfiawnder agored",
-  openJusticeText: "Mae egwyddor cyfiawnder agored yn golygu y dylai llysoedd a thribiwnlysoedd, lle bo modd, fod yn agored i'r cyhoedd a'r wasg eu gwylio.",
-  dataSource: "Ffynhonnell data",
+  pageTitle: "Rhestr Achosion Dyddiol Teulu ar gyfer",
+  listFor: "Rhestr ar gyfer",
+  lastUpdated: "Diweddarwyd ddiwethaf",
+  importantInformation: "Gwybodaeth bwysig",
+  openJusticeIntro:
+    "Mae cyfiawnder agored yn egwyddor sylfaenol yn ein system gyfiawnder. Gallwch fynychu gwrandawiad cyhoeddus yn bersonol neu gallwch wneud cais am ganiatâd i arsylwi o bell.",
+  openJusticeContact: (venueName: string, email: string, phone: string) =>
+    `Dylid gwneud ceisiadau i arsylwi o bell ar wrandawiad sy'n digwydd yn ${venueName} mewn da bryd yn uniongyrchol i: ${email} neu drwy ffonio ${phone}. Efallai y gofynnir i chi ddarparu rhagor o fanylion.`,
+  openJusticeDecision:
+    "Bydd y barnwr sy'n gwrando'r achos yn penderfynu a yw'n briodol i chi arsylwi o bell. Byddant yn ystyried buddiannau cyfiawnder, y gallu technegol ar gyfer arsylwi o bell a'r hyn sy'n angenrheidiol i sicrhau gweinyddiaeth briodol cyfiawnder.",
+  openJusticePrivate:
+    "Weithiau mae'n angenrheidiol cynnal gwrandawiadau yn breifat ac ni fyddwch yn gallu arsylwi o bell nac yn bersonol. Mae aelodau o'r wasg yn gallu mynychu rhai gwrandawiadau preifat.",
+  openJusticeMoreInfo: "I gael rhagor o wybodaeth, ewch i",
+  openJusticeLink: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  openJusticeLinkText: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
+  dataSource: "Ffynhonnell Data",
   time: "Amser",
   caseRef: "Cyfeirnod yr achos",
   caseName: "Enw'r achos",
@@ -16,9 +25,10 @@ export const cy = {
   duration: "Hyd",
   applicant: "Ceisydd",
   respondent: "Atebydd",
+  before: "Gerbron",
+  reportingRestrictions: "Cyfyngiad Adrodd",
   noHearings: "Dim gwrandawiadau heddiw",
   linkToTop: "Yn ôl i'r brig",
-  judiciary: "Barnwriaeth",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",

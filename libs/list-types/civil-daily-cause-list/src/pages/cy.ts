@@ -1,9 +1,6 @@
 export const cy = {
   title: "Rhestr Achosion Dyddiol Sifil",
   pageTitle: "Rhestr Achosion Dyddiol Sifil ar gyfer",
-  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
-  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.",
   listFor: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
   importantInformation: "Gwybodaeth bwysig",

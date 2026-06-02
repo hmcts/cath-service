@@ -10,8 +10,6 @@
   <div class="header-section">
     <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
 
-    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
-
     <div class="address">
       {% for line in header.addressLines %}
         {{ line }}{% if not loop.last %}<br>{% endif %}
@@ -50,7 +48,7 @@
         {% for session in courtRoom.session %}
           <div class="court-room-section">
             <div class="section-heading">
-              {{ courtRoom.courtRoomName }}
+              {{ courtRoom.courtRoomName }}{% if session.formattedJudiciaries | length %}: {{ session.formattedJudiciaries }}{% endif %}
             </div>
 
             <table>
