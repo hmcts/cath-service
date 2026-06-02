@@ -1,14 +1,17 @@
 export const cy = {
   pageTitle: "Rheoli tanysgrifiadau trydydd parti",
-  channelLabel: "Dewiswch Sianel os gwelwch yn dda",
-  channelApiOption: "API",
-  sensitivityLabel: "Dewiswch sensitifrwydd os gwelwch yn dda",
-  sensitivityPublicOption: "Cyhoeddus",
-  sensitivityPrivateOption: "Preifat",
-  sensitivityClassifiedOption: "Cyfrinachol",
-  listTypesLabel: "Dewiswch fathau rhestr os gwelwch yn dda",
+  listTypeHeader: "Math o restr",
+  publicHeader: "Cyhoeddus",
+  privateHeader: "Preifat",
+  classifiedHeader: "Cyfrinachol",
+  unselectedHeader: "Heb ei ddewis",
+  sensitivityHeader: "Sensitifrwydd",
+  publicOption: "Cyhoeddus",
+  privateOption: "Preifat",
+  classifiedOption: "Cyfrinachol",
+  unselectedOption: "Heb ei ddewis",
   saveButtonText: "Cadarnhau tanysgrifiadau",
   errorSummaryTitle: "Mae yna broblem",
-  sensitivityRequired: "Dewiswch lefel sensitifrwydd",
-  userNotFound: "Ni chanfuwyd defnyddiwr"
+  userNotFound: "Ni chanfuwyd defnyddiwr",
+  noListTypesText: "Nid oes mathau rhestr ar gael."
 };

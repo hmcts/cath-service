@@ -34,7 +34,9 @@
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
+    "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
+    "@launchdarkly/node-server-sdk": "^9.7.0",
     "papaparse": "5.5.3"
   },
   "devDependencies": {
