@@ -1215,7 +1215,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list":
+"@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:*, @hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
   dependencies:
@@ -1233,7 +1233,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/upper-tribunal-lands-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list":
+"@hmcts/upper-tribunal-lands-chamber-daily-hearing-list@workspace:*, @hmcts/upper-tribunal-lands-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list"
   dependencies:
@@ -1251,7 +1251,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list":
+"@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list@workspace:*, @hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"
   dependencies:
@@ -1340,6 +1340,9 @@ __metadata:
     "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/test-support": "workspace:*"
+    "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*"
+    "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*"
+    "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/verified-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/config": "npm:3.3.5"

@@ -1,6 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
+import "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"; // Register UTCC converter
+import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTLC converter
+import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
 import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";

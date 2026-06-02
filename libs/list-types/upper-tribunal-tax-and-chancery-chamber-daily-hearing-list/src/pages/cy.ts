@@ -1,5 +1,6 @@
 export const cy = {
   pageTitle: "[TRANSLATE: Upper Tribunal Tax and Chancery Chamber Daily Hearing list]",
+  downloadPdf: "[TRANSLATE: Download as PDF]",
   listForDate: "[TRANSLATE: List for]",
   lastUpdated: "[TRANSLATE: Last updated]",
   at: "[TRANSLATE: at]",

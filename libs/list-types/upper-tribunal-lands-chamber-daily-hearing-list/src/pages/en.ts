@@ -1,5 +1,6 @@
 export const en = {
   pageTitle: "Upper Tribunal (Lands Chamber) Daily Hearing list",
+  downloadPdf: "Download as PDF",
   listForDate: "List for",
   lastUpdated: "Last updated",
   at: "at",

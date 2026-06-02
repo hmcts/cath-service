@@ -88,7 +88,7 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
   }
 
   if (jsonData.length > 0) {
-    const actualHeaders = Object.keys(jsonData[0] || {}).map((h) => h.toLowerCase().trim());
+    const actualHeaders = headers.map((h) => h.toLowerCase().trim());
     validateHeaders(actualHeaders, config.fields);
   }
 
@@ -145,14 +145,13 @@ function getField(row: Record<string, unknown>, header: string, rowNumber: numbe
   const keys = Object.keys(row);
   const key = keys.find((k) => k.toLowerCase().trim() === header.toLowerCase());
 
-  if (!key) {
-    throw new Error(`Missing column '${header}'`);
-  }
+  const value = key ? row[key] : undefined;
 
-  const value = row[key];
-
-  if (required && (value === null || value === undefined || String(value).trim() === "")) {
-    throw new Error(`Missing required field '${header}' in row ${rowNumber}`);
+  if (value === null || value === undefined || String(value).trim() === "") {
+    if (required) {
+      throw new Error(`Missing required field '${header}' in row ${rowNumber}`);
+    }
+    return "";
   }
 
   return String(value).trim();

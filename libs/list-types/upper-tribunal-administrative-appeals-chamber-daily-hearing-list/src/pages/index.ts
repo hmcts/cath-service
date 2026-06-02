@@ -89,7 +89,8 @@ export const GET = async (req: Request, res: Response) => {
       title: header.listTitle,
       header,
       hearings,
-      dataSource
+      dataSource,
+      pdfDownloadUrl: `/api/pdf/${artefactId}/download`
     });
   } catch (error) {
     console.error("Error rendering Upper Tribunal (Administrative Appeals Chamber) list:", error);

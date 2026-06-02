@@ -32,6 +32,8 @@
     }
   },
 
+  "forwardPorts": [8080, 3001],
+
   "postCreateCommand": "bash .devcontainer/setup.sh",
 
   "customizations": {
