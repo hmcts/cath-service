@@ -35,7 +35,7 @@ export async function seedLocationData() {
 
   const needsSeeding = await shouldSeed();
   if (!needsSeeding) {
-    // Upsert sub-jurisdictions and list types even for existing DBs to pick up new entries added since initial seed
+    // Upsert sub-jurisdictions, locations, and list types even for existing DBs to pick up new entries added since initial seed
     for (const subJurisdiction of locationData.subJurisdictions) {
       await prisma.subJurisdiction.upsert({
         where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
@@ -52,6 +52,24 @@ export async function seedLocationData() {
         }
       });
     }
+
+    for (const location of locationData.locations) {
+      await prisma.location.upsert({
+        where: { locationId: location.locationId },
+        create: {
+          locationId: location.locationId,
+          name: location.name,
+          welshName: location.welshName,
+          email: null,
+          contactNo: null
+        },
+        update: {
+          name: location.name,
+          welshName: location.welshName
+        }
+      });
+    }
+
     await seedListTypes();
     return;
   }
