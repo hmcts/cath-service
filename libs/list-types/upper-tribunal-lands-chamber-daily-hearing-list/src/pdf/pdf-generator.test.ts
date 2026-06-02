@@ -112,6 +112,28 @@ describe("generateUtlcDailyHearingListPdf", () => {
     expect(result.error).toBe("Puppeteer crashed");
   });
 
+  it("should return error when PDF generation reports success but returns no buffer", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: undefined,
+      sizeBytes: undefined
+    });
+
+    // Act
+    const result = await generateUtlcDailyHearingListPdf({
+      artefactId: "no-buffer-pdf",
+      contentDate: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+  });
+
   it("should pass correct render options to renderer", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
