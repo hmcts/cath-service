@@ -1,14 +1,5 @@
 {% extends "layouts/base-template.njk" %}
 
-{% block head %}
-  {{ super() }}
-  <style>
-    .back-to-top {
-      margin-top: 40px;
-    }
-  </style>
-{% endblock %}
-
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
@@ -92,7 +83,7 @@
 
     <p class="govuk-body-s govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
 
-    <div class="back-to-top">
+    <div class="govuk-!-margin-top-7">
       <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
     </div>
 
