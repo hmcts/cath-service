@@ -94,21 +94,21 @@ export const locationData: {
     {
       locationId: 13,
       name: "Upper Tribunal Tax and Chancery Chamber",
-      welshName: "[TRANSLATE: Upper Tribunal Tax and Chancery Chamber]",
+      welshName: "Tribiwnlys Uwch Siambr Dreth a Siawnsri",
       regions: [7],
       subJurisdictions: [10]
     },
     {
       locationId: 14,
       name: "Upper Tribunal Lands Chamber",
-      welshName: "[TRANSLATE: Upper Tribunal Lands Chamber]",
+      welshName: "Tribiwnlys Uwch (Siambr Tiroedd)",
       regions: [7],
       subJurisdictions: [11]
     },
     {
       locationId: 15,
       name: "Upper Tribunal Administrative Appeals Chamber",
-      welshName: "[TRANSLATE: Upper Tribunal Administrative Appeals Chamber]",
+      welshName: "Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
       regions: [1],
       subJurisdictions: [12]
     }
@@ -147,7 +147,7 @@ export const locationData: {
     {
       regionId: 7,
       name: "National",
-      welshName: "[TRANSLATE: National]"
+      welshName: "Cenedlaethol"
     }
   ],
   jurisdictions: [
@@ -230,19 +230,19 @@ export const locationData: {
     {
       subJurisdictionId: 10,
       name: "Upper Tribunal Tax and Chancery Chamber",
-      welshName: "[TRANSLATE: Upper Tribunal Tax and Chancery Chamber]",
+      welshName: "Tribiwnlys Uwch Siambr Dreth a Siawnsri",
       jurisdictionId: 4
     },
     {
       subJurisdictionId: 11,
       name: "Upper Tribunal Lands Chamber",
-      welshName: "[TRANSLATE: Upper Tribunal Lands Chamber]",
+      welshName: "Tribiwnlys Uwch (Siambr Tiroedd)",
       jurisdictionId: 4
     },
     {
       subJurisdictionId: 12,
       name: "Upper Tribunal Administrative Appeals Chamber",
-      welshName: "[TRANSLATE: Upper Tribunal Administrative Appeals Chamber]",
+      welshName: "Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
       jurisdictionId: 4
     }
   ]

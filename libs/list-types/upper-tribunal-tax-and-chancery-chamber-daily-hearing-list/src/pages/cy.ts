@@ -1,38 +1,38 @@
 export const cy = {
-  pageTitle: "[TRANSLATE: Upper Tribunal Tax and Chancery Chamber Daily Hearing list]",
-  downloadPdf: "[TRANSLATE: Download as PDF]",
-  listForDate: "[TRANSLATE: List for]",
-  lastUpdated: "[TRANSLATE: Last updated]",
-  at: "[TRANSLATE: at]",
+  pageTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri",
+  downloadPdf: "Lawrlwytho fel PDF",
+  listForDate: "Rhestr ar gyfer",
+  lastUpdated: "Diweddarwyd ddiwethaf",
+  at: "am",
   openingStatement: {
     contactText:
-      "[TRANSLATE: A representative of the media, or any other person, wishing to attend a remote hearing should contact uttc@justice.gov.uk and we will arrange for your attendance.]",
-    observeLinkText: "[TRANSLATE: Observe a court or tribunal hearing as a journalist, researcher or member of the public]",
+      "Dylai cynrychiolydd o'r cyfryngau, neu unrhyw berson arall, sy'n dymuno mynychu gwrandawiad o bell gysylltu â uttc@justice.gov.uk a byddwn yn trefnu ar gyfer eich presenoldeb.",
+    observeLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
     observeLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
   },
-  openingStatementTitle: "[TRANSLATE: Important information]",
-  searchCasesTitle: "[TRANSLATE: Search Cases]",
-  searchCasesLabel: "[TRANSLATE: Search by case reference, case name, judge, venue, or other details]",
+  openingStatementTitle: "Gwybodaeth bwysig",
+  searchCasesTitle: "Chwilio Achosion",
+  searchCasesLabel: "Chwilio yn ôl cyfeirnod achos, enw'r achos, barnwr, lleoliad, neu fanylion eraill",
   tableHeaders: {
-    time: "[TRANSLATE: Time]",
-    caseReference: "[TRANSLATE: Case Reference]",
-    caseName: "[TRANSLATE: Case Name]",
-    judges: "[TRANSLATE: Judge(s)]",
-    members: "[TRANSLATE: Member(s)]",
-    hearingType: "[TRANSLATE: Hearing Type]",
-    venue: "[TRANSLATE: Venue]",
-    additionalInformation: "[TRANSLATE: Additional Information]"
+    time: "Amser",
+    caseReference: "Cyfeirnod Achos",
+    caseName: "Enw'r Achos",
+    judges: "Barnwr/Barnwyr",
+    members: "Aelod/Aelodau",
+    hearingType: "Math o Wrandawiad",
+    venue: "Lleoliad",
+    additionalInformation: "Gwybodaeth Ychwanegol"
   },
-  dataSource: "[TRANSLATE: Data source]",
-  backToTop: "[TRANSLATE: Back to top]",
+  dataSource: "Ffynhonnell data",
+  backToTop: "Yn ôl i frig y dudalen",
   cautionNote:
-    "[TRANSLATE: Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.]",
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:
-    "[TRANSLATE: This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.]",
+    "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
   provenanceLabels: {
-    MANUAL_UPLOAD: "[TRANSLATE: Manual Upload]",
+    MANUAL_UPLOAD: "Llwytho â Llaw",
     XHIBIT: "XHIBIT",
     SNL: "SNL",
-    COMMON_PLATFORM: "[TRANSLATE: Common Platform]"
+    COMMON_PLATFORM: "Platfform Cyffredin"
   }
 };

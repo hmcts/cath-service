@@ -1,50 +1,50 @@
 export const cy = {
-  pageTitle: "[TRANSLATE: Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list]",
-  downloadPdf: "[TRANSLATE: Download as PDF]",
-  listForDate: "[TRANSLATE: List for]",
-  lastUpdated: "[TRANSLATE: Last updated]",
-  at: "[TRANSLATE: at]",
+  pageTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
+  downloadPdf: "Lawrlwytho fel PDF",
+  listForDate: "Rhestr ar gyfer",
+  lastUpdated: "Diweddarwyd ddiwethaf",
+  at: "am",
   openingStatement: {
-    detailsTitle: "[TRANSLATE: Details]",
+    detailsTitle: "Manylion",
     listChangeNotice:
-      "[TRANSLATE: Lists are subject to change until 4:30pm. Any alterations after this time will be telephoned or emailed direct to the parties or their legal representatives.]",
-    englandAndWalesTitle: "[TRANSLATE: England and Wales]",
-    englandAndWalesRemoteText: "[TRANSLATE: Remote hearings via CVP and BT Meet Me]",
+      "Mae'r rhestrau yn destun newid hyd at 4:30pm. Bydd unrhyw newidiadau ar ôl yr amser hwn yn cael eu ffonio neu eu hanfon trwy e-bost yn uniongyrchol at y partïon neu eu cynrychiolwyr cyfreithiol.",
+    englandAndWalesTitle: "Cymru a Lloegr",
+    englandAndWalesRemoteText: "Gwrandawiadau o bell drwy CVP a BT Meet Me",
     englandAndWalesCvpText:
-      "[TRANSLATE: Members of the public or the media who wish to observe a hearing are required to contact adminappeals@justice.gov.uk in advance of the hearing. They will be provided with the video link details to observe the hearing.]",
+      "Mae'n ofynnol i aelodau o'r cyhoedd neu'r cyfryngau sydd am arsylwi gwrandawiad gysylltu â adminappeals@justice.gov.uk cyn y gwrandawiad. Byddant yn cael manylion y ddolen fideo i arsylwi'r gwrandawiad.",
     englandAndWalesBtMeetMeText:
-      "[TRANSLATE: If the hearing is via BT Meet Me, members of the public or the media who wish to observe the hearing should contact adminappeals@justice.gov.uk. They will be provided with the telephone conference number for the hearing.]",
-    scotlandTitle: "[TRANSLATE: Scotland]",
-    scotlandRemoteText: "[TRANSLATE: Remote hearings (CVP)]",
+      "Os yw'r gwrandawiad drwy BT Meet Me, dylai aelodau o'r cyhoedd neu'r cyfryngau sydd am arsylwi'r gwrandawiad gysylltu â adminappeals@justice.gov.uk. Byddant yn cael rhif cynhadledd ffôn y gwrandawiad.",
+    scotlandTitle: "Yr Alban",
+    scotlandRemoteText: "Gwrandawiadau o bell (CVP)",
     scotlandCvpText:
-      "[TRANSLATE: Members of the public or the media who wish to observe a hearing conducted from Scotland are required to contact UTAACMailbox@justice.gov.uk in advance of the hearing. They will be provided with the video link details to observe the hearing.]",
-    observeLinkText: "[TRANSLATE: Observe a court or tribunal hearing as a journalist, researcher or member of the public]",
+      "Mae'n ofynnol i aelodau o'r cyhoedd neu'r cyfryngau sydd am arsylwi gwrandawiad a gynhelir o'r Alban gysylltu â UTAACMailbox@justice.gov.uk cyn y gwrandawiad. Byddant yn cael manylion y ddolen fideo i arsylwi'r gwrandawiad.",
+    observeLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
     observeLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
   },
-  openingStatementTitle: "[TRANSLATE: Important information]",
-  searchCasesTitle: "[TRANSLATE: Search Cases]",
-  searchCasesLabel: "[TRANSLATE: Search by case reference, appellant, case name, judge, venue, or other details]",
+  openingStatementTitle: "Gwybodaeth bwysig",
+  searchCasesTitle: "Chwilio Achosion",
+  searchCasesLabel: "Chwilio yn ôl cyfeirnod achos, apelydd, enw'r achos, barnwr, lleoliad, neu fanylion eraill",
   tableHeaders: {
-    time: "[TRANSLATE: Time]",
-    appellant: "[TRANSLATE: Appellant]",
-    caseReferenceNumber: "[TRANSLATE: Case Reference Number]",
-    caseName: "[TRANSLATE: Case Name]",
-    judges: "[TRANSLATE: Judge(s)]",
-    members: "[TRANSLATE: Member(s)]",
-    modeOfHearing: "[TRANSLATE: Mode of Hearing]",
-    venue: "[TRANSLATE: Venue]",
-    additionalInformation: "[TRANSLATE: Additional Information]"
+    time: "Amser",
+    appellant: "Apelydd",
+    caseReferenceNumber: "Rhif Cyfeirnod Achos",
+    caseName: "Enw'r Achos",
+    judges: "Barnwr/Barnwyr",
+    members: "Aelod/Aelodau",
+    modeOfHearing: "Dull Gwrandawiad",
+    venue: "Lleoliad",
+    additionalInformation: "Gwybodaeth Ychwanegol"
   },
-  dataSource: "[TRANSLATE: Data source]",
-  backToTop: "[TRANSLATE: Back to top]",
+  dataSource: "Ffynhonnell data",
+  backToTop: "Yn ôl i frig y dudalen",
   cautionNote:
-    "[TRANSLATE: Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.]",
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:
-    "[TRANSLATE: This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.]",
+    "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
   provenanceLabels: {
-    MANUAL_UPLOAD: "[TRANSLATE: Manual Upload]",
+    MANUAL_UPLOAD: "Llwytho â Llaw",
     XHIBIT: "XHIBIT",
     SNL: "SNL",
-    COMMON_PLATFORM: "[TRANSLATE: Common Platform]"
+    COMMON_PLATFORM: "Platfform Cyffredin"
   }
 };
