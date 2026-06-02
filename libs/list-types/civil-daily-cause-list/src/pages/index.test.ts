@@ -151,6 +151,15 @@ describe("civil-daily-cause-list controller", () => {
     expect(renderCall[1]).toHaveProperty("header");
     expect(renderCall[1]).toHaveProperty("listData");
     expect(renderCall[1]).toHaveProperty("t");
+    const t = renderCall[1].t;
+    expect(t).toHaveProperty("pageTitle");
+    expect(t).toHaveProperty("listFor");
+    expect(t).toHaveProperty("lastUpdated");
+    expect(t).toHaveProperty("importantInformation");
+    expect(t).toHaveProperty("openJusticeIntro");
+    expect(t).toHaveProperty("openJusticeContact");
+    expect(t).toHaveProperty("reportingRestrictions");
+    expect(t).toHaveProperty("beforeJudge");
   });
 
   it("should successfully render cause list in Welsh", async () => {

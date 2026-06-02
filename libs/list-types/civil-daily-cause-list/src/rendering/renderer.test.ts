@@ -324,4 +324,179 @@ describe("renderCauseListData (civil-daily-cause-list)", () => {
     const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
     expect((caseItem as any).formattedReportingRestriction).toBe("Section 39, Section 45");
   });
+
+  it("should set hearing channel from sitting channel", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: { line: ["Address"], postCode: "AB1 2CD" }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        channel: ["VIDEO", "TELEPHONE"],
+                        hearing: [{ case: [{ caseName: "Test v Test", caseNumber: "T-001" }] }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
+    expect((sitting as any).caseHearingChannel).toBe("VIDEO, TELEPHONE");
+  });
+
+  it("should set hearing channel to empty string when no channel is provided", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: { line: ["Address"], postCode: "AB1 2CD" }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [{ case: [{ caseName: "Test v Test", caseNumber: "T-001" }] }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
+    expect((sitting as any).caseHearingChannel).toBe("");
+  });
+
+  it("should order presiding judge first in formatted judiciaries", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: { line: ["Address"], postCode: "AB1 2CD" }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    judiciary: [
+                      { johKnownAs: "Judge B", isPresiding: false },
+                      { johKnownAs: "Judge A (Presiding)", isPresiding: true }
+                    ],
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [{ case: [{ caseName: "Test v Test", caseNumber: "T-001" }] }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect((session as any).formattedJudiciaries).toBe("Judge A (Presiding), Judge B");
+  });
+
+  it("should return empty string when no judiciaries are present", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: {
+        venueName: "Test Court",
+        venueAddress: { line: ["Address"], postCode: "AB1 2CD" }
+      },
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    sittings: [
+                      {
+                        sittingStart: "2025-11-12T10:00:00.000Z",
+                        sittingEnd: "2025-11-12T11:00:00.000Z",
+                        hearing: [{ case: [{ caseName: "Test v Test", caseNumber: "T-001" }] }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect((session as any).formattedJudiciaries).toBe("");
+  });
 });
