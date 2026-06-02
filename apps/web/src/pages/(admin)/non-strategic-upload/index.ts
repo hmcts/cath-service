@@ -5,20 +5,24 @@ import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language } from "@hmcts/publication";
+import { Language, Sensitivity } from "@hmcts/publication";
 import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-async function getListTypes() {
+async function getListTypesData() {
   const nonStrategicListTypes = await findNonStrategicListTypes();
-  const options = nonStrategicListTypes.map((listType) => ({
-    value: listType.id.toString(),
-    text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
-  }));
-  return [{ value: "", text: "<Please choose a list type>" }, ...options];
+  const options = [
+    { value: "", text: "<Please choose a list type>" },
+    ...nonStrategicListTypes.map((listType) => ({
+      value: listType.id.toString(),
+      text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
+    }))
+  ];
+  const sensitivityMap = Object.fromEntries(nonStrategicListTypes.map((listType) => [listType.id.toString(), Sensitivity.PUBLIC]));
+  return { options, sensitivityMap };
 }
 
 const SENSITIVITY_OPTIONS = [
@@ -86,16 +90,17 @@ const getHandler = async (req: Request, res: Response) => {
   const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
   const locationName = location?.name || formData.locationName || "";
 
-  const listTypes = await getListTypes();
+  const [{ options: listTypeOptions, sensitivityMap }, locations] = await Promise.all([getListTypesData(), getAllLocations(locale)]);
 
   res.render("non-strategic-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
-    locations: await getAllLocations(locale),
-    listTypes: selectOption(listTypes, formData.listType),
+    locations,
+    listTypes: selectOption(listTypeOptions, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
+    listTypeSensitivityMap: JSON.stringify(sensitivityMap),
     locale
   });
 };
