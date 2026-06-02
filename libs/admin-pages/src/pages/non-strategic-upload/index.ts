@@ -8,7 +8,6 @@ import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
 import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import type { Session } from "express-session";
 import "../../manual-upload/model.js";
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, type UploadFormData } from "../../manual-upload/model.js";
 import { storeNonStrategicUpload } from "../../manual-upload/storage.js";
@@ -38,9 +37,9 @@ const LANGUAGE_OPTIONS = [{ value: "", text: "" }, ...Object.entries(LANGUAGE_LA
 
 const getTranslations = (locale: string) => (locale === "cy" ? cy : en);
 
-const hasValue = (val: unknown) => val !== undefined && val !== null && val !== "" && String(val).trim() !== "";
+const hasValue = (val: any) => val !== undefined && val !== null && val !== "" && val.toString().trim() !== "";
 
-function parseDateInput(body: Record<string, string>, prefix: string) {
+function parseDateInput(body: any, prefix: string) {
   const day = body[`${prefix}-day`];
   const month = body[`${prefix}-month`];
   const year = body[`${prefix}-year`];
@@ -48,7 +47,7 @@ function parseDateInput(body: Record<string, string>, prefix: string) {
   return hasValue(day) || hasValue(month) || hasValue(year) ? { day: day || "", month: month || "", year: year || "" } : undefined;
 }
 
-function transformDateFields(body: Record<string, string>): UploadFormData {
+function transformDateFields(body: any): UploadFormData {
   return {
     locationId: body.locationId,
     locationName: body["court-display"],
@@ -61,13 +60,13 @@ function transformDateFields(body: Record<string, string>): UploadFormData {
   };
 }
 
-function saveSession(session: Session): Promise<void> {
+function saveSession(session: any): Promise<void> {
   return new Promise((resolve, reject) => {
-    session.save((err: unknown) => (err ? reject(err) : resolve()));
+    session.save((err: any) => (err ? reject(err) : resolve()));
   });
 }
 
-function selectOption(options: { value: string; text: string }[], selectedValue: string | undefined) {
+function selectOption(options: any[], selectedValue: string | undefined) {
   return options.map((item) => ({ ...item, selected: item.value === selectedValue }));
 }
 
