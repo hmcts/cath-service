@@ -17,6 +17,22 @@
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
   </div>
 
+  <div class="opening-statement">
+    <p class="bold">{{ t.openingStatement.detailsTitle }}</p>
+    <p>{{ t.openingStatement.listChangeNotice }}</p>
+
+    <p class="bold">{{ t.openingStatement.englandAndWalesTitle }}</p>
+    <p>{{ t.openingStatement.englandAndWalesRemoteText }}</p>
+    <p>{{ t.openingStatement.englandAndWalesCvpText }}</p>
+    <p>{{ t.openingStatement.englandAndWalesBtMeetMeText }}</p>
+
+    <p class="bold">{{ t.openingStatement.scotlandTitle }}</p>
+    <p>{{ t.openingStatement.scotlandRemoteText }}</p>
+    <p>{{ t.openingStatement.scotlandCvpText }}</p>
+
+    <p><a href="{{ t.openingStatement.observeLinkUrl }}">{{ t.openingStatement.observeLinkText }}</a></p>
+  </div>
+
   {% if hearings.length > 0 %}
     <table>
       <thead>
