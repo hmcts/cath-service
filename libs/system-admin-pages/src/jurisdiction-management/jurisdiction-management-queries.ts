@@ -57,6 +57,26 @@ export async function listAllJurisdictionData(filter?: { jurisdiction?: string; 
   return rows.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export async function listJurisdictionsWithSubJurisdictions() {
+  return prisma.jurisdiction.findMany({
+    where: { deletedAt: null },
+    include: {
+      subJurisdictions: {
+        where: { deletedAt: null },
+        orderBy: { name: "asc" }
+      }
+    },
+    orderBy: { name: "asc" }
+  });
+}
+
+export async function listRegions() {
+  return prisma.region.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: "asc" }
+  });
+}
+
 export async function findJurisdictionDataById(id: number, type: JurisdictionDataType) {
   switch (type) {
     case "Jurisdiction":

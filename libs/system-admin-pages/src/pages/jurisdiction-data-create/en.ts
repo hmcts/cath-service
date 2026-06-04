@@ -10,6 +10,8 @@ export const en = {
     { value: "Sub-Jurisdiction", text: "Sub-Jurisdiction" },
     { value: "Region", text: "Region" }
   ],
+  jurisdictionLabel: "Parent Jurisdiction",
+  jurisdictionPlaceholder: "Select a jurisdiction",
   confirmButton: "Confirm",
   errorSummaryTitle: "There is a problem"
 };

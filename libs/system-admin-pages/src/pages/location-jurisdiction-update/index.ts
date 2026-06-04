@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import { listAllJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-queries.js";
+import { listJurisdictionsWithSubJurisdictions, listRegions } from "../../jurisdiction-management/jurisdiction-management-queries.js";
 import { getLocationJurisdictionDetails, updateLocationJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
 import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
 import { cy } from "./cy.js";
@@ -19,11 +19,38 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   const { locationId, locationName } = session.locationJurisdiction;
-  const allData = await listAllJurisdictionData();
-  const locationData = await getLocationJurisdictionDetails(locationId);
+  const [jurisdictionsWithSubs, regions, locationData] = await Promise.all([
+    listJurisdictionsWithSubJurisdictions(),
+    listRegions(),
+    getLocationJurisdictionDetails(locationId)
+  ]);
 
   const currentSubJurisdictionIds = locationData?.locationSubJurisdictions?.map((lsj: any) => lsj.subJurisdiction?.subJurisdictionId) || [];
   const currentRegionIds = locationData?.locationRegions?.map((lr: any) => lr.region?.regionId) || [];
+
+  const jurisdictionLabelMap: Record<string, string> = {
+    Civil: content.civilCourtLabel,
+    Crime: content.criminalCourtLabel,
+    Family: content.familyCourtLabel,
+    Tribunal: content.tribunalLabel
+  };
+
+  const subJurisdictionGroups = jurisdictionsWithSubs
+    .filter((j) => j.subJurisdictions.length > 0)
+    .map((j) => ({
+      heading: jurisdictionLabelMap[j.name] || j.name,
+      items: j.subJurisdictions.map((s) => ({
+        value: s.subJurisdictionId.toString(),
+        text: s.name,
+        checked: currentSubJurisdictionIds.includes(s.subJurisdictionId)
+      }))
+    }));
+
+  const regionCheckboxes = regions.map((r) => ({
+    value: r.regionId.toString(),
+    text: r.name,
+    checked: currentRegionIds.includes(r.regionId)
+  }));
 
   const template =
     LOCATION_JURISDICTION_UPDATE_VARIANT === "dropdowns" ? "location-jurisdiction-update/index-dropdowns" : "location-jurisdiction-update/index-accordions";
@@ -32,9 +59,8 @@ const getHandler = async (req: Request, res: Response) => {
     ...content,
     back: language === "cy" ? "Yn ôl" : "Back",
     locationName,
-    allData,
-    currentSubJurisdictionIds,
-    currentRegionIds,
+    subJurisdictionGroups,
+    regionCheckboxes,
     cancelHref: `${content.cancelHref}${langSuffix}`
   });
 };

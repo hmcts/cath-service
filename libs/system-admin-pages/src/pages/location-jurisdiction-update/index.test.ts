@@ -13,10 +13,11 @@ vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () =
 }));
 
 vi.mock("../../jurisdiction-management/jurisdiction-management-queries.js", () => ({
-  listAllJurisdictionData: vi.fn()
+  listJurisdictionsWithSubJurisdictions: vi.fn(),
+  listRegions: vi.fn()
 }));
 
-import { listAllJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-queries.js";
+import { listJurisdictionsWithSubJurisdictions, listRegions } from "../../jurisdiction-management/jurisdiction-management-queries.js";
 import { getLocationJurisdictionDetails, updateLocationJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
 
 describe("location-jurisdiction-update page", () => {
@@ -37,12 +38,21 @@ describe("location-jurisdiction-update page", () => {
   });
 
   describe("GET", () => {
-    it("should render update form with jurisdiction data", async () => {
+    it("should render update form with grouped jurisdiction data", async () => {
       // Arrange
-      vi.mocked(listAllJurisdictionData).mockResolvedValue([{ id: 10, name: "County Court", welshName: "Llys Sirol", type: "Sub-Jurisdiction" }]);
+      vi.mocked(listJurisdictionsWithSubJurisdictions).mockResolvedValue([
+        {
+          jurisdictionId: 1,
+          name: "Civil",
+          welshName: "Sifil",
+          deletedAt: null,
+          subJurisdictions: [{ subJurisdictionId: 10, name: "County Court", welshName: "Llys Sirol", jurisdictionId: 1, deletedAt: null }]
+        }
+      ] as any);
+      vi.mocked(listRegions).mockResolvedValue([{ regionId: 5, name: "London", welshName: "Llundain", deletedAt: null }] as any);
       vi.mocked(getLocationJurisdictionDetails).mockResolvedValue({
         locationSubJurisdictions: [{ subJurisdiction: { subJurisdictionId: 10 } }],
-        locationRegions: []
+        locationRegions: [{ region: { regionId: 5 } }]
       } as any);
 
       // Act
@@ -54,7 +64,13 @@ describe("location-jurisdiction-update page", () => {
         "location-jurisdiction-update/index-dropdowns",
         expect.objectContaining({
           locationName: "Test Court",
-          currentSubJurisdictionIds: [10]
+          subJurisdictionGroups: [
+            {
+              heading: "Type of civil court",
+              items: [{ value: "10", text: "County Court", checked: true }]
+            }
+          ],
+          regionCheckboxes: [{ value: "5", text: "London", checked: true }]
         })
       );
     });

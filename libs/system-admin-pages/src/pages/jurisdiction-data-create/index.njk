@@ -49,15 +49,33 @@
         id: "type",
         name: "type",
         label: { text: typeLabel },
-        items: [{ value: "", text: typePlaceholder }] | concat(typeOptions),
+        items: typeItems,
         value: data.type,
         errorMessage: { text: typeError.text } if typeError else undefined
       }) }}
+
+      <div id="jurisdiction-container" {% if data.type !== "Sub-Jurisdiction" %}hidden{% endif %}>
+        {% set jurisdictionError = (errors | selectattr("href", "equalto", "#jurisdictionId") | first) if errors else undefined %}
+        {{ govukSelect({
+          id: "jurisdictionId",
+          name: "jurisdictionId",
+          label: { text: jurisdictionLabel },
+          items: jurisdictionItems,
+          value: data.jurisdictionId,
+          errorMessage: { text: jurisdictionError.text } if jurisdictionError else undefined
+        }) }}
+      </div>
 
       {{ govukButton({
         text: confirmButton
       }) }}
     </form>
+
+    <script nonce="{{ cspNonce }}">
+      document.getElementById("type").addEventListener("change", function() {
+        document.getElementById("jurisdiction-container").hidden = this.value !== "Sub-Jurisdiction";
+      });
+    </script>
 
   </div>
 </div>

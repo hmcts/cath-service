@@ -38,6 +38,11 @@ export async function listJurisdictionData(filter?: { jurisdiction?: string; sub
 
 export async function createJurisdictionData(data: CreateJurisdictionInput): Promise<ValidationError[]> {
   const errors = await validateJurisdictionFields(data.name, data.welshName, data.type);
+
+  if (data.type === "Sub-Jurisdiction" && !data.jurisdictionId) {
+    errors.push({ text: "Select a jurisdiction", href: "#jurisdictionId" });
+  }
+
   if (errors.length > 0) return errors;
 
   const duplicateErrors = await checkUniqueness(data.name, data.welshName, data.type);
