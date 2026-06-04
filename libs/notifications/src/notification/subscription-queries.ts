@@ -28,7 +28,11 @@ export async function findActiveSubscriptionsByLocation(locationId: number): Pro
       searchValue: locationId.toString(),
       user: { subscriptionListTypes: { none: {} } }
     },
-    include: {
+    select: {
+      subscriptionId: true,
+      userId: true,
+      searchType: true,
+      searchValue: true,
       user: {
         select: {
           email: true,
@@ -56,7 +60,9 @@ export async function findActiveSubscriptionsByCaseNumber(caseNumber: string): P
       searchType: "CASE_NUMBER",
       searchValue: caseNumber
     },
-    include: {
+    select: {
+      subscriptionId: true,
+      userId: true,
       user: {
         select: {
           email: true,
@@ -74,7 +80,9 @@ export async function findActiveSubscriptionsByCaseName(caseName: string): Promi
       searchType: "CASE_NAME",
       searchValue: { equals: caseName, mode: "insensitive" }
     },
-    include: {
+    select: {
+      subscriptionId: true,
+      userId: true,
       user: {
         select: {
           email: true,

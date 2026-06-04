@@ -1,6 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
-import { PrismaClient } from "../generated/prisma/client.js";
+import { PrismaClient } from "../prisma/generated/prisma/client.js";
 
 // Construct DATABASE_URL from individual env vars if available
 if (process.env.POSTGRES_HOST && process.env.POSTGRES_USER && process.env.POSTGRES_PASSWORD && process.env.POSTGRES_PORT && process.env.POSTGRES_DATABASE) {
@@ -31,5 +31,5 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export type { PrismaClient } from "../generated/prisma/client.js";
-export * from "../generated/prisma/client.js";
+export type { PrismaClient } from "../prisma/generated/prisma/client.js";
+export * from "../prisma/generated/prisma/client.js";
