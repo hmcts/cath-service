@@ -83,6 +83,10 @@ function formatJudiciaries(session: Session): string {
 }
 
 function calculateDuration(sitting: Sitting): void {
+  if (sitting.sittingStart) {
+    (sitting as any).time = formatTime(sitting.sittingStart);
+  }
+
   if (!sitting.sittingStart || !sitting.sittingEnd) {
     (sitting as any).duration = "";
     (sitting as any).durationAsHours = 0;
@@ -100,7 +104,6 @@ function calculateDuration(sitting: Sitting): void {
 
   (sitting as any).durationAsHours = hours;
   (sitting as any).durationAsMinutes = minutes;
-  (sitting as any).time = formatTime(sitting.sittingStart);
 }
 
 function formatHearingChannel(sitting: Sitting, session: Session): void {

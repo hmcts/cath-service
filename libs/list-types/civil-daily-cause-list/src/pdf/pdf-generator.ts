@@ -59,7 +59,7 @@ export async function generateCivilDailyCauseListPdf(options: PdfGenerationOptio
       };
     }
 
-    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
+    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes ?? 0);
   } catch (error) {
     return createPdfErrorResult(error);
   }

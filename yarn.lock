@@ -890,6 +890,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/civil-daily-cause-list@workspace:libs/list-types/civil-daily-cause-list"
   dependencies:
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -961,6 +962,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/family-daily-cause-list@workspace:libs/list-types/family-daily-cause-list"
   dependencies:
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
