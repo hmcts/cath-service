@@ -1,0 +1,306 @@
+name: One-Shot - Fix KV State
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-kv-state-stg:
+    name: Fix KV State - STG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (STG)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix STG KV State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatestg \
+            --resource-group jenkins-state-stg \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-stg" \
+            -backend-config="storage_account_name=sdsstatestg" \
+            -backend-config="container_name=tfstate-stg" \
+            -backend-config="key=cath-service/stg/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove all stale entries so Terraform can re-import cleanly.
+          for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
+            "module.key_vault.azurerm_key_vault.kv" \
+            "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from STG state" \
+              || echo "WARNING: $resource not found in STG state (may already be removed)"
+          done
+
+  fix-kv-state-demo:
+    name: Fix KV State - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Demo)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix Demo KV State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-demo" \
+            -backend-config="storage_account_name=sdsstatedemo" \
+            -backend-config="container_name=tfstate-demo" \
+            -backend-config="key=cath-service/demo/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
+            "module.key_vault.azurerm_key_vault.kv" \
+            "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from Demo state" \
+              || echo "WARNING: $resource not found in Demo state (may already be removed)"
+          done
+
+  fix-kv-state-test:
+    name: Fix KV State - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix Test KV State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
+            "module.key_vault.azurerm_key_vault.kv" \
+            "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from Test state" \
+              || echo "WARNING: $resource not found in Test state (may already be removed)"
+          done
+
+  fix-kv-state-ithc:
+    name: Fix KV State - ITHC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (ITHC)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix ITHC KV State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-ithc" \
+            -backend-config="storage_account_name=sdsstateithc" \
+            -backend-config="container_name=tfstate-ithc" \
+            -backend-config="key=cath-service/ithc/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          for resource in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string \
+            "module.key_vault.azurerm_key_vault.kv" \
+            "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "azurerm_resource_group.app_kv_rg" \
+            "azurerm_resource_group.ss_kv_rg" \
+            "azurerm_resource_group.rg"; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from ITHC state" \
+              || echo "WARNING: $resource not found in ITHC state (may already be removed)"
+          done
