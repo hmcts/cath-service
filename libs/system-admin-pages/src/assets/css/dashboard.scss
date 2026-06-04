@@ -40,6 +40,21 @@
   }
 }
 
+.audit-log-layout {
+  display: flex;
+  gap: 30px;
+}
+
+.audit-log-layout__filter {
+  width: 33.333%;
+  flex-shrink: 0;
+}
+
+.audit-log-layout__content {
+  flex: 1;
+  min-width: 0;
+}
+
 .admin-tile__description {
   margin-bottom: 0;
   color: #0b0c0c;

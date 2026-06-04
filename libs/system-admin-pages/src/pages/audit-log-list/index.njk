@@ -17,9 +17,9 @@
   </div>
 </div>
 
-<div class="govuk-grid-row">
+<div class="audit-log-layout">
   <!-- Filter Panel -->
-  <div class="govuk-grid-column-one-third">
+  <div class="audit-log-layout__filter">
     <div style="border: 1px solid #b1b4b6;">
 
       {# Filter Panel Title #}
@@ -163,7 +163,7 @@
   </div>
 
   <!-- Main Content -->
-  <div class="govuk-grid-column-two-thirds">
+  <div class="audit-log-layout__content">
     {% if errorList %}
       {{ govukErrorSummary({
         titleText: "There is a problem",
