@@ -17,9 +17,9 @@
   </div>
 </div>
 
-<div class="audit-log-layout">
+<div class="audit-log-layout govuk-grid-row">
   <!-- Filter Panel -->
-  <div class="audit-log-layout__filter">
+  <div class="audit-log-layout__filter govuk-grid-column-one-third">
     <div style="border: 1px solid #b1b4b6;">
 
       {# Filter Panel Title #}
@@ -163,7 +163,7 @@
   </div>
 
   <!-- Main Content -->
-  <div class="audit-log-layout__content">
+  <div class="audit-log-layout__content govuk-grid-column-three-quarters">
     {% if errorList %}
       {{ govukErrorSummary({
         titleText: "There is a problem",
@@ -176,7 +176,7 @@
       {% for log in logs %}
         {% set tableRows = (tableRows.push([
           { text: log.timestamp },
-          { text: log.userEmail },
+          { html: "<span class='audit-log-layout__word-break'>" + log.userEmail + "</span>" },
           { text: log.action },
           { html: '<a href="/audit-log-detail?id=' + log.id + '" class="govuk-link">' + viewLinkText + '</a>' }
         ]), tableRows) %}
@@ -187,7 +187,7 @@
           { text: timestampHeader },
           { text: emailHeader },
           { text: actionHeader },
-          { text: viewHeader }
+          { html: '<span class="govuk-visually-hidden">' + viewHeader + '</span>', classes: 'audit-log-layout__view-header' }
         ],
         rows: tableRows
       }) }}

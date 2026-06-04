@@ -42,7 +42,7 @@
 
 .audit-log-layout {
   display: flex;
-  gap: 30px;
+  gap: 0;
 }
 
 .audit-log-layout__filter {
@@ -50,9 +50,23 @@
   flex-shrink: 0;
 }
 
+.audit-log-layout__content.govuk-grid-column-three-quarters {
+  padding-right: 0;
+}
+
 .audit-log-layout__content {
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+
+  .audit-log-layout__word-break {
+    word-break: break-word;
+  }
+
+  .audit-log-layout__view-header {
+    white-space: nowrap;
+    width: 1%;
+  }
 }
 
 .admin-tile__description {
