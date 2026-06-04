@@ -11,8 +11,8 @@ const mockJurisdictions = [
 const mockRegions = [
   { regionId: 1, name: "London", welshName: "Llundain" },
   { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
-  { regionId: 3, name: "South East", welshName: "De Ddwyrain" },
-  { regionId: 4, name: "North", welshName: "Gogledd" },
+  { regionId: 3, name: "South East", welshName: "De-ddwyrain Lloegr" },
+  { regionId: 4, name: "North West", welshName: "Gogledd Orllewin Lloegr" },
   { regionId: 5, name: "Wales", welshName: "Cymru" }
 ];
 
