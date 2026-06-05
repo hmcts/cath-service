@@ -111,6 +111,19 @@ describe("civil-daily-cause-list controller", () => {
     expect(res.render).toHaveBeenCalledWith("errors/403", expect.any(Object));
   });
 
+  it("should pass undefined listType when dbListType is not found", async () => {
+    req.query = { artefactId: "test-id" };
+    vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(validateCivilDailyCauseList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCauseListData).mockResolvedValue(mockRenderedData);
+
+    await GET(req as Request, res as Response);
+
+    expect(canAccessPublicationData).toHaveBeenCalledWith(req.user, mockArtefact, undefined);
+  });
+
   it("should return 404 when JSON file cannot be read", async () => {
     req.query = { artefactId: "test-id" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);

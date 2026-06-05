@@ -963,7 +963,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/daily-cause-list-common@workspace:libs/list-types/daily-cause-list-common"
   dependencies:
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
