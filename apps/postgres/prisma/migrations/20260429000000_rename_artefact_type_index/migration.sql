@@ -1,2 +1,2 @@
--- Rename index to match Prisma convention
-ALTER INDEX "idx_artefact_type" RENAME TO "artefact_type_idx";
+-- No-op: idx_artefact_type was already renamed to artefact_type_idx in migration 20260422140711_fix_index_names
+SELECT 1;
