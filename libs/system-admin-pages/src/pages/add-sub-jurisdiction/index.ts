@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { createSubJurisdiction, getAllJurisdictions, type JurisdictionOption } from "../../reference-data-upload/repository/sub-jurisdiction-repository.js";
 import { validateSubJurisdictionData } from "../../reference-data-upload/validation/sub-jurisdiction-validation.js";
 import { cy } from "./cy.js";
@@ -77,7 +78,7 @@ export const postHandler = async (req: Request, res: Response) => {
   // Set audit log flag
   req.auditMetadata = {
     shouldLog: true,
-    action: "ADD_SUB_JURISDICTION",
+    action: AuditLogAction.ADD_SUB_JURISDICTION,
     entityInfo: `Name: ${formData.name.trim()}, Welsh Name: ${formData.welshName.trim()}, Jurisdiction ID: ${jurisdictionIdNum}`
   };
 

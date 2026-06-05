@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { createThirdPartyUser } from "../../third-party-user/queries.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -45,7 +46,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   req.auditMetadata = {
     shouldLog: true,
-    action: "CREATE_THIRD_PARTY_USER",
+    action: AuditLogAction.CREATE_THIRD_PARTY_USER,
     entityInfo: `ID: ${user.id}, Name: ${user.name}`
   };
 

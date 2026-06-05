@@ -1,0 +1,48 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle(user.email) }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukRadios({
+        name: "confirmation",
+        fieldset: {
+          legend: {
+            text: pageTitle(user.email),
+            isPageHeading: false,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        items: [
+          {
+            value: "yes",
+            text: yesOption
+          },
+          {
+            value: "no",
+            text: noOption
+          }
+        ],
+        errorMessage: errors[0] if errors and errors[0]
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+  </div>
+</div>
+{% endblock %}

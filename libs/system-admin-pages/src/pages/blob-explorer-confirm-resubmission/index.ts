@@ -2,6 +2,7 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getArtefactMetadata } from "@hmcts/publication";
 import "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { formatDateTime } from "../../services/formatting.js";
 import "../../types/session.js";
 import { sendPublicationNotifications } from "../../services/service.js";
@@ -63,7 +64,7 @@ const postHandler = async (req: Request, res: Response) => {
     // Set audit log flag
     req.auditMetadata = {
       shouldLog: true,
-      action: "BLOB_EXPLORER_RESUBMISSION",
+      action: AuditLogAction.BLOB_EXPLORER_RESUBMISSION,
       entityInfo: `Artefact ID: ${artefactId}`
     };
 
