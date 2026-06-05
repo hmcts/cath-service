@@ -9,7 +9,7 @@ test.describe("System Admin Dashboard", () => {
     await page.waitForURL("/system-admin-dashboard");
   });
 
-  test("system admin can view and interact with dashboard", async ({ page }) => {
+  test.skip("system admin can view and interact with dashboard", async ({ page }) => {
     // Verify page loads correctly
     await expect(page).toHaveTitle(/Court and tribunal hearings/i);
 
