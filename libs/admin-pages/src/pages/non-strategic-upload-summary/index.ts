@@ -104,7 +104,7 @@ const postHandler = async (req: Request, res: Response) => {
     const isExcelFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
-    const artefactId = await createArtefact({
+    const { artefactId, isUpdate } = await createArtefact({
       artefactId: randomUUID(),
       locationId: uploadData.locationId,
       listTypeId,
@@ -170,8 +170,11 @@ const postHandler = async (req: Request, res: Response) => {
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
       provenance: Provenance.MANUAL_UPLOAD,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
       displayFrom,
       displayTo,
+      isUpdate,
       logPrefix: "[Non-Strategic Upload]"
     });
 
