@@ -68,7 +68,7 @@ describe("Auth login page handler", () => {
       GET(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockIsSsoConfigured).toHaveBeenCalled();
-      expect(mockPassport.authenticate).toHaveBeenCalledWith("azuread-openidconnect", {
+      expect(mockPassport.authenticate).toHaveBeenCalledWith("sso-oidc", {
         failureRedirect: "/",
         failureMessage: true
       });

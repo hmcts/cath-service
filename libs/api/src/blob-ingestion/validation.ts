@@ -11,7 +11,6 @@ const EXTERNAL_PROVENANCES = ["SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
 export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
   const errors: ValidationError[] = [];
 
-  // Size validation
   if (rawBodySize > MAX_BLOB_SIZE) {
     errors.push({
       field: "body",
