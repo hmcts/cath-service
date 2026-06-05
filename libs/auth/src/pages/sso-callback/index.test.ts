@@ -1,7 +1,9 @@
 import { USER_ROLES } from "@hmcts/account";
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import type { Request, Response } from "express";
+import passport from "passport";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { isSsoConfigured } from "../../config/sso-config.js";
 import { GET } from "./index.js";
 
 // Mock passport
@@ -15,6 +17,56 @@ vi.mock("passport", () => ({
 vi.mock("@hmcts/account/repository/query", () => ({
   createOrUpdateUser: vi.fn().mockResolvedValue({})
 }));
+
+vi.mock("../../config/sso-config.js", () => ({
+  isSsoConfigured: vi.fn().mockReturnValue(true)
+}));
+
+describe("SSO callback guard middleware", () => {
+  const guardMiddleware = GET[0] as (req: Request, res: Response, next: () => void) => void;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 503 and not call passport when SSO is not configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(false);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const req = {} as Request;
+    const res = {
+      status: vi.fn().mockReturnThis(),
+      send: vi.fn()
+    } as unknown as Response;
+    const next = vi.fn();
+
+    guardMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.send).toHaveBeenCalledWith("SSO authentication is not available. Please check configuration.");
+    expect(passport.authenticate).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should call passport.authenticate with sso-oidc strategy when SSO is configured", () => {
+    vi.mocked(isSsoConfigured).mockReturnValue(true);
+
+    const mockMiddleware = vi.fn();
+    vi.mocked(passport.authenticate).mockReturnValue(mockMiddleware as any);
+
+    const req = {} as Request;
+    const res = {} as Response;
+    const next = vi.fn();
+
+    guardMiddleware(req, res, next);
+
+    expect(passport.authenticate).toHaveBeenCalledWith("sso-oidc", {
+      failureRedirect: "/login",
+      failureMessage: true
+    });
+    expect(mockMiddleware).toHaveBeenCalledWith(req, res, next);
+  });
+});
 
 describe("SSO Return handler", () => {
   const handler = GET[GET.length - 1] as (req: Request, res: Response) => Promise<void>;

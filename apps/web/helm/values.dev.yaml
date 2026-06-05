@@ -30,7 +30,7 @@ nodejs:
         - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
-          alias: SSO_IDENTITY_METADATA
+          alias: SSO_ISSUER_URL
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
         - name: sso-sg-admin-ctsc
