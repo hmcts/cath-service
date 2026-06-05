@@ -24,6 +24,7 @@
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
