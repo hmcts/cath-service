@@ -86,37 +86,6 @@ describe("reference-data-upload-summary page", () => {
       expect(mockResponse.redirect).toHaveBeenCalledWith("/reference-data-upload");
     });
 
-    it("should render validation errors when data is invalid", async () => {
-      mockRequest.session!.uploadData = {
-        fileBuffer: Buffer.from("test"),
-        fileName: "test.csv",
-        mimeType: "text/csv"
-      };
-
-      const mockData = [{ locationId: 1, locationName: "Test" }];
-
-      vi.mocked(csvParser.parseCsv).mockReturnValue({
-        success: true,
-        data: mockData
-      });
-
-      vi.mocked(validation.validateLocationData).mockResolvedValue(["Invalid location ID"]);
-
-      const { GET } = await import("./index.js");
-      const handler = GET[1];
-
-      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
-
-      expect(mockResponse.render).toHaveBeenCalledWith(
-        "reference-data-upload-summary/index",
-        expect.objectContaining({
-          fileName: "test.csv",
-          errors: ["Invalid location ID"],
-          hasErrors: true
-        })
-      );
-    });
-
     it("should render summary with valid data", async () => {
       mockRequest.session!.uploadData = {
         fileBuffer: Buffer.from("test"),
@@ -156,7 +125,6 @@ describe("reference-data-upload-summary page", () => {
         data: mockData
       });
 
-      vi.mocked(validation.validateLocationData).mockResolvedValue([]);
       vi.mocked(enrichment.enrichLocationData).mockResolvedValue(enrichedData);
 
       const { GET } = await import("./index.js");
@@ -183,6 +151,49 @@ describe("reference-data-upload-summary page", () => {
       await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
       expect(mockResponse.redirect).toHaveBeenCalledWith("/reference-data-upload");
+    });
+
+    it("should render validation errors on the summary page alongside the preview", async () => {
+      mockRequest.session!.uploadData = {
+        fileBuffer: Buffer.from("test"),
+        fileName: "test.csv",
+        mimeType: "text/csv"
+      };
+
+      const mockData = [{ locationId: 1, locationName: "Test" }];
+      const enrichedData = [
+        {
+          locationId: 1,
+          locationName: "Test",
+          jurisdictionNames: [],
+          subJurisdictionNames: [],
+          regionNames: [],
+          jurisdictionWelshNames: [],
+          subJurisdictionWelshNames: [],
+          regionWelshNames: []
+        }
+      ];
+
+      vi.mocked(csvParser.parseCsv).mockReturnValue({ success: true, data: mockData });
+      vi.mocked(validation.validateLocationData).mockResolvedValue([{ text: "Invalid location ID", href: "#file" }]);
+      vi.mocked(enrichment.enrichLocationData).mockResolvedValue(enrichedData);
+
+      const { POST } = await import("./index.js");
+      const handler = POST[1];
+
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "reference-data-upload-summary/index",
+        expect.objectContaining({
+          fileName: "test.csv",
+          errors: [{ text: "Invalid location ID", href: "#file" }],
+          hasErrors: true,
+          previewData: enrichedData
+        })
+      );
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
+      expect(mockRequest.session!.uploadData).toBeDefined();
     });
 
     it("should process and save valid data", async () => {

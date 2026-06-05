@@ -2,9 +2,25 @@ import type { PrismaClient } from "@hmcts/postgres-prisma";
 import { prisma } from "@hmcts/postgres-prisma";
 import type { ParsedLocationData } from "../model.js";
 
+function mergeByLocationId(data: ParsedLocationData[]): ParsedLocationData[] {
+  const merged = new Map<number, ParsedLocationData>();
+  for (const row of data) {
+    const existing = merged.get(row.locationId);
+    if (existing) {
+      existing.locationReferences = [...existing.locationReferences, ...row.locationReferences];
+      existing.subJurisdictionNames = [...new Set([...existing.subJurisdictionNames, ...row.subJurisdictionNames])];
+      existing.regionNames = [...new Set([...existing.regionNames, ...row.regionNames])];
+    } else {
+      merged.set(row.locationId, { ...row, locationReferences: [...row.locationReferences] });
+    }
+  }
+  return [...merged.values()];
+}
+
 export async function upsertLocations(data: ParsedLocationData[]): Promise<void> {
+  const mergedData = mergeByLocationId(data);
   await prisma.$transaction(async (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">) => {
-    for (const row of data) {
+    for (const row of mergedData) {
       // Get sub-jurisdiction IDs from names
       const subJurisdictions = await tx.subJurisdiction.findMany({
         where: {
@@ -81,6 +97,23 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
           data: regionIds.map((regionId: number) => ({
             locationId: row.locationId,
             regionId
+          }))
+        });
+      }
+
+      await tx.locationReference.deleteMany({
+        where: {
+          locationId: row.locationId
+        }
+      });
+
+      if (row.locationReferences.length > 0) {
+        await tx.locationReference.createMany({
+          data: row.locationReferences.map((ref) => ({
+            locationId: row.locationId,
+            provenance: ref.provenance,
+            provenanceLocationId: ref.provenanceLocationId,
+            provenanceLocationType: ref.provenanceLocationType
           }))
         });
       }

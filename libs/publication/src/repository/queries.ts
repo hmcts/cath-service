@@ -36,7 +36,7 @@ export interface LocationWithPublicationCount {
   publicationCount: number;
 }
 
-export async function createArtefact(data: Artefact): Promise<string> {
+export async function createArtefact(data: Artefact): Promise<{ artefactId: string; isUpdate: boolean }> {
   // Check if artefact already exists with same location, list type, content date, and language
   const existing = await prisma.artefact.findFirst({
     where: {
@@ -64,7 +64,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
         }
       }
     });
-    return existing.artefactId;
+    return { artefactId: existing.artefactId, isUpdate: true };
   }
 
   // Create new artefact
@@ -84,7 +84,7 @@ export async function createArtefact(data: Artefact): Promise<string> {
       noMatch: data.noMatch ?? false
     }
   });
-  return artefact.artefactId;
+  return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
 export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
@@ -103,6 +103,7 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       lastReceivedDate: true,
       isFlatFile: true,
       provenance: true,
+      supersededCount: true,
       noMatch: true
     }
   });

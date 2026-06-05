@@ -85,7 +85,7 @@ describe("createArtefact", () => {
 
     const result = await createArtefact(artefactData as any);
 
-    expect(result).toBe(artefactData.artefactId);
+    expect(result).toEqual({ artefactId: artefactData.artefactId, isUpdate: false });
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
       where: {
         locationId: artefactData.locationId,
@@ -162,7 +162,7 @@ describe("createArtefact", () => {
 
     const result = await createArtefact(artefactData as any);
 
-    expect(result).toBe(existingArtefactId);
+    expect(result).toEqual({ artefactId: existingArtefactId, isUpdate: true });
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
       where: {
         locationId: artefactData.locationId,
@@ -641,6 +641,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
       noMatch: false
     } as any;
 
@@ -663,6 +664,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
+        supersededCount: true,
         noMatch: true
       }
     });
@@ -678,6 +680,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
       noMatch: false
     });
   });
@@ -702,6 +705,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
+        supersededCount: true,
         noMatch: true
       }
     });
@@ -721,6 +725,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "API",
+      supersededCount: 5,
       noMatch: true
     } as any;
 
@@ -740,6 +745,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: false,
       provenance: "API",
+      supersededCount: 5,
       noMatch: true
     });
   });
@@ -1031,7 +1037,7 @@ describe("getArtefactMetadata", () => {
       displayTo: new Date("2025-10-30T16:00:00.000Z"),
       lastReceivedDate: new Date(),
       isFlatFile: false,
-      provenance: "XHIBIT",
+      provenance: "PDDA",
       supersededCount: 0,
       noMatch: false
     } as any;
@@ -1055,7 +1061,7 @@ describe("getArtefactMetadata", () => {
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
 
-    expect(result?.provenance).toBe("XHIBIT");
+    expect(result?.provenance).toBe("PDDA");
   });
 
   it("should return null when artefact not found", async () => {

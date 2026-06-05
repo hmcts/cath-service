@@ -1,11 +1,11 @@
-LOCATION_ID,LOCATION_NAME,WELSH_LOCATION_NAME,EMAIL,CONTACT_NO,SUB_JURISDICTION_NAME,REGION_NAME
-9001,Test Court Alpha,Llys Prawf Alffa,test.alpha@test.hmcts.net,01234567890,Civil Court;Crown Court,South East
-9002,Test Court Beta,Llys Prawf Beta,test.beta@test.hmcts.net,01234567891,Civil Court;Family Court,Midlands
-9003,Test Court Gamma,Llys Prawf Gama,test.gamma@test.hmcts.net,01234567892,Civil Court,North
-9004,Test Court Delta,Llys Prawf Delta,test.delta@test.hmcts.net,01234567893,Civil Court;Crown Court;Court of Appeal,London
-9005,Test Court Epsilon,Llys Prawf Epsilon,test.epsilon@test.hmcts.net,01234567894,Civil Court;Family Court,Wales
-9006,Test Court Zeta,Llys Prawf Zeta,test.zeta@test.hmcts.net,01234567895,Civil Court;Crown Court,North
-9007,Test Court Eta,Llys Prawf Eta,test.eta@test.hmcts.net,01234567896,Civil Court;Family Court,South East
-9008,Test Court Theta,Llys Prawf Theta,test.theta@test.hmcts.net,01234567897,Civil Court;Family Court,North
-9,Test SJP Court,Llys Prawf SJP,sjp@test.hmcts.net,01234567898,Magistrates Court,London;Midlands;South East;North;Wales
-9010,Test Court Iota,Llys Prawf Iota,test.iota@test.hmcts.net,01234567899,Civil Court;Crown Court,North
+LOCATION_ID,LOCATION_NAME,WELSH_LOCATION_NAME,EMAIL,CONTACT_NO,SUB_JURISDICTION_NAME,REGION_NAME,PROVENANCE,PROVENANCE_LOCATION_ID,PROVENANCE_LOCATION_TYPE
+9001,Test Court Alpha,Llys Prawf Alffa,test.alpha@test.hmcts.net,01234567890,Civil Court;Crown Court,South East,SNL,9001,VENUE
+9002,Test Court Beta,Llys Prawf Beta,test.beta@test.hmcts.net,01234567891,Civil Court;Family Court,Midlands,SNL,9002,VENUE
+9003,Test Court Gamma,Llys Prawf Gama,test.gamma@test.hmcts.net,01234567892,Civil Court,North,SNL,9003,VENUE
+9004,Test Court Delta,Llys Prawf Delta,test.delta@test.hmcts.net,01234567893,Civil Court;Crown Court;Court of Appeal,London,SNL,9004,VENUE
+9005,Test Court Epsilon,Llys Prawf Epsilon,test.epsilon@test.hmcts.net,01234567894,Civil Court;Family Court,Wales,SNL,9005,VENUE
+9006,Test Court Zeta,Llys Prawf Zeta,test.zeta@test.hmcts.net,01234567895,Civil Court;Crown Court,North,SNL,9006,VENUE
+9007,Test Court Eta,Llys Prawf Eta,test.eta@test.hmcts.net,01234567896,Civil Court;Family Court,South East,SNL,9007,VENUE
+9008,Test Court Theta,Llys Prawf Theta,test.theta@test.hmcts.net,01234567897,Civil Court;Family Court,North,SNL,9008,VENUE
+9,Test SJP Court,Llys Prawf SJP,sjp@test.hmcts.net,01234567898,Magistrates Court,London;Midlands;South East;North;Wales,SNL,9,VENUE
+9010,Test Court Iota,Llys Prawf Iota,test.iota@test.hmcts.net,01234567899,Civil Court;Crown Court,North,SNL,9010,VENUE

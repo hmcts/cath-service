@@ -107,7 +107,7 @@ const postHandler = async (req: Request, res: Response) => {
     const isFlatFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
-    const artefactId = await createArtefact({
+    const { artefactId, isUpdate } = await createArtefact({
       artefactId: randomUUID(),
       type: "LIST",
       locationId: uploadData.locationId,
@@ -124,7 +124,7 @@ const postHandler = async (req: Request, res: Response) => {
     });
 
     // Save file to temporary storage with artefactId as filename (will overwrite if exists)
-    await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+    const savedFilePath = await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
 
     let jsonData: unknown;
     if (!isFlatFile) {
@@ -148,8 +148,12 @@ const postHandler = async (req: Request, res: Response) => {
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
       provenance: Provenance.MANUAL_UPLOAD,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
       displayFrom,
       displayTo,
+      isUpdate,
+      flatFilePath: isFlatFile ? savedFilePath : undefined,
       logPrefix: "[Manual Upload]"
     });
 
