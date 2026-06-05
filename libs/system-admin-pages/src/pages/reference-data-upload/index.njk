@@ -46,7 +46,7 @@
 
     <form method="post" enctype="multipart/form-data" novalidate>
 
-      <div class="reference-data-upload__file-upload-container">
+      <div class="govuk-inset-text">
         {% set fileError = (errors | selectattr("href", "equalto", "#file") | first) if errors else undefined %}
         <div class="govuk-form-group{% if fileError %} govuk-form-group--error{% endif %}">
           {{ govukFileUpload({

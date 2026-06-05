@@ -13,7 +13,9 @@ export const en = {
   jurisdictionHeader: "Jurisdiction",
   subJurisdictionHeader: "Sub-Jurisdiction",
   regionHeader: "Region",
+  provenanceHeader: "Provenance",
+  provenanceLocationIdHeader: "Provenance Location ID",
+  provenanceLocationTypeHeader: "Provenance Location Type",
   errorSummaryTitle: "There is a problem",
-  errorTitle: "Unable to upload reference data file",
-  errorMessage: "Please verify that provided fields are correct."
+  errorTitle: "Unable to upload reference data file"
 };
