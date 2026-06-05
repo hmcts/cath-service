@@ -26,6 +26,7 @@
       "@hmcts/redis": ["libs/redis/src"],
       "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"],
       "@hmcts/list-types-common": ["libs/list-types/common/src"],
+      "@hmcts/daily-cause-list-common": ["libs/list-types/daily-cause-list-common/src"],
       "@hmcts/civil-and-family-daily-cause-list": ["libs/list-types/civil-and-family-daily-cause-list/src"],
       "@hmcts/civil-daily-cause-list": ["libs/list-types/civil-daily-cause-list/src"],
       "@hmcts/family-daily-cause-list": ["libs/list-types/family-daily-cause-list/src"],

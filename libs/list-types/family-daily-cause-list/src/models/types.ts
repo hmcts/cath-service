@@ -8,4 +8,4 @@ export type {
   RenderOptions,
   Session,
   Sitting
-} from "@hmcts/civil-and-family-daily-cause-list";
+} from "@hmcts/daily-cause-list-common";
