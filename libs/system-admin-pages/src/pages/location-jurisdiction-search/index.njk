@@ -4,18 +4,14 @@
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
-{% block pageTitle %}
-  {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
-{% endblock %}
-
 {% block backLink %}
   {{ govukBackLink({
-    text: back,
-    href: "/reference-data"
+    text: "Back",
+    href: backLink
   }) }}
 {% endblock %}
 
-{% block content %}
+{% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-three-quarters">
 
@@ -40,7 +36,6 @@
         hint: {
           text: searchHint
         },
-        errorMessage: { text: "" } if errors else undefined,
         attributes: {
           "data-autocomplete": "true",
           "data-locale": lng or "en",

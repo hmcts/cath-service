@@ -1,0 +1,68 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-quarter">
+    <form method="get" novalidate>
+      <h2 class="govuk-heading-m">{{ filterHeading }}</h2>
+
+      {{ govukInput({
+        id: "jurisdiction",
+        name: "jurisdiction",
+        label: { text: jurisdictionFilterLabel },
+        hint: { text: filterHint },
+        value: filterValues.jurisdiction
+      }) }}
+
+      {{ govukInput({
+        id: "subJurisdiction",
+        name: "subJurisdiction",
+        label: { text: subJurisdictionFilterLabel },
+        hint: { text: filterHint },
+        value: filterValues.subJurisdiction
+      }) }}
+
+      {{ govukButton({
+        text: applyFiltersButton
+      }) }}
+    </form>
+  </div>
+
+  <div class="govuk-grid-column-three-quarters">
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    {% if tableRows.length > 0 %}
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ nameColumn }}</th>
+            <th scope="col" class="govuk-table__header">{{ typeColumn }}</th>
+            <th scope="col" class="govuk-table__header">{{ actionColumn }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for row in tableRows %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ row[0].text }}</td>
+              <td class="govuk-table__cell">{{ row[1].text }}</td>
+              <td class="govuk-table__cell">{{ row[2].html | safe }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="govuk-body">{{ noResultsText }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
