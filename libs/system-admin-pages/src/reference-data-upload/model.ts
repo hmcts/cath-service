@@ -11,6 +11,15 @@ export interface CsvRow {
   CONTACT_NO: string;
   SUB_JURISDICTION_NAME: string;
   REGION_NAME: string;
+  PROVENANCE: string;
+  PROVENANCE_LOCATION_ID: string;
+  PROVENANCE_LOCATION_TYPE: string;
+}
+
+export interface LocationReferenceEntry {
+  provenance: string;
+  provenanceLocationId: string;
+  provenanceLocationType: string;
 }
 
 export interface ParsedLocationData {
@@ -21,6 +30,7 @@ export interface ParsedLocationData {
   contactNo: string;
   subJurisdictionNames: string[];
   regionNames: string[];
+  locationReferences: LocationReferenceEntry[];
 }
 
 export interface EnrichedLocationData extends ParsedLocationData {

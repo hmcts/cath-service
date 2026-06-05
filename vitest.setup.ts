@@ -19,6 +19,9 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn()
     },
+    locationReference: {
+      findFirst: vi.fn()
+    },
     jurisdiction: {
       findMany: vi.fn()
     },

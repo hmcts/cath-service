@@ -24,7 +24,7 @@ describe("queries", async () => {
       const log: IngestionLog = {
         id: "test-id",
         timestamp: new Date("2025-01-25T10:00:00Z"),
-        sourceSystem: "XHIBIT",
+        sourceSystem: "PDDA",
         courtId: "123",
         status: "SUCCESS",
         artefactId: "artefact-123"
@@ -59,7 +59,7 @@ describe("queries", async () => {
       const log: IngestionLog = {
         id: "test-id",
         timestamp: new Date("2025-01-25T10:00:00Z"),
-        sourceSystem: "XHIBIT",
+        sourceSystem: "PDDA",
         courtId: "123",
         status: "VALIDATION_ERROR",
         errorMessage: "court_id is required"
@@ -100,7 +100,7 @@ describe("queries", async () => {
         {
           id: "log-1",
           timestamp: new Date("2025-01-15T10:00:00Z"),
-          sourceSystem: "XHIBIT",
+          sourceSystem: "PDDA",
           courtId: "123",
           status: "SUCCESS",
           errorMessage: null,
@@ -154,7 +154,7 @@ describe("queries", async () => {
         {
           id: "log-1",
           timestamp: new Date("2025-01-25T10:00:00Z"),
-          sourceSystem: "XHIBIT",
+          sourceSystem: "PDDA",
           courtId: "123",
           status: "VALIDATION_ERROR",
           errorMessage: "Invalid JSON",
@@ -196,7 +196,7 @@ describe("queries", async () => {
         {
           id: "log-1",
           timestamp: new Date("2025-01-25T10:00:00Z"),
-          sourceSystem: "XHIBIT",
+          sourceSystem: "PDDA",
           courtId: "123",
           status: "SYSTEM_ERROR",
           errorMessage: "Database connection failed",

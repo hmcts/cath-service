@@ -9,7 +9,9 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 vi.mock("@hmcts/list-types-common", () => ({
-  createJsonValidator: () => mockValidate
+  createJsonValidator: () => mockValidate,
+  provenanceLabelsEn: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" },
+  provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" }
 }));
 
 vi.mock("@hmcts/publication", () => ({

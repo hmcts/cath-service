@@ -30,6 +30,13 @@ export async function generateReferenceDataCsv(): Promise<string> {
               }
             }
           }
+        },
+        locationReferences: {
+          select: {
+            provenance: true,
+            provenanceLocationId: true,
+            provenanceLocationType: true
+          }
         }
       }
     });
@@ -39,6 +46,10 @@ export async function generateReferenceDataCsv(): Promise<string> {
 
       const regionNames = location.locationRegions.map((lr) => lr.region.name).join(";");
 
+      const provenances = location.locationReferences.map((lr) => lr.provenance).join(";");
+      const provenanceLocationIds = location.locationReferences.map((lr) => lr.provenanceLocationId).join(";");
+      const provenanceLocationTypes = location.locationReferences.map((lr) => lr.provenanceLocationType).join(";");
+
       return {
         LOCATION_ID: location.locationId,
         LOCATION_NAME: location.name,
@@ -46,7 +57,10 @@ export async function generateReferenceDataCsv(): Promise<string> {
         EMAIL: location.email || "",
         CONTACT_NO: location.contactNo || "",
         SUB_JURISDICTION_NAME: subJurisdictionNames,
-        REGION_NAME: regionNames
+        REGION_NAME: regionNames,
+        PROVENANCE: provenances,
+        PROVENANCE_LOCATION_ID: provenanceLocationIds,
+        PROVENANCE_LOCATION_TYPE: provenanceLocationTypes
       };
     });
 
