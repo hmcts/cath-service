@@ -24,13 +24,6 @@ vi.mock("../rendering/renderer.js", () => ({
   renderCauseListData: vi.fn()
 }));
 
-vi.mock("@hmcts/publication", () => ({
-  PROVENANCE_LABELS: {
-    MANUAL_UPLOAD: "Manual Upload",
-    CFT_IDAM: "CFT IDAM"
-  }
-}));
-
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderCauseListData } from "../rendering/renderer.js";
 import { generateDailyCauseListPdf } from "./pdf-generator.js";
@@ -91,7 +84,14 @@ describe("generateDailyCauseListPdf", () => {
     });
 
     const result = await generateDailyCauseListPdf(
-      { artefactId: "test-123", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData },
+      {
+        artefactId: "test-123",
+        contentDate: new Date("2025-01-01"),
+        locale: "en",
+        locationId: "240",
+        jsonData: mockCauseListData,
+        provenanceLabel: "Manual Upload"
+      },
       "/tmp/templates",
       mockImportEn,
       mockImportCy
@@ -106,7 +106,7 @@ describe("generateDailyCauseListPdf", () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: false, error: "Puppeteer crashed" });
 
     const result = await generateDailyCauseListPdf(
-      { artefactId: "failed-pdf", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData },
+      { artefactId: "failed-pdf", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData, provenanceLabel: "" },
       "/tmp/templates",
       mockImportEn,
       mockImportCy
@@ -120,7 +120,7 @@ describe("generateDailyCauseListPdf", () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: undefined, sizeBytes: 0 });
 
     const result = await generateDailyCauseListPdf(
-      { artefactId: "no-buffer", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData },
+      { artefactId: "no-buffer", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData, provenanceLabel: "" },
       "/tmp/templates",
       mockImportEn,
       mockImportCy
@@ -134,7 +134,7 @@ describe("generateDailyCauseListPdf", () => {
     vi.mocked(renderCauseListData).mockRejectedValue(new Error("Renderer failed"));
 
     const result = await generateDailyCauseListPdf(
-      { artefactId: "renderer-error", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData },
+      { artefactId: "renderer-error", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData, provenanceLabel: "" },
       "/tmp/templates",
       mockImportEn,
       mockImportCy
@@ -144,7 +144,7 @@ describe("generateDailyCauseListPdf", () => {
     expect(result.error).toBe("Failed to generate PDF: Renderer failed");
   });
 
-  it("should use MANUAL_UPLOAD provenance label", async () => {
+  it("should use provided provenance label in rendered HTML", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
 
     await generateDailyCauseListPdf(
@@ -154,7 +154,7 @@ describe("generateDailyCauseListPdf", () => {
         locale: "en",
         locationId: "240",
         jsonData: mockCauseListData,
-        provenance: "MANUAL_UPLOAD"
+        provenanceLabel: "Manual Upload"
       },
       "/tmp/templates",
       mockImportEn,
@@ -164,31 +164,11 @@ describe("generateDailyCauseListPdf", () => {
     expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Manual Upload" }));
   });
 
-  it("should use raw provenance value when not in PROVENANCE_LABELS", async () => {
+  it("should use empty provenance label when not provided", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
 
     await generateDailyCauseListPdf(
-      {
-        artefactId: "provenance-test",
-        contentDate: new Date("2025-01-01"),
-        locale: "en",
-        locationId: "240",
-        jsonData: mockCauseListData,
-        provenance: "CUSTOM_SOURCE"
-      },
-      "/tmp/templates",
-      mockImportEn,
-      mockImportCy
-    );
-
-    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "CUSTOM_SOURCE" }));
-  });
-
-  it("should use empty string when provenance is not provided", async () => {
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
-
-    await generateDailyCauseListPdf(
-      { artefactId: "no-provenance", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData },
+      { artefactId: "no-provenance", contentDate: new Date("2025-01-01"), locale: "en", locationId: "240", jsonData: mockCauseListData, provenanceLabel: "" },
       "/tmp/templates",
       mockImportEn,
       mockImportCy
@@ -202,7 +182,7 @@ describe("generateDailyCauseListPdf", () => {
 
     const contentDate = new Date("2025-06-15");
     await generateDailyCauseListPdf(
-      { artefactId: "welsh-pdf", contentDate, locale: "cy", locationId: "999", jsonData: mockCauseListData },
+      { artefactId: "welsh-pdf", contentDate, locale: "cy", locationId: "999", jsonData: mockCauseListData, provenanceLabel: "" },
       "/tmp/templates",
       mockImportEn,
       mockImportCy

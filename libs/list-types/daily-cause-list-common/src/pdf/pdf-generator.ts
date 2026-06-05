@@ -9,12 +9,12 @@ import {
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { CauseListData, RenderOptions } from "../models/types.js";
 import { renderCauseListData } from "../rendering/renderer.js";
 
 export interface DailyCauseListPdfOptions extends BasePdfGenerationOptions<CauseListData> {
   contentDate: Date;
+  provenanceLabel: string;
 }
 
 export async function generateDailyCauseListPdf(
@@ -34,14 +34,12 @@ export async function generateDailyCauseListPdf(
 
     const translations = await loadTranslations(options.locale, importEn, importCy);
 
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
-
     const env = configureNunjucks(templateDir);
     const html = env.render("pdf-template.njk", {
       header: renderedData.header,
       openJustice: renderedData.openJustice,
       listData: renderedData.listData,
-      dataSource: provenanceLabel,
+      dataSource: options.provenanceLabel,
       t: translations,
       pdfStyles: PDF_BASE_STYLES + PDF_CIVIL_FAMILY_STYLES
     });

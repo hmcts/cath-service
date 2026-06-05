@@ -4,6 +4,13 @@ vi.mock("@hmcts/daily-cause-list-common", () => ({
   generateDailyCauseListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/publication", () => ({
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    CFT_IDAM: "CFT IDAM"
+  }
+}));
+
 import { generateDailyCauseListPdf } from "@hmcts/daily-cause-list-common";
 import { generateFamilyDailyCauseListPdf } from "./pdf-generator.js";
 
@@ -17,7 +24,7 @@ const mockCauseListData = {
 };
 
 describe("generateFamilyDailyCauseListPdf", () => {
-  it("should delegate to generateDailyCauseListPdf with correct arguments", async () => {
+  it("should delegate to generateDailyCauseListPdf with resolved provenance label", async () => {
     vi.mocked(generateDailyCauseListPdf).mockResolvedValue({ success: true, sizeBytes: 1024 });
 
     const options = {
@@ -25,14 +32,39 @@ describe("generateFamilyDailyCauseListPdf", () => {
       contentDate: new Date("2025-01-01"),
       locale: "en",
       locationId: "240",
-      jsonData: mockCauseListData
+      jsonData: mockCauseListData,
+      provenance: "MANUAL_UPLOAD"
     };
 
     const result = await generateFamilyDailyCauseListPdf(options);
 
-    expect(generateDailyCauseListPdf).toHaveBeenCalledWith(options, expect.any(String), expect.any(Function), expect.any(Function));
+    expect(generateDailyCauseListPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ provenanceLabel: "Manual Upload" }),
+      expect.any(String),
+      expect.any(Function),
+      expect.any(Function)
+    );
     expect(result.success).toBe(true);
     expect(result.sizeBytes).toBe(1024);
+  });
+
+  it("should use empty provenance label when provenance is not provided", async () => {
+    vi.mocked(generateDailyCauseListPdf).mockResolvedValue({ success: true, sizeBytes: 512 });
+
+    await generateFamilyDailyCauseListPdf({
+      artefactId: "no-provenance",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockCauseListData
+    });
+
+    expect(generateDailyCauseListPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ provenanceLabel: "" }),
+      expect.any(String),
+      expect.any(Function),
+      expect.any(Function)
+    );
   });
 
   it("should return error result when generateDailyCauseListPdf fails", async () => {

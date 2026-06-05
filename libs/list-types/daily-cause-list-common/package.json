@@ -21,7 +21,6 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
-    "@hmcts/publication": "workspace:*",
     "luxon": "3.7.2"
   },
   "devDependencies": {
