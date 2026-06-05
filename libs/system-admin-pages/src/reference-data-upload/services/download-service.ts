@@ -31,7 +31,13 @@ export async function generateReferenceDataCsv(): Promise<string> {
             }
           }
         },
-        locationReferences: true
+        locationReferences: {
+          select: {
+            provenance: true,
+            provenanceLocationId: true,
+            provenanceLocationType: true
+          }
+        }
       }
     });
 
@@ -40,9 +46,9 @@ export async function generateReferenceDataCsv(): Promise<string> {
 
       const regionNames = location.locationRegions.map((lr) => lr.region.name).join(";");
 
-      const provenances = location.locationReferences.map((lr: any) => lr.provenance).join(";");
-      const provenanceLocationIds = location.locationReferences.map((lr: any) => lr.provenanceLocationId).join(";");
-      const provenanceLocationTypes = location.locationReferences.map((lr: any) => lr.provenanceLocationType).join(";");
+      const provenances = location.locationReferences.map((lr) => lr.provenance).join(";");
+      const provenanceLocationIds = location.locationReferences.map((lr) => lr.provenanceLocationId).join(";");
+      const provenanceLocationTypes = location.locationReferences.map((lr) => lr.provenanceLocationType).join(";");
 
       return {
         LOCATION_ID: location.locationId,
