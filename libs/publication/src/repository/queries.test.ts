@@ -1023,7 +1023,7 @@ describe("getArtefactMetadata", () => {
       displayTo: new Date("2025-10-30T16:00:00.000Z"),
       lastReceivedDate: new Date(),
       isFlatFile: false,
-      provenance: "XHIBIT",
+      provenance: "PDDA",
       supersededCount: 0,
       noMatch: false
     } as any;
@@ -1047,7 +1047,7 @@ describe("getArtefactMetadata", () => {
 
     const result = await getArtefactMetadata("550e8400-e29b-41d4-a716-446655440000");
 
-    expect(result?.provenance).toBe("XHIBIT");
+    expect(result?.provenance).toBe("PDDA");
   });
 
   it("should return null when artefact not found", async () => {
