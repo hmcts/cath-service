@@ -17,6 +17,34 @@ function saveSession(session: any): Promise<void> {
   });
 }
 
+async function buildPreviewData(data: any[], page: number) {
+  const enrichedData = await enrichLocationData(data);
+  const itemsPerPage = 10;
+  const totalItems = enrichedData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const paginatedData = enrichedData.slice(startIndex, startIndex + itemsPerPage);
+
+  const paginationItems = [];
+  for (let i = 1; i <= totalPages; i++) {
+    paginationItems.push({
+      number: i,
+      href: `/reference-data-upload-summary?page=${i}`,
+      current: i === page
+    });
+  }
+
+  return {
+    previewData: paginatedData,
+    pagination: {
+      items: paginationItems,
+      previous: page > 1 ? { href: `/reference-data-upload-summary?page=${page - 1}` } : undefined,
+      next: page < totalPages ? { href: `/reference-data-upload-summary?page=${page + 1}` } : undefined
+    },
+    showPagination: totalPages > 1
+  };
+}
+
 const getHandler = async (req: Request, res: Response) => {
   const locale = "en";
   const t = getTranslations(locale);
@@ -46,54 +74,15 @@ const getHandler = async (req: Request, res: Response) => {
 
   console.log("Parsed data:", JSON.stringify(parseResult.data, null, 2));
 
-  // Validate data
-  const validationErrors = await validateLocationData(parseResult.data);
-
-  if (validationErrors.length > 0) {
-    console.log("Validation errors:", validationErrors);
-    return res.render("reference-data-upload-summary/index", {
-      ...t,
-      fileName: uploadData.fileName,
-      errors: validationErrors,
-      hasErrors: true,
-      locale
-    });
-  }
-
-  // Enrich data for preview
-  const enrichedData = await enrichLocationData(parseResult.data);
-
-  // Pagination
   const page = Number.parseInt((req.query.page as string) || "1", 10);
-  const itemsPerPage = 10;
-  const totalItems = enrichedData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedData = enrichedData.slice(startIndex, endIndex);
-
-  // Build pagination items
-  const paginationItems = [];
-  for (let i = 1; i <= totalPages; i++) {
-    paginationItems.push({
-      number: i,
-      href: `/reference-data-upload-summary?page=${i}`,
-      current: i === page
-    });
-  }
+  const preview = await buildPreviewData(parseResult.data, page);
 
   res.render("reference-data-upload-summary/index", {
     ...t,
+    ...preview,
     fileName: uploadData.fileName,
-    previewData: paginatedData,
     hasErrors: false,
-    locale,
-    pagination: {
-      items: paginationItems,
-      previous: page > 1 ? { href: `/reference-data-upload-summary?page=${page - 1}` } : undefined,
-      next: page < totalPages ? { href: `/reference-data-upload-summary?page=${page + 1}` } : undefined
-    },
-    showPagination: totalPages > 1
+    locale
   });
 };
 
@@ -123,10 +112,17 @@ const postHandler = async (req: Request, res: Response) => {
   const validationErrors = await validateLocationData(parseResult.data);
 
   if (validationErrors.length > 0) {
-    req.session.uploadErrors = validationErrors;
-    delete req.session.uploadData;
-    await saveSession(req.session);
-    return res.redirect("/reference-data-upload");
+    const locale = "en";
+    const t = getTranslations(locale);
+    const preview = await buildPreviewData(parseResult.data, 1);
+    return res.render("reference-data-upload-summary/index", {
+      ...t,
+      ...preview,
+      fileName: uploadData.fileName,
+      errors: validationErrors,
+      hasErrors: true,
+      locale
+    });
   }
 
   // Upload to database

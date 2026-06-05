@@ -146,6 +146,19 @@ export async function seedLocationData() {
         }))
       });
     }
+
+    await prisma.locationReference.deleteMany({
+      where: { locationId: location.locationId }
+    });
+
+    await prisma.locationReference.create({
+      data: {
+        locationId: location.locationId,
+        provenance: "SNL",
+        provenanceLocationId: String(location.locationId + 100),
+        provenanceLocationType: "VENUE"
+      }
+    });
   }
   console.log(`Seeded ${locationData.locations.length} locations`);
 
