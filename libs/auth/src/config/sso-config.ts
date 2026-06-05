@@ -1,13 +1,10 @@
 import config from "config";
 
 interface SsoConfig {
-  identityMetadata: string;
+  issuerUrl: string;
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  responseType: "code" | "code id_token" | "id_token code" | "id_token";
-  responseMode: "query" | "form_post";
-  scope: string[];
   systemAdminGroupId: string;
   internalAdminCtscGroupId: string;
   internalAdminLocalGroupId: string;
@@ -31,16 +28,6 @@ function getConfigValue(key: string): string {
 }
 
 /**
- * Appends the OpenID Connect discovery endpoint path to a base URL
- * The passport-azure-ad library requires the full .well-known/openid-configuration URL
- */
-function appendOpenIdConfigPath(baseUrl: string): string {
-  if (!baseUrl) return "";
-  const trimmed = baseUrl.replace(/\/$/, "");
-  return `${trimmed}/.well-known/openid-configuration`;
-}
-
-/**
  * Loads SSO configuration from config object or environment variables
  * @returns SSO configuration object
  */
@@ -49,13 +36,10 @@ export function getSsoConfig(): SsoConfig {
   const redirectUri = `${baseUrl}/sso/return`;
 
   return {
-    identityMetadata: appendOpenIdConfigPath(getConfigValue("SSO_IDENTITY_METADATA")),
+    issuerUrl: getConfigValue("SSO_ISSUER_URL"),
     clientId: getConfigValue("SSO_CLIENT_ID"),
     clientSecret: getConfigValue("SSO_CLIENT_SECRET"),
     redirectUri,
-    responseType: "code",
-    responseMode: "query",
-    scope: ["openid", "profile", "email"],
     systemAdminGroupId: getConfigValue("SSO_SYSTEM_ADMIN_GROUP_ID"),
     internalAdminCtscGroupId: getConfigValue("SSO_INTERNAL_ADMIN_CTSC_GROUP_ID"),
     internalAdminLocalGroupId: getConfigValue("SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID")
@@ -67,11 +51,10 @@ export function getSsoConfig(): SsoConfig {
  * @returns true if SSO configuration is complete, false otherwise
  */
 export function isSsoConfigured(): boolean {
-  // Check if SSO should be disabled for local development
   if (process.env.NODE_ENV === "development" && !process.env.ENABLE_SSO) {
     return false;
   }
 
   const ssoConfig = getSsoConfig();
-  return !!(ssoConfig.identityMetadata && ssoConfig.clientId && ssoConfig.clientSecret);
+  return !!(ssoConfig.issuerUrl && ssoConfig.clientId && ssoConfig.clientSecret);
 }

@@ -38,7 +38,7 @@
     "@hmcts/account": "*",
     "@hmcts/cloud-native-platform": "workspace:*",
     "@microsoft/microsoft-graph-client": "3.0.7",
-    "passport-azure-ad": "4.3.5"
+    "openid-client": "6.8.4"
   },
   "devDependencies": {
     "@types/express": "5.0.6",

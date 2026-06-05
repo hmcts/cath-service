@@ -17,7 +17,7 @@ export const GET = [
     }
 
     // Proceed with SSO authentication
-    return passport.authenticate("azuread-openidconnect", {
+    return passport.authenticate("sso-oidc", {
       failureRedirect: "/login",
       failureMessage: true
     })(req, res, next);
