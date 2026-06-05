@@ -7,10 +7,11 @@ import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
 import { createIngestionLog } from "./queries.js";
 
 const PROVENANCE_MAP: Record<string, string> = {
-  XHIBIT: Provenance.XHIBIT,
   MANUAL_UPLOAD: Provenance.MANUAL_UPLOAD,
   SNL: Provenance.SNL,
-  COMMON_PLATFORM: Provenance.COMMON_PLATFORM
+  COMMON_PLATFORM: Provenance.COMMON_PLATFORM,
+  CP_CATH: Provenance.CP_CATH,
+  PDDA: Provenance.PDDA
 };
 
 export async function processBlobIngestion(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobIngestionResponse> {
@@ -61,11 +62,13 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     };
   }
 
+  const locationId = validation.resolvedLocationId ?? request.court_id;
+
   try {
     // Create artefact in database (returns actual artefact ID - either new or existing)
     const { artefactId, isUpdate } = await createArtefact({
       artefactId: newArtefactId,
-      locationId: request.court_id,
+      locationId,
       listTypeId: validation.listTypeId,
       contentDate: new Date(request.content_date),
       sensitivity: request.sensitivity,
@@ -99,7 +102,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     if (!noMatch) {
       processPublication({
         artefactId,
-        locationId: request.court_id,
+        locationId,
         listTypeId: validation.listTypeId,
         contentDate: new Date(request.content_date),
         locale: request.language === "WELSH" ? "cy" : "en",

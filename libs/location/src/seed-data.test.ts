@@ -24,6 +24,10 @@ const mockPrisma = {
   locationSubJurisdiction: {
     deleteMany: vi.fn(),
     createMany: vi.fn()
+  },
+  locationReference: {
+    deleteMany: vi.fn(),
+    create: vi.fn()
   }
 };
 
@@ -187,6 +191,8 @@ describe("seed-data", () => {
       mockPrisma.locationSubJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.locationRegion.createMany.mockResolvedValue({ count: 1 });
       mockPrisma.locationSubJurisdiction.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.locationReference.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.locationReference.create.mockResolvedValue({});
 
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
@@ -211,6 +217,8 @@ describe("seed-data", () => {
       mockPrisma.locationSubJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.locationRegion.createMany.mockResolvedValue({ count: 1 });
       mockPrisma.locationSubJurisdiction.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.locationReference.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.locationReference.create.mockResolvedValue({});
     });
 
     it("should seed regions correctly", async () => {
@@ -334,6 +342,26 @@ describe("seed-data", () => {
       expect(mockPrisma.locationSubJurisdiction.createMany).toHaveBeenCalledTimes(locationsWithSubJurisdictions.length);
       expect(mockPrisma.locationSubJurisdiction.createMany).toHaveBeenCalledWith({
         data: [{ locationId: 1, subJurisdictionId: 1 }]
+      });
+    });
+
+    it("should delete and create SNL location reference records for each location", async () => {
+      const { seedLocationData } = await import("./seed-data.js");
+      await seedLocationData();
+
+      expect(mockPrisma.locationReference.deleteMany).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockPrisma.locationReference.deleteMany).toHaveBeenCalledWith({
+        where: { locationId: 1 }
+      });
+
+      expect(mockPrisma.locationReference.create).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockPrisma.locationReference.create).toHaveBeenCalledWith({
+        data: {
+          locationId: 1,
+          provenance: "SNL",
+          provenanceLocationId: "101",
+          provenanceLocationType: "VENUE"
+        }
       });
     });
 

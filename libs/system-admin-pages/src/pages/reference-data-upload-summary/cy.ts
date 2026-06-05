@@ -13,7 +13,9 @@ export const cy = {
   jurisdictionHeader: "Welsh placeholder",
   subJurisdictionHeader: "Welsh placeholder",
   regionHeader: "Welsh placeholder",
+  provenanceHeader: "Welsh placeholder",
+  provenanceLocationIdHeader: "Welsh placeholder",
+  provenanceLocationTypeHeader: "Welsh placeholder",
   errorSummaryTitle: "Welsh placeholder",
-  errorTitle: "Welsh placeholder",
-  errorMessage: "Welsh placeholder"
+  errorTitle: "Welsh placeholder"
 };
