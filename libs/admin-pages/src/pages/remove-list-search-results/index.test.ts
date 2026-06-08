@@ -90,7 +90,8 @@ describe("remove-list-search-results page", () => {
           artefactRows: expect.any(Array),
           resultCount: 1,
           sortBy: "contentDate",
-          order: "desc"
+          order: "desc",
+          isDefaultSort: true
         })
       );
     });
@@ -145,7 +146,8 @@ describe("remove-list-search-results page", () => {
         "remove-list-search-results/index",
         expect.objectContaining({
           sortBy: "language",
-          order: "asc"
+          order: "asc",
+          isDefaultSort: false
         })
       );
     });
@@ -193,6 +195,7 @@ describe("remove-list-search-results page", () => {
       expect(mockRes.render).toHaveBeenCalledWith(
         "remove-list-search-results/index",
         expect.objectContaining({
+          isDefaultSort: true,
           errors: expect.arrayContaining([
             expect.objectContaining({
               href: "#artefacts"

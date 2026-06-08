@@ -104,7 +104,8 @@ const getHandler = async (req: Request, res: Response) => {
     artefactRows,
     resultCount: artefacts.length,
     sortBy,
-    order
+    order,
+    isDefaultSort: req.query.sort === undefined
   });
 };
 
@@ -173,6 +174,7 @@ const postHandler = async (req: Request, res: Response) => {
       resultCount: artefacts.length,
       sortBy,
       order,
+      isDefaultSort: req.query.sort === undefined,
       errors: [
         {
           text: lang.errorNoSelection,
