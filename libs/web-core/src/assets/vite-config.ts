@@ -34,7 +34,6 @@ export function createBaseViteConfig(modulesPaths: string[]): UserConfig {
     css: {
       preprocessorOptions: {
         scss: {
-          quietDeps: true,
           loadPaths: ["node_modules"]
         }
       },
@@ -54,8 +53,8 @@ export function createBaseViteConfig(modulesPaths: string[]): UserConfig {
             dest: "fonts"
           },
           {
-            // Copy GOV.UK Frontend rebrand images (overrides standard images)
-            src: "../../node_modules/govuk-frontend/dist/govuk/assets/rebrand/images/*",
+            // Copy GOV.UK Frontend images (rebranded assets are the default from v6)
+            src: "../../node_modules/govuk-frontend/dist/govuk/assets/images/*",
             dest: "images"
           },
           {
