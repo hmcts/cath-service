@@ -7,7 +7,7 @@ import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
-import { findListTypeById } from "@hmcts/system-admin-pages";
+import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { saveUploadedFile } from "../../manual-upload/file-storage.js";
@@ -16,17 +16,6 @@ import { LANGUAGE_LABELS, SENSITIVITY_LABELS } from "../../manual-upload/model.j
 import { getNonStrategicUpload } from "../../manual-upload/storage.js";
 import cy from "./cy.js";
 import en from "./en.js";
-
-declare module "express-serve-static-core" {
-  interface Request {
-    auditMetadata?: {
-      shouldLog?: boolean;
-      action?: string;
-      entityInfo?: string;
-      [key: string]: string | number | boolean | undefined;
-    };
-  }
-}
 
 const getHandler = async (req: Request, res: Response) => {
   const lang = req.query.lng === "cy" ? cy : en;
@@ -115,8 +104,9 @@ const postHandler = async (req: Request, res: Response) => {
     const isExcelFile = !uploadData.fileName?.endsWith(".json");
 
     // Store metadata in database (creates new or updates existing)
-    const artefactId = await createArtefact({
+    const { artefactId, isUpdate } = await createArtefact({
       artefactId: randomUUID(),
+      type: "LIST",
       locationId: uploadData.locationId,
       listTypeId,
       contentDate,
@@ -181,8 +171,11 @@ const postHandler = async (req: Request, res: Response) => {
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
       provenance: Provenance.MANUAL_UPLOAD,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
       displayFrom,
       displayTo,
+      isUpdate,
       logPrefix: "[Non-Strategic Upload]"
     });
 
@@ -207,7 +200,7 @@ const postHandler = async (req: Request, res: Response) => {
     // Set audit log flag
     req.auditMetadata = {
       shouldLog: true,
-      action: "NON_STRATEGIC_UPLOAD",
+      action: AuditLogAction.NON_STRATEGIC_UPLOAD,
       entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.friendlyName || listTypeId}, File: ${uploadData.fileName}`
     };
 

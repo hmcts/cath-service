@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
 const TEMP_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
-export async function saveUploadedFile(artefactId: string, originalFileName: string, fileBuffer: Buffer): Promise<void> {
+export async function saveUploadedFile(artefactId: string, originalFileName: string, fileBuffer: Buffer): Promise<string> {
   // Extract file extension from original filename
   const fileExtension = path.extname(originalFileName);
   const newFileName = `${artefactId}${fileExtension}`;
@@ -20,4 +20,5 @@ export async function saveUploadedFile(artefactId: string, originalFileName: str
   // Save file with artefactId as filename
   const filePath = path.join(TEMP_STORAGE_BASE, newFileName);
   await fs.writeFile(filePath, fileBuffer);
+  return filePath;
 }

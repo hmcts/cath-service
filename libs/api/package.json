@@ -26,15 +26,18 @@
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
+    "@hmcts/pdda-html-upload": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
-    "@hmcts/system-admin-pages": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*",
+    "multer": "1.4.5-lts.1"
   },
   "peerDependencies": {
     "express": "^5.2.0"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
+    "@types/multer": "1.4.12",
     "typescript": "5.9.3",
     "vitest": "4.1.7"
   }

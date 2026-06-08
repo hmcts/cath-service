@@ -165,7 +165,7 @@ describe("create-third-party-user-summary page", () => {
 
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
-        action: "CREATE_THIRD_PARTY_USER",
+        action: "Create third party user",
         entityInfo: "ID: new-user-id, Name: Test User"
       });
     });

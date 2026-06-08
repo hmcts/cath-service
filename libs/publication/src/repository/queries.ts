@@ -36,7 +36,7 @@ export interface LocationWithPublicationCount {
   publicationCount: number;
 }
 
-export async function createArtefact(data: Artefact): Promise<string> {
+export async function createArtefact(data: Artefact): Promise<{ artefactId: string; isUpdate: boolean }> {
   // Check if artefact already exists with same location, list type, content date, and language
   const existing = await prisma.artefact.findFirst({
     where: {
@@ -64,13 +64,14 @@ export async function createArtefact(data: Artefact): Promise<string> {
         }
       }
     });
-    return existing.artefactId;
+    return { artefactId: existing.artefactId, isUpdate: true };
   }
 
   // Create new artefact
   const artefact = await prisma.artefact.create({
     data: {
       artefactId: data.artefactId,
+      type: data.type,
       locationId: data.locationId,
       listTypeId: data.listTypeId,
       contentDate: data.contentDate,
@@ -80,10 +81,10 @@ export async function createArtefact(data: Artefact): Promise<string> {
       displayTo: data.displayTo,
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
-      noMatch: data.noMatch
+      noMatch: data.noMatch ?? false
     }
   });
-  return artefact.artefactId;
+  return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
 export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
@@ -91,6 +92,7 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
     where: { artefactId },
     select: {
       artefactId: true,
+      type: true,
       locationId: true,
       listTypeId: true,
       contentDate: true,
@@ -101,6 +103,7 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       lastReceivedDate: true,
       isFlatFile: true,
       provenance: true,
+      supersededCount: true,
       noMatch: true
     }
   });
@@ -116,6 +119,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
     },
     select: {
       artefactId: true,
+      type: true,
       locationId: true,
       listTypeId: true,
       contentDate: true,
@@ -140,6 +144,7 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
     },
     select: {
       artefactId: true,
+      type: true,
       locationId: true,
       listTypeId: true,
       contentDate: true,
@@ -302,6 +307,7 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   return artefacts.map(
     (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
+      type: artefact.type,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,

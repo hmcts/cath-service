@@ -261,7 +261,7 @@ describe("manage-third-party-subscriptions page", () => {
 
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
-        action: "UPDATE_THIRD_PARTY_SUBSCRIPTIONS",
+        action: "Update third party subscriptions",
         entityInfo: expect.stringMatching(/ID: user-123, Name: Test User, Sensitivity: PUBLIC, Previous List Types: \[.*\], Current List Types: \[.*\]/)
       });
     });

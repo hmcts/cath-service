@@ -54,6 +54,7 @@ describe("createArtefact", () => {
   it("should create a new artefact when no existing artefact is found", async () => {
     const artefactData = {
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
+      type: "LIST",
       locationId: "1",
       listTypeId: 6,
       contentDate: new Date("2025-10-23"),
@@ -84,7 +85,7 @@ describe("createArtefact", () => {
 
     const result = await createArtefact(artefactData as any);
 
-    expect(result).toBe(artefactData.artefactId);
+    expect(result).toEqual({ artefactId: artefactData.artefactId, isUpdate: false });
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
       where: {
         locationId: artefactData.locationId,
@@ -95,8 +96,9 @@ describe("createArtefact", () => {
     });
     expect(prisma.artefact.create).toHaveBeenCalledTimes(1);
     expect(prisma.artefact.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         artefactId: artefactData.artefactId,
+        type: "LIST",
         locationId: artefactData.locationId,
         listTypeId: artefactData.listTypeId,
         contentDate: artefactData.contentDate,
@@ -106,7 +108,7 @@ describe("createArtefact", () => {
         displayTo: artefactData.displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD"
-      }
+      })
     });
     expect(prisma.artefact.update).not.toHaveBeenCalled();
   });
@@ -160,7 +162,7 @@ describe("createArtefact", () => {
 
     const result = await createArtefact(artefactData as any);
 
-    expect(result).toBe(existingArtefactId);
+    expect(result).toEqual({ artefactId: existingArtefactId, isUpdate: true });
     expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
       where: {
         locationId: artefactData.locationId,
@@ -346,6 +348,7 @@ describe("createArtefact", () => {
       artefactId: "550e8400-e29b-41d4-a716-446655440010",
       locationId: "1",
       listTypeId: 6,
+      type: "LIST",
       contentDate,
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -375,8 +378,9 @@ describe("createArtefact", () => {
     await createArtefact(artefactData as any);
 
     expect(prisma.artefact.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         artefactId: artefactData.artefactId,
+        type: "LIST",
         locationId: artefactData.locationId,
         listTypeId: artefactData.listTypeId,
         contentDate,
@@ -386,7 +390,7 @@ describe("createArtefact", () => {
         displayTo,
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD"
-      }
+      })
     });
   });
 });
@@ -439,6 +443,7 @@ describe("getArtefactsByLocation", () => {
       orderBy: { contentDate: "desc" },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -502,6 +507,7 @@ describe("getArtefactsByIds", () => {
       },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -635,6 +641,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
       noMatch: false
     } as any;
 
@@ -646,6 +653,7 @@ describe("getArtefactById", () => {
       where: { artefactId: "550e8400-e29b-41d4-a716-446655440000" },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -656,6 +664,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
+        supersededCount: true,
         noMatch: true
       }
     });
@@ -671,6 +680,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
+      supersededCount: 0,
       noMatch: false
     });
   });
@@ -684,6 +694,7 @@ describe("getArtefactById", () => {
       where: { artefactId: "non-existent-id" },
       select: {
         artefactId: true,
+        type: true,
         locationId: true,
         listTypeId: true,
         contentDate: true,
@@ -694,6 +705,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
+        supersededCount: true,
         noMatch: true
       }
     });
@@ -713,6 +725,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "API",
+      supersededCount: 5,
       noMatch: true
     } as any;
 
@@ -732,6 +745,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: false,
       provenance: "API",
+      supersededCount: 5,
       noMatch: true
     });
   });

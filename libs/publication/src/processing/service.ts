@@ -3,6 +3,7 @@ import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWee
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
+import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
@@ -258,7 +259,12 @@ interface ProcessPublicationParams {
   provenance?: string;
   displayFrom?: Date;
   displayTo?: Date;
+  sensitivity?: string;
+  language?: string;
+  isUpdate?: boolean;
+  flatFilePath?: string;
   skipNotifications?: boolean;
+  skipThirdPartyPush?: boolean;
   logPrefix?: string;
 }
 
@@ -281,7 +287,12 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     provenance,
     displayFrom,
     displayTo,
+    sensitivity = "",
+    language = "",
+    isUpdate = false,
+    flatFilePath,
     skipNotifications = false,
+    skipThirdPartyPush = false,
     logPrefix = "[Publication]"
   } = params;
 
@@ -331,6 +342,27 @@ export async function processPublication(params: ProcessPublicationParams): Prom
 
     result.notificationsSent = notificationResult.sent;
     result.notificationsFailed = notificationResult.failed;
+  }
+
+  if (!skipThirdPartyPush) {
+    sendThirdPartyPublications({
+      artefactId,
+      locationId,
+      listTypeId,
+      contentDate,
+      sensitivity,
+      language,
+      displayFrom: displayFrom ?? new Date(),
+      displayTo: displayTo ?? new Date(),
+      provenance: provenance ?? "",
+      isUpdate,
+      jsonData,
+      pdfPath: result.pdfPath,
+      flatFilePath,
+      logPrefix
+    }).catch((error) => {
+      console.error(`${logPrefix} Third-party push failed:`, error);
+    });
   }
 
   return result;
