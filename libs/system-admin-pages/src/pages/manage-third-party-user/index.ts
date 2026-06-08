@@ -1,6 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
-import { findThirdPartyUserById, getHighestSensitivity } from "../../third-party-user/queries.js";
+import { findThirdPartyUserById } from "../../third-party-user/queries.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -22,12 +22,9 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const highestSensitivity = await getHighestSensitivity(user.subscriptions);
-
   res.render("manage-third-party-user/index", {
     ...content,
-    user,
-    highestSensitivity
+    user
   });
 };
 

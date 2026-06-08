@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateRadioSelection, validateSensitivity, validateThirdPartyUserName } from "./validation.js";
+import { validateRadioSelection, validateThirdPartyUserName } from "./validation.js";
 
 describe("validateThirdPartyUserName", () => {
   it("should return error when name is undefined", () => {
@@ -58,38 +58,6 @@ describe("validateRadioSelection", () => {
 
   it("should return null for no selection", () => {
     const result = validateRadioSelection("no");
-    expect(result).toBeNull();
-  });
-});
-
-describe("validateSensitivity", () => {
-  it("should return error when value is undefined", () => {
-    const result = validateSensitivity(undefined);
-    expect(result).toEqual({ href: "#sensitivity" });
-  });
-
-  it("should return error when value is empty string", () => {
-    const result = validateSensitivity("");
-    expect(result).toEqual({ href: "#sensitivity" });
-  });
-
-  it("should return error for invalid sensitivity value", () => {
-    const result = validateSensitivity("INVALID");
-    expect(result).toEqual({ href: "#sensitivity" });
-  });
-
-  it("should return null for PUBLIC", () => {
-    const result = validateSensitivity("PUBLIC");
-    expect(result).toBeNull();
-  });
-
-  it("should return null for PRIVATE", () => {
-    const result = validateSensitivity("PRIVATE");
-    expect(result).toBeNull();
-  });
-
-  it("should return null for CLASSIFIED", () => {
-    const result = validateSensitivity("CLASSIFIED");
     expect(result).toBeNull();
   });
 });
