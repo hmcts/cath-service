@@ -106,6 +106,7 @@ const postHandler = async (req: Request, res: Response) => {
     // Store metadata in database (creates new or updates existing)
     const { artefactId, isUpdate } = await createArtefact({
       artefactId: randomUUID(),
+      type: "LIST",
       locationId: uploadData.locationId,
       listTypeId,
       contentDate,

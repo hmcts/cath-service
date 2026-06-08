@@ -1,5 +1,6 @@
 export interface Artefact {
   artefactId: string;
+  type: string;
   locationId: string;
   listTypeId: number;
   contentDate: Date;

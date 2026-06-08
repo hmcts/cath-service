@@ -95,7 +95,8 @@ async function seedSjpArtefacts(prefix: string): Promise<void> {
           displayFrom: oneWeekAgo.toISOString(),
           displayTo: oneWeekFromNow.toISOString(),
           isFlatFile: false,
-          provenance
+          provenance,
+          type: "LIST"
         };
 
         const created = await createTestArtefact(artefact);
