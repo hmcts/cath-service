@@ -1,6 +1,4 @@
-@use "govuk-frontend/dist/govuk/index" with (
-  $govuk-suppressed-warnings: ("import-using-all")
-);
+@use "govuk-frontend/dist/govuk/index";
 @use "@hmcts/web-core/src/assets/css/search-autocomplete.scss";
 @use "@hmcts/web-core/src/assets/css/filter-panel.scss";
 @use "@hmcts/web-core/src/assets/css/back-to-top.scss";
