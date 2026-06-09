@@ -4,6 +4,13 @@
 -- 134 requirements, ref REQ-0001..REQ-0134 ordered by issue number.
 -- Apply after schema.sql. See scripts/init_db.sh.
 --
+-- Includes:
+--   * impl_commit_sha / impl_paths: from each issue's merged closing PR(s).
+--     Only 19 issues have a merged PR (the migrated JIRA tickets were
+--     closed administratively, so no commit trace exists for them).
+--   * requirement_link: 21 links — derives_from from native GitHub sub-issue
+--     parents (both ends in set), depends_on from verified issue-body references.
+--
 -- NOT hand-edited: regenerated from the board + issues. To change requirements
 -- after this load, add a numbered migration in migrations/ rather than editing here.
 
@@ -11,16 +18,17 @@ BEGIN TRANSACTION;
 
 INSERT INTO requirement
   (id, ref, title, statement, kind, status, priority, granularity,
-   issue_number, issue_url, created_at, updated_at, created_by, updated_by)
+   issue_number, issue_url, impl_commit_sha, impl_paths,
+   created_at, updated_at, created_by, updated_by)
 VALUES
-  (1, 'REQ-0001', 'Public User Journey', 'This ticket covers all the actions required to be undertaken by public users while navigating through CaTH and accessing general information and public hearing lists.', 'functional', 'verified', 'medium', 'epic', 211, 'https://github.com/hmcts/cath-service/issues/211', '2026-01-20T16:58:42Z', '2026-01-30T15:02:48Z', 'linusnorton', 'linusnorton'),
-  (2, 'REQ-0002', 'CaTH Publication - Manual Publishing', 'This epic covers all the steps in the user journey, business and technical requirements involved in the manual process of publishing hearing lists in CaTH.', 'functional', 'verified', 'medium', 'epic', 213, 'https://github.com/hmcts/cath-service/issues/213', '2026-01-20T16:59:00Z', '2026-01-30T15:02:50Z', 'linusnorton', 'linusnorton'),
-  (3, 'REQ-0003', 'Project Prep Tasks', '#### This epic is raised to capture preparatory tasks needed for the CaTH AI project.', 'functional', 'verified', 'lowest', 'epic', 222, 'https://github.com/hmcts/cath-service/issues/222', '2026-01-20T17:00:25Z', '2026-01-30T15:02:52Z', 'linusnorton', 'linusnorton'),
+  (1, 'REQ-0001', 'Public User Journey', 'This ticket covers all the actions required to be undertaken by public users while navigating through CaTH and accessing general information and public hearing lists.', 'functional', 'verified', 'medium', 'epic', 211, 'https://github.com/hmcts/cath-service/issues/211', NULL, NULL, '2026-01-20T16:58:42Z', '2026-01-30T15:02:48Z', 'linusnorton', 'linusnorton'),
+  (2, 'REQ-0002', 'CaTH Publication - Manual Publishing', 'This epic covers all the steps in the user journey, business and technical requirements involved in the manual process of publishing hearing lists in CaTH.', 'functional', 'verified', 'medium', 'epic', 213, 'https://github.com/hmcts/cath-service/issues/213', NULL, NULL, '2026-01-20T16:59:00Z', '2026-01-30T15:02:50Z', 'linusnorton', 'linusnorton'),
+  (3, 'REQ-0003', 'Project Prep Tasks', '#### This epic is raised to capture preparatory tasks needed for the CaTH AI project.', 'functional', 'verified', 'lowest', 'epic', 222, 'https://github.com/hmcts/cath-service/issues/222', NULL, NULL, '2026-01-20T17:00:25Z', '2026-01-30T15:02:52Z', 'linusnorton', 'linusnorton'),
   (4, 'REQ-0004', 'TEST TICKET', '#### User story
 
 **As a** *<type of user>,* **I want to** *<some goal>,* **so that** *<some reason>.*
 #### Acceptance criteria
- # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 226, 'https://github.com/hmcts/cath-service/issues/226', '2026-01-20T17:01:02Z', '2026-01-30T15:02:55Z', 'linusnorton', 'linusnorton'),
+ # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 226, 'https://github.com/hmcts/cath-service/issues/226', NULL, NULL, '2026-01-20T17:01:02Z', '2026-01-30T15:02:55Z', 'linusnorton', 'linusnorton'),
   (5, 'REQ-0005', '‘How do you want to sign in’ Page', '**PROBLEM STATEMENT**
 
 Verified users are required to sign into CaTH before accessing restricted information. This would require access to a ''sign in'' page.
@@ -41,7 +49,7 @@ Verified users are required to sign into CaTH before accessing restricted inform
  * User can make an account selection by clicking a radio button beside the specific account and clicking the continue button
  * Where the User does not have a CaTH account, the User is provided a link to create a CaTH account
  * User can see the general information links at the bottom of the page ( Help, privacy, cookies, accessibility statement, contact, terms and conditions, welsh, government digital service and open government licence)
- * User has the option of switching to the Welsh translated page', 'functional', 'verified', 'medium', 'story', 227, 'https://github.com/hmcts/cath-service/issues/227', '2026-01-20T17:01:14Z', '2026-01-30T15:02:58Z', 'linusnorton', 'linusnorton'),
+ * User has the option of switching to the Welsh translated page', 'functional', 'verified', 'medium', 'story', 227, 'https://github.com/hmcts/cath-service/issues/227', NULL, NULL, '2026-01-20T17:01:14Z', '2026-01-30T15:02:58Z', 'linusnorton', 'linusnorton'),
   (6, 'REQ-0006', 'CaTH ‘Sign in’ - CFT IDAM', '**PROBLEM STATEMENT**
 
 Verified users are required to sign into CaTH before accessing restricted information. This required the input of verified sign in details.
@@ -444,7 +452,7 @@ This requires verified credentials input through the CaTH sign-in process and va
  - Confirm if error tracking should be logged for failed sign-in attempts.  
  - Confirm if password reset emails use existing HMCTS templates or custom CaTH branding.
 
-—', 'functional', 'verified', 'medium', 'story', 228, 'https://github.com/hmcts/cath-service/issues/228', '2026-01-20T17:01:28Z', '2026-01-30T15:03:00Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 228, 'https://github.com/hmcts/cath-service/issues/228', NULL, NULL, '2026-01-20T17:01:28Z', '2026-01-30T15:03:00Z', 'linusnorton', 'linusnorton'),
   (7, 'REQ-0007', 'CaTH Sign In - B2C', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH. Public users are however restricted from accessing private/classified information and would need to be authorised and verified before access is granted to restricted information in CaTH and would be expected to sign into CaTH before accessing their account. 
@@ -798,7 +806,7 @@ These users must sign into CaTH using their verified credentials before gaining 
  - Confirm whether all sign-in error messages are logged for audit.  
  - Confirm if “Forgot password” applies to all account types or only CaTH accounts.
 
-—', 'functional', 'verified', 'medium', 'story', 229, 'https://github.com/hmcts/cath-service/issues/229', '2026-01-20T17:01:44Z', '2026-04-15T10:34:17Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 229, 'https://github.com/hmcts/cath-service/issues/229', 'c3acd7bdbe390bfc302d511da3f1cca379a21b92', '["apps/web/src/app.test.ts","apps/web/src/app.ts","apps/web/src/assets/css/index.scss","apps/web/src/assets/js/index.ts","e2e-tests/playwright.config.ts","e2e-tests/tests/session-expired.spec.ts","e2e-tests/tests/sign-in.spec.ts","e2e-tests/tests/sign-out.spec.ts","libs/account/src/repository/model.ts","libs/auth/package.json","libs/auth/src/assets/css/session-timeout.scss","libs/auth/src/assets/js/session-timeout.test.ts","libs/auth/src/assets/js/session-timeout.ts","libs/auth/src/config.ts","libs/auth/src/config/b2c-config.test.ts","libs/auth/src/config/b2c-config.ts","libs/auth/src/index.ts","libs/auth/src/middleware/session-timeout.test.ts","libs/auth/src/middleware/session-timeout.ts","libs/auth/src/pages/b2c-callback/index.test.ts","libs/auth/src/pages/b2c-callback/index.ts","libs/auth/src/pages/b2c-forgot-password/index.test.ts","libs/auth/src/pages/b2c-forgot-password/index.ts","libs/auth/src/pages/b2c-login/index.test.ts","libs/auth/src/pages/b2c-login/index.ts","libs/auth/src/pages/logout/index.test.ts","libs/auth/src/pages/logout/index.ts","libs/auth/src/pages/password-reset-success/cy.ts","libs/auth/src/pages/password-reset-success/en.ts","libs/auth/src/pages/password-reset-success/index.njk","libs/auth/src/pages/password-reset-success/index.test.ts","libs/auth/src/pages/password-reset-success/index.ts","libs/auth/src/pages/session-expired/cy.ts","libs/auth/src/pages/session-expired/en.ts","libs/auth/src/pages/session-expired/index.njk","libs/auth/src/pages/session-expired/index.test.ts","libs/auth/src/pages/session-expired/index.ts","libs/auth/src/pages/session-logged-out/index.njk","libs/auth/src/session/timeout-tracker.test.ts","libs/auth/src/session/timeout-tracker.ts","libs/auth/src/user-profile.ts","libs/auth/tsconfig.json","libs/public-pages/src/pages/sign-in/index.test.ts","libs/public-pages/src/pages/sign-in/index.ts","libs/web-core/src/middleware/helmet/helmet-middleware.ts"]', '2026-01-20T17:01:44Z', '2026-04-15T10:34:17Z', 'linusnorton', 'linusnorton'),
   (8, 'REQ-0008', 'User table creation in database', '**PROBLEM STATEMENT**
 
 The details of users who sign into CaTH needs to be stored in the database. This ticket is raised to create a user table to be used to store user details.
@@ -1043,7 +1051,7 @@ Each operation on the User table must be logged in the ***Audit Log*** for trace
 - Confirm retention and anonymization timelines are aligned with GDPR.  
 - Confirm whether users can exist under multiple provenance sources (e.g., dual accounts).  
 - Confirm if local admin roles are created manually or dynamically via provider data.  
-- Confirm database: PostgreSQL or equivalent relational DB.', 'functional', 'verified', 'high', 'story', 230, 'https://github.com/hmcts/cath-service/issues/230', '2026-01-20T17:01:58Z', '2026-01-30T15:03:03Z', 'linusnorton', 'linusnorton'),
+- Confirm database: PostgreSQL or equivalent relational DB.', 'functional', 'verified', 'high', 'story', 230, 'https://github.com/hmcts/cath-service/issues/230', NULL, NULL, '2026-01-20T17:01:58Z', '2026-01-30T15:03:03Z', 'linusnorton', 'linusnorton'),
   (9, 'REQ-0009', 'Forgotten password', '**PROBLEM STATEMENT**
 
 Verified users are required to sign into CaTH before accessing restricted information. Sometimes users forget the password required to access their verified account.
@@ -1065,7 +1073,7 @@ Verified users are required to sign into CaTH before accessing restricted inform
  * Where the user inputs the correct verification code within 10minutes, then the user can continue the password recovery process and is informed upon completing the process that the password was changed successfully
  * Where the user does not input the code withing 10 minutes, then the user is informed that the verification code has expired and is prompted to request a new code by clicking the send new code’ link
  * The expired code can no longer be used in resetting the account password
- * Where the user no longer wants to continue with the password recovery process and clicks the cancel button, then the process is terminated, and the user is informed that the password is unchanged and can still sign-in using the button below and your existing credentials.', 'functional', 'verified', 'medium', 'story', 231, 'https://github.com/hmcts/cath-service/issues/231', '2026-01-20T17:02:16Z', '2026-01-30T15:03:05Z', 'linusnorton', 'linusnorton'),
+ * Where the user no longer wants to continue with the password recovery process and clicks the cancel button, then the process is terminated, and the user is informed that the password is unchanged and can still sign-in using the button below and your existing credentials.', 'functional', 'verified', 'medium', 'story', 231, 'https://github.com/hmcts/cath-service/issues/231', NULL, NULL, '2026-01-20T17:02:16Z', '2026-01-30T15:03:05Z', 'linusnorton', 'linusnorton'),
   (10, 'REQ-0010', 'Landing Page - Header & Footer', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH. This would require users to undergo a few steps to navigate through the different pages in CaTH.
@@ -1088,7 +1096,7 @@ All CaTH users, including members of the public, have access to hearing lists pu
  * Users are also informed that More courts and tribunals will become available over time.
  * Legal and media professionals can see a sign in link just after the highlighted service information
  * Users are informed that the service is also available in Welsh language and provided a link to switch to Welsh
- * Users can see a ‘continue’ button to continues the process to viewing the hearing lists', 'functional', 'verified', 'high', 'story', 232, 'https://github.com/hmcts/cath-service/issues/232', '2026-01-20T17:02:27Z', '2026-01-30T15:03:07Z', 'linusnorton', 'linusnorton'),
+ * Users can see a ‘continue’ button to continues the process to viewing the hearing lists', 'functional', 'verified', 'high', 'story', 232, 'https://github.com/hmcts/cath-service/issues/232', NULL, NULL, '2026-01-20T17:02:27Z', '2026-01-30T15:03:07Z', 'linusnorton', 'linusnorton'),
   (11, 'REQ-0011', 'Public user – Restricted access', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH. Public users are however restricted from accessing private/classified information and would need to be authorised and verified before access is granted to restricted information in CaTH. As such, public users are not required to sign in to access general information in CaTH.
@@ -1122,7 +1130,7 @@ All CaTH users, including members of the public, have access to hearing lists pu
  * Where the public user clicks the forgotten password link, then the user is re-directed to a page where the user is expected to input their email address in the data field provided to receive a verification code.
  * When the public user inputs their email address and clicks the send code button, since the public user does not have a verified account, then the public user does not receive a verification code in the inputted email address
  * Where the public user inputs an incorrect verification code then the user will be notified of the rejected log in and that the sign in failed
- * Where the public user no longer wants to continue with the password recovery process and clicks the cancel button, then the process is terminated', 'functional', 'verified', 'high', 'story', 233, 'https://github.com/hmcts/cath-service/issues/233', '2026-01-20T17:02:44Z', '2026-01-30T15:03:10Z', 'linusnorton', 'linusnorton'),
+ * Where the public user no longer wants to continue with the password recovery process and clicks the cancel button, then the process is terminated', 'functional', 'verified', 'high', 'story', 233, 'https://github.com/hmcts/cath-service/issues/233', NULL, NULL, '2026-01-20T17:02:44Z', '2026-01-30T15:03:10Z', 'linusnorton', 'linusnorton'),
   (12, 'REQ-0012', 'Requirements for content displayed on all pages in CaTH', '**PROBLEM STATEMENT**
 
 All CaTH pages are expected to have specific content displayed at the top and bottom of each page.
@@ -1147,7 +1155,7 @@ All CaTH pages are expected to have specific content displayed at the top and bo
  * A separate section at the bottom, demarcated by a dark blue narrow banner similar to the above criteria for the ‘Gov.UK’, displays the Crown logo followed by various appropriate links provided beneath the Crown, at the bottom of the page and embedded in the following texts; Help, privacy, cookies, accessibility statement, contact, terms and conditions, Welsh, government digital service and open government licence)
  * This section is displayed in a light blue colour similar to the above criteria for the ‘sign in’ and ‘court and tribunal hearings’.
 
- * A link to the Crown copy right is embedded in the royal coat of arms logo at the bottom right of the page, with the crown copyright text written beneath it.', 'functional', 'verified', 'high', 'story', 234, 'https://github.com/hmcts/cath-service/issues/234', '2026-01-20T17:02:54Z', '2026-01-30T15:03:13Z', 'linusnorton', 'linusnorton'),
+ * A link to the Crown copy right is embedded in the royal coat of arms logo at the bottom right of the page, with the crown copyright text written beneath it.', 'functional', 'verified', 'high', 'story', 234, 'https://github.com/hmcts/cath-service/issues/234', NULL, NULL, '2026-01-20T17:02:54Z', '2026-01-30T15:03:13Z', 'linusnorton', 'linusnorton'),
   (13, 'REQ-0013', '‘What do you want to do?’ Page', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH. This would require users to undergo a few steps to navigate through the different pages in CaTH including selection what they want to view.
@@ -1169,7 +1177,7 @@ All CaTH users, including members of the public, have access to hearing lists pu
  * Under the ‘find a court or tribunal’, the descriptive text in the bracket is provided (View time, location, type of hearings and more)
  * Under the ‘find a single justice procedure case’ option, the descriptive text in the bracket is provided (TV licensing, minor traffic offences such as speeding and more)
  * Users can continue the process by clicking the ‘continue’ button
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 235, 'https://github.com/hmcts/cath-service/issues/235', '2026-01-20T17:03:12Z', '2026-01-30T15:03:15Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 235, 'https://github.com/hmcts/cath-service/issues/235', NULL, NULL, '2026-01-20T17:03:12Z', '2026-01-30T15:03:15Z', 'linusnorton', 'linusnorton'),
   (14, 'REQ-0014', 'Find a single justice procedure case', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH including single justice procedure (SJP) cases.
@@ -1552,7 +1560,7 @@ All text above uses {**}Welsh placeholders{**}, e.g.:
 |TS14|Reporting restriction|View press list|True/false value displayed|
 |TS15|Back to Top|Scroll down → click|Scroll returns to page header|
 |TS16|Accessibility: keyboard|Use Tab/Enter/Space|All links/filters/buttons accessible|
-|TS17|Language toggle|Switch to Welsh|Page displays Welsh placeholders|', 'functional', 'verified', 'high', 'story', 236, 'https://github.com/hmcts/cath-service/issues/236', '2026-01-20T17:03:32Z', '2026-05-26T09:57:53Z', 'linusnorton', 'linusnorton'),
+|TS17|Language toggle|Switch to Welsh|Page displays Welsh placeholders|', 'functional', 'verified', 'high', 'story', 236, 'https://github.com/hmcts/cath-service/issues/236', 'dc2e4aa7f44a210830806c7d57020cd3182802e5', '["apps/api/src/app.ts","apps/web/package.json","apps/web/src/app.test.ts","apps/web/src/app.ts","apps/web/src/assets/css/index.scss","apps/web/src/assets/js/index.ts","apps/web/src/pages/cy.ts","apps/web/src/pages/index.test.ts","apps/web/vite.build.ts","biome.json","e2e-tests/tests/sjp-press-list.spec.ts","e2e-tests/tests/sjp-public-list.spec.ts","libs/account/src/roles.ts","libs/api/src/blob-ingestion/validation.test.ts","libs/api/src/blob-ingestion/validation.ts","libs/list-types/common/package.json","libs/list-types/common/src/assets/js/sjp-filter-search.ts","libs/list-types/common/src/index.ts","libs/list-types/common/src/sjp/json-parser.test.ts","libs/list-types/common/src/sjp/json-parser.ts","libs/list-types/common/src/sjp/sjp-paginator.test.ts","libs/list-types/common/src/sjp/sjp-paginator.ts","libs/list-types/common/src/sjp/sjp-service.test.ts","libs/list-types/common/src/sjp/sjp-service.ts","libs/list-types/common/src/validation/list-type-validator.test.ts","libs/list-types/common/src/validation/list-type-validator.ts","libs/list-types/sjp-press-list/package.json","libs/list-types/sjp-press-list/src/assets/css/sjp-filters.scss","libs/list-types/sjp-press-list/src/config.test.ts","libs/list-types/sjp-press-list/src/config.ts","libs/list-types/sjp-press-list/src/index.ts","libs/list-types/sjp-press-list/src/pages/cy.ts","libs/list-types/sjp-press-list/src/pages/en.ts","libs/list-types/sjp-press-list/src/pages/index.test.ts","libs/list-types/sjp-press-list/src/pages/index.ts","libs/list-types/sjp-press-list/src/pages/sjp-press-list.njk","libs/list-types/sjp-press-list/src/schemas/sjp-press-list.json","libs/list-types/sjp-press-list/src/validation/json-validator.test.ts","libs/list-types/sjp-press-list/src/validation/json-validator.ts","libs/list-types/sjp-press-list/tsconfig.json","libs/list-types/sjp-public-list/package.json","libs/list-types/sjp-public-list/src/assets/css/sjp-public-list.scss","libs/list-types/sjp-public-list/src/assets/js/sortable-table.ts","libs/list-types/sjp-public-list/src/config.test.ts","libs/list-types/sjp-public-list/src/config.ts","libs/list-types/sjp-public-list/src/index.ts","libs/list-types/sjp-public-list/src/pages/cy.ts","libs/list-types/sjp-public-list/src/pages/en.ts","libs/list-types/sjp-public-list/src/pages/index.test.ts","libs/list-types/sjp-public-list/src/pages/index.ts","libs/list-types/sjp-public-list/src/pages/sjp-public-list.njk","libs/list-types/sjp-public-list/src/schemas/sjp-public-list.json","libs/list-types/sjp-public-list/src/validation/json-validator.test.ts","libs/list-types/sjp-public-list/src/validation/json-validator.ts","libs/list-types/sjp-public-list/tsconfig.json","libs/location/src/list-type-data.ts","libs/location/src/seed-data.ts","libs/location/src/seed-list-types.ts","libs/notifications/src/notification/notification-service.ts","libs/public-pages/src/pages/summary-of-publications/cy.ts","libs/public-pages/src/pages/summary-of-publications/en.ts","libs/public-pages/src/pages/summary-of-publications/index.test.ts","libs/public-pages/src/pages/summary-of-publications/index.ts","libs/publication/src/index.ts","libs/publication/src/repository/queries.test.ts","libs/publication/src/repository/queries.ts","libs/web-core/src/middleware/govuk-frontend/configure-govuk.ts","libs/web-core/src/middleware/govuk-frontend/filters/index.ts","libs/web-core/src/middleware/govuk-frontend/filters/time.test.ts","libs/web-core/src/middleware/govuk-frontend/filters/time.ts","tsconfig.json"]', '2026-01-20T17:03:32Z', '2026-05-26T09:57:53Z', 'linusnorton', 'linusnorton'),
   (15, 'REQ-0015', 'View SJP cases that are ready for hearing', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH including single justice procedure (SJP) cases.
@@ -1577,7 +1585,7 @@ All CaTH users, including members of the public, have access to hearing lists pu
  * Users can close each filter option by clicking on the collapsible accordion
  * Users can clear the selected filter options by clicking the ‘clear filter’ link provided at the top of the filter
  * Users can go back to the top of the page by clicking the ‘back to top’ arrow/text provided at the bottom of the page
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 237, 'https://github.com/hmcts/cath-service/issues/237', '2026-01-20T17:03:46Z', '2026-01-30T15:03:18Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 237, 'https://github.com/hmcts/cath-service/issues/237', NULL, NULL, '2026-01-20T17:03:46Z', '2026-01-30T15:03:18Z', 'linusnorton', 'linusnorton'),
   (16, 'REQ-0016', 'Select a court or tribunal', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to unrestricted court and tribunal hearing lists. This would require users going through several steps to achieve this.
@@ -1600,7 +1608,7 @@ All CaTH users, including members of the public, have access to unrestricted cou
  * The user can make a selection from the displayed options by clicking on it
  * The user can continue the process by clicking the ‘continue’ button
  * The user can choose to click the ‘select from an A-Z list of courts and tribunals’ link to view all available venues
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 238, 'https://github.com/hmcts/cath-service/issues/238', '2026-01-20T17:03:56Z', '2026-01-30T15:03:20Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 238, 'https://github.com/hmcts/cath-service/issues/238', NULL, NULL, '2026-01-20T17:03:56Z', '2026-01-30T15:03:20Z', 'linusnorton', 'linusnorton'),
   (17, 'REQ-0017', 'Find a court or tribunal', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to unrestricted court and tribunal hearing lists. This would require users going through several steps to achieve this.
@@ -1626,7 +1634,7 @@ All CaTH users, including members of the public, have access to unrestricted cou
  * User can click on the alphabets at the top of the page to view only venues beginning with that alphabet
  * Users can clear the selected filter options by clicking the ‘clear filter’ link provided at the top of the filter
  * Users can go back to the top of the page by clicking the ‘back to top’ arrow/text provided at the bottom of the page
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 239, 'https://github.com/hmcts/cath-service/issues/239', '2026-01-20T17:04:19Z', '2026-01-30T15:03:23Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 239, 'https://github.com/hmcts/cath-service/issues/239', NULL, NULL, '2026-01-20T17:04:19Z', '2026-01-30T15:03:23Z', 'linusnorton', 'linusnorton'),
   (18, 'REQ-0018', '‘What do you want to view?’ Page', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to unrestricted court and tribunal hearing lists. This would require users going through several steps to achieve this.
@@ -1645,7 +1653,7 @@ All CaTH users, including members of the public, have access to unrestricted cou
  * All CaTH users have access to unrestricted published hearing information in CaTH
  * On the ‘What do you want to view?’ Page for each venue, the user is able t see all the hearing lists published at this venue
  * User can click o the hearing list link to view the cases published in the list
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 240, 'https://github.com/hmcts/cath-service/issues/240', '2026-01-20T17:04:34Z', '2026-01-30T15:03:25Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 240, 'https://github.com/hmcts/cath-service/issues/240', NULL, NULL, '2026-01-20T17:04:34Z', '2026-01-30T15:03:25Z', 'linusnorton', 'linusnorton'),
   (19, 'REQ-0019', 'Manual publishing – Your Dashboard', '**PROBLEM STATEMENT**
 
 Local admins (court clerks) can publish hearing lists manually in CaTH by uploading a flat file. This process involves several steps.
@@ -1663,7 +1671,7 @@ Local admins (court clerks) can publish hearing lists manually in CaTH by upload
 **ACCEPTANCE CRITERIA**
  * A local admin is able to access a verified account by signing in through the sign in page with their approved log in details
  * The local admin can see a dashboard that displays the upload, upload excel file and remove tabs
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 241, 'https://github.com/hmcts/cath-service/issues/241', '2026-01-20T17:04:48Z', '2026-01-30T15:03:27Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 241, 'https://github.com/hmcts/cath-service/issues/241', NULL, NULL, '2026-01-20T17:04:48Z', '2026-01-30T15:03:27Z', 'linusnorton', 'linusnorton'),
   (20, 'REQ-0020', 'Manual publishing – Manual upload form', '**PROBLEM STATEMENT**
 
 Local admins (court clerks) can publish hearing lists manually in CaTH by uploading a flat file. This process involves several steps.
@@ -1708,7 +1716,7 @@ Local admins (court clerks) can publish hearing lists manually in CaTH by upload
  * This will be the date the publication is available from, if today''s date is used it will be displayed immediately. If a date in the future is used, it will display from 00:01 of that date.
  * **Display to**
  * This will be the last date the publication is available. It will be displayed until 23:59 of that date.
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 242, 'https://github.com/hmcts/cath-service/issues/242', '2026-01-20T17:05:02Z', '2026-01-30T15:03:30Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 242, 'https://github.com/hmcts/cath-service/issues/242', NULL, NULL, '2026-01-20T17:05:02Z', '2026-01-30T15:03:30Z', 'linusnorton', 'linusnorton'),
   (21, 'REQ-0021', 'Manual publishing – Confirm upload details', '**PROBLEM STATEMENT**
 
 Local admins (court clerks) can publish hearing lists manually in CaTH by uploading a flat file. This process involves several steps.
@@ -1913,7 +1921,7 @@ After uploading a file, the local admin needs to check the details before publis
  - Confirm if any “Change” action triggers validation checks before returning to summary.  
  - Confirm whether Welsh translations are to be dynamically loaded or static.  
 
-—', 'functional', 'verified', 'medium', 'story', 243, 'https://github.com/hmcts/cath-service/issues/243', '2026-01-20T17:05:15Z', '2026-01-30T15:03:32Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 243, 'https://github.com/hmcts/cath-service/issues/243', NULL, NULL, '2026-01-20T17:05:15Z', '2026-01-30T15:03:32Z', 'linusnorton', 'linusnorton'),
   (22, 'REQ-0022', 'Manual publishing – Manual upload successful', '**PROBLEM STATEMENT**
 
 Local admins (court clerks) can publish hearing lists manually in CaTH by uploading a flat file. This process involves several steps.
@@ -2143,7 +2151,7 @@ The page is purely informational and provides navigation options.
  - Confirm if the {**}`**`Home`**`{**} link directs to the admin dashboard or CaTH home page for all roles.  
  - Confirm whether the {**}`**`Continue`**`{**} button on the summary page triggers automatic backend confirmation before redirecting here.
 
-—', 'functional', 'verified', 'medium', 'story', 244, 'https://github.com/hmcts/cath-service/issues/244', '2026-01-20T17:05:29Z', '2026-01-30T15:03:35Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 244, 'https://github.com/hmcts/cath-service/issues/244', NULL, NULL, '2026-01-20T17:05:29Z', '2026-01-30T15:03:35Z', 'linusnorton', 'linusnorton'),
   (23, 'REQ-0023', 'Excel Upload – Upload Excel File', '**PROBLEM STATEMENT**
 
 The non-strategic publishing route requires the upload of an excel file in CaTH which is then transformed at the back end to a Json file before publishing. The upload process is completed over a number of steps.
@@ -2482,22 +2490,22 @@ The non-strategic publishing route requires the upload of an excel file in CaTH 
 
  * Language toggle switches all English text to Welsh placeholders.
 
- * Back link returns user to dashboard without clearing form data.', 'functional', 'verified', 'medium', 'story', 245, 'https://github.com/hmcts/cath-service/issues/245', '2026-01-20T17:05:45Z', '2026-01-30T15:03:37Z', 'linusnorton', 'linusnorton'),
+ * Back link returns user to dashboard without clearing form data.', 'functional', 'verified', 'medium', 'story', 245, 'https://github.com/hmcts/cath-service/issues/245', NULL, NULL, '2026-01-20T17:05:45Z', '2026-01-30T15:03:37Z', 'linusnorton', 'linusnorton'),
   (24, 'REQ-0024', 'Preparation for Sprint 2- Cadence', '#### User story
 
 **As a** user I Want all project governance planning sessions are setup in time for cath rewirte commencement{*}].{*}
 #### Acceptance criteria
- # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 246, 'https://github.com/hmcts/cath-service/issues/246', '2026-01-20T17:05:59Z', '2026-01-30T15:03:39Z', 'linusnorton', 'linusnorton'),
+ # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 246, 'https://github.com/hmcts/cath-service/issues/246', NULL, NULL, '2026-01-20T17:05:59Z', '2026-01-30T15:03:39Z', 'linusnorton', 'linusnorton'),
   (25, 'REQ-0025', 'Create Backlog Items for cath rewrite commencement', '#### User story
 
 **As a** *<type of user>,* **I want to** *<some goal>,* **so that** *<some reason>.*
 #### Acceptance criteria
- # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 247, 'https://github.com/hmcts/cath-service/issues/247', '2026-01-20T17:06:10Z', '2026-01-30T15:03:41Z', 'linusnorton', 'linusnorton'),
+ # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 247, 'https://github.com/hmcts/cath-service/issues/247', NULL, NULL, '2026-01-20T17:06:10Z', '2026-01-30T15:03:41Z', 'linusnorton', 'linusnorton'),
   (26, 'REQ-0026', 'Prepare licences for Cath rewrite', '#### User story
 
 **As a** *<type of user>,* **I want to** *<some goal>,* **so that** *<some reason>.*
 #### Acceptance criteria
- # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 248, 'https://github.com/hmcts/cath-service/issues/248', '2026-01-20T17:06:20Z', '2026-01-30T15:03:45Z', 'linusnorton', 'linusnorton'),
+ # **Given that** *<some precondition>,* **when** *<some action is carried out>,* **then** *<I expect some result>.*', 'functional', 'verified', 'medium', 'story', 248, 'https://github.com/hmcts/cath-service/issues/248', NULL, NULL, '2026-01-20T17:06:20Z', '2026-01-30T15:03:45Z', 'linusnorton', 'linusnorton'),
   (27, 'REQ-0027', 'Excel Upload – Complete excel upload process /  Care Standards Tribunal Weekly Hearing List', '**PROBLEM STATEMENT**
 
 The non-strategic publishing route requires the upload of an excel file in CaTH which is then transformed at the back end to a Json file before publishing. The upload process is completed over a number of steps.
@@ -2911,7 +2919,7 @@ Data source: Care Standards Tribunal
  
  * Table can be standard single row per case with 6 columns, or 2-line responsive rows; spec allows either as long as all 6 data items are visible.
 
- * “Back to top” is a clickable link or button with arrow icon.', 'functional', 'verified', 'medium', 'story', 249, 'https://github.com/hmcts/cath-service/issues/249', '2026-01-20T17:06:30Z', '2026-01-30T15:03:47Z', 'linusnorton', 'linusnorton'),
+ * “Back to top” is a clickable link or button with arrow icon.', 'functional', 'verified', 'medium', 'story', 249, 'https://github.com/hmcts/cath-service/issues/249', NULL, NULL, '2026-01-20T17:06:30Z', '2026-01-30T15:03:47Z', 'linusnorton', 'linusnorton'),
   (28, 'REQ-0028', 'Excel Upload – Excel upload successful', '**PROBLEM STATEMENT**
 
 The non-strategic publishing route requires the upload of an excel file in CaTH which is then transformed at the back end to a Json file before publishing. The upload process is completed over a number of steps.
@@ -2932,7 +2940,7 @@ The non-strategic publishing route requires the upload of an excel file in CaTH 
  * The system displays ‘success’ boldly in a green banner
  * In the same banner, a descriptive text is displayed and reads ‘Your file has been uploaded’
  * Beneath the green banner, the user can see several links that directs them to ‘upload another file’, ‘remove file’ or ‘home’.
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 250, 'https://github.com/hmcts/cath-service/issues/250', '2026-01-20T17:06:48Z', '2026-01-30T15:03:50Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 250, 'https://github.com/hmcts/cath-service/issues/250', NULL, NULL, '2026-01-20T17:06:48Z', '2026-01-30T15:03:50Z', 'linusnorton', 'linusnorton'),
   (29, 'REQ-0029', 'Remove publication', '**PROBLEM STATEMENT**
 
 Admins who can upload files and publish hearing lists in CaTH are also given permission to remove these publications if needed. This process is carried out in several steps.
@@ -3271,7 +3279,7 @@ This process allows for the secure and auditable removal of published content fr
  - Confirm if multi-language content (Welsh/English) should display both versions in the results table.  
  - Confirm if removal should automatically trigger GOV.UK unpublishing via API or require manual sync.
 
-—', 'functional', 'verified', 'high', 'story', 251, 'https://github.com/hmcts/cath-service/issues/251', '2026-01-20T17:07:00Z', '2026-01-30T15:03:52Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 251, 'https://github.com/hmcts/cath-service/issues/251', NULL, NULL, '2026-01-20T17:07:00Z', '2026-01-30T15:03:52Z', 'linusnorton', 'linusnorton'),
   (30, 'REQ-0030', 'Find content to remove', '**PROBLEM STATEMENT**
 
 Local admins who can upload files and publish hearing lists in CaTH are also given permission to remove these publications if needed. This process is carried out in several steps.
@@ -3293,7 +3301,7 @@ Local admins who can upload files and publish hearing lists in CaTH are also giv
  * where the local admin does not input any selection into the search bar and clicks the continue button, then the system will display the following descriptive message to prompt the user; '' There is a problem''. it will also state ''court or tribunal name must be 3 characters or more'' and highlight the search bar so the user knows where to input the information 
  
  * When a user types in the search bar, the system will display likely options that correspond with the user’s input
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 252, 'https://github.com/hmcts/cath-service/issues/252', '2026-01-20T17:07:15Z', '2026-01-30T15:03:55Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 252, 'https://github.com/hmcts/cath-service/issues/252', NULL, NULL, '2026-01-20T17:07:15Z', '2026-01-30T15:03:55Z', 'linusnorton', 'linusnorton'),
   (31, 'REQ-0031', 'Select content to remove', '**PROBLEM STATEMENT**
 
 Local admins who can upload files and publish hearing lists in CaTH are also given permission to remove these publications if needed. This process is carried out in several steps.
@@ -3315,7 +3323,7 @@ Local admins who can upload files and publish hearing lists in CaTH are also giv
  * The local admin can see a table displaying the list type, court or tribunal name, content date, display dates, language and sensitivity of each content that’s available in the venue selected
  * The local admin can see a check box at the end of the row with each content’s details in the table that allows the selection of all the content to be deleted
  * The local admin continues the process by clicking the continue button
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 253, 'https://github.com/hmcts/cath-service/issues/253', '2026-01-20T17:07:27Z', '2026-01-30T15:03:58Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 253, 'https://github.com/hmcts/cath-service/issues/253', NULL, NULL, '2026-01-20T17:07:27Z', '2026-01-30T15:03:58Z', 'linusnorton', 'linusnorton'),
   (32, 'REQ-0032', 'Are you sure you want to remove this content?', '**PROBLEM STATEMENT**
 
 Local admins who can upload files and publish hearing lists in CaTH are also given permission to remove these publications if needed. This process is carried out in several steps.
@@ -3337,7 +3345,7 @@ Local admins who can upload files and publish hearing lists in CaTH are also giv
  * Local admin sees two radio buttons to select yes to complete the removal or no to cancel the removal of the content
  * Where the local admin selects yes, the removal process is completed
  * Where the local admin selects no, the removal process is terminated, and the local admin is taken back to the ‘select content to remove page’
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 254, 'https://github.com/hmcts/cath-service/issues/254', '2026-01-20T17:07:40Z', '2026-01-30T15:04:02Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 254, 'https://github.com/hmcts/cath-service/issues/254', NULL, NULL, '2026-01-20T17:07:40Z', '2026-01-30T15:04:02Z', 'linusnorton', 'linusnorton'),
   (33, 'REQ-0033', 'File Removal Successful', '**PROBLEM STATEMENT**
 
 Local admins who can upload files and publish hearing lists in CaTH are also given permission to remove these publications if needed. This process is carried out in several steps.
@@ -3357,7 +3365,7 @@ Local admins who can upload files and publish hearing lists in CaTH are also giv
  * When the local admin clicks the continue button to complete the content removal process, a confirmation of successful file removal is displayed by the system boldly in a green banner
  * In the same banner, a descriptive text is displayed and reads ‘Your file has been removed’
  * Beneath the green banner, the user can see several links that directs them to ‘remove another file’ or ‘home’.
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 255, 'https://github.com/hmcts/cath-service/issues/255', '2026-01-20T17:07:52Z', '2026-01-30T15:04:04Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 255, 'https://github.com/hmcts/cath-service/issues/255', NULL, NULL, '2026-01-20T17:07:52Z', '2026-01-30T15:04:04Z', 'linusnorton', 'linusnorton'),
   (34, 'REQ-0034', 'Verified user- Account creation', '**PROBLEM STATEMENT**
 
 Users who meet the set criteria are able to apply to create a verified account in CaTH. This ticket covers the requirements for creating an account in CaTH.
@@ -3765,7 +3773,7 @@ Byddwn yn anfon e-bost atoch os bydd angen mwy o wybodaeth arnom neu i gadarnhau
 - ***Refresh vs retain:*** Requirement to ***retain values on error*** but ***clear on page refresh*** can surprise users; ensure explicit refresh behaviour and avoid caching causing unintended persistence. **(Flagging to confirm desired UX.)**
 - ***Employer field persistence on error when file fails:*** If security policy blocks repopulating some fields, clarify exceptions. **(Flagging to confirm.)**
 
----', 'functional', 'verified', 'high', 'story', 256, 'https://github.com/hmcts/cath-service/issues/256', '2026-01-20T17:08:04Z', '2026-01-30T15:04:07Z', 'linusnorton', 'linusnorton'),
+---', 'functional', 'verified', 'high', 'story', 256, 'https://github.com/hmcts/cath-service/issues/256', NULL, NULL, '2026-01-20T17:08:04Z', '2026-01-30T15:04:07Z', 'linusnorton', 'linusnorton'),
   (35, 'REQ-0035', 'Verified user- Account creation Confirmation', '**PROBLEM STATEMENT**
 
 Users who meet the set criteria are able to apply to create a verified account in CaTH. This ticket covers the requirements for creating an account in CaTH.
@@ -3789,7 +3797,7 @@ HMCTS will review your details.
 We''ll email you if we need more information or to confirm that your account has been created.
 
 If you do not get an email from us within 5 working days, call our courts and tribunals service centre on 0300 303 0656.
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 257, 'https://github.com/hmcts/cath-service/issues/257', '2026-01-20T17:08:25Z', '2026-01-30T15:04:09Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 257, 'https://github.com/hmcts/cath-service/issues/257', NULL, NULL, '2026-01-20T17:08:25Z', '2026-01-30T15:04:09Z', 'linusnorton', 'linusnorton'),
   (36, 'REQ-0036', 'Upload Reference Data', '**PROBLEM STATEMENT**
 
 This ticket is raised to upload the reference data needed to publish hearing lists in CaTH.
@@ -4113,7 +4121,7 @@ The system must allow a System Admin to manually upload a reference data CSV fil
  - Confirm if an email confirmation should be sent after a successful upload.  
  - Confirm if Welsh translation will be hard-coded or managed by a translation service.
 
-—', 'functional', 'verified', 'high', 'story', 258, 'https://github.com/hmcts/cath-service/issues/258', '2026-01-20T17:08:38Z', '2026-01-30T15:04:11Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 258, 'https://github.com/hmcts/cath-service/issues/258', NULL, NULL, '2026-01-20T17:08:38Z', '2026-01-30T15:04:11Z', 'linusnorton', 'linusnorton'),
   (37, 'REQ-0037', 'API connection in CaTH', '**PROBLEM STATEMENT**
 
 To publish hearing lists in CaTH, an API connection is needed to receive data from validated data sources.
@@ -4340,7 +4348,7 @@ This connection must ensure secure, accurate, and consistent data transfer betwe
 - Confirm the frequency of scheduled health checks on API connections.  
 - Confirm if CaTH should notify admins automatically if a connection fails or becomes inactive.
 
----', 'functional', 'verified', 'high', 'story', 259, 'https://github.com/hmcts/cath-service/issues/259', '2026-01-20T17:08:53Z', '2026-01-30T15:04:14Z', 'linusnorton', 'linusnorton'),
+---', 'functional', 'verified', 'high', 'story', 259, 'https://github.com/hmcts/cath-service/issues/259', NULL, NULL, '2026-01-20T17:08:53Z', '2026-01-30T15:04:14Z', 'linusnorton', 'linusnorton'),
   (38, 'REQ-0038', 'Create Database schema for Location Details (Location, Jurisdiction, Sub-Jurisdictions, Region)', '**PROBLEM STATEMENT**
 
 This ticket is raised to create the database schema to store the location details.
@@ -4377,7 +4385,7 @@ This ticket is raised to create the database schema to store the location detail
  * Location - Lleoliad
  * Jurisdiction - Awdurdodaeth
  * Sub-Jurisdictions -
- * Region - Rhanbarth', 'functional', 'verified', 'medium', 'story', 260, 'https://github.com/hmcts/cath-service/issues/260', '2026-01-20T17:09:05Z', '2026-01-30T15:04:17Z', 'linusnorton', 'linusnorton'),
+ * Region - Rhanbarth', 'functional', 'verified', 'medium', 'story', 260, 'https://github.com/hmcts/cath-service/issues/260', NULL, NULL, '2026-01-20T17:09:05Z', '2026-01-30T15:04:17Z', 'linusnorton', 'linusnorton'),
   (39, 'REQ-0039', 'Verified User – Dashboard', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH. The landing page in CaTH for a media verified user is the dashboard.
@@ -4600,7 +4608,7 @@ No input fields are required on this page. The dashboard only displays informati
  - Confirm if a loading state is needed while fetching user data.  
  - Confirm if email subscription count or hearing summary stats should be displayed on tiles.
 
-—', 'functional', 'verified', 'medium', 'story', 261, 'https://github.com/hmcts/cath-service/issues/261', '2026-01-20T17:09:18Z', '2026-01-30T15:04:19Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 261, 'https://github.com/hmcts/cath-service/issues/261', NULL, NULL, '2026-01-20T17:09:18Z', '2026-01-30T15:04:19Z', 'linusnorton', 'linusnorton'),
   (40, 'REQ-0040', 'Verified User – Email subscriptions', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -4943,7 +4951,7 @@ Once approved, they can subscribe to receive {**}`**`email notifications`**`{**}
  - Confirm if email notifications are immediate (real-time) or scheduled batch triggers - Not applicable yet in this ticket 
  - Confirm error logging location for invalid subscription updates - Yes
 
-—', 'functional', 'verified', 'medium', 'story', 262, 'https://github.com/hmcts/cath-service/issues/262', '2026-01-20T17:09:36Z', '2026-01-30T15:04:22Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 262, 'https://github.com/hmcts/cath-service/issues/262', NULL, NULL, '2026-01-20T17:09:36Z', '2026-01-30T15:04:22Z', 'linusnorton', 'linusnorton'),
   (41, 'REQ-0041', 'Verified User – How do you want to add an email subscription', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -4974,7 +4982,7 @@ Verified user are users who have applied to create accounts in CaTH to have acce
  * The user can see 3 radio buttons with 3 buttons ‘By court or tribunal name’, ‘By case name’ and ‘By case reference number, case ID or unique reference number (URN)’
  * User can see a ‘continue’ button that allows the user progress to the next stage of the subscription process
  * The verified user can navigate to the previous page using the ‘back’ link provided at the top left of the page
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 263, 'https://github.com/hmcts/cath-service/issues/263', '2026-01-20T17:10:16Z', '2026-01-30T15:04:24Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 263, 'https://github.com/hmcts/cath-service/issues/263', NULL, NULL, '2026-01-20T17:10:16Z', '2026-01-30T15:04:24Z', 'linusnorton', 'linusnorton'),
   (42, 'REQ-0042', 'Verified User – How do you want to add an email subscription', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -5006,7 +5014,7 @@ Verified user are users who have applied to create accounts in CaTH to have acce
  * Where the user selects ‘By case reference number, case ID or unique reference number (URN)’, then the user is taken to a page titled ‘What is the reference number?’ and the following descriptive message is displayed under the header ‘Please enter either a case reference number, case ID or unique reference number (URN). You must enter an exact match.’ where the user inputs a case name that does not exist, then the user is informed, and the same error message as above is displayed with the only change being ‘Enter a valid case reference number’
  * User can see a ‘continue’ button that allows the user progress to the next stage of the subscription process
  * The verified user can navigate to the previous page using the ‘back’ link provided at the top left of the page
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 264, 'https://github.com/hmcts/cath-service/issues/264', '2026-01-20T17:10:31Z', '2026-01-30T15:04:26Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 264, 'https://github.com/hmcts/cath-service/issues/264', NULL, NULL, '2026-01-20T17:10:31Z', '2026-01-30T15:04:26Z', 'linusnorton', 'linusnorton'),
   (43, 'REQ-0043', 'Verified User – Unsubscribe', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information which they can subscribe to receive email notifications from CaTH and also unsubscribe from.
@@ -5306,7 +5314,7 @@ Verified users (media) create accounts in CaTH to access restricted hearing info
  - {**}`**`Data model shape:`**`{**} whether “delete user from Subscriptions table” means removing all rows for that user or only the selected `\{user*id, court*id}` row when others exist.  
  - {**}`**`Link destinations:`**`{**} exact URLs for “Subscribe by court or tribunal name” and “What court or tribunal are you interested in?” should match the implemented routes used elsewhere.
 
-—', 'functional', 'verified', 'medium', 'story', 265, 'https://github.com/hmcts/cath-service/issues/265', '2026-01-20T17:10:43Z', '2026-01-30T15:04:28Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 265, 'https://github.com/hmcts/cath-service/issues/265', NULL, NULL, '2026-01-20T17:10:43Z', '2026-01-30T15:04:28Z', 'linusnorton', 'linusnorton'),
   (44, 'REQ-0044', 'Verified User – Select list type', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -5330,7 +5338,7 @@ Verified user are users who have applied to create accounts in CaTH to have acce
  * the total number selected is displayed undeath the available list types
  * The user sees a continue button below that allows the user continue the subscription process
  * The verified user can navigate to the previous page using the ‘back’ link provided at the top left of the page
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 266, 'https://github.com/hmcts/cath-service/issues/266', '2026-01-20T17:11:30Z', '2026-01-30T15:04:31Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 266, 'https://github.com/hmcts/cath-service/issues/266', NULL, NULL, '2026-01-20T17:11:30Z', '2026-01-30T15:04:31Z', 'linusnorton', 'linusnorton'),
   (45, 'REQ-0045', 'Verified User – What version of the list do you want to receive?', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -5359,7 +5367,7 @@ Verified user are users who have applied to create accounts in CaTH to have acce
  *  
  * The verified user can navigate to the previous page using the ‘back’ link provided at the top left of the page
 
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 267, 'https://github.com/hmcts/cath-service/issues/267', '2026-01-20T17:11:42Z', '2026-01-30T15:04:34Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'medium', 'story', 267, 'https://github.com/hmcts/cath-service/issues/267', NULL, NULL, '2026-01-20T17:11:42Z', '2026-01-30T15:04:34Z', 'linusnorton', 'linusnorton'),
   (46, 'REQ-0046', 'Single Sign On - System Admin User', '**PROBLEM STATEMENT**
 
 A system admin user in CaTH is given access to system functionality by another system admin user. This allows the system admin to upload reference data, manage third-party users, explore the blobs (Json files) uploaded in CaTH, view the audit log, delete courts, manage CaTH users, bulk create media accounts and manage location metadata. The system admin user would need to sign in using the single sign on information to access their account which then takes them to the dashboard as the landing page.
@@ -5700,7 +5708,7 @@ Upon successful sign-in, they are taken to the {**}`**`System Admin Dashboard`**
  - Confirm if {**}`**`error codes`**`{**} displayed in troubleshooting can be logged automatically.  
  - Confirm if {**}`**`GitHub sign-in`**`{**} is for developers or administrative debugging purposes only.
 
-—', 'functional', 'verified', 'high', 'story', 268, 'https://github.com/hmcts/cath-service/issues/268', '2026-01-20T17:11:55Z', '2026-01-30T15:04:37Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 268, 'https://github.com/hmcts/cath-service/issues/268', NULL, NULL, '2026-01-20T17:11:55Z', '2026-01-30T15:04:37Z', 'linusnorton', 'linusnorton'),
   (47, 'REQ-0047', 'Single Sign On - Admin User', '**Covered by VIBE-201**
 
  
@@ -6061,7 +6069,7 @@ Upon successful authentication, they are redirected to the **{*}Admin Dashboard{
  - Confirm if GitHub sign-in option is mandatory or configurable.  
  - Confirm if unsuccessful verification attempts trigger lockout.  
 
-—', 'functional', 'verified', 'high', 'story', 269, 'https://github.com/hmcts/cath-service/issues/269', '2026-01-20T17:12:10Z', '2026-01-30T15:04:39Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 269, 'https://github.com/hmcts/cath-service/issues/269', NULL, NULL, '2026-01-20T17:12:10Z', '2026-01-30T15:04:39Z', 'linusnorton', 'linusnorton'),
   (48, 'REQ-0048', 'System Admin User – Dashboard', '**PROBLEM STATEMENT**
 
 System admin users in CaTH require a centralised dashboard that allows access to all key administrative functions.  
@@ -6323,7 +6331,7 @@ This dashboard acts as the main control panel for managing reference data, user 
 - Confirm if role-based access applies to each tile individually.  
 - Confirm caching or refresh interval for audit data display.  
 
----', 'functional', 'verified', 'high', 'story', 270, 'https://github.com/hmcts/cath-service/issues/270', '2026-01-20T17:12:26Z', '2026-01-30T15:04:41Z', 'linusnorton', 'linusnorton'),
+---', 'functional', 'verified', 'high', 'story', 270, 'https://github.com/hmcts/cath-service/issues/270', NULL, NULL, '2026-01-20T17:12:26Z', '2026-01-30T15:04:41Z', 'linusnorton', 'linusnorton'),
   (49, 'REQ-0049', 'Landing Page - Part 2', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH. This would require users to undergo a few steps to navigate through the different pages in CaTH.
@@ -6566,7 +6574,7 @@ None applicable — this page contains only static informational content and lin
 - Confirm if analytics tracking should record outbound link clicks to external sites.  
 - Confirm if additional regional tribunal links (e.g., for devolved tribunals) will be included later.
  
----', 'functional', 'verified', 'high', 'story', 271, 'https://github.com/hmcts/cath-service/issues/271', '2026-01-20T17:12:41Z', '2026-01-30T15:04:44Z', 'linusnorton', 'linusnorton'),
+---', 'functional', 'verified', 'high', 'story', 271, 'https://github.com/hmcts/cath-service/issues/271', NULL, NULL, '2026-01-20T17:12:41Z', '2026-01-30T15:04:44Z', 'linusnorton', 'linusnorton'),
   (50, 'REQ-0050', 'Create Court in CaTH', '**PROBLEM STATEMENT**
 
 Court venues need to be created in CaTH so that hearing lists can be published against theses venues. 
@@ -6805,7 +6813,7 @@ Each court’s details must be properly recorded within the Court Master Referen
 - Confirm if ***audit logging*** is required for every court creation (e.g., date, user ID).  
 - Confirm if ***court deletion*** or editing will be supported on the same interface.  
 - Confirm if ***notifications*** or email confirmations are sent when new courts are added.  
-- Confirm whether ***validation of Welsh fields*** is mandatory for bilingual courts.', 'functional', 'verified', 'high', 'story', 272, 'https://github.com/hmcts/cath-service/issues/272', '2026-01-20T17:12:53Z', '2026-01-30T15:04:46Z', 'linusnorton', 'linusnorton'),
+- Confirm whether ***validation of Welsh fields*** is mandatory for bilingual courts.', 'functional', 'verified', 'high', 'story', 272, 'https://github.com/hmcts/cath-service/issues/272', NULL, NULL, '2026-01-20T17:12:53Z', '2026-01-30T15:04:46Z', 'linusnorton', 'linusnorton'),
   (51, 'REQ-0051', 'Blob Ingestion in CaTH', '**PROBLEM STATEMENT**
 
 To auto-publish a hearing list in CaTH, a blob (Json file) would have to be ingested and validated from a source system through an API.
@@ -7097,7 +7105,7 @@ Example API Response (Failure – Court Not Found):
 
  * Confirm if versioning is needed for schema validation (v1, v2).
 
- * Confirm if notification to the source system should be via email or API response callback.', 'functional', 'verified', 'medium', 'story', 273, 'https://github.com/hmcts/cath-service/issues/273', '2026-01-20T17:13:05Z', '2026-01-30T15:04:49Z', 'linusnorton', 'linusnorton'),
+ * Confirm if notification to the source system should be via email or API response callback.', 'functional', 'verified', 'medium', 'story', 273, 'https://github.com/hmcts/cath-service/issues/273', NULL, NULL, '2026-01-20T17:13:05Z', '2026-01-30T15:04:49Z', 'linusnorton', 'linusnorton'),
   (52, 'REQ-0052', 'Display of Pubs - What do you want to do?', '**PROBLEM STATEMENT**
 
 This ticket is raised to cover the display screens needed in CaTH to allow users view uploaded publications files as hearing lists in CaTH front end.
@@ -7329,7 +7337,7 @@ The system must render these files appropriately for public or verified users to
 - Confirm whether the user session should persist the selected option if they return to this page.  
 - Confirm whether non~~logged~~in public users access this page or only authenticated users.  
 - Confirm whether the radio button layout should display vertically (default GOV.UK layout) or side~~by~~side on wider screens.  
-- Confirm if analytics tracking (e.g., Google Tag Manager) is required to capture selection events.', 'functional', 'verified', 'high', 'story', 274, 'https://github.com/hmcts/cath-service/issues/274', '2026-01-20T17:13:51Z', '2026-01-30T15:04:51Z', 'linusnorton', 'linusnorton'),
+- Confirm if analytics tracking (e.g., Google Tag Manager) is required to capture selection events.', 'functional', 'verified', 'high', 'story', 274, 'https://github.com/hmcts/cath-service/issues/274', NULL, NULL, '2026-01-20T17:13:51Z', '2026-01-30T15:04:51Z', 'linusnorton', 'linusnorton'),
   (53, 'REQ-0053', 'Display of Pubs -  What court or tribunal are you interested in?', '**PROBLEM STATEMENT**
 
 This ticket is raised to cover the display screens needed in CaTH to allow users view uploaded publications files as hearing lists in CaTH front end.
@@ -7557,7 +7565,7 @@ This screen allows users to select a specific court or tribunal to view availabl
 - Confirm whether ***court names*** in Welsh should appear alongside English names in suggestions.  
 - Confirm whether ***A–Z list*** is a separate static page or dynamically generated from reference data.  
 - Confirm if analytics tracking should record user selection (court name and timestamp).  
-- Confirm if the input field should accept free text (for unlisted courts) or restrict to validated suggestions only.', 'functional', 'verified', 'high', 'story', 275, 'https://github.com/hmcts/cath-service/issues/275', '2026-01-20T17:14:05Z', '2026-01-30T15:04:53Z', 'linusnorton', 'linusnorton'),
+- Confirm if the input field should accept free text (for unlisted courts) or restrict to validated suggestions only.', 'functional', 'verified', 'high', 'story', 275, 'https://github.com/hmcts/cath-service/issues/275', NULL, NULL, '2026-01-20T17:14:05Z', '2026-01-30T15:04:53Z', 'linusnorton', 'linusnorton'),
   (54, 'REQ-0054', 'Display of Pubs - Find a court or tribunal', '**PROBLEM STATEMENT**
 
 This ticket is raised to cover the display screens needed in CaTH to allow users view uploaded publications files as hearing lists in CaTH front end.
@@ -7829,7 +7837,7 @@ This page enables users to browse and filter all available courts and tribunals 
 - Confirm whether users can combine ***A–Z navigation*** and ***filters*** simultaneously.  
 - Confirm if analytics tracking should capture filter selections for reporting.
 
----', 'functional', 'verified', 'high', 'story', 276, 'https://github.com/hmcts/cath-service/issues/276', '2026-01-20T17:14:19Z', '2026-01-30T15:04:56Z', 'linusnorton', 'linusnorton'),
+---', 'functional', 'verified', 'high', 'story', 276, 'https://github.com/hmcts/cath-service/issues/276', NULL, NULL, '2026-01-20T17:14:19Z', '2026-01-30T15:04:56Z', 'linusnorton', 'linusnorton'),
   (55, 'REQ-0055', 'Display of Pubs - Summary of Pubs page', '**PROBLEM STATEMENT**
 
 This ticket is raised to cover the display screens needed in CaTH to allow users view uploaded publications files as hearing lists in CaTH front end.
@@ -8078,7 +8086,7 @@ The page consists entirely of text and links for display and navigation purposes
 - Confirm whether the list links should open as downloadable PDFs or as HTML-rendered pages.  
 - Confirm whether archived lists (past display dates) should remain visible for admin users only.  
 - Confirm if analytics tracking is required for link clicks and list views.  
-- Confirm whether sorting or filtering options (e.g., by date or hearing type) are required for venues with multiple lists.', 'functional', 'verified', 'high', 'story', 277, 'https://github.com/hmcts/cath-service/issues/277', '2026-01-20T17:14:32Z', '2026-01-30T15:04:58Z', 'linusnorton', 'linusnorton'),
+- Confirm whether sorting or filtering options (e.g., by date or hearing type) are required for venues with multiple lists.', 'functional', 'verified', 'high', 'story', 277, 'https://github.com/hmcts/cath-service/issues/277', NULL, NULL, '2026-01-20T17:14:32Z', '2026-01-30T15:04:58Z', 'linusnorton', 'linusnorton'),
   (56, 'REQ-0056', 'Display of Pubs - View flat file', '**PROBLEM STATEMENT**
 
 This ticket is raised to cover the display screens needed in CaTH to allow users view uploaded publications (flat files) as hearing lists in CaTH front end.
@@ -8300,7 +8308,7 @@ This functionality enables users to open and read detailed case information cont
  - Confirm if language toggle dynamically switches the file or requires reloading from storage.  
  - Confirm retention period for published files after display expiry date.  
 
-—', 'functional', 'verified', 'high', 'story', 278, 'https://github.com/hmcts/cath-service/issues/278', '2026-01-20T17:14:45Z', '2026-01-30T14:02:26Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 278, 'https://github.com/hmcts/cath-service/issues/278', NULL, NULL, '2026-01-20T17:14:45Z', '2026-01-30T14:02:26Z', 'linusnorton', 'linusnorton'),
   (57, 'REQ-0057', 'Civil & Family Daily Cause list', '**PROBLEM STATEMENT**
 
 This ticket is raised to cover the creation of the validation schema and style guide needed to publish, display and view the civil and family daily cause list in CaTH front end. To ensure hearing list publications uploaded as JSON files are correctly formatted, validated, and displayed consistently in CaTH, a validation schema and style guide integration process must be implemented. 
@@ -8619,7 +8627,7 @@ Displayed beneath the header as a descriptive text block:
  - Confirm whether the error page should offer a “Back to court selection” link.  
  - Confirm whether future iterations will include pagination or filtering for lengthy lists.  
 
-—', 'functional', 'verified', 'high', 'story', 279, 'https://github.com/hmcts/cath-service/issues/279', '2026-01-20T17:15:01Z', '2026-01-30T15:05:01Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 279, 'https://github.com/hmcts/cath-service/issues/279', NULL, NULL, '2026-01-20T17:15:01Z', '2026-01-30T15:05:01Z', 'linusnorton', 'linusnorton'),
   (58, 'REQ-0058', 'Error handling for Json-HTML Conversion (Suggested by AI)', '**PROBLEM STATEMENT**
 
 This ticket covers the error handling and fallback process for when a JSON publication file uploaded to CaTH fails during the ingestion, conversion, or rendering process.  
@@ -8910,7 +8918,7 @@ Test Scenarios
 
  * Confirm if **partial rendering** is acceptable for minor issues (e.g., missing optional fields).
 
- * Confirm whether **user-facing error page** should display a contact link for the court or admin.', 'non_functional', 'verified', 'medium', 'story', 280, 'https://github.com/hmcts/cath-service/issues/280', '2026-01-20T17:15:17Z', '2026-01-30T15:05:03Z', 'linusnorton', 'linusnorton'),
+ * Confirm whether **user-facing error page** should display a contact link for the court or admin.', 'non_functional', 'verified', 'medium', 'story', 280, 'https://github.com/hmcts/cath-service/issues/280', NULL, NULL, '2026-01-20T17:15:17Z', '2026-01-30T15:05:03Z', 'linusnorton', 'linusnorton'),
   (59, 'REQ-0059', 'JSON Validation Schema and Style Guide Integration Specification (Suggested by AI)', '**PROBLEM STATEMENT**
 
 To ensure hearing list publications uploaded as JSON files are correctly formatted, validated, and displayed consistently in CaTH, a validation schema and style guide integration process must be implemented.  This ticket ensures that JSON publication data follows a defined structure (schema) and is rendered in a consistent, accessible format aligned with CaTH’s design and presentation standards.
@@ -9227,7 +9235,7 @@ Test Scenarios
 
  * Confirm whether the **style guide** should support embedded media (e.g., downloadable attachments).
 
- * Confirm whether **schema updates** will trigger revalidation of existing JSON publications.', 'functional', 'verified', 'medium', 'story', 281, 'https://github.com/hmcts/cath-service/issues/281', '2026-01-20T17:15:32Z', '2026-01-30T15:05:06Z', 'linusnorton', 'linusnorton'),
+ * Confirm whether **schema updates** will trigger revalidation of existing JSON publications.', 'functional', 'verified', 'medium', 'story', 281, 'https://github.com/hmcts/cath-service/issues/281', NULL, NULL, '2026-01-20T17:15:32Z', '2026-01-30T15:05:06Z', 'linusnorton', 'linusnorton'),
   (60, 'REQ-0060', 'Backend - Subscription Fulfilment (Email notifications)', '**PROBLEM STATEMENT**
 
 Verified user are users can subscribe to email notifications from CaTH. This would require the triggering of email notifications to be sent to users from CaTH back end.
@@ -9470,8 +9478,8 @@ within the Court and tribunal hearings service.
  - Confirm if bilingual templates (EN/CY) are required for notifications.  
  - Confirm if the trigger runs synchronously or via queue (recommended: async queue processing).
 
-—', 'functional', 'verified', 'medium', 'story', 283, 'https://github.com/hmcts/cath-service/issues/283', '2026-01-20T17:15:58Z', '2026-01-30T14:02:28Z', 'linusnorton', 'linusnorton'),
-  (61, 'REQ-0061', 'Setting up a flux config / k8s namespace for CaTH Service', 'Set up a flux config / k8s namespace for {{{}CaTH Service{}}}? It will also need a postgres flux db like this: <https://github.com/hmcts/cnp~~flux~~config/pull/41784>', 'constraint', 'verified', 'medium', 'story', 284, 'https://github.com/hmcts/cath-service/issues/284', '2026-01-20T17:16:41Z', '2026-01-30T15:05:09Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 283, 'https://github.com/hmcts/cath-service/issues/283', NULL, NULL, '2026-01-20T17:15:58Z', '2026-01-30T14:02:28Z', 'linusnorton', 'linusnorton'),
+  (61, 'REQ-0061', 'Setting up a flux config / k8s namespace for CaTH Service', 'Set up a flux config / k8s namespace for {{{}CaTH Service{}}}? It will also need a postgres flux db like this: <https://github.com/hmcts/cnp~~flux~~config/pull/41784>', 'constraint', 'verified', 'medium', 'story', 284, 'https://github.com/hmcts/cath-service/issues/284', NULL, NULL, '2026-01-20T17:16:41Z', '2026-01-30T15:05:09Z', 'linusnorton', 'linusnorton'),
   (62, 'REQ-0062', 'Manage media account requests - Approve application', '**PROBLEM STATEMENT**
 
 Media users are expected to create accounts in CaTH by filling and when submitting the account creation form. When this happens, the CTSC Admin user is expected to verify the applicant and approve before the account is created. Where there are any concerns, the application can be rejected.
@@ -9901,7 +9909,7 @@ When a new application is submitted, a {**}`**`CTSC Admin user`**`{**} is respon
  - Confirm if an audit log entry must be created when an Admin approves or rejects.  
  - Confirm if rejected applicants receive an automated notification.  
 
-—', 'functional', 'verified', 'medium', 'story', 285, 'https://github.com/hmcts/cath-service/issues/285', '2026-01-20T17:16:52Z', '2026-01-30T14:02:26Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 285, 'https://github.com/hmcts/cath-service/issues/285', NULL, NULL, '2026-01-20T17:16:52Z', '2026-01-30T14:02:26Z', 'linusnorton', 'linusnorton'),
   (63, 'REQ-0063', 'Manage media account requests - Reject application', '**PROBLEM STATEMENT**
 
 Media users are expected to create accounts in CaTH by filling and when submitting the account creation form. When this happens, the CTSC Admin user is expected to verify the applicant and approve before the account is created. Where there are any concerns, the application can be rejected.
@@ -10315,7 +10323,7 @@ Where an application raises concerns, CTSC Admin must be able to **{*}reject the
  - Confirm if a rejected applicant can reapply immediately.  
  - Confirm retention period for rejected applications.
 
-—', 'functional', 'verified', 'medium', 'story', 286, 'https://github.com/hmcts/cath-service/issues/286', '2026-01-20T17:17:09Z', '2026-01-30T14:03:11Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 286, 'https://github.com/hmcts/cath-service/issues/286', NULL, NULL, '2026-01-20T17:17:09Z', '2026-01-30T14:03:11Z', 'linusnorton', 'linusnorton'),
   (64, 'REQ-0064', 'CaTH General Information - Accessibility statement', '**PROBLEM STATEMENT**
 
 Every page in CaTH has a section displays links to various general information at the bottom of the page. This ticket captures the accessibility statement requirements.
@@ -10540,7 +10548,7 @@ All references (contact details, phone, email, audit dates) remain the same.
  - Confirm maintenance owner for the accessibility content updates (e.g., CTSC team or platform team).
  - Confirm if audit dates and compliance sections should be dynamically updated on future releases.
 
-—', 'functional', 'verified', 'medium', 'story', 287, 'https://github.com/hmcts/cath-service/issues/287', '2026-01-20T17:17:26Z', '2026-01-30T13:39:48Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'medium', 'story', 287, 'https://github.com/hmcts/cath-service/issues/287', NULL, NULL, '2026-01-20T17:17:26Z', '2026-01-30T13:39:48Z', 'linusnorton', 'linusnorton'),
   (65, 'REQ-0065', 'CaTH General Information - Cookie Policy', '**PROBLEM STATEMENT**
 
 Every page in CaTH has a section displays links to various general information at the bottom of the page. This ticket captures the Cookie Policy requirements.
@@ -10899,7 +10907,7 @@ Scrolls smoothly to page top.
  
 
  
- #', 'functional', 'verified', 'medium', 'story', 288, 'https://github.com/hmcts/cath-service/issues/288', '2026-01-20T17:18:09Z', '2026-01-30T14:03:06Z', 'linusnorton', 'linusnorton'),
+ #', 'functional', 'verified', 'medium', 'story', 288, 'https://github.com/hmcts/cath-service/issues/288', NULL, NULL, '2026-01-20T17:18:09Z', '2026-01-30T14:03:06Z', 'linusnorton', 'linusnorton'),
   (66, 'REQ-0066', 'Authentication on classified publications', '**PROBLEM STATEMENT**
 
 Every list published in CaTH is assigned a sensitivity level which indicates which user group the publication should be made available to. This ticket covers the authentication of publications based on the sensitivity level. 
@@ -10939,19 +10947,19 @@ Every list published in CaTH is assigned a sensitivity level which indicates whi
 |SSO|Local Admin, CTSC Admin|Public|
 |CFT IdAM|Verified|Public, Private, Classified|
 |Crime IdAM|Verified|Public, Private, Classified|
-|Public|Public|Public|', 'functional', 'verified', 'medium', 'story', 289, 'https://github.com/hmcts/cath-service/issues/289', '2026-01-20T17:18:50Z', '2026-01-30T14:03:10Z', 'linusnorton', 'linusnorton'),
+|Public|Public|Public|', 'functional', 'verified', 'medium', 'story', 289, 'https://github.com/hmcts/cath-service/issues/289', NULL, NULL, '2026-01-20T17:18:50Z', '2026-01-30T14:03:10Z', 'linusnorton', 'linusnorton'),
   (67, 'REQ-0067', 'Create hook for lint style check and any typescript errors', '#### User story
 
 **As a** developer{*},{*} I want to integrate lint and TypeScript validation into our pre-merge checks, so that we can identify and fix issues before they trigger a PR build failure.
 
 We are currently doing it for existing CaTH.
 #### Acceptance criteria
- # Make sure there is not lint and typescript error in code before pushing to Github', 'non_functional', 'verified', 'medium', 'story', 290, 'https://github.com/hmcts/cath-service/issues/290', '2026-01-20T17:19:04Z', '2026-04-29T14:33:02Z', 'linusnorton', 'linusnorton'),
+ # Make sure there is not lint and typescript error in code before pushing to Github', 'non_functional', 'verified', 'medium', 'story', 290, 'https://github.com/hmcts/cath-service/issues/290', NULL, NULL, '2026-01-20T17:19:04Z', '2026-04-29T14:33:02Z', 'linusnorton', 'linusnorton'),
   (68, 'REQ-0068', 'Refactor values.dev.yaml files', 'In CaTH AI, we have values.dev.yaml file which is being used only for local development. But values.dev.yaml file should only be use when we want to override values on values.yaml file. So, we need to refactor the code to make sure values.dev.yaml file should be used to override the values.yaml when needed.
 
 **Acceptance criteria:**
  * End to end tests are passing on local
- * Github pipeline is passing', 'constraint', 'verified', 'medium', 'story', 291, 'https://github.com/hmcts/cath-service/issues/291', '2026-01-20T17:19:15Z', '2026-04-29T14:32:45Z', 'linusnorton', 'linusnorton'),
+ * Github pipeline is passing', 'constraint', 'verified', 'medium', 'story', 291, 'https://github.com/hmcts/cath-service/issues/291', NULL, NULL, '2026-01-20T17:19:15Z', '2026-04-29T14:32:45Z', 'linusnorton', 'linusnorton'),
   (69, 'REQ-0069', 'Language toggle link is not consistent across different pages', '---
 
 ## Original JIRA Metadata
@@ -10962,7 +10970,7 @@ We are currently doing it for existing CaTH.
 - **Assignee**: Unassigned
 - **Created**: 12/1/2025
 - **Updated**: 12/1/2025
-- **Original Labels**: cath', 'functional', 'verified', 'medium', 'story', 292, 'https://github.com/hmcts/cath-service/issues/292', '2026-01-20T17:19:25Z', '2026-05-08T09:19:01Z', 'linusnorton', 'linusnorton'),
+- **Original Labels**: cath', 'functional', 'verified', 'medium', 'story', 292, 'https://github.com/hmcts/cath-service/issues/292', '7804aa26667d9ea20848b4f28fd83a314a419c18', '["apps/web/src/assets/css/index.scss","apps/web/src/pages/index.njk","apps/web/src/pages/index.njk.test.ts","e2e-tests/tests/cft-idam/cft-idam.spec.ts","e2e-tests/tests/courts-tribunals-list.spec.ts","e2e-tests/tests/language-toggle-service-navigation.spec.ts","e2e-tests/tests/page-structure.spec.ts","e2e-tests/tests/search.spec.ts","e2e-tests/tests/sign-in.spec.ts","e2e-tests/tests/summary-of-publications.spec.ts","e2e-tests/tests/view-option.spec.ts","libs/admin-pages/src/pages/admin-dashboard/index.test.ts","libs/admin-pages/src/pages/admin-dashboard/index.ts","libs/admin-pages/src/pages/manual-upload-success/index.test.ts","libs/admin-pages/src/pages/manual-upload-success/index.ts","libs/admin-pages/src/pages/manual-upload-summary/index.test.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/manual-upload/index.test.ts","libs/admin-pages/src/pages/media-applications/[id]/approve.ts","libs/admin-pages/src/pages/media-applications/[id]/approved.test.ts","libs/admin-pages/src/pages/media-applications/[id]/approved.ts","libs/admin-pages/src/pages/media-applications/[id]/index.test.ts","libs/admin-pages/src/pages/media-applications/[id]/index.ts","libs/admin-pages/src/pages/media-applications/[id]/reject.test.ts","libs/admin-pages/src/pages/media-applications/[id]/reject.ts","libs/admin-pages/src/pages/media-applications/[id]/rejected.test.ts","libs/admin-pages/src/pages/media-applications/[id]/rejected.ts","libs/admin-pages/src/pages/media-applications/index.test.ts","libs/admin-pages/src/pages/media-applications/index.ts","libs/admin-pages/src/pages/non-strategic-upload-success/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload-success/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload/index.ts","libs/admin-pages/src/pages/remove-list-confirmation/index.ts","libs/admin-pages/src/pages/remove-list-search-results/index.ts","libs/admin-pages/src/pages/remove-list-search/index.test.ts","libs/admin-pages/src/pages/remove-list-search/index.ts","libs/admin-pages/src/pages/remove-list-success/index.ts","libs/web-core/src/locales/cy.test.ts","libs/web-core/src/locales/cy.ts","libs/web-core/src/locales/en.test.ts","libs/web-core/src/locales/en.ts","libs/web-core/src/middleware/i18n/locale-middleware.test.ts","libs/web-core/src/middleware/i18n/locale-middleware.ts","libs/web-core/src/views/components/phase-banner-content.njk","libs/web-core/src/views/components/service-navigation.njk"]', '2026-01-20T17:19:25Z', '2026-05-08T09:19:01Z', 'linusnorton', 'linusnorton'),
   (70, 'REQ-0070', 'Configure Nightly Pipeline and Add Test Guidance to CLAUDE.md', 'We need to enhance our CI/CD process by configuring a nightly pipeline and improving contributor documentation. This includes two main tasks:
 ~~--~~
 ### **1️⃣ Configure Nightly Pipeline**
@@ -10976,7 +10984,7 @@ Add clear instructions on how to:
 
  * Handle test data
 
- * Expectations for test coverage', 'non_functional', 'verified', 'medium', 'story', 293, 'https://github.com/hmcts/cath-service/issues/293', '2026-01-20T17:19:35Z', '2026-01-30T15:05:12Z', 'linusnorton', 'linusnorton'),
+ * Expectations for test coverage', 'non_functional', 'verified', 'medium', 'story', 293, 'https://github.com/hmcts/cath-service/issues/293', NULL, NULL, '2026-01-20T17:19:35Z', '2026-01-30T15:05:12Z', 'linusnorton', 'linusnorton'),
   (71, 'REQ-0071', 'Subscribe by case name, case reference number, case ID or unique reference number (URN)', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -11405,7 +11413,7 @@ As a verified media user, I want to subscribe to hearing lists in CaTH so that I
 
  * Subscription confirmation page displays correct success messaging.
 
- * Welsh translations display correctly for specified labels and messages.', 'functional', 'verified', 'medium', 'story', 294, 'https://github.com/hmcts/cath-service/issues/294', '2026-01-20T17:19:46Z', '2026-02-25T10:29:34Z', 'linusnorton', 'linusnorton'),
+ * Welsh translations display correctly for specified labels and messages.', 'functional', 'verified', 'medium', 'story', 294, 'https://github.com/hmcts/cath-service/issues/294', NULL, NULL, '2026-01-20T17:19:46Z', '2026-02-25T10:29:34Z', 'linusnorton', 'linusnorton'),
   (72, 'REQ-0072', 'Verified user - Bulk unsubscribe process', '**PROBLEM STATEMENT**
 
 Verified users are users who have applied to create accounts in CaTH to have access to restricted hearing information which they can subscribe to receive email notifications from CaTH and also unsubscribe from.
@@ -11709,7 +11717,7 @@ As a verified media user, I want to bulk unsubscribe from my subscriptions in Ca
 ### **Accessibility**
  * Keyboard navigation reaches all controls.
 
- * Screen reader correctly announces checkboxes, radio buttons, tables, and success messages.', 'functional', 'verified', 'medium', 'story', 295, 'https://github.com/hmcts/cath-service/issues/295', '2026-01-20T17:19:59Z', '2026-01-30T14:03:08Z', 'linusnorton', 'linusnorton'),
+ * Screen reader correctly announces checkboxes, radio buttons, tables, and success messages.', 'functional', 'verified', 'medium', 'story', 295, 'https://github.com/hmcts/cath-service/issues/295', NULL, NULL, '2026-01-20T17:19:59Z', '2026-01-30T14:03:08Z', 'linusnorton', 'linusnorton'),
   (73, 'REQ-0073', 'Verified user - Select & Edit List Type (List Type Subscription Only)', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH and also select specific list types of interest.
@@ -12724,7 +12732,7 @@ Feature: Subscribing to hearing lists with list~~type selection (VIBE~~307)
       | Add another subscription |
       | Manage your current email subscriptions |
       | Find a court or tribunal |
-      | Select which list type to receive |', 'functional', 'verified', 'medium', 'story', 296, 'https://github.com/hmcts/cath-service/issues/296', '2026-01-20T17:20:13Z', '2026-05-15T09:36:09Z', 'linusnorton', 'linusnorton'),
+      | Select which list type to receive |', 'functional', 'verified', 'medium', 'story', 296, 'https://github.com/hmcts/cath-service/issues/296', 'cf8573ae0681c5585a1db0ecfee6d45b953d635c', '["apps/postgres/prisma/migrations/20260417132557_add_subscription_list_type/migration.sql","apps/postgres/prisma/schema.prisma","apps/web/src/app.ts","e2e-tests/tests/verified-user/bulk-unsubscribe.spec.ts","e2e-tests/tests/verified-user/email-subscriptions.spec.ts","libs/auth/src/pages/sso-callback/index.test.ts","libs/auth/src/pages/sso-callback/index.ts","libs/location/src/list-type-data.ts","libs/location/src/location-data.ts","libs/location/src/seed-list-types.ts","libs/notifications/src/index.ts","libs/notifications/src/notification/notification-service.test.ts","libs/notifications/src/notification/notification-service.ts","libs/notifications/src/notification/subscription-queries.test.ts","libs/notifications/src/notification/subscription-queries.ts","libs/publication/src/processing/service.test.ts","libs/publication/src/processing/service.ts","libs/subscriptions/prisma/schema.prisma","libs/subscriptions/src/index.ts","libs/subscriptions/src/pending-subscriptions-store.test.ts","libs/subscriptions/src/pending-subscriptions-store.ts","libs/subscriptions/src/repository/service.test.ts","libs/subscriptions/src/repository/service.ts","libs/subscriptions/src/repository/subscription-list-type-queries.test.ts","libs/subscriptions/src/repository/subscription-list-type-queries.ts","libs/subscriptions/src/repository/subscription-list-type-service.test.ts","libs/subscriptions/src/repository/subscription-list-type-service.ts","libs/subscriptions/src/restore-pending-subscriptions-middleware.test.ts","libs/subscriptions/src/restore-pending-subscriptions-middleware.ts","libs/subscriptions/src/session.ts","libs/verified-pages/src/index.ts","libs/verified-pages/src/pages/add-email-subscription/cy.ts","libs/verified-pages/src/pages/add-email-subscription/en.ts","libs/verified-pages/src/pages/add-email-subscription/index.njk","libs/verified-pages/src/pages/add-email-subscription/index.test.ts","libs/verified-pages/src/pages/add-email-subscription/index.ts","libs/verified-pages/src/pages/bulk-unsubscribe/index.njk","libs/verified-pages/src/pages/location-name-search/index.njk","libs/verified-pages/src/pages/location-name-search/index.test.ts","libs/verified-pages/src/pages/location-name-search/index.ts","libs/verified-pages/src/pages/pending-subscriptions/cy.ts","libs/verified-pages/src/pages/pending-subscriptions/en.ts","libs/verified-pages/src/pages/pending-subscriptions/index.njk","libs/verified-pages/src/pages/pending-subscriptions/index.test.ts","libs/verified-pages/src/pages/pending-subscriptions/index.ts","libs/verified-pages/src/pages/subscription-add-list-language/cy.ts","libs/verified-pages/src/pages/subscription-add-list-language/en.ts","libs/verified-pages/src/pages/subscription-add-list-language/index.njk","libs/verified-pages/src/pages/subscription-add-list-language/index.test.ts","libs/verified-pages/src/pages/subscription-add-list-language/index.ts","libs/verified-pages/src/pages/subscription-add-list/cy.ts","libs/verified-pages/src/pages/subscription-add-list/en.ts","libs/verified-pages/src/pages/subscription-add-list/index.njk","libs/verified-pages/src/pages/subscription-add-list/index.test.ts","libs/verified-pages/src/pages/subscription-add-list/index.ts","libs/verified-pages/src/pages/subscription-configure-list-language/cy.ts","libs/verified-pages/src/pages/subscription-configure-list-language/en.ts","libs/verified-pages/src/pages/subscription-configure-list-language/index.njk","libs/verified-pages/src/pages/subscription-configure-list-language/index.test.ts","libs/verified-pages/src/pages/subscription-configure-list-language/index.ts","libs/verified-pages/src/pages/subscription-configure-list-preview/cy.ts","libs/verified-pages/src/pages/subscription-configure-list-preview/en.ts","libs/verified-pages/src/pages/subscription-configure-list-preview/index.njk","libs/verified-pages/src/pages/subscription-configure-list-preview/index.test.ts","libs/verified-pages/src/pages/subscription-configure-list-preview/index.ts","libs/verified-pages/src/pages/subscription-configure-list/cy.ts","libs/verified-pages/src/pages/subscription-configure-list/en.ts","libs/verified-pages/src/pages/subscription-configure-list/index.njk","libs/verified-pages/src/pages/subscription-configure-list/index.test.ts","libs/verified-pages/src/pages/subscription-configure-list/index.ts","libs/verified-pages/src/pages/subscription-confirmation-preview/cy.ts","libs/verified-pages/src/pages/subscription-confirmation-preview/en.ts","libs/verified-pages/src/pages/subscription-confirmation-preview/index.njk","libs/verified-pages/src/pages/subscription-confirmation-preview/index.test.ts","libs/verified-pages/src/pages/subscription-confirmation-preview/index.ts","libs/verified-pages/src/pages/subscription-confirmed/cy.ts","libs/verified-pages/src/pages/subscription-confirmed/en.ts","libs/verified-pages/src/pages/subscription-confirmed/index.njk","libs/verified-pages/src/pages/subscription-management/cy.ts","libs/verified-pages/src/pages/subscription-management/en.ts","libs/verified-pages/src/pages/subscription-management/index.njk","libs/verified-pages/src/pages/subscription-management/index.test.ts","libs/verified-pages/src/pages/subscription-management/index.ts","libs/verified-pages/src/session.ts"]', '2026-01-20T17:20:13Z', '2026-05-15T09:36:09Z', 'linusnorton', 'linusnorton'),
   (74, 'REQ-0074', 'Configure List Type and Get List information from database', '**PROBLEM STATEMENT**
 
 In CaTH AI, we are getting list type information from mock file libs/list~~types/common/src/mock~~list-types.ts. Now we have implemented Admin functionality and Location information is storing into database, so we need to store list information into database to make it more flexible. Below will be the list database fields:
@@ -13395,7 +13403,7 @@ Fields:
 Constraints:
  * list*type*id and sub*jurisdiction*id must pair uniquely (no duplicates).
 
- * Deleting a list type removes its linking rows (cascade delete).', 'functional', 'verified', 'medium', 'story', 297, 'https://github.com/hmcts/cath-service/issues/297', '2026-01-20T17:20:28Z', '2026-04-15T09:46:00Z', 'linusnorton', 'linusnorton'),
+ * Deleting a list type removes its linking rows (cascade delete).', 'functional', 'verified', 'medium', 'story', 297, 'https://github.com/hmcts/cath-service/issues/297', 'c30616a50bb704e95ce01cdc6ec693bd273044f8', '["apps/postgres/prisma/migrations/20251209141600_add_list_types/migration.sql","apps/postgres/src/schema-discovery.ts","apps/web/src/assets/js/index.ts","apps/web/src/server.test.ts","apps/web/src/server.ts","e2e-tests/global-setup.ts","e2e-tests/tests/care-standards-tribunal-upload.spec.ts","e2e-tests/tests/configure-list-type.spec.ts","e2e-tests/tests/manual-upload.spec.ts","e2e-tests/tests/system-admin-dashboard.spec.ts","e2e-tests/utils/seed-list-types.ts","libs/admin-pages/package.json","libs/admin-pages/src/assets/js/index.ts","libs/admin-pages/src/assets/js/list-type-sensitivity.test.ts","libs/admin-pages/src/assets/js/list-type-sensitivity.ts","libs/admin-pages/src/manual-upload/validation.ts","libs/admin-pages/src/pages/manual-upload-summary/index.test.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/manual-upload/index.njk","libs/admin-pages/src/pages/manual-upload/index.test.ts","libs/admin-pages/src/pages/manual-upload/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload/index.ts","libs/admin-pages/src/pages/remove-list-confirmation/index.test.ts","libs/admin-pages/src/pages/remove-list-confirmation/index.ts","libs/admin-pages/src/pages/remove-list-search-results/index.test.ts","libs/admin-pages/src/pages/remove-list-search-results/index.ts","libs/api/src/blob-ingestion/repository/service.test.ts","libs/api/src/blob-ingestion/validation.test.ts","libs/api/src/blob-ingestion/validation.ts","libs/list-types/civil-and-family-daily-cause-list/src/pages/index.test.ts","libs/list-types/civil-and-family-daily-cause-list/src/pages/index.ts","libs/list-types/common/src/index.test.ts","libs/list-types/common/src/index.ts","libs/list-types/common/src/mock-list-types.test.ts","libs/list-types/common/src/validation/list-type-validator.test.ts","libs/list-types/common/src/validation/list-type-validator.ts","libs/location/prisma/schema.prisma","libs/location/src/index.ts","libs/location/src/list-type-data.ts","libs/location/src/seed-data.test.ts","libs/location/src/seed-data.ts","libs/location/src/seed-list-types.ts","libs/public-pages/src/flat-file/flat-file-service.test.ts","libs/public-pages/src/flat-file/flat-file-service.ts","libs/public-pages/src/pages/summary-of-publications/index.test.ts","libs/public-pages/src/pages/summary-of-publications/index.ts","libs/publication/src/authorisation/middleware.test.ts","libs/publication/src/authorisation/middleware.ts","libs/publication/src/authorisation/service.test.ts","libs/publication/src/authorisation/service.ts","libs/publication/src/index.test.ts","libs/publication/src/index.ts","libs/publication/src/repository/queries.test.ts","libs/publication/src/repository/queries.ts","libs/publication/src/repository/service.test.ts","libs/publication/src/repository/service.ts","libs/system-admin-pages/src/index.ts","libs/system-admin-pages/src/list-type/queries.test.ts","libs/system-admin-pages/src/list-type/queries.ts","libs/system-admin-pages/src/list-type/service.test.ts","libs/system-admin-pages/src/list-type/service.ts","libs/system-admin-pages/src/list-type/types.ts","libs/system-admin-pages/src/list-type/validation.test.ts","libs/system-admin-pages/src/list-type/validation.ts","libs/system-admin-pages/src/pages/configure-list-type-enter-details/cy.ts","libs/system-admin-pages/src/pages/configure-list-type-enter-details/en.ts","libs/system-admin-pages/src/pages/configure-list-type-enter-details/index.njk","libs/system-admin-pages/src/pages/configure-list-type-enter-details/index.test.ts","libs/system-admin-pages/src/pages/configure-list-type-enter-details/index.ts","libs/system-admin-pages/src/pages/configure-list-type-preview/cy.ts","libs/system-admin-pages/src/pages/configure-list-type-preview/en.ts","libs/system-admin-pages/src/pages/configure-list-type-preview/index.njk","libs/system-admin-pages/src/pages/configure-list-type-preview/index.test.ts","libs/system-admin-pages/src/pages/configure-list-type-preview/index.ts","libs/system-admin-pages/src/pages/configure-list-type-select-sub-jurisdictions/cy.ts","libs/system-admin-pages/src/pages/configure-list-type-select-sub-jurisdictions/en.ts","libs/system-admin-pages/src/pages/configure-list-type-select-sub-jurisdictions/index.njk","libs/system-admin-pages/src/pages/configure-list-type-select-sub-jurisdictions/index.test.ts","libs/system-admin-pages/src/pages/configure-list-type-select-sub-jurisdictions/index.ts","libs/system-admin-pages/src/pages/configure-list-type-success/cy.ts","libs/system-admin-pages/src/pages/configure-list-type-success/en.ts","libs/system-admin-pages/src/pages/configure-list-type-success/index.njk","libs/system-admin-pages/src/pages/configure-list-type-success/index.test.ts","libs/system-admin-pages/src/pages/configure-list-type-success/index.ts","libs/system-admin-pages/src/pages/delete-list-type-success/cy.ts","libs/system-admin-pages/src/pages/delete-list-type-success/en.ts","libs/system-admin-pages/src/pages/delete-list-type-success/index.njk","libs/system-admin-pages/src/pages/delete-list-type-success/index.test.ts","libs/system-admin-pages/src/pages/delete-list-type-success/index.ts","libs/system-admin-pages/src/pages/delete-list-type/cy.ts","libs/system-admin-pages/src/pages/delete-list-type/en.ts","libs/system-admin-pages/src/pages/delete-list-type/index.njk"]', '2026-01-20T17:20:28Z', '2026-04-15T09:46:00Z', 'linusnorton', 'linusnorton'),
   (75, 'REQ-0075', 'Blob explorer and manual re-submission trigger functionality.', '**PROBLEM STATEMENT**
 
 System admin users in CaTH access several system functionalities through the System Admin dashboard which allows them to perform administrative tasks.  The dashboard acts as the main control panel for managing reference data, user accounts, media accounts, audit logs, and other administrative operations. This ticket covers the Blob explorer and manual re-submission trigger functionality.
@@ -13962,7 +13970,7 @@ As a System Admin User, I want to access the Blob Explorer functionality in CaTH
 ### **Accessibility**
  * All interactive elements reachable by keyboard.
 
- * Screen readers announce all metadata, errors, and success states.', 'functional', 'verified', 'medium', 'story', 298, 'https://github.com/hmcts/cath-service/issues/298', '2026-01-20T17:20:45Z', '2026-01-30T14:03:57Z', 'linusnorton', 'linusnorton'),
+ * Screen readers announce all metadata, errors, and success states.', 'functional', 'verified', 'medium', 'story', 298, 'https://github.com/hmcts/cath-service/issues/298', NULL, NULL, '2026-01-20T17:20:45Z', '2026-01-30T14:03:57Z', 'linusnorton', 'linusnorton'),
   (76, 'REQ-0076', 'Audit Log View', '### **PROBLEM STATEMENT**
 
 System admin users in CaTH access several system functionalities through the System Admin dashboard which allows them to perform administrative tasks.  The dashboard acts as the main control panel for managing reference data, user accounts, media accounts, audit logs, and other administrative operations. This ticket covers the  the end~~to~~end navigation of the Audit Log View process which is covered across three screens; Dashboard, Audit Log List View and Individual Audit Log Detail View.
@@ -14242,7 +14250,7 @@ So that I can monitor and review system activity.
 
  * Back navigation returns the user to the previous screen without losing context.
 
- * Newly performed system admin actions appear immediately in the audit log list.', 'functional', 'verified', 'medium', 'story', 299, 'https://github.com/hmcts/cath-service/issues/299', '2026-01-20T17:21:01Z', '2026-02-25T12:42:12Z', 'linusnorton', 'linusnorton'),
+ * Newly performed system admin actions appear immediately in the audit log list.', 'functional', 'verified', 'medium', 'story', 299, 'https://github.com/hmcts/cath-service/issues/299', '7a2ce6c92a3c93951ad5af9f99beab90ae58712d', '["apps/postgres/prisma/migrations/20260119121546_add_audit_log_table/migration.sql","apps/postgres/src/schema-discovery.test.ts","apps/postgres/src/schema-discovery.ts","apps/web/src/app.ts","docs/tickets/VIBE-311/audit log viewer.docx","e2e-tests/tests/audit-log-viewer.spec.ts","e2e-tests/tests/system-admin-dashboard.spec.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts","libs/admin-pages/src/pages/remove-list-confirmation/index.ts","libs/audit-log/package.json","libs/audit-log/prisma/schema.prisma","libs/audit-log/src/config.ts","libs/audit-log/tsconfig.json","libs/system-admin-pages/src/assets/css/dashboard.scss","libs/system-admin-pages/src/audit-log/logger.test.ts","libs/system-admin-pages/src/audit-log/logger.ts","libs/system-admin-pages/src/audit-log/middleware.test.ts","libs/system-admin-pages/src/audit-log/middleware.ts","libs/system-admin-pages/src/audit-log/repository.test.ts","libs/system-admin-pages/src/audit-log/repository.ts","libs/system-admin-pages/src/audit-log/service.test.ts","libs/system-admin-pages/src/audit-log/service.ts","libs/system-admin-pages/src/index.ts","libs/system-admin-pages/src/pages/add-jurisdiction/index.ts","libs/system-admin-pages/src/pages/add-region/index.ts","libs/system-admin-pages/src/pages/add-sub-jurisdiction/index.ts","libs/system-admin-pages/src/pages/audit-log-detail/cy.ts","libs/system-admin-pages/src/pages/audit-log-detail/en.ts","libs/system-admin-pages/src/pages/audit-log-detail/index.njk","libs/system-admin-pages/src/pages/audit-log-detail/index.test.ts","libs/system-admin-pages/src/pages/audit-log-detail/index.ts","libs/system-admin-pages/src/pages/audit-log-list/cy.ts","libs/system-admin-pages/src/pages/audit-log-list/en.ts","libs/system-admin-pages/src/pages/audit-log-list/index.njk","libs/system-admin-pages/src/pages/audit-log-list/index.test.ts","libs/system-admin-pages/src/pages/audit-log-list/index.ts","libs/system-admin-pages/src/pages/blob-explorer-confirm-resubmission/index.ts","libs/system-admin-pages/src/pages/delete-court-confirm/index.ts","libs/system-admin-pages/src/pages/reference-data-upload-summary/index.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/cy.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/en.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/index.njk.test.ts"]', '2026-01-20T17:21:01Z', '2026-02-25T12:42:12Z', 'linusnorton', 'linusnorton'),
   (77, 'REQ-0077', 'Delete Court Process', '### **PROBLEM STATEMENT**
 
 System admin users in CaTH access several system functionalities through the System Admin dashboard which allows them to perform administrative tasks. The dashboard acts as the main control panel for managing reference data, user accounts, media accounts, audit logs, and other administrative operations. This ticket covers the the end~~to~~end navigation of the Delete Court process which is covered across four screens; Dashboard, Find the court to remove, Are you sure you want to delete this court? and Delete Successful screen.
@@ -14508,7 +14516,7 @@ There are active artefacts for the given location."
 
  * Soft-deleted courts remain in the database for reference and audit.
 
- * Non-system admin users cannot access the Delete Court functionality.', 'functional', 'verified', 'medium', 'story', 300, 'https://github.com/hmcts/cath-service/issues/300', '2026-01-20T17:21:14Z', '2026-01-30T14:03:59Z', 'linusnorton', 'linusnorton'),
+ * Non-system admin users cannot access the Delete Court functionality.', 'functional', 'verified', 'medium', 'story', 300, 'https://github.com/hmcts/cath-service/issues/300', NULL, NULL, '2026-01-20T17:21:14Z', '2026-01-30T14:03:59Z', 'linusnorton', 'linusnorton'),
   (78, 'REQ-0078', 'Third Party User Management - Future', '### **PROBLEM STATEMENT**
 
 System admin users in CaTH access several system functionalities through the System Admin dashboard which allows them to perform administrative tasks. The dashboard acts as the main control panel for managing reference data, user accounts, media accounts, audit logs, and other administrative operations. This ticket covers the system admin user''s ability to onboard, update and delete third~~party users through a structured, multi~~screen workflow. 
@@ -15077,7 +15085,7 @@ OR
 
  * All create, update, and delete actions write audit logs with before/after values where applicable.
 
- * Back navigation preserves entered or saved data across all flows.', 'functional', 'implemented', 'medium', 'story', 301, 'https://github.com/hmcts/cath-service/issues/301', '2026-01-20T17:21:32Z', '2026-05-11T16:01:42Z', 'linusnorton', 'linusnorton'),
+ * Back navigation preserves entered or saved data across all flows.', 'functional', 'implemented', 'medium', 'story', 301, 'https://github.com/hmcts/cath-service/issues/301', NULL, NULL, '2026-01-20T17:21:32Z', '2026-05-11T16:01:42Z', 'linusnorton', 'linusnorton'),
   (79, 'REQ-0079', 'Refactor artefact search extraction and subscription process', '**PROBLEM STATEMENT**
 
 Currently, a verified user can only subscribe to a location but it can also subscribe by other types as well which are not implemented yet. But we need to update the application database in such a ways that it can support all types of user subscription.
@@ -15326,7 +15334,7 @@ Currently, a verified user can only subscribe to a location but it can also subs
 
  * No references to `location_id` remain in the subscription table.
 
- * Future subscription types can be added without further schema changes.', 'functional', 'verified', 'medium', 'story', 302, 'https://github.com/hmcts/cath-service/issues/302', '2026-01-20T17:21:43Z', '2026-02-24T10:02:46Z', 'linusnorton', 'linusnorton'),
+ * Future subscription types can be added without further schema changes.', 'functional', 'verified', 'medium', 'story', 302, 'https://github.com/hmcts/cath-service/issues/302', NULL, NULL, '2026-01-20T17:21:43Z', '2026-02-24T10:02:46Z', 'linusnorton', 'linusnorton'),
   (80, 'REQ-0080', 'The RCJ Hearing Lists', '**PROBLEM STATEMENT**
 
 Hearing lists are published in CaTH through various routes. This ticket covers the non-strategic publishing of hearing lists from The Royal Court of Justice (through the upload of excel files in CaTH) which would require the creation of validation schema and style guides.
@@ -15724,7 +15732,7 @@ Lleoliad, Barnwr, Amser, Rhif yr Achos, Manylion yr achos, Math o Wrandawiad, Gw
 
  ** PDF downloads are available for each list.
 
- ** Email summaries are generated on publication.', 'functional', 'verified', 'medium', 'story', 303, 'https://github.com/hmcts/cath-service/issues/303', '2026-01-20T17:21:56Z', '2026-02-09T09:42:42Z', 'linusnorton', 'linusnorton'),
+ ** Email summaries are generated on publication.', 'functional', 'verified', 'medium', 'story', 303, 'https://github.com/hmcts/cath-service/issues/303', NULL, NULL, '2026-01-20T17:21:56Z', '2026-02-09T09:42:42Z', 'linusnorton', 'linusnorton'),
   (81, 'REQ-0081', 'Care Standards Weekly hearing list - Welsh translation', '**PROBLEM STATEMENT**
 
 This ticket covers the implementation of the Welsh translation for the publishing of the care standards weekly hearing list through the non-strategic publishing route.
@@ -16016,7 +16024,7 @@ Behavioural rules for bilingual content
 
  ** Keyboard-only users can toggle language, search cases, navigate back, and download the PDF.
 
- ** Screen readers correctly announce headings, table headers, and language changes.', 'functional', 'verified', 'medium', 'story', 305, 'https://github.com/hmcts/cath-service/issues/305', '2026-01-20T17:22:24Z', '2026-02-09T10:03:26Z', 'linusnorton', 'linusnorton'),
+ ** Screen readers correctly announce headings, table headers, and language changes.', 'functional', 'verified', 'medium', 'story', 305, 'https://github.com/hmcts/cath-service/issues/305', NULL, NULL, '2026-01-20T17:22:24Z', '2026-02-09T10:03:26Z', 'linusnorton', 'linusnorton'),
   (82, 'REQ-0082', 'PDF Subscriptions template & email summary for the RCJ and Care Standards lists', '**PROBLEM STATEMENT**
 
 This ticket cover the creation of the email summary and the PDF version of the RCJ hearing Lists and the Care Standards List which are to be included within the Subscription fulfilment. 
@@ -16261,7 +16269,7 @@ This email contains information intended to assist the accurate reporting of cou
 
  * PDF link journey: User can access the download screens and successfully download the PDF.
 
- * Testing: Unit tests, integration tests, and accessibility tests are completed successfully.', 'functional', 'verified', 'medium', 'story', 306, 'https://github.com/hmcts/cath-service/issues/306', '2026-01-20T17:22:43Z', '2026-02-16T17:05:33Z', 'linusnorton', 'linusnorton'),
+ * Testing: Unit tests, integration tests, and accessibility tests are completed successfully.', 'functional', 'verified', 'medium', 'story', 306, 'https://github.com/hmcts/cath-service/issues/306', NULL, NULL, '2026-01-20T17:22:43Z', '2026-02-16T17:05:33Z', 'linusnorton', 'linusnorton'),
   (83, 'REQ-0083', 'PDF Subscriptions template & email summary for the Civil and Family Daily Cause list', '**PROBLEM STATEMENT**
 
 This ticket covers the creation of the email summary and the PDF version of the Civil and Family Daily Cause List which are to be included within the subscription fulfilment.
@@ -16501,7 +16509,7 @@ This email contains information intended to assist the accurate reporting of cou
 
  * Expiry handling: Attempting to access the file after expiry shows the correct error message.
 
- * Testing: Validation, unit tests, and integration tests are completed successfully for each list type.', 'functional', 'verified', 'medium', 'story', 308, 'https://github.com/hmcts/cath-service/issues/308', '2026-01-20T17:23:04Z', '2026-03-18T09:59:14Z', 'linusnorton', 'linusnorton'),
+ * Testing: Validation, unit tests, and integration tests are completed successfully for each list type.', 'functional', 'verified', 'medium', 'story', 308, 'https://github.com/hmcts/cath-service/issues/308', NULL, NULL, '2026-01-20T17:23:04Z', '2026-03-18T09:59:14Z', 'linusnorton', 'linusnorton'),
   (84, 'REQ-0084', 'RCJ/Rolls Building - Summary of Pubs Caution Message', '**PROBLEM STATEMENT**
 
 This ticket covers the implementation of the Rolls Building and RCJ landing page caution and no list message which would require some backend database changes (location metadata) and frontend screen updates.
@@ -16557,7 +16565,7 @@ If you do not see a list published for the court you are looking for, it means t
 
  * Welsh
 “Mae''r rhestrau hyn yn destun newid tan 4:30pm. Os bydd unrhyw newidiadau ar ôl yr amser hwn, byddwn yn ffonio neu’n anfon e-bost yn uniongyrchol at y partïon neu eu cynrychiolwyr cyfreithiol.
-Os nad ydych yn gweld rhestr wedi’i chyhoeddi ar gyfer y llys rydych yn chwilio amdano, mae’n golygu nad oes gwrandawiadau wedi’u trefnu.”', 'functional', 'verified', 'medium', 'story', 309, 'https://github.com/hmcts/cath-service/issues/309', '2026-01-20T17:23:14Z', '2026-02-13T15:41:36Z', 'linusnorton', 'linusnorton'),
+Os nad ydych yn gweld rhestr wedi’i chyhoeddi ar gyfer y llys rydych yn chwilio amdano, mae’n golygu nad oes gwrandawiadau wedi’u trefnu.”', 'functional', 'verified', 'medium', 'story', 309, 'https://github.com/hmcts/cath-service/issues/309', 'bf81c1c3330413d3278bc7ff5b6d93026adc3e6f', '["apps/postgres/prisma/migrations/20260126174218_add_location_metadata/migration.sql","e2e-tests/tests/care-standards-tribunal-upload.spec.ts","e2e-tests/tests/location-metadata.spec.ts","e2e-tests/tests/summary-of-publications.spec.ts","e2e-tests/tests/system-admin-dashboard.spec.ts","libs/location/prisma/schema.prisma","libs/location/src/index.ts","libs/location/src/repository/location-metadata-queries.test.ts","libs/location/src/repository/location-metadata-queries.ts","libs/location/src/repository/location-metadata-service.test.ts","libs/location/src/repository/location-metadata-service.ts","libs/location/src/repository/model.ts","libs/location/src/validation/location-metadata-validation.test.ts","libs/location/src/validation/location-metadata-validation.ts","libs/public-pages/src/pages/summary-of-publications/cy.ts","libs/public-pages/src/pages/summary-of-publications/en.ts","libs/public-pages/src/pages/summary-of-publications/index.njk","libs/public-pages/src/pages/summary-of-publications/index.test.ts","libs/public-pages/src/pages/summary-of-publications/index.ts","libs/system-admin-pages/src/pages/location-metadata-delete-confirmation/cy.ts","libs/system-admin-pages/src/pages/location-metadata-delete-confirmation/en.ts","libs/system-admin-pages/src/pages/location-metadata-delete-confirmation/index.njk","libs/system-admin-pages/src/pages/location-metadata-delete-confirmation/index.test.ts","libs/system-admin-pages/src/pages/location-metadata-delete-confirmation/index.ts","libs/system-admin-pages/src/pages/location-metadata-manage/cy.ts","libs/system-admin-pages/src/pages/location-metadata-manage/en.ts","libs/system-admin-pages/src/pages/location-metadata-manage/index.njk","libs/system-admin-pages/src/pages/location-metadata-manage/index.test.ts","libs/system-admin-pages/src/pages/location-metadata-manage/index.ts","libs/system-admin-pages/src/pages/location-metadata-search/cy.ts","libs/system-admin-pages/src/pages/location-metadata-search/en.ts","libs/system-admin-pages/src/pages/location-metadata-search/index.njk","libs/system-admin-pages/src/pages/location-metadata-search/index.test.ts","libs/system-admin-pages/src/pages/location-metadata-search/index.ts","libs/system-admin-pages/src/pages/location-metadata-session.ts","libs/system-admin-pages/src/pages/location-metadata-success/cy.ts","libs/system-admin-pages/src/pages/location-metadata-success/en.ts","libs/system-admin-pages/src/pages/location-metadata-success/index.njk","libs/system-admin-pages/src/pages/location-metadata-success/index.test.ts","libs/system-admin-pages/src/pages/location-metadata-success/index.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/cy.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/en.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/index.njk.test.ts","tsconfig.json"]', '2026-01-20T17:23:14Z', '2026-02-13T15:41:36Z', 'linusnorton', 'linusnorton'),
   (85, 'REQ-0085', 'User Management', '### **PROBLEM STATEMENT**
 
 System admin users in CaTH access several system administrative functionalities through the System Admin dashboard which allows them to perform administrative tasks. This ticket covers the system admin user''s ability to manage and delete CaTH users through a structured, multi-screen workflow. 
@@ -16813,7 +16821,7 @@ Delete flow (Yes): Selecting “Yes” deletes the user and displays the “User
 
 Data integrity: Deleted users are removed from the CaTH database.
 
-Pagination: Next and Previous controls navigate correctly between result pages.', 'functional', 'verified', 'medium', 'story', 310, 'https://github.com/hmcts/cath-service/issues/310', '2026-01-20T17:23:27Z', '2026-06-05T16:01:12Z', 'linusnorton', 'linusnorton'),
+Pagination: Next and Previous controls navigate correctly between result pages.', 'functional', 'verified', 'medium', 'story', 310, 'https://github.com/hmcts/cath-service/issues/310', '8889f7a709b7d5411bffa058568903a22bcef233', '["apps/postgres/prisma/migrations/20260203115946_add_user_search_indexes/migration.sql","apps/postgres/prisma/migrations/20260422140711_fix_index_names/migration.sql","apps/postgres/prisma/seed.ts","apps/web/src/assets/css/index.scss","e2e-tests/tests/system-admin/system-admin-dashboard.spec.ts","e2e-tests/tests/system-admin/user-management.spec.ts","libs/admin-pages/src/pages/manual-upload-summary/index.test.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts","libs/admin-pages/src/pages/remove-list-confirmation/index.ts","libs/list-types/common/package.json","libs/postgres-prisma/prisma/schema/base.prisma","libs/system-admin-pages/package.json","libs/system-admin-pages/src/assets/css/user-management.scss","libs/system-admin-pages/src/audit-log/logger.ts","libs/system-admin-pages/src/audit-log/middleware.ts","libs/system-admin-pages/src/index.ts","libs/system-admin-pages/src/pages/add-jurisdiction/index.ts","libs/system-admin-pages/src/pages/add-region/index.ts","libs/system-admin-pages/src/pages/add-sub-jurisdiction/index.ts","libs/system-admin-pages/src/pages/blob-explorer-confirm-resubmission/index.ts","libs/system-admin-pages/src/pages/create-third-party-user-summary/index.test.ts","libs/system-admin-pages/src/pages/create-third-party-user-summary/index.ts","libs/system-admin-pages/src/pages/delete-court-confirm/index.ts","libs/system-admin-pages/src/pages/delete-third-party-user/index.test.ts","libs/system-admin-pages/src/pages/delete-third-party-user/index.ts","libs/system-admin-pages/src/pages/delete-user-confirm/[userId]/cy.ts","libs/system-admin-pages/src/pages/delete-user-confirm/[userId]/en.ts","libs/system-admin-pages/src/pages/delete-user-confirm/[userId]/index.njk","libs/system-admin-pages/src/pages/delete-user-confirm/[userId]/index.test.ts","libs/system-admin-pages/src/pages/delete-user-confirm/[userId]/index.ts","libs/system-admin-pages/src/pages/delete-user-success/cy.ts","libs/system-admin-pages/src/pages/delete-user-success/en.ts","libs/system-admin-pages/src/pages/delete-user-success/index.njk","libs/system-admin-pages/src/pages/delete-user-success/index.test.ts","libs/system-admin-pages/src/pages/delete-user-success/index.ts","libs/system-admin-pages/src/pages/find-users/clear-filters/index.ts","libs/system-admin-pages/src/pages/find-users/cy.ts","libs/system-admin-pages/src/pages/find-users/en.ts","libs/system-admin-pages/src/pages/find-users/index.njk","libs/system-admin-pages/src/pages/find-users/index.test.ts","libs/system-admin-pages/src/pages/find-users/index.ts","libs/system-admin-pages/src/pages/find-users/remove-filter/index.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/index.test.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/index.ts","libs/system-admin-pages/src/pages/manage-user/[userId]/cy.ts","libs/system-admin-pages/src/pages/manage-user/[userId]/en.ts","libs/system-admin-pages/src/pages/manage-user/[userId]/index.njk","libs/system-admin-pages/src/pages/manage-user/[userId]/index.test.ts","libs/system-admin-pages/src/pages/manage-user/[userId]/index.ts","libs/system-admin-pages/src/pages/reference-data-upload-summary/index.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/cy.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/en.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/index.njk.test.ts","libs/system-admin-pages/src/user-management/queries.test.ts","libs/system-admin-pages/src/user-management/queries.ts","libs/system-admin-pages/src/user-management/validation.test.ts","libs/system-admin-pages/src/user-management/validation.ts"]', '2026-01-20T17:23:27Z', '2026-06-05T16:01:12Z', 'linusnorton', 'linusnorton'),
   (86, 'REQ-0086', 'Header and footer update', 'After the implementation of VIBE-159, there are some known differences between current CaTH and AI CaTH on header and footer below:
  * New CaTH has an additional foot link called ''Open Government Licence'' in the footer which is not in current CaTH.
 
@@ -16824,10 +16832,10 @@ When you use this information under the OGL, you should include the following at
 
 The <Open Government Licence v3.0>(https://www.nationalarchives.gov.uk/doc/open~~government~~licence/version/3/) does not cover use of any personal data in the Court and tribunal hearings service. Personal data is subject to applicable data protection laws.
 
- * The pageurl parameter for the feedback link begins with a ''/'' in the new CaTH and no ''/'' in current CaTH', 'functional', 'verified', 'medium', 'task', 311, 'https://github.com/hmcts/cath-service/issues/311', '2026-01-20T17:23:41Z', '2026-01-30T15:05:14Z', 'linusnorton', 'linusnorton'),
+ * The pageurl parameter for the feedback link begins with a ''/'' in the new CaTH and no ''/'' in current CaTH', 'functional', 'verified', 'medium', 'task', 311, 'https://github.com/hmcts/cath-service/issues/311', NULL, NULL, '2026-01-20T17:23:41Z', '2026-01-30T15:05:14Z', 'linusnorton', 'linusnorton'),
   (87, 'REQ-0087', 'Service navigation update', '# Update service navigation for manual upload pages following SSO implementation to include Dashboard and Admin Dashboard for system admin sign~~in, and Dashboard only for local admin and CTSC admin sign~~in
  # When signed in as SSO local admin or CTSC admin, the service navigation text on the admin dashboard page should be ''Dashboard'' not ''Admin Dashboard''
- # When signed in as CTSC admin, we should see 4 tiles instead of 3 on admin dashboard. Local admin and system admin should continue to see 3 tiles on admin dashboard. The fourth tile should be ''Manage Media Account Requests''', 'functional', 'verified', 'medium', 'task', 312, 'https://github.com/hmcts/cath-service/issues/312', '2026-01-20T17:23:56Z', '2026-01-30T15:05:17Z', 'linusnorton', 'linusnorton'),
+ # When signed in as CTSC admin, we should see 4 tiles instead of 3 on admin dashboard. Local admin and system admin should continue to see 3 tiles on admin dashboard. The fourth tile should be ''Manage Media Account Requests''', 'functional', 'verified', 'medium', 'task', 312, 'https://github.com/hmcts/cath-service/issues/312', NULL, NULL, '2026-01-20T17:23:56Z', '2026-01-30T15:05:17Z', 'linusnorton', 'linusnorton'),
   (88, 'REQ-0088', 'Merge Tests Related to Manual Upload (Flat File)', '**Description:**
 Currently, there are three separate test files created for the manual upload (flat file) functionality across different tickets. This task aims to merge all these tests into a single, unified test file. During this process, any tests that are not necessary for validating the core functionality should be removed to ensure the test suite remains efficient, relevant, and easy to maintain.
 
@@ -16840,7 +16848,7 @@ Currently, there are three separate test files created for the manual upload (fl
 
  * Ensure the final test file fully covers the manual upload process.
 
- * Verify that the new test file executes successfully in the pipeline.', 'non_functional', 'verified', 'medium', 'task', 313, 'https://github.com/hmcts/cath-service/issues/313', '2026-01-20T17:24:09Z', '2026-01-30T15:05:20Z', 'linusnorton', 'linusnorton'),
+ * Verify that the new test file executes successfully in the pipeline.', 'non_functional', 'verified', 'medium', 'task', 313, 'https://github.com/hmcts/cath-service/issues/313', NULL, NULL, '2026-01-20T17:24:09Z', '2026-01-30T15:05:20Z', 'linusnorton', 'linusnorton'),
   (89, 'REQ-0089', 'Merge CFT Login Tests into One File & Merge SSO Login Tests into One File', '**Description:**
 Currently, login tests for CFT and SSO are spread across multiple test files, leading to duplication, scattered maintenance, and inconsistent structure. To improve test organization, readability, and maintainability, we should consolidate:
  * All **CFT login tests** into a single test file
@@ -16858,7 +16866,7 @@ Currently, login tests for CFT and SSO are spread across multiple test files, le
 
  * Test suite runs successfully with all login test cases passing
 
- * CI/CD pipelines reflect updated test paths', 'non_functional', 'verified', 'medium', 'task', 314, 'https://github.com/hmcts/cath-service/issues/314', '2026-01-20T17:24:23Z', '2026-01-30T15:05:22Z', 'linusnorton', 'linusnorton'),
+ * CI/CD pipelines reflect updated test paths', 'non_functional', 'verified', 'medium', 'task', 314, 'https://github.com/hmcts/cath-service/issues/314', NULL, NULL, '2026-01-20T17:24:23Z', '2026-01-30T15:05:22Z', 'linusnorton', 'linusnorton'),
   (90, 'REQ-0090', 'Optimize Tests for Subscription Add/Remove Functionality by Removing Redundancies and Merging Related Scenarios', '**Description:**
 The current test suite for *Adding and Removing Subscriptions* contains several redundant or fragmented test cases that validate similar flows using separate tests. This increases test execution time and maintenance overhead.
 
@@ -16894,7 +16902,7 @@ We should review and optimise these tests by:
 
  * Final set of optimised tests is documented and reviewed.
 
- * No loss in functional coverage.', 'non_functional', 'verified', 'medium', 'task', 315, 'https://github.com/hmcts/cath-service/issues/315', '2026-01-20T17:24:36Z', '2026-01-30T15:05:24Z', 'linusnorton', 'linusnorton'),
+ * No loss in functional coverage.', 'non_functional', 'verified', 'medium', 'task', 315, 'https://github.com/hmcts/cath-service/issues/315', NULL, NULL, '2026-01-20T17:24:36Z', '2026-01-30T15:05:24Z', 'linusnorton', 'linusnorton'),
   (91, 'REQ-0091', 'Third Party User Management - Current', '### **PROBLEM STATEMENT**
 
 System admin users in CaTH access several system functionalities through the System Admin dashboard which allows them to perform administrative tasks. The dashboard acts as the main control panel for managing reference data, user accounts, media accounts, audit logs, and other administrative operations. This ticket covers the system admin user''s ability to onboard, update and delete third~~party users through a structured, multi~~screen workflow. 
@@ -16993,7 +17001,7 @@ System admin users in CaTH access several system functionalities through the Sys
  * Select yes or no to continue
  * Third party user deleted
  * Home
- * back - Yn ôl', 'functional', 'verified', 'medium', 'story', 322, 'https://github.com/hmcts/cath-service/issues/322', '2026-01-29T16:02:45Z', '2026-04-15T11:15:45Z', 'linusnorton', 'linusnorton'),
+ * back - Yn ôl', 'functional', 'verified', 'medium', 'story', 322, 'https://github.com/hmcts/cath-service/issues/322', '5045f89f97d9d822f4239c1a514362ffaa97f77c', '["apps/postgres/prisma/migrations/20260209135314_add_legacy_third_party_user_tables/migration.sql","apps/postgres/prisma/schema.prisma","e2e-tests/tests/delete-court.spec.ts","e2e-tests/tests/system-admin-dashboard.spec.ts","e2e-tests/tests/third-party-user-management.spec.ts","libs/admin-pages/src/pages/remove-list-search-results/index.njk","libs/admin-pages/src/pages/remove-list-success/index.njk","libs/system-admin-pages/package.json","libs/system-admin-pages/src/pages/create-third-party-user-summary/cy.ts","libs/system-admin-pages/src/pages/create-third-party-user-summary/en.ts","libs/system-admin-pages/src/pages/create-third-party-user-summary/index.njk","libs/system-admin-pages/src/pages/create-third-party-user-summary/index.test.ts","libs/system-admin-pages/src/pages/create-third-party-user-summary/index.ts","libs/system-admin-pages/src/pages/create-third-party-user/cy.ts","libs/system-admin-pages/src/pages/create-third-party-user/en.ts","libs/system-admin-pages/src/pages/create-third-party-user/index.njk","libs/system-admin-pages/src/pages/create-third-party-user/index.test.ts","libs/system-admin-pages/src/pages/create-third-party-user/index.ts","libs/system-admin-pages/src/pages/delete-court-success/index.njk","libs/system-admin-pages/src/pages/delete-third-party-user/cy.ts","libs/system-admin-pages/src/pages/delete-third-party-user/en.ts","libs/system-admin-pages/src/pages/delete-third-party-user/index.njk","libs/system-admin-pages/src/pages/delete-third-party-user/index.test.ts","libs/system-admin-pages/src/pages/delete-third-party-user/index.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/cy.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/en.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/index.njk","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/index.test.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/index.ts","libs/system-admin-pages/src/pages/manage-third-party-user/cy.ts","libs/system-admin-pages/src/pages/manage-third-party-user/en.ts","libs/system-admin-pages/src/pages/manage-third-party-user/index.njk","libs/system-admin-pages/src/pages/manage-third-party-user/index.test.ts","libs/system-admin-pages/src/pages/manage-third-party-user/index.ts","libs/system-admin-pages/src/pages/manage-third-party-users/cy.ts","libs/system-admin-pages/src/pages/manage-third-party-users/en.ts","libs/system-admin-pages/src/pages/manage-third-party-users/index.njk","libs/system-admin-pages/src/pages/manage-third-party-users/index.test.ts","libs/system-admin-pages/src/pages/manage-third-party-users/index.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/cy.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/en.ts","libs/system-admin-pages/src/pages/system-admin-dashboard/index.njk.test.ts","libs/system-admin-pages/src/pages/third-party-subscriptions-updated/cy.ts","libs/system-admin-pages/src/pages/third-party-subscriptions-updated/en.ts","libs/system-admin-pages/src/pages/third-party-subscriptions-updated/index.njk","libs/system-admin-pages/src/pages/third-party-subscriptions-updated/index.test.ts","libs/system-admin-pages/src/pages/third-party-subscriptions-updated/index.ts","libs/system-admin-pages/src/pages/third-party-user-created/cy.ts","libs/system-admin-pages/src/pages/third-party-user-created/en.ts","libs/system-admin-pages/src/pages/third-party-user-created/index.njk","libs/system-admin-pages/src/pages/third-party-user-created/index.test.ts","libs/system-admin-pages/src/pages/third-party-user-created/index.ts","libs/system-admin-pages/src/pages/third-party-user-deleted/cy.ts","libs/system-admin-pages/src/pages/third-party-user-deleted/en.ts","libs/system-admin-pages/src/pages/third-party-user-deleted/index.njk","libs/system-admin-pages/src/pages/third-party-user-deleted/index.test.ts","libs/system-admin-pages/src/pages/third-party-user-deleted/index.ts","libs/system-admin-pages/src/third-party-user/queries.test.ts","libs/system-admin-pages/src/third-party-user/queries.ts","libs/system-admin-pages/src/third-party-user/validation.test.ts","libs/system-admin-pages/src/third-party-user/validation.ts"]', '2026-01-29T16:02:45Z', '2026-04-15T11:15:45Z', 'linusnorton', 'linusnorton'),
   (92, 'REQ-0092', 'Third Party subscription Fulfilment - Current', '**PROBLEM STATEMENT**
 
 Third Party users can subscribe to receive publications from CaTH. This ticket covers the Third Party Subscription fulfilment process.
@@ -17032,8 +17040,8 @@ Third Party users can subscribe to receive publications from CaTH. This ticket c
  ** 202 (if the request was accepted but has not been finished yet)
  *** 204 with <`**Location*`>(https://tools.ietf.org/html/rfc7231#section-7.1.2) header (if the actual resource is not returned)
  * Validation is established to ensure no publication is sent when the trigger has not been activated, to ensure that Non-subscribed JSON payload is not sent to the third party and to ensure that the system differentiates between newly uploaded and updated publication 
- * Integration test and Unit test are performed', 'functional', 'verified', 'medium', 'story', 323, 'https://github.com/hmcts/cath-service/issues/323', '2026-01-29T16:02:45Z', '2026-06-05T15:11:14Z', 'linusnorton', 'linusnorton'),
-  (93, 'REQ-0093', 'Project Prep Tasks', '#### This epic is raised to capture preparatory tasks needed for the CaTH AI project.', 'functional', 'verified', 'lowest', 'epic', 328, 'https://github.com/hmcts/cath-service/issues/328', '2026-01-30T13:58:56Z', '2026-01-30T15:05:27Z', 'linusnorton', 'linusnorton'),
+ * Integration test and Unit test are performed', 'functional', 'verified', 'medium', 'story', 323, 'https://github.com/hmcts/cath-service/issues/323', '134fe37df290f1aede378ed85108ac8c5a49b93c', '["apps/postgres/prisma/migrations/20260409150532_add_legacy_third_party_push_log/migration.sql","apps/postgres/prisma/migrations/20260528115459_add_third_party_push_log/migration.sql","apps/postgres/src/schema-discovery.test.ts","libs/admin-pages/package.json","libs/admin-pages/src/manual-upload/file-storage.ts","libs/admin-pages/src/pages/manual-upload-summary/index.test.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.test.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts","libs/admin-pages/src/pages/remove-list-confirmation/index.ts","libs/api/src/blob-ingestion/file-storage.ts","libs/api/src/blob-ingestion/repository/service.test.ts","libs/api/src/blob-ingestion/repository/service.ts","libs/legacy-third-party-fulfilment/package.json","libs/legacy-third-party-fulfilment/src/config.ts","libs/legacy-third-party-fulfilment/src/index.ts","libs/legacy-third-party-fulfilment/src/push/headers.test.ts","libs/legacy-third-party-fulfilment/src/push/headers.ts","libs/legacy-third-party-fulfilment/src/push/http-client.test.ts","libs/legacy-third-party-fulfilment/src/push/http-client.ts","libs/legacy-third-party-fulfilment/src/push/retry.test.ts","libs/legacy-third-party-fulfilment/src/push/retry.ts","libs/legacy-third-party-fulfilment/src/queries.test.ts","libs/legacy-third-party-fulfilment/src/queries.ts","libs/legacy-third-party-fulfilment/src/service.test.ts","libs/legacy-third-party-fulfilment/src/service.ts","libs/legacy-third-party-fulfilment/tsconfig.json","libs/postgres-prisma/prisma/schema/third-party-push-log.prisma","libs/publication/package.json","libs/publication/src/processing/service.test.ts","libs/publication/src/processing/service.ts","libs/publication/src/repository/model.ts","libs/publication/src/repository/queries.test.ts","libs/publication/src/repository/queries.ts","libs/system-admin-pages/src/pages/manage-third-party-subscriptions/index.njk","libs/test-support/src/routes/test-support/mock-courtel.ts","tsconfig.json"]', '2026-01-29T16:02:45Z', '2026-06-05T15:11:14Z', 'linusnorton', 'linusnorton'),
+  (93, 'REQ-0093', 'Project Prep Tasks', '#### This epic is raised to capture preparatory tasks needed for the CaTH AI project.', 'functional', 'verified', 'lowest', 'epic', 328, 'https://github.com/hmcts/cath-service/issues/328', NULL, NULL, '2026-01-30T13:58:56Z', '2026-01-30T15:05:27Z', 'linusnorton', 'linusnorton'),
   (94, 'REQ-0094', '‘What do you want to do?’ Page', '**PROBLEM STATEMENT**
 
 All CaTH users, including members of the public, have access to hearing lists published in CaTH. This would require users to undergo a few steps to navigate through the different pages in CaTH including selection what they want to view.
@@ -17055,7 +17063,7 @@ All CaTH users, including members of the public, have access to hearing lists pu
  * Under the ‘find a court or tribunal’, the descriptive text in the bracket is provided (View time, location, type of hearings and more)
  * Under the ‘find a single justice procedure case’ option, the descriptive text in the bracket is provided (TV licensing, minor traffic offences such as speeding and more)
  * Users can continue the process by clicking the ‘continue’ button
- * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 329, 'https://github.com/hmcts/cath-service/issues/329', '2026-01-30T13:59:35Z', '2026-01-30T15:05:29Z', 'linusnorton', 'linusnorton'),
+ * All CaTH pages specifications are maintained', 'functional', 'verified', 'high', 'story', 329, 'https://github.com/hmcts/cath-service/issues/329', NULL, NULL, '2026-01-30T13:59:35Z', '2026-01-30T15:05:29Z', 'linusnorton', 'linusnorton'),
   (95, 'REQ-0095', 'Upload Reference Data', '**PROBLEM STATEMENT**
 
 This ticket is raised to upload the reference data needed to publish hearing lists in CaTH.
@@ -17379,7 +17387,7 @@ The system must allow a System Admin to manually upload a reference data CSV fil
  - Confirm if an email confirmation should be sent after a successful upload.  
  - Confirm if Welsh translation will be hard-coded or managed by a translation service.
 
-—', 'functional', 'verified', 'high', 'story', 330, 'https://github.com/hmcts/cath-service/issues/330', '2026-01-30T14:01:18Z', '2026-01-30T15:05:31Z', 'linusnorton', 'linusnorton'),
+—', 'functional', 'verified', 'high', 'story', 330, 'https://github.com/hmcts/cath-service/issues/330', NULL, NULL, '2026-01-30T14:01:18Z', '2026-01-30T15:05:31Z', 'linusnorton', 'linusnorton'),
   (96, 'REQ-0096', 'Merge Tests Related to Manual Upload (Flat File)', '**Description:**
 Currently, there are three separate test files created for the manual upload (flat file) functionality across different tickets. This task aims to merge all these tests into a single, unified test file. During this process, any tests that are not necessary for validating the core functionality should be removed to ensure the test suite remains efficient, relevant, and easy to maintain.
 
@@ -17392,7 +17400,7 @@ Currently, there are three separate test files created for the manual upload (fl
 
  * Ensure the final test file fully covers the manual upload process.
 
- * Verify that the new test file executes successfully in the pipeline.', 'non_functional', 'verified', 'medium', 'task', 332, 'https://github.com/hmcts/cath-service/issues/332', '2026-01-30T14:05:30Z', '2026-01-30T15:05:34Z', 'linusnorton', 'linusnorton'),
+ * Verify that the new test file executes successfully in the pipeline.', 'non_functional', 'verified', 'medium', 'task', 332, 'https://github.com/hmcts/cath-service/issues/332', NULL, NULL, '2026-01-30T14:05:30Z', '2026-01-30T15:05:34Z', 'linusnorton', 'linusnorton'),
   (97, 'REQ-0097', 'PDDA/HTML', '**PROBLEM STATEMENT**
 To implement the Crown lists publishing in CaTH, the PDDA functionality sends data in HTML/HTM format to the AWS S3 bucket. This ticket captures the requirements needed to implement the PDDA/HTML connection.
 
@@ -17540,13 +17548,13 @@ ________________________________________
 •	Exact allowed MIME types (if validation is required) and whether MIME validation is mandatory or best-effort.
 •	S3 bucket name/prefix conventions and object key naming rules (including whether overwrites are allowed and idempotency strategy).
 •	Whether non-LCSU artefact types should be rejected by this new endpoint or handled by existing publication upload logic.
-•	Expected response codes for success/failure (e.g., 200/201/202, and specific 4xx/5xx mapping).', 'functional', 'verified', NULL, NULL, 334, 'https://github.com/hmcts/cath-service/issues/334', '2026-02-02T16:41:24Z', '2026-06-08T08:27:38Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	Expected response codes for success/failure (e.g., 200/201/202, and specific 4xx/5xx mapping).', 'functional', 'verified', NULL, NULL, 334, 'https://github.com/hmcts/cath-service/issues/334', 'd8716a1c48e725304167c652e60978f7d8a5d1a1', '["apps/postgres/prisma/migrations/20260211121457_add_artefact_type/migration.sql","apps/postgres/prisma/migrations/20260429000000_rename_artefact_type_index/migration.sql","apps/postgres/prisma/seed.sql","e2e-tests/package.json","e2e-tests/run-with-credentials.js","e2e-tests/tests/api/pdda-html-s3-upload.spec.ts","e2e-tests/utils/api-auth-helpers.ts","e2e-tests/utils/seed-location-data.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts","libs/api/package.json","libs/api/src/blob-ingestion/repository/service.ts","libs/api/src/routes/v1/publication.test.ts","libs/api/src/routes/v1/publication.ts","libs/pdda-html-upload/package.json","libs/pdda-html-upload/src/index.ts","libs/pdda-html-upload/src/s3/s3-client.test.ts","libs/pdda-html-upload/src/s3/s3-client.ts","libs/pdda-html-upload/src/s3/s3-upload-service.test.ts","libs/pdda-html-upload/src/s3/s3-upload-service.ts","libs/pdda-html-upload/src/types.ts","libs/pdda-html-upload/src/validation/file-validation.test.ts","libs/pdda-html-upload/src/validation/file-validation.ts","libs/pdda-html-upload/tsconfig.json","libs/postgres-prisma/prisma/schema/base.prisma","libs/publication/src/repository/model.ts","libs/publication/src/repository/queries.test.ts","libs/publication/src/repository/queries.ts","libs/test-support/src/routes/test-support/artefacts.ts","libs/test-support/src/types.ts","tsconfig.json"]', '2026-02-02T16:41:24Z', '2026-06-08T08:27:38Z', 'OgechiOkelu', 'OgechiOkelu'),
   (98, 'REQ-0098', 'Refactor the code to use List information from the database table', 'Currently, lots of pages are getting list information from mock file. We need to update the code so that all the list information comes for list type database tables.
 
 **Acceptance criteria:**
 
 - All pages are getting list type information from database
-- list type mock file has been deleted from the code repository.', 'functional', 'approved', NULL, 'epic', 342, 'https://github.com/hmcts/cath-service/issues/342', '2026-02-11T11:41:46Z', '2026-02-12T21:41:50Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- list type mock file has been deleted from the code repository.', 'functional', 'approved', NULL, 'epic', 342, 'https://github.com/hmcts/cath-service/issues/342', NULL, NULL, '2026-02-11T11:41:46Z', '2026-02-12T21:41:50Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (99, 'REQ-0099', 'Subscription Emails Fulfilment Complete Journey', 'Once excel generation for SJP has been implemented. We need to make sure that user is able to get all four types of subscriptions emails which have been configured in Gov Notifier:
 
 Media Publication Subscription (JSON) - Both PDF and Excel. This will be send when list type is SJP list and file size is less than 2MB.
@@ -17617,7 +17625,7 @@ As a part of this ticket, we need to tell AI about the personalisation lists and
 
 **Acceptance criteria:**
 
-- User is able to get all four type of subscription emails.', 'functional', 'implemented', 'medium', 'story', 343, 'https://github.com/hmcts/cath-service/issues/343', '2026-02-11T12:00:11Z', '2026-06-08T16:36:45Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- User is able to get all four type of subscription emails.', 'functional', 'implemented', 'medium', 'story', 343, 'https://github.com/hmcts/cath-service/issues/343', NULL, NULL, '2026-02-11T12:00:11Z', '2026-06-08T16:36:45Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (100, 'REQ-0100', 'Complete Azure B2C media user creation journey', 'As part of this ticket, once CTSC Admin approves the media application, we need to make that user has been created in Azure AD using graph api and relevant emails will be sent to the user.
 
 If it is a new user, we need to send Media New Account Confirmation & Setup
@@ -17638,7 +17646,7 @@ Template Id: cc1b744d-6aa1-4410-9f53-216f8bd3298f
 **Acceptance criteria**
 
 - User created in Azure AD once admin approves
-- User receive Confirmation & setup email if a new user otherwise receive Existing User Confirmation Email', 'functional', 'verified', 'medium', 'story', 346, 'https://github.com/hmcts/cath-service/issues/346', '2026-02-11T16:36:19Z', '2026-05-07T15:57:43Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- User receive Confirmation & setup email if a new user otherwise receive Existing User Confirmation Email', 'functional', 'verified', 'medium', 'story', 346, 'https://github.com/hmcts/cath-service/issues/346', 'dfda319a05a4c544e20b83b1680b55e95cabacd8', '["libs/account/package.json","libs/account/src/repository/model.ts","libs/account/src/repository/query.test.ts","libs/account/src/repository/query.ts","libs/account/src/repository/service.test.ts","libs/account/src/repository/service.ts","libs/admin-pages/src/media-application/service.test.ts","libs/admin-pages/src/media-application/service.ts","libs/admin-pages/src/pages/media-applications/[id]/approve-cy.ts","libs/admin-pages/src/pages/media-applications/[id]/approve-en.ts","libs/admin-pages/src/pages/media-applications/[id]/approve.test.ts","libs/admin-pages/src/pages/media-applications/[id]/approve.ts","libs/admin-pages/src/pages/media-applications/[id]/reject-reasons.test.ts","libs/admin-pages/src/pages/media-applications/[id]/reject-reasons.ts","libs/admin-pages/src/pages/media-applications/[id]/reject.test.ts","libs/admin-pages/src/pages/media-applications/[id]/reject.ts","libs/auth/src/graph-api/client.test.ts","libs/auth/src/graph-api/client.ts","libs/auth/src/index.ts","libs/notification/src/govuk-notify-service.test.ts","libs/notification/src/govuk-notify-service.ts","libs/notification/src/index.ts","tsconfig.json"]', '2026-02-11T16:36:19Z', '2026-05-07T15:57:43Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (101, 'REQ-0101', 'Replace passport-azure-ad with openid-client', 'CaTH AI is currently using library passport-azure-ad which will be deprecated soon. Instead of using passport-azure-ad, we need to use openid-client in our application.
 
 SSO_ISSUER_URL will be used from keyvault and Github secrets which has been added already.
@@ -17650,7 +17658,7 @@ Once both https://github.com/hmcts/cath-service/issues/229 and https://github.co
 - SSO logins are working and users are able to login successfully.
 - CFT login is working and users are able to login successfully.
 - Azure B2C is working and users are able to login successfully.
-- Crime IDAM user is working and able to login successfully.', 'constraint', 'verified', 'medium', 'story', 347, 'https://github.com/hmcts/cath-service/issues/347', '2026-02-11T16:48:32Z', '2026-06-05T14:27:07Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Crime IDAM user is working and able to login successfully.', 'constraint', 'verified', 'medium', 'story', 347, 'https://github.com/hmcts/cath-service/issues/347', '832fbcc122e31e9c698002948b6f3a0d27c8d006', '["apps/web/config/custom-environment-variables.json","apps/web/src/app.ts","libs/api/src/blob-ingestion/validation.ts","libs/auth/package.json","libs/auth/src/config/crime-idam-config.test.ts","libs/auth/src/config/crime-idam-config.ts","libs/auth/src/config/passport-config.test.ts","libs/auth/src/config/passport-config.ts","libs/auth/src/config/sso-config.test.ts","libs/auth/src/config/sso-config.ts","libs/auth/src/pages/cft-callback/index.ts","libs/auth/src/pages/login/index.test.ts","libs/auth/src/pages/login/index.ts","libs/auth/src/pages/logout/index.test.ts","libs/auth/src/pages/logout/index.ts","libs/auth/src/pages/sso-callback/index.test.ts","libs/auth/src/pages/sso-callback/index.ts","package.json"]', '2026-02-11T16:48:32Z', '2026-06-05T14:27:07Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (102, 'REQ-0102', 'Implement Crime IDAM Integration', 'I want to integrate Crime IDAM into the application so that users can authenticate securely and access crime-related services.
 
 **Description:**
@@ -17680,7 +17688,7 @@ The application must use the Crime IDAM OAuth2 endpoints for:
 **Error Handling**
 
 - Handle errors gracefully, such as invalid tokens, expired sessions, or unauthorised access.
-- Display appropriate error messages to the user.', 'functional', 'verified', NULL, NULL, 357, 'https://github.com/hmcts/cath-service/issues/357', '2026-02-12T14:41:50Z', '2026-05-07T14:33:43Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Display appropriate error messages to the user.', 'functional', 'verified', NULL, NULL, 357, 'https://github.com/hmcts/cath-service/issues/357', 'fb1f9b58926aafed7472bd2de06cea33fa661b82', '["apps/web/src/app.test.ts","apps/web/src/app.ts","apps/web/src/server.ts","e2e-tests/playwright.config.ts","e2e-tests/tests/crime-idam/crime-idam.spec.ts","e2e-tests/tests/sign-in.spec.ts","libs/auth/src/config/cft-idam-config.test.ts","libs/auth/src/config/cft-idam-config.ts","libs/auth/src/config/crime-idam-config.test.ts","libs/auth/src/config/crime-idam-config.ts","libs/auth/src/crime-idam/token-client.test.ts","libs/auth/src/crime-idam/token-client.ts","libs/auth/src/index.ts","libs/auth/src/pages/cft-login/index.test.ts","libs/auth/src/pages/cft-login/index.ts","libs/auth/src/pages/crime-callback/index.test.ts","libs/auth/src/pages/crime-callback/index.ts","libs/auth/src/pages/crime-login/index.test.ts","libs/auth/src/pages/crime-login/index.ts","libs/auth/src/pages/crime-rejected/cy.ts","libs/auth/src/pages/crime-rejected/en.ts","libs/auth/src/pages/crime-rejected/index.njk","libs/auth/src/pages/crime-rejected/index.test.ts","libs/auth/src/pages/crime-rejected/index.ts","libs/auth/src/pages/logout/index.test.ts","libs/auth/src/pages/logout/index.ts","libs/auth/src/role-service/index.test.ts","libs/auth/src/role-service/index.ts","libs/auth/src/user-profile.ts","libs/public-pages/src/pages/sign-in/index.test.ts","libs/public-pages/src/pages/sign-in/index.ts","libs/web-core/src/middleware/helmet/helmet-middleware.test.ts","libs/web-core/src/middleware/helmet/helmet-middleware.ts"]', '2026-02-12T14:41:50Z', '2026-05-07T14:33:43Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (103, 'REQ-0103', 'System Admin - Data Management', '**PROBLEM STATEMENT:**
 This ticket covers the implementation of the functionality needed to upload Reference Data, manage Jurisdiction Data and Reference Data. It will explore different options in the fulfilment of this scope of work.
 
@@ -17716,7 +17724,7 @@ This ticket covers the implementation of the functionality needed to upload Refe
 •	When user clicks the green ‘Confirm button in either option 1 or 2, user is taken to the confirmation page with ‘Location Jurisdiction Data Updated’ displayed in a green banner an the descriptive text beneath ‘The location jurisdiction data has been successfully updated’. This is followed by the same link as above in other confirmation pages
 •	Where the user clicks the ‘Cancel’ button then the process is cancelled
 •	System checks for dependencies must be performed before any deletion can occur and orphaned lists due to the deletion must be accounted and Audit entry must be logged. The possibility of Soft delete (status = inactive) should be considered
-•	Where no radio button is selected and the continue button is clicked, then the system will display a ‘There is a problem. Please select one option’ error message in red.', 'functional', 'implemented', NULL, 'story', 410, 'https://github.com/hmcts/cath-service/issues/410', '2026-02-24T17:54:19Z', '2026-05-28T08:01:52Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	Where no radio button is selected and the continue button is clicked, then the system will display a ‘There is a problem. Please select one option’ error message in red.', 'functional', 'implemented', NULL, 'story', 410, 'https://github.com/hmcts/cath-service/issues/410', NULL, NULL, '2026-02-24T17:54:19Z', '2026-05-28T08:01:52Z', 'OgechiOkelu', 'OgechiOkelu'),
   (104, 'REQ-0104', 'Style Guide: Tribunal non-strategic publishing - UTCC, UTLC & UTAAC', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the validation schema, style guide, PDF and email summary needed for the Upper Tribunal (Tax and Chancery Chamber), Upper Tribunal (Lands Chamber) and the Upper Tribunal (Administrative Appeals Chamber) to publish in CaTH, through the non-strategic publishing route.
 
@@ -17762,7 +17770,7 @@ Remote hearings
 When hearings are listed for Scotland the hearing will be available to representatives of the media or any other member of the public, on their request, and therefore will be a hearing conducted in public in accordance with Rule 37 of the Tribunal Procedure (Upper Tribunal) Rules 2008. It will be organised and conducted using Cloud Video Platform (CVP). Any media representative or any other member of the public wishing to witness the hearing will need to do so over the internet and provide an email address at which to be sent an appropriate link for access. Please contact UTAACMailbox@justice.gov.uk.
 
 •	The fields to be displayed in the Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list are Time, Appellant, Case Reference Number, Case Name, Judge(s), Member(s), Mode of Hearing, Venue and Additional Information
-•	The following link [Observe a court or tribunal hearing - GOV.UK](https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing) should be masked anywhere this text is displayed in the opening statement for all the lists; ‘Observe a court or tribunal hearing as a journalist, researcher or member of the public’', 'functional', 'implemented', 'medium', 'story', 425, 'https://github.com/hmcts/cath-service/issues/425', '2026-02-27T16:23:17Z', '2026-05-28T14:59:06Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The following link [Observe a court or tribunal hearing - GOV.UK](https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing) should be masked anywhere this text is displayed in the opening statement for all the lists; ‘Observe a court or tribunal hearing as a journalist, researcher or member of the public’', 'functional', 'implemented', 'medium', 'story', 425, 'https://github.com/hmcts/cath-service/issues/425', NULL, NULL, '2026-02-27T16:23:17Z', '2026-05-28T14:59:06Z', 'OgechiOkelu', 'OgechiOkelu'),
   (105, 'REQ-0105', 'Style Guide: Tribunal non-strategic publishing - SIAC, POAC, PAAC, FFT TC, FFT LRT & FFT RPT', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the validation schema, style guide, PDF and email summary needed for the following tribunals to publish in CaTH, through the non-strategic publishing route; Special Immigration Appeals Commission, Proscribed Organisations Appeal Commission, Pathogens Access Appeal Commission, First-tier Tribunal (Tax Chamber), First-tier Tribunal (Lands Registration Tribunal and First-tier Tribunal (Property Chamber) (Residential Property).
 
@@ -17820,7 +17828,7 @@ Members of the public wishing to observe a hearing or representatives of the med
 Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at [insert office email] with the following details in the subject line “[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]” and appropriate arrangements will be made to allow access where reasonably practicable.
 [Observe a court or tribunal hearing as a journalist, researcher or member of the public](https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing)
 
-•	The fields to be displayed within the First-tier Tribunal (Tax Chamber) Weekly Hearing List are Date, Time, Venue, Case Type, Case Reference Number, Judge(s), Member(s), Hearing Method and Additional Information', 'functional', 'approved', 'medium', 'story', 428, 'https://github.com/hmcts/cath-service/issues/428', '2026-03-03T13:36:57Z', '2026-06-03T08:59:39Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The fields to be displayed within the First-tier Tribunal (Tax Chamber) Weekly Hearing List are Date, Time, Venue, Case Type, Case Reference Number, Judge(s), Member(s), Hearing Method and Additional Information', 'functional', 'approved', 'medium', 'story', 428, 'https://github.com/hmcts/cath-service/issues/428', NULL, NULL, '2026-03-03T13:36:57Z', '2026-06-03T08:59:39Z', 'OgechiOkelu', 'OgechiOkelu'),
   (106, 'REQ-0106', 'Style Guide: Tribunal non-strategic publishing - GRC, WPAFCC & UTIAC', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the validation schema, style guide, PDF and email summary needed for the following tribunals to publish in CaTH, through the non-strategic publishing route; General Regulatory Chamber, First-tier Tribunal (War Pensions and Armed Forces Compensation) Chamber, Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review and Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeals.
 
@@ -17872,7 +17880,7 @@ For details on attending a UTIAC remote hearing, please email uppertribunallisti
 •	The fields to be displayed within the Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List are Hearing Time, Case Title, Representative, Case Reference Number, Judge(s), Hearing Type, Location and Additional Information.
 •	The fields to be displayed within the Upper Tribunal (Immigration and Asylum) Chamber – Statutory Appeal are Hearing Time, Appellant, Representative, Appeal Reference Number, Judge(s), Hearing Type, Location and Additional Information.
 
-•	The text ''Observe a court or tribunal hearing as a journalist, researcher or member of the public'' is used to mask the  https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing link', 'functional', 'approved', 'medium', 'story', 429, 'https://github.com/hmcts/cath-service/issues/429', '2026-03-03T18:12:03Z', '2026-05-26T15:33:53Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The text ''Observe a court or tribunal hearing as a journalist, researcher or member of the public'' is used to mask the  https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing link', 'functional', 'approved', 'medium', 'story', 429, 'https://github.com/hmcts/cath-service/issues/429', NULL, NULL, '2026-03-03T18:12:03Z', '2026-05-26T15:33:53Z', 'OgechiOkelu', 'OgechiOkelu'),
   (107, 'REQ-0107', 'Style Guide: Tribunal non-Strategic publishing - SSCS Hearing Lists', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the validation schema, style guide, PDF and email summary needed for the SSCS tribunals to publish in CaTH through the non-strategic publishing route.
 
@@ -17938,7 +17946,7 @@ Open justice is a fundamental principle of our justice system. When considering 
 Social Security and Child Support Tribunal parties and representatives will be informed directly as to the arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should contact the Social Security and Child Support Tribunal Office direct, in advance of the hearing date, by emailing sscsa-cardiff@justice.gov.uk so that arrangements can be made. The following details should be included in the subject line of the email [OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]. If the case is to be heard in private or is subject to a reporting restriction, this will be notified.
 For more information, please visit https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing
 
-•	The fields to be displayed within all the SSCS Hearing lists are Venue, Appeal Reference Number, Hearing Type, Appellant, Courtroom, Hearing Time, Tribunal, FTA/Respondent and Additional Information', 'functional', 'approved', 'medium', 'story', 431, 'https://github.com/hmcts/cath-service/issues/431', '2026-03-09T15:04:40Z', '2026-05-26T15:34:00Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The fields to be displayed within all the SSCS Hearing lists are Venue, Appeal Reference Number, Hearing Type, Appellant, Courtroom, Hearing Time, Tribunal, FTA/Respondent and Additional Information', 'functional', 'approved', 'medium', 'story', 431, 'https://github.com/hmcts/cath-service/issues/431', NULL, NULL, '2026-03-09T15:04:40Z', '2026-05-26T15:34:00Z', 'OgechiOkelu', 'OgechiOkelu'),
   (108, 'REQ-0108', 'Style Guide: SEND, CIC and Asylum Support Tribunal Hearing Lists Publishing in CaTH', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the validation schema, style guide, PDF and email summary needed for the First-tier Tribunal (Special Educational Needs and Disability), Criminal Injuries Compensation Tribunal and Asylum Support Tribunal to publish in CaTH through the non-strategic publishing route.
 
@@ -17987,7 +17995,7 @@ For more information, please visit https://www.gov.uk/guidance/observe-a-court-o
 •	The opening statement displayed within the important information accordion for the AST Daily Hearing List is as follows;
 Open justice is a fundamental principle of our justice system. When considering the use of telephone and video technology, the judiciary will have regard to the principles of open justice. Judges may determine that a hearing should be held in private if this is necessary to secure the proper administration of justice.
 Asylum Support Tribunal parties and representatives will be informed directly as to the arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should contact the Asylum Support Tribunal Office direct, in advance of the hearing date, by emailing asylumsupporttribunals@justice.gov.uk so that arrangements can be made. The following details should be included in the subject line of the email [OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]. If the case is to be heard in private or is subject to a reporting restriction, this will be notified.
-For more information, please visit https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing', 'functional', 'approved', 'medium', 'story', 434, 'https://github.com/hmcts/cath-service/issues/434', '2026-03-10T13:26:03Z', '2026-05-26T15:34:42Z', 'OgechiOkelu', 'OgechiOkelu'),
+For more information, please visit https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing', 'functional', 'approved', 'medium', 'story', 434, 'https://github.com/hmcts/cath-service/issues/434', NULL, NULL, '2026-03-10T13:26:03Z', '2026-05-26T15:34:42Z', 'OgechiOkelu', 'OgechiOkelu'),
   (109, 'REQ-0109', 'Style Guide: Implement Crown PDDA Lists', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the validation schema, style guide, PDF and email summary needed for the PDDA Crime Lists (Crown Firm, Daily and Warned lists) to publish in CaTH through the non-strategic publishing route.
 
@@ -18033,7 +18041,7 @@ To find out which reporting restrictions apply on a specific case, contact:
 The undermentioned cases are warned for the hearing period of week commencing [date as DD month YYYY]
 Any representation about the listing of a case should be made to the Listing Officer immediately
 The prosecuting authority is the Crown Prosecution Service unless otherwise stated
-*denotes a defendant in custody', 'functional', 'approved', NULL, NULL, 436, 'https://github.com/hmcts/cath-service/issues/436', '2026-03-11T17:06:21Z', '2026-05-26T15:35:38Z', 'OgechiOkelu', 'OgechiOkelu'),
+*denotes a defendant in custody', 'functional', 'approved', NULL, NULL, 436, 'https://github.com/hmcts/cath-service/issues/436', NULL, NULL, '2026-03-11T17:06:21Z', '2026-05-26T15:35:38Z', 'OgechiOkelu', 'OgechiOkelu'),
   (110, 'REQ-0110', 'Style Guide: PCOL, Mental Health Tribunal, IAC Daily List', '**PROBLEM STATEMENT**
 This ticket is raised for the creation of lists for manual publishing in CaTH.
 
@@ -18049,7 +18057,7 @@ This ticket is raised for the creation of lists for manual publishing in CaTH.
 •	The Mental Health Tribunal rarely publishes a hearing list and so the following message should be displayed in the summary of publications page to inform users that the hearing list is not routinely published;
 ‘Mental health hearings are held in private and unless a request has been made by the patient for a public hearing a hearing list will not be published.’
 •	Immigration and Asylum Chamber publishes 2 lists manually in CaTH; the Immigration and Asylum Chamber Daily List and the Immigration and Asylum Chamber Daily List – Additional Cases. These lists are created in the front end.   
-•	The Immigration and Asylum Chamber Daily List will always appear first where both list types are published under the same venue, regardless of the order in which both lists are published', 'functional', 'approved', 'medium', 'story', 438, 'https://github.com/hmcts/cath-service/issues/438', '2026-03-12T16:58:40Z', '2026-05-26T15:35:51Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The Immigration and Asylum Chamber Daily List will always appear first where both list types are published under the same venue, regardless of the order in which both lists are published', 'functional', 'approved', 'medium', 'story', 438, 'https://github.com/hmcts/cath-service/issues/438', NULL, NULL, '2026-03-12T16:58:40Z', '2026-05-26T15:35:51Z', 'OgechiOkelu', 'OgechiOkelu'),
   (111, 'REQ-0111', 'Update: ‘Remove List Summary’ table', '**PROBLEM STATEMENT**
 In the ‘Remove’ tile, when the Local Admin selects the venue to remove a publication from, the published lists for the selected venue are displayed in a table with several columns. This ticket is raised to implement some changes to the table.
 
@@ -18062,7 +18070,7 @@ In the ‘Remove’ tile, when the Local Admin selects the venue to remove a pub
 
 **ACCEPTANCE CRITERIA**
 •	The double-headed arrow cursor is added beside each column header
-•	The arrow facing down under the ‘content date’ column is removed', 'functional', 'implemented', NULL, NULL, 466, 'https://github.com/hmcts/cath-service/issues/466', '2026-03-24T11:30:02Z', '2026-06-05T13:27:25Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The arrow facing down under the ‘content date’ column is removed', 'functional', 'implemented', NULL, NULL, 466, 'https://github.com/hmcts/cath-service/issues/466', NULL, NULL, '2026-03-24T11:30:02Z', '2026-06-05T13:27:25Z', 'OgechiOkelu', 'OgechiOkelu'),
   (112, 'REQ-0112', 'Update: Audit log view', '**PROBLEM STATEMENT**
 In the ‘Audit Log Viewer’ tile, when the Admin selects the action to view from the list of actions in the audit log, there are several functionalities that are inconsistent with the formatting across CaTH. Hence, this ticket is raised to implement changes to the identified instances.
 
@@ -18074,30 +18082,30 @@ In the ‘Audit Log Viewer’ tile, when the Admin selects the action to view fr
 
 **ACCEPTANCE CRITERIA**
 •	‘Back’ link is changed from ‘Back to audit log list’ to ‘Back’
-•	The ‘Date/Month/Year’ data boxes are presented in one row rather than across two rows', 'functional', 'in_progress', NULL, NULL, 467, 'https://github.com/hmcts/cath-service/issues/467', '2026-03-24T12:54:56Z', '2026-06-03T12:46:12Z', 'OgechiOkelu', 'OgechiOkelu'),
+•	The ‘Date/Month/Year’ data boxes are presented in one row rather than across two rows', 'functional', 'in_progress', NULL, NULL, 467, 'https://github.com/hmcts/cath-service/issues/467', NULL, NULL, '2026-03-24T12:54:56Z', '2026-06-03T12:46:12Z', 'OgechiOkelu', 'OgechiOkelu'),
   (113, 'REQ-0113', 'PDF not generated after publication upload', 'PDF should be generated after manual upload and non-strategic upload. This feature has been broken recently. PDF is not generated and no subscription email sent after upload.
 
 **Acceptance criteria**
-PDF is generated during the upload process and subscription email containing the PDF link sent to subscribers', 'functional', 'verified', NULL, NULL, 475, 'https://github.com/hmcts/cath-service/issues/475', '2026-04-13T14:02:04Z', '2026-05-08T08:30:01Z', 'KianKwa', 'KianKwa'),
+PDF is generated during the upload process and subscription email containing the PDF link sent to subscribers', 'functional', 'verified', NULL, NULL, 475, 'https://github.com/hmcts/cath-service/issues/475', '34f9a630284c2fc99c2d52baa0f6dfe4f9edf90c', '["e2e-tests/tests/admin/manual-upload.spec.ts","e2e-tests/utils/test-support-api.ts","libs/admin-pages/src/pages/manual-upload-summary/index.ts","libs/admin-pages/src/pages/non-strategic-upload-summary/index.ts"]', '2026-04-13T14:02:04Z', '2026-05-08T08:30:01Z', 'KianKwa', 'KianKwa'),
   (114, 'REQ-0114', 'Publication dates not displaying correctly on style guide', '- For all list types the content date on the artefact table is set to be one day earlier than the set date due to BST.
 - The publication date is on the style guide pages for all RCJ and Care Standards lists is not set to the content date. Instead it is using the display from date
 - For weekly hearing list like Care Standards list, the summary of publications page should shows the text ''for week commencing''. This is currently not shown.
 
 **Acceptance criteria**
-All the above are fixed.', 'functional', 'verified', NULL, NULL, 478, 'https://github.com/hmcts/cath-service/issues/478', '2026-04-13T16:27:11Z', '2026-05-08T08:45:23Z', 'KianKwa', 'KianKwa'),
+All the above are fixed.', 'functional', 'verified', NULL, NULL, 478, 'https://github.com/hmcts/cath-service/issues/478', 'b8cf78f6f9c20dfa888fceda5fcd86bcde39d87a', '["libs/list-types/administrative-court-daily-cause-list/src/pages/index.test.ts","libs/list-types/administrative-court-daily-cause-list/src/pages/index.ts","libs/list-types/administrative-court-daily-cause-list/src/pdf/pdf-generator.test.ts","libs/list-types/administrative-court-daily-cause-list/src/pdf/pdf-generator.ts","libs/list-types/administrative-court-daily-cause-list/src/rendering/renderer.test.ts","libs/list-types/administrative-court-daily-cause-list/src/rendering/renderer.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pages/index.test.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pages/index.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pdf/pdf-generator.test.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pdf/pdf-generator.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/rendering/renderer.test.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/rendering/renderer.ts","libs/list-types/common/src/index.ts","libs/list-types/common/src/rendering/hearing-normalisation.test.ts","libs/list-types/common/src/rendering/hearing-normalisation.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pages/index.test.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pages/index.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pdf/pdf-generator.test.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pdf/pdf-generator.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/rendering/renderer.test.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/rendering/renderer.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pages/index.test.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pages/index.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pdf/pdf-generator.test.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pdf/pdf-generator.ts","libs/list-types/london-administrative-court-daily-cause-list/src/rendering/renderer.test.ts","libs/list-types/london-administrative-court-daily-cause-list/src/rendering/renderer.ts","libs/list-types/rcj-standard-daily-cause-list/src/pages/index.test.ts","libs/list-types/rcj-standard-daily-cause-list/src/pages/index.ts","libs/list-types/rcj-standard-daily-cause-list/src/pdf/pdf-generator.test.ts","libs/list-types/rcj-standard-daily-cause-list/src/pdf/pdf-generator.ts","libs/list-types/rcj-standard-daily-cause-list/src/rendering/renderer.test.ts","libs/list-types/rcj-standard-daily-cause-list/src/rendering/renderer.ts","libs/public-pages/src/pages/summary-of-publications/cy.ts","libs/public-pages/src/pages/summary-of-publications/en.ts","libs/public-pages/src/pages/summary-of-publications/index.njk","libs/public-pages/src/pages/summary-of-publications/index.ts","libs/publication/src/processing/service.ts","libs/web-core/src/utils/date-utils.test.ts","libs/web-core/src/utils/date-utils.ts"]', '2026-04-13T16:27:11Z', '2026-05-08T08:45:23Z', 'KianKwa', 'KianKwa'),
   (115, 'REQ-0115', 'Get List Types from database on all the pages', 'We have added functionality to add list types in database. All pages in CaTH should get the list type from database instead of mock-list-types.ts.
 
 **Acceptance criteria**
 
 - There is no mock-list-types.ts in code repo
 - All list types are coming from database 
-- All tests are passing', 'functional', 'verified', NULL, NULL, 482, 'https://github.com/hmcts/cath-service/issues/482', '2026-04-14T10:40:11Z', '2026-05-06T17:20:07Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- All tests are passing', 'functional', 'verified', NULL, NULL, 482, 'https://github.com/hmcts/cath-service/issues/482', NULL, NULL, '2026-04-14T10:40:11Z', '2026-05-06T17:20:07Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (116, 'REQ-0116', 'Refactor End to End Tests', 'Using PR: https://github.com/hmcts/cath-service/pull/414 make sure no test is interacting with database directly. Use existing CaTH pages or add Testing support endpoint to populate data for end to end tests.
 
 **Acceptance criteria**
 
 - All tests are passing on PR build stage
-- No mock data setup for end to end tests', 'non_functional', 'verified', NULL, NULL, 483, 'https://github.com/hmcts/cath-service/issues/483', '2026-04-14T10:45:42Z', '2026-04-24T14:52:46Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- No mock data setup for end to end tests', 'non_functional', 'verified', NULL, NULL, 483, 'https://github.com/hmcts/cath-service/issues/483', NULL, NULL, '2026-04-14T10:45:42Z', '2026-04-24T14:52:46Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (117, 'REQ-0117', 'Generate SJP Excel file when list is uploaded', '## User Story
 
 As a verified user, I want an Excel file to be generated automatically when an SJP list is uploaded, so that I can download the case data in spreadsheet format.
@@ -18114,7 +18122,7 @@ Four SJP list types require Excel generation:
 - `SJP_PUBLIC_LIST`
 - `SJP_DELTA_PUBLIC_LIST`
 - `SJP_PRESS_LIST`
-- `SJP_DELTA_PRESS_LIST`', 'functional', 'implemented', NULL, NULL, 484, 'https://github.com/hmcts/cath-service/issues/484', '2026-04-14T10:57:58Z', '2026-06-08T16:36:26Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- `SJP_DELTA_PRESS_LIST`', 'functional', 'implemented', NULL, NULL, 484, 'https://github.com/hmcts/cath-service/issues/484', NULL, NULL, '2026-04-14T10:57:58Z', '2026-06-08T16:36:26Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (118, 'REQ-0118', 'Subscribe by case name, case reference number, case ID or unique reference number (URN)', '**PROBLEM STATEMENT**
 
 Verified user are users who have applied to create accounts in CaTH to have access to restricted hearing information. Upon approval, verified users can then sign in on CaTH and subscribe to email notifications from CaTH.
@@ -18279,7 +18287,7 @@ CY: Title/H1 “tanysgrifiadau wedi’i ychwanegu”
 EN: Body text — “Your email subscription has been added.”
 CY: Body text — “Eich tanysgrifiadau e-bost wedi’i ychwanegu”
 EN: Link — “Email subscriptions”
-CY: Link — “Welsh placeholder”', 'functional', 'verified', 'medium', 'story', 510, 'https://github.com/hmcts/cath-service/issues/510', '2026-04-20T16:01:32Z', '2026-05-15T09:35:51Z', 'OgechiOkelu', 'OgechiOkelu'),
+CY: Link — “Welsh placeholder”', 'functional', 'verified', 'medium', 'story', 510, 'https://github.com/hmcts/cath-service/issues/510', NULL, NULL, '2026-04-20T16:01:32Z', '2026-05-15T09:35:51Z', 'OgechiOkelu', 'OgechiOkelu'),
   (119, 'REQ-0119', 'Remove List Sensitivity - Third Party Courtel', '**PROBLEM STATEMENT**
 CaTH AI implemented List Sensitivity when user subscribe to the list. Courtel does not support List sensitivity. So we need to remove it.
 
@@ -18292,7 +18300,7 @@ We also need to remove channel from the manage-third-party-subscriptions page. T
 **ACCEPTANCE CRITERIA**
 List sensitivity has been removed from Third Party (Coutel).
 Channel has been removed from Third Party (Coutel).
-The sensitivity and channel fields removed from legacy_third_party_subscription table.', 'constraint', 'implemented', 'high', 'story', 511, 'https://github.com/hmcts/cath-service/issues/511', '2026-04-20T16:27:39Z', '2026-06-08T15:42:44Z', 'OgechiOkelu', 'OgechiOkelu'),
+The sensitivity and channel fields removed from legacy_third_party_subscription table.', 'constraint', 'implemented', 'high', 'story', 511, 'https://github.com/hmcts/cath-service/issues/511', NULL, NULL, '2026-04-20T16:27:39Z', '2026-06-08T15:42:44Z', 'OgechiOkelu', 'OgechiOkelu'),
   (120, 'REQ-0120', 'Style Guide: Magistrates'' Court Hearing Lists - Crime Portal / Libra', '**PROBLEM STATEMENT**
 
 This ticket is raised for the creation of the style guide, downloadable PDF and email summary of the Magistrates'' Court Hearing Lists from Crime Portal, which are to be published in CaTH.
@@ -18360,7 +18368,7 @@ Fodd bynnag, nid yw''r cyfyngiadau bob amser yn cael eu rhestru. Mae rhai yn ber
 I ganfod pa gyfyngiadau riportio sy''n berthnasol ar achos penodol, cysylltwch â''r:
 • llys yn uniongyrchol
 • Gwasanaeth Llysoedd a Thribiwnlysoedd EM ar 0330 808 4407
-Gallwch hefyd ddarllen y canllaw ar gyfyngiadau riportio', 'functional', 'approved', NULL, NULL, 514, 'https://github.com/hmcts/cath-service/issues/514', '2026-04-22T16:25:55Z', '2026-05-21T15:54:40Z', 'OgechiOkelu', 'OgechiOkelu'),
+Gallwch hefyd ddarllen y canllaw ar gyfyngiadau riportio', 'functional', 'approved', NULL, NULL, 514, 'https://github.com/hmcts/cath-service/issues/514', NULL, NULL, '2026-04-22T16:25:55Z', '2026-05-21T15:54:40Z', 'OgechiOkelu', 'OgechiOkelu'),
   (121, 'REQ-0121', 'Add the open justice licence link to CaTH footer', '**PROBLEM STATEMENT**
 This ticket is raised to add the open justice licence link to CaTH footer. It also needs to be added to B2C page footer as well.
 
@@ -18378,16 +18386,16 @@ This ticket is raised to add the open justice licence link to CaTH footer. It al
 
 open justice licence link is added to the CaTH footer
 link for the open justice licence is https://caselaw.nationalarchives.gov.uk/open-justice-licence/version/2 
-Above 2 points added to B2C page as well.', 'functional', 'implemented', NULL, NULL, 545, 'https://github.com/hmcts/cath-service/issues/545', '2026-05-01T08:54:16Z', '2026-06-08T15:20:28Z', 'OgechiOkelu', 'OgechiOkelu'),
+Above 2 points added to B2C page as well.', 'functional', 'implemented', NULL, NULL, 545, 'https://github.com/hmcts/cath-service/issues/545', NULL, NULL, '2026-05-01T08:54:16Z', '2026-06-08T15:20:28Z', 'OgechiOkelu', 'OgechiOkelu'),
   (122, 'REQ-0122', 'Proof of ID document not removed if a media application is rejected', 'If a media application is rejected, the media application status should be set to REJECTED and the proof of ID document deleted.
 
-Currently the document remains in the temp folder if the application is rejected. This is correctly deleted when the media application is approved.', 'functional', 'verified', NULL, NULL, 546, 'https://github.com/hmcts/cath-service/issues/546', '2026-05-06T12:54:41Z', '2026-05-15T09:48:00Z', 'KianKwa', 'KianKwa'),
+Currently the document remains in the temp folder if the application is rejected. This is correctly deleted when the media application is approved.', 'functional', 'verified', NULL, NULL, 546, 'https://github.com/hmcts/cath-service/issues/546', 'e420aeb75698fc704c83fc8b73ca54f99910c3dd', '["libs/admin-pages/src/media-application/service.test.ts","libs/admin-pages/src/media-application/service.ts"]', '2026-05-06T12:54:41Z', '2026-05-15T09:48:00Z', 'KianKwa', 'KianKwa'),
   (123, 'REQ-0123', 'Fix STAGING Env', 'We need to make sure that all the changes which are being marge into master deployed successfully on STG environment.
 
 Acceptance Criteria:
 
-- STG environment is working', 'constraint', 'verified', NULL, NULL, 559, 'https://github.com/hmcts/cath-service/issues/559', '2026-05-11T07:52:29Z', '2026-05-11T07:52:29Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
-  (124, 'REQ-0124', 'Fix any typescript and lint issue when commit code into branch', 'We need to make sure that when a developers commit a code, it should automatically fix any typescript or lint issue in the code. You need to create per-commit hook for it.', 'non_functional', 'approved', NULL, NULL, 563, 'https://github.com/hmcts/cath-service/issues/563', '2026-05-11T10:59:30Z', '2026-05-26T12:24:01Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- STG environment is working', 'constraint', 'verified', NULL, NULL, 559, 'https://github.com/hmcts/cath-service/issues/559', NULL, NULL, '2026-05-11T07:52:29Z', '2026-05-11T07:52:29Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+  (124, 'REQ-0124', 'Fix any typescript and lint issue when commit code into branch', 'We need to make sure that when a developers commit a code, it should automatically fix any typescript or lint issue in the code. You need to create per-commit hook for it.', 'non_functional', 'approved', NULL, NULL, 563, 'https://github.com/hmcts/cath-service/issues/563', NULL, NULL, '2026-05-11T10:59:30Z', '2026-05-26T12:24:01Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (125, 'REQ-0125', 'Fix firewall issue for CaTH Staging Environment', 'We managed to successfully deploy the code on Staging environment but all the pages are being blocked by firewall. We need to fix this issue.
 
 Staging URL: https://cath-web.staging.platform.hmcts.net/
@@ -18395,7 +18403,7 @@ Staging URL: https://cath-web.staging.platform.hmcts.net/
 Acceptance criteria:
 
 - CaTH AI staging URL is working
-- All Public pages are working', 'constraint', 'verified', NULL, NULL, 565, 'https://github.com/hmcts/cath-service/issues/565', '2026-05-11T15:35:46Z', '2026-05-15T15:26:49Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- All Public pages are working', 'constraint', 'verified', NULL, NULL, 565, 'https://github.com/hmcts/cath-service/issues/565', NULL, NULL, '2026-05-11T15:35:46Z', '2026-05-15T15:26:49Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (126, 'REQ-0126', 'Set up ITHC, Demo and Test environments', '## User Story
 
 As a platform engineer, I want Flux kustomization overlays created for ITHC, Demo and Test environments in `sds-flux-config`, so that Flux can manage application deployments to those environments.
@@ -18420,7 +18428,7 @@ Currently `cath-service` only has STG and PROD overlays in `sds-flux-config`. IT
 - Pipeline workflow changes (covered in separate issues)
 - Infrastructure / Terraform changes (covered in separate issue)
 - IDAM/SSO configuration for new environments (separate story)
-- PROD deployment changes', 'constraint', 'in_progress', NULL, NULL, 566, 'https://github.com/hmcts/cath-service/issues/566', '2026-05-12T10:04:34Z', '2026-06-09T09:13:14Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- PROD deployment changes', 'constraint', 'in_progress', NULL, NULL, 566, 'https://github.com/hmcts/cath-service/issues/566', NULL, NULL, '2026-05-12T10:04:34Z', '2026-06-09T09:13:14Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (127, 'REQ-0127', 'Create bootstrap Key Vault infrastructure inside cath-service', '## User Story
 As a platform engineer, I want bootstrap Key Vaults provisioned per environment from within the cath-service monorepo infrastructure folder, so that there is a central and controlled place to manage secrets before they are synced into the application Key Vault.
 
@@ -18445,7 +18453,7 @@ This work lives inside the existing `cath-service` monorepo under the `infrastru
 - Follow the `pip-shared-infrastructure-bootstrap` pattern but scoped to the `infrastructure/` folder within this monorepo
 
 ## Out of Scope
-Adding secrets manually or syncing secrets from bootstrap KV to application KV.', 'constraint', 'verified', NULL, NULL, 580, 'https://github.com/hmcts/cath-service/issues/580', '2026-05-12T12:34:31Z', '2026-05-22T13:25:44Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+Adding secrets manually or syncing secrets from bootstrap KV to application KV.', 'constraint', 'verified', NULL, NULL, 580, 'https://github.com/hmcts/cath-service/issues/580', '0487eb8f3cdcf5ccdbbae63ef072ffc4ee5a601d', '["infrastructure/bootstrap/main.tf","infrastructure/bootstrap/output.tf","infrastructure/bootstrap/state.tf","infrastructure/bootstrap/variables.tf","infrastructure/demo.tfvars","infrastructure/ithc.tfvars","infrastructure/keyvault.tf","infrastructure/output.tf","infrastructure/prod.tfvars","infrastructure/stg.tfvars","infrastructure/test.tfvars"]', '2026-05-12T12:34:31Z', '2026-05-22T13:25:44Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (128, 'REQ-0128', 'System admin reference data upload - Backend logic update', '*Frontend update is not covered in this ticket.
 
 Currently the reference data upload does not have the concept of provenance. To support multiple provenances for a location:
@@ -18486,7 +18494,7 @@ Changes required in publication upload processing to support the use of provenan
   - REGION
   - OWNING_HEARING_LOCATION
   - NATIONAL
- - When a publication is uploaded by external systems using the API, we should query the location table by the provenance location ID, provenance and the list type provenance location type to covert the provenance location ID to internal location ID before storing the publication in the database.', 'functional', 'verified', NULL, NULL, 582, 'https://github.com/hmcts/cath-service/issues/582', '2026-05-12T12:41:17Z', '2026-06-05T09:03:38Z', 'KianKwa', 'KianKwa'),
+ - When a publication is uploaded by external systems using the API, we should query the location table by the provenance location ID, provenance and the list type provenance location type to covert the provenance location ID to internal location ID before storing the publication in the database.', 'functional', 'verified', NULL, NULL, 582, 'https://github.com/hmcts/cath-service/issues/582', 'cbe4731e31a9e8c90f42445484537234ca25abc9', '["apps/postgres/prisma/migrations/20260520113517_add_location_reference/migration.sql","e2e-tests/fixtures/test-reference-data.csv","e2e-tests/tests/api/blob-ingestion-notifications.spec.ts","e2e-tests/tests/api/blob-ingestion.spec.ts","libs/api/src/blob-ingestion/repository/model.ts","libs/api/src/blob-ingestion/repository/queries.test.ts","libs/api/src/blob-ingestion/repository/service.test.ts","libs/api/src/blob-ingestion/repository/service.ts","libs/api/src/blob-ingestion/validation.test.ts","libs/api/src/blob-ingestion/validation.ts","libs/list-types/administrative-court-daily-cause-list/src/pages/cy.ts","libs/list-types/administrative-court-daily-cause-list/src/pages/en.ts","libs/list-types/administrative-court-daily-cause-list/src/pages/index.test.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pages/cy.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pages/en.ts","libs/list-types/care-standards-tribunal-weekly-hearing-list/src/pages/index.test.ts","libs/list-types/common/src/index.ts","libs/list-types/common/src/locales/cy.ts","libs/list-types/common/src/locales/en.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pages/cy.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pages/en.ts","libs/list-types/court-of-appeal-civil-daily-cause-list/src/pages/index.test.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pages/cy.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pages/en.ts","libs/list-types/london-administrative-court-daily-cause-list/src/pages/index.test.ts","libs/list-types/rcj-standard-daily-cause-list/src/pages/cy.ts","libs/list-types/rcj-standard-daily-cause-list/src/pages/en.ts","libs/list-types/rcj-standard-daily-cause-list/src/pages/index.test.ts","libs/location/src/index.ts","libs/location/src/repository/location-reference-model.ts","libs/location/src/repository/location-reference-queries.ts","libs/location/src/seed-data.test.ts","libs/location/src/seed-data.ts","libs/postgres-prisma/prisma/schema/location.prisma","libs/publication/src/provenance.ts","libs/publication/src/repository/queries.test.ts","libs/system-admin-pages/src/assets/css/reference-data-upload.scss","libs/system-admin-pages/src/list-type/queries.test.ts","libs/system-admin-pages/src/list-type/queries.ts","libs/system-admin-pages/src/pages/reference-data-upload-summary/cy.ts","libs/system-admin-pages/src/pages/reference-data-upload-summary/en.ts","libs/system-admin-pages/src/pages/reference-data-upload-summary/index.njk","libs/system-admin-pages/src/pages/reference-data-upload-summary/index.test.ts","libs/system-admin-pages/src/pages/reference-data-upload-summary/index.ts","libs/system-admin-pages/src/pages/reference-data-upload/index.njk","libs/system-admin-pages/src/reference-data-upload/model.ts","libs/system-admin-pages/src/reference-data-upload/parsers/csv-parser.test.ts","libs/system-admin-pages/src/reference-data-upload/parsers/csv-parser.ts","libs/system-admin-pages/src/reference-data-upload/repository/upload-repository.test.ts","libs/system-admin-pages/src/reference-data-upload/repository/upload-repository.ts","libs/system-admin-pages/src/reference-data-upload/services/download-service.test.ts","libs/system-admin-pages/src/reference-data-upload/services/download-service.ts","libs/system-admin-pages/src/reference-data-upload/validation/validation.test.ts","libs/system-admin-pages/src/reference-data-upload/validation/validation.ts","vitest.setup.ts"]', '2026-05-12T12:41:17Z', '2026-06-05T09:03:38Z', 'KianKwa', 'KianKwa'),
   (129, 'REQ-0129', 'Configure multi-environment infrastructure for ITHC, Demo and Test', '## User Story
 
 As a platform engineer, I want infrastructure configured for ITHC, Demo and Test environments, so that Azure resources (Key Vault, Redis, PostgreSQL) and GitHub Actions credentials are available for deployments to those environments.
@@ -18515,7 +18523,7 @@ Currently `infrastructure/state.tf` has STG hardcoded and there are no per-envir
 
 - PROD infrastructure changes
 - Bootstrap KV creation (covered in #580 and #581)
-- Pipeline workflow changes (covered in separate issues)', 'constraint', 'approved', NULL, NULL, 583, 'https://github.com/hmcts/cath-service/issues/583', '2026-05-12T13:46:13Z', '2026-05-12T13:46:13Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Pipeline workflow changes (covered in separate issues)', 'constraint', 'approved', NULL, NULL, 583, 'https://github.com/hmcts/cath-service/issues/583', NULL, NULL, '2026-05-12T13:46:13Z', '2026-05-12T13:46:13Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (130, 'REQ-0130', 'Add environment-specific deploy workflows for ITHC, Demo and Test', '## User Story
 
 As a developer, I want dedicated GitHub Actions workflows for ITHC, Demo and Test environments, so that pushing to those branches automatically deploys the promoted images to the correct environment.
@@ -18550,7 +18558,7 @@ Currently only `workflow.main.yml` exists and deploys to STG. ITHC, Demo and Tes
 
 - Branch sync wiring from master (covered in separate issue)
 - Creating the `ithc`, `demo`, `test` branches (covered in branch sync issue)
-- Pipeline changes to `workflow.main.yml` (covered in branch sync issue)', 'constraint', 'approved', NULL, NULL, 584, 'https://github.com/hmcts/cath-service/issues/584', '2026-05-12T13:46:39Z', '2026-05-12T13:46:39Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Pipeline changes to `workflow.main.yml` (covered in branch sync issue)', 'constraint', 'approved', NULL, NULL, 584, 'https://github.com/hmcts/cath-service/issues/584', NULL, NULL, '2026-05-12T13:46:39Z', '2026-05-12T13:46:39Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (131, 'REQ-0131', 'Sync lower environment branches from master after successful promote', '## User Story
 
 As a developer, I want master to automatically sync to ITHC, Demo and Test branches after a successful promote, so that lower environment deployments are triggered automatically without any manual intervention.
@@ -18579,7 +18587,7 @@ This is the GitHub Actions equivalent of the Jenkins `branchesToSync` pattern us
 
 - Creating the environment-specific workflows (covered in #584)
 - Flux overlays (covered in #566)
-- Infrastructure changes (covered in #583)', 'constraint', 'approved', NULL, NULL, 585, 'https://github.com/hmcts/cath-service/issues/585', '2026-05-12T13:47:04Z', '2026-05-12T13:47:04Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Infrastructure changes (covered in #583)', 'constraint', 'approved', NULL, NULL, 585, 'https://github.com/hmcts/cath-service/issues/585', NULL, NULL, '2026-05-12T13:47:04Z', '2026-05-12T13:47:04Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (132, 'REQ-0132', 'Configure Helm values to load secrets from cath Key Vaults for PR and STG builds', '## User Story
 
 As a developer, I want PR builds to load secrets from `cath-bootstrap-stg-kv` and STG/master builds to load secrets from `cath-stg`, so that all environments use the cath-owned Key Vaults rather than borrowing secrets from unrelated services.
@@ -18625,7 +18633,7 @@ Currently:
 ## Out of Scope
 
 - Secrets management for ITHC, Demo or Test environments (covered in #583)
-- Bootstrap KV creation or secret sync (covered in #580 and #581)', 'constraint', 'approved', NULL, NULL, 586, 'https://github.com/hmcts/cath-service/issues/586', '2026-05-12T13:51:32Z', '2026-05-12T13:51:32Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Bootstrap KV creation or secret sync (covered in #580 and #581)', 'constraint', 'approved', NULL, NULL, 586, 'https://github.com/hmcts/cath-service/issues/586', NULL, NULL, '2026-05-12T13:51:32Z', '2026-05-12T13:51:32Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (133, 'REQ-0133', 'Style Guide: Implement Civil and Family Daily Cause Lists', '## User Story
 
 As a user, I want to view the Civil Daily Cause List and Family Daily Cause List in an accessible and well-formatted style, so that I can see scheduled hearings with all relevant case details.
@@ -18766,16 +18774,15 @@ Both lists use individual column keys (no `tableHeaders` array in locale):
 - Schema sources from pip-data-management `src/main/resources/schemas/`:
   - `civil_daily_cause_list.json`
   - `family_daily_cause_list.json`
-- Follow the `civil-and-family-daily-cause-list` module as the reference implementation', 'functional', 'implemented', NULL, NULL, 594, 'https://github.com/hmcts/cath-service/issues/594', '2026-05-13T08:52:28Z', '2026-05-22T10:22:32Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
+- Follow the `civil-and-family-daily-cause-list` module as the reference implementation', 'functional', 'implemented', NULL, NULL, 594, 'https://github.com/hmcts/cath-service/issues/594', NULL, NULL, '2026-05-13T08:52:28Z', '2026-05-22T10:22:32Z', 'junaidiqbalmoj', 'junaidiqbalmoj'),
   (134, 'REQ-0134', 'Add missing regions and sub-jurisdictions to seed data', 'Some regions and sub-jurisdictions are missing in the seed data. As a result, we cannot upload court venues containing those regions or sub-jurisdictions.
 
 Review what is in current CaTH and make sure AI CaTH have the same regions/sub-jurisdictions as well as their Welsh translations
 
 **Acceptance Criteria**
-Regions and sub-jurisdictions in AI CaTH match those in current CaTH.', 'functional', 'implemented', NULL, NULL, 678, 'https://github.com/hmcts/cath-service/issues/678', '2026-06-04T15:24:44Z', '2026-06-04T16:11:26Z', 'KianKwa', 'KianKwa');
+Regions and sub-jurisdictions in AI CaTH match those in current CaTH.', 'functional', 'implemented', NULL, NULL, 678, 'https://github.com/hmcts/cath-service/issues/678', NULL, NULL, '2026-06-04T15:24:44Z', '2026-06-04T16:11:26Z', 'KianKwa', 'KianKwa');
 
--- One 'created' change row per requirement (version 1), stamped with the
--- issue's creation time and author.
+-- One 'created' change row per requirement (version 1).
 INSERT INTO requirement_change
   (requirement_id, version, change_type, change_summary, changed_by, changed_at)
 VALUES
@@ -18913,5 +18920,30 @@ VALUES
   (132, 1, 'created', 'imported from GitHub issue', 'junaidiqbalmoj', '2026-05-12T13:51:32Z'),
   (133, 1, 'created', 'imported from GitHub issue', 'junaidiqbalmoj', '2026-05-13T08:52:28Z'),
   (134, 1, 'created', 'imported from GitHub issue', 'KianKwa', '2026-06-04T15:24:44Z');
+
+-- Traceability links between requirements.
+INSERT INTO requirement_link (source_id, target_id, type, created_at)
+VALUES
+  (4, 3, 'derives_from', '2026-06-09T00:00:00Z'),
+  (10, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (13, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (16, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (17, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (18, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (19, 2, 'derives_from', '2026-06-09T00:00:00Z'),
+  (20, 2, 'derives_from', '2026-06-09T00:00:00Z'),
+  (21, 2, 'derives_from', '2026-06-09T00:00:00Z'),
+  (22, 2, 'derives_from', '2026-06-09T00:00:00Z'),
+  (24, 3, 'derives_from', '2026-06-09T00:00:00Z'),
+  (25, 3, 'derives_from', '2026-06-09T00:00:00Z'),
+  (26, 3, 'derives_from', '2026-06-09T00:00:00Z'),
+  (49, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (94, 1, 'derives_from', '2026-06-09T00:00:00Z'),
+  (110, 2, 'derives_from', '2026-06-09T00:00:00Z'),
+  (22, 21, 'depends_on', '2026-06-09T00:00:00Z'),
+  (47, 46, 'depends_on', '2026-06-09T00:00:00Z'),
+  (59, 58, 'depends_on', '2026-06-09T00:00:00Z'),
+  (72, 71, 'depends_on', '2026-06-09T00:00:00Z'),
+  (73, 74, 'depends_on', '2026-06-09T00:00:00Z');
 
 COMMIT;
