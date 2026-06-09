@@ -2,7 +2,7 @@ module "redis" {
   source = "git::https://github.com/hmcts/cnp-module-redis?ref=master"
 
   product             = var.product
-  name                = "cath-${var.env}"
+  name                = "cath-redis-${var.env}"
   resource_group_name = azurerm_resource_group.redis_rg.name
   location            = var.location
   env                 = var.env

@@ -69,15 +69,14 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch OLD Redis details for state import (cath-demo - original name, PE already points here)
-          # redis.tf now uses name = "cath-${env}" for non-stg envs to avoid PE replacement
+          # Fetch Redis details for state import
           az redis show \
-            --name "cath-demo" \
+            --name "cath-redis-demo" \
             --resource-group "cath-cache-demo" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-demo" \
+            --name "cath-redis-demo" \
             --resource-group "cath-cache-demo" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
@@ -493,15 +492,14 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch OLD Redis details for state import (cath-test - original name, PE already points here)
-          # redis.tf now uses name = "cath-${env}" for non-stg envs to avoid PE replacement
+          # Fetch Redis details for state import
           az redis show \
-            --name "cath-test" \
+            --name "cath-redis-test" \
             --resource-group "cath-cache-test" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-test" \
+            --name "cath-redis-test" \
             --resource-group "cath-cache-test" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
@@ -890,15 +888,14 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch OLD Redis details for state import (cath-ithc - original name, PE already points here)
-          # redis.tf now uses name = "cath-${env}" for non-stg envs to avoid PE replacement
+          # Fetch Redis details for state import
           az redis show \
-            --name "cath-ithc" \
+            --name "cath-redis-ithc" \
             --resource-group "cath-cache-ithc" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-ithc" \
+            --name "cath-redis-ithc" \
             --resource-group "cath-cache-ithc" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
@@ -1287,15 +1284,14 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch OLD Redis details for state import (cath-stg - original name, PE already points here)
-          # redis.tf uses name = "cath-${env}" for all envs
+          # Fetch Redis details for state import
           az redis show \
-            --name "cath-stg" \
+            --name "cath-redis-stg" \
             --resource-group "cath-cache-stg" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-stg" \
+            --name "cath-redis-stg" \
             --resource-group "cath-cache-stg" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
