@@ -26,10 +26,15 @@ CREATE TABLE requirement (
   kind                TEXT NOT NULL DEFAULT 'functional'
                         CHECK (kind IN ('functional', 'non_functional', 'constraint')),
   status              TEXT NOT NULL DEFAULT 'draft'
-                        CHECK (status IN ('draft', 'proposed', 'approved',
+                        CHECK (status IN ('draft', 'proposed', 'approved', 'in_progress',
                                           'implemented', 'verified', 'obsolete')),
   priority            TEXT
-                        CHECK (priority IN ('must', 'should', 'could', 'wont')),
+                        CHECK (priority IN ('highest', 'high', 'medium', 'low', 'lowest')),
+
+  -- Ticket granularity from the originating GitHub issue's type:* label.
+  -- Orthogonal to kind: an epic or story can be functional or non-functional.
+  granularity         TEXT
+                        CHECK (granularity IN ('epic', 'story', 'task')),
   verification_method TEXT
                         CHECK (verification_method IN ('test', 'inspection',
                                                        'analysis', 'demonstration')),
