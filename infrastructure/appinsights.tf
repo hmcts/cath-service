@@ -5,9 +5,9 @@ module "application_insights" {
 
   env     = var.env
   product = var.product
-  name    = "${var.product}-${var.component}-appinsights"
+  name    = "cath-${var.env}-appinsights"
 
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.ss_kv_rg.name
 
   common_tags = var.common_tags
 }

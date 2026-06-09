@@ -3,13 +3,14 @@ module "postgresql" {
     azurerm.postgres_network = azurerm.postgres_network
   }
 
-  source        = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
-  name          = "cath-${var.env}"
-  env           = var.env
-  product       = var.product
-  component     = var.component
-  business_area = "sds"
-  common_tags   = var.common_tags
+  source              = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
+  name                = "flexible-cath-${var.env}"
+  resource_group_name = azurerm_resource_group.postgres_rg.name
+  env                 = var.env
+  product             = var.product
+  component           = var.component
+  business_area       = "sds"
+  common_tags         = var.common_tags
 
   # Use expanded subnet - original postgresql subnet is full
   subnet_suffix = "expanded"
