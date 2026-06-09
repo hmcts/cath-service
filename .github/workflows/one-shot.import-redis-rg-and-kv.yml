@@ -54,7 +54,7 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="c68a4bed-4c3d-4956-af51-4ae164c1957c"
-          TF_VARS="-var=env=demo -var=subscription=DTS-SHAREDSERVICES-DEMO -var=aks_subscription_id=${SUB}"
+          TF_VARS="-var=env=demo -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-demo resource group into azurerm_resource_group.redis_rg
           terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
@@ -112,7 +112,7 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="3eec5bde-7feb-4566-bfb6-805df6e10b90"
-          TF_VARS="-var=env=test -var=subscription=DTS-SHAREDSERVICES-TEST -var=aks_subscription_id=${SUB}"
+          TF_VARS="-var=env=test -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-test resource group into azurerm_resource_group.redis_rg
           terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
@@ -170,7 +170,7 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="ba71a911-e0d6-4776-a1a6-079af1df7139"
-          TF_VARS="-var=env=ithc -var=subscription=DTS-SHAREDSERVICES-ITHC -var=aks_subscription_id=${SUB}"
+          TF_VARS="-var=env=ithc -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-ithc resource group into azurerm_resource_group.redis_rg
           terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
@@ -228,7 +228,7 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="74dacd4f-a248-45bb-a2f0-af700dc4cf68"
-          TF_VARS="-var=env=stg -var=subscription=DTS-SHAREDSERVICES-STG -var=aks_subscription_id=${SUB}"
+          TF_VARS="-var=env=stg -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-stg resource group into azurerm_resource_group.redis_rg
           terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
