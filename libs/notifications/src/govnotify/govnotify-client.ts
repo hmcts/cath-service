@@ -76,7 +76,7 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
       });
       personalisation.link_to_file = linkToFile;
       personalisation.pdf_link_to_file = linkToFile;
-      personalisation.pdf_link_text = linkToFile;
+      personalisation.pdf_link_text = "Download PDF version";
     }
 
     // If Excel buffer is provided, upload to GOV.UK Notify document service
@@ -86,7 +86,7 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
         retentionPeriod: "1 week"
       });
       personalisation.excel_link_to_file = excelLink;
-      personalisation.excel_link_text = excelLink;
+      personalisation.excel_link_text = "Download Excel version";
     }
 
     const response = (await (notifyClient as any).sendEmail(templateId, params.emailAddress, {

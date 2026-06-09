@@ -292,7 +292,8 @@ describe("govnotify-client", () => {
       expect.objectContaining({
         personalisation: expect.objectContaining({
           link_to_file: { file: "uploaded-file-reference" },
-          pdf_link_to_file: { file: "uploaded-file-reference" }
+          pdf_link_to_file: { file: "uploaded-file-reference" },
+          pdf_link_text: "Download PDF version"
         })
       })
     );
@@ -327,7 +328,8 @@ describe("govnotify-client", () => {
       "user@example.com",
       expect.objectContaining({
         personalisation: expect.objectContaining({
-          excel_link_to_file: { file: "uploaded-excel-reference" }
+          excel_link_to_file: { file: "uploaded-excel-reference" },
+          excel_link_text: "Download Excel version"
         })
       })
     );
@@ -363,7 +365,9 @@ describe("govnotify-client", () => {
         personalisation: expect.objectContaining({
           link_to_file: { file: "pdf-ref" },
           pdf_link_to_file: { file: "pdf-ref" },
-          excel_link_to_file: { file: "excel-ref" }
+          pdf_link_text: "Download PDF version",
+          excel_link_to_file: { file: "excel-ref" },
+          excel_link_text: "Download Excel version"
         })
       })
     );
