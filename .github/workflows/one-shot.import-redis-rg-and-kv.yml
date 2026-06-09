@@ -69,14 +69,15 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
+          # Fetch OLD Redis details for state import (cath-demo - original name, PE already points here)
+          # redis.tf now uses name = "cath-${env}" for non-stg envs to avoid PE replacement
           az redis show \
-            --name "cath-redis-demo" \
+            --name "cath-demo" \
             --resource-group "cath-cache-demo" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-redis-demo" \
+            --name "cath-demo" \
             --resource-group "cath-cache-demo" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
@@ -236,10 +237,12 @@ jobs:
                   elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
                       pe_subnet_id = pe_data['properties']['subnet'].get('id')
                   # Extract private connection resource id (the Redis cache)
+                  # Normalize case: Azure CLI returns /Microsoft.Cache/Redis/ but Terraform expects /Microsoft.Cache/redis/
                   pe_conn_resource_id = None
                   plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
                   if plsc:
-                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      raw_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      pe_conn_resource_id = raw_id.replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/') if raw_id else None
                   resources.append({
                       "module": "module.redis", "mode": "managed",
                       "type": "azurerm_private_endpoint", "name": "this",
@@ -490,14 +493,15 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
+          # Fetch OLD Redis details for state import (cath-test - original name, PE already points here)
+          # redis.tf now uses name = "cath-${env}" for non-stg envs to avoid PE replacement
           az redis show \
-            --name "cath-redis-test" \
+            --name "cath-test" \
             --resource-group "cath-cache-test" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-redis-test" \
+            --name "cath-test" \
             --resource-group "cath-cache-test" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
@@ -655,10 +659,12 @@ jobs:
                   elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
                       pe_subnet_id = pe_data['properties']['subnet'].get('id')
                   # Extract private connection resource id (the Redis cache)
+                  # Normalize case: Azure CLI returns /Microsoft.Cache/Redis/ but Terraform expects /Microsoft.Cache/redis/
                   pe_conn_resource_id = None
                   plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
                   if plsc:
-                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      raw_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      pe_conn_resource_id = raw_id.replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/') if raw_id else None
                   resources.append({
                       "module": "module.redis", "mode": "managed",
                       "type": "azurerm_private_endpoint", "name": "this",
@@ -884,14 +890,15 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
+          # Fetch OLD Redis details for state import (cath-ithc - original name, PE already points here)
+          # redis.tf now uses name = "cath-${env}" for non-stg envs to avoid PE replacement
           az redis show \
-            --name "cath-redis-ithc" \
+            --name "cath-ithc" \
             --resource-group "cath-cache-ithc" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-redis-ithc" \
+            --name "cath-ithc" \
             --resource-group "cath-cache-ithc" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
@@ -1049,10 +1056,12 @@ jobs:
                   elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
                       pe_subnet_id = pe_data['properties']['subnet'].get('id')
                   # Extract private connection resource id (the Redis cache)
+                  # Normalize case: Azure CLI returns /Microsoft.Cache/Redis/ but Terraform expects /Microsoft.Cache/redis/
                   pe_conn_resource_id = None
                   plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
                   if plsc:
-                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      raw_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      pe_conn_resource_id = raw_id.replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/') if raw_id else None
                   resources.append({
                       "module": "module.redis", "mode": "managed",
                       "type": "azurerm_private_endpoint", "name": "this",
@@ -1443,10 +1452,12 @@ jobs:
                   elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
                       pe_subnet_id = pe_data['properties']['subnet'].get('id')
                   # Extract private connection resource id (the Redis cache)
+                  # Normalize case: Azure CLI returns /Microsoft.Cache/Redis/ but Terraform expects /Microsoft.Cache/redis/
                   pe_conn_resource_id = None
                   plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
                   if plsc:
-                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      raw_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                      pe_conn_resource_id = raw_id.replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/') if raw_id else None
                   resources.append({
                       "module": "module.redis", "mode": "managed",
                       "type": "azurerm_private_endpoint", "name": "this",
