@@ -18921,29 +18921,31 @@ VALUES
   (133, 1, 'created', 'imported from GitHub issue', 'junaidiqbalmoj', '2026-05-13T08:52:28Z'),
   (134, 1, 'created', 'imported from GitHub issue', 'KianKwa', '2026-06-04T15:24:44Z');
 
--- Traceability links between requirements.
-INSERT INTO requirement_link (source_id, target_id, type, created_at)
+-- Traceability links between requirements (structural origins only — facts
+-- read from GitHub). Inferred (content-derived) links are added separately
+-- via migration and flagged is_suspect=1.
+INSERT INTO requirement_link (source_id, target_id, type, origin, created_at)
 VALUES
-  (4, 3, 'derives_from', '2026-06-09T00:00:00Z'),
-  (10, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (13, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (16, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (17, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (18, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (19, 2, 'derives_from', '2026-06-09T00:00:00Z'),
-  (20, 2, 'derives_from', '2026-06-09T00:00:00Z'),
-  (21, 2, 'derives_from', '2026-06-09T00:00:00Z'),
-  (22, 2, 'derives_from', '2026-06-09T00:00:00Z'),
-  (24, 3, 'derives_from', '2026-06-09T00:00:00Z'),
-  (25, 3, 'derives_from', '2026-06-09T00:00:00Z'),
-  (26, 3, 'derives_from', '2026-06-09T00:00:00Z'),
-  (49, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (94, 1, 'derives_from', '2026-06-09T00:00:00Z'),
-  (110, 2, 'derives_from', '2026-06-09T00:00:00Z'),
-  (22, 21, 'depends_on', '2026-06-09T00:00:00Z'),
-  (47, 46, 'depends_on', '2026-06-09T00:00:00Z'),
-  (59, 58, 'depends_on', '2026-06-09T00:00:00Z'),
-  (72, 71, 'depends_on', '2026-06-09T00:00:00Z'),
-  (73, 74, 'depends_on', '2026-06-09T00:00:00Z');
+  (4, 3, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (10, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (13, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (16, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (17, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (18, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (19, 2, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (20, 2, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (21, 2, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (22, 2, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (24, 3, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (25, 3, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (26, 3, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (49, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (94, 1, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (110, 2, 'derives_from', 'github_subissue', '2026-06-09T00:00:00Z'),
+  (22, 21, 'depends_on', 'issue_reference', '2026-06-09T00:00:00Z'),
+  (47, 46, 'depends_on', 'issue_reference', '2026-06-09T00:00:00Z'),
+  (59, 58, 'depends_on', 'issue_reference', '2026-06-09T00:00:00Z'),
+  (72, 71, 'depends_on', 'issue_reference', '2026-06-09T00:00:00Z'),
+  (73, 74, 'depends_on', 'issue_reference', '2026-06-09T00:00:00Z');
 
 COMMIT;

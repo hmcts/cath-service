@@ -72,8 +72,20 @@ CREATE TABLE requirement_link (
                 CHECK (type IN ('derives_from', 'refines', 'satisfies',
                                 'depends_on', 'conflicts_with')),
 
+  -- How the link was established. Structural origins are facts read from
+  -- GitHub; 'inferred' links are derived from requirement content and are
+  -- judgement, not fact (flagged is_suspect=1 until a human confirms them).
+  origin      TEXT NOT NULL DEFAULT 'inferred'
+                CHECK (origin IN ('github_subissue', 'issue_reference', 'inferred')),
+
+  -- For inferred links: 0-1 confidence from the analysis. NULL for structural.
+  confidence  REAL,
+  -- For inferred links: why the link was proposed. NULL for structural.
+  rationale   TEXT,
+
   -- Set when either end is edited (on a meaningful field) after the last
-  -- review, prompting someone to re-check the link still holds.
+  -- review, prompting someone to re-check the link still holds. Also used to
+  -- mark inferred links as needing review.
   is_suspect  INTEGER NOT NULL DEFAULT 0
                 CHECK (is_suspect IN (0, 1)),
 
