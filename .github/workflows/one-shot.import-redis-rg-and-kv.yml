@@ -54,15 +54,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="c68a4bed-4c3d-4956-af51-4ae164c1957c"
+          TF_VARS="-var=env=demo -var=subscription=DTS-SHAREDSERVICES-DEMO -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-demo resource group into azurerm_resource_group.redis_rg
-          terraform import azurerm_resource_group.redis_rg \
+          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
             "/subscriptions/${SUB}/resourceGroups/cath-cache-demo" \
             && echo "Imported redis_rg" \
             || echo "WARNING: redis_rg import failed (may already be in state)"
 
           # Import the existing cath-ss-kv-demo key vault into the module state
-          terraform import "module.application_key_vault.azurerm_key_vault.kv" \
+          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
             "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-demo-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-demo" \
             && echo "Imported application_key_vault.kv" \
             || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
@@ -111,15 +112,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="3eec5bde-7feb-4566-bfb6-805df6e10b90"
+          TF_VARS="-var=env=test -var=subscription=DTS-SHAREDSERVICES-TEST -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-test resource group into azurerm_resource_group.redis_rg
-          terraform import azurerm_resource_group.redis_rg \
+          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
             "/subscriptions/${SUB}/resourceGroups/cath-cache-test" \
             && echo "Imported redis_rg" \
             || echo "WARNING: redis_rg import failed (may already be in state)"
 
           # Import the existing cath-ss-kv-test key vault into the module state
-          terraform import "module.application_key_vault.azurerm_key_vault.kv" \
+          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
             "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-test-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-test" \
             && echo "Imported application_key_vault.kv" \
             || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
@@ -168,15 +170,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="ba71a911-e0d6-4776-a1a6-079af1df7139"
+          TF_VARS="-var=env=ithc -var=subscription=DTS-SHAREDSERVICES-ITHC -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-ithc resource group into azurerm_resource_group.redis_rg
-          terraform import azurerm_resource_group.redis_rg \
+          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
             "/subscriptions/${SUB}/resourceGroups/cath-cache-ithc" \
             && echo "Imported redis_rg" \
             || echo "WARNING: redis_rg import failed (may already be in state)"
 
           # Import the existing cath-ss-kv-ithc key vault into the module state
-          terraform import "module.application_key_vault.azurerm_key_vault.kv" \
+          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
             "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-ithc-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-ithc" \
             && echo "Imported application_key_vault.kv" \
             || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
@@ -225,15 +228,16 @@ jobs:
             -backend-config="access_key=${STORAGE_KEY}"
 
           SUB="74dacd4f-a248-45bb-a2f0-af700dc4cf68"
+          TF_VARS="-var=env=stg -var=subscription=DTS-SHAREDSERVICES-STG -var=aks_subscription_id=${SUB}"
 
           # Import the existing cath-cache-stg resource group into azurerm_resource_group.redis_rg
-          terraform import azurerm_resource_group.redis_rg \
+          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
             "/subscriptions/${SUB}/resourceGroups/cath-cache-stg" \
             && echo "Imported redis_rg" \
             || echo "WARNING: redis_rg import failed (may already be in state)"
 
           # Import the existing cath-ss-kv-stg key vault into the module state
-          terraform import "module.application_key_vault.azurerm_key_vault.kv" \
+          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
             "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-stg-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-stg" \
             && echo "Imported application_key_vault.kv" \
             || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
