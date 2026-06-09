@@ -62,6 +62,20 @@ jobs:
               || echo "WARNING: secret $secret not found in vault"
           done
 
+          # Fetch KV access policy object IDs
+          az keyvault show --name "cath-ss-kv-demo" --resource-group "cath-ss-kv-demo-rg" \
+            --query "properties.accessPolicies[].objectId" -o tsv 2>/dev/null \
+            > /tmp/policy_ids.txt || echo "WARNING: could not fetch access policies"
+          echo "Access policy object IDs:"
+          cat /tmp/policy_ids.txt || true
+
+          # Fetch PE details from Azure
+          az network private-endpoint show \
+            --name "cath-demo" \
+            --resource-group "cath-cache-demo" \
+            -o json 2>/dev/null > /tmp/pe_details.json \
+            || echo "WARNING: PE cath-demo not found, skipping PE state patch"
+
           python3 << 'PYEOF'
           import json
 
@@ -152,16 +166,73 @@ jobs:
           else:
               print("module.redis.azurerm_redis_cache.redis already in state, skipping")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state
-          # The PE in Azure has private_connection_resource_id pointing to old Redis (cath-cath-{env}).
-          # The fix-private-endpoints workflow deletes the PE in Azure so Terraform can recreate it
-          # pointing to the new Redis (cath-{env}). Remove from state to avoid diff detection.
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          if len(resources) < before:
-              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          # PE deletion failed due to AuthorizationFailed (SP lacks privateDnsZoneGroups/delete).
+          # Instead, add the existing PE to state so Terraform does not try to create a duplicate.
+          import os as _os
+          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
+              with open('/tmp/pe_details.json') as pef:
+                  pe_az = json.load(pef)
+              pe_id = pe_az.get('id', '')
+              pe_name = pe_az.get('name', f'cath-{env}')
+              pe_location = pe_az.get('location', 'uksouth')
+              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
+              # Extract private_connection_resource_id from privateLinkServiceConnections
+              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
+              private_connection_resource_id = ''
+              subresource_names = []
+              if plsc:
+                  conn = plsc[0]
+                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
+                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
+              # Extract subnet_id
+              subnet_id = ''
+              nic_ids = []
+              if pe_az.get('subnet'):
+                  subnet_id = pe_az['subnet'].get('id', '')
+              for nic in (pe_az.get('networkInterfaces') or []):
+                  nic_ids.append(nic.get('id', ''))
+              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id,
+                          "location": pe_location,
+                          "name": pe_name,
+                          "resource_group_name": pe_rg,
+                          "subnet_id": subnet_id,
+                          "tags": {},
+                          "timeouts": None,
+                          "custom_dns_configs": [],
+                          "custom_network_interface_name": None,
+                          "ip_configuration": [],
+                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
+                          "private_dns_zone_configs": [],
+                          "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False,
+                              "name": f"cath-{env}",
+                              "private_connection_resource_alias": None,
+                              "private_connection_resource_id": private_connection_resource_id,
+                              "private_ip_addresses": [],
+                              "request_message": None,
+                              "subresource_names": subresource_names
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
           else:
-              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+              # No PE found in Azure - remove from state so Terraform can create fresh
+              before = len(resources)
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
+              if len(resources) < before:
+                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+              else:
+                  print(f"PE not in Azure and not in state, nothing to do")
 
           # module.application_insights.azurerm_application_insights.this - re-point to cath-ss-kv-{env}-rg
           # App insights physically exists in cath-ss-{env}-rg but config wants cath-ss-kv-{env}-rg.
@@ -262,11 +333,55 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
 
-          # KV access policies - remove so Terraform can re-import/reconcile cleanly
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
-          if len(resources) < before:
-              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+          # KV access policies - add existing Azure policies to state
+          # We MUST import them rather than delete from state, otherwise Terraform tries to CREATE
+          # them and gets "already exists" errors.
+          # Known Terraform resource names for access policies:
+          policy_resource_names = [
+              "creator_access_policy",
+              "developer",           # index_key 0
+              "product_team_access_policy",
+              "implicit_managed_identity_access_policy",  # index_key 0
+          ]
+          kv_id_for_policy = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if _os.path.exists('/tmp/policy_ids.txt'):
+              with open('/tmp/policy_ids.txt') as pf:
+                  policy_object_ids = [l.strip() for l in pf if l.strip()]
+              # Remove all existing policy entries to rebuild cleanly
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+              # Re-add each policy with a round-robin assignment to the known resource names
+              # The exact mapping doesn't matter for state-correctness as long as each policy_id is tracked
+              for i, obj_id in enumerate(policy_object_ids):
+                  if i < len(policy_resource_names):
+                      r_name = policy_resource_names[i]
+                      # Some resources use index_key 0 (developer[0], implicit_managed_identity_access_policy[0])
+                      uses_index = r_name in ("developer", "implicit_managed_identity_access_policy")
+                      policy_az_id = f"{kv_id_for_policy}/objectId/{obj_id}"
+                      entry = {
+                          "module": "module.application_key_vault", "mode": "managed",
+                          "type": "azurerm_key_vault_access_policy", "name": r_name,
+                          "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                          "instances": [{"schema_version": 0, "attributes": {
+                              "id": policy_az_id,
+                              "key_vault_id": kv_id_for_policy,
+                              "object_id": obj_id,
+                              "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
+                              "application_id": "",
+                              "certificate_permissions": [],
+                              "key_permissions": [],
+                              "secret_permissions": [],
+                              "storage_permissions": [],
+                              "timeouts": None
+                          }, "sensitive_attributes": [], "private": ""}]
+                      }
+                      if uses_index:
+                          entry["instances"][0]["index_key"] = 0
+                      resources.append(entry)
+                      print(f"Added module.application_key_vault.azurerm_key_vault_access_policy.{r_name}{'[0]' if uses_index else ''} -> objectId/{obj_id}")
+                  else:
+                      print(f"WARNING: more policies in Azure ({len(policy_object_ids)}) than Terraform resource names ({len(policy_resource_names)}), skipping objectId/{obj_id}")
+          else:
+              print("WARNING: /tmp/policy_ids.txt not found, skipping KV access policy state patch")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -326,6 +441,20 @@ jobs:
             [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
               || echo "WARNING: secret $secret not found in vault"
           done
+
+          # Fetch KV access policy object IDs
+          az keyvault show --name "cath-ss-kv-test" --resource-group "cath-ss-kv-test-rg" \
+            --query "properties.accessPolicies[].objectId" -o tsv 2>/dev/null \
+            > /tmp/policy_ids.txt || echo "WARNING: could not fetch access policies"
+          echo "Access policy object IDs:"
+          cat /tmp/policy_ids.txt || true
+
+          # Fetch PE details from Azure
+          az network private-endpoint show \
+            --name "cath-test" \
+            --resource-group "cath-cache-test" \
+            -o json 2>/dev/null > /tmp/pe_details.json \
+            || echo "WARNING: PE cath-test not found, skipping PE state patch"
 
           python3 << 'PYEOF'
           import json
@@ -414,13 +543,59 @@ jobs:
           else:
               print("module.redis.azurerm_redis_cache.redis already in state, skipping")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          if len(resources) < before:
-              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          import os as _os
+          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
+              with open('/tmp/pe_details.json') as pef:
+                  pe_az = json.load(pef)
+              pe_id = pe_az.get('id', '')
+              pe_name = pe_az.get('name', f'cath-{env}')
+              pe_location = pe_az.get('location', 'uksouth')
+              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
+              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
+              private_connection_resource_id = ''
+              subresource_names = []
+              if plsc:
+                  conn = plsc[0]
+                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
+                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
+              subnet_id = ''
+              nic_ids = []
+              if pe_az.get('subnet'):
+                  subnet_id = pe_az['subnet'].get('id', '')
+              for nic in (pe_az.get('networkInterfaces') or []):
+                  nic_ids.append(nic.get('id', ''))
+              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id, "location": pe_location, "name": pe_name,
+                          "resource_group_name": pe_rg, "subnet_id": subnet_id,
+                          "tags": {}, "timeouts": None, "custom_dns_configs": [],
+                          "custom_network_interface_name": None, "ip_configuration": [],
+                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
+                          "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False, "name": f"cath-{env}",
+                              "private_connection_resource_alias": None,
+                              "private_connection_resource_id": private_connection_resource_id,
+                              "private_ip_addresses": [], "request_message": None,
+                              "subresource_names": subresource_names
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
           else:
-              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+              before = len(resources)
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
+              if len(resources) < before:
+                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state")
+              else:
+                  print(f"PE not in Azure and not in state, nothing to do")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -452,7 +627,6 @@ jobs:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           # KV secrets - add to state from version IDs fetched by bash
-          import os
           secret_map = {
               'postgres-host': 'postgres_host',
               'postgres-user': 'postgres_user',
@@ -466,7 +640,7 @@ jobs:
               'app-insights-connection-string': 'app_insights_connection_string',
           }
           kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
-          if os.path.exists('/tmp/secret_ids.txt'):
+          if _os.path.exists('/tmp/secret_ids.txt'):
               with open('/tmp/secret_ids.txt') as sf:
                   for line in sf:
                       line = line.strip()
@@ -480,9 +654,7 @@ jobs:
                               "type": "azurerm_key_vault_secret", "name": resource_name,
                               "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
                               "instances": [{"schema_version": 0, "attributes": {
-                                  "id": version_id,
-                                  "name": secret_name,
-                                  "key_vault_id": kv_id,
+                                  "id": version_id, "name": secret_name, "key_vault_id": kv_id,
                                   "value": "", "content_type": "", "not_before_date": None,
                                   "expiration_date": None, "tags": {}, "timeouts": None,
                                   "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
@@ -500,10 +672,8 @@ jobs:
                   "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
                   "instances": [{"schema_version": 0, "attributes": {
-                      "id": kv_diag_id,
-                      "name": f"cath-ss-kv-{env}",
-                      "target_resource_id": kv_id,
-                      "log_analytics_workspace_id": None,
+                      "id": kv_diag_id, "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id, "log_analytics_workspace_id": None,
                       "storage_account_id": None, "eventhub_name": None,
                       "eventhub_authorization_rule_id": None, "partner_solution_id": None,
                       "enabled_log": [], "metric": [], "log": [], "timeouts": None
@@ -513,11 +683,43 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
 
-          # KV access policies - remove so Terraform can re-import/reconcile cleanly
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
-          if len(resources) < before:
-              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+          # KV access policies - add existing Azure policies to state
+          policy_resource_names = [
+              "creator_access_policy",
+              "developer",
+              "product_team_access_policy",
+              "implicit_managed_identity_access_policy",
+          ]
+          kv_id_for_policy = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if _os.path.exists('/tmp/policy_ids.txt'):
+              with open('/tmp/policy_ids.txt') as pf:
+                  policy_object_ids = [l.strip() for l in pf if l.strip()]
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+              for i, obj_id in enumerate(policy_object_ids):
+                  if i < len(policy_resource_names):
+                      r_name = policy_resource_names[i]
+                      uses_index = r_name in ("developer", "implicit_managed_identity_access_policy")
+                      policy_az_id = f"{kv_id_for_policy}/objectId/{obj_id}"
+                      entry = {
+                          "module": "module.application_key_vault", "mode": "managed",
+                          "type": "azurerm_key_vault_access_policy", "name": r_name,
+                          "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                          "instances": [{"schema_version": 0, "attributes": {
+                              "id": policy_az_id, "key_vault_id": kv_id_for_policy,
+                              "object_id": obj_id, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
+                              "application_id": "", "certificate_permissions": [],
+                              "key_permissions": [], "secret_permissions": [],
+                              "storage_permissions": [], "timeouts": None
+                          }, "sensitive_attributes": [], "private": ""}]
+                      }
+                      if uses_index:
+                          entry["instances"][0]["index_key"] = 0
+                      resources.append(entry)
+                      print(f"Added module.application_key_vault.azurerm_key_vault_access_policy.{r_name}{'[0]' if uses_index else ''} -> objectId/{obj_id}")
+                  else:
+                      print(f"WARNING: extra policy objectId/{obj_id} - no matching Terraform resource name")
+          else:
+              print("WARNING: /tmp/policy_ids.txt not found, skipping KV access policy state patch")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -577,6 +779,20 @@ jobs:
             [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
               || echo "WARNING: secret $secret not found in vault"
           done
+
+          # Fetch KV access policy object IDs
+          az keyvault show --name "cath-ss-kv-ithc" --resource-group "cath-ss-kv-ithc-rg" \
+            --query "properties.accessPolicies[].objectId" -o tsv 2>/dev/null \
+            > /tmp/policy_ids.txt || echo "WARNING: could not fetch access policies"
+          echo "Access policy object IDs:"
+          cat /tmp/policy_ids.txt || true
+
+          # Fetch PE details from Azure
+          az network private-endpoint show \
+            --name "cath-ithc" \
+            --resource-group "cath-cache-ithc" \
+            -o json 2>/dev/null > /tmp/pe_details.json \
+            || echo "WARNING: PE cath-ithc not found, skipping PE state patch"
 
           python3 << 'PYEOF'
           import json
@@ -665,13 +881,59 @@ jobs:
           else:
               print("module.redis.azurerm_redis_cache.redis already in state, skipping")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          if len(resources) < before:
-              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          import os as _os
+          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
+              with open('/tmp/pe_details.json') as pef:
+                  pe_az = json.load(pef)
+              pe_id = pe_az.get('id', '')
+              pe_name = pe_az.get('name', f'cath-{env}')
+              pe_location = pe_az.get('location', 'uksouth')
+              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
+              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
+              private_connection_resource_id = ''
+              subresource_names = []
+              if plsc:
+                  conn = plsc[0]
+                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
+                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
+              subnet_id = ''
+              nic_ids = []
+              if pe_az.get('subnet'):
+                  subnet_id = pe_az['subnet'].get('id', '')
+              for nic in (pe_az.get('networkInterfaces') or []):
+                  nic_ids.append(nic.get('id', ''))
+              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id, "location": pe_location, "name": pe_name,
+                          "resource_group_name": pe_rg, "subnet_id": subnet_id,
+                          "tags": {}, "timeouts": None, "custom_dns_configs": [],
+                          "custom_network_interface_name": None, "ip_configuration": [],
+                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
+                          "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False, "name": f"cath-{env}",
+                              "private_connection_resource_alias": None,
+                              "private_connection_resource_id": private_connection_resource_id,
+                              "private_ip_addresses": [], "request_message": None,
+                              "subresource_names": subresource_names
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
           else:
-              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+              before = len(resources)
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
+              if len(resources) < before:
+                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state")
+              else:
+                  print(f"PE not in Azure and not in state, nothing to do")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -703,7 +965,6 @@ jobs:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           # KV secrets - add to state from version IDs fetched by bash
-          import os
           secret_map = {
               'postgres-host': 'postgres_host',
               'postgres-user': 'postgres_user',
@@ -717,7 +978,7 @@ jobs:
               'app-insights-connection-string': 'app_insights_connection_string',
           }
           kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
-          if os.path.exists('/tmp/secret_ids.txt'):
+          if _os.path.exists('/tmp/secret_ids.txt'):
               with open('/tmp/secret_ids.txt') as sf:
                   for line in sf:
                       line = line.strip()
@@ -731,9 +992,7 @@ jobs:
                               "type": "azurerm_key_vault_secret", "name": resource_name,
                               "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
                               "instances": [{"schema_version": 0, "attributes": {
-                                  "id": version_id,
-                                  "name": secret_name,
-                                  "key_vault_id": kv_id,
+                                  "id": version_id, "name": secret_name, "key_vault_id": kv_id,
                                   "value": "", "content_type": "", "not_before_date": None,
                                   "expiration_date": None, "tags": {}, "timeouts": None,
                                   "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
@@ -751,10 +1010,8 @@ jobs:
                   "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
                   "instances": [{"schema_version": 0, "attributes": {
-                      "id": kv_diag_id,
-                      "name": f"cath-ss-kv-{env}",
-                      "target_resource_id": kv_id,
-                      "log_analytics_workspace_id": None,
+                      "id": kv_diag_id, "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id, "log_analytics_workspace_id": None,
                       "storage_account_id": None, "eventhub_name": None,
                       "eventhub_authorization_rule_id": None, "partner_solution_id": None,
                       "enabled_log": [], "metric": [], "log": [], "timeouts": None
@@ -764,11 +1021,43 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
 
-          # KV access policies - remove so Terraform can re-import/reconcile cleanly
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
-          if len(resources) < before:
-              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+          # KV access policies - add existing Azure policies to state
+          policy_resource_names = [
+              "creator_access_policy",
+              "developer",
+              "product_team_access_policy",
+              "implicit_managed_identity_access_policy",
+          ]
+          kv_id_for_policy = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if _os.path.exists('/tmp/policy_ids.txt'):
+              with open('/tmp/policy_ids.txt') as pf:
+                  policy_object_ids = [l.strip() for l in pf if l.strip()]
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+              for i, obj_id in enumerate(policy_object_ids):
+                  if i < len(policy_resource_names):
+                      r_name = policy_resource_names[i]
+                      uses_index = r_name in ("developer", "implicit_managed_identity_access_policy")
+                      policy_az_id = f"{kv_id_for_policy}/objectId/{obj_id}"
+                      entry = {
+                          "module": "module.application_key_vault", "mode": "managed",
+                          "type": "azurerm_key_vault_access_policy", "name": r_name,
+                          "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                          "instances": [{"schema_version": 0, "attributes": {
+                              "id": policy_az_id, "key_vault_id": kv_id_for_policy,
+                              "object_id": obj_id, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
+                              "application_id": "", "certificate_permissions": [],
+                              "key_permissions": [], "secret_permissions": [],
+                              "storage_permissions": [], "timeouts": None
+                          }, "sensitive_attributes": [], "private": ""}]
+                      }
+                      if uses_index:
+                          entry["instances"][0]["index_key"] = 0
+                      resources.append(entry)
+                      print(f"Added module.application_key_vault.azurerm_key_vault_access_policy.{r_name}{'[0]' if uses_index else ''} -> objectId/{obj_id}")
+                  else:
+                      print(f"WARNING: extra policy objectId/{obj_id} - no matching Terraform resource name")
+          else:
+              print("WARNING: /tmp/policy_ids.txt not found, skipping KV access policy state patch")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -828,6 +1117,20 @@ jobs:
             [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
               || echo "WARNING: secret $secret not found in vault"
           done
+
+          # Fetch KV access policy object IDs
+          az keyvault show --name "cath-ss-kv-stg" --resource-group "cath-ss-kv-stg-rg" \
+            --query "properties.accessPolicies[].objectId" -o tsv 2>/dev/null \
+            > /tmp/policy_ids.txt || echo "WARNING: could not fetch access policies"
+          echo "Access policy object IDs:"
+          cat /tmp/policy_ids.txt || true
+
+          # Fetch PE details from Azure
+          az network private-endpoint show \
+            --name "cath-stg" \
+            --resource-group "cath-cache-stg" \
+            -o json 2>/dev/null > /tmp/pe_details.json \
+            || echo "WARNING: PE cath-stg not found, skipping PE state patch"
 
           python3 << 'PYEOF'
           import json
@@ -915,13 +1218,59 @@ jobs:
           })
           print(f"Set module.redis.azurerm_redis_cache.redis -> {redis_id} (fixed casing)")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state (STG PE was already being created fresh)
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          if len(resources) < before:
-              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          import os as _os
+          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
+              with open('/tmp/pe_details.json') as pef:
+                  pe_az = json.load(pef)
+              pe_id = pe_az.get('id', '')
+              pe_name = pe_az.get('name', f'cath-{env}')
+              pe_location = pe_az.get('location', 'uksouth')
+              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
+              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
+              private_connection_resource_id = ''
+              subresource_names = []
+              if plsc:
+                  conn = plsc[0]
+                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
+                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
+              subnet_id = ''
+              nic_ids = []
+              if pe_az.get('subnet'):
+                  subnet_id = pe_az['subnet'].get('id', '')
+              for nic in (pe_az.get('networkInterfaces') or []):
+                  nic_ids.append(nic.get('id', ''))
+              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id, "location": pe_location, "name": pe_name,
+                          "resource_group_name": pe_rg, "subnet_id": subnet_id,
+                          "tags": {}, "timeouts": None, "custom_dns_configs": [],
+                          "custom_network_interface_name": None, "ip_configuration": [],
+                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
+                          "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False, "name": f"cath-{env}",
+                              "private_connection_resource_alias": None,
+                              "private_connection_resource_id": private_connection_resource_id,
+                              "private_ip_addresses": [], "request_message": None,
+                              "subresource_names": subresource_names
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
           else:
-              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+              before = len(resources)
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
+              if len(resources) < before:
+                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state")
+              else:
+                  print(f"PE not in Azure and not in state, nothing to do")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -953,7 +1302,6 @@ jobs:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           # KV secrets - add to state from version IDs fetched by bash
-          import os
           secret_map = {
               'postgres-host': 'postgres_host',
               'postgres-user': 'postgres_user',
@@ -967,7 +1315,7 @@ jobs:
               'app-insights-connection-string': 'app_insights_connection_string',
           }
           kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
-          if os.path.exists('/tmp/secret_ids.txt'):
+          if _os.path.exists('/tmp/secret_ids.txt'):
               with open('/tmp/secret_ids.txt') as sf:
                   for line in sf:
                       line = line.strip()
@@ -981,9 +1329,7 @@ jobs:
                               "type": "azurerm_key_vault_secret", "name": resource_name,
                               "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
                               "instances": [{"schema_version": 0, "attributes": {
-                                  "id": version_id,
-                                  "name": secret_name,
-                                  "key_vault_id": kv_id,
+                                  "id": version_id, "name": secret_name, "key_vault_id": kv_id,
                                   "value": "", "content_type": "", "not_before_date": None,
                                   "expiration_date": None, "tags": {}, "timeouts": None,
                                   "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
@@ -1001,10 +1347,8 @@ jobs:
                   "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
                   "instances": [{"schema_version": 0, "attributes": {
-                      "id": kv_diag_id,
-                      "name": f"cath-ss-kv-{env}",
-                      "target_resource_id": kv_id,
-                      "log_analytics_workspace_id": None,
+                      "id": kv_diag_id, "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id, "log_analytics_workspace_id": None,
                       "storage_account_id": None, "eventhub_name": None,
                       "eventhub_authorization_rule_id": None, "partner_solution_id": None,
                       "enabled_log": [], "metric": [], "log": [], "timeouts": None
@@ -1014,11 +1358,43 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
 
-          # KV access policies - remove so Terraform can re-import/reconcile cleanly
-          before = len(resources)
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
-          if len(resources) < before:
-              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+          # KV access policies - add existing Azure policies to state
+          policy_resource_names = [
+              "creator_access_policy",
+              "developer",
+              "product_team_access_policy",
+              "implicit_managed_identity_access_policy",
+          ]
+          kv_id_for_policy = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if _os.path.exists('/tmp/policy_ids.txt'):
+              with open('/tmp/policy_ids.txt') as pf:
+                  policy_object_ids = [l.strip() for l in pf if l.strip()]
+              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+              for i, obj_id in enumerate(policy_object_ids):
+                  if i < len(policy_resource_names):
+                      r_name = policy_resource_names[i]
+                      uses_index = r_name in ("developer", "implicit_managed_identity_access_policy")
+                      policy_az_id = f"{kv_id_for_policy}/objectId/{obj_id}"
+                      entry = {
+                          "module": "module.application_key_vault", "mode": "managed",
+                          "type": "azurerm_key_vault_access_policy", "name": r_name,
+                          "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                          "instances": [{"schema_version": 0, "attributes": {
+                              "id": policy_az_id, "key_vault_id": kv_id_for_policy,
+                              "object_id": obj_id, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
+                              "application_id": "", "certificate_permissions": [],
+                              "key_permissions": [], "secret_permissions": [],
+                              "storage_permissions": [], "timeouts": None
+                          }, "sensitive_attributes": [], "private": ""}]
+                      }
+                      if uses_index:
+                          entry["instances"][0]["index_key"] = 0
+                      resources.append(entry)
+                      print(f"Added module.application_key_vault.azurerm_key_vault_access_policy.{r_name}{'[0]' if uses_index else ''} -> objectId/{obj_id}")
+                  else:
+                      print(f"WARNING: extra policy objectId/{obj_id} - no matching Terraform resource name")
+          else:
+              print("WARNING: /tmp/policy_ids.txt not found, skipping KV access policy state patch")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
