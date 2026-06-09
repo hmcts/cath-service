@@ -4,7 +4,7 @@ module "postgresql" {
   }
 
   source              = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
-  name                = "flexible-cath-${var.env}"
+  name                = "flexible-cath"
   resource_group_name = azurerm_resource_group.postgres_rg.name
   env                 = var.env
   product             = var.product

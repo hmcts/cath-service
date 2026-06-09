@@ -5,7 +5,7 @@ module "application_insights" {
 
   env     = var.env
   product = var.product
-  name    = "cath-${var.env}-appinsights"
+  name    = "cath-appinsights"
 
   resource_group_name = azurerm_resource_group.ss_kv_rg.name
 
