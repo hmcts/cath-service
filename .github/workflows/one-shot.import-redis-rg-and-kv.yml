@@ -1287,14 +1287,15 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
+          # Fetch OLD Redis details for state import (cath-stg - original name, PE already points here)
+          # redis.tf uses name = "cath-${env}" for all envs
           az redis show \
-            --name "cath-redis-stg" \
+            --name "cath-stg" \
             --resource-group "cath-cache-stg" \
             --output json 2>/dev/null > /tmp/redis_details.json \
             || echo '{}' > /tmp/redis_details.json
           az redis list-keys \
-            --name "cath-redis-stg" \
+            --name "cath-stg" \
             --resource-group "cath-cache-stg" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json

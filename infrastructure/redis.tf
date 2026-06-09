@@ -2,9 +2,7 @@ module "redis" {
   source = "git::https://github.com/hmcts/cnp-module-redis?ref=master"
 
   product             = var.product
-  # stg PE was already replaced to point to cath-redis-stg; other envs lack PE delete permission
-  # so we keep the existing PE (cath-{env}) pointing to old Redis by using the original name
-  name                = var.env == "stg" ? "cath-redis-${var.env}" : "cath-${var.env}"
+  name                = "cath-${var.env}"
   resource_group_name = azurerm_resource_group.redis_rg.name
   location            = var.location
   env                 = var.env
