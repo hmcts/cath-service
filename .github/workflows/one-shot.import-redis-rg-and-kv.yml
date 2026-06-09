@@ -52,6 +52,16 @@ jobs:
             --file /tmp/terraform.tfstate \
             --account-key "${STORAGE_KEY}"
 
+          # Fetch KV secret version IDs
+          rm -f /tmp/secret_ids.txt
+          for secret in postgres-host postgres-user postgres-password postgres-port postgres-url \
+                        redis-host redis-port redis-access-key redis-url app-insights-connection-string; do
+            vid=$(az keyvault secret show --vault-name "cath-ss-kv-demo" --name "$secret" \
+              --query "id" -o tsv 2>/dev/null || true)
+            [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
+              || echo "WARNING: secret $secret not found in vault"
+          done
+
           python3 << 'PYEOF'
           import json
 
@@ -190,6 +200,74 @@ jobs:
                       elif attrs.get('id') == alert_id_new:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
+          # KV secrets - add to state from version IDs fetched by bash
+          import os
+          secret_map = {
+              'postgres-host': 'postgres_host',
+              'postgres-user': 'postgres_user',
+              'postgres-password': 'postgres_password',
+              'postgres-port': 'postgres_port',
+              'postgres-url': 'postgres_url',
+              'redis-host': 'redis_host',
+              'redis-port': 'redis_port',
+              'redis-access-key': 'redis_access_key',
+              'redis-url': 'redis_url',
+              'app-insights-connection-string': 'app_insights_connection_string',
+          }
+          kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if os.path.exists('/tmp/secret_ids.txt'):
+              with open('/tmp/secret_ids.txt') as sf:
+                  for line in sf:
+                      line = line.strip()
+                      if '=' not in line:
+                          continue
+                      secret_name, version_id = line.split('=', 1)
+                      resource_name = secret_map.get(secret_name, secret_name.replace('-', '_'))
+                      if not any(r.get('type') == 'azurerm_key_vault_secret' and r.get('name') == resource_name for r in resources):
+                          resources.append({
+                              "module": "", "mode": "managed",
+                              "type": "azurerm_key_vault_secret", "name": resource_name,
+                              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                              "instances": [{"schema_version": 0, "attributes": {
+                                  "id": version_id,
+                                  "name": secret_name,
+                                  "key_vault_id": kv_id,
+                                  "value": "", "content_type": "", "not_before_date": None,
+                                  "expiration_date": None, "tags": {}, "timeouts": None,
+                                  "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
+                              }, "sensitive_attributes": [[{"type": "get_attr", "value": "value"}]], "private": ""}]
+                          })
+                          print(f"Added azurerm_key_vault_secret.{resource_name}")
+                      else:
+                          print(f"azurerm_key_vault_secret.{resource_name} already in state, skipping")
+
+          # KV diagnostic setting
+          kv_diag_id = f"{kv_id}|cath-ss-kv-{env}"
+          if not any(r.get('type') == 'azurerm_monitor_diagnostic_setting' and r.get('name') == 'kv-ds' and r.get('module') == 'module.application_key_vault' for r in resources):
+              resources.append({
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": kv_diag_id,
+                      "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id,
+                      "log_analytics_workspace_id": None,
+                      "storage_account_id": None, "eventhub_name": None,
+                      "eventhub_authorization_rule_id": None, "partner_solution_id": None,
+                      "enabled_log": [], "metric": [], "log": [], "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds")
+          else:
+              print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
+
+          # KV access policies - remove so Terraform can re-import/reconcile cleanly
+          before = len(resources)
+          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+          if len(resources) < before:
+              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
               json.dump(state, f, indent=2)
@@ -238,6 +316,16 @@ jobs:
             --name "cath-service/test/terraform.tfstate" \
             --file /tmp/terraform.tfstate \
             --account-key "${STORAGE_KEY}"
+
+          # Fetch KV secret version IDs
+          rm -f /tmp/secret_ids.txt
+          for secret in postgres-host postgres-user postgres-password postgres-port postgres-url \
+                        redis-host redis-port redis-access-key redis-url app-insights-connection-string; do
+            vid=$(az keyvault secret show --vault-name "cath-ss-kv-test" --name "$secret" \
+              --query "id" -o tsv 2>/dev/null || true)
+            [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
+              || echo "WARNING: secret $secret not found in vault"
+          done
 
           python3 << 'PYEOF'
           import json
@@ -363,6 +451,74 @@ jobs:
                       elif attrs.get('id') == alert_id_new:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
+          # KV secrets - add to state from version IDs fetched by bash
+          import os
+          secret_map = {
+              'postgres-host': 'postgres_host',
+              'postgres-user': 'postgres_user',
+              'postgres-password': 'postgres_password',
+              'postgres-port': 'postgres_port',
+              'postgres-url': 'postgres_url',
+              'redis-host': 'redis_host',
+              'redis-port': 'redis_port',
+              'redis-access-key': 'redis_access_key',
+              'redis-url': 'redis_url',
+              'app-insights-connection-string': 'app_insights_connection_string',
+          }
+          kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if os.path.exists('/tmp/secret_ids.txt'):
+              with open('/tmp/secret_ids.txt') as sf:
+                  for line in sf:
+                      line = line.strip()
+                      if '=' not in line:
+                          continue
+                      secret_name, version_id = line.split('=', 1)
+                      resource_name = secret_map.get(secret_name, secret_name.replace('-', '_'))
+                      if not any(r.get('type') == 'azurerm_key_vault_secret' and r.get('name') == resource_name for r in resources):
+                          resources.append({
+                              "module": "", "mode": "managed",
+                              "type": "azurerm_key_vault_secret", "name": resource_name,
+                              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                              "instances": [{"schema_version": 0, "attributes": {
+                                  "id": version_id,
+                                  "name": secret_name,
+                                  "key_vault_id": kv_id,
+                                  "value": "", "content_type": "", "not_before_date": None,
+                                  "expiration_date": None, "tags": {}, "timeouts": None,
+                                  "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
+                              }, "sensitive_attributes": [[{"type": "get_attr", "value": "value"}]], "private": ""}]
+                          })
+                          print(f"Added azurerm_key_vault_secret.{resource_name}")
+                      else:
+                          print(f"azurerm_key_vault_secret.{resource_name} already in state, skipping")
+
+          # KV diagnostic setting
+          kv_diag_id = f"{kv_id}|cath-ss-kv-{env}"
+          if not any(r.get('type') == 'azurerm_monitor_diagnostic_setting' and r.get('name') == 'kv-ds' and r.get('module') == 'module.application_key_vault' for r in resources):
+              resources.append({
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": kv_diag_id,
+                      "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id,
+                      "log_analytics_workspace_id": None,
+                      "storage_account_id": None, "eventhub_name": None,
+                      "eventhub_authorization_rule_id": None, "partner_solution_id": None,
+                      "enabled_log": [], "metric": [], "log": [], "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds")
+          else:
+              print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
+
+          # KV access policies - remove so Terraform can re-import/reconcile cleanly
+          before = len(resources)
+          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+          if len(resources) < before:
+              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
               json.dump(state, f, indent=2)
@@ -411,6 +567,16 @@ jobs:
             --name "cath-service/ithc/terraform.tfstate" \
             --file /tmp/terraform.tfstate \
             --account-key "${STORAGE_KEY}"
+
+          # Fetch KV secret version IDs
+          rm -f /tmp/secret_ids.txt
+          for secret in postgres-host postgres-user postgres-password postgres-port postgres-url \
+                        redis-host redis-port redis-access-key redis-url app-insights-connection-string; do
+            vid=$(az keyvault secret show --vault-name "cath-ss-kv-ithc" --name "$secret" \
+              --query "id" -o tsv 2>/dev/null || true)
+            [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
+              || echo "WARNING: secret $secret not found in vault"
+          done
 
           python3 << 'PYEOF'
           import json
@@ -536,6 +702,74 @@ jobs:
                       elif attrs.get('id') == alert_id_new:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
+          # KV secrets - add to state from version IDs fetched by bash
+          import os
+          secret_map = {
+              'postgres-host': 'postgres_host',
+              'postgres-user': 'postgres_user',
+              'postgres-password': 'postgres_password',
+              'postgres-port': 'postgres_port',
+              'postgres-url': 'postgres_url',
+              'redis-host': 'redis_host',
+              'redis-port': 'redis_port',
+              'redis-access-key': 'redis_access_key',
+              'redis-url': 'redis_url',
+              'app-insights-connection-string': 'app_insights_connection_string',
+          }
+          kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if os.path.exists('/tmp/secret_ids.txt'):
+              with open('/tmp/secret_ids.txt') as sf:
+                  for line in sf:
+                      line = line.strip()
+                      if '=' not in line:
+                          continue
+                      secret_name, version_id = line.split('=', 1)
+                      resource_name = secret_map.get(secret_name, secret_name.replace('-', '_'))
+                      if not any(r.get('type') == 'azurerm_key_vault_secret' and r.get('name') == resource_name for r in resources):
+                          resources.append({
+                              "module": "", "mode": "managed",
+                              "type": "azurerm_key_vault_secret", "name": resource_name,
+                              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                              "instances": [{"schema_version": 0, "attributes": {
+                                  "id": version_id,
+                                  "name": secret_name,
+                                  "key_vault_id": kv_id,
+                                  "value": "", "content_type": "", "not_before_date": None,
+                                  "expiration_date": None, "tags": {}, "timeouts": None,
+                                  "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
+                              }, "sensitive_attributes": [[{"type": "get_attr", "value": "value"}]], "private": ""}]
+                          })
+                          print(f"Added azurerm_key_vault_secret.{resource_name}")
+                      else:
+                          print(f"azurerm_key_vault_secret.{resource_name} already in state, skipping")
+
+          # KV diagnostic setting
+          kv_diag_id = f"{kv_id}|cath-ss-kv-{env}"
+          if not any(r.get('type') == 'azurerm_monitor_diagnostic_setting' and r.get('name') == 'kv-ds' and r.get('module') == 'module.application_key_vault' for r in resources):
+              resources.append({
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": kv_diag_id,
+                      "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id,
+                      "log_analytics_workspace_id": None,
+                      "storage_account_id": None, "eventhub_name": None,
+                      "eventhub_authorization_rule_id": None, "partner_solution_id": None,
+                      "enabled_log": [], "metric": [], "log": [], "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds")
+          else:
+              print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
+
+          # KV access policies - remove so Terraform can re-import/reconcile cleanly
+          before = len(resources)
+          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+          if len(resources) < before:
+              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
+
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
               json.dump(state, f, indent=2)
@@ -584,6 +818,16 @@ jobs:
             --name "cath-service/stg/terraform.tfstate" \
             --file /tmp/terraform.tfstate \
             --account-key "${STORAGE_KEY}"
+
+          # Fetch KV secret version IDs
+          rm -f /tmp/secret_ids.txt
+          for secret in postgres-host postgres-user postgres-password postgres-port postgres-url \
+                        redis-host redis-port redis-access-key redis-url app-insights-connection-string; do
+            vid=$(az keyvault secret show --vault-name "cath-ss-kv-stg" --name "$secret" \
+              --query "id" -o tsv 2>/dev/null || true)
+            [ -n "$vid" ] && echo "${secret}=${vid}" >> /tmp/secret_ids.txt \
+              || echo "WARNING: secret $secret not found in vault"
+          done
 
           python3 << 'PYEOF'
           import json
@@ -707,6 +951,74 @@ jobs:
                           print(f"Updated module.application_insights.azurerm_monitor_activity_log_alert.main[0] RG -> cath-ss-kv-{env}-rg")
                       elif attrs.get('id') == alert_id_new:
                           print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
+
+          # KV secrets - add to state from version IDs fetched by bash
+          import os
+          secret_map = {
+              'postgres-host': 'postgres_host',
+              'postgres-user': 'postgres_user',
+              'postgres-password': 'postgres_password',
+              'postgres-port': 'postgres_port',
+              'postgres-url': 'postgres_url',
+              'redis-host': 'redis_host',
+              'redis-port': 'redis_port',
+              'redis-access-key': 'redis_access_key',
+              'redis-url': 'redis_url',
+              'app-insights-connection-string': 'app_insights_connection_string',
+          }
+          kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+          if os.path.exists('/tmp/secret_ids.txt'):
+              with open('/tmp/secret_ids.txt') as sf:
+                  for line in sf:
+                      line = line.strip()
+                      if '=' not in line:
+                          continue
+                      secret_name, version_id = line.split('=', 1)
+                      resource_name = secret_map.get(secret_name, secret_name.replace('-', '_'))
+                      if not any(r.get('type') == 'azurerm_key_vault_secret' and r.get('name') == resource_name for r in resources):
+                          resources.append({
+                              "module": "", "mode": "managed",
+                              "type": "azurerm_key_vault_secret", "name": resource_name,
+                              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                              "instances": [{"schema_version": 0, "attributes": {
+                                  "id": version_id,
+                                  "name": secret_name,
+                                  "key_vault_id": kv_id,
+                                  "value": "", "content_type": "", "not_before_date": None,
+                                  "expiration_date": None, "tags": {}, "timeouts": None,
+                                  "versionless_id": f"https://cath-ss-kv-{env}.vault.azure.net/secrets/{secret_name}"
+                              }, "sensitive_attributes": [[{"type": "get_attr", "value": "value"}]], "private": ""}]
+                          })
+                          print(f"Added azurerm_key_vault_secret.{resource_name}")
+                      else:
+                          print(f"azurerm_key_vault_secret.{resource_name} already in state, skipping")
+
+          # KV diagnostic setting
+          kv_diag_id = f"{kv_id}|cath-ss-kv-{env}"
+          if not any(r.get('type') == 'azurerm_monitor_diagnostic_setting' and r.get('name') == 'kv-ds' and r.get('module') == 'module.application_key_vault' for r in resources):
+              resources.append({
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_monitor_diagnostic_setting", "name": "kv-ds",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": kv_diag_id,
+                      "name": f"cath-ss-kv-{env}",
+                      "target_resource_id": kv_id,
+                      "log_analytics_workspace_id": None,
+                      "storage_account_id": None, "eventhub_name": None,
+                      "eventhub_authorization_rule_id": None, "partner_solution_id": None,
+                      "enabled_log": [], "metric": [], "log": [], "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds")
+          else:
+              print("module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds already in state, skipping")
+
+          # KV access policies - remove so Terraform can re-import/reconcile cleanly
+          before = len(resources)
+          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_key_vault_access_policy' and r.get('module') == 'module.application_key_vault')]
+          if len(resources) < before:
+              print(f"Removed {before - len(resources)} KV access policy entries from state (will be re-created)")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:

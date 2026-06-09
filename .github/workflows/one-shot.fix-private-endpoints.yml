@@ -45,7 +45,6 @@ jobs:
           az network private-endpoint delete \
             --name cath-demo \
             --resource-group cath-cache-demo \
-            --yes \
             && echo "Deleted PE cath-demo in cath-cache-demo" \
             || echo "WARNING: PE cath-demo may not exist or deletion failed, continuing"
 
@@ -72,7 +71,6 @@ jobs:
           az network private-endpoint delete \
             --name cath-test \
             --resource-group cath-cache-test \
-            --yes \
             && echo "Deleted PE cath-test in cath-cache-test" \
             || echo "WARNING: PE cath-test may not exist or deletion failed, continuing"
 
@@ -99,6 +97,5 @@ jobs:
           az network private-endpoint delete \
             --name cath-ithc \
             --resource-group cath-cache-ithc \
-            --yes \
             && echo "Deleted PE cath-ithc in cath-cache-ithc" \
             || echo "WARNING: PE cath-ithc may not exist or deletion failed, continuing"
