@@ -46,11 +46,17 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Configure Git
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           git config user.name "claude-code-bot[bot]"
           git config user.email "claude-code-bot[bot]@users.noreply.github.com"
+          # Credentials are not persisted in .git/config (persist-credentials: false),
+          # so set the App token on the origin remote explicitly for the bot's push.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
       - name: Install sqlite3
         run: sudo apt-get update && sudo apt-get install -y sqlite3

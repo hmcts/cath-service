@@ -45,7 +45,8 @@ CREATE TABLE requirement (
 
   -- Refinement: the code that implemented it, filled in after implementation.
   impl_commit_sha     TEXT,
-  impl_paths          TEXT,                              -- JSON array of file paths
+  impl_paths          TEXT                               -- JSON array of file paths
+                        CHECK (impl_paths IS NULL OR json_valid(impl_paths)),
 
   version             INTEGER NOT NULL DEFAULT 1,        -- current version number
   is_suspect          INTEGER NOT NULL DEFAULT 0
@@ -79,7 +80,8 @@ CREATE TABLE requirement_link (
                 CHECK (origin IN ('github_subissue', 'issue_reference', 'inferred')),
 
   -- For inferred links: 0-1 confidence from the analysis. NULL for structural.
-  confidence  REAL,
+  confidence  REAL
+                CHECK (confidence IS NULL OR (confidence >= 0.0 AND confidence <= 1.0)),
   -- For inferred links: why the link was proposed. NULL for structural.
   rationale   TEXT,
 
@@ -112,6 +114,8 @@ CREATE TABLE requirement_change (
   old_value       TEXT,                                  -- stringified previous value
   new_value       TEXT,                                  -- stringified new value
 
+  -- 'deleted' is reserved for manual obsolete/removal operations; the automated
+  -- sync never hard-deletes, so it is unused by generated data by design.
   change_type     TEXT NOT NULL
                     CHECK (change_type IN ('created', 'modified',
                                            'status_changed', 'deleted')),
