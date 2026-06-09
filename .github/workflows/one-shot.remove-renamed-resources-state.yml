@@ -19,7 +19,7 @@ jobs:
 
       - name: Install Terraform
         run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
           unzip -o /tmp/terraform.zip -d /usr/local/bin/
           terraform version
 
@@ -120,7 +120,7 @@ jobs:
 
       - name: Install Terraform
         run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
           unzip -o /tmp/terraform.zip -d /usr/local/bin/
           terraform version
 
@@ -226,7 +226,7 @@ jobs:
 
       - name: Install Terraform
         run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
           unzip -o /tmp/terraform.zip -d /usr/local/bin/
           terraform version
 
@@ -332,7 +332,7 @@ jobs:
 
       - name: Install Terraform
         run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
           unzip -o /tmp/terraform.zip -d /usr/local/bin/
           terraform version
 
