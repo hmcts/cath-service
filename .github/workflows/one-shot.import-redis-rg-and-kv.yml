@@ -4,8 +4,8 @@ name: One-Shot - Import Redis RG and KV Into State
 #   - azurerm_resource_group.redis_rg  (cath-cache-{env})
 #   - azurerm_resource_group.ss_kv_rg  (cath-ss-kv-{env}-rg) - REPLACE existing entry
 #   - module.application_key_vault.azurerm_key_vault.kv
-#   - module.redis.azurerm_redis_cache.redis  (with lowercase resource ID for STG)
-#   - module.redis.azurerm_private_endpoint.this[0] - REMOVED from state (let Terraform recreate)
+#   - module.redis.azurerm_redis_cache.redis  - REMOVED from state (Redis renamed to cath-redis-{env})
+#   - module.redis.azurerm_private_endpoint.this[0] - REMOVED from state (will be recreated fresh)
 #   - module.application_insights.azurerm_application_insights.this - re-pointed to cath-ss-kv-{env}-rg
 #   - module.application_insights.azurerm_monitor_activity_log_alert.main[0] - re-pointed to cath-ss-kv-{env}-rg
 #
@@ -69,12 +69,9 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch PE details from Azure
-          az network private-endpoint show \
-            --name "cath-demo" \
-            --resource-group "cath-cache-demo" \
-            -o json 2>/dev/null > /tmp/pe_details.json \
-            || echo "WARNING: PE cath-demo not found, skipping PE state patch"
+          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
+          # so Terraform creates fresh resources without attempting to delete the old ones
+          rm -f /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -133,106 +130,18 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # module.redis.azurerm_redis_cache.redis
-          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
-              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
-              resources.append({
-                  "module": "module.redis", "mode": "managed",
-                  "type": "azurerm_redis_cache", "name": "redis",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 1, "attributes": {
-                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
-                      "resource_group_name": f"cath-cache-{env}",
-                      "capacity": 0, "family": "C", "sku_name": "Basic",
-                      "redis_version": "6", "minimum_tls_version": "1.2",
-                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
-                      "tags": {}, "timeouts": None,
-                      "hostname": f"cath-{env}.redis.cache.windows.net",
-                      "ssl_port": 6380, "port": 6379,
-                      "primary_access_key": "", "secondary_access_key": "",
-                      "primary_connection_string": "", "secondary_connection_string": "",
-                      "private_static_ip_address": None, "replicas_per_master": None,
-                      "replicas_per_primary": None, "shard_count": 0,
-                      "access_keys_authentication_enabled": True,
-                      "redis_configuration": [], "patch_schedule": [], "zones": None
-                  }, "sensitive_attributes": [
-                      [{"type": "get_attr", "value": "primary_access_key"}],
-                      [{"type": "get_attr", "value": "secondary_access_key"}],
-                      [{"type": "get_attr", "value": "primary_connection_string"}],
-                      [{"type": "get_attr", "value": "secondary_connection_string"}]
-                  ], "private": ""}]
-              })
-              print(f"Added module.redis.azurerm_redis_cache.redis")
-          else:
-              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
-
-          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
-          # PE deletion failed due to AuthorizationFailed (SP lacks privateDnsZoneGroups/delete).
-          # Instead, add the existing PE to state so Terraform does not try to create a duplicate.
+          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
+          # so Terraform creates new resources fresh without attempting to delete the old ones
           import os as _os
-          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
-              with open('/tmp/pe_details.json') as pef:
-                  pe_az = json.load(pef)
-              pe_id = pe_az.get('id', '')
-              pe_name = pe_az.get('name', f'cath-{env}')
-              pe_location = pe_az.get('location', 'uksouth')
-              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
-              # Extract private_connection_resource_id from privateLinkServiceConnections
-              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
-              private_connection_resource_id = ''
-              subresource_names = []
-              if plsc:
-                  conn = plsc[0]
-                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
-                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
-              # Extract subnet_id
-              subnet_id = ''
-              nic_ids = []
-              if pe_az.get('subnet'):
-                  subnet_id = pe_az['subnet'].get('id', '')
-              for nic in (pe_az.get('networkInterfaces') or []):
-                  nic_ids.append(nic.get('id', ''))
-              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
-                  resources.append({
-                      "module": "module.redis", "mode": "managed",
-                      "type": "azurerm_private_endpoint", "name": "this",
-                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                          "id": pe_id,
-                          "location": pe_location,
-                          "name": pe_name,
-                          "resource_group_name": pe_rg,
-                          "subnet_id": subnet_id,
-                          "tags": {},
-                          "timeouts": None,
-                          "custom_dns_configs": [],
-                          "custom_network_interface_name": None,
-                          "ip_configuration": [],
-                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
-                          "private_dns_zone_configs": [],
-                          "private_dns_zone_group": [],
-                          "private_service_connection": [{
-                              "is_manual_connection": False,
-                              "name": f"cath-{env}",
-                              "private_connection_resource_alias": None,
-                              "private_connection_resource_id": private_connection_resource_id,
-                              "private_ip_addresses": [],
-                              "request_message": None,
-                              "subresource_names": subresource_names
-                          }]
-                      }, "sensitive_attributes": [], "private": ""}]
-                  })
-                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
-              else:
-                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
-          else:
-              # No PE found in Azure - remove from state so Terraform can create fresh
-              before = len(resources)
-              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-              if len(resources) < before:
-                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
-              else:
-                  print(f"PE not in Azure and not in state, nothing to do")
+          before = len(resources)
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis'
+          )]
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
+          )]
+          removed = before - len(resources)
+          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
 
           # module.application_insights.azurerm_application_insights.this - re-point to cath-ss-kv-{env}-rg
           # App insights physically exists in cath-ss-{env}-rg but config wants cath-ss-kv-{env}-rg.
@@ -449,12 +358,9 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch PE details from Azure
-          az network private-endpoint show \
-            --name "cath-test" \
-            --resource-group "cath-cache-test" \
-            -o json 2>/dev/null > /tmp/pe_details.json \
-            || echo "WARNING: PE cath-test not found, skipping PE state patch"
+          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
+          # so Terraform creates fresh resources without attempting to delete the old ones
+          rm -f /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -511,91 +417,18 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
-              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
-              resources.append({
-                  "module": "module.redis", "mode": "managed",
-                  "type": "azurerm_redis_cache", "name": "redis",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 1, "attributes": {
-                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
-                      "resource_group_name": f"cath-cache-{env}",
-                      "capacity": 0, "family": "C", "sku_name": "Basic",
-                      "redis_version": "6", "minimum_tls_version": "1.2",
-                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
-                      "tags": {}, "timeouts": None,
-                      "hostname": f"cath-{env}.redis.cache.windows.net",
-                      "ssl_port": 6380, "port": 6379,
-                      "primary_access_key": "", "secondary_access_key": "",
-                      "primary_connection_string": "", "secondary_connection_string": "",
-                      "private_static_ip_address": None, "replicas_per_master": None,
-                      "replicas_per_primary": None, "shard_count": 0,
-                      "access_keys_authentication_enabled": True,
-                      "redis_configuration": [], "patch_schedule": [], "zones": None
-                  }, "sensitive_attributes": [
-                      [{"type": "get_attr", "value": "primary_access_key"}],
-                      [{"type": "get_attr", "value": "secondary_access_key"}],
-                      [{"type": "get_attr", "value": "primary_connection_string"}],
-                      [{"type": "get_attr", "value": "secondary_connection_string"}]
-                  ], "private": ""}]
-              })
-              print(f"Added module.redis.azurerm_redis_cache.redis")
-          else:
-              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
-
-          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
+          # so Terraform creates new resources fresh without attempting to delete the old ones
           import os as _os
-          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
-              with open('/tmp/pe_details.json') as pef:
-                  pe_az = json.load(pef)
-              pe_id = pe_az.get('id', '')
-              pe_name = pe_az.get('name', f'cath-{env}')
-              pe_location = pe_az.get('location', 'uksouth')
-              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
-              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
-              private_connection_resource_id = ''
-              subresource_names = []
-              if plsc:
-                  conn = plsc[0]
-                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
-                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
-              subnet_id = ''
-              nic_ids = []
-              if pe_az.get('subnet'):
-                  subnet_id = pe_az['subnet'].get('id', '')
-              for nic in (pe_az.get('networkInterfaces') or []):
-                  nic_ids.append(nic.get('id', ''))
-              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
-                  resources.append({
-                      "module": "module.redis", "mode": "managed",
-                      "type": "azurerm_private_endpoint", "name": "this",
-                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                          "id": pe_id, "location": pe_location, "name": pe_name,
-                          "resource_group_name": pe_rg, "subnet_id": subnet_id,
-                          "tags": {}, "timeouts": None, "custom_dns_configs": [],
-                          "custom_network_interface_name": None, "ip_configuration": [],
-                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
-                          "private_dns_zone_configs": [], "private_dns_zone_group": [],
-                          "private_service_connection": [{
-                              "is_manual_connection": False, "name": f"cath-{env}",
-                              "private_connection_resource_alias": None,
-                              "private_connection_resource_id": private_connection_resource_id,
-                              "private_ip_addresses": [], "request_message": None,
-                              "subresource_names": subresource_names
-                          }]
-                      }, "sensitive_attributes": [], "private": ""}]
-                  })
-                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
-              else:
-                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
-          else:
-              before = len(resources)
-              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-              if len(resources) < before:
-                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state")
-              else:
-                  print(f"PE not in Azure and not in state, nothing to do")
+          before = len(resources)
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis'
+          )]
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
+          )]
+          removed = before - len(resources)
+          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -787,12 +620,9 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch PE details from Azure
-          az network private-endpoint show \
-            --name "cath-ithc" \
-            --resource-group "cath-cache-ithc" \
-            -o json 2>/dev/null > /tmp/pe_details.json \
-            || echo "WARNING: PE cath-ithc not found, skipping PE state patch"
+          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
+          # so Terraform creates fresh resources without attempting to delete the old ones
+          rm -f /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -849,91 +679,18 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
-              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
-              resources.append({
-                  "module": "module.redis", "mode": "managed",
-                  "type": "azurerm_redis_cache", "name": "redis",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 1, "attributes": {
-                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
-                      "resource_group_name": f"cath-cache-{env}",
-                      "capacity": 0, "family": "C", "sku_name": "Basic",
-                      "redis_version": "6", "minimum_tls_version": "1.2",
-                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
-                      "tags": {}, "timeouts": None,
-                      "hostname": f"cath-{env}.redis.cache.windows.net",
-                      "ssl_port": 6380, "port": 6379,
-                      "primary_access_key": "", "secondary_access_key": "",
-                      "primary_connection_string": "", "secondary_connection_string": "",
-                      "private_static_ip_address": None, "replicas_per_master": None,
-                      "replicas_per_primary": None, "shard_count": 0,
-                      "access_keys_authentication_enabled": True,
-                      "redis_configuration": [], "patch_schedule": [], "zones": None
-                  }, "sensitive_attributes": [
-                      [{"type": "get_attr", "value": "primary_access_key"}],
-                      [{"type": "get_attr", "value": "secondary_access_key"}],
-                      [{"type": "get_attr", "value": "primary_connection_string"}],
-                      [{"type": "get_attr", "value": "secondary_connection_string"}]
-                  ], "private": ""}]
-              })
-              print(f"Added module.redis.azurerm_redis_cache.redis")
-          else:
-              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
-
-          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
+          # so Terraform creates new resources fresh without attempting to delete the old ones
           import os as _os
-          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
-              with open('/tmp/pe_details.json') as pef:
-                  pe_az = json.load(pef)
-              pe_id = pe_az.get('id', '')
-              pe_name = pe_az.get('name', f'cath-{env}')
-              pe_location = pe_az.get('location', 'uksouth')
-              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
-              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
-              private_connection_resource_id = ''
-              subresource_names = []
-              if plsc:
-                  conn = plsc[0]
-                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
-                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
-              subnet_id = ''
-              nic_ids = []
-              if pe_az.get('subnet'):
-                  subnet_id = pe_az['subnet'].get('id', '')
-              for nic in (pe_az.get('networkInterfaces') or []):
-                  nic_ids.append(nic.get('id', ''))
-              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
-                  resources.append({
-                      "module": "module.redis", "mode": "managed",
-                      "type": "azurerm_private_endpoint", "name": "this",
-                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                          "id": pe_id, "location": pe_location, "name": pe_name,
-                          "resource_group_name": pe_rg, "subnet_id": subnet_id,
-                          "tags": {}, "timeouts": None, "custom_dns_configs": [],
-                          "custom_network_interface_name": None, "ip_configuration": [],
-                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
-                          "private_dns_zone_configs": [], "private_dns_zone_group": [],
-                          "private_service_connection": [{
-                              "is_manual_connection": False, "name": f"cath-{env}",
-                              "private_connection_resource_alias": None,
-                              "private_connection_resource_id": private_connection_resource_id,
-                              "private_ip_addresses": [], "request_message": None,
-                              "subresource_names": subresource_names
-                          }]
-                      }, "sensitive_attributes": [], "private": ""}]
-                  })
-                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
-              else:
-                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
-          else:
-              before = len(resources)
-              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-              if len(resources) < before:
-                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state")
-              else:
-                  print(f"PE not in Azure and not in state, nothing to do")
+          before = len(resources)
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis'
+          )]
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
+          )]
+          removed = before - len(resources)
+          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -1125,12 +882,9 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Fetch PE details from Azure
-          az network private-endpoint show \
-            --name "cath-stg" \
-            --resource-group "cath-cache-stg" \
-            -o json 2>/dev/null > /tmp/pe_details.json \
-            || echo "WARNING: PE cath-stg not found, skipping PE state patch"
+          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
+          # so Terraform creates fresh resources without attempting to delete the old ones
+          rm -f /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -1187,90 +941,18 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # module.redis.azurerm_redis_cache.redis - REPLACE to fix ID casing (Redis -> redis)
-          redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
-          resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis')]
-          resources.append({
-              "module": "module.redis", "mode": "managed",
-              "type": "azurerm_redis_cache", "name": "redis",
-              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-              "instances": [{"schema_version": 1, "attributes": {
-                  "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
-                  "resource_group_name": f"cath-cache-{env}",
-                  "capacity": 0, "family": "C", "sku_name": "Basic",
-                  "redis_version": "6", "minimum_tls_version": "1.2",
-                  "non_ssl_port_enabled": False, "public_network_access_enabled": False,
-                  "tags": {}, "timeouts": None,
-                  "hostname": f"cath-{env}.redis.cache.windows.net",
-                  "ssl_port": 6380, "port": 6379,
-                  "primary_access_key": "", "secondary_access_key": "",
-                  "primary_connection_string": "", "secondary_connection_string": "",
-                  "private_static_ip_address": None, "replicas_per_master": None,
-                  "replicas_per_primary": None, "shard_count": 0,
-                  "access_keys_authentication_enabled": True,
-                  "redis_configuration": [], "patch_schedule": [], "zones": None
-              }, "sensitive_attributes": [
-                  [{"type": "get_attr", "value": "primary_access_key"}],
-                  [{"type": "get_attr", "value": "secondary_access_key"}],
-                  [{"type": "get_attr", "value": "primary_connection_string"}],
-                  [{"type": "get_attr", "value": "secondary_connection_string"}]
-              ], "private": ""}]
-          })
-          print(f"Set module.redis.azurerm_redis_cache.redis -> {redis_id} (fixed casing)")
-
-          # module.redis.azurerm_private_endpoint.this[0] - add current Azure PE to state
+          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
+          # so Terraform creates new resources fresh without attempting to delete the old ones
           import os as _os
-          if _os.path.exists('/tmp/pe_details.json') and _os.path.getsize('/tmp/pe_details.json') > 2:
-              with open('/tmp/pe_details.json') as pef:
-                  pe_az = json.load(pef)
-              pe_id = pe_az.get('id', '')
-              pe_name = pe_az.get('name', f'cath-{env}')
-              pe_location = pe_az.get('location', 'uksouth')
-              pe_rg = pe_az.get('resourceGroup', f'cath-cache-{env}')
-              plsc = (pe_az.get('privateLinkServiceConnections') or []) + (pe_az.get('manualPrivateLinkServiceConnections') or [])
-              private_connection_resource_id = ''
-              subresource_names = []
-              if plsc:
-                  conn = plsc[0]
-                  private_connection_resource_id = (conn.get('properties') or {}).get('privateLinkServiceId', '')
-                  subresource_names = (conn.get('properties') or {}).get('groupIds', [])
-              subnet_id = ''
-              nic_ids = []
-              if pe_az.get('subnet'):
-                  subnet_id = pe_az['subnet'].get('id', '')
-              for nic in (pe_az.get('networkInterfaces') or []):
-                  nic_ids.append(nic.get('id', ''))
-              if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
-                  resources.append({
-                      "module": "module.redis", "mode": "managed",
-                      "type": "azurerm_private_endpoint", "name": "this",
-                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                          "id": pe_id, "location": pe_location, "name": pe_name,
-                          "resource_group_name": pe_rg, "subnet_id": subnet_id,
-                          "tags": {}, "timeouts": None, "custom_dns_configs": [],
-                          "custom_network_interface_name": None, "ip_configuration": [],
-                          "network_interface": [{"id": nic_ids[0], "name": nic_ids[0].split('/')[-1]} if nic_ids else {}],
-                          "private_dns_zone_configs": [], "private_dns_zone_group": [],
-                          "private_service_connection": [{
-                              "is_manual_connection": False, "name": f"cath-{env}",
-                              "private_connection_resource_alias": None,
-                              "private_connection_resource_id": private_connection_resource_id,
-                              "private_ip_addresses": [], "request_message": None,
-                              "subresource_names": subresource_names
-                          }]
-                      }, "sensitive_attributes": [], "private": ""}]
-                  })
-                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
-              else:
-                  print("module.redis.azurerm_private_endpoint.this already in state, skipping")
-          else:
-              before = len(resources)
-              resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-              if len(resources) < before:
-                  print(f"PE not in Azure - removed module.redis.azurerm_private_endpoint.this from state")
-              else:
-                  print(f"PE not in Azure and not in state, nothing to do")
+          before = len(resources)
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis'
+          )]
+          resources[:] = [r for r in resources if not (
+              r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
+          )]
+          removed = before - len(resources)
+          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
