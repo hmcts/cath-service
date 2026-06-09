@@ -1,8 +1,10 @@
 name: One-Shot - Import Redis RG and KV Into State
 
 # Imports cath-cache-{env} resource group and cath-ss-kv-{env} key vault
-# into Terraform state so the next apply does not try to create resources
-# that already exist in Azure.
+# into Terraform state by directly patching the state blob.
+#
+# This approach bypasses terraform import (which fails due to module config
+# evaluation errors) by directly adding resource entries to the state JSON.
 #
 # Run this ONCE after the state removal workflow, before retriggering infra.
 
@@ -14,15 +16,6 @@ jobs:
     name: Import - Demo
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Terraform
-        run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
-          unzip -o /tmp/terraform.zip -d /usr/local/bin/
-          terraform version
-
       - name: Azure Login (Demo)
         run: |
           echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
@@ -37,50 +30,126 @@ jobs:
           subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
           "
 
-      - name: Import Demo Redis RG and KV Into State
-        working-directory: infrastructure
+      - name: Patch Demo State
         run: |
+          SUB="c68a4bed-4c3d-4956-af51-4ae164c1957c"
           STORAGE_KEY=$(az storage account keys list \
             --account-name sdsstatedemo \
             --resource-group jenkins-state-demo \
             --query "[0].value" \
             --output tsv)
 
-          terraform init \
-            -backend-config="resource_group_name=jenkins-state-demo" \
-            -backend-config="storage_account_name=sdsstatedemo" \
-            -backend-config="container_name=tfstate-demo" \
-            -backend-config="key=cath-service/demo/terraform.tfstate" \
-            -backend-config="access_key=${STORAGE_KEY}"
+          # Download current state
+          az storage blob download \
+            --account-name sdsstatedemo \
+            --container-name tfstate-demo \
+            --name "cath-service/demo/terraform.tfstate" \
+            --file /tmp/terraform.tfstate \
+            --account-key "${STORAGE_KEY}"
 
-          SUB="c68a4bed-4c3d-4956-af51-4ae164c1957c"
-          TF_VARS="-var=env=demo -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
+          python3 << 'PYEOF'
+          import json, sys, uuid
 
-          # Import the existing cath-cache-demo resource group into azurerm_resource_group.redis_rg
-          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
-            "/subscriptions/${SUB}/resourceGroups/cath-cache-demo" \
-            && echo "Imported redis_rg" \
-            || echo "WARNING: redis_rg import failed (may already be in state)"
+          with open('/tmp/terraform.tfstate') as f:
+              state = json.load(f)
 
-          # Import the existing cath-ss-kv-demo key vault into the module state
-          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
-            "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-demo-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-demo" \
-            && echo "Imported application_key_vault.kv" \
-            || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
+          resources = state.setdefault('resources', [])
+          sub = "c68a4bed-4c3d-4956-af51-4ae164c1957c"
+          env = "demo"
+
+          # Check/add azurerm_resource_group.redis_rg
+          rg_addr = "azurerm_resource_group.redis_rg"
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
+              rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
+              resources.append({
+                  "module": "",
+                  "mode": "managed",
+                  "type": "azurerm_resource_group",
+                  "name": "redis_rg",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{
+                      "schema_version": 0,
+                      "attributes": {
+                          "id": rg_id,
+                          "location": "uksouth",
+                          "managed_by": "",
+                          "name": f"cath-cache-{env}",
+                          "tags": {},
+                          "timeouts": None
+                      },
+                      "sensitive_attributes": [],
+                      "private": ""
+                  }]
+              })
+              print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
+          else:
+              print(f"azurerm_resource_group.redis_rg already in state, skipping")
+
+          # Check/add module.application_key_vault.azurerm_key_vault.kv
+          kv_type = "azurerm_key_vault"
+          kv_name = "kv"
+          kv_module = "module.application_key_vault"
+          if not any(r.get('type') == kv_type and r.get('name') == kv_name and r.get('module') == kv_module for r in resources):
+              kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+              resources.append({
+                  "module": kv_module,
+                  "mode": "managed",
+                  "type": kv_type,
+                  "name": kv_name,
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{
+                      "schema_version": 2,
+                      "attributes": {
+                          "id": kv_id,
+                          "location": "uksouth",
+                          "name": f"cath-ss-kv-{env}",
+                          "resource_group_name": f"cath-ss-kv-{env}-rg",
+                          "tags": {},
+                          "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
+                          "sku_name": "standard",
+                          "enabled_for_deployment": False,
+                          "enabled_for_disk_encryption": False,
+                          "enabled_for_template_deployment": False,
+                          "enable_rbac_authorization": False,
+                          "purge_protection_enabled": True,
+                          "public_network_access_enabled": True,
+                          "soft_delete_retention_days": 90,
+                          "access_policy": [],
+                          "contact": [],
+                          "network_acls": [],
+                          "timeouts": None,
+                          "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"
+                      },
+                      "sensitive_attributes": [],
+                      "private": ""
+                  }]
+              })
+              print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
+          else:
+              print(f"module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          # Increment serial to invalidate any cached state
+          state['serial'] = state.get('serial', 0) + 1
+
+          with open('/tmp/terraform.tfstate.new', 'w') as f:
+              json.dump(state, f, indent=2)
+          print("State file written")
+          PYEOF
+
+          # Upload patched state
+          az storage blob upload \
+            --account-name sdsstatedemo \
+            --container-name tfstate-demo \
+            --name "cath-service/demo/terraform.tfstate" \
+            --file /tmp/terraform.tfstate.new \
+            --account-key "${STORAGE_KEY}" \
+            --overwrite
+          echo "Demo state patched successfully"
 
   import-test:
     name: Import - Test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Terraform
-        run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
-          unzip -o /tmp/terraform.zip -d /usr/local/bin/
-          terraform version
-
       - name: Azure Login (Test)
         run: |
           echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
@@ -95,50 +164,79 @@ jobs:
           subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
           "
 
-      - name: Import Test Redis RG and KV Into State
-        working-directory: infrastructure
+      - name: Patch Test State
         run: |
+          SUB="3eec5bde-7feb-4566-bfb6-805df6e10b90"
           STORAGE_KEY=$(az storage account keys list \
             --account-name sdsstatetest \
             --resource-group jenkins-state-test \
             --query "[0].value" \
             --output tsv)
 
-          terraform init \
-            -backend-config="resource_group_name=jenkins-state-test" \
-            -backend-config="storage_account_name=sdsstatetest" \
-            -backend-config="container_name=tfstate-test" \
-            -backend-config="key=cath-service/test/terraform.tfstate" \
-            -backend-config="access_key=${STORAGE_KEY}"
+          az storage blob download \
+            --account-name sdsstatetest \
+            --container-name tfstate-test \
+            --name "cath-service/test/terraform.tfstate" \
+            --file /tmp/terraform.tfstate \
+            --account-key "${STORAGE_KEY}"
 
-          SUB="3eec5bde-7feb-4566-bfb6-805df6e10b90"
-          TF_VARS="-var=env=test -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
+          python3 << 'PYEOF'
+          import json
 
-          # Import the existing cath-cache-test resource group into azurerm_resource_group.redis_rg
-          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
-            "/subscriptions/${SUB}/resourceGroups/cath-cache-test" \
-            && echo "Imported redis_rg" \
-            || echo "WARNING: redis_rg import failed (may already be in state)"
+          with open('/tmp/terraform.tfstate') as f:
+              state = json.load(f)
 
-          # Import the existing cath-ss-kv-test key vault into the module state
-          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
-            "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-test-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-test" \
-            && echo "Imported application_key_vault.kv" \
-            || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
+          resources = state.setdefault('resources', [])
+          sub = "3eec5bde-7feb-4566-bfb6-805df6e10b90"
+          env = "test"
+
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
+              rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
+              resources.append({
+                  "module": "",
+                  "mode": "managed",
+                  "type": "azurerm_resource_group",
+                  "name": "redis_rg",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {"id": rg_id, "location": "uksouth", "managed_by": "", "name": f"cath-cache-{env}", "tags": {}, "timeouts": None}, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
+          else:
+              print("azurerm_resource_group.redis_rg already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
+              kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+              resources.append({
+                  "module": "module.application_key_vault",
+                  "mode": "managed",
+                  "type": "azurerm_key_vault",
+                  "name": "kv",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 2, "attributes": {"id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}", "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {}, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard", "enabled_for_deployment": False, "enabled_for_disk_encryption": False, "enabled_for_template_deployment": False, "enable_rbac_authorization": False, "purge_protection_enabled": True, "public_network_access_enabled": True, "soft_delete_retention_days": 90, "access_policy": [], "contact": [], "network_acls": [], "timeouts": None, "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"}, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
+          else:
+              print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          state['serial'] = state.get('serial', 0) + 1
+          with open('/tmp/terraform.tfstate.new', 'w') as f:
+              json.dump(state, f, indent=2)
+          print("State file written")
+          PYEOF
+
+          az storage blob upload \
+            --account-name sdsstatetest \
+            --container-name tfstate-test \
+            --name "cath-service/test/terraform.tfstate" \
+            --file /tmp/terraform.tfstate.new \
+            --account-key "${STORAGE_KEY}" \
+            --overwrite
+          echo "Test state patched successfully"
 
   import-ithc:
     name: Import - ITHC
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Terraform
-        run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
-          unzip -o /tmp/terraform.zip -d /usr/local/bin/
-          terraform version
-
       - name: Azure Login (ITHC)
         run: |
           echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
@@ -153,50 +251,79 @@ jobs:
           subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
           "
 
-      - name: Import ITHC Redis RG and KV Into State
-        working-directory: infrastructure
+      - name: Patch ITHC State
         run: |
+          SUB="ba71a911-e0d6-4776-a1a6-079af1df7139"
           STORAGE_KEY=$(az storage account keys list \
             --account-name sdsstateithc \
             --resource-group jenkins-state-ithc \
             --query "[0].value" \
             --output tsv)
 
-          terraform init \
-            -backend-config="resource_group_name=jenkins-state-ithc" \
-            -backend-config="storage_account_name=sdsstateithc" \
-            -backend-config="container_name=tfstate-ithc" \
-            -backend-config="key=cath-service/ithc/terraform.tfstate" \
-            -backend-config="access_key=${STORAGE_KEY}"
+          az storage blob download \
+            --account-name sdsstateithc \
+            --container-name tfstate-ithc \
+            --name "cath-service/ithc/terraform.tfstate" \
+            --file /tmp/terraform.tfstate \
+            --account-key "${STORAGE_KEY}"
 
-          SUB="ba71a911-e0d6-4776-a1a6-079af1df7139"
-          TF_VARS="-var=env=ithc -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
+          python3 << 'PYEOF'
+          import json
 
-          # Import the existing cath-cache-ithc resource group into azurerm_resource_group.redis_rg
-          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
-            "/subscriptions/${SUB}/resourceGroups/cath-cache-ithc" \
-            && echo "Imported redis_rg" \
-            || echo "WARNING: redis_rg import failed (may already be in state)"
+          with open('/tmp/terraform.tfstate') as f:
+              state = json.load(f)
 
-          # Import the existing cath-ss-kv-ithc key vault into the module state
-          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
-            "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-ithc-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-ithc" \
-            && echo "Imported application_key_vault.kv" \
-            || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
+          resources = state.setdefault('resources', [])
+          sub = "ba71a911-e0d6-4776-a1a6-079af1df7139"
+          env = "ithc"
+
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
+              rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
+              resources.append({
+                  "module": "",
+                  "mode": "managed",
+                  "type": "azurerm_resource_group",
+                  "name": "redis_rg",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {"id": rg_id, "location": "uksouth", "managed_by": "", "name": f"cath-cache-{env}", "tags": {}, "timeouts": None}, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
+          else:
+              print("azurerm_resource_group.redis_rg already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
+              kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+              resources.append({
+                  "module": "module.application_key_vault",
+                  "mode": "managed",
+                  "type": "azurerm_key_vault",
+                  "name": "kv",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 2, "attributes": {"id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}", "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {}, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard", "enabled_for_deployment": False, "enabled_for_disk_encryption": False, "enabled_for_template_deployment": False, "enable_rbac_authorization": False, "purge_protection_enabled": True, "public_network_access_enabled": True, "soft_delete_retention_days": 90, "access_policy": [], "contact": [], "network_acls": [], "timeouts": None, "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"}, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
+          else:
+              print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          state['serial'] = state.get('serial', 0) + 1
+          with open('/tmp/terraform.tfstate.new', 'w') as f:
+              json.dump(state, f, indent=2)
+          print("State file written")
+          PYEOF
+
+          az storage blob upload \
+            --account-name sdsstateithc \
+            --container-name tfstate-ithc \
+            --name "cath-service/ithc/terraform.tfstate" \
+            --file /tmp/terraform.tfstate.new \
+            --account-key "${STORAGE_KEY}" \
+            --overwrite
+          echo "ITHC state patched successfully"
 
   import-stg:
     name: Import - STG
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Terraform
-        run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
-          unzip -o /tmp/terraform.zip -d /usr/local/bin/
-          terraform version
-
       - name: Azure Login (STG)
         run: |
           echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
@@ -211,33 +338,71 @@ jobs:
           subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
           "
 
-      - name: Import STG Redis RG and KV Into State
-        working-directory: infrastructure
+      - name: Patch STG State
         run: |
+          SUB="74dacd4f-a248-45bb-a2f0-af700dc4cf68"
           STORAGE_KEY=$(az storage account keys list \
             --account-name sdsstatestg \
             --resource-group jenkins-state-stg \
             --query "[0].value" \
             --output tsv)
 
-          terraform init \
-            -backend-config="resource_group_name=jenkins-state-stg" \
-            -backend-config="storage_account_name=sdsstatestg" \
-            -backend-config="container_name=tfstate-stg" \
-            -backend-config="key=cath-service/stg/terraform.tfstate" \
-            -backend-config="access_key=${STORAGE_KEY}"
+          az storage blob download \
+            --account-name sdsstatestg \
+            --container-name tfstate-stg \
+            --name "cath-service/stg/terraform.tfstate" \
+            --file /tmp/terraform.tfstate \
+            --account-key "${STORAGE_KEY}"
 
-          SUB="74dacd4f-a248-45bb-a2f0-af700dc4cf68"
-          TF_VARS="-var=env=stg -var=subscription=${SUB} -var=aks_subscription_id=${SUB}"
+          python3 << 'PYEOF'
+          import json
 
-          # Import the existing cath-cache-stg resource group into azurerm_resource_group.redis_rg
-          terraform import ${TF_VARS} azurerm_resource_group.redis_rg \
-            "/subscriptions/${SUB}/resourceGroups/cath-cache-stg" \
-            && echo "Imported redis_rg" \
-            || echo "WARNING: redis_rg import failed (may already be in state)"
+          with open('/tmp/terraform.tfstate') as f:
+              state = json.load(f)
 
-          # Import the existing cath-ss-kv-stg key vault into the module state
-          terraform import ${TF_VARS} "module.application_key_vault.azurerm_key_vault.kv" \
-            "/subscriptions/${SUB}/resourceGroups/cath-ss-kv-stg-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-stg" \
-            && echo "Imported application_key_vault.kv" \
-            || echo "WARNING: application_key_vault.kv import failed (may already be in state)"
+          resources = state.setdefault('resources', [])
+          sub = "74dacd4f-a248-45bb-a2f0-af700dc4cf68"
+          env = "stg"
+
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
+              rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
+              resources.append({
+                  "module": "",
+                  "mode": "managed",
+                  "type": "azurerm_resource_group",
+                  "name": "redis_rg",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {"id": rg_id, "location": "uksouth", "managed_by": "", "name": f"cath-cache-{env}", "tags": {}, "timeouts": None}, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
+          else:
+              print("azurerm_resource_group.redis_rg already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
+              kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
+              resources.append({
+                  "module": "module.application_key_vault",
+                  "mode": "managed",
+                  "type": "azurerm_key_vault",
+                  "name": "kv",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 2, "attributes": {"id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}", "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {}, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard", "enabled_for_deployment": False, "enabled_for_disk_encryption": False, "enabled_for_template_deployment": False, "enable_rbac_authorization": False, "purge_protection_enabled": True, "public_network_access_enabled": True, "soft_delete_retention_days": 90, "access_policy": [], "contact": [], "network_acls": [], "timeouts": None, "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"}, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
+          else:
+              print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          state['serial'] = state.get('serial', 0) + 1
+          with open('/tmp/terraform.tfstate.new', 'w') as f:
+              json.dump(state, f, indent=2)
+          print("State file written")
+          PYEOF
+
+          az storage blob upload \
+            --account-name sdsstatestg \
+            --container-name tfstate-stg \
+            --name "cath-service/stg/terraform.tfstate" \
+            --file /tmp/terraform.tfstate.new \
+            --account-key "${STORAGE_KEY}" \
+            --overwrite
+          echo "STG state patched successfully"
