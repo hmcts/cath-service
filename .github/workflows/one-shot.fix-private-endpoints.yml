@@ -1,21 +1,18 @@
 name: One-Shot - Fix Redis Private Endpoints
 
-# The Redis private endpoints in demo/test/ithc have their private_connection_resource_id
-# pointing to the old Redis cache name (cath-cath-{env}) instead of the new name (cath-{env}).
-# This field is immutable, so the PE must be deleted and recreated.
+# Deletes Redis private endpoints from Azure so Terraform can recreate them fresh.
+# Required when PEs exist in Azure but not in Terraform state (or point to wrong resource).
 #
 # Terraform cannot delete the PE because it lacks permission to delete the DNS zone group
 # (Microsoft.Network/privateEndpoints/privateDnsZoneGroups/delete).
 #
 # This workflow:
-#   1. Deletes the old PE via Azure CLI (which handles DNS zone group cleanup internally)
+#   1. Deletes the PE via Azure CLI (which handles DNS zone group cleanup internally)
 #   2. Removes the PE from Terraform state (import-redis-rg-and-kv does this too)
 #
 # After running this workflow:
 #   - Run the import-redis-rg-and-kv workflow to ensure state is correct
 #   - Retrigger the main infra build - Terraform will create a fresh PE pointing to new Redis
-#
-# STG is excluded because its PE was already not in state (being created fresh).
 
 on:
   workflow_dispatch:
@@ -99,3 +96,29 @@ jobs:
             --resource-group cath-cache-ithc \
             && echo "Deleted PE cath-ithc in cath-cache-ithc" \
             || echo "WARNING: PE cath-ithc may not exist or deletion failed, continuing"
+
+  fix-pe-stg:
+    name: Fix PE - STG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (STG)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Delete STG Private Endpoint
+        run: |
+          az network private-endpoint delete \
+            --name cath-stg \
+            --resource-group cath-cache-stg \
+            && echo "Deleted PE cath-stg in cath-cache-stg" \
+            || echo "WARNING: PE cath-stg may not exist or deletion failed, continuing"
