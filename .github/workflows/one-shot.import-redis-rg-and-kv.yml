@@ -1,7 +1,11 @@
 name: One-Shot - Import Redis RG and KV Into State
 
-# Imports cath-cache-{env} resource group and cath-ss-kv-{env} key vault
-# into Terraform state by directly patching the state blob.
+# Imports into Terraform state by directly patching the state blob:
+#   - azurerm_resource_group.redis_rg  (cath-cache-{env})
+#   - azurerm_resource_group.ss_kv_rg  (cath-ss-kv-{env}-rg)
+#   - module.application_key_vault.azurerm_key_vault.kv
+#   - module.redis.azurerm_redis_cache.redis
+#   - module.redis.azurerm_private_endpoint.this[0]
 #
 # This approach bypasses terraform import (which fails due to module config
 # evaluation errors) by directly adding resource entries to the state JSON.
@@ -39,7 +43,6 @@ jobs:
             --query "[0].value" \
             --output tsv)
 
-          # Download current state
           az storage blob download \
             --account-name sdsstatedemo \
             --container-name tfstate-demo \
@@ -48,7 +51,7 @@ jobs:
             --account-key "${STORAGE_KEY}"
 
           python3 << 'PYEOF'
-          import json, sys, uuid
+          import json
 
           with open('/tmp/terraform.tfstate') as f:
               state = json.load(f)
@@ -57,86 +60,115 @@ jobs:
           sub = "c68a4bed-4c3d-4956-af51-4ae164c1957c"
           env = "demo"
 
-          # Check/add azurerm_resource_group.redis_rg
-          rg_addr = "azurerm_resource_group.redis_rg"
+          def rg_entry(name, rg_name, rg_id):
+              return {
+                  "module": "", "mode": "managed", "type": "azurerm_resource_group", "name": name,
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": rg_id, "location": "uksouth", "managed_by": "", "name": rg_name, "tags": {}, "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              }
+
+          # azurerm_resource_group.redis_rg
           if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
               rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
-              resources.append({
-                  "module": "",
-                  "mode": "managed",
-                  "type": "azurerm_resource_group",
-                  "name": "redis_rg",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{
-                      "schema_version": 0,
-                      "attributes": {
-                          "id": rg_id,
-                          "location": "uksouth",
-                          "managed_by": "",
-                          "name": f"cath-cache-{env}",
-                          "tags": {},
-                          "timeouts": None
-                      },
-                      "sensitive_attributes": [],
-                      "private": ""
-                  }]
-              })
+              resources.append(rg_entry("redis_rg", f"cath-cache-{env}", rg_id))
               print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
           else:
-              print(f"azurerm_resource_group.redis_rg already in state, skipping")
+              print("azurerm_resource_group.redis_rg already in state, skipping")
 
-          # Check/add module.application_key_vault.azurerm_key_vault.kv
-          kv_type = "azurerm_key_vault"
-          kv_name = "kv"
-          kv_module = "module.application_key_vault"
-          if not any(r.get('type') == kv_type and r.get('name') == kv_name and r.get('module') == kv_module for r in resources):
+          # azurerm_resource_group.ss_kv_rg
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'ss_kv_rg' for r in resources):
+              kv_rg_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg"
+              resources.append(rg_entry("ss_kv_rg", f"cath-ss-kv-{env}-rg", kv_rg_id))
+              print(f"Added azurerm_resource_group.ss_kv_rg -> {kv_rg_id}")
+          else:
+              print("azurerm_resource_group.ss_kv_rg already in state, skipping")
+
+          # module.application_key_vault.azurerm_key_vault.kv
+          if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
               kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
               resources.append({
-                  "module": kv_module,
-                  "mode": "managed",
-                  "type": kv_type,
-                  "name": kv_name,
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_key_vault", "name": "kv",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{
-                      "schema_version": 2,
-                      "attributes": {
-                          "id": kv_id,
-                          "location": "uksouth",
-                          "name": f"cath-ss-kv-{env}",
-                          "resource_group_name": f"cath-ss-kv-{env}-rg",
-                          "tags": {},
-                          "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
-                          "sku_name": "standard",
-                          "enabled_for_deployment": False,
-                          "enabled_for_disk_encryption": False,
-                          "enabled_for_template_deployment": False,
-                          "enable_rbac_authorization": False,
-                          "purge_protection_enabled": True,
-                          "public_network_access_enabled": True,
-                          "soft_delete_retention_days": 90,
-                          "access_policy": [],
-                          "contact": [],
-                          "network_acls": [],
-                          "timeouts": None,
-                          "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"
-                      },
-                      "sensitive_attributes": [],
-                      "private": ""
-                  }]
+                  "instances": [{"schema_version": 2, "attributes": {
+                      "id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}",
+                      "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {},
+                      "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard",
+                      "enabled_for_deployment": False, "enabled_for_disk_encryption": False,
+                      "enabled_for_template_deployment": False, "enable_rbac_authorization": False,
+                      "purge_protection_enabled": True, "public_network_access_enabled": True,
+                      "soft_delete_retention_days": 90, "access_policy": [], "contact": [],
+                      "network_acls": [], "timeouts": None,
+                      "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"
+                  }, "sensitive_attributes": [], "private": ""}]
               })
               print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
           else:
-              print(f"module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+              print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Increment serial to invalidate any cached state
+          # module.redis.azurerm_redis_cache.redis
+          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
+              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/Redis/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_redis_cache", "name": "redis",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 1, "attributes": {
+                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "capacity": 0, "family": "C", "sku_name": "Basic",
+                      "redis_version": "6", "minimum_tls_version": "1.2",
+                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
+                      "tags": {}, "timeouts": None,
+                      "hostname": f"cath-{env}.redis.cache.windows.net",
+                      "ssl_port": 6380, "port": 6379,
+                      "primary_access_key": "", "secondary_access_key": "",
+                      "primary_connection_string": "", "secondary_connection_string": "",
+                      "private_static_ip_address": None, "replicas_per_master": None,
+                      "replicas_per_primary": None, "shard_count": 0,
+                      "access_keys_authentication_enabled": True,
+                      "redis_configuration": [], "patch_schedule": [], "zones": None
+                  }, "sensitive_attributes": [
+                      [{"type": "get_attr", "value": "primary_access_key"}],
+                      [{"type": "get_attr", "value": "secondary_access_key"}],
+                      [{"type": "get_attr", "value": "primary_connection_string"}],
+                      [{"type": "get_attr", "value": "secondary_connection_string"}]
+                  ], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+          else:
+              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
+
+          # module.redis.azurerm_private_endpoint.this[0]
+          if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+              pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_private_endpoint", "name": "this",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                      "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "custom_network_interface_name": None, "ip_configuration": [],
+                      "tags": {}, "timeouts": None,
+                      "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
+                      "network_interface": [], "custom_dns_configs": [],
+                      "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                      "private_service_connection": []
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+          else:
+              print("module.redis.azurerm_private_endpoint.this[0] already in state, skipping")
+
           state['serial'] = state.get('serial', 0) + 1
-
           with open('/tmp/terraform.tfstate.new', 'w') as f:
               json.dump(state, f, indent=2)
           print("State file written")
           PYEOF
 
-          # Upload patched state
           az storage blob upload \
             --account-name sdsstatedemo \
             --container-name tfstate-demo \
@@ -190,33 +222,103 @@ jobs:
           sub = "3eec5bde-7feb-4566-bfb6-805df6e10b90"
           env = "test"
 
+          def rg_entry(name, rg_name, rg_id):
+              return {
+                  "module": "", "mode": "managed", "type": "azurerm_resource_group", "name": name,
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": rg_id, "location": "uksouth", "managed_by": "", "name": rg_name, "tags": {}, "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              }
+
           if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
               rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
-              resources.append({
-                  "module": "",
-                  "mode": "managed",
-                  "type": "azurerm_resource_group",
-                  "name": "redis_rg",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 0, "attributes": {"id": rg_id, "location": "uksouth", "managed_by": "", "name": f"cath-cache-{env}", "tags": {}, "timeouts": None}, "sensitive_attributes": [], "private": ""}]
-              })
+              resources.append(rg_entry("redis_rg", f"cath-cache-{env}", rg_id))
               print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
           else:
               print("azurerm_resource_group.redis_rg already in state, skipping")
 
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'ss_kv_rg' for r in resources):
+              kv_rg_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg"
+              resources.append(rg_entry("ss_kv_rg", f"cath-ss-kv-{env}-rg", kv_rg_id))
+              print(f"Added azurerm_resource_group.ss_kv_rg -> {kv_rg_id}")
+          else:
+              print("azurerm_resource_group.ss_kv_rg already in state, skipping")
+
           if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
               kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
               resources.append({
-                  "module": "module.application_key_vault",
-                  "mode": "managed",
-                  "type": "azurerm_key_vault",
-                  "name": "kv",
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_key_vault", "name": "kv",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 2, "attributes": {"id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}", "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {}, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard", "enabled_for_deployment": False, "enabled_for_disk_encryption": False, "enabled_for_template_deployment": False, "enable_rbac_authorization": False, "purge_protection_enabled": True, "public_network_access_enabled": True, "soft_delete_retention_days": 90, "access_policy": [], "contact": [], "network_acls": [], "timeouts": None, "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"}, "sensitive_attributes": [], "private": ""}]
+                  "instances": [{"schema_version": 2, "attributes": {
+                      "id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}",
+                      "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {},
+                      "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard",
+                      "enabled_for_deployment": False, "enabled_for_disk_encryption": False,
+                      "enabled_for_template_deployment": False, "enable_rbac_authorization": False,
+                      "purge_protection_enabled": True, "public_network_access_enabled": True,
+                      "soft_delete_retention_days": 90, "access_policy": [], "contact": [],
+                      "network_acls": [], "timeouts": None,
+                      "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"
+                  }, "sensitive_attributes": [], "private": ""}]
               })
               print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
+              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/Redis/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_redis_cache", "name": "redis",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 1, "attributes": {
+                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "capacity": 0, "family": "C", "sku_name": "Basic",
+                      "redis_version": "6", "minimum_tls_version": "1.2",
+                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
+                      "tags": {}, "timeouts": None,
+                      "hostname": f"cath-{env}.redis.cache.windows.net",
+                      "ssl_port": 6380, "port": 6379,
+                      "primary_access_key": "", "secondary_access_key": "",
+                      "primary_connection_string": "", "secondary_connection_string": "",
+                      "private_static_ip_address": None, "replicas_per_master": None,
+                      "replicas_per_primary": None, "shard_count": 0,
+                      "access_keys_authentication_enabled": True,
+                      "redis_configuration": [], "patch_schedule": [], "zones": None
+                  }, "sensitive_attributes": [
+                      [{"type": "get_attr", "value": "primary_access_key"}],
+                      [{"type": "get_attr", "value": "secondary_access_key"}],
+                      [{"type": "get_attr", "value": "primary_connection_string"}],
+                      [{"type": "get_attr", "value": "secondary_connection_string"}]
+                  ], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+          else:
+              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+              pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_private_endpoint", "name": "this",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                      "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "custom_network_interface_name": None, "ip_configuration": [],
+                      "tags": {}, "timeouts": None,
+                      "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
+                      "network_interface": [], "custom_dns_configs": [],
+                      "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                      "private_service_connection": []
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+          else:
+              print("module.redis.azurerm_private_endpoint.this[0] already in state, skipping")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -277,33 +379,103 @@ jobs:
           sub = "ba71a911-e0d6-4776-a1a6-079af1df7139"
           env = "ithc"
 
+          def rg_entry(name, rg_name, rg_id):
+              return {
+                  "module": "", "mode": "managed", "type": "azurerm_resource_group", "name": name,
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": rg_id, "location": "uksouth", "managed_by": "", "name": rg_name, "tags": {}, "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              }
+
           if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
               rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
-              resources.append({
-                  "module": "",
-                  "mode": "managed",
-                  "type": "azurerm_resource_group",
-                  "name": "redis_rg",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 0, "attributes": {"id": rg_id, "location": "uksouth", "managed_by": "", "name": f"cath-cache-{env}", "tags": {}, "timeouts": None}, "sensitive_attributes": [], "private": ""}]
-              })
+              resources.append(rg_entry("redis_rg", f"cath-cache-{env}", rg_id))
               print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
           else:
               print("azurerm_resource_group.redis_rg already in state, skipping")
 
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'ss_kv_rg' for r in resources):
+              kv_rg_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg"
+              resources.append(rg_entry("ss_kv_rg", f"cath-ss-kv-{env}-rg", kv_rg_id))
+              print(f"Added azurerm_resource_group.ss_kv_rg -> {kv_rg_id}")
+          else:
+              print("azurerm_resource_group.ss_kv_rg already in state, skipping")
+
           if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
               kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
               resources.append({
-                  "module": "module.application_key_vault",
-                  "mode": "managed",
-                  "type": "azurerm_key_vault",
-                  "name": "kv",
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_key_vault", "name": "kv",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 2, "attributes": {"id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}", "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {}, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard", "enabled_for_deployment": False, "enabled_for_disk_encryption": False, "enabled_for_template_deployment": False, "enable_rbac_authorization": False, "purge_protection_enabled": True, "public_network_access_enabled": True, "soft_delete_retention_days": 90, "access_policy": [], "contact": [], "network_acls": [], "timeouts": None, "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"}, "sensitive_attributes": [], "private": ""}]
+                  "instances": [{"schema_version": 2, "attributes": {
+                      "id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}",
+                      "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {},
+                      "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard",
+                      "enabled_for_deployment": False, "enabled_for_disk_encryption": False,
+                      "enabled_for_template_deployment": False, "enable_rbac_authorization": False,
+                      "purge_protection_enabled": True, "public_network_access_enabled": True,
+                      "soft_delete_retention_days": 90, "access_policy": [], "contact": [],
+                      "network_acls": [], "timeouts": None,
+                      "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"
+                  }, "sensitive_attributes": [], "private": ""}]
               })
               print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
+              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/Redis/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_redis_cache", "name": "redis",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 1, "attributes": {
+                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "capacity": 0, "family": "C", "sku_name": "Basic",
+                      "redis_version": "6", "minimum_tls_version": "1.2",
+                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
+                      "tags": {}, "timeouts": None,
+                      "hostname": f"cath-{env}.redis.cache.windows.net",
+                      "ssl_port": 6380, "port": 6379,
+                      "primary_access_key": "", "secondary_access_key": "",
+                      "primary_connection_string": "", "secondary_connection_string": "",
+                      "private_static_ip_address": None, "replicas_per_master": None,
+                      "replicas_per_primary": None, "shard_count": 0,
+                      "access_keys_authentication_enabled": True,
+                      "redis_configuration": [], "patch_schedule": [], "zones": None
+                  }, "sensitive_attributes": [
+                      [{"type": "get_attr", "value": "primary_access_key"}],
+                      [{"type": "get_attr", "value": "secondary_access_key"}],
+                      [{"type": "get_attr", "value": "primary_connection_string"}],
+                      [{"type": "get_attr", "value": "secondary_connection_string"}]
+                  ], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+          else:
+              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+              pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_private_endpoint", "name": "this",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                      "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "custom_network_interface_name": None, "ip_configuration": [],
+                      "tags": {}, "timeouts": None,
+                      "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
+                      "network_interface": [], "custom_dns_configs": [],
+                      "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                      "private_service_connection": []
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+          else:
+              print("module.redis.azurerm_private_endpoint.this[0] already in state, skipping")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -364,33 +536,103 @@ jobs:
           sub = "74dacd4f-a248-45bb-a2f0-af700dc4cf68"
           env = "stg"
 
+          def rg_entry(name, rg_name, rg_id):
+              return {
+                  "module": "", "mode": "managed", "type": "azurerm_resource_group", "name": name,
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 0, "attributes": {
+                      "id": rg_id, "location": "uksouth", "managed_by": "", "name": rg_name, "tags": {}, "timeouts": None
+                  }, "sensitive_attributes": [], "private": ""}]
+              }
+
           if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'redis_rg' for r in resources):
               rg_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}"
-              resources.append({
-                  "module": "",
-                  "mode": "managed",
-                  "type": "azurerm_resource_group",
-                  "name": "redis_rg",
-                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 0, "attributes": {"id": rg_id, "location": "uksouth", "managed_by": "", "name": f"cath-cache-{env}", "tags": {}, "timeouts": None}, "sensitive_attributes": [], "private": ""}]
-              })
+              resources.append(rg_entry("redis_rg", f"cath-cache-{env}", rg_id))
               print(f"Added azurerm_resource_group.redis_rg -> {rg_id}")
           else:
               print("azurerm_resource_group.redis_rg already in state, skipping")
 
+          if not any(r.get('type') == 'azurerm_resource_group' and r.get('name') == 'ss_kv_rg' for r in resources):
+              kv_rg_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg"
+              resources.append(rg_entry("ss_kv_rg", f"cath-ss-kv-{env}-rg", kv_rg_id))
+              print(f"Added azurerm_resource_group.ss_kv_rg -> {kv_rg_id}")
+          else:
+              print("azurerm_resource_group.ss_kv_rg already in state, skipping")
+
           if not any(r.get('type') == 'azurerm_key_vault' and r.get('name') == 'kv' and r.get('module') == 'module.application_key_vault' for r in resources):
               kv_id = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.KeyVault/vaults/cath-ss-kv-{env}"
               resources.append({
-                  "module": "module.application_key_vault",
-                  "mode": "managed",
-                  "type": "azurerm_key_vault",
-                  "name": "kv",
+                  "module": "module.application_key_vault", "mode": "managed",
+                  "type": "azurerm_key_vault", "name": "kv",
                   "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-                  "instances": [{"schema_version": 2, "attributes": {"id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}", "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {}, "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard", "enabled_for_deployment": False, "enabled_for_disk_encryption": False, "enabled_for_template_deployment": False, "enable_rbac_authorization": False, "purge_protection_enabled": True, "public_network_access_enabled": True, "soft_delete_retention_days": 90, "access_policy": [], "contact": [], "network_acls": [], "timeouts": None, "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"}, "sensitive_attributes": [], "private": ""}]
+                  "instances": [{"schema_version": 2, "attributes": {
+                      "id": kv_id, "location": "uksouth", "name": f"cath-ss-kv-{env}",
+                      "resource_group_name": f"cath-ss-kv-{env}-rg", "tags": {},
+                      "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082", "sku_name": "standard",
+                      "enabled_for_deployment": False, "enabled_for_disk_encryption": False,
+                      "enabled_for_template_deployment": False, "enable_rbac_authorization": False,
+                      "purge_protection_enabled": True, "public_network_access_enabled": True,
+                      "soft_delete_retention_days": 90, "access_policy": [], "contact": [],
+                      "network_acls": [], "timeouts": None,
+                      "vault_uri": f"https://cath-ss-kv-{env}.vault.azure.net/"
+                  }, "sensitive_attributes": [], "private": ""}]
               })
               print(f"Added module.application_key_vault.azurerm_key_vault.kv -> {kv_id}")
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_redis_cache' and r.get('name') == 'redis' and r.get('module') == 'module.redis' for r in resources):
+              redis_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/Redis/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_redis_cache", "name": "redis",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"schema_version": 1, "attributes": {
+                      "id": redis_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "capacity": 0, "family": "C", "sku_name": "Basic",
+                      "redis_version": "6", "minimum_tls_version": "1.2",
+                      "non_ssl_port_enabled": False, "public_network_access_enabled": False,
+                      "tags": {}, "timeouts": None,
+                      "hostname": f"cath-{env}.redis.cache.windows.net",
+                      "ssl_port": 6380, "port": 6379,
+                      "primary_access_key": "", "secondary_access_key": "",
+                      "primary_connection_string": "", "secondary_connection_string": "",
+                      "private_static_ip_address": None, "replicas_per_master": None,
+                      "replicas_per_primary": None, "shard_count": 0,
+                      "access_keys_authentication_enabled": True,
+                      "redis_configuration": [], "patch_schedule": [], "zones": None
+                  }, "sensitive_attributes": [
+                      [{"type": "get_attr", "value": "primary_access_key"}],
+                      [{"type": "get_attr", "value": "secondary_access_key"}],
+                      [{"type": "get_attr", "value": "primary_connection_string"}],
+                      [{"type": "get_attr", "value": "secondary_connection_string"}]
+                  ], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+          else:
+              print("module.redis.azurerm_redis_cache.redis already in state, skipping")
+
+          if not any(r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis' for r in resources):
+              pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
+              resources.append({
+                  "module": "module.redis", "mode": "managed",
+                  "type": "azurerm_private_endpoint", "name": "this",
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                      "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
+                      "resource_group_name": f"cath-cache-{env}",
+                      "custom_network_interface_name": None, "ip_configuration": [],
+                      "tags": {}, "timeouts": None,
+                      "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
+                      "network_interface": [], "custom_dns_configs": [],
+                      "private_dns_zone_configs": [], "private_dns_zone_group": [],
+                      "private_service_connection": []
+                  }, "sensitive_attributes": [], "private": ""}]
+              })
+              print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+          else:
+              print("module.redis.azurerm_private_endpoint.this[0] already in state, skipping")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:

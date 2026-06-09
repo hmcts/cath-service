@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_resource_group" "ss_kv_rg" {
-  name     = "cath-ss-${var.env}-rg"
+  name     = "${var.product}-ss-kv-${var.env}-rg"
   location = var.location
   tags     = var.common_tags
 }
