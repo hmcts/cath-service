@@ -4,8 +4,8 @@ name: One-Shot - Import Redis RG and KV Into State
 #   - azurerm_resource_group.redis_rg  (cath-cache-{env})
 #   - azurerm_resource_group.ss_kv_rg  (cath-ss-kv-{env}-rg) - REPLACE existing entry
 #   - module.application_key_vault.azurerm_key_vault.kv
-#   - module.redis.azurerm_redis_cache.redis  - REMOVED from state (Redis renamed to cath-redis-{env})
-#   - module.redis.azurerm_private_endpoint.this[0] - REMOVED from state (will be recreated fresh)
+#   - module.redis.azurerm_redis_cache.redis  - IMPORTED into state (cath-redis-{env} already exists in Azure)
+#   - module.redis.azurerm_private_endpoint.this[0] - REMOVED from state (will be recreated fresh after PE deletion)
 #   - module.application_insights.azurerm_application_insights.this - re-pointed to cath-ss-kv-{env}-rg
 #   - module.application_insights.azurerm_monitor_activity_log_alert.main[0] - re-pointed to cath-ss-kv-{env}-rg
 #
@@ -69,9 +69,18 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
-          # so Terraform creates fresh resources without attempting to delete the old ones
+          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
           rm -f /tmp/pe_details.json
+          az redis show \
+            --name "cath-redis-demo" \
+            --resource-group "cath-cache-demo" \
+            --output json 2>/dev/null > /tmp/redis_details.json \
+            || echo '{}' > /tmp/redis_details.json
+          az redis list-keys \
+            --name "cath-redis-demo" \
+            --resource-group "cath-cache-demo" \
+            --output json 2>/dev/null > /tmp/redis_keys.json \
+            || echo '{}' > /tmp/redis_keys.json
 
           python3 << 'PYEOF'
           import json
@@ -130,8 +139,8 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
-          # so Terraform creates new resources fresh without attempting to delete the old ones
+          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
+          # Then add new cath-redis-{env} to state if it exists in Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -141,7 +150,70 @@ jobs:
               r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
           )]
           removed = before - len(resources)
-          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
+          print(f"Removed {removed} old Redis/PE resource(s) from state")
+
+          # Import new cath-redis-{env} Redis cache into state if it exists in Azure
+          if _os.path.exists('/tmp/redis_details.json') and _os.path.exists('/tmp/redis_keys.json'):
+              with open('/tmp/redis_details.json') as rf:
+                  redis_data = json.load(rf)
+              with open('/tmp/redis_keys.json') as kf:
+                  redis_keys = json.load(kf)
+              if redis_data.get('id'):
+                  redis_id = redis_data['id']
+                  redis_name = redis_data.get('name', f'cath-redis-{env}')
+                  redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
+                  redis_port = redis_data.get('port', 6379)
+                  redis_ssl_port = redis_data.get('sslPort', 6380)
+                  redis_location = redis_data.get('location', 'uksouth').lower().replace(' ', '')
+                  redis_capacity = redis_data.get('properties', {}).get('sku', {}).get('capacity', 0) if 'properties' in redis_data else redis_data.get('sku', {}).get('capacity', 0)
+                  redis_family = redis_data.get('properties', {}).get('sku', {}).get('family', 'C') if 'properties' in redis_data else redis_data.get('sku', {}).get('family', 'C')
+                  redis_sku = redis_data.get('properties', {}).get('sku', {}).get('name', 'Basic') if 'properties' in redis_data else redis_data.get('sku', {}).get('name', 'Basic')
+                  redis_version = redis_data.get('properties', {}).get('redisVersion', '6') if 'properties' in redis_data else redis_data.get('redisVersion', '6')
+                  redis_primary_key = redis_keys.get('primaryKey', '')
+                  redis_secondary_key = redis_keys.get('secondaryKey', '')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_redis_cache", "name": "redis",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"schema_version": 1, "attributes": {
+                          "id": redis_id,
+                          "name": redis_name,
+                          "resource_group_name": f"cath-cache-{env}",
+                          "location": redis_location,
+                          "capacity": redis_capacity,
+                          "family": redis_family,
+                          "sku_name": redis_sku,
+                          "redis_version": str(redis_version).split('.')[0],
+                          "hostname": redis_hostname,
+                          "port": redis_port,
+                          "ssl_port": redis_ssl_port,
+                          "primary_access_key": redis_primary_key,
+                          "secondary_access_key": redis_secondary_key,
+                          "primary_connection_string": f"rediss://:{redis_primary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "secondary_connection_string": f"rediss://:{redis_secondary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "enable_non_ssl_port": False,
+                          "minimum_tls_version": "1.2",
+                          "public_network_access_enabled": False,
+                          "shard_count": 0,
+                          "subnet_id": None,
+                          "zones": None,
+                          "tags": {},
+                          "timeouts": None,
+                          "identity": [],
+                          "patch_schedule": [],
+                          "redis_configuration": []
+                      }, "sensitive_attributes": [
+                          [{"type": "get_attr", "value": "primary_access_key"}],
+                          [{"type": "get_attr", "value": "primary_connection_string"}],
+                          [{"type": "get_attr", "value": "secondary_access_key"}],
+                          [{"type": "get_attr", "value": "secondary_connection_string"}]
+                      ], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+              else:
+                  print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
+          else:
+              print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
 
           # module.application_insights.azurerm_application_insights.this - re-point to cath-ss-kv-{env}-rg
           # App insights physically exists in cath-ss-{env}-rg but config wants cath-ss-kv-{env}-rg.
@@ -358,9 +430,18 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
-          # so Terraform creates fresh resources without attempting to delete the old ones
+          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
           rm -f /tmp/pe_details.json
+          az redis show \
+            --name "cath-redis-test" \
+            --resource-group "cath-cache-test" \
+            --output json 2>/dev/null > /tmp/redis_details.json \
+            || echo '{}' > /tmp/redis_details.json
+          az redis list-keys \
+            --name "cath-redis-test" \
+            --resource-group "cath-cache-test" \
+            --output json 2>/dev/null > /tmp/redis_keys.json \
+            || echo '{}' > /tmp/redis_keys.json
 
           python3 << 'PYEOF'
           import json
@@ -417,8 +498,8 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
-          # so Terraform creates new resources fresh without attempting to delete the old ones
+          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
+          # Then add new cath-redis-{env} to state if it exists in Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -428,7 +509,70 @@ jobs:
               r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
           )]
           removed = before - len(resources)
-          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
+          print(f"Removed {removed} old Redis/PE resource(s) from state")
+
+          # Import new cath-redis-{env} Redis cache into state if it exists in Azure
+          if _os.path.exists('/tmp/redis_details.json') and _os.path.exists('/tmp/redis_keys.json'):
+              with open('/tmp/redis_details.json') as rf:
+                  redis_data = json.load(rf)
+              with open('/tmp/redis_keys.json') as kf:
+                  redis_keys = json.load(kf)
+              if redis_data.get('id'):
+                  redis_id = redis_data['id']
+                  redis_name = redis_data.get('name', f'cath-redis-{env}')
+                  redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
+                  redis_port = redis_data.get('port', 6379)
+                  redis_ssl_port = redis_data.get('sslPort', 6380)
+                  redis_location = redis_data.get('location', 'uksouth').lower().replace(' ', '')
+                  redis_capacity = redis_data.get('properties', {}).get('sku', {}).get('capacity', 0) if 'properties' in redis_data else redis_data.get('sku', {}).get('capacity', 0)
+                  redis_family = redis_data.get('properties', {}).get('sku', {}).get('family', 'C') if 'properties' in redis_data else redis_data.get('sku', {}).get('family', 'C')
+                  redis_sku = redis_data.get('properties', {}).get('sku', {}).get('name', 'Basic') if 'properties' in redis_data else redis_data.get('sku', {}).get('name', 'Basic')
+                  redis_version = redis_data.get('properties', {}).get('redisVersion', '6') if 'properties' in redis_data else redis_data.get('redisVersion', '6')
+                  redis_primary_key = redis_keys.get('primaryKey', '')
+                  redis_secondary_key = redis_keys.get('secondaryKey', '')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_redis_cache", "name": "redis",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"schema_version": 1, "attributes": {
+                          "id": redis_id,
+                          "name": redis_name,
+                          "resource_group_name": f"cath-cache-{env}",
+                          "location": redis_location,
+                          "capacity": redis_capacity,
+                          "family": redis_family,
+                          "sku_name": redis_sku,
+                          "redis_version": str(redis_version).split('.')[0],
+                          "hostname": redis_hostname,
+                          "port": redis_port,
+                          "ssl_port": redis_ssl_port,
+                          "primary_access_key": redis_primary_key,
+                          "secondary_access_key": redis_secondary_key,
+                          "primary_connection_string": f"rediss://:{redis_primary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "secondary_connection_string": f"rediss://:{redis_secondary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "enable_non_ssl_port": False,
+                          "minimum_tls_version": "1.2",
+                          "public_network_access_enabled": False,
+                          "shard_count": 0,
+                          "subnet_id": None,
+                          "zones": None,
+                          "tags": {},
+                          "timeouts": None,
+                          "identity": [],
+                          "patch_schedule": [],
+                          "redis_configuration": []
+                      }, "sensitive_attributes": [
+                          [{"type": "get_attr", "value": "primary_access_key"}],
+                          [{"type": "get_attr", "value": "primary_connection_string"}],
+                          [{"type": "get_attr", "value": "secondary_access_key"}],
+                          [{"type": "get_attr", "value": "secondary_connection_string"}]
+                      ], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+              else:
+                  print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
+          else:
+              print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -620,9 +764,18 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
-          # so Terraform creates fresh resources without attempting to delete the old ones
+          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
           rm -f /tmp/pe_details.json
+          az redis show \
+            --name "cath-redis-ithc" \
+            --resource-group "cath-cache-ithc" \
+            --output json 2>/dev/null > /tmp/redis_details.json \
+            || echo '{}' > /tmp/redis_details.json
+          az redis list-keys \
+            --name "cath-redis-ithc" \
+            --resource-group "cath-cache-ithc" \
+            --output json 2>/dev/null > /tmp/redis_keys.json \
+            || echo '{}' > /tmp/redis_keys.json
 
           python3 << 'PYEOF'
           import json
@@ -679,8 +832,8 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
-          # so Terraform creates new resources fresh without attempting to delete the old ones
+          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
+          # Then add new cath-redis-{env} to state if it exists in Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -690,7 +843,70 @@ jobs:
               r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
           )]
           removed = before - len(resources)
-          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
+          print(f"Removed {removed} old Redis/PE resource(s) from state")
+
+          # Import new cath-redis-{env} Redis cache into state if it exists in Azure
+          if _os.path.exists('/tmp/redis_details.json') and _os.path.exists('/tmp/redis_keys.json'):
+              with open('/tmp/redis_details.json') as rf:
+                  redis_data = json.load(rf)
+              with open('/tmp/redis_keys.json') as kf:
+                  redis_keys = json.load(kf)
+              if redis_data.get('id'):
+                  redis_id = redis_data['id']
+                  redis_name = redis_data.get('name', f'cath-redis-{env}')
+                  redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
+                  redis_port = redis_data.get('port', 6379)
+                  redis_ssl_port = redis_data.get('sslPort', 6380)
+                  redis_location = redis_data.get('location', 'uksouth').lower().replace(' ', '')
+                  redis_capacity = redis_data.get('properties', {}).get('sku', {}).get('capacity', 0) if 'properties' in redis_data else redis_data.get('sku', {}).get('capacity', 0)
+                  redis_family = redis_data.get('properties', {}).get('sku', {}).get('family', 'C') if 'properties' in redis_data else redis_data.get('sku', {}).get('family', 'C')
+                  redis_sku = redis_data.get('properties', {}).get('sku', {}).get('name', 'Basic') if 'properties' in redis_data else redis_data.get('sku', {}).get('name', 'Basic')
+                  redis_version = redis_data.get('properties', {}).get('redisVersion', '6') if 'properties' in redis_data else redis_data.get('redisVersion', '6')
+                  redis_primary_key = redis_keys.get('primaryKey', '')
+                  redis_secondary_key = redis_keys.get('secondaryKey', '')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_redis_cache", "name": "redis",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"schema_version": 1, "attributes": {
+                          "id": redis_id,
+                          "name": redis_name,
+                          "resource_group_name": f"cath-cache-{env}",
+                          "location": redis_location,
+                          "capacity": redis_capacity,
+                          "family": redis_family,
+                          "sku_name": redis_sku,
+                          "redis_version": str(redis_version).split('.')[0],
+                          "hostname": redis_hostname,
+                          "port": redis_port,
+                          "ssl_port": redis_ssl_port,
+                          "primary_access_key": redis_primary_key,
+                          "secondary_access_key": redis_secondary_key,
+                          "primary_connection_string": f"rediss://:{redis_primary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "secondary_connection_string": f"rediss://:{redis_secondary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "enable_non_ssl_port": False,
+                          "minimum_tls_version": "1.2",
+                          "public_network_access_enabled": False,
+                          "shard_count": 0,
+                          "subnet_id": None,
+                          "zones": None,
+                          "tags": {},
+                          "timeouts": None,
+                          "identity": [],
+                          "patch_schedule": [],
+                          "redis_configuration": []
+                      }, "sensitive_attributes": [
+                          [{"type": "get_attr", "value": "primary_access_key"}],
+                          [{"type": "get_attr", "value": "primary_connection_string"}],
+                          [{"type": "get_attr", "value": "secondary_access_key"}],
+                          [{"type": "get_attr", "value": "secondary_connection_string"}]
+                      ], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+              else:
+                  print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
+          else:
+              print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -882,9 +1098,18 @@ jobs:
           echo "Access policy object IDs:"
           cat /tmp/policy_ids.txt || true
 
-          # Redis is being renamed to cath-redis-{env} - remove old Redis+PE from state
-          # so Terraform creates fresh resources without attempting to delete the old ones
+          # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
           rm -f /tmp/pe_details.json
+          az redis show \
+            --name "cath-redis-stg" \
+            --resource-group "cath-cache-stg" \
+            --output json 2>/dev/null > /tmp/redis_details.json \
+            || echo '{}' > /tmp/redis_details.json
+          az redis list-keys \
+            --name "cath-redis-stg" \
+            --resource-group "cath-cache-stg" \
+            --output json 2>/dev/null > /tmp/redis_keys.json \
+            || echo '{}' > /tmp/redis_keys.json
 
           python3 << 'PYEOF'
           import json
@@ -941,8 +1166,8 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Redis renamed to cath-redis-{env} - remove old Redis cache and PE from state
-          # so Terraform creates new resources fresh without attempting to delete the old ones
+          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
+          # Then add new cath-redis-{env} to state if it exists in Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -952,7 +1177,70 @@ jobs:
               r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis'
           )]
           removed = before - len(resources)
-          print(f"Removed {removed} old Redis/PE resource(s) from state (will be orphaned in Azure)")
+          print(f"Removed {removed} old Redis/PE resource(s) from state")
+
+          # Import new cath-redis-{env} Redis cache into state if it exists in Azure
+          if _os.path.exists('/tmp/redis_details.json') and _os.path.exists('/tmp/redis_keys.json'):
+              with open('/tmp/redis_details.json') as rf:
+                  redis_data = json.load(rf)
+              with open('/tmp/redis_keys.json') as kf:
+                  redis_keys = json.load(kf)
+              if redis_data.get('id'):
+                  redis_id = redis_data['id']
+                  redis_name = redis_data.get('name', f'cath-redis-{env}')
+                  redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
+                  redis_port = redis_data.get('port', 6379)
+                  redis_ssl_port = redis_data.get('sslPort', 6380)
+                  redis_location = redis_data.get('location', 'uksouth').lower().replace(' ', '')
+                  redis_capacity = redis_data.get('properties', {}).get('sku', {}).get('capacity', 0) if 'properties' in redis_data else redis_data.get('sku', {}).get('capacity', 0)
+                  redis_family = redis_data.get('properties', {}).get('sku', {}).get('family', 'C') if 'properties' in redis_data else redis_data.get('sku', {}).get('family', 'C')
+                  redis_sku = redis_data.get('properties', {}).get('sku', {}).get('name', 'Basic') if 'properties' in redis_data else redis_data.get('sku', {}).get('name', 'Basic')
+                  redis_version = redis_data.get('properties', {}).get('redisVersion', '6') if 'properties' in redis_data else redis_data.get('redisVersion', '6')
+                  redis_primary_key = redis_keys.get('primaryKey', '')
+                  redis_secondary_key = redis_keys.get('secondaryKey', '')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_redis_cache", "name": "redis",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"schema_version": 1, "attributes": {
+                          "id": redis_id,
+                          "name": redis_name,
+                          "resource_group_name": f"cath-cache-{env}",
+                          "location": redis_location,
+                          "capacity": redis_capacity,
+                          "family": redis_family,
+                          "sku_name": redis_sku,
+                          "redis_version": str(redis_version).split('.')[0],
+                          "hostname": redis_hostname,
+                          "port": redis_port,
+                          "ssl_port": redis_ssl_port,
+                          "primary_access_key": redis_primary_key,
+                          "secondary_access_key": redis_secondary_key,
+                          "primary_connection_string": f"rediss://:{redis_primary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "secondary_connection_string": f"rediss://:{redis_secondary_key}@{redis_hostname}:{redis_ssl_port}",
+                          "enable_non_ssl_port": False,
+                          "minimum_tls_version": "1.2",
+                          "public_network_access_enabled": False,
+                          "shard_count": 0,
+                          "subnet_id": None,
+                          "zones": None,
+                          "tags": {},
+                          "timeouts": None,
+                          "identity": [],
+                          "patch_schedule": [],
+                          "redis_configuration": []
+                      }, "sensitive_attributes": [
+                          [{"type": "get_attr", "value": "primary_access_key"}],
+                          [{"type": "get_attr", "value": "primary_connection_string"}],
+                          [{"type": "get_attr", "value": "secondary_access_key"}],
+                          [{"type": "get_attr", "value": "secondary_connection_string"}]
+                      ], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_redis_cache.redis -> {redis_id}")
+              else:
+                  print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
+          else:
+              print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
