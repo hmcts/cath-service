@@ -5,7 +5,7 @@ name: One-Shot - Import Redis RG and KV Into State
 #   - azurerm_resource_group.ss_kv_rg  (cath-ss-kv-{env}-rg) - REPLACE existing entry
 #   - module.application_key_vault.azurerm_key_vault.kv
 #   - module.redis.azurerm_redis_cache.redis  - IMPORTED into state (cath-redis-{env} already exists in Azure)
-#   - module.redis.azurerm_private_endpoint.this[0] - REMOVED from state (will be recreated fresh after PE deletion)
+#   - module.redis.azurerm_private_endpoint.this[0] - IMPORTED into state (cath-{env} already exists in Azure)
 #   - module.application_insights.azurerm_application_insights.this - re-pointed to cath-ss-kv-{env}-rg
 #   - module.application_insights.azurerm_monitor_activity_log_alert.main[0] - re-pointed to cath-ss-kv-{env}-rg
 #
@@ -70,7 +70,6 @@ jobs:
           cat /tmp/policy_ids.txt || true
 
           # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
-          rm -f /tmp/pe_details.json
           az redis show \
             --name "cath-redis-demo" \
             --resource-group "cath-cache-demo" \
@@ -81,6 +80,12 @@ jobs:
             --resource-group "cath-cache-demo" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
+          # Fetch private endpoint details for state import
+          az network private-endpoint show \
+            --name "cath-demo" \
+            --resource-group "cath-cache-demo" \
+            --output json 2>/dev/null > /tmp/pe_details.json \
+            || echo '{}' > /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -139,8 +144,7 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
-          # Then add new cath-redis-{env} to state if it exists in Azure
+          # Remove old Redis cache and PE from state, then re-add from Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -215,6 +219,61 @@ jobs:
                   print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
           else:
               print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
+
+          # Import private endpoint into state if it exists in Azure
+          if _os.path.exists('/tmp/pe_details.json'):
+              with open('/tmp/pe_details.json') as pef:
+                  pe_data = json.load(pef)
+              if pe_data.get('id'):
+                  pe_id = pe_data['id']
+                  pe_name = pe_data.get('name', f'cath-{env}')
+                  pe_location = pe_data.get('location', 'uksouth').lower().replace(' ', '')
+                  pe_rg = pe_data.get('resourceGroup', f'cath-cache-{env}')
+                  # Extract subnet_id from the PE data
+                  pe_subnet_id = None
+                  if 'subnet' in pe_data:
+                      pe_subnet_id = pe_data['subnet'].get('id')
+                  elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
+                      pe_subnet_id = pe_data['properties']['subnet'].get('id')
+                  # Extract private connection resource id (the Redis cache)
+                  pe_conn_resource_id = None
+                  plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
+                  if plsc:
+                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id,
+                          "name": pe_name,
+                          "location": pe_location,
+                          "resource_group_name": pe_rg,
+                          "subnet_id": pe_subnet_id or "",
+                          "tags": {},
+                          "timeouts": None,
+                          "custom_dns_configs": [],
+                          "custom_network_interface_name": "",
+                          "ip_configuration": [],
+                          "network_interface": [],
+                          "private_dns_zone_configs": [],
+                          "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False,
+                              "name": pe_name,
+                              "private_connection_resource_alias": "",
+                              "private_connection_resource_id": pe_conn_resource_id or "",
+                              "private_ip_address": "",
+                              "request_message": "",
+                              "subresource_names": ["redisCache"]
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("WARNING: PE not found in Azure, will be created fresh by Terraform")
+          else:
+              print("WARNING: pe_details.json not found, PE will be created fresh by Terraform")
 
           # module.application_insights.azurerm_application_insights.this - re-point to cath-ss-kv-{env}-rg
           # App insights physically exists in cath-ss-{env}-rg but config wants cath-ss-kv-{env}-rg.
@@ -432,7 +491,6 @@ jobs:
           cat /tmp/policy_ids.txt || true
 
           # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
-          rm -f /tmp/pe_details.json
           az redis show \
             --name "cath-redis-test" \
             --resource-group "cath-cache-test" \
@@ -443,6 +501,12 @@ jobs:
             --resource-group "cath-cache-test" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
+          # Fetch private endpoint details for state import
+          az network private-endpoint show \
+            --name "cath-test" \
+            --resource-group "cath-cache-test" \
+            --output json 2>/dev/null > /tmp/pe_details.json \
+            || echo '{}' > /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -499,8 +563,7 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
-          # Then add new cath-redis-{env} to state if it exists in Azure
+          # Remove old Redis cache and PE from state, then re-add from Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -575,6 +638,61 @@ jobs:
                   print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
           else:
               print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
+
+          # Import private endpoint into state if it exists in Azure
+          if _os.path.exists('/tmp/pe_details.json'):
+              with open('/tmp/pe_details.json') as pef:
+                  pe_data = json.load(pef)
+              if pe_data.get('id'):
+                  pe_id = pe_data['id']
+                  pe_name = pe_data.get('name', f'cath-{env}')
+                  pe_location = pe_data.get('location', 'uksouth').lower().replace(' ', '')
+                  pe_rg = pe_data.get('resourceGroup', f'cath-cache-{env}')
+                  # Extract subnet_id from the PE data
+                  pe_subnet_id = None
+                  if 'subnet' in pe_data:
+                      pe_subnet_id = pe_data['subnet'].get('id')
+                  elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
+                      pe_subnet_id = pe_data['properties']['subnet'].get('id')
+                  # Extract private connection resource id (the Redis cache)
+                  pe_conn_resource_id = None
+                  plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
+                  if plsc:
+                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id,
+                          "name": pe_name,
+                          "location": pe_location,
+                          "resource_group_name": pe_rg,
+                          "subnet_id": pe_subnet_id or "",
+                          "tags": {},
+                          "timeouts": None,
+                          "custom_dns_configs": [],
+                          "custom_network_interface_name": "",
+                          "ip_configuration": [],
+                          "network_interface": [],
+                          "private_dns_zone_configs": [],
+                          "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False,
+                              "name": pe_name,
+                              "private_connection_resource_alias": "",
+                              "private_connection_resource_id": pe_conn_resource_id or "",
+                              "private_ip_address": "",
+                              "request_message": "",
+                              "subresource_names": ["redisCache"]
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("WARNING: PE not found in Azure, will be created fresh by Terraform")
+          else:
+              print("WARNING: pe_details.json not found, PE will be created fresh by Terraform")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -767,7 +885,6 @@ jobs:
           cat /tmp/policy_ids.txt || true
 
           # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
-          rm -f /tmp/pe_details.json
           az redis show \
             --name "cath-redis-ithc" \
             --resource-group "cath-cache-ithc" \
@@ -778,6 +895,12 @@ jobs:
             --resource-group "cath-cache-ithc" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
+          # Fetch private endpoint details for state import
+          az network private-endpoint show \
+            --name "cath-ithc" \
+            --resource-group "cath-cache-ithc" \
+            --output json 2>/dev/null > /tmp/pe_details.json \
+            || echo '{}' > /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -834,8 +957,7 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
-          # Then add new cath-redis-{env} to state if it exists in Azure
+          # Remove old Redis cache and PE from state, then re-add from Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -910,6 +1032,61 @@ jobs:
                   print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
           else:
               print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
+
+          # Import private endpoint into state if it exists in Azure
+          if _os.path.exists('/tmp/pe_details.json'):
+              with open('/tmp/pe_details.json') as pef:
+                  pe_data = json.load(pef)
+              if pe_data.get('id'):
+                  pe_id = pe_data['id']
+                  pe_name = pe_data.get('name', f'cath-{env}')
+                  pe_location = pe_data.get('location', 'uksouth').lower().replace(' ', '')
+                  pe_rg = pe_data.get('resourceGroup', f'cath-cache-{env}')
+                  # Extract subnet_id from the PE data
+                  pe_subnet_id = None
+                  if 'subnet' in pe_data:
+                      pe_subnet_id = pe_data['subnet'].get('id')
+                  elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
+                      pe_subnet_id = pe_data['properties']['subnet'].get('id')
+                  # Extract private connection resource id (the Redis cache)
+                  pe_conn_resource_id = None
+                  plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
+                  if plsc:
+                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id,
+                          "name": pe_name,
+                          "location": pe_location,
+                          "resource_group_name": pe_rg,
+                          "subnet_id": pe_subnet_id or "",
+                          "tags": {},
+                          "timeouts": None,
+                          "custom_dns_configs": [],
+                          "custom_network_interface_name": "",
+                          "ip_configuration": [],
+                          "network_interface": [],
+                          "private_dns_zone_configs": [],
+                          "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False,
+                              "name": pe_name,
+                              "private_connection_resource_alias": "",
+                              "private_connection_resource_id": pe_conn_resource_id or "",
+                              "private_ip_address": "",
+                              "request_message": "",
+                              "subresource_names": ["redisCache"]
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("WARNING: PE not found in Azure, will be created fresh by Terraform")
+          else:
+              print("WARNING: pe_details.json not found, PE will be created fresh by Terraform")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
@@ -1102,7 +1279,6 @@ jobs:
           cat /tmp/policy_ids.txt || true
 
           # Fetch new Redis details for state import (cath-redis-{env} created by previous Terraform run)
-          rm -f /tmp/pe_details.json
           az redis show \
             --name "cath-redis-stg" \
             --resource-group "cath-cache-stg" \
@@ -1113,6 +1289,12 @@ jobs:
             --resource-group "cath-cache-stg" \
             --output json 2>/dev/null > /tmp/redis_keys.json \
             || echo '{}' > /tmp/redis_keys.json
+          # Fetch private endpoint details for state import
+          az network private-endpoint show \
+            --name "cath-stg" \
+            --resource-group "cath-cache-stg" \
+            --output json 2>/dev/null > /tmp/pe_details.json \
+            || echo '{}' > /tmp/pe_details.json
 
           python3 << 'PYEOF'
           import json
@@ -1169,8 +1351,7 @@ jobs:
           else:
               print("module.application_key_vault.azurerm_key_vault.kv already in state, skipping")
 
-          # Remove old Redis cache and PE from state (old names: cath-{env} or cath-cath-{env})
-          # Then add new cath-redis-{env} to state if it exists in Azure
+          # Remove old Redis cache and PE from state, then re-add from Azure
           import os as _os
           before = len(resources)
           resources[:] = [r for r in resources if not (
@@ -1245,6 +1426,61 @@ jobs:
                   print("WARNING: cath-redis-{env} not found in Azure, Redis will be created fresh by Terraform")
           else:
               print("WARNING: redis details files not found, Redis will be created fresh by Terraform")
+
+          # Import private endpoint into state if it exists in Azure
+          if _os.path.exists('/tmp/pe_details.json'):
+              with open('/tmp/pe_details.json') as pef:
+                  pe_data = json.load(pef)
+              if pe_data.get('id'):
+                  pe_id = pe_data['id']
+                  pe_name = pe_data.get('name', f'cath-{env}')
+                  pe_location = pe_data.get('location', 'uksouth').lower().replace(' ', '')
+                  pe_rg = pe_data.get('resourceGroup', f'cath-cache-{env}')
+                  # Extract subnet_id from the PE data
+                  pe_subnet_id = None
+                  if 'subnet' in pe_data:
+                      pe_subnet_id = pe_data['subnet'].get('id')
+                  elif 'properties' in pe_data and 'subnet' in pe_data['properties']:
+                      pe_subnet_id = pe_data['properties']['subnet'].get('id')
+                  # Extract private connection resource id (the Redis cache)
+                  pe_conn_resource_id = None
+                  plsc = pe_data.get('privateLinkServiceConnections', []) or pe_data.get('properties', {}).get('privateLinkServiceConnections', [])
+                  if plsc:
+                      pe_conn_resource_id = plsc[0].get('privateLinkServiceId') or plsc[0].get('properties', {}).get('privateLinkServiceId')
+                  resources.append({
+                      "module": "module.redis", "mode": "managed",
+                      "type": "azurerm_private_endpoint", "name": "this",
+                      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                      "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
+                          "id": pe_id,
+                          "name": pe_name,
+                          "location": pe_location,
+                          "resource_group_name": pe_rg,
+                          "subnet_id": pe_subnet_id or "",
+                          "tags": {},
+                          "timeouts": None,
+                          "custom_dns_configs": [],
+                          "custom_network_interface_name": "",
+                          "ip_configuration": [],
+                          "network_interface": [],
+                          "private_dns_zone_configs": [],
+                          "private_dns_zone_group": [],
+                          "private_service_connection": [{
+                              "is_manual_connection": False,
+                              "name": pe_name,
+                              "private_connection_resource_alias": "",
+                              "private_connection_resource_id": pe_conn_resource_id or "",
+                              "private_ip_address": "",
+                              "request_message": "",
+                              "subresource_names": ["redisCache"]
+                          }]
+                      }, "sensitive_attributes": [], "private": ""}]
+                  })
+                  print(f"Added module.redis.azurerm_private_endpoint.this[0] -> {pe_id}")
+              else:
+                  print("WARNING: PE not found in Azure, will be created fresh by Terraform")
+          else:
+              print("WARNING: pe_details.json not found, PE will be created fresh by Terraform")
 
           # module.application_insights - re-point to cath-ss-kv-{env}-rg
           ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
