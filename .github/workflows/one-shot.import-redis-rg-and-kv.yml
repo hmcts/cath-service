@@ -5,7 +5,9 @@ name: One-Shot - Import Redis RG and KV Into State
 #   - azurerm_resource_group.ss_kv_rg  (cath-ss-kv-{env}-rg) - REPLACE existing entry
 #   - module.application_key_vault.azurerm_key_vault.kv
 #   - module.redis.azurerm_redis_cache.redis  (with lowercase resource ID for STG)
-#   - module.redis.azurerm_private_endpoint.this[0] - REPLACE with correct private_connection_resource_id
+#   - module.redis.azurerm_private_endpoint.this[0] - REMOVED from state (let Terraform recreate)
+#   - module.application_insights.azurerm_application_insights.this - re-pointed to cath-ss-kv-{env}-rg
+#   - module.application_insights.azurerm_monitor_activity_log_alert.main[0] - re-pointed to cath-ss-kv-{env}-rg
 #
 # This approach bypasses terraform import (which fails due to module config
 # evaluation errors) by directly modifying resource entries in the state JSON.
@@ -140,51 +142,53 @@ jobs:
           else:
               print("module.redis.azurerm_redis_cache.redis already in state, skipping")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REPLACE with correct private_connection_resource_id
-          pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
-          redis_id_for_pe = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
+          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state
+          # The PE in Azure has private_connection_resource_id pointing to old Redis (cath-cath-{env}).
+          # The fix-private-endpoints workflow deletes the PE in Azure so Terraform can recreate it
+          # pointing to the new Redis (cath-{env}). Remove from state to avoid diff detection.
+          before = len(resources)
           resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          resources.append({
-              "module": "module.redis", "mode": "managed",
-              "type": "azurerm_private_endpoint", "name": "this",
-              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-              "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                  "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
-                  "resource_group_name": f"cath-cache-{env}",
-                  "custom_network_interface_name": None, "ip_configuration": [],
-                  "tags": {}, "timeouts": None,
-                  "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
-                  "network_interface": [],
-                  "custom_dns_configs": [],
-                  "private_dns_zone_configs": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup/privateDnsZoneConfigs/privatelink.redis.cache.windows.net",
-                          "name": "privatelink.redis.cache.windows.net",
-                          "private_dns_zone_id": f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net",
-                          "record_sets": []
-                      }
-                  ],
-                  "private_dns_zone_group": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup",
-                          "name": "redis-endpoint-dnszonegroup",
-                          "private_dns_zone_ids": [f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net"]
-                      }
-                  ],
-                  "private_service_connection": [
-                      {
-                          "is_manual_connection": False,
-                          "name": f"cath-{env}",
-                          "private_connection_resource_id": redis_id_for_pe,
-                          "private_connection_resource_alias": None,
-                          "private_ip_address": "10.51.96.6",
-                          "request_message": None,
-                          "subresource_names": ["redisCache"]
-                      }
-                  ]
-              }, "sensitive_attributes": [], "private": ""}]
-          })
-          print(f"Set module.redis.azurerm_private_endpoint.this[0] with correct private_connection_resource_id")
+          if len(resources) < before:
+              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          else:
+              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+
+          # module.application_insights.azurerm_application_insights.this - re-point to cath-ss-kv-{env}-rg
+          # App insights physically exists in cath-ss-{env}-rg but config wants cath-ss-kv-{env}-rg.
+          # Update state to point to correct RG so Terraform sees no diff on the resource group change.
+          ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          ai_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_application_insights' and r.get('name') == 'this' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == ai_id_old:
+                          attrs['id'] = ai_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          print(f"Updated module.application_insights.azurerm_application_insights.this RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == ai_id_new:
+                          print(f"module.application_insights.azurerm_application_insights.this already pointing to cath-ss-kv-{env}-rg")
+
+          # module.application_insights.azurerm_monitor_activity_log_alert.main[0] - re-point to cath-ss-kv-{env}-rg
+          alert_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          alert_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_monitor_activity_log_alert' and r.get('name') == 'main' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == alert_id_old:
+                          attrs['id'] = alert_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          # Also update scope references
+                          if 'scope' in attrs:
+                              attrs['scope'] = [s.replace(f"cath-ss-{env}-rg", f"cath-ss-kv-{env}-rg") for s in attrs.get('scope', [])]
+                          if 'action' in attrs:
+                              for a in attrs.get('action', []):
+                                  if 'action_group_id' in a:
+                                      a['action_group_id'] = a['action_group_id'].replace(f"cath-ss-{env}-rg", f"cath-ss-kv-{env}-rg")
+                          print(f"Updated module.application_insights.azurerm_monitor_activity_log_alert.main[0] RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == alert_id_new:
+                          print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -322,51 +326,42 @@ jobs:
           else:
               print("module.redis.azurerm_redis_cache.redis already in state, skipping")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REPLACE with correct private_connection_resource_id
-          pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
-          redis_id_for_pe = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
+          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state
+          before = len(resources)
           resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          resources.append({
-              "module": "module.redis", "mode": "managed",
-              "type": "azurerm_private_endpoint", "name": "this",
-              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-              "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                  "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
-                  "resource_group_name": f"cath-cache-{env}",
-                  "custom_network_interface_name": None, "ip_configuration": [],
-                  "tags": {}, "timeouts": None,
-                  "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
-                  "network_interface": [],
-                  "custom_dns_configs": [],
-                  "private_dns_zone_configs": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup/privateDnsZoneConfigs/privatelink.redis.cache.windows.net",
-                          "name": "privatelink.redis.cache.windows.net",
-                          "private_dns_zone_id": f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net",
-                          "record_sets": []
-                      }
-                  ],
-                  "private_dns_zone_group": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup",
-                          "name": "redis-endpoint-dnszonegroup",
-                          "private_dns_zone_ids": [f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net"]
-                      }
-                  ],
-                  "private_service_connection": [
-                      {
-                          "is_manual_connection": False,
-                          "name": f"cath-{env}",
-                          "private_connection_resource_id": redis_id_for_pe,
-                          "private_connection_resource_alias": None,
-                          "private_ip_address": "10.141.32.10",
-                          "request_message": None,
-                          "subresource_names": ["redisCache"]
-                      }
-                  ]
-              }, "sensitive_attributes": [], "private": ""}]
-          })
-          print(f"Set module.redis.azurerm_private_endpoint.this[0] with correct private_connection_resource_id")
+          if len(resources) < before:
+              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          else:
+              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+
+          # module.application_insights - re-point to cath-ss-kv-{env}-rg
+          ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          ai_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_application_insights' and r.get('name') == 'this' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == ai_id_old:
+                          attrs['id'] = ai_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          print(f"Updated module.application_insights.azurerm_application_insights.this RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == ai_id_new:
+                          print(f"module.application_insights.azurerm_application_insights.this already pointing to cath-ss-kv-{env}-rg")
+
+          alert_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          alert_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_monitor_activity_log_alert' and r.get('name') == 'main' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == alert_id_old:
+                          attrs['id'] = alert_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          if 'scope' in attrs:
+                              attrs['scope'] = [s.replace(f"cath-ss-{env}-rg", f"cath-ss-kv-{env}-rg") for s in attrs.get('scope', [])]
+                          print(f"Updated module.application_insights.azurerm_monitor_activity_log_alert.main[0] RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == alert_id_new:
+                          print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -504,51 +499,42 @@ jobs:
           else:
               print("module.redis.azurerm_redis_cache.redis already in state, skipping")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REPLACE with correct private_connection_resource_id
-          pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
-          redis_id_for_pe = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
+          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state
+          before = len(resources)
           resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          resources.append({
-              "module": "module.redis", "mode": "managed",
-              "type": "azurerm_private_endpoint", "name": "this",
-              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-              "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                  "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
-                  "resource_group_name": f"cath-cache-{env}",
-                  "custom_network_interface_name": None, "ip_configuration": [],
-                  "tags": {}, "timeouts": None,
-                  "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
-                  "network_interface": [],
-                  "custom_dns_configs": [],
-                  "private_dns_zone_configs": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup/privateDnsZoneConfigs/privatelink.redis.cache.windows.net",
-                          "name": "privatelink.redis.cache.windows.net",
-                          "private_dns_zone_id": f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net",
-                          "record_sets": []
-                      }
-                  ],
-                  "private_dns_zone_group": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup",
-                          "name": "redis-endpoint-dnszonegroup",
-                          "private_dns_zone_ids": [f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net"]
-                      }
-                  ],
-                  "private_service_connection": [
-                      {
-                          "is_manual_connection": False,
-                          "name": f"cath-{env}",
-                          "private_connection_resource_id": redis_id_for_pe,
-                          "private_connection_resource_alias": None,
-                          "private_ip_address": "10.143.32.9",
-                          "request_message": None,
-                          "subresource_names": ["redisCache"]
-                      }
-                  ]
-              }, "sensitive_attributes": [], "private": ""}]
-          })
-          print(f"Set module.redis.azurerm_private_endpoint.this[0] with correct private_connection_resource_id")
+          if len(resources) < before:
+              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          else:
+              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+
+          # module.application_insights - re-point to cath-ss-kv-{env}-rg
+          ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          ai_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_application_insights' and r.get('name') == 'this' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == ai_id_old:
+                          attrs['id'] = ai_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          print(f"Updated module.application_insights.azurerm_application_insights.this RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == ai_id_new:
+                          print(f"module.application_insights.azurerm_application_insights.this already pointing to cath-ss-kv-{env}-rg")
+
+          alert_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          alert_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_monitor_activity_log_alert' and r.get('name') == 'main' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == alert_id_old:
+                          attrs['id'] = alert_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          if 'scope' in attrs:
+                              attrs['scope'] = [s.replace(f"cath-ss-{env}-rg", f"cath-ss-kv-{env}-rg") for s in attrs.get('scope', [])]
+                          print(f"Updated module.application_insights.azurerm_monitor_activity_log_alert.main[0] RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == alert_id_new:
+                          print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:
@@ -685,51 +671,42 @@ jobs:
           })
           print(f"Set module.redis.azurerm_redis_cache.redis -> {redis_id} (fixed casing)")
 
-          # module.redis.azurerm_private_endpoint.this[0] - REPLACE with correct private_connection_resource_id
-          pe_id = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Network/privateEndpoints/cath-{env}"
-          redis_id_for_pe = f"/subscriptions/{sub}/resourceGroups/cath-cache-{env}/providers/Microsoft.Cache/redis/cath-{env}"
+          # module.redis.azurerm_private_endpoint.this[0] - REMOVE from state (STG PE was already being created fresh)
+          before = len(resources)
           resources[:] = [r for r in resources if not (r.get('type') == 'azurerm_private_endpoint' and r.get('name') == 'this' and r.get('module') == 'module.redis')]
-          resources.append({
-              "module": "module.redis", "mode": "managed",
-              "type": "azurerm_private_endpoint", "name": "this",
-              "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
-              "instances": [{"index_key": 0, "schema_version": 0, "attributes": {
-                  "id": pe_id, "location": "uksouth", "name": f"cath-{env}",
-                  "resource_group_name": f"cath-cache-{env}",
-                  "custom_network_interface_name": None, "ip_configuration": [],
-                  "tags": {}, "timeouts": None,
-                  "subnet_id": f"/subscriptions/{sub}/resourceGroups/ss-{env}-network-rg/providers/Microsoft.Network/virtualNetworks/ss-{env}-vnet/subnets/iaas",
-                  "network_interface": [],
-                  "custom_dns_configs": [],
-                  "private_dns_zone_configs": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup/privateDnsZoneConfigs/privatelink.redis.cache.windows.net",
-                          "name": "privatelink.redis.cache.windows.net",
-                          "private_dns_zone_id": f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net",
-                          "record_sets": []
-                      }
-                  ],
-                  "private_dns_zone_group": [
-                      {
-                          "id": f"{pe_id}/privateDnsZoneGroups/redis-endpoint-dnszonegroup",
-                          "name": "redis-endpoint-dnszonegroup",
-                          "private_dns_zone_ids": [f"/subscriptions/{dns_sub}/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.cache.windows.net"]
-                      }
-                  ],
-                  "private_service_connection": [
-                      {
-                          "is_manual_connection": False,
-                          "name": f"cath-{env}",
-                          "private_connection_resource_id": redis_id_for_pe,
-                          "private_connection_resource_alias": None,
-                          "private_ip_address": "",
-                          "request_message": None,
-                          "subresource_names": ["redisCache"]
-                      }
-                  ]
-              }, "sensitive_attributes": [], "private": ""}]
-          })
-          print(f"Set module.redis.azurerm_private_endpoint.this[0] with correct private_connection_resource_id")
+          if len(resources) < before:
+              print(f"Removed module.redis.azurerm_private_endpoint.this from state (will be recreated)")
+          else:
+              print(f"module.redis.azurerm_private_endpoint.this not in state, nothing to remove")
+
+          # module.application_insights - re-point to cath-ss-kv-{env}-rg
+          ai_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          ai_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/components/cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_application_insights' and r.get('name') == 'this' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == ai_id_old:
+                          attrs['id'] = ai_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          print(f"Updated module.application_insights.azurerm_application_insights.this RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == ai_id_new:
+                          print(f"module.application_insights.azurerm_application_insights.this already pointing to cath-ss-kv-{env}-rg")
+
+          alert_id_old = f"/subscriptions/{sub}/resourceGroups/cath-ss-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          alert_id_new = f"/subscriptions/{sub}/resourceGroups/cath-ss-kv-{env}-rg/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-appinsights-{env}"
+          for r in resources:
+              if r.get('type') == 'azurerm_monitor_activity_log_alert' and r.get('name') == 'main' and r.get('module') == 'module.application_insights':
+                  for inst in r.get('instances', []):
+                      attrs = inst.get('attributes', {})
+                      if attrs.get('id') == alert_id_old:
+                          attrs['id'] = alert_id_new
+                          attrs['resource_group_name'] = f"cath-ss-kv-{env}-rg"
+                          if 'scope' in attrs:
+                              attrs['scope'] = [s.replace(f"cath-ss-{env}-rg", f"cath-ss-kv-{env}-rg") for s in attrs.get('scope', [])]
+                          print(f"Updated module.application_insights.azurerm_monitor_activity_log_alert.main[0] RG -> cath-ss-kv-{env}-rg")
+                      elif attrs.get('id') == alert_id_new:
+                          print(f"module.application_insights.azurerm_monitor_activity_log_alert.main[0] already pointing to cath-ss-kv-{env}-rg")
 
           state['serial'] = state.get('serial', 0) + 1
           with open('/tmp/terraform.tfstate.new', 'w') as f:

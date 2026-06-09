@@ -1,0 +1,104 @@
+name: One-Shot - Fix Redis Private Endpoints
+
+# The Redis private endpoints in demo/test/ithc have their private_connection_resource_id
+# pointing to the old Redis cache name (cath-cath-{env}) instead of the new name (cath-{env}).
+# This field is immutable, so the PE must be deleted and recreated.
+#
+# Terraform cannot delete the PE because it lacks permission to delete the DNS zone group
+# (Microsoft.Network/privateEndpoints/privateDnsZoneGroups/delete).
+#
+# This workflow:
+#   1. Deletes the old PE via Azure CLI (which handles DNS zone group cleanup internally)
+#   2. Removes the PE from Terraform state (import-redis-rg-and-kv does this too)
+#
+# After running this workflow:
+#   - Run the import-redis-rg-and-kv workflow to ensure state is correct
+#   - Retrigger the main infra build - Terraform will create a fresh PE pointing to new Redis
+#
+# STG is excluded because its PE was already not in state (being created fresh).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-pe-demo:
+    name: Fix PE - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (Demo)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Delete Demo Private Endpoint
+        run: |
+          # Delete the PE via Azure CLI - this handles DNS zone group cleanup natively
+          az network private-endpoint delete \
+            --name cath-demo \
+            --resource-group cath-cache-demo \
+            --yes \
+            && echo "Deleted PE cath-demo in cath-cache-demo" \
+            || echo "WARNING: PE cath-demo may not exist or deletion failed, continuing"
+
+  fix-pe-test:
+    name: Fix PE - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Delete Test Private Endpoint
+        run: |
+          az network private-endpoint delete \
+            --name cath-test \
+            --resource-group cath-cache-test \
+            --yes \
+            && echo "Deleted PE cath-test in cath-cache-test" \
+            || echo "WARNING: PE cath-test may not exist or deletion failed, continuing"
+
+  fix-pe-ithc:
+    name: Fix PE - ITHC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (ITHC)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Delete ITHC Private Endpoint
+        run: |
+          az network private-endpoint delete \
+            --name cath-ithc \
+            --resource-group cath-cache-ithc \
+            --yes \
+            && echo "Deleted PE cath-ithc in cath-cache-ithc" \
+            || echo "WARNING: PE cath-ithc may not exist or deletion failed, continuing"
