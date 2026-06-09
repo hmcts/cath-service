@@ -159,7 +159,8 @@ jobs:
               with open('/tmp/redis_keys.json') as kf:
                   redis_keys = json.load(kf)
               if redis_data.get('id'):
-                  redis_id = redis_data['id']
+                  # Terraform expects lowercase 'redis' in the resource ID path (not 'Redis' from Azure CLI)
+                  redis_id = redis_data['id'].replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/')
                   redis_name = redis_data.get('name', f'cath-redis-{env}')
                   redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
                   redis_port = redis_data.get('port', 6379)
@@ -518,7 +519,8 @@ jobs:
               with open('/tmp/redis_keys.json') as kf:
                   redis_keys = json.load(kf)
               if redis_data.get('id'):
-                  redis_id = redis_data['id']
+                  # Terraform expects lowercase 'redis' in the resource ID path (not 'Redis' from Azure CLI)
+                  redis_id = redis_data['id'].replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/')
                   redis_name = redis_data.get('name', f'cath-redis-{env}')
                   redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
                   redis_port = redis_data.get('port', 6379)
@@ -852,7 +854,8 @@ jobs:
               with open('/tmp/redis_keys.json') as kf:
                   redis_keys = json.load(kf)
               if redis_data.get('id'):
-                  redis_id = redis_data['id']
+                  # Terraform expects lowercase 'redis' in the resource ID path (not 'Redis' from Azure CLI)
+                  redis_id = redis_data['id'].replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/')
                   redis_name = redis_data.get('name', f'cath-redis-{env}')
                   redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
                   redis_port = redis_data.get('port', 6379)
@@ -1186,7 +1189,8 @@ jobs:
               with open('/tmp/redis_keys.json') as kf:
                   redis_keys = json.load(kf)
               if redis_data.get('id'):
-                  redis_id = redis_data['id']
+                  # Terraform expects lowercase 'redis' in the resource ID path (not 'Redis' from Azure CLI)
+                  redis_id = redis_data['id'].replace('/Microsoft.Cache/Redis/', '/Microsoft.Cache/redis/')
                   redis_name = redis_data.get('name', f'cath-redis-{env}')
                   redis_hostname = redis_data.get('hostName', f'{redis_name}.redis.cache.windows.net')
                   redis_port = redis_data.get('port', 6379)
