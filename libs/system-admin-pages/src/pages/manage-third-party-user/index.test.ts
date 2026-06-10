@@ -3,11 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
 vi.mock("../../third-party-user/queries.js", () => ({
-  findThirdPartyUserById: vi.fn(),
-  getHighestSensitivity: vi.fn()
+  findThirdPartyUserById: vi.fn()
 }));
 
-import { findThirdPartyUserById, getHighestSensitivity } from "../../third-party-user/queries.js";
+import { findThirdPartyUserById } from "../../third-party-user/queries.js";
 
 describe("manage-third-party-user page", () => {
   let req: Partial<Request>;
@@ -62,10 +61,9 @@ describe("manage-third-party-user page", () => {
       const mockUser = {
         id: "user-123",
         name: "Test User",
-        subscriptions: [{ listTypeId: 1, sensitivity: "PUBLIC" }]
+        subscriptions: [{ listTypeId: 1 }]
       };
       (findThirdPartyUserById as any).mockResolvedValue(mockUser);
-      (getHighestSensitivity as any).mockResolvedValue("PUBLIC");
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -74,8 +72,7 @@ describe("manage-third-party-user page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-user/index",
         expect.objectContaining({
-          user: mockUser,
-          highestSensitivity: "PUBLIC"
+          user: mockUser
         })
       );
     });
@@ -88,7 +85,6 @@ describe("manage-third-party-user page", () => {
         subscriptions: []
       };
       (findThirdPartyUserById as any).mockResolvedValue(mockUser);
-      (getHighestSensitivity as any).mockResolvedValue(null);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -97,28 +93,6 @@ describe("manage-third-party-user page", () => {
         "manage-third-party-user/index",
         expect.objectContaining({
           user: mockUser
-        })
-      );
-    });
-
-    it("should calculate highest sensitivity for user subscriptions", async () => {
-      req.query = { id: "user-123" };
-      const mockUser = {
-        id: "user-123",
-        name: "Test User",
-        subscriptions: [{ listTypeId: 1, sensitivity: "CLASSIFIED" }]
-      };
-      (findThirdPartyUserById as any).mockResolvedValue(mockUser);
-      (getHighestSensitivity as any).mockResolvedValue("CLASSIFIED");
-
-      const handler = GET[GET.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(getHighestSensitivity).toHaveBeenCalledWith(mockUser.subscriptions);
-      expect(res.render).toHaveBeenCalledWith(
-        "manage-third-party-user/index",
-        expect.objectContaining({
-          highestSensitivity: "CLASSIFIED"
         })
       );
     });
