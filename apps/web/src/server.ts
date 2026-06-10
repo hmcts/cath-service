@@ -14,7 +14,11 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 async function startServer() {
   const app = await createApp();
 
-  await seedLocationData();
+  try {
+    await seedLocationData();
+  } catch (error) {
+    console.error("Location data seeding failed, continuing server startup:", error);
+  }
 
   // Check if we should use HTTPS (local development with certificates)
   const certsDir = path.join(__dirname, "..", "certs");
