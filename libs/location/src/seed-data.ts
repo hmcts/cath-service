@@ -33,8 +33,24 @@ async function shouldSeed(): Promise<boolean> {
   return true;
 }
 
+// TODO: Remove this function once staging has been reseeded successfully
+async function clearJurisdictionData() {
+  if (process.env.ENVIRONMENT === "prod" || process.env.CI === "true") {
+    return;
+  }
+
+  console.log("Clearing stale jurisdiction and sub-jurisdiction data...");
+  await (prisma as any).listTypeSubJurisdiction.deleteMany({});
+  await prisma.locationSubJurisdiction.deleteMany({});
+  await prisma.subJurisdiction.deleteMany({});
+  await prisma.jurisdiction.deleteMany({});
+  console.log("Cleared jurisdiction data");
+}
+
 export async function seedLocationData() {
   console.log("Checking if location data seeding is needed...");
+
+  await clearJurisdictionData();
 
   const needsSeeding = await shouldSeed();
   if (!needsSeeding) {
