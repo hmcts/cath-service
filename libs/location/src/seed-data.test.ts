@@ -8,13 +8,11 @@ const mockPrisma = {
   },
   jurisdiction: {
     count: vi.fn(),
-    upsert: vi.fn(),
-    deleteMany: vi.fn()
+    upsert: vi.fn()
   },
   subJurisdiction: {
     count: vi.fn(),
-    upsert: vi.fn(),
-    deleteMany: vi.fn()
+    upsert: vi.fn()
   },
   location: {
     count: vi.fn(),
@@ -31,9 +29,6 @@ const mockPrisma = {
   locationReference: {
     deleteMany: vi.fn(),
     create: vi.fn()
-  },
-  listTypeSubJurisdiction: {
-    deleteMany: vi.fn()
   }
 };
 
@@ -109,10 +104,6 @@ describe("seed-data", () => {
     consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     vi.clearAllMocks();
     mockSeedListTypes.mockResolvedValue(undefined);
-    mockPrisma.listTypeSubJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
-    mockPrisma.locationSubJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
-    mockPrisma.subJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
-    mockPrisma.jurisdiction.deleteMany.mockResolvedValue({ count: 0 });
   });
 
   afterEach(() => {
@@ -346,8 +337,8 @@ describe("seed-data", () => {
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
 
-      // Should delete existing records for each location (+1 for clearJurisdictionData bulk delete)
-      expect(mockPrisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledTimes(mockLocationData.locations.length + 1);
+      // Should delete existing records for each location
+      expect(mockPrisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledTimes(mockLocationData.locations.length);
       expect(mockPrisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledWith({
         where: { locationId: 1 }
       });
