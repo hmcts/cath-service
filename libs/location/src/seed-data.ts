@@ -3,9 +3,11 @@ import { locationData } from "./location-data.js";
 import { seedListTypes } from "./seed-list-types.js";
 
 async function shouldSeed(): Promise<boolean> {
-  // Only seed in local development, not in CI or production
-  if (process.env.NODE_ENV === "production") {
-    console.log("Skipping seed: NODE_ENV is production");
+  // Skip seeding in production only — STG and other non-prod environments should be seeded.
+  // Use ENVIRONMENT (set via Helm to the cluster environment name e.g. "stg", "prod")
+  // rather than NODE_ENV, which is always "production" for any deployed Node.js server.
+  if (process.env.ENVIRONMENT === "prod") {
+    console.log("Skipping seed: ENVIRONMENT is prod");
     return false;
   }
 

@@ -10,6 +10,7 @@ nodejs:
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
+    ENVIRONMENT: '{{ .Values.global.environment }}'
     POSTGRES_DATABASE: cath
     REDIS_HOST: 'cath-redis-{{ .Values.global.environment }}.redis.cache.windows.net'
     SSO_ALLOW_HTTP_REDIRECT: 'false'

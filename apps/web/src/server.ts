@@ -3,6 +3,7 @@ import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { seedLocationData } from "@hmcts/location";
 import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,6 +13,8 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 async function startServer() {
   const app = await createApp();
+
+  await seedLocationData();
 
   // Check if we should use HTTPS (local development with certificates)
   const certsDir = path.join(__dirname, "..", "certs");
