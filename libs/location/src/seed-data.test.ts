@@ -111,14 +111,14 @@ describe("seed-data", () => {
   });
 
   describe("shouldSeed", () => {
-    it("should return false when NODE_ENV is production", async () => {
-      process.env.NODE_ENV = "production";
+    it("should return false when ENVIRONMENT is prod", async () => {
+      process.env.ENVIRONMENT = "prod";
       const { seedLocationData } = await import("./seed-data.js");
 
       await seedLocationData();
 
       expect(consoleLogSpy).toHaveBeenCalledWith("Checking if location data seeding is needed...");
-      expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: NODE_ENV is production");
+      expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: ENVIRONMENT is prod");
       expect(mockPrisma.region.count).not.toHaveBeenCalled();
     });
 
