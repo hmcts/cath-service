@@ -11,6 +11,7 @@ const mockPrisma = {
     upsert: vi.fn()
   },
   subJurisdiction: {
+    count: vi.fn(),
     upsert: vi.fn()
   },
   location: {
@@ -139,6 +140,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(1);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
 
       const { seedLocationData } = await import("./seed-data.js");
@@ -154,6 +156,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(1);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
 
       const { seedLocationData } = await import("./seed-data.js");
@@ -168,6 +171,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(1);
 
       const { seedLocationData } = await import("./seed-data.js");
@@ -182,6 +186,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
       mockPrisma.region.upsert.mockResolvedValue({});
       mockPrisma.jurisdiction.upsert.mockResolvedValue({});
@@ -208,6 +213,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
       mockPrisma.region.upsert.mockResolvedValue({});
       mockPrisma.jurisdiction.upsert.mockResolvedValue({});
