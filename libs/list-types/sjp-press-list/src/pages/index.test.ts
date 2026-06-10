@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
@@ -7,6 +7,9 @@ vi.mock("node:fs/promises");
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
+      findUnique: vi.fn()
+    },
+    listType: {
       findUnique: vi.fn()
     }
   }
@@ -21,20 +24,14 @@ vi.mock("@hmcts/list-types-common", async () => {
   };
 });
 vi.mock("../validation/json-validator.js");
-vi.mock("@hmcts/publication", () => ({
-  PROVENANCE_LABELS: {
-    MANUAL: "Manual Upload",
-    API: "API Upload"
-  }
-}));
 
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { validateSjpPressList } from "../validation/json-validator.js";
 
 describe("SJP Press List Controller", () => {
-  const getHandler = GET;
-  const postHandler = POST;
+  const getHandler = GET[1];
+  const postHandler = POST[1];
 
   const mockRequest = (overrides?: Partial<Request>) =>
     ({
@@ -178,7 +175,7 @@ describe("SJP Press List Controller", () => {
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
-        provenance: "MANUAL"
+        provenance: "MANUAL_UPLOAD"
       } as never);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
@@ -367,6 +364,167 @@ describe("SJP Press List Controller", () => {
       await postHandler(req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=test-123");
+    });
+  });
+
+  describe("requireVerifiedWithProvenance middleware", () => {
+    const middleware = GET[0];
+
+    const mockNext = vi.fn() as unknown as NextFunction;
+
+    it("should allow system admin to bypass provenance check", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "SYSTEM_ADMIN" }
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      await middleware(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should redirect to sign-in when user is not verified", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "BASIC" },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should redirect to sign-in when user has no provenance", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "VERIFIED", provenance: undefined },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should redirect to sign-in when artefactId is missing", async () => {
+      const req = mockRequest({
+        query: {},
+        user: { role: "VERIFIED", provenance: "PI_AAD" },
+        originalUrl: "/sjp-press-list",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should redirect to sign-in when artefactId is not a valid UUID", async () => {
+      const req = mockRequest({
+        query: { artefactId: "invalid-id" },
+        user: { role: "VERIFIED", provenance: "PI_AAD" },
+        originalUrl: "/sjp-press-list?artefactId=invalid-id",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should redirect to sign-in when artefact is not found", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "VERIFIED", provenance: "PI_AAD" },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should redirect to sign-in when list type is not found", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "VERIFIED", provenance: "PI_AAD" },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should redirect to sign-in when user provenance does not match allowed provenance", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "VERIFIED", provenance: "CRIME_IDAM" },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+
+      await middleware(req, res, mockNext);
+
+      expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    });
+
+    it("should call next when user provenance matches allowed provenance", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "VERIFIED", provenance: "PI_AAD" },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+
+      await middleware(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should support comma-separated allowed provenance", async () => {
+      const req = mockRequest({
+        query: { artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+        user: { role: "VERIFIED", provenance: "CFT_IDAM" },
+        originalUrl: "/sjp-press-list?artefactId=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        session: {}
+      } as Partial<Request>);
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD,CFT_IDAM" } as never);
+
+      await middleware(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(res.redirect).not.toHaveBeenCalled();
     });
   });
 });

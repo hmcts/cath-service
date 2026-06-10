@@ -24,6 +24,7 @@
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
+    "@hmcts/excel-generation": "workspace:*",
     "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
@@ -32,6 +33,8 @@
     "@hmcts/notifications": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/sjp-press-list": "workspace:*",
+    "@hmcts/sjp-public-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "ajv": "8.20.0"
   },

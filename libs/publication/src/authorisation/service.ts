@@ -9,7 +9,7 @@ export interface ListType {
 }
 
 const METADATA_ONLY_ROLES = ["INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"] as const;
-const VERIFIED_USER_PROVENANCES = ["B2C_IDAM", "CFT_IDAM", "CRIME_IDAM"] as const;
+const VERIFIED_USER_PROVENANCES = ["PI_AAD", "CFT_IDAM", "CRIME_IDAM"] as const;
 
 /**
  * Checks if a user has a verified provenance
@@ -54,7 +54,7 @@ export function canAccessPublication(user: UserProfile | undefined, artefact: Ar
   if (sensitivity === Sensitivity.CLASSIFIED) {
     if (!isVerifiedUser(user)) return false;
     if (!listType) return false; // Fail closed if list type not found
-    return user!.provenance === listType.provenance;
+    return listType.provenance.split(",").includes(user!.provenance!);
   }
 
   // Default: deny access
