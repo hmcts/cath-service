@@ -12,7 +12,7 @@ dependencies:
     repository: "file://../../apps/postgres/helm"
     condition: postgres.enabled
   - name: cath-web
-    version: 0.0.1
+    version: 0.0.2
     repository: "file://../../apps/web/helm"
     condition: web.enabled
   - name: cath-api
