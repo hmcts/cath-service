@@ -90,6 +90,62 @@ export const locationData: {
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
       subJurisdictions: [7]
+    },
+    {
+      locationId: 13,
+      name: "Midlands Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr",
+      regions: [2],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 14,
+      name: "South East Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain",
+      regions: [3],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 15,
+      name: "Wales and South West Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr",
+      regions: [5, 7],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 16,
+      name: "Scotland Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban",
+      regions: [8],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 17,
+      name: "North East Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+      regions: [9],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 18,
+      name: "North West Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr",
+      regions: [10],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 19,
+      name: "London Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
+      regions: [1],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 20,
+      name: "Liverpool Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl",
+      regions: [10],
+      subJurisdictions: [8]
     }
   ],
   regions: [
@@ -122,6 +178,26 @@ export const locationData: {
       regionId: 6,
       name: "Yorkshire",
       welshName: "Swydd Efrog"
+    },
+    {
+      regionId: 7,
+      name: "South West",
+      welshName: "De Orllewin Lloegr"
+    },
+    {
+      regionId: 8,
+      name: "Scotland",
+      welshName: "Yr Alban"
+    },
+    {
+      regionId: 9,
+      name: "North East",
+      welshName: "Gogledd Ddwyrain Lloegr"
+    },
+    {
+      regionId: 10,
+      name: "North West",
+      welshName: "Gogledd Orllewin Lloegr"
     }
   ],
   jurisdictions: [

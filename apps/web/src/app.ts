@@ -34,6 +34,7 @@ import {
   moduleRoot as sjpPublicListModuleRoot,
   pageRoutes as sjpPublicListRoutes
 } from "@hmcts/sjp-public-list/config";
+import { moduleRoot as sscsDailyHearingListModuleRoot, pageRoutes as sscsDailyHearingListRoutes } from "@hmcts/sscs-daily-hearing-list/config";
 import {
   apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
@@ -118,6 +119,7 @@ export async function createApp(): Promise<Express> {
     authModuleRoot,
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
+    sscsDailyHearingListModuleRoot,
     civilFamilyCauseListModuleRoot,
     sjpPressListModuleRoot,
     sjpPublicListModuleRoot,
@@ -193,6 +195,7 @@ export async function createApp(): Promise<Express> {
   // Register list type routes first to ensure proper route matching
   app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
   app.use(await createSimpleRouter(careStandardsTribunalRoutes));
+  app.use(await createSimpleRouter(sscsDailyHearingListRoutes));
   app.use(await createSimpleRouter(sjpPressListRoutes));
   app.use(await createSimpleRouter(sjpDeltaPressListRoutes));
   app.use(await createSimpleRouter(sjpPublicListRoutes));
