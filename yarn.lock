@@ -2483,6 +2483,7 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/sscs-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:5.9.3"
