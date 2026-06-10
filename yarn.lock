@@ -2123,6 +2123,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
+    "@hmcts/sscs-daily-hearing-list": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
@@ -2553,7 +2554,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/sscs-daily-hearing-list@workspace:libs/list-types/sscs-daily-hearing-list":
+"@hmcts/sscs-daily-hearing-list@workspace:*, @hmcts/sscs-daily-hearing-list@workspace:libs/list-types/sscs-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/sscs-daily-hearing-list@workspace:libs/list-types/sscs-daily-hearing-list"
   dependencies:

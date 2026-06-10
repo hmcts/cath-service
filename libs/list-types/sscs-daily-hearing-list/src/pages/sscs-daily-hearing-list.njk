@@ -6,6 +6,9 @@
     .back-to-top {
       margin-top: 40px;
     }
+    .new-line-wrap {
+      white-space: pre;
+    }
   </style>
 {% endblock %}
 
@@ -74,7 +77,7 @@
               <td class="govuk-table__cell">{{ hearing.appellant }}</td>
               <td class="govuk-table__cell">{{ hearing.courtroom }}</td>
               <td class="govuk-table__cell">{{ hearing.hearingTime }}</td>
-              <td class="govuk-table__cell">{{ hearing.tribunal }}</td>
+              <td class="govuk-table__cell new-line-wrap">{{ hearing.tribunal }}</td>
               <td class="govuk-table__cell">{{ hearing.respondent }}</td>
               <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
             </tr>
