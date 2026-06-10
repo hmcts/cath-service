@@ -19,10 +19,11 @@ async function shouldSeed(): Promise<boolean> {
   // Check if tables are empty
   const regionCount = await prisma.region.count();
   const jurisdictionCount = await prisma.jurisdiction.count();
+  const subJurisdictionCount = await prisma.subJurisdiction.count();
   const locationCount = await prisma.location.count();
 
-  // Only seed if all tables are empty
-  const isEmpty = regionCount === 0 && jurisdictionCount === 0 && locationCount === 0;
+  // Only seed if all tables are empty — checking subJurisdiction prevents partial state issues
+  const isEmpty = regionCount === 0 && jurisdictionCount === 0 && subJurisdictionCount === 0 && locationCount === 0;
 
   if (!isEmpty) {
     console.log("Skipping seed: Tables already contain data");
