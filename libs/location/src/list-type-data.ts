@@ -316,5 +316,41 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SJP Public List (New cases)",
     subJurisdictionIds: [7]
+  },
+  {
+    id: 28,
+    name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "UT (T and CC) Daily Hearing List",
+    subJurisdictionIds: [10]
+  },
+  {
+    id: 29,
+    name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Lands Chamber) Daily Hearing list",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "upper-tribunal-lands-chamber-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "UT (LC) Daily Hearing List",
+    subJurisdictionIds: [11]
+  },
+  {
+    id: 30,
+    name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "upper-tribunal-administrative-appeals-chamber-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "UT (AAC) Daily Hearing List",
+    subJurisdictionIds: [12]
   }
 ];

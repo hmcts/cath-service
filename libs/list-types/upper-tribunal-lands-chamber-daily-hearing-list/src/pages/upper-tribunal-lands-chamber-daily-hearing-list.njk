@@ -1,0 +1,90 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .back-to-top {
+      margin-top: 40px;
+    }
+  </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listForDate }} {{ header.hearingDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+
+    {% if pdfDownloadUrl %}
+      <p class="govuk-body"><a href="{{ pdfDownloadUrl }}" class="govuk-link">{{ t.downloadPdf }}</a></p>
+    {% endif %}
+
+    <details class="govuk-details govuk-!-margin-top-6" data-module="govuk-details" open>
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          {{ t.openingStatementTitle }}
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+        <p class="govuk-body">{{ t.openingStatement.contactText }}</p>
+        <p class="govuk-body">
+          <a href="{{ t.openingStatement.observeLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
+            {{ t.openingStatement.observeLinkText }}
+          </a>
+        </p>
+      </div>
+    </details>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-s">{{ t.searchCasesTitle }}</h2>
+      <label class="govuk-label govuk-visually-hidden" for="case-search-input">
+        {{ t.searchCasesLabel }}
+      </label>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text" aria-label="{{ t.searchCasesLabel }}">
+    </div>
+
+    <div id="hearings-table-container">
+      <table class="govuk-table" id="hearings-table" role="table" aria-label="{{ t.pageTitle }}">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.time }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseReference }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseName }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.judges }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.members }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingType }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.venue }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.modeOfHearing }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.additionalInformation }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for hearing in hearings %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ hearing.time }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseReference }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseName }}</td>
+              <td class="govuk-table__cell">{{ hearing.judges }}</td>
+              <td class="govuk-table__cell">{{ hearing.members }}</td>
+              <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
+              <td class="govuk-table__cell">{{ hearing.venue }}</td>
+              <td class="govuk-table__cell">{{ hearing.modeOfHearing }}</td>
+              <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="govuk-body-s govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
+
+    <div class="back-to-top">
+      <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
