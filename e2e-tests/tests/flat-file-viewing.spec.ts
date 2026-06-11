@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 import { createTestArtefact, deleteTestFlatFileFromWeb, getListTypeByName, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
@@ -225,8 +226,8 @@ test.describe("Flat File Viewing", () => {
     await newPage.close();
 
     // STEP 6: Test PDF download with correct headers
-    const baseUrl = process.env.CATH_SERVICE_WEB_URL || "https://localhost:8080";
-    const response = await page.request.get(`${baseUrl}/api/flat-file/${artefactId}/download`, {
+    const apiUrl = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
+    const response = await page.request.get(`${apiUrl}/api/flat-file/${artefactId}/download`, {
       ignoreHTTPSErrors: true
     });
 
@@ -282,10 +283,7 @@ test.describe("Flat File Viewing", () => {
     await expect(page.locator('object[type="application/pdf"]')).toBeVisible();
 
     // Final accessibility check
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -430,10 +428,7 @@ test.describe("Flat File Viewing", () => {
     await expect(notFlatFileErrorList).toContainText(/not available as a file/i);
 
     // STEP 7: Run accessibility checks on error page
-    let accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
 
@@ -471,10 +466,7 @@ test.describe("Flat File Viewing", () => {
     await expect(page).toHaveURL(/\/summary-of-publications\?locationId=/);
 
     // STEP 10: Final accessibility check
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });

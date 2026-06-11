@@ -4,6 +4,7 @@ import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module
 import ExcelJSPkg from "exceljs";
 import { getApiAuthToken } from "../utils/api-auth-helpers.js";
+import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 import { createOrGetListType, deleteTestArtefacts, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
@@ -293,10 +294,7 @@ test.describe("Summary of Publications Page", () => {
     expect(firstLinkHref).not.toContain("/publication/");
 
     // Run accessibility checks
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -322,10 +320,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(publicationLinks).toHaveCount(0);
 
     // Run accessibility checks
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -367,8 +362,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.locator("body")).toContainText("Diweddarwyd ddiwethaf");
 
     // Test accessibility (WCAG 2.2 AA only, with known GOV.UK component issues disabled)
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    const accessibilityScanResults = await axeCheck(page)
       .disableRules(["target-size", "link-name", "scrollable-region-focusable", "label", "aria-valid-attr-value"])
       .analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
@@ -421,10 +415,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.getByText("Dewiswch y rhestr rydych chi am ei gweld o'r ddolen(nau) isod:")).toBeVisible();
 
     // Run accessibility checks in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -555,10 +546,7 @@ test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
     await expect(page.locator("body")).toContainText("Preliminary hearing");
 
     // Step 8: Test accessibility on the CST view page
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name", "scrollable-region-focusable"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name", "scrollable-region-focusable"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
 

@@ -1,6 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
-import { PrismaClient } from "../prisma/generated/prisma/client.js";
+import { PrismaClient } from "../generated/prisma/client.js";
 
 // Construct DATABASE_URL from individual env vars if available
 if (process.env.POSTGRES_HOST && process.env.POSTGRES_USER && process.env.POSTGRES_PASSWORD && process.env.POSTGRES_PORT && process.env.POSTGRES_DATABASE) {
@@ -14,13 +13,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Create connection pool
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-// Create driver adapter
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -31,5 +24,5 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export type { PrismaClient } from "../prisma/generated/prisma/client.js";
-export * from "../prisma/generated/prisma/client.js";
+export type { PrismaClient } from "../generated/prisma/client.js";
+export * from "../generated/prisma/client.js";

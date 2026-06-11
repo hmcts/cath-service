@@ -14,7 +14,7 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/cloud-native-platform": "workspace:*",
+    "@hmcts-cft/cloud-native-platform": "2.1.0",
     "config": "4.4.1"
   },
   "devDependencies": {

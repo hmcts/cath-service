@@ -3,6 +3,7 @@ import * as path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 // Helper function to authenticate as System Admin
@@ -378,7 +379,7 @@ test.describe
       test("should meet WCAG 2.2 AA standards", async ({ page }) => {
         await page.goto("/add-jurisdiction");
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -389,7 +390,7 @@ test.describe
         const saveButton = page.getByRole("button", { name: /save/i });
         await saveButton.click();
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -521,7 +522,7 @@ test.describe
         const workerId = process.env.TEST_WORKER_INDEX || "0";
         await completeAddJurisdictionFlow(page, `Accessibility Test ${timestamp}-${random}-${workerId}`, `Prawf Hygyrchedd ${timestamp}-${random}-${workerId}`);
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -847,7 +848,7 @@ test.describe
       test("should meet WCAG 2.2 AA standards", async ({ page }) => {
         await page.goto("/add-sub-jurisdiction");
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -858,7 +859,7 @@ test.describe
         const saveButton = page.getByRole("button", { name: /save/i });
         await saveButton.click();
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -1041,7 +1042,7 @@ test.describe
           `Prawf Hygyrchedd ${timestamp}-${random}-${workerId}`
         );
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -1329,7 +1330,7 @@ test.describe
       test("should meet WCAG 2.2 AA standards", async ({ page }) => {
         await page.goto("/add-region");
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -1340,7 +1341,7 @@ test.describe
         const saveButton = page.getByRole("button", { name: /save/i });
         await saveButton.click();
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -1492,7 +1493,7 @@ test.describe
         const workerId = process.env.TEST_WORKER_INDEX || "0";
         await completeAddRegionFlow(page, `Accessibility Test ${timestamp}-${random}-${workerId}`, `Prawf Hygyrchedd ${timestamp}-${random}-${workerId}`);
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -2035,7 +2036,7 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
       test("should meet WCAG 2.2 AA standards on upload page @nightly", async ({ page }) => {
         await page.goto("/reference-data-upload");
 
-        const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        const accessibilityScanResults = await axeCheck(page).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
@@ -2045,11 +2046,8 @@ ${Array.from({ length: 15 }, (_, i) => `${9001 + i},Test Court ${i},Llys Prawf $
         await uploadCsvFile(page, validCsvContent);
         await page.waitForURL("/reference-data-upload-summary", { timeout: 10000 });
 
-        const accessibilityScanResults = await new AxeBuilder({ page })
-          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-          // Exclude pre-existing scrollable-region-focusable issue in template
-          .disableRules(["scrollable-region-focusable"])
-          .analyze();
+        // scrollable-region-focusable: pre-existing issue in template table
+        const accessibilityScanResults = await axeCheck(page).disableRules(["scrollable-region-focusable"]).analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);
       });
