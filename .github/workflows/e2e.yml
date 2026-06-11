@@ -105,24 +105,6 @@ jobs:
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
           echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
 
-      - name: Load app config secrets from cath-ss-kv-stg
-        run: |
-          KV="cath-ss-kv-stg"
-          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
-
-          echo "SESSION_SECRET=$(fetch session-secret)" >> $GITHUB_ENV
-          echo "SSO_CLIENT_ID=$(fetch sso-client-id)" >> $GITHUB_ENV
-          echo "SSO_CLIENT_SECRET=$(fetch sso-client-secret)" >> $GITHUB_ENV
-          echo "SSO_ISSUER_URL=$(fetch sso-issuer-url)" >> $GITHUB_ENV
-          echo "SSO_SYSTEM_ADMIN_GROUP_ID=$(fetch sso-sg-system-admin)" >> $GITHUB_ENV
-          echo "SSO_INTERNAL_ADMIN_CTSC_GROUP_ID=$(fetch sso-sg-admin-ctsc)" >> $GITHUB_ENV
-          echo "SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID=$(fetch sso-sg-admin-local)" >> $GITHUB_ENV
-          echo "CFT_IDAM_CLIENT_SECRET=$(fetch cft-idam-client-secret)" >> $GITHUB_ENV
-          echo "AZURE_TENANT_ID=$(fetch app-tenant-id)" >> $GITHUB_ENV
-          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
-          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
-          echo "APP_PIP_DATA_MANAGEMENT_SCOPE=$(fetch app-pip-data-management-scope)" >> $GITHUB_ENV
-
       - name: Enable Corepack
         run: corepack enable
 
