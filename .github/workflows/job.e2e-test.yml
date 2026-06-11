@@ -25,11 +25,6 @@ jobs:
       pull-requests: write
       actions: read
       id-token: write
-    env:
-      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
-      AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
-      AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -61,6 +56,15 @@ jobs:
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
           echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
+
+      - name: Load app config secrets from cath-ss-kv-stg
+        run: |
+          KV="cath-ss-kv-stg"
+          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+
+          echo "AZURE_TENANT_ID=$(fetch app-tenant-id)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
