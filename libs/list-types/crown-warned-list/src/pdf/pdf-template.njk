@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+  </div>
+
+  {% if header.weekCommencing | length %}
+    <p>{{ t.preStatement(header.weekCommencing) }}</p>
+  {% endif %}
+
+  <div class="info-box">
+    <h3>{{ t.reportingRestrictionsTitle }}</h3>
+    <p>{{ t.reportingRestrictionsBody }}</p>
+  </div>
+
+  {% for group in groupedCategories %}
+    <div class="court-section">
+      <h2>{{ group.category }}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th class="no-wrap">{{ t.fixedFor }}</th>
+            <th class="no-wrap">{{ t.caseRef }}</th>
+            <th class="no-wrap">{{ t.defendant }}</th>
+            <th class="no-wrap">{{ t.prosecutingAuthority }}</th>
+            <th class="no-wrap">{{ t.linkedCases }}</th>
+            <th class="no-wrap">{{ t.listingNotes }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for case in group.cases %}
+            <tr>
+              <td class="no-wrap">{{ case.fixedFor }}</td>
+              <td class="no-wrap">{{ case.caseNumber }}</td>
+              <td>{% if case.isInCustody %}*{% endif %}{{ case.defendants }}</td>
+              <td class="no-wrap">{{ case.prosecutingAuthority }}</td>
+              <td>{{ case.linkedCases }}</td>
+              <td>{{ case.listingNotes }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

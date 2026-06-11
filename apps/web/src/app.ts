@@ -11,6 +11,9 @@ import {
 import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
 import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as crownDailyListModuleRoot, pageRoutes as crownDailyListRoutes } from "@hmcts/crown-daily-list/config";
+import { moduleRoot as crownFirmListModuleRoot, pageRoutes as crownFirmListRoutes } from "@hmcts/crown-firm-list/config";
+import { moduleRoot as crownWarnedListModuleRoot, pageRoutes as crownWarnedListRoutes } from "@hmcts/crown-warned-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot, pageRoutes as londonAdminRoutes } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -126,6 +129,9 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
+    crownDailyListModuleRoot,
+    crownFirmListModuleRoot,
+    crownWarnedListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
     verifiedPagesModuleRoot,
@@ -201,6 +207,9 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(londonAdminRoutes));
   app.use(await createSimpleRouter(civilAppealRoutes));
   app.use(await createSimpleRouter(adminCourtRoutes));
+  app.use(await createSimpleRouter(crownDailyListRoutes));
+  app.use(await createSimpleRouter(crownFirmListRoutes));
+  app.use(await createSimpleRouter(crownWarnedListRoutes));
 
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
   app.use(await createSimpleRouter(authRoutes, pageRoutes));
