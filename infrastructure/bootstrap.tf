@@ -21,3 +21,13 @@ module "key_vault_bootstrap" {
   common_tags             = var.common_tags
   create_managed_identity = false
 }
+
+# Grant the app managed identity Get/List access to the bootstrap KV
+# so pods can read bootstrap secrets (e.g. e2e test credentials)
+resource "azurerm_key_vault_access_policy" "bootstrap_kv_app_mi" {
+  key_vault_id = module.key_vault_bootstrap.key_vault_id
+  tenant_id    = var.tenant_id
+  object_id    = data.azurerm_user_assigned_identity.app_mi.principal_id
+
+  secret_permissions = ["Get", "List"]
+}
