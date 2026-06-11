@@ -2120,8 +2120,10 @@ __metadata:
     "@types/supertest": "npm:^7.0.0"
     compression: "npm:1.8.1"
     config: "npm:4.4.1"
+    connect-redis: "npm:9.0.0"
     cors: "npm:2.8.6"
     express: "npm:5.2.1"
+    express-session: "npm:1.19.0"
     govuk-frontend: "npm:6.2.0"
     helmet: "npm:8.0.0"
     jwks-rsa: "npm:4.0.1"
@@ -2131,6 +2133,7 @@ __metadata:
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
     pg-format: "npm:1.0.4"
+    redis: "npm:5.12.1"
     supertest: "npm:^7.1.4"
     typescript: "npm:6.0.3"
   languageName: unknown
