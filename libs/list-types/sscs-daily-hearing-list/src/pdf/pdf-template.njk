@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ header.listTitle }}</title>
-  <style>{{ pdfStyles | safe }}</style>
+  <style>{{ pdfStyles | safe }}
+    .new-line-wrap { white-space: pre; }
+  </style>
 </head>
 <body>
   <div class="header-section">
@@ -46,7 +48,7 @@
             <td>{{ hearing.appellant }}</td>
             <td>{{ hearing.courtroom }}</td>
             <td class="no-wrap">{{ hearing.hearingTime }}</td>
-            <td>{{ hearing.tribunal }}</td>
+            <td class="new-line-wrap">{{ hearing.tribunal }}</td>
             <td>{{ hearing.respondent }}</td>
             <td>{{ hearing.additionalInformation }}</td>
           </tr>
