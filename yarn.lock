@@ -2207,8 +2207,8 @@ __metadata:
     "@hmcts/publication": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@types/express": "npm:5.0.6"
-    "@types/multer": "npm:1.4.12"
-    multer: "npm:1.4.5-lts.1"
+    "@types/multer": "npm:1.4.13"
+    multer: "npm:1.4.5-lts.2"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.8"
   peerDependencies:
@@ -4987,12 +4987,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/multer@npm:1.4.12":
-  version: 1.4.12
-  resolution: "@types/multer@npm:1.4.12"
+"@types/multer@npm:1.4.13":
+  version: 1.4.13
+  resolution: "@types/multer@npm:1.4.13"
   dependencies:
     "@types/express": "npm:*"
-  checksum: 10c0/1250a32a66b7c5929cc5b005dae4ad0768ded9b6b52ba6f90931ff39b4ed775b09a0fd9d880f0836bcac16a9a7febed6a479c6bf108a52a244c4c53badb82a7b
+  checksum: 10c0/aed716fdc0bc8c5bfe6689bfe6569b6743b64be795140e80cab169bfe43f687027880b7fc401fca98f820dd464ad5986093ec322d865116eb31ce29a3361c469
   languageName: node
   linkType: hard
 
@@ -8714,9 +8714,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"multer@npm:1.4.5-lts.1":
-  version: 1.4.5-lts.1
-  resolution: "multer@npm:1.4.5-lts.1"
+"multer@npm:1.4.5-lts.2":
+  version: 1.4.5-lts.2
+  resolution: "multer@npm:1.4.5-lts.2"
   dependencies:
     append-field: "npm:^1.0.0"
     busboy: "npm:^1.0.0"
@@ -8725,7 +8725,7 @@ __metadata:
     object-assign: "npm:^4.1.1"
     type-is: "npm:^1.6.4"
     xtend: "npm:^4.0.0"
-  checksum: 10c0/4c6c91e93e510c99e791b6520e3e2f4a227a57f4f509427ff7f3a6f4cc0b4b09ad77c475f629c12f7ae01dba11645b2bd6568877cab775de8bf853b0a67259b4
+  checksum: 10c0/59c934621bde284e04e25aa35ef79f8a9ed0c2ac4c5bae4c2880670105ec1645480ae57a84ed92323b2a8d8f875ca3189ad8a18fa0ed0bdc6fd26553d9426883
   languageName: node
   linkType: hard
 
