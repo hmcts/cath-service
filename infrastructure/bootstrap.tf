@@ -31,3 +31,13 @@ resource "azurerm_key_vault_access_policy" "bootstrap_kv_app_mi" {
 
   secret_permissions = ["Get", "List"]
 }
+
+# Grant the CI service principal (GitHub Actions OIDC) Get/List access to the bootstrap KV
+# so workflows can fetch e2e test credentials
+resource "azurerm_key_vault_access_policy" "bootstrap_kv_ci_sp" {
+  key_vault_id = module.key_vault_bootstrap.key_vault_id
+  tenant_id    = var.tenant_id
+  object_id    = var.ci_service_principal_object_id
+
+  secret_permissions = ["Get", "List"]
+}
