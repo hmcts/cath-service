@@ -68,6 +68,11 @@ jobs:
       CFT_IDAM_URL: https://idam-web-public.aat.platform.hmcts.net
       CFT_IDAM_CLIENT_SECRET: ${{ secrets.CFT_IDAM_CLIENT_SECRET }}
 
+      # API Authentication Configuration (for blob ingestion endpoint)
+      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
+      APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
+
       # Azure B2C Configuration (mocked in CI until delete endpoint is deployed)
       MOCK_AZURE_B2C: "true"
       MEDIA_FORGOT_PASSWORD_LINK: "https://localhost:8080/forgot-password"
@@ -103,9 +108,6 @@ jobs:
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
           echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
-          echo "AZURE_TENANT_ID=$(fetch app-tenant)" >> $GITHUB_ENV
-          echo "AZURE_API_CLIENT_ID=$(fetch cath-service-client-id)" >> $GITHUB_ENV
-          echo "AZURE_API_CLIENT_SECRET=$(fetch cath-service-secret)" >> $GITHUB_ENV
 
       - name: Enable Corepack
         run: corepack enable
