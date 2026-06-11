@@ -335,6 +335,13 @@ test.describe("Summary of Publications Page", () => {
     // Navigate to summary of publications
     await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
 
+    // Dismiss cookie banner if present
+    const cookieBanner = page.locator(".govuk-cookie-banner");
+    if (await cookieBanner.isVisible()) {
+      await cookieBanner.locator('button:has-text("Accept analytics cookies")').click();
+      await page.waitForTimeout(500); // Wait for banner to be dismissed
+    }
+
     // Find and click the publication link
     const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
     await expect(publicationLinks.first()).toBeVisible();
@@ -358,6 +365,13 @@ test.describe("Summary of Publications Page", () => {
     // Test Welsh translation
     await page.locator(".app-language-toggle a").click();
     await page.waitForLoadState("networkidle");
+
+    // Dismiss cookie banner if it reappears after language change
+    if (await cookieBanner.isVisible()) {
+      await cookieBanner.locator('button:has-text("Derbyn cwcis dadansoddeg")').click();
+      await page.waitForTimeout(500);
+    }
+
     await expect(page.locator("body")).toContainText("Rhestr ar gyfer 15 Ionawr 2026");
     await expect(page.locator("body")).toContainText("Diweddarwyd ddiwethaf");
 

@@ -180,6 +180,13 @@ test.describe("Flat File Viewing", () => {
     await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
     await page.waitForLoadState("domcontentloaded");
 
+    // Dismiss cookie banner if present
+    const cookieBanner = page.locator(".govuk-cookie-banner");
+    if (await cookieBanner.isVisible()) {
+      await cookieBanner.locator('button:has-text("Accept analytics cookies")').click();
+      await page.waitForTimeout(500); // Wait for banner to be dismissed
+    }
+
     // Verify page loaded successfully (not an error page)
     const errorSummary = page.locator(".govuk-error-summary");
     await expect(errorSummary).not.toBeVisible();
