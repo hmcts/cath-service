@@ -114,9 +114,9 @@ async function createFlatFileArtefact(
     const pdfBuffer = createTestPDFBuffer(fileContent);
 
     if (IS_DEPLOYED) {
-      // In deployed environments, upload file via the web app's test-support endpoint so it
-      // lands on the web pod's filesystem where the flat-file viewer reads from
-      console.log(`[flat-file] Uploading file via web app for artefact ${artefactId}`);
+      // In deployed environments, upload file via the API's test-support endpoint so it
+      // lands on the API pod's filesystem where the flat-file download endpoint reads from
+      console.log(`[flat-file] Uploading file via API for artefact ${artefactId}`);
       await uploadTestFlatFileToWeb({ artefactId, content: pdfBuffer, extension: ".pdf" });
     } else {
       // Locally, write directly to shared storage directory
