@@ -2129,6 +2129,8 @@ __metadata:
     nodemon: "npm:3.1.14"
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
+    pg: "npm:8.21.0"
+    pg-format: "npm:1.0.4"
     supertest: "npm:^7.1.4"
     typescript: "npm:6.0.3"
   languageName: unknown
