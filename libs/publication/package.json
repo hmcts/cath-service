@@ -26,6 +26,7 @@
     "@hmcts/civil-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/family-daily-cause-list": "workspace:*",
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
@@ -38,6 +39,6 @@
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "vitest": "4.1.8"
   }
 }

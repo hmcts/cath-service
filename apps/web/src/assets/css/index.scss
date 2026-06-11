@@ -1,12 +1,11 @@
-@use "govuk-frontend/dist/govuk/index" with (
-  $govuk-suppressed-warnings: ("import-using-all")
-);
+@use "govuk-frontend/dist/govuk/index";
 @use "@hmcts/web-core/src/assets/css/search-autocomplete.scss";
 @use "@hmcts/web-core/src/assets/css/filter-panel.scss";
 @use "@hmcts/web-core/src/assets/css/back-to-top.scss";
 @use "@hmcts/web-core/src/assets/css/button-as-link.scss";
 @use "@hmcts/admin-pages/src/assets/css/index.scss" as admin;
 @use "@hmcts/system-admin-pages/src/assets/css/dashboard.scss";
+@use "@hmcts/system-admin-pages/src/assets/css/user-management.scss";
 @use "@hmcts/verified-pages/src/assets/css/verified-pages.scss" as verified;
 @use "@hmcts/auth/src/assets/css/session-timeout.scss";
 @use "@hmcts/sjp-press-list/src/assets/css/sjp-filters.scss";

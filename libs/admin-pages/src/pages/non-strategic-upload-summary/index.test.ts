@@ -48,7 +48,10 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     if (id === 5) return Promise.resolve({ id: 5, friendlyName: "Magistrates Public List", welshFriendlyName: "Rhestr Gyhoeddus Ynadon" });
     if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
     return Promise.resolve(null);
-  })
+  }),
+  AuditLogAction: {
+    NON_STRATEGIC_UPLOAD: "Non strategic upload"
+  }
 }));
 
 vi.mock("@hmcts/web-core", async () => {
@@ -73,7 +76,7 @@ vi.mock("@hmcts/publication", async () => {
   const actual = await vi.importActual("@hmcts/publication");
   return {
     ...actual,
-    createArtefact: vi.fn(() => Promise.resolve("artefact-id-123")),
+    createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
     processPublication: vi.fn(() => Promise.resolve())
   };
 });
@@ -238,6 +241,8 @@ describe("non-strategic-upload-summary page", () => {
           locationId: "123",
           listTypeId: 6,
           locale: "en",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
           provenance: "MANUAL_UPLOAD",
           logPrefix: "[Non-Strategic Upload]"
         })
@@ -277,7 +282,9 @@ describe("non-strategic-upload-summary page", () => {
 
       expect(processPublication).toHaveBeenCalledWith(
         expect.objectContaining({
-          locale: "cy"
+          locale: "cy",
+          sensitivity: "PUBLIC",
+          language: "WELSH"
         })
       );
     });
@@ -401,7 +408,7 @@ describe("non-strategic-upload-summary page", () => {
       };
 
       vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(createArtefact).mockResolvedValue("artefact-id-123");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
 
       const session = {
         save: (callback: (err?: any) => void) => callback()

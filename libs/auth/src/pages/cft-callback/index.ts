@@ -53,14 +53,6 @@ export const GET = async (req: Request, res: Response) => {
       provenance: "CFT_IDAM"
     };
 
-    console.log("CFT IDAM: Creating user session with:", {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      role: user.role,
-      provenance: user.provenance
-    });
-
     req.session.regenerate((err: Error | null) => {
       if (err) {
         console.error("CFT IDAM callback: Session regeneration failed", err);
@@ -78,14 +70,6 @@ export const GET = async (req: Request, res: Response) => {
             console.error("CFT IDAM callback: Session save failed", saveErr);
             return res.redirect(`/sign-in?error=session_save_failed&lng=${lng}`);
           }
-
-          console.log("CFT IDAM: Session saved successfully");
-          console.log("CFT IDAM: Session ID:", req.sessionID);
-          console.log("CFT IDAM: User in session:", req.user);
-          console.log("CFT IDAM: Full session data:", {
-            cookie: req.session.cookie,
-            passport: req.session.passport
-          });
 
           // Clean up language from session and redirect with language parameter
           delete req.session.lng;

@@ -59,7 +59,7 @@
     "connect-redis": "^9.0.0",
     "express": "^5.2.0",
     "express-session": "^1.18.2",
-    "govuk-frontend": "^5.2.0",
+    "govuk-frontend": "^6.2.0",
     "helmet": "^8.0.0",
     "multer": "^2.0.2",
     "nunjucks": "^3.2.4",
@@ -85,11 +85,11 @@
     "@types/express-session": "1.19.0",
     "@types/multer": "2.1.0",
     "@types/nunjucks": "3.2.6",
-    "@types/pg": "8.16.0",
+    "@types/pg": "8.20.0",
     "@types/pg-format": "1.0.5",
     "connect-redis": "9.0.0",
     "express-session": "1.19.0",
-    "pg": "8.18.0",
+    "pg": "8.21.0",
     "pg-format": "1.0.4"
   }
 }

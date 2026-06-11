@@ -65,7 +65,7 @@ const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "value
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
+  await getPropertiesVolumeSecrets({ chartPath });
   const { default: config } = await import("config");
 
   // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
@@ -111,7 +111,7 @@ export async function createApp(): Promise<Express> {
   app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
-  configurePassport(app);
+  await configurePassport(app);
 
   const modulePaths = [
     __dirname,

@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { findAllListTypes } from "../../list-type/queries.js";
 import { findThirdPartyUserById, updateThirdPartySubscriptions } from "../../third-party-user/queries.js";
 import { validateSensitivity } from "../../third-party-user/validation.js";
@@ -101,7 +102,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   req.auditMetadata = {
     shouldLog: true,
-    action: "UPDATE_THIRD_PARTY_SUBSCRIPTIONS",
+    action: AuditLogAction.UPDATE_THIRD_PARTY_SUBSCRIPTIONS,
     entityInfo: `ID: ${session.manageThirdPartyUser.userId}, Name: ${session.manageThirdPartyUser.userName}, Sensitivity: ${sensitivity}, Previous List Types: [${previousListTypes}], Current List Types: [${currentListTypes}]`
   };
 

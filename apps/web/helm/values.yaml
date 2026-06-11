@@ -10,8 +10,9 @@ nodejs:
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
+    ENVIRONMENT: '{{ .Values.global.environment }}'
     POSTGRES_DATABASE: cath
-    REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
+    REDIS_HOST: 'cath-redis-{{ .Values.global.environment }}.redis.cache.windows.net'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
     CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
@@ -23,7 +24,7 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
   keyVaults:
-    cath:
+    cath-ss-kv:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
@@ -38,7 +39,7 @@ nodejs:
         - name: sso-client-secret
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
-          alias: SSO_IDENTITY_METADATA
+          alias: SSO_ISSUER_URL
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
         - name: sso-sg-admin-ctsc
@@ -47,7 +48,11 @@ nodejs:
           alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-
+        # Third-party push secrets (Courtel)
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE
         # Azure AD B2C secrets (media user account management)
         - name: b2c-tenant-id
           alias: AZURE_B2C_TENANT_ID

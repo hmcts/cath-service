@@ -18,8 +18,8 @@ export const cy = {
     },
     {
       title: "Rheoli Defnyddwyr",
-      description: "Chwilio, diweddaru a dileu defnyddwyr",
-      href: "/user-management"
+      description: "Dod o hyd i, diweddaru a dileu defnyddwyr",
+      href: "/find-users"
     },
     {
       title: "Archwiliwr Blob",

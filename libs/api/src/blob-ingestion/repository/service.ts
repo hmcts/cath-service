@@ -66,8 +66,9 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
 
   try {
     // Create artefact in database (returns actual artefact ID - either new or existing)
-    const artefactId = await createArtefact({
+    const { artefactId, isUpdate } = await createArtefact({
       artefactId: newArtefactId,
+      type: "LIST",
       locationId,
       listTypeId: validation.listTypeId,
       contentDate: new Date(request.content_date),
@@ -108,6 +109,11 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
         locale: request.language === "WELSH" ? "cy" : "en",
         jsonData: request.hearing_list as CauseListData,
         provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
+        sensitivity: request.sensitivity,
+        language: request.language,
+        displayFrom: new Date(request.display_from),
+        displayTo: new Date(request.display_to),
+        isUpdate,
         logPrefix: "[blob-ingestion]"
       }).catch((error) => {
         console.error("[blob-ingestion] Failed to process publication:", {

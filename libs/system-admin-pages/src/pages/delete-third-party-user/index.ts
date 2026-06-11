@@ -1,5 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../audit-log/logger.js";
 import { deleteThirdPartyUser, findThirdPartyUserById } from "../../third-party-user/queries.js";
 import { validateRadioSelection } from "../../third-party-user/validation.js";
 import { cy } from "./cy.js";
@@ -73,7 +74,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   req.auditMetadata = {
     shouldLog: true,
-    action: "DELETE_THIRD_PARTY_USER",
+    action: AuditLogAction.DELETE_THIRD_PARTY_USER,
     entityInfo: `ID: ${session.deleteThirdPartyUser.userId}, Name: ${session.deleteThirdPartyUser.userName}`
   };
 

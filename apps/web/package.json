@@ -49,12 +49,12 @@
     "express": "5.2.1",
     "express-session": "1.19.0",
     "glob": "13.0.6",
-    "govuk-frontend": "5.14.0",
+    "govuk-frontend": "6.2.0",
     "helmet": "8.1.0",
     "multer": "2.1.1",
     "nunjucks": "3.2.4",
     "passport": "0.7.0",
-    "pg": "8.19.0",
+    "pg": "8.21.0",
     "pg-format": "1.0.4",
     "redis": "5.12.1"
   },
@@ -70,7 +70,7 @@
     "nodemon": "3.1.14",
     "sass": "1.99.0",
     "supertest": "7.2.2",
-    "vite": "7.3.3",
+    "vite": "7.3.5",
     "vite-plugin-static-copy": "3.4.0"
   }
 }
