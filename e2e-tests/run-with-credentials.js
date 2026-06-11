@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env file in the parent directory
 config({ path: path.resolve(__dirname, '../.env') });
 
-const VAULT_NAME = 'cath-stg';
+const VAULT_NAME = 'cath-bootstrap-stg-kv';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
 
 const SECRET_MAPPINGS = {
@@ -29,9 +29,12 @@ const SECRET_MAPPINGS = {
   'cft-valid-test-account-password': 'CFT_VALID_TEST_ACCOUNT_PASSWORD',
   'cft-invalid-test-account': 'CFT_INVALID_TEST_ACCOUNT',
   'cft-invalid-test-account-password': 'CFT_INVALID_TEST_ACCOUNT_PASSWORD',
+  'crime-valid-test-account': 'CRIME_IDAM_VALID_TEST_ACCOUNT',
+  'crime-valid-test-account-password': 'CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD',
+  'gov-uk-notify-test-api-key': 'GOVUK_NOTIFY_API_KEY',
   'app-tenant': 'AZURE_TENANT_ID',
-  'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
-  'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
+  'cath-service-client-id': 'AZURE_API_CLIENT_ID',
+  'cath-service-secret': 'AZURE_API_CLIENT_SECRET',
 };
 
 async function loadCredentialsFromAzure() {
