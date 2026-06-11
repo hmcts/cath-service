@@ -52,6 +52,6 @@
     "@types/multer": "2.1.0",
     "@types/node": "24.10.4",
     "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "vitest": "4.1.8"
   }
 }
