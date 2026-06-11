@@ -173,7 +173,7 @@ export const locationData: {
     {
       jurisdictionId: 3,
       name: "Crime",
-      welshName: "Trosedd"
+      welshName: "Troseddau"
     },
     {
       jurisdictionId: 4,

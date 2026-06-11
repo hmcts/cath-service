@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mockJurisdictions = [
   { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
   { jurisdictionId: 2, name: "Family", welshName: "Teulu" },
-  { jurisdictionId: 3, name: "Crime", welshName: "Trosedd" },
+  { jurisdictionId: 3, name: "Crime", welshName: "Troseddau" },
   { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" }
 ];
 
