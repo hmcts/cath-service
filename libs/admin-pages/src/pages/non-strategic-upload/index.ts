@@ -1,6 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import "@hmcts/web-core"; // Import for Express type augmentation
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
 import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";

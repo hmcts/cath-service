@@ -5,6 +5,7 @@ import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converte
 import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
 import { getLocationById } from "@hmcts/location";
 import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
 import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";

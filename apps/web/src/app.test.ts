@@ -226,7 +226,7 @@ describe("Web Application", () => {
 
     it("should register public pages routes", async () => {
       const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalledTimes(20);
+      expect(createSimpleRouter).toHaveBeenCalledTimes(21);
     });
 
     it("should register system-admin page routes", async () => {

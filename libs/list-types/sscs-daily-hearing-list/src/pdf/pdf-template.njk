@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}
+    .new-line-wrap { white-space: pre; }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <p class="bold header-date">{{ t.listForDate }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformationTitle }}</h3>
+    <p>{{ importantInformationText }}</p>
+    <p><a href="{{ t.importantInformationLinkUrl }}">{{ t.importantInformationLinkText }}</a></p>
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.appealReferenceNumber }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.appellant }}</th>
+          <th>{{ t.tableHeaders.courtroom }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingTime }}</th>
+          <th>{{ t.tableHeaders.tribunal }}</th>
+          <th>{{ t.tableHeaders.respondent }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td>{{ hearing.venue }}</td>
+            <td class="no-wrap">{{ hearing.appealReferenceNumber }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.appellant }}</td>
+            <td>{{ hearing.courtroom }}</td>
+            <td class="no-wrap">{{ hearing.hearingTime }}</td>
+            <td class="new-line-wrap">{{ hearing.tribunal }}</td>
+            <td>{{ hearing.respondent }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hearings scheduled.</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>
