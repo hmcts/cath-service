@@ -67,6 +67,26 @@ describe("generateFamilyDailyCauseListPdf", () => {
     );
   });
 
+  it("should use provenance as label when provenance key is not in registry", async () => {
+    vi.mocked(generateDailyCauseListPdf).mockResolvedValue({ success: true, sizeBytes: 512 });
+
+    await generateFamilyDailyCauseListPdf({
+      artefactId: "unknown-provenance",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockCauseListData,
+      provenance: "UNKNOWN_PROVENANCE"
+    });
+
+    expect(generateDailyCauseListPdf).toHaveBeenCalledWith(
+      expect.objectContaining({ provenanceLabel: "UNKNOWN_PROVENANCE" }),
+      expect.any(String),
+      expect.any(Function),
+      expect.any(Function)
+    );
+  });
+
   it("should return error result when generateDailyCauseListPdf fails", async () => {
     vi.mocked(generateDailyCauseListPdf).mockResolvedValue({ success: false, error: "PDF generation failed" });
 

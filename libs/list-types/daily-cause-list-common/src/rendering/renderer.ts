@@ -1,6 +1,7 @@
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
-import type { CauseListCase, CauseListData, Party, RenderOptions, Session, Sitting } from "../models/types.js";
+import { createPartyDetails } from "../email-summary/party-extractor.js";
+import type { CauseListCase, CauseListData, RenderOptions, Session, Sitting } from "../models/types.js";
 
 function formatTime(isoDateTime: string): string {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London");
@@ -114,37 +115,6 @@ function formatHearingChannel(sitting: Sitting, session: Session): void {
   (sitting as any).caseHearingChannel = channel;
 }
 
-function convertPartyRole(role: string): string {
-  const roleMap: Record<string, string> = {
-    APPLICANT_PETITIONER: "APPLICANT_PETITIONER",
-    APPLICANT_PETITIONER_REPRESENTATIVE: "APPLICANT_PETITIONER_REPRESENTATIVE",
-    RESPONDENT: "RESPONDENT",
-    RESPONDENT_REPRESENTATIVE: "RESPONDENT_REPRESENTATIVE"
-  };
-
-  return roleMap[role] || role;
-}
-
-function createPartyDetails(party: Party): string {
-  if (party.individualDetails) {
-    const details = party.individualDetails;
-    const parts: string[] = [];
-
-    if (details.title) parts.push(details.title);
-    if (details.individualForenames) parts.push(details.individualForenames);
-    if (details.individualMiddleName) parts.push(details.individualMiddleName);
-    if (details.individualSurname) parts.push(details.individualSurname);
-
-    return parts.filter((n) => n.length > 0).join(" ");
-  }
-
-  if (party.organisationDetails?.organisationName) {
-    return party.organisationDetails.organisationName;
-  }
-
-  return "";
-}
-
 function processParties(caseItem: CauseListCase): void {
   let applicant = "";
   let respondent = "";
@@ -152,12 +122,11 @@ function processParties(caseItem: CauseListCase): void {
   let respondentRepresentative = "";
 
   for (const party of caseItem.party ?? []) {
-    const role = convertPartyRole(party.partyRole);
     const details = createPartyDetails(party).trim();
 
     if (!details) continue;
 
-    switch (role) {
+    switch (party.partyRole) {
       case "APPLICANT_PETITIONER":
         if (applicant.length > 0) applicant += ", ";
         applicant += details;

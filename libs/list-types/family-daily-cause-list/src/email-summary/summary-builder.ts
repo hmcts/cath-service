@@ -1,56 +1,8 @@
+import { extractParty } from "@hmcts/daily-cause-list-common";
 import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
-import type { CauseListCase, CauseListData, Party } from "../models/types.js";
+import type { CauseListData } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
-
-function convertPartyRole(role: string): string {
-  const roleMap: Record<string, string> = {
-    APPLICANT_PETITIONER: "APPLICANT_PETITIONER",
-    APPLICANT_PETITIONER_REPRESENTATIVE: "APPLICANT_PETITIONER_REPRESENTATIVE",
-    RESPONDENT: "RESPONDENT",
-    RESPONDENT_REPRESENTATIVE: "RESPONDENT_REPRESENTATIVE"
-  };
-
-  return roleMap[role] || role;
-}
-
-function createPartyDetails(party: Party): string {
-  if (party.individualDetails) {
-    const details = party.individualDetails;
-    const parts: string[] = [];
-
-    if (details.title) parts.push(details.title);
-    if (details.individualForenames) parts.push(details.individualForenames);
-    if (details.individualMiddleName) parts.push(details.individualMiddleName);
-    if (details.individualSurname) parts.push(details.individualSurname);
-
-    return parts.filter((n) => n.length > 0).join(" ");
-  }
-
-  if (party.organisationDetails?.organisationName) {
-    return party.organisationDetails.organisationName;
-  }
-
-  return "";
-}
-
-function extractParty(caseItem: CauseListCase, targetRole: string): string {
-  let result = "";
-
-  caseItem.party?.forEach((party) => {
-    const role = convertPartyRole(party.partyRole);
-    const details = createPartyDetails(party).trim();
-
-    if (!details) return;
-
-    if (role === targetRole) {
-      if (result.length > 0) result += ", ";
-      result += details;
-    }
-  });
-
-  return result.replace(/,\s*$/, "").trim();
-}
 
 export function extractCaseSummary(jsonData: CauseListData): CaseSummary[] {
   const summaries: CaseSummary[] = [];

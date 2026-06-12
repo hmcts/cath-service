@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime

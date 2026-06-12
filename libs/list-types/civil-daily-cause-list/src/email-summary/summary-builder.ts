@@ -1,56 +1,8 @@
+import { extractParty } from "@hmcts/daily-cause-list-common";
 import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
-import type { CauseListCase, CauseListData, Party } from "../models/types.js";
+import type { CauseListData } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
-
-function convertPartyRole(role: string): string {
-  const roleMap: Record<string, string> = {
-    APPLICANT_PETITIONER: "APPLICANT_PETITIONER",
-    APPLICANT_PETITIONER_REPRESENTATIVE: "APPLICANT_PETITIONER_REPRESENTATIVE",
-    RESPONDENT: "RESPONDENT",
-    RESPONDENT_REPRESENTATIVE: "RESPONDENT_REPRESENTATIVE"
-  };
-
-  return roleMap[role] || role;
-}
-
-function createPartyDetails(party: Party): string {
-  if (party.individualDetails) {
-    const details = party.individualDetails;
-    const parts: string[] = [];
-
-    if (details.title) parts.push(details.title);
-    if (details.individualForenames) parts.push(details.individualForenames);
-    if (details.individualMiddleName) parts.push(details.individualMiddleName);
-    if (details.individualSurname) parts.push(details.individualSurname);
-
-    return parts.filter((n) => n.length > 0).join(" ");
-  }
-
-  if (party.organisationDetails?.organisationName) {
-    return party.organisationDetails.organisationName;
-  }
-
-  return "";
-}
-
-function extractApplicant(caseItem: CauseListCase): string {
-  let applicant = "";
-
-  caseItem.party?.forEach((party) => {
-    const role = convertPartyRole(party.partyRole);
-    const details = createPartyDetails(party).trim();
-
-    if (!details) return;
-
-    if (role === "APPLICANT_PETITIONER") {
-      if (applicant.length > 0) applicant += ", ";
-      applicant += details;
-    }
-  });
-
-  return applicant.replace(/,\s*$/, "").trim();
-}
 
 export function extractCaseSummary(jsonData: CauseListData): CaseSummary[] {
   const summaries: CaseSummary[] = [];
@@ -61,7 +13,7 @@ export function extractCaseSummary(jsonData: CauseListData): CaseSummary[] {
         for (const sitting of session.sittings) {
           for (const hearing of sitting.hearing) {
             for (const caseItem of hearing.case) {
-              const applicant = extractApplicant(caseItem);
+              const applicant = extractParty(caseItem, "APPLICANT_PETITIONER");
               const fields: CaseSummary = [];
 
               if (applicant) {
