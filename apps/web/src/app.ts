@@ -44,7 +44,7 @@ const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "value
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath });
+  await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
   const { default: config } = await import("config");
 
   // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)

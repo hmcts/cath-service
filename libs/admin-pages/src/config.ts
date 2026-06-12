@@ -5,4 +5,4 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const moduleRoot = __dirname;
-export const fileUploadRoutes = ["/admin/manual-upload", "/admin/non-strategic-upload"];
+export const fileUploadRoutes = ["/manual-upload", "/non-strategic-upload"];
