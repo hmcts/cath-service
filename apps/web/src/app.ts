@@ -11,7 +11,11 @@ import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civi
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
-import { fileUploadRoutes as publicPagesFileUploadRoutes, moduleRoot as publicPagesModuleRoot } from "@hmcts/public-pages/config";
+import {
+  apiRoutes as publicPagesApiRoutes,
+  fileUploadRoutes as publicPagesFileUploadRoutes,
+  moduleRoot as publicPagesModuleRoot
+} from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
@@ -146,8 +150,9 @@ export async function createApp(): Promise<Express> {
     app.post(route, fileUploadMiddleware);
   }
 
-  // API routes served from the web app (location autocomplete, etc.)
+  // API routes served from the web app (location autocomplete, flat-file downloads, etc.)
   app.use(await createSimpleRouter(locationApiRoutes));
+  app.use(await createSimpleRouter(publicPagesApiRoutes));
 
   // Register all pages from apps/web/src/pages (includes route groups and admin)
   app.use(await createSimpleRouter({ path: `${__dirname}/pages` }));

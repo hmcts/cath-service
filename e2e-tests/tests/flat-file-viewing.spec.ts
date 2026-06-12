@@ -233,8 +233,8 @@ test.describe("Flat File Viewing", () => {
     await newPage.close();
 
     // STEP 6: Test PDF download with correct headers
-    const apiUrl = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-    const response = await page.request.get(`${apiUrl}/api/flat-file/${artefactId}/download`, {
+    const baseUrl = process.env.CATH_SERVICE_WEB_URL || "https://localhost:8080";
+    const response = await page.request.get(`${baseUrl}/api/flat-file/${artefactId}/download`, {
       ignoreHTTPSErrors: true
     });
 
