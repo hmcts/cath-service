@@ -4,6 +4,7 @@ export const meta = {
   phases: [
     { title: 'Discover', detail: 'Parse ticket for routes and fetch legacy pages from pip-frontend' },
     { title: 'Migrate', detail: 'Transform pages to new structure in parallel' },
+    { title: 'Backend', detail: 'Create validation schemas, PDFs, and email templates in parallel' },
     { title: 'Tests', detail: 'Generate unit and E2E tests' },
     { title: 'Verify', detail: 'Check content against ticket requirements' },
   ],
@@ -94,6 +95,18 @@ const VERIFICATION_SCHEMA = {
   }
 };
 
+const BACKEND_WORK_SCHEMA = {
+  type: 'object',
+  properties: {
+    page: { type: 'string' },
+    validationSchemaCreated: { type: 'boolean' },
+    pdfTemplateCreated: { type: 'boolean' },
+    emailSummaryCreated: { type: 'boolean' },
+    listManipulationCreated: { type: 'boolean' },
+    issues: { type: 'array', items: { type: 'string' } }
+  }
+};
+
 // Validate args
 if (!args || typeof args !== 'number') {
   throw new Error('Usage: /migrate-pip-pages <issue-number>');
@@ -107,24 +120,41 @@ phase('Discover');
 log(`Fetching issue #${issueNumber} to extract page routes`);
 
 const ticketInfo = await agent(
-  `Fetch GitHub issue #${issueNumber} using: gh issue view ${issueNumber} --json title,body
+  `Fetch GitHub issue #${issueNumber} using curl to https://api.github.com/repos/hmcts/cath-service/issues/${issueNumber}
 
-  Parse the issue to extract:
-  1. Pages to migrate - Look for:
-     - Route tables (e.g., "| Page | Route |" with rows like "| 5 | /subscription-add-list |")
-     - Route lists (e.g., "New routes: /crime-login, /crime-login/return")
-     - URL structure sections with paths
-  2. Content requirements - Look for:
-     - Acceptance criteria
-     - UI elements that must be present
-     - Welsh translation requirements
+  Parse the acceptance criteria to identify list types or pages that need style guides/templates.
 
-  For each page, extract:
-  - Route path (e.g., "/subscription-add-list")
-  - Derive page name from route (e.g., "subscription-add-list")
-  - Description (if provided in the ticket)
+  DETECTION PATTERNS - Look for any of these in acceptance criteria:
+  1. List names mentioned with display names (e.g., "The Mental Health Tribunal Daily Hearing List is created...")
+  2. Upload form names (e.g., "the list name is displayed as PCOL Daily Cause list")
+  3. Tribunal names with weekly/daily lists (e.g., "SIAC Weekly Hearing List")
+  4. Regional variants of the same list type (e.g., RPT Eastern, RPT London)
+  5. Multiple related lists (e.g., "Immigration and Asylum Chamber Daily List" and "...Additional Cases")
 
-  Return structured data with pages array containing name, route, and description for each page to migrate.`,
+  ROUTE DERIVATION - For each list/page found:
+  1. If upload form name is provided, use that for route derivation
+  2. Otherwise use the full display name
+  3. Convert to kebab-case: lowercase, replace spaces/punctuation with hyphens
+  4. Examples:
+     - "SIAC Weekly Hearing List" → /siac-weekly-hearing-list
+     - "PCOL Daily Cause list" → /pcol-daily-cause-list
+     - "Mental Health Tribunal Daily Hearing List" → /mental-health-tribunal-daily-hearing-list
+     - "Immigration and Asylum Chamber Daily List – Additional Cases" → /immigration-and-asylum-chamber-daily-list-additional-cases
+
+  FOR EACH LIST/PAGE, EXTRACT:
+  - Display name (full name shown in frontend)
+  - Upload form name (if different/specified)
+  - Derived route (kebab-case)
+  - Jurisdiction (Civil, Tribunal, etc.)
+  - Region (National, London, Yorkshire, etc.)
+  - Frequency (daily, weekly, rarely, etc.)
+  - Fields to display (if specified in "fields to be displayed" sections)
+  - Opening statements or special messages (from accordion or summary page)
+  - Ordering/priority rules (if specified)
+
+  Return structured data:
+  - pages: [{name: route without slash, route: with slash, description: display name}]
+  - contentRequirements: ALL acceptance criteria bullets as array of strings (preserve exact wording)`,
   {
     label: 'parse-ticket',
     schema: ISSUE_SCHEMA
@@ -199,31 +229,39 @@ const migrations = await pipeline(
     ${page.notes ? `Migration notes: ${page.notes}` : ''}
     Ticket requirements: ${JSON.stringify(ticketInfo)}
 
+    SPECIAL HANDLING FOR TRIBUNAL STYLE GUIDE PAGES:
+    - Many tribunal pages use shared controllers (e.g., nonStrategicTribunalListsController)
+    - Templates might be dynamically generated or use partials
+    - Content is often in JSON keyed by list-type slug
+    - Opening statements are in "important information" accordion sections
+
     Step 1: Create lib module at libs/${page.name}/
     - Create package.json with @hmcts/${page.name}
     - Create tsconfig.json
     - Create src/config.ts with moduleRoot export
     - Create src/index.ts with content exports
-    - Create src/${page.name}-page/en.ts from i18n JSON
-    - Create src/${page.name}-page/cy.ts from i18n JSON (if exists)
-    - Convert JSON structure to TypeScript objects
+    - Create src/${page.name}-page/en.ts from legacy i18n
+      * Extract content for this specific list type from JSON
+      * Include: page title, fields, opening statement, any special messages
+      * Use ticket requirements to fill in any missing content
+    - Create src/${page.name}-page/cy.ts (Welsh translation)
+      * If Welsh exists in pip-frontend, migrate it
+      * Otherwise, mark with TODO comment for translation
 
     Step 2: Create page controller at apps/web/src/pages/(core)/${page.name}/
-    - Create index.ts with GET export (and POST if hasPost is true)
+    - Create index.ts with GET export
     - Import content from lib: import { ${page.name}PageEn as en, ${page.name}PageCy as cy } from "@hmcts/${page.name}"
-    - Use functional controller pattern, not class-based
-    - Pass en, cy, t to res.render()
+    - Use functional controller pattern, NOT class-based
+    - Pass en, cy, and i18n t function to res.render()
+    - Handle any data fetching needed (publications, list metadata)
 
     Step 3: Migrate template to apps/web/src/pages/(core)/${page.name}/index.njk
-    - Copy template structure
-    - Ensure extends "layouts/base-template.njk"
-    - Update any macro imports to use GOV.UK Design System
-    - Replace hardcoded text with variables from content files
-    - Follow GOV.UK patterns from .claude/rules/design.md:
-      * Use appropriate components (govukButton, govukInput, etc.)
-      * Include govukErrorSummary if form has validation
-      * Proper heading hierarchy (h1 for page title)
-      * Accessible form labels and hints
+    - Follow the GOV.UK style guide page pattern
+    - Include "important information" details component with opening statement
+    - Display fields as specified in ticket (Date, Time, Case Reference, etc.)
+    - Ensure proper heading hierarchy
+    - Use GOV.UK Design System components
+    - Make content variables instead of hardcoded text
 
     Step 4: Update root tsconfig.json paths to include "@hmcts/${page.name}": ["libs/${page.name}/src"]
 
@@ -239,7 +277,93 @@ const migrations = await pipeline(
 const successfulMigrations = migrations.filter(Boolean).filter(m => m.libCreated && m.controllerCreated);
 log(`Successfully migrated ${successfulMigrations.length}/${legacyPages.pages.length} pages`);
 
-// Phase 3: Generate tests in parallel
+// Phase 3: Backend work - fetch schemas and templates from pip-data-management
+phase('Backend');
+
+const backendWork = await pipeline(
+  successfulMigrations,
+
+  (migration) => agent(
+    `Migrate backend components for "${migration.page}" from pip backend services.
+
+    CRITICAL: All backend components already exist and must be migrated from:
+    - pip-data-management: schemas, PDF templates (Thymeleaf), email summary logic
+    - pip-publication-service: template IDs, publication configuration
+
+    If you cannot find any component after thorough searching, STOP and ask the developer for help.
+    Do NOT create placeholder code - migrate existing implementations.
+
+    Follow conventions from CLAUDE.md and .claude/rules/backend.md:
+    - JSON Schema with AJV for validation
+    - Functional style
+    - ES modules with .js extensions
+
+    Page: ${migration.page}
+    Ticket requirements: ${JSON.stringify(ticketInfo)}
+
+    STEP 1 - Fetch JSON Validation Schema:
+    Search pip-data-management repo for schema:
+    - Try: https://raw.githubusercontent.com/hmcts/pip-data-management/master/src/main/resources/schemas/
+    - Search for files matching list type (e.g., "siac", "poac", "tribunal")
+    - Fetch JSON schema using curl
+    - Copy to: libs/publication/src/validation/schemas/${migration.page}-schema.json
+
+    STEP 2 - Fetch PDF Generation Logic:
+    PDF templates are at:
+    - Java service: https://github.com/hmcts/pip-data-management/tree/master/src/main/java/uk/gov/hmcts/reform/pip/data/management/service/filegeneration
+    - Thymeleaf templates: https://github.com/hmcts/pip-data-management/tree/master/src/main/resources/templates
+
+    Actions:
+    1. Find the Java file generation service for this list type (search filegeneration/ directory)
+    2. Find the Thymeleaf template (search templates/ directory)
+    3. Convert Java/Thymeleaf to TypeScript + Nunjucks/HTML
+    4. Create: libs/pdf-generation/src/templates/${migration.page}-pdf.ts
+    5. Use generatePdf from libs/pdf-generation/src/generator.ts
+    6. Include all fields from ticket
+
+    STEP 3 - Email Summary Field Extraction:
+
+    NOTE: Email templates themselves are in GOV.UK Notify (external), not in the codebase.
+    We only create the field extraction logic to generate summary data.
+
+    Fetch from pip-data-management artefact summary service:
+    - URL: https://raw.githubusercontent.com/hmcts/pip-data-management/master/src/main/java/uk/gov/hmcts/reform/pip/data/management/service/artefactsummary/NonStrategicListSummaryData.java
+    - Search for this list type in LIST_TYPE_SUMMARY_FIELDS map
+    - Example: SIAC_WEEKLY_HEARING_LIST: List.of(TIME, CASE_REFERENCE_NUMBER, CASE_NAME)
+    - Extract the fields list for this specific list type
+
+    Create: libs/list-types/${migration.page}/src/email-summary/summary-builder.ts
+    - Import CaseSummary types from @hmcts/list-types-common
+    - Implement extractCaseSummary() function
+    - Map Java field names to proper labels (TIME → "Time", CASE_REFERENCE_NUMBER → "Case reference number")
+    - Re-export formatCaseSummaryForEmail
+
+    Follow pattern from: libs/list-types/rcj-standard-daily-cause-list/src/email-summary/summary-builder.ts
+
+    STEP 4 - List Manipulation:
+    1. Search Java service files for data transformation
+    2. Look for sorting/filtering/grouping logic
+    3. Convert to TypeScript functional style
+    4. Create: libs/publication/src/${migration.page}-manipulation.ts
+
+    STEP 5 - Update Exports:
+    - Export PDF template: libs/pdf-generation/src/index.ts
+    - Export email template: libs/notifications/src/index.ts
+    - Export manipulation: libs/publication/src/index.ts
+
+    Report what was migrated, what was created new, and any issues.`,
+    {
+      label: `backend-${migration.page}`,
+      phase: 'Backend',
+      schema: BACKEND_WORK_SCHEMA
+    }
+  )
+);
+
+const successfulBackendWork = backendWork.filter(Boolean).filter(b => b.validationSchemaCreated);
+log(`Successfully created backend components for ${successfulBackendWork.length}/${successfulMigrations.length} pages`);
+
+// Phase 4: Generate tests in parallel
 phase('Tests');
 
 const tests = await pipeline(
@@ -348,17 +472,27 @@ await agent(
 const summary = {
   totalPages: legacyPages.pages.length,
   migrated: successfulMigrations.length,
+  backendCompleted: successfulBackendWork.length,
   tested: tests.filter(Boolean).length,
   contentIssues: contentIssues.length,
-  pages: successfulMigrations.map(m => ({
-    name: m.page,
-    hasTests: tests.some(t => t && t.page === m.page),
-    contentComplete: !contentIssues.some(v => v.page === m.page),
-    issues: [
-      ...m.issues || [],
-      ...verifications.find(v => v && v.page === m.page)?.missingContent || []
-    ]
-  }))
+  pages: successfulMigrations.map(m => {
+    const backend = backendWork.find(b => b && b.page === m.page);
+    return {
+      name: m.page,
+      hasTests: tests.some(t => t && t.page === m.page),
+      contentComplete: !contentIssues.some(v => v.page === m.page),
+      backendComplete: backend ?
+        (backend.validationSchemaCreated && backend.pdfTemplateCreated && backend.emailSummaryCreated) :
+        false,
+      issues: [
+        ...m.issues || [],
+        ...verifications.find(v => v && v.page === m.page)?.missingContent || [],
+        ...backend?.issues || []
+      ]
+    };
+  })
 };
+
+log(`\n✅ Migration complete: ${summary.migrated} pages migrated, ${summary.backendCompleted} with backend, ${summary.tested} with tests`);
 
 return summary;
