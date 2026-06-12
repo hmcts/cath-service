@@ -1,18 +1,15 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { familyDailyCauseListCy as cy, familyDailyCauseListEn as en, renderCauseListData, validateFamilyDailyCauseList } from "@hmcts/family-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
-import { renderCauseListData } from "../rendering/renderer.js";
-import { validateCivilDailyCauseList } from "../validation/json-validator.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 export const GET = async (req: Request, res: Response) => {
@@ -75,7 +72,7 @@ export const GET = async (req: Request, res: Response) => {
     try {
       jsonContent = await readFile(jsonFilePath, "utf-8");
     } catch (error) {
-      console.error(`[civil-daily-cause-list] Error reading JSON file at ${jsonFilePath}:`, error);
+      console.error(`[family-daily-cause-list] Error reading JSON file at ${jsonFilePath}:`, error);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -86,9 +83,9 @@ export const GET = async (req: Request, res: Response) => {
 
     const jsonData = JSON.parse(jsonContent);
 
-    const validationResult = validateCivilDailyCauseList(jsonData);
+    const validationResult = validateFamilyDailyCauseList(jsonData);
     if (!validationResult.isValid) {
-      console.error("[civil-daily-cause-list] Validation errors:", validationResult.errors);
+      console.error("[family-daily-cause-list] Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {
         en,
         cy,
@@ -105,7 +102,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
-    res.render("civil-daily-cause-list", {
+    res.render("family-daily-cause-list", {
       en,
       cy,
       title: t.title,
@@ -116,7 +113,7 @@ export const GET = async (req: Request, res: Response) => {
       t
     });
   } catch (error) {
-    console.error("[civil-daily-cause-list] Unexpected error:", error);
+    console.error("[family-daily-cause-list] Unexpected error:", error);
     return res.status(500).render("errors/common", {
       en,
       cy,

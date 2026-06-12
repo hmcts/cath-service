@@ -1,10 +1,9 @@
 import { readFile } from "node:fs/promises";
+import { renderCauseListData, validateCivilDailyCauseList } from "@hmcts/civil-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderCauseListData } from "../rendering/renderer.js";
-import { validateCivilDailyCauseList } from "../validation/json-validator.js";
 import { GET } from "./index.js";
 
 vi.mock("node:fs/promises");
@@ -23,8 +22,7 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     canAccessPublicationData: vi.fn()
   };
 });
-vi.mock("../validation/json-validator.js");
-vi.mock("../rendering/renderer.js");
+vi.mock("@hmcts/civil-daily-cause-list");
 
 describe("civil-daily-cause-list controller", () => {
   let req: Partial<Request>;
@@ -96,6 +94,7 @@ describe("civil-daily-cause-list controller", () => {
 
     await GET(req as Request, res as Response);
 
+    expect(getArtefactById).toHaveBeenCalledWith("nonexistent-id");
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
@@ -131,6 +130,7 @@ describe("civil-daily-cause-list controller", () => {
 
     await GET(req as Request, res as Response);
 
+    expect(consoleErrorSpy).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
@@ -143,6 +143,8 @@ describe("civil-daily-cause-list controller", () => {
 
     await GET(req as Request, res as Response);
 
+    expect(validateCivilDailyCauseList).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[civil-daily-cause-list] Validation errors:", ["Validation error"]);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
@@ -157,22 +159,19 @@ describe("civil-daily-cause-list controller", () => {
 
     await GET(req as Request, res as Response);
 
+    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
+      locationId: "1",
+      contentDate: mockArtefact.contentDate,
+      locale: "en"
+    });
     const renderCall = vi.mocked(res.render).mock.calls[0];
     expect(renderCall[0]).toBe("civil-daily-cause-list");
     expect(renderCall[1]).toHaveProperty("en");
     expect(renderCall[1]).toHaveProperty("cy");
     expect(renderCall[1]).toHaveProperty("header");
+    expect(renderCall[1]).toHaveProperty("openJustice");
     expect(renderCall[1]).toHaveProperty("listData");
     expect(renderCall[1]).toHaveProperty("t");
-    const t = renderCall[1].t;
-    expect(t).toHaveProperty("pageTitle");
-    expect(t).toHaveProperty("listFor");
-    expect(t).toHaveProperty("lastUpdated");
-    expect(t).toHaveProperty("importantInformation");
-    expect(t).toHaveProperty("openJusticeIntro");
-    expect(t).toHaveProperty("openJusticeContact");
-    expect(t).toHaveProperty("reportingRestrictions");
-    expect(t).toHaveProperty("beforeJudge");
   });
 
   it("should successfully render cause list in Welsh", async () => {
@@ -185,7 +184,11 @@ describe("civil-daily-cause-list controller", () => {
 
     await GET(req as Request, res as Response);
 
-    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "cy" }));
+    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
+      locationId: "1",
+      contentDate: mockArtefact.contentDate,
+      locale: "cy"
+    });
     expect(res.render).toHaveBeenCalledWith("civil-daily-cause-list", expect.any(Object));
   });
 
@@ -199,7 +202,11 @@ describe("civil-daily-cause-list controller", () => {
 
     await GET(req as Request, res as Response);
 
-    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "en" }));
+    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
+      locationId: "1",
+      contentDate: mockArtefact.contentDate,
+      locale: "en"
+    });
   });
 
   it("should use provenance label for data source", async () => {
@@ -214,12 +221,25 @@ describe("civil-daily-cause-list controller", () => {
     expect(res.render).toHaveBeenCalledWith("civil-daily-cause-list", expect.objectContaining({ dataSource: "Manual Upload" }));
   });
 
+  it("should use raw provenance when label not found", async () => {
+    req.query = { artefactId: "test-id" };
+    vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, provenance: "UNKNOWN_PROVENANCE" });
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(validateCivilDailyCauseList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCauseListData).mockResolvedValue(mockRenderedData);
+
+    await GET(req as Request, res as Response);
+
+    expect(res.render).toHaveBeenCalledWith("civil-daily-cause-list", expect.objectContaining({ dataSource: "UNKNOWN_PROVENANCE" }));
+  });
+
   it("should return 500 on unexpected error", async () => {
     req.query = { artefactId: "test-id" };
     vi.mocked(getArtefactById).mockRejectedValue(new Error("Database error"));
 
     await GET(req as Request, res as Response);
 
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[civil-daily-cause-list] Unexpected error:", expect.any(Error));
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
