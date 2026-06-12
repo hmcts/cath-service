@@ -33,8 +33,8 @@ const SECRET_MAPPINGS = {
   'crime-valid-test-account-password': 'CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD',
   'gov-uk-notify-test-api-key': 'GOVUK_NOTIFY_API_KEY',
   'app-tenant': 'AZURE_TENANT_ID',
-  'cath-service-client-id': 'AZURE_API_CLIENT_ID',
-  'cath-service-secret': 'AZURE_API_CLIENT_SECRET',
+  'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
+  'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
 };
 
 async function loadCredentialsFromAzure() {
