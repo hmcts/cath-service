@@ -23,7 +23,7 @@ vi.mock("@hmcts/location", () => ({
   getLocationsByIds: vi.fn()
 }));
 
-import { getLocationById, getLocationsByIds } from "@hmcts/location";
+import { getLocationsByIds } from "@hmcts/location";
 
 describe("Subscription Service", () => {
   beforeEach(() => {

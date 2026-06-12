@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 import { assertAuthenticated, loginWithCftIdam, logout } from "../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
@@ -162,10 +163,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on authenticated summary page
-      const summaryAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const summaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(summaryAccessibility.violations).toEqual([]);
 
       // 3. Verify CFT user sees PUBLIC, PRIVATE, and CLASSIFIED CFT publications
@@ -283,10 +281,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       expect(welshHeading).toBeTruthy();
 
       // Run accessibility check on Welsh summary page
-      const welshAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const welshAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(welshAccessibility.violations).toEqual([]);
 
       // Navigate back to English version
@@ -318,10 +313,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on unauthenticated summary page after logout
-      const logoutAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const logoutAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(logoutAccessibility.violations).toEqual([]);
 
       const publicationLinksUnauth = page.locator('.govuk-list a[href*="artefactId="]');
@@ -345,10 +337,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on summary page
-      const summaryAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const summaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(summaryAccessibility.violations).toEqual([]);
 
       // 3. Verify System admin sees all publications including CLASSIFIED
@@ -368,10 +357,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on CLASSIFIED publication page
-      const classifiedAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const classifiedAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(classifiedAccessibility.violations).toEqual([]);
 
       // Should successfully access the publication
@@ -389,10 +375,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on publication data view page
-      const publicationAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const publicationAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(publicationAccessibility.violations).toEqual([]);
 
       // Should not see metadata-only restriction message
@@ -414,10 +397,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on CTSC admin summary page
-      const ctscSummaryAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const ctscSummaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(ctscSummaryAccessibility.violations).toEqual([]);
 
       // 3. Verify CTSC admin only sees PUBLIC publications
@@ -463,10 +443,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on PUBLIC publication page
-      const ctscPublicationAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const ctscPublicationAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(ctscPublicationAccessibility.violations).toEqual([]);
 
       // Should successfully access PUBLIC publication data
@@ -486,10 +463,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on Local admin summary page
-      const localSummaryAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const localSummaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(localSummaryAccessibility.violations).toEqual([]);
 
       // 3. Verify Local admin only sees PUBLIC publications
@@ -535,10 +509,7 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on PUBLIC publication page
-      const localPublicationAccessibility = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name", "region"])
-        .analyze();
+      const localPublicationAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(localPublicationAccessibility.violations).toEqual([]);
 
       // Should successfully access PUBLIC publication data

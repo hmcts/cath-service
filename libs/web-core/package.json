@@ -15,38 +15,10 @@
     "./errors": {
       "production": "./dist/views/errors/index.js",
       "default": "./src/views/errors/index.ts"
-    },
-    "./vite": {
-      "production": "./dist/assets/vite-config.js",
-      "default": "./src/assets/vite-config.ts"
-    },
-    "./src/assets/js/search-autocomplete.js": {
-      "production": "./dist/assets/js/search-autocomplete.js",
-      "default": "./src/assets/js/search-autocomplete.ts"
-    },
-    "./src/assets/js/filter-panel.js": {
-      "production": "./dist/assets/js/filter-panel.js",
-      "default": "./src/assets/js/filter-panel.ts"
-    },
-    "./src/assets/js/back-to-top.js": {
-      "production": "./dist/assets/js/back-to-top.js",
-      "default": "./src/assets/js/back-to-top.ts"
-    },
-    "./src/assets/css/search-autocomplete.scss": {
-      "default": "./src/assets/css/search-autocomplete.scss"
-    },
-    "./src/assets/css/filter-panel.scss": {
-      "default": "./src/assets/css/filter-panel.scss"
-    },
-    "./src/assets/css/back-to-top.scss": {
-      "default": "./src/assets/css/back-to-top.scss"
-    },
-    "./src/assets/css/button-as-link.scss": {
-      "default": "./src/assets/css/button-as-link.scss"
     }
   },
   "scripts": {
-    "build": "tsc && cp -r src/views dist/ && mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc && cp -r src/views dist/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -63,6 +35,7 @@
     "helmet": "^8.0.0",
     "multer": "^2.0.2",
     "nunjucks": "^3.2.4",
+    "passport": "^0.7.0",
     "pg": "^8.13.1",
     "pg-format": "^1.0.4"
   },
@@ -85,11 +58,14 @@
     "@types/express-session": "1.19.0",
     "@types/multer": "2.1.0",
     "@types/nunjucks": "3.2.6",
+    "@types/passport": "^1.0.17",
     "@types/pg": "8.20.0",
     "@types/pg-format": "1.0.5",
     "connect-redis": "9.0.0",
     "express-session": "1.19.0",
     "pg": "8.21.0",
-    "pg-format": "1.0.4"
+    "pg-format": "1.0.4",
+    "typescript": "6.0.3",
+    "vitest": "4.1.8"
   }
 }

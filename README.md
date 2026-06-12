@@ -85,6 +85,7 @@ cath-service/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API server (Express 5.x)
 │   ├── web/                    # Web frontend (Express 5.x + Nunjucks)
+│   │   └── src/pages/          # Page controllers, templates, tests (auto-discovered)
 │   └── postgres/               # Database configuration (Prisma)
 ├── libs/                       # Modular packages (explicitly registered)
 │   ├── cloud-native-platform/  # Cloud Native Platform features
@@ -93,10 +94,13 @@ cath-service/
 │   ├── footer-pages/           # Module with example footer pages
 │   └── [your-module]/          # Your feature modules
 │       └── src/
-│           ├── pages/          # Page routes (imported in web app)
-│           ├── routes/         # API routes (imported in API app)
+│           ├── index.ts        # Business logic + content exports
+│           ├── config.ts       # Module configuration (moduleRoot, assets)
+│           ├── [page-name]/    # Page content (cy.ts, en.ts)
+│           ├── routes/         # API routes (auto-discovered)
 │           ├── prisma/         # Prisma schema
-│           ├── locales/        # Translations (loaded by govuk-starter)
+│           ├── locales/        # Shared translations
+│           ├── views/          # Shared templates
 │           └── assets/         # Module assets (compiled by vite)
 ├── e2e-tests/                  # End-to-end tests (Playwright)
 ├── docs/                       # Documentation and ADRs
