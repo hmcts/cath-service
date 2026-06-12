@@ -1,6 +1,6 @@
 # migrate-pip-pages
 
-Migrate pages from pip-frontend legacy service based on routes listed in the ticket.
+Complete end-to-end migration of tribunal list pages from pip services (pip-frontend, pip-data-management, pip-publication-service).
 
 When the user invokes this skill, run the `migrate-pip-pages` workflow with the issue number as args.
 
@@ -12,16 +12,20 @@ When the user invokes this skill, run the `migrate-pip-pages` workflow with the 
 
 ## What it does
 
-1. **Parses ticket** to extract routes/page names from tables or lists
-2. **Searches pip-frontend** using flexible matching for those routes (handles naming differences)
-3. **Migrates in parallel**:
-   - Creates lib module with `en.ts`/`cy.ts` content files
+1. **Parses ticket** to extract list types/pages from acceptance criteria (e.g., "SIAC Weekly Hearing List")
+2. **Migrates frontend** (pip-frontend):
+   - Creates content lib module with `en.ts`/`cy.ts`
    - Creates page controller in `apps/web/src/pages/`
    - Migrates Nunjucks template with GOV.UK components
-   - Generates unit tests for controller
-   - Generates E2E tests for user journey
-4. **Verifies content** against ticket requirements
-5. **Updates routes** in `apps/web/src/app.ts`
+3. **Migrates backend** (pip-data-management, pip-publication-service) in parallel:
+   - Fetches and converts JSON schemas
+   - Converts PDF templates (Java/Thymeleaf → TypeScript/Nunjucks)
+   - Extracts email summary field configuration
+   - Creates list-type module in `libs/list-types/`
+4. **Generates tests**:
+   - Frontend: controller unit tests, E2E journey tests
+   - Backend: email summary tests, PDF generator tests
+5. **Verifies** all components against ticket requirements
 
 ## Instructions
 
@@ -52,59 +56,82 @@ Extracts routes from issue #312, fetches those pages from pip-frontend, then mig
 
 ## Ticket Requirements
 
-The ticket must include routes in one of these formats:
+Works with tribunal style guide tickets that describe list types in acceptance criteria.
 
-**Route table:**
-```markdown
-| Page | Route |
-| 5 | `/subscription-add-list` |
-| 6 | `/subscription-add-list-language` |
-```
+**Example:** Issue #428, #429, #438 describe tribunals like:
+- "SIAC Weekly Hearing List" 
+- "First-tier Tribunal (Tax Chamber) Weekly Hearing List"
+- "RPT Eastern Weekly Hearing List"
 
-**Route list:**
-```markdown
-New routes: `/crime-login`, `/crime-login/return`, `/crime-rejected`
-```
+Each includes:
+- Full display name and upload form name
+- Fields to display (e.g., Date, Time, Case Reference Number)
+- Opening statements for important information accordion
+- Region information
 
-**URL structure:**
-```markdown
-## URL Structure
-- Sign-in options: `/sign-in`
-- Dashboard: `/dashboard`
-```
+Routes are automatically derived from list names:
+- "SIAC Weekly Hearing List" → `/siac-weekly-hearing-list`
+- "RPT Eastern Weekly Hearing List" → `/rpt-eastern-weekly-hearing-list`
 
 ## What gets created
 
-For each page (e.g., "home"):
+For each list type (e.g., "siac-weekly-hearing-list"):
 
+**Frontend content module:**
 ```
-libs/home/
+libs/siac-weekly-hearing-list/
 ├── package.json
 ├── tsconfig.json
 └── src/
-    ├── config.ts           # Module configuration
-    ├── index.ts            # Exports content
-    ├── home-page/
-    │   ├── en.ts          # English content
-    │   └── cy.ts          # Welsh content
+    ├── config.ts                        # Module configuration
+    ├── index.ts                         # Exports content
+    └── siac-weekly-hearing-list-page/
+        ├── en.ts                        # English content
+        └── cy.ts                        # Welsh content
+```
 
-apps/web/src/pages/
-└── (core)/
-    └── home/
-        ├── index.ts        # Controller with GET export
-        ├── index.njk       # Migrated template
-        └── index.test.ts   # Unit tests
+**Frontend page:**
+```
+apps/web/src/pages/(core)/siac-weekly-hearing-list/
+├── index.ts                             # Controller with GET export
+├── index.njk                            # Migrated template
+└── index.test.ts                        # Unit tests
+```
 
-e2e-tests/tests/
-└── home.spec.ts           # E2E test with accessibility checks
+**Backend list-type module:**
+```
+libs/list-types/siac-weekly-hearing-list/
+├── package.json
+├── tsconfig.json
+└── src/
+    ├── schemas/
+    │   └── siac-weekly-hearing-list.json  # JSON Schema validation
+    ├── email-summary/
+    │   ├── summary-builder.ts              # Email field extraction
+    │   └── summary-builder.test.ts
+    ├── pdf/
+    │   ├── pdf-generator.ts                # PDF generation
+    │   ├── pdf-template.njk                # PDF template
+    │   └── pdf-generator.test.ts
+    ├── conversion/
+    │   └── siac-weekly-hearing-list-config.ts  # Data transformation
+    ├── models/
+    │   └── siac-weekly-hearing-list.types.ts   # TypeScript types
+    ├── config.ts
+    └── index.ts
+```
+
+**E2E tests:**
+```
+e2e-tests/tests/siac-weekly-hearing-list.spec.ts  # Journey test with accessibility
 ```
 
 ## Notes
 
-- Uses flexible route matching (handles minor naming differences between ticket and pip-frontend)
-- Handles cases where one ticket route maps to multiple pip-frontend pages
-- Preserves all i18n content from legacy JSON files
-- Updates GOV.UK component usage to latest patterns
-- Follows new codebase conventions (camelCase, functional style)
-- Verifies content against ticket requirements
-- Generates tests following AAA pattern
+- **All components migrated from existing pip services** - no placeholder code
+- Flexible route matching handles naming variations
+- Converts Java/Thymeleaf to TypeScript/Nunjucks
+- Registers email summary in notification service
+- Follows GOV.UK Design System patterns
+- Tests follow AAA pattern with Welsh + accessibility inline
+- Verifies against ticket requirements

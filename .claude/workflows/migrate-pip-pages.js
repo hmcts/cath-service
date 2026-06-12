@@ -1,12 +1,12 @@
 export const meta = {
   name: 'migrate-pip-pages',
-  description: 'Migrate pages from pip-frontend based on routes listed in ticket',
+  description: 'Migrate views and accompanying logic from pip services',
   phases: [
-    { title: 'Discover', detail: 'Parse ticket for routes and fetch legacy pages from pip-frontend' },
-    { title: 'Migrate', detail: 'Transform pages to new structure in parallel' },
-    { title: 'Backend', detail: 'Create validation schemas, PDFs, and email templates in parallel' },
-    { title: 'Tests', detail: 'Generate unit and E2E tests' },
-    { title: 'Verify', detail: 'Check content against ticket requirements' },
+    { title: 'Discover', detail: 'Parse ticket and fetch pages from pip-frontend' },
+    { title: 'Migrate Frontend', detail: 'Create content modules and page controllers' },
+    { title: 'Migrate Backend', detail: 'Create schemas, PDFs, and email summary from pip-data-management' },
+    { title: 'Tests', detail: 'Generate unit and E2E tests for all components' },
+    { title: 'Verify', detail: 'Verify all components against ticket requirements' },
   ],
 };
 
@@ -20,11 +20,12 @@ const ISSUE_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: { type: 'string', description: 'Page name in kebab-case (e.g., "subscription-add-list")' },
-          route: { type: 'string', description: 'Route path (e.g., "/subscription-add-list")' },
-          description: { type: 'string', description: 'What this page does' }
+          name: { type: 'string', description: 'Page name in kebab-case (e.g., "siac-weekly-hearing-list")' },
+          route: { type: 'string', description: 'Route path (e.g., "/siac-weekly-hearing-list")' },
+          description: { type: 'string', description: 'Full display name (e.g., "Special Immigration Appeals Commission Weekly Hearing List")' },
+          listTypeConstant: { type: 'string', description: 'Java constant name from pip-data-management (e.g., "SIAC_WEEKLY_HEARING_LIST")' }
         },
-        required: ['name', 'route']
+        required: ['name', 'route', 'description']
       }
     },
     contentRequirements: {
@@ -145,6 +146,10 @@ const ticketInfo = await agent(
   - Display name (full name shown in frontend)
   - Upload form name (if different/specified)
   - Derived route (kebab-case)
+  - List type constant: Derive Java constant name for pip-data-management lookup
+    * Convert to SCREAMING_SNAKE_CASE
+    * Example: "SIAC Weekly Hearing List" → "SIAC_WEEKLY_HEARING_LIST"
+    * Example: "RPT Eastern Weekly Hearing List" → "RPT_EASTERN_WEEKLY_HEARING_LIST"
   - Jurisdiction (Civil, Tribunal, etc.)
   - Region (National, London, Yorkshire, etc.)
   - Frequency (daily, weekly, rarely, etc.)
@@ -153,7 +158,7 @@ const ticketInfo = await agent(
   - Ordering/priority rules (if specified)
 
   Return structured data:
-  - pages: [{name: route without slash, route: with slash, description: display name}]
+  - pages: [{name: route without slash, route: with slash, description: display name, listTypeConstant: SCREAMING_SNAKE_CASE}]
   - contentRequirements: ALL acceptance criteria bullets as array of strings (preserve exact wording)`,
   {
     label: 'parse-ticket',
@@ -235,37 +240,30 @@ const migrations = await pipeline(
     - Content is often in JSON keyed by list-type slug
     - Opening statements are in "important information" accordion sections
 
-    Step 1: Create lib module at libs/${page.name}/
-    - Create package.json with @hmcts/${page.name}
-    - Create tsconfig.json
-    - Create src/config.ts with moduleRoot export
-    - Create src/index.ts with content exports
-    - Create src/${page.name}-page/en.ts from legacy i18n
-      * Extract content for this specific list type from JSON
-      * Include: page title, fields, opening statement, any special messages
-      * Use ticket requirements to fill in any missing content
-    - Create src/${page.name}-page/cy.ts (Welsh translation)
-      * If Welsh exists in pip-frontend, migrate it
-      * Otherwise, mark with TODO comment for translation
+    NOTE: This creates frontend-only components. The unified list-type module (with schemas, PDF, etc.)
+    will be created in the Backend phase. This separation allows parallel work.
 
-    Step 2: Create page controller at apps/web/src/pages/(core)/${page.name}/
-    - Create index.ts with GET export
-    - Import content from lib: import { ${page.name}PageEn as en, ${page.name}PageCy as cy } from "@hmcts/${page.name}"
-    - Use functional controller pattern, NOT class-based
-    - Pass en, cy, and i18n t function to res.render()
-    - Handle any data fetching needed (publications, list metadata)
+    Step 1: Extract i18n content from pip-frontend
+    - Fetch i18n files from pip-frontend (locales/en/*.json and cy/*.json)
+    - Extract content specific to this list type
+    - Prepare for creation in list-types module (will be created in Backend phase)
 
-    Step 3: Migrate template to apps/web/src/pages/(core)/${page.name}/index.njk
+    Step 2: Create page template at apps/web/src/pages/(list-types)/${page.name}/
+    - Create ${page.name}.njk (Nunjucks template)
     - Follow the GOV.UK style guide page pattern
     - Include "important information" details component with opening statement
     - Display fields as specified in ticket (Date, Time, Case Reference, etc.)
     - Ensure proper heading hierarchy
     - Use GOV.UK Design System components
-    - Make content variables instead of hardcoded text
+    - Use i18n variables for all text content
 
-    Step 4: Update root tsconfig.json paths to include "@hmcts/${page.name}": ["libs/${page.name}/src"]
+    Step 3: Create page controller (if needed for non-standard behavior)
+    - Most list types use shared rendering logic
+    - Only create custom controller if page has unique behavior
+    - Location: apps/web/src/pages/(list-types)/${page.name}/index.ts
+    - Import locales from list-types module (will be available after Backend phase)
 
-    Report what was created and any issues encountered.`,
+    Report what was created and note that the unified list-type module will be created in Backend phase.`,
     {
       label: `migrate-${page.name}`,
       phase: 'Migrate',
@@ -284,14 +282,16 @@ const backendWork = await pipeline(
   successfulMigrations,
 
   (migration) => agent(
-    `Migrate backend components for "${migration.page}" from pip backend services.
+    `Migrate backend components for "${migration.page}" from pip-data-management.
 
-    CRITICAL: All backend components already exist and must be migrated from:
-    - pip-data-management: schemas, PDF templates (Thymeleaf), email summary logic
-    - pip-publication-service: template IDs, publication configuration
-
+    CRITICAL: All backend components already exist in pip-data-management and must be migrated.
     If you cannot find any component after thorough searching, STOP and ask the developer for help.
     Do NOT create placeholder code - migrate existing implementations.
+
+    List type information:
+    - Page name: ${migration.page}
+    - List type constant: ${ticketInfo.pages.find(p => p.name === migration.page)?.listTypeConstant || 'UNKNOWN'}
+    - Use this constant to find components in pip-data-management
 
     Follow conventions from CLAUDE.md and .claude/rules/backend.md:
     - JSON Schema with AJV for validation
@@ -301,14 +301,27 @@ const backendWork = await pipeline(
     Page: ${migration.page}
     Ticket requirements: ${JSON.stringify(ticketInfo)}
 
-    STEP 1 - Fetch JSON Validation Schema:
+    IMPORTANT: Create a unified list-type module at libs/list-types/${migration.page}/
+    This module will contain: schemas, locales (i18n), email-summary, PDF, conversion, models
+
+    STEP 1 - Create Locales from pip-frontend i18n:
+    - Fetch i18n files from pip-frontend (locales/en/*.json and cy/*.json)
+    - Extract content specific to this list type
+    - Create: libs/list-types/${migration.page}/src/locales/en.ts
+      * Convert JSON to TypeScript object
+      * Include: page title, fields, opening statement, labels
+    - Create: libs/list-types/${migration.page}/src/locales/cy.ts
+      * Welsh translation (if exists in pip-frontend)
+      * Otherwise create with TODO comments
+
+    STEP 2 - Fetch JSON Validation Schema:
     Search pip-data-management repo for schema:
     - Try: https://raw.githubusercontent.com/hmcts/pip-data-management/master/src/main/resources/schemas/
     - Search for files matching list type (e.g., "siac", "poac", "tribunal")
     - Fetch JSON schema using curl
     - Copy to: libs/publication/src/validation/schemas/${migration.page}-schema.json
 
-    STEP 2 - Fetch PDF Generation Logic:
+    STEP 3 - Fetch PDF Generation Logic:
     PDF templates are at:
     - Java service: https://github.com/hmcts/pip-data-management/tree/master/src/main/java/uk/gov/hmcts/reform/pip/data/management/service/filegeneration
     - Thymeleaf templates: https://github.com/hmcts/pip-data-management/tree/master/src/main/resources/templates
@@ -321,7 +334,7 @@ const backendWork = await pipeline(
     5. Use generatePdf from libs/pdf-generation/src/generator.ts
     6. Include all fields from ticket
 
-    STEP 3 - Email Summary Field Extraction:
+    STEP 4 - Email Summary Field Extraction:
 
     NOTE: Email templates themselves are in GOV.UK Notify (external), not in the codebase.
     We only create the field extraction logic to generate summary data.
@@ -340,16 +353,51 @@ const backendWork = await pipeline(
 
     Follow pattern from: libs/list-types/rcj-standard-daily-cause-list/src/email-summary/summary-builder.ts
 
-    STEP 4 - List Manipulation:
-    1. Search Java service files for data transformation
-    2. Look for sorting/filtering/grouping logic
-    3. Convert to TypeScript functional style
-    4. Create: libs/publication/src/${migration.page}-manipulation.ts
+    STEP 5 - Data Conversion/Transformation:
+    Search pip-data-management for data transformation logic:
+    - Look in service files for sorting/filtering/grouping of publication JSON data
+    - Check for field mapping and data manipulation
+    - Convert Java logic to TypeScript functional style
 
-    STEP 5 - Update Exports:
-    - Export PDF template: libs/pdf-generation/src/index.ts
-    - Export email template: libs/notifications/src/index.ts
-    - Export manipulation: libs/publication/src/index.ts
+    Create: libs/list-types/${migration.page}/src/conversion/${migration.page}-config.ts
+    - Field mapping configuration for publication JSON
+    - Data transformation functions
+    - Sorting/filtering logic
+    - Follow pattern from: libs/list-types/rcj-standard-daily-cause-list/src/conversion/
+
+    Also create TypeScript types for publication JSON data (NOT database):
+    - libs/list-types/${migration.page}/src/models/${migration.page}.types.ts
+    - Define interfaces for the publication JSON structure
+    - Example: HearingList, Hearing, CaseDetails (from the JSON schema)
+
+    STEP 6 - Create List-Type Module Structure and Register:
+
+    A) Create module configuration files:
+    1. package.json - "@hmcts/list-types-${migration.page}" with proper exports
+    2. tsconfig.json - extends root, excludes tests/assets
+    3. src/config.ts - exports moduleRoot path
+    4. src/index.ts - exports schemas, email summary, PDF, conversion, types
+
+    B) Register email summary in notification service:
+    Update: libs/notifications/src/notification/notification-service.ts
+    \`\`\`typescript
+    import { extractCaseSummary as extract${migration.page.replace(/-/g, '')}, formatCaseSummaryForEmail } from "@hmcts/list-types-${migration.page}";
+
+    const ${migration.page.replace(/-/g, '')}Config: EmailBuilderConfig = {
+      extract: extract${migration.page.replace(/-/g, '')} as SummaryExtractor,
+      format: formatCaseSummaryForEmail
+    };
+
+    // Find the list type ID by searching for ${ticketInfo.pages.find(p => p.name === migration.page)?.listTypeConstant || 'LIST_TYPE_CONSTANT'}
+    // in the ListType enum or database. Add to EMAIL_BUILDER_CONFIGS:
+    const EMAIL_BUILDER_CONFIGS: EmailBuilderConfigs = {
+      [LIST_TYPE_ID]: ${migration.page.replace(/-/g, '')}Config,
+      // ... existing configs
+    };
+    \`\`\`
+
+    C) Update root tsconfig.json:
+    Add path: "@hmcts/list-types-${migration.page}": ["libs/list-types/${migration.page}/src"]
 
     Report what was migrated, what was created new, and any issues.`,
     {
@@ -370,7 +418,7 @@ const tests = await pipeline(
   successfulMigrations,
 
   (migration) => agent(
-    `Generate tests for migrated page "${migration.page}".
+    `Generate tests for migrated page "${migration.page}" - both frontend and backend.
 
     CRITICAL: Follow testing rules from .claude/rules/testing.md and .claude/rules/e2e-testing.md:
     - AAA pattern (Arrange, Act, Assert) with clear sections
@@ -380,20 +428,43 @@ const tests = await pipeline(
     - Use getByRole() selectors (preferred)
     - Tag @nightly for longer tests
 
-    Step 1: Create unit test at apps/web/src/pages/(core)/${migration.page}/index.test.ts
-    - Use Vitest with AAA pattern (Arrange, Act, Assert)
+    FRONTEND TESTS:
+
+    Step 1: Create page controller unit test
+    - Location: apps/web/src/pages/(core)/${migration.page}/index.test.ts
     - Test GET handler renders with correct data
     - Test POST handler if it exists (validation, redirect, error handling)
     - Mock Request/Response with proper types
-    - Follow testing pattern from CLAUDE.md and .claude/rules/testing.md
+    - Use Vitest with AAA pattern
 
-    Step 2: Create E2E test at e2e-tests/tests/${migration.page}.spec.ts
+    Step 2: Create E2E test
+    - Location: e2e-tests/tests/${migration.page}.spec.ts
     - Test complete user journey for this page
     - Include Welsh translation test (?lng=cy)
     - Include accessibility check with AxeBuilder inline
     - Use getByRole() selectors (preferred)
     - Tag with @nightly if appropriate
-    - Follow E2E patterns from .claude/rules/e2e-testing.md
+
+    BACKEND TESTS (if backend components were created):
+
+    Step 3: Create email summary unit test
+    - Location: libs/list-types/${migration.page}/src/email-summary/summary-builder.test.ts
+    - Test extractCaseSummary extracts correct fields
+    - Test with various JSON data structures
+    - Test empty data handling
+    - Follow pattern from libs/list-types/rcj-standard-daily-cause-list/src/email-summary/summary-builder.test.ts
+
+    Step 4: Create PDF generator unit test
+    - Location: libs/list-types/${migration.page}/src/pdf/pdf-generator.test.ts
+    - Test PDF generation with valid data
+    - Test field rendering
+    - Test with empty/missing data
+    - Follow pattern from libs/list-types/rcj-standard-daily-cause-list/src/pdf/pdf-generator.test.ts
+
+    Step 5: Create conversion logic unit test (if conversion exists)
+    - Location: libs/list-types/${migration.page}/src/conversion/${migration.page}-config.test.ts
+    - Test data transformation functions
+    - Test sorting/filtering logic
 
     Report what was created.`,
     {
@@ -414,19 +485,41 @@ const verifications = await pipeline(
 
   (migration) => {
     return agent(
-      `Verify migrated page "${migration.page}" against ticket requirements.
+      `Verify migrated components for "${migration.page}" against ticket requirements.
 
       Ticket requirements: ${JSON.stringify(ticketInfo)}
 
-      Check:
+      FRONTEND VERIFICATION:
       1. Read apps/web/src/pages/(core)/${migration.page}/index.njk
-      2. Read libs/${migration.page}/src/${migration.page}-page/en.ts
-      3. Read libs/${migration.page}/src/${migration.page}-page/cy.ts
-      4. Verify all content requirements are present
-      5. Check Welsh translation is complete
-      6. Identify any missing or incomplete content
+         - Check all fields from ticket are displayed
+         - Check opening statement is present
+         - Check GOV.UK Design System components used correctly
 
-      Return verification results with specific missing items.`,
+      2. Read libs/${migration.page}/src/${migration.page}-page/en.ts
+         - Check all content from ticket is present
+         - Check field labels, headings, body text
+
+      3. Read libs/${migration.page}/src/${migration.page}-page/cy.ts
+         - Check Welsh translation is complete
+         - Check all en.ts content has Welsh equivalent
+
+      BACKEND VERIFICATION (if backend work was done):
+      4. Read libs/list-types/${migration.page}/src/schemas/${migration.page}.json
+         - Check schema includes all fields from ticket
+         - Check required fields match ticket requirements
+
+      5. Read libs/list-types/${migration.page}/src/email-summary/summary-builder.ts
+         - Check extractCaseSummary extracts correct fields
+         - From ticket: "fields to be published for the email summary" (e.g., Date, Time, Case Reference)
+
+      6. Read libs/list-types/${migration.page}/src/pdf/pdf-template.njk
+         - Check PDF template includes all fields from ticket
+         - Check formatting matches GOV.UK standards
+
+      7. Check libs/notifications/src/notification/notification-service.ts
+         - Verify email summary is registered in EMAIL_BUILDER_CONFIGS
+
+      Return verification results with specific missing items for both frontend and backend.`,
       {
         label: `verify-${migration.page}`,
         phase: 'Verify',
