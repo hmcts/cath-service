@@ -1,5 +1,6 @@
 import type {} from "@hmcts/auth";
 import type { NextFunction, Request, Response } from "express";
+import type {} from "multer";
 import { type AuditLogAction, logAction } from "./logger.js";
 
 declare module "express-serve-static-core" {

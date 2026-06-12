@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 test.describe("Cookie Management", () => {
   test.beforeEach(async ({ context }) => {
@@ -221,7 +222,7 @@ test.describe("Cookie Management", () => {
     // STEP 6: Run accessibility scan
     await page.goto("/cookie-preferences");
     await page.waitForLoadState("load");
-    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 });
