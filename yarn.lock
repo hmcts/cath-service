@@ -2076,7 +2076,7 @@ __metadata:
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/multer": "npm:2.1.0"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
   peerDependencies:
@@ -2092,7 +2092,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -2187,7 +2187,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -2205,7 +2205,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2224,7 +2224,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2250,7 +2250,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2267,7 +2267,7 @@ __metadata:
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.1.0"
     "@types/config": "npm:3.3.5"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     config: "npm:4.4.1"
   languageName: unknown
   linkType: soft
@@ -2280,7 +2280,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.7"
@@ -2295,7 +2295,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2335,7 +2335,7 @@ __metadata:
   dependencies:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     ajv: "npm:8.20.0"
     exceljs: "npm:4.4.0"
     typescript: "npm:6.0.3"
@@ -2363,7 +2363,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2378,7 +2378,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:
-    "@types/node": "npm:^22.10.2"
+    "@types/node": "npm:^24.0.0"
     notifications-node-client: "npm:^8.2.1"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
@@ -2412,7 +2412,7 @@ __metadata:
     "@aws-sdk/node-http-handler": "npm:3.374.0"
     "@types/express": "npm:5.0.6"
     "@types/multer": "npm:2.0.0"
-    "@types/node": "npm:22.13.10"
+    "@types/node": "npm:24.13.2"
     multer: "npm:2.0.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
@@ -2425,7 +2425,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/pdf-generation@workspace:libs/pdf-generation"
   dependencies:
-    "@types/node": "npm:22.19.21"
+    "@types/node": "npm:24.13.2"
     puppeteer: "npm:24.42.0"
     typescript: "npm:6.0.3"
   languageName: unknown
@@ -2449,7 +2449,7 @@ __metadata:
   dependencies:
     "@hmcts/postgres-prisma": "workspace:*"
     "@prisma/client": "npm:7.8.0"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     http-proxy: "npm:1.18.1"
     prisma: "npm:7.8.0"
   languageName: unknown
@@ -2506,7 +2506,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -2532,7 +2532,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
   peerDependencies:
@@ -2546,7 +2546,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
   peerDependencies:
@@ -5090,30 +5090,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:22.13.10":
-  version: 22.13.10
-  resolution: "@types/node@npm:22.13.10"
+"@types/node@npm:24.13.2, @types/node@npm:^24.0.0":
+  version: 24.13.2
+  resolution: "@types/node@npm:24.13.2"
   dependencies:
-    undici-types: "npm:~6.20.0"
-  checksum: 10c0/a3865f9503d6f718002374f7b87efaadfae62faa499c1a33b12c527cfb9fd86f733e1a1b026b80c5a0e4a965701174bc3305595a7d36078aa1abcf09daa5dee9
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:22.19.21, @types/node@npm:^22.10.2":
-  version: 22.19.21
-  resolution: "@types/node@npm:22.19.21"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/9a18a5fabaf75a55d63796d6086029c4f9fdd1c026a26d629804f5cc99b3302c749be321df29d7a7141dc227501ed645b5f9d01095d926f5d2c0e2230fcd3f59
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:24.10.4":
-  version: 24.10.4
-  resolution: "@types/node@npm:24.10.4"
-  dependencies:
-    undici-types: "npm:~7.16.0"
-  checksum: 10c0/069639cb7233ee747df1897b5e784f6b6c5da765c96c94773c580aac888fa1a585048d2a6e95eb8302d89c7a9df75801c8b5a0b7d0221d4249059cf09a5f4228
+    undici-types: "npm:~7.18.0"
+  checksum: 10c0/d7d48a88a4feb0a6aac3cbfaf9ef3b12752b4b09447f88dd0b4c77c03b281e3d4330fe6982a99aedcd63fc16c7540a0c248b91eb2abb0b3edd884d7fe684e9ea
   languageName: node
   linkType: hard
 
@@ -6144,7 +6126,7 @@ __metadata:
     "@biomejs/cli-linux-arm64": "npm:^2.3.6"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/jsonwebtoken": "npm:9.0.10"
-    "@types/node": "npm:24.10.4"
+    "@types/node": "npm:24.13.2"
     "@types/passport": "npm:1.0.17"
     "@types/supertest": "npm:7.2.0"
     "@vitest/coverage-v8": "npm:4.1.8"
@@ -10437,24 +10419,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.20.0":
-  version: 6.20.0
-  resolution: "undici-types@npm:6.20.0"
-  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.21.0":
-  version: 6.21.0
-  resolution: "undici-types@npm:6.21.0"
-  checksum: 10c0/c01ed51829b10aa72fc3ce64b747f8e74ae9b60eafa19a7b46ef624403508a54c526ffab06a14a26b3120d055e1104d7abe7c9017e83ced038ea5cf52f8d5e04
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~7.16.0":
-  version: 7.16.0
-  resolution: "undici-types@npm:7.16.0"
-  checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
+"undici-types@npm:~7.18.0":
+  version: 7.18.2
+  resolution: "undici-types@npm:7.18.2"
+  checksum: 10c0/85a79189113a238959d7a647368e4f7c5559c3a404ebdb8fc4488145ce9426fcd82252a844a302798dfc0e37e6fb178ff481ed03bc4caf634c5757d9ef43521d
   languageName: node
   linkType: hard
 
