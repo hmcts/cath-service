@@ -84,11 +84,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - name: Load e2e test credentials from bootstrap Key Vault
+      - name: Load credentials and app secrets from bootstrap Key Vault
         run: |
           KV="cath-bootstrap-stg-kv"
           fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
 
+          # E2E test credentials
           echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
           echo "SSO_TEST_SYSTEM_ADMIN_PASSWORD=$(fetch sso-test-system-admin-account-pwd)" >> $GITHUB_ENV
           echo "SSO_TEST_LOCAL_ADMIN_EMAIL=$(fetch sso-test-admin-local-account-user)" >> $GITHUB_ENV
@@ -104,6 +105,20 @@ jobs:
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
           echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
+
+          # App secrets required at startup
+          echo "SESSION_SECRET=$(fetch session-secret)" >> $GITHUB_ENV
+          echo "SSO_CLIENT_ID=$(fetch sso-client-id)" >> $GITHUB_ENV
+          echo "SSO_CLIENT_SECRET=$(fetch sso-client-secret)" >> $GITHUB_ENV
+          echo "SSO_ISSUER_URL=$(fetch sso-issuer-url)" >> $GITHUB_ENV
+          echo "SSO_SYSTEM_ADMIN_GROUP_ID=$(fetch sso-sg-system-admin)" >> $GITHUB_ENV
+          echo "SSO_INTERNAL_ADMIN_CTSC_GROUP_ID=$(fetch sso-sg-admin-ctsc)" >> $GITHUB_ENV
+          echo "SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID=$(fetch sso-sg-admin-local)" >> $GITHUB_ENV
+          echo "CFT_IDAM_CLIENT_SECRET=$(fetch cft-idam-client-secret)" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=$(fetch app-tenant)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
+          echo "APP_PIP_DATA_MANAGEMENT_SCOPE=$(fetch app-pip-data-management-scope)" >> $GITHUB_ENV
 
       - name: Enable Corepack
         run: corepack enable

@@ -17,6 +17,7 @@ const VAULT_NAME = 'cath-bootstrap-stg-kv';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
 
 const SECRET_MAPPINGS = {
+  // E2E test credentials
   'sso-test-system-admin-account-user': 'SSO_TEST_SYSTEM_ADMIN_EMAIL',
   'sso-test-system-admin-account-pwd': 'SSO_TEST_SYSTEM_ADMIN_PASSWORD',
   'sso-test-admin-local-account-user': 'SSO_TEST_LOCAL_ADMIN_EMAIL',
@@ -32,9 +33,19 @@ const SECRET_MAPPINGS = {
   'crime-valid-test-account': 'CRIME_IDAM_VALID_TEST_ACCOUNT',
   'crime-valid-test-account-password': 'CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD',
   'gov-uk-notify-test-api-key': 'GOVUK_NOTIFY_API_KEY',
+  // App secrets required at startup
+  'session-secret': 'SESSION_SECRET',
+  'sso-client-id': 'SSO_CLIENT_ID',
+  'sso-client-secret': 'SSO_CLIENT_SECRET',
+  'sso-issuer-url': 'SSO_ISSUER_URL',
+  'sso-sg-system-admin': 'SSO_SYSTEM_ADMIN_GROUP_ID',
+  'sso-sg-admin-ctsc': 'SSO_INTERNAL_ADMIN_CTSC_GROUP_ID',
+  'sso-sg-admin-local': 'SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID',
+  'cft-idam-client-secret': 'CFT_IDAM_CLIENT_SECRET',
   'app-tenant': 'AZURE_TENANT_ID',
   'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
   'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
+  'app-pip-data-management-scope': 'APP_PIP_DATA_MANAGEMENT_SCOPE',
 };
 
 async function loadCredentialsFromAzure() {
