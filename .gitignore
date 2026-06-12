@@ -10,6 +10,9 @@ build/
 public/build/
 database/build
 
+# Requirements SQLite DB (build artefact; rebuild with requirements/scripts/init_db.sh)
+requirements/*.db
+
 # Temporary storage
 apps/web/storage/temp/
 

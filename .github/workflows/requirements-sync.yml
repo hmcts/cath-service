@@ -1,0 +1,214 @@
+name: Requirements Sync
+
+# Nightly job that keeps the requirements database in sync with GitHub.
+#
+# It detects drift between the committed requirements DB (requirements/seed.sql +
+# migrations) and the live state of GitHub Project #43, then has Claude write a new
+# numbered migration capturing the delta and open a PR for human review. Nothing is
+# committed to the source of truth without that review.
+#
+# Drift in scope:
+#   (a) new requirements — issues that have newly reached "Refined Tickets" or beyond
+#   (b) board status changes on existing requirements
+#   (c) implementation changes — new/changed merged closing PRs (impl_commit_sha / impl_paths)
+# Out of scope: title / statement / priority edits.
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 04:00 UTC daily — after the 02:00 nightly E2E run
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+env:
+  # GitHub Project #43 (CaTH Kanban) — same IDs used by the claude-ready job in claude.yml.
+  PROJECT_ID: PVT_kwDOAVwpV84BNDg2
+  STATUS_FIELD_ID: PVTSSF_lADOAVwpV84BNDg2zg8KRxo
+
+jobs:
+  sync:
+    name: Sync requirements DB from GitHub
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure Git
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git config user.name "claude-code-bot[bot]"
+          git config user.email "claude-code-bot[bot]@users.noreply.github.com"
+          # Credentials are not persisted in .git/config (persist-credentials: false),
+          # so set the App token on the origin remote explicitly for the bot's push.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
+      - name: Install sqlite3
+        run: sudo apt-get update && sudo apt-get install -y sqlite3
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+          cache-dependency-path: '**/yarn.lock'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
+          aws-region: eu-west-1
+
+      - name: Run Claude Code - Requirements Sync
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
+          CLAUDE_CODE_MAX_OUTPUT_TOKENS: '8192'
+          MAX_THINKING_TOKENS: '2048'
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PROJECT_ID: ${{ env.PROJECT_ID }}
+          STATUS_FIELD_ID: ${{ env.STATUS_FIELD_ID }}
+        with:
+          use_bedrock: "true"
+          github_token: ${{ steps.app-token.outputs.token }}
+          prompt: |
+            You are syncing the standalone SQLite "requirements" database (in the
+            requirements/ directory) with the live state of GitHub Project #43
+            (hmcts/cath-service, "CaTH Kanban"). The DB is built from committed SQL:
+            requirements/schema.sql + requirements/seed.sql + requirements/migrations/*.sql,
+            applied in order by requirements/scripts/init_db.sh. The .db itself is a
+            gitignored build artefact; the SQL files are the source of truth.
+
+            Read requirements/schema.sql, requirements/seed.sql and
+            requirements/migrations/001_inferred_links.sql first to learn the schema, the
+            column set, and the SQL style to match.
+
+            Work through these steps IN ORDER:
+
+            ## 1. Read the current DB state
+            Run `yarn requirements:build`, then query requirements/requirements.db with
+            sqlite3 to capture, per requirement: issue_number, status, impl_commit_sha,
+            impl_paths, version. Also get `SELECT MAX(id) FROM requirement` and the highest
+            REQ-NNNN ref.
+
+            ## 2. Read the live GitHub state
+            Using `gh api graphql`, page through Project #43's items (PROJECT_ID env var,
+            Status field STATUS_FIELD_ID). The board statuses in order are: Backlog,
+            Prioritised Backlog, Refined Tickets, In Progress, Code Review, Ready For Test,
+            In Test, Ready For Sign Off, Done. The "gate" is **Refined Tickets and everything
+            after it** — ignore Backlog and Prioritised Backlog.
+            For each gated issue collect: number, title, body, url, createdAt, labels, and its
+            merged closing PRs (closedByPullRequestsReferences with state MERGED — merge
+            commit oid and changed file paths). Dedupe by issue_number.
+
+            ## 3. Compute the delta — THREE change types only
+            Apply this exact mapping (matching how seed.sql was built):
+            - board status -> requirement.status: Refined Tickets=approved, In Progress=in_progress,
+              Code Review / Ready For Test / In Test / Ready For Sign Off=implemented, Done=verified.
+            - priority from priority:* label suffix (1-highest->highest, 2-high->high,
+              3-medium->medium, 4-low->low, 5-lowest->lowest); NULL if no such label.
+            - granularity from type:* label (epic/story/task); NULL if absent.
+            - kind for NEW rows defaults to 'functional'.
+            - impl_commit_sha = the latest merged closing PR's merge commit oid.
+            - impl_paths = JSON array of the UNION of changed source files across merged closing
+              PRs, sorted, EXCLUDING: lockfiles (yarn.lock etc), .github/**, **/helm/**, *.md,
+              *.yml/*.yaml, and dist/build/generated/coverage paths. (See seed.sql for the style.)
+
+            Detect:
+            (a) NEW: a gated issue whose issue_number is not in the DB.
+            (b) STATUS CHANGE: existing requirement whose mapped status differs from the DB.
+            (c) IMPL CHANGE: existing requirement whose impl_commit_sha or impl_paths differs.
+                Compare impl_paths as SORTED SETS. Treat NULL-vs-NULL as NO change — most
+                requirements have no merged PR and must NOT generate a nightly change.
+
+            ## 4. If the delta is EMPTY: STOP
+            Do not scaffold a file, do not commit, do not open a PR. Print a clear message that
+            there were no changes and finish. This is the normal nightly outcome.
+
+            ## 5. Write the migration
+            Scaffold it: `requirements/scripts/new_migration.sh "sync github <YYYY-MM-DD>"`
+            (use today's date). Replace the TODO with the delta SQL, inside the existing
+            BEGIN TRANSACTION / COMMIT. Match seed.sql / 001 conventions exactly:
+            - NEW requirement: INSERT into requirement with id = current MAX(id)+k and
+              ref = next REQ-NNNN (sort new issues by issue_number before assigning, so the
+              lowest issue number gets the lowest ref). created_by/updated_by =
+              'github-actions[bot]'. created_at/updated_at from the issue's createdAt. Then an
+              INSERT into requirement_change (requirement_id, version=1, change_type='created',
+              change_summary='imported from GitHub issue', changed_by, changed_at=createdAt).
+            - STATUS CHANGE: UPDATE requirement SET status='<new>', version = version + 1,
+              updated_at = '<today ISO>' WHERE id = <id>; then INSERT requirement_change
+              (requirement_id, version=<old+1>, field='status', old_value, new_value,
+              change_type='status_changed', change_summary='board status moved', changed_by,
+              changed_at='<today ISO>').
+            - IMPL CHANGE: UPDATE requirement SET impl_commit_sha=..., impl_paths=...,
+              version = version + 1, updated_at='<today ISO>'; then one requirement_change row
+              per changed field (field='impl_commit_sha' and/or 'impl_paths',
+              change_type='modified', change_summary='merged PR(s) changed', new version).
+            If a single requirement has BOTH a status and impl change, use ONE UPDATE, bump
+            version once, and put all the change rows at that same new version (one logical edit).
+            NEVER delete a requirement or move it to a lower status, even if an issue dropped
+            below the gate or was removed — refs are never reused. If you see such a case, note
+            it in the PR body for a human to handle (do not change the row).
+
+            ## 6. Verify before opening a PR
+            Run `yarn requirements:build` — it must succeed. Then run
+            `sqlite3 requirements/requirements.db "PRAGMA integrity_check; PRAGMA foreign_key_check;"`
+            — integrity must be 'ok' and foreign_key_check must be empty. If either fails, fix
+            the migration; if you cannot, do NOT open a PR — exit with an error instead.
+
+            ## 7. Open (or update) the PR
+            First check for an existing open PR from a branch matching `chore/requirements-sync-*`
+            (`gh pr list --state open --head ...`). If one exists, commit onto THAT branch and
+            push (do not open a duplicate). Otherwise create branch
+            `chore/requirements-sync-<YYYY-MM-DD>`, commit only the new migration file, push, and
+            `gh pr create` against master. The PR body must summarise the delta: counts of new /
+            status-changed / impl-changed requirements with their REQ refs, and any
+            below-the-gate cases noted for a human.
+          claude_args: |
+            --dangerously-skip-permissions
+            --append-system-prompt "You are running in a scheduled GitHub Action to sync the requirements database. Read @CLAUDE.md and the requirements/ SQL files. Be precise: this is an append-only audit log. If there is no drift, do nothing and open no PR. Never hard-delete or down-status a requirement."
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*),Bash(gh:*),Bash(sqlite3:*),Bash(./requirements/scripts/new_migration.sh:*)"
+
+      - name: Independent build & integrity gate
+        if: always()
+        run: |
+          # Defense in depth: re-verify whatever migrations now exist in the working tree
+          # (including any Claude just wrote), independent of Claude's own checks. A bad
+          # migration must never sit in a green PR.
+          set -euo pipefail
+          yarn requirements:build
+          result=$(sqlite3 requirements/requirements.db "PRAGMA integrity_check;")
+          if [ "$result" != "ok" ]; then
+            echo "::error::integrity_check failed: $result"
+            exit 1
+          fi
+          fk=$(sqlite3 requirements/requirements.db "PRAGMA foreign_key_check;")
+          if [ -n "$fk" ]; then
+            echo "::error::foreign_key_check reported violations: $fk"
+            exit 1
+          fi
+          echo "✓ requirements DB builds clean and passes integrity checks"
