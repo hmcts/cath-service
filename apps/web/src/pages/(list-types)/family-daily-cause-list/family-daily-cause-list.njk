@@ -25,6 +25,10 @@
     <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
 
     <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body">
       {% for line in header.addressLines %}
         {{ line }}{% if not loop.last %}<br>{% endif %}
       {% endfor %}
@@ -54,6 +58,11 @@
         </p>
       </div>
     </details>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
+    </div>
 
     <div id="court-lists-container">
     {% for courtList in listData.courtLists %}
@@ -146,8 +155,16 @@
                               <td class="govuk-table__cell no-wrap">{{ hearing.hearingType }}</td>
                               <td class="govuk-table__cell no-wrap">{{ sitting.caseHearingChannel }}</td>
                               <td class="govuk-table__cell no-wrap">{{ durationText }}</td>
-                              <td class="govuk-table__cell no-wrap">{{ case.applicant }}</td>
-                              <td class="govuk-table__cell no-wrap">{{ case.respondent }}</td>
+                              <td class="govuk-table__cell no-wrap">
+                                {% if case.applicant %}
+                                  {{ case.applicant }}{% if case.applicantRepresentative %}, {{ t.legalAdvisor }}: {{ case.applicantRepresentative }}{% endif %}
+                                {% endif %}
+                              </td>
+                              <td class="govuk-table__cell no-wrap">
+                                {% if case.respondent %}
+                                  {{ case.respondent }}{% if case.respondentRepresentative %}, {{ t.legalAdvisor }}: {{ case.respondentRepresentative }}{% endif %}
+                                {% endif %}
+                              </td>
                             </tr>
                             {% if case.formattedReportingRestriction | length %}
                               <tr class="govuk-table__row">

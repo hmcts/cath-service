@@ -11,7 +11,7 @@ export async function generateCivilDailyCauseListPdf(options: Omit<DailyCauseLis
   return generateDailyCauseListPdf(
     { ...options, provenanceLabel },
     __dirname,
-    () => import("../pages/en.js"),
-    () => import("../pages/cy.js")
+    () => import("../locales/en.js"),
+    () => import("../locales/cy.js")
   );
 }
