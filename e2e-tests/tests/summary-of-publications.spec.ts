@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module

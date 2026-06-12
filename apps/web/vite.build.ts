@@ -7,7 +7,6 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const assetsPath = path.join(__dirname, "src", "assets");
 
 function getEntries(assetsPath: string): Record<string, string> {

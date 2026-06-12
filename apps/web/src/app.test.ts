@@ -78,6 +78,14 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   pageRoutes: { path: "/mock/civil-family/pages" }
 }));
 
+vi.mock("@hmcts/civil-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/civil-daily-cause-list"
+}));
+
+vi.mock("@hmcts/family-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/family-daily-cause-list"
+}));
+
 vi.mock("@hmcts/rcj-standard-daily-cause-list/config", () => ({
   moduleRoot: "/mock/rcj-standard",
   pageRoutes: { path: "/mock/rcj-standard/pages" }

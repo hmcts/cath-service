@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";

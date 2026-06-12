@@ -7,7 +7,9 @@ import { moduleRoot as adminCourtModuleRoot } from "@hmcts/administrative-court-
 import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
+import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -91,6 +93,8 @@ export async function createApp(): Promise<Express> {
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
     civilFamilyCauseListModuleRoot,
+    civilDailyCauseListModuleRoot,
+    familyDailyCauseListModuleRoot,
     sjpPressListModuleRoot,
     sjpPublicListModuleRoot,
     rcjStandardModuleRoot,
