@@ -34,7 +34,7 @@
     "dev:up": "docker compose up -d && yarn db:migrate:dev && yarn db:seed",
     "dev:down": "docker compose down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
-    "db:seed": "tsx --env-file-if-exists=.env libs/location/src/seed-data.ts",
+    "db:seed": "tsx --env-file-if-exists=.env apps/postgres/prisma/seed.ts",
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
     "db:generate": "yarn workspace @hmcts/postgres-prisma run generate",
     "db:studio": "yarn workspace @hmcts/postgres run studio",
@@ -57,7 +57,7 @@
     "supertest": "7.2.2",
     "tsx": "4.22.4",
     "turbo": "2.9.18",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vitest": "4.1.8"
   },
   "packageManager": "yarn@4.14.1",

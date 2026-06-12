@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 
@@ -24,10 +25,7 @@ test.describe("400 Error Page", () => {
     await expect(contactLink).toContainText(/contact us/i);
 
     // Check WCAG 2.2 AA accessibility compliance
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     if (accessibilityScanResults.violations.length > 0) {
       console.log("Accessibility violations found:");

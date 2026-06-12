@@ -8,12 +8,10 @@ export const GET = async (req: Request, res: Response) => {
     const query = req.query.q as string | undefined;
 
     if (query) {
-      // Search for locations
       const results = await searchLocations(query, language);
       return res.json(results);
     }
 
-    // Get all locations
     const locations = await getAllLocations(language);
     return res.json(locations);
   } catch (error) {
