@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Translations } from "./translation-loader.js";
+import "passport";
 
 declare module "express-session" {
   interface SessionData {

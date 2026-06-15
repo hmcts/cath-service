@@ -1,10 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { apiRoutes as blobIngestionRoutes } from "@hmcts/blob-ingestion/config";
-import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts/cloud-native-platform";
-import { apiRoutes as locationRoutes } from "@hmcts/location/config";
-import { apiRoutes as publicPagesRoutes } from "@hmcts/public-pages/config";
-import { createSimpleRouter } from "@hmcts/simple-router";
+import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts-cft/cloud-native-platform";
+import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import compression from "compression";
 import cors from "cors";
 import type { Express } from "express";
@@ -32,7 +29,11 @@ export async function createApp(): Promise<Express> {
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
-  const routeMounts = [{ path: `${__dirname}/routes` }, blobIngestionRoutes, locationRoutes, publicPagesRoutes];
+  const routeMounts = [{ path: `${__dirname}/routes` }];
+
+  // Register public-pages API routes (flat-file download)
+  const { apiRoutes: publicPagesRoutes } = await import("@hmcts/public-pages/config");
+  routeMounts.push(publicPagesRoutes);
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   // ENABLE_TEST_SUPPORT=true allows preview/staging deployments to run E2E tests

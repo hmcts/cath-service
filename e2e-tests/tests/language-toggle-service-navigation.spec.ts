@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
 
 test.describe("Language Toggle in Service Navigation - Issue 292", () => {
@@ -65,10 +66,7 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
     expect(toggleFocused).toBe(true);
 
     // 6. Test accessibility in English
-    const englishAccessibilityResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["link-name", "target-size"])
-      .analyze();
+    const englishAccessibilityResults = await axeCheck(page).disableRules(["link-name", "target-size"]).analyze();
     expect(englishAccessibilityResults.violations).toEqual([]);
 
     // 7. Test query parameter preservation on a different page
@@ -159,10 +157,7 @@ test.describe("Language Toggle in Service Navigation - Issue 292", () => {
     await expect(languageToggleOnUpload).not.toBeVisible();
 
     // 6. Test accessibility on admin page (without language toggle)
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["link-name", "target-size"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["link-name", "target-size"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
 
