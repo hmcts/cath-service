@@ -35,10 +35,10 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
   const categoryMap: Map<string, CrownWarnedCaseRow[]> = new Map();
   for (const courtList of WarnedList.CourtLists) {
     for (const entry of courtList.WithFixedDate ?? []) {
-      const label = entry.HearingDescription || "";
-      if (!categoryMap.has(label)) categoryMap.set(label, []);
       for (const fixture of entry.Fixture ?? []) {
         for (const caseItem of fixture.Cases ?? []) {
+          const label = caseItem.Hearing?.[0]?.HearingDescription || "";
+          if (!categoryMap.has(label)) categoryMap.set(label, []);
           categoryMap.get(label)!.push(processCase(caseItem, fixture.FixedDate));
         }
       }

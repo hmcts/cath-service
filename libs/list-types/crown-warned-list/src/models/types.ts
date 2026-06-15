@@ -24,6 +24,7 @@ export interface PddaCase {
   CaseNumber?: string;
   CaseNumberCaTH?: string;
   Hearing?: Array<{
+    HearingDescription?: string;
     ListNote?: string;
   }>;
   Prosecution?: {
@@ -41,7 +42,6 @@ export interface PddaFixture {
 }
 
 export interface PddaCourtListEntry {
-  HearingDescription?: string;
   Fixture?: PddaFixture[];
 }
 

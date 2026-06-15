@@ -66,7 +66,7 @@ describe("renderCrownWarnedListData", () => {
     expect(result.groupedCategories).toHaveLength(0);
   });
 
-  it("should group WithFixedDate cases by HearingDescription", async () => {
+  it("should group WithFixedDate cases by HearingDescription from Case.Hearing[0]", async () => {
     const input = {
       ...baseInput,
       WarnedList: {
@@ -75,13 +75,13 @@ describe("renderCrownWarnedListData", () => {
           {
             WithFixedDate: [
               {
-                HearingDescription: "TestHearingDescription",
                 Fixture: [
                   {
                     FixedDate: "2025-11-22",
                     Cases: [
                       {
                         CaseNumber: "T20250001",
+                        Hearing: [{ HearingDescription: "TestHearingDescription", ListNote: "" }],
                         Defendants: [
                           {
                             PersonalDetails: {
@@ -205,13 +205,13 @@ describe("renderCrownWarnedListData", () => {
           {
             WithFixedDate: [
               {
-                HearingDescription: "TestCategory",
                 Fixture: [
                   {
                     FixedDate: "2025-11-22",
                     Cases: [
                       {
                         CaseNumber: "T20250010",
+                        Hearing: [{ HearingDescription: "TestCategory", ListNote: "" }],
                         Defendants: [
                           {
                             PersonalDetails: {
@@ -377,14 +377,13 @@ describe("renderCrownWarnedListData", () => {
           {
             WithFixedDate: [
               {
-                HearingDescription: "TestCategory",
                 Fixture: [
                   {
                     FixedDate: "2025-11-22",
                     Cases: [
                       {
                         CaseNumber: "T20250030",
-                        Hearing: [{ ListNote: "Interpreter required" }],
+                        Hearing: [{ HearingDescription: "TestCategory", ListNote: "Interpreter required" }],
                         Defendants: []
                       }
                     ]
