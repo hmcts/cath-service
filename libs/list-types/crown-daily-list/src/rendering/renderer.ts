@@ -32,10 +32,13 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
       })()
     : "";
 
+  const startDate = jsonData.DailyList.ListHeader.StartDate;
+  const contentDate = startDate ? formatContentDate(new Date(startDate), options.locale) : formatContentDate(options.contentDate, options.locale);
+
   const header = {
     locationName,
     addressLines,
-    contentDate: formatContentDate(options.contentDate, options.locale),
+    contentDate,
     lastUpdated,
     version: jsonData.DailyList.ListHeader.Version || ""
   };

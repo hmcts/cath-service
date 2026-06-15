@@ -42,7 +42,7 @@ describe("renderCrownDailyListData", () => {
 
     expect(result.header.locationName).toBe("Crown Court at Leeds");
     expect(result.header.addressLines).toEqual(["1 Oxford Row", "LS1 3BG"]);
-    expect(result.header.contentDate).toBe("01 January 2025");
+    expect(result.header.contentDate).toBe("12 November 2025");
   });
 
   it("should use Welsh location name when locale is cy and welshName is present", async () => {
@@ -327,7 +327,7 @@ describe("renderCrownDailyListData", () => {
       locale: "cy"
     });
 
-    expect(result.header.contentDate).toContain("Ionawr");
+    expect(result.header.contentDate).toContain("Tachwedd");
   });
 
   it("should include version in header from ListHeader.Version", async () => {
