@@ -15,11 +15,8 @@ export const cy = {
   listingNotes: "Nodiadau rhestru",
   reportingRestrictions: "Cyfyngiad Adrodd",
   categoryLabels: {
-    "For Trial": "I Dreial",
-    "For Plea": "I Bledio",
-    "For Sentence": "I Ddedfrydu",
-    "For Appeal": "I Apelio",
-    "To be allocated": "I'w ddyrannu"
+    WithFixedDate: "Gyda Dyddiad Penodol",
+    WithoutFixedDate: "Heb Ddyddiad Penodol"
   },
   reportingRestrictionsTitle: "Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn",
   reportingRestrictionsBody:

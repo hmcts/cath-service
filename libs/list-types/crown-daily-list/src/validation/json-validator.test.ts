@@ -4,50 +4,44 @@ import { validateCrownDailyList } from "./json-validator.js";
 describe("validateCrownDailyList", () => {
   it("should validate a correct crown daily list", () => {
     const validData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z",
-        documentName: "Crown Daily List",
-        version: "1.0"
-      },
-      venue: {
-        venueName: "Crown Court at Leeds",
-        venueAddress: {
-          line: ["1 Oxford Row"],
-          town: "Leeds",
-          postCode: "LS1 3BG"
-        }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
+      DailyList: {
+        DocumentID: "CDPL-2025-001",
+        ListHeader: {
+          ListDate: "2025-11-12",
+          LastPublicationDate: "2025-11-12",
+          PublishedTime: "09:00:00",
+          Version: "1.0"
+        },
+        CrownCourt: {
+          CourtHouseName: "Crown Court at Leeds",
+          CourtHouseAddress: {
+            CourtHouseAddressLine: ["1 Oxford Row"],
+            CourtHouseAddressTown: "Leeds",
+            CourtHouseAddressPostCode: "LS1 3BG"
+          }
+        },
+        CourtLists: [
+          {
+            Sittings: [
               {
-                courtRoomName: "Court 1",
-                session: [
+                CourtRoomNumber: "Court 1",
+                Judiciary: {
+                  Judge: {
+                    CitizenNameForename: "James",
+                    CitizenNameSurname: "Smith"
+                  }
+                },
+                Hearings: [
                   {
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        hearing: [
-                          {
-                            hearingDescription: "Trial",
-                            case: [
-                              {
-                                caseNumber: "T20250001"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "T20250001"
                   }
                 ]
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     };
 
     const result = validateCrownDailyList(validData);
@@ -57,12 +51,8 @@ describe("validateCrownDailyList", () => {
     expect(result.schemaVersion).toBe("1.0");
   });
 
-  it("should return errors for missing required fields", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      }
-    };
+  it("should return errors for missing required DailyList", () => {
+    const invalidData = {};
 
     const result = validateCrownDailyList(invalidData);
 
@@ -70,19 +60,13 @@ describe("validateCrownDailyList", () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for invalid publication date format", () => {
+  it("should return errors for missing DocumentID", () => {
     const invalidData = {
-      document: {
-        publicationDate: "not-a-date"
-      },
-      venue: {
-        venueName: "Crown Court at Leeds",
-        venueAddress: {
-          line: ["1 Oxford Row"],
-          postCode: "LS1 3BG"
-        }
-      },
-      courtLists: []
+      DailyList: {
+        ListHeader: {},
+        CrownCourt: { CourtHouseName: "Crown Court at Leeds" },
+        CourtLists: []
+      }
     };
 
     const result = validateCrownDailyList(invalidData);
@@ -90,12 +74,14 @@ describe("validateCrownDailyList", () => {
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing venue", () => {
+  it("should return errors for missing CourtHouseName in CrownCourt", () => {
     const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      },
-      courtLists: []
+      DailyList: {
+        DocumentID: "CDPL-2025-001",
+        ListHeader: {},
+        CrownCourt: {},
+        CourtLists: []
+      }
     };
 
     const result = validateCrownDailyList(invalidData);
@@ -103,22 +89,22 @@ describe("validateCrownDailyList", () => {
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing courtRoomName in nested structure", () => {
+  it("should return errors for missing Judiciary in Sittings", () => {
     const invalidData = {
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      venue: { venueName: "Crown Court at Leeds", venueAddress: { line: ["1 Oxford Row"], postCode: "LS1 3BG" } },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
+      DailyList: {
+        DocumentID: "CDPL-2025-001",
+        ListHeader: {},
+        CrownCourt: { CourtHouseName: "Crown Court at Leeds" },
+        CourtLists: [
+          {
+            Sittings: [
               {
-                session: [{ sittings: [{ sittingStart: "2025-11-12T10:00:00.000Z", hearing: [] }] }]
+                CourtRoomNumber: "Court 1"
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     };
 
     const result = validateCrownDailyList(invalidData);
@@ -126,23 +112,22 @@ describe("validateCrownDailyList", () => {
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing sittingStart in nested structure", () => {
+  it("should return errors for missing CourtRoomNumber in Sittings", () => {
     const invalidData = {
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      venue: { venueName: "Crown Court at Leeds", venueAddress: { line: ["1 Oxford Row"], postCode: "LS1 3BG" } },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
+      DailyList: {
+        DocumentID: "CDPL-2025-001",
+        ListHeader: {},
+        CrownCourt: { CourtHouseName: "Crown Court at Leeds" },
+        CourtLists: [
+          {
+            Sittings: [
               {
-                courtRoomName: "Court 1",
-                session: [{ sittings: [{ hearing: [] }] }]
+                Judiciary: { Judge: {} }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     };
 
     const result = validateCrownDailyList(invalidData);

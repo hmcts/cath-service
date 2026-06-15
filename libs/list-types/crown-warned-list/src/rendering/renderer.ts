@@ -1,68 +1,58 @@
-import { createPartyDetails, formatContentDate, formatPublicationDateTime, formatTime } from "@hmcts/list-types-common";
+import { formatContentDate } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
-import type { CrownWarnedCase, CrownWarnedCaseRow, CrownWarnedListData, GroupedHearingCategory, Party, RenderOptions } from "../models/types.js";
+import type { CitizenName, CrownWarnedCaseRow, CrownWarnedListData, GroupedHearingCategory, PddaCase, PddaDefendant, RenderOptions } from "../models/types.js";
 
-const HEARING_CATEGORIES = ["For Trial", "For Plea", "For Sentence", "For Appeal", "To be allocated"];
+const CUSTODY_STATUSES = ["On remand", "In custody", "In care"];
+const CATEGORIES = ["WithFixedDate", "WithoutFixedDate"];
 
 export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, options: RenderOptions) {
+  const { WarnedList } = jsonData;
   const location = await getLocationById(Number.parseInt(options.locationId, 10));
-  const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || jsonData.venue.venueName;
+  const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || WarnedList.CrownCourt.CourtHouseName;
+
+  const address = WarnedList.CrownCourt.CourtHouseAddress;
 
   const header = {
     locationName,
-    addressLines: formatAddress(jsonData.venue.venueAddress),
+    addressLines: formatAddress(address),
     contentDate: formatContentDate(options.contentDate, options.locale),
-    lastUpdated: formatPublicationDateTime(jsonData.document.publicationDate, options.locale),
-    weekCommencing: formatWeekCommencing(jsonData.document.weekCommencing, options.locale)
+    lastUpdated: formatDate(WarnedList.ListHeader.LastPublicationDate, options.locale),
+    weekCommencing: formatDate(WarnedList.ListHeader.StartDate, options.locale)
   };
 
   const openJustice = {
-    venueName: jsonData.venue.venueName,
-    email: jsonData.venue.venueContact?.venueEmail || "",
-    phone: jsonData.venue.venueContact?.venueTelephone || ""
+    venueName: WarnedList.CrownCourt.CourtHouseName,
+    email: address?.CourtHouseAddressEmail || "",
+    phone: address?.CourtHouseAddressPhone || ""
   };
 
   const categoryMap: Map<string, CrownWarnedCaseRow[]> = new Map();
-  for (const cat of HEARING_CATEGORIES) {
+  for (const cat of CATEGORIES) {
     categoryMap.set(cat, []);
   }
 
-  for (const courtList of jsonData.courtLists) {
-    for (const courtRoom of courtList.courtHouse.courtRoom) {
-      for (const session of courtRoom.session) {
-        for (const sitting of session.sittings) {
-          const sittingTime = formatTime(sitting.sittingStart);
-
-          for (const hearing of sitting.hearing) {
-            const category = resolveCategoryFromDescription(hearing.hearingDescription || hearing.hearingType || "");
-
-            for (const caseItem of hearing.case) {
-              const { names, isInCustody } = extractDefendants(caseItem);
-              const linkedCases = (caseItem.linkedCases || []).map((lc) => lc.caseReference || "").filter((r) => r.length > 0);
-
-              const row: CrownWarnedCaseRow = {
-                fixedFor: caseItem.fixedFor || sittingTime,
-                caseNumber: caseItem.caseNumber || "",
-                defendants: names.join(", "),
-                prosecutingAuthority: caseItem.prosecutingAuthority || "",
-                linkedCases: linkedCases.join(", "),
-                listingNotes: caseItem.listingNotes || "",
-                isInCustody
-              };
-
-              const categoryRows = categoryMap.get(category);
-              if (categoryRows) categoryRows.push(row);
-            }
-          }
+  for (const courtList of WarnedList.CourtLists) {
+    for (const entry of courtList.WithFixedDate ?? []) {
+      for (const fixture of entry.Fixture ?? []) {
+        for (const caseItem of fixture.Cases ?? []) {
+          const row = processCase(caseItem, fixture.FixedDate, options.locale);
+          categoryMap.get("WithFixedDate")!.push(row);
         }
+      }
+    }
+
+    for (const entry of courtList.WithoutFixedDate ?? []) {
+      for (const caseItem of entry.Cases ?? []) {
+        const row = processCase(caseItem, undefined, options.locale);
+        categoryMap.get("WithoutFixedDate")!.push(row);
       }
     }
   }
 
   const groupedCategories: GroupedHearingCategory[] = [];
-  for (const cat of HEARING_CATEGORIES) {
-    const cases = categoryMap.get(cat) || [];
+  for (const cat of CATEGORIES) {
+    const cases = categoryMap.get(cat) ?? [];
     if (cases.length > 0) {
       groupedCategories.push({ category: cat, cases });
     }
@@ -71,54 +61,55 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
   return { header, openJustice, groupedCategories };
 }
 
-function formatAddress(address: CrownWarnedListData["venue"]["venueAddress"]): string[] {
+function formatAddress(address: CrownWarnedListData["WarnedList"]["CrownCourt"]["CourtHouseAddress"]): string[] {
+  if (!address) return [];
   const parts: string[] = [];
-  for (const line of address.line) {
+  for (const line of address.CourtHouseAddressLine ?? []) {
     if (line && line.length > 0) parts.push(line);
   }
-  if (address.town && address.town.length > 0) parts.push(address.town);
-  if (address.county && address.county.length > 0) parts.push(address.county);
-  if (address.postCode && address.postCode.length > 0) parts.push(address.postCode);
+  if (address.CourtHouseAddressTown && address.CourtHouseAddressTown.length > 0) parts.push(address.CourtHouseAddressTown);
+  if (address.CourtHouseAddressCounty && address.CourtHouseAddressCounty.length > 0) parts.push(address.CourtHouseAddressCounty);
+  if (address.CourtHouseAddressPostCode && address.CourtHouseAddressPostCode.length > 0) parts.push(address.CourtHouseAddressPostCode);
   return parts;
 }
 
-function formatWeekCommencing(isoOrText: string | undefined, locale: string): string {
-  if (!isoOrText) return "";
+function formatDate(dateStr: string | undefined, locale: string): string {
+  if (!dateStr) return "";
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
-  const dt = DateTime.fromISO(isoOrText).setZone("Europe/London");
-  if (dt.isValid) {
-    return dt.toJSDate().toLocaleDateString(localeCode, {
-      day: "2-digit",
-      month: "long",
-      year: "numeric"
-    });
-  }
-  return isoOrText;
+  const dt = DateTime.fromISO(dateStr);
+  if (!dt.isValid) return dateStr;
+  return dt.toJSDate().toLocaleDateString(localeCode, { day: "2-digit", month: "long", year: "numeric" });
 }
 
-function extractDefendants(caseItem: CrownWarnedCase): { names: string[]; isInCustody: boolean } {
-  const names: string[] = [];
-  let isInCustody = false;
-
-  for (const party of caseItem.party ?? []) {
-    if (party.partyRole === "DEFENDANT") {
-      const details = createPartyDetails(party as Party).trim();
-      if (details) names.push(details);
-    } else if (party.partyRole === "DEFENDANT_IN_CUSTODY") {
-      const details = createPartyDetails(party as Party).trim();
-      if (details) names.push(details);
-      isInCustody = true;
-    }
-  }
-
-  return { names, isInCustody };
+function formatCitizenName(name: CitizenName): string {
+  return [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
-function resolveCategoryFromDescription(description: string): string {
-  const normalised = (description || "").toLowerCase();
-  if (normalised.includes("trial")) return "For Trial";
-  if (normalised.includes("plea")) return "For Plea";
-  if (normalised.includes("sentence")) return "For Sentence";
-  if (normalised.includes("appeal")) return "For Appeal";
-  return "To be allocated";
+function formatDefendantName(defendant: PddaDefendant): string {
+  if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
+    return defendant.PersonalDetails.MaskedName;
+  }
+  return formatCitizenName(defendant.PersonalDetails.Name);
+}
+
+function isDefendantInCustody(defendant: PddaDefendant): boolean {
+  return CUSTODY_STATUSES.includes(defendant.PersonalDetails.CustodyStatus ?? "");
+}
+
+function processCase(caseItem: PddaCase, fixedDate: string | undefined, locale: string): CrownWarnedCaseRow {
+  const defendants = caseItem.Defendants ?? [];
+  const names = defendants.map(formatDefendantName).filter((n) => n.length > 0);
+  const inCustody = defendants.some(isDefendantInCustody);
+  const linkedCases = (caseItem.LinkedCases ?? []).map((lc) => lc.CaseNumber ?? "").filter((n) => n.length > 0);
+  const listNote = caseItem.Hearing?.[0]?.ListNote ?? "";
+
+  return {
+    fixedFor: fixedDate ? formatDate(fixedDate, locale) : "",
+    caseNumber: caseItem.CaseNumber ?? "",
+    defendants: names.join(", "),
+    prosecutingAuthority: caseItem.Prosecution?.ProsecutingAuthority ?? "",
+    linkedCases: linkedCases.join(", "),
+    listingNotes: listNote,
+    isInCustody: inCustody
+  };
 }

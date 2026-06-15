@@ -8,13 +8,27 @@ vi.mock("@hmcts/location", () => ({
 import { getLocationById } from "@hmcts/location";
 
 const baseInput = {
-  document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-  venue: {
-    venueName: "Crown Court at Leeds",
-    venueAddress: { line: ["1 Oxford Row"], town: "Leeds", county: "West Yorkshire", postCode: "LS1 3BG" },
-    venueContact: { venueTelephone: "0113 306 2500", venueEmail: "leedscc@justice.gov.uk" }
-  },
-  courtLists: []
+  DailyList: {
+    DocumentID: "CDPL-2025-001",
+    ListHeader: {
+      ListDate: "2025-11-12",
+      LastPublicationDate: "2025-11-12",
+      PublishedTime: "09:00:00",
+      Version: "1.0"
+    },
+    CrownCourt: {
+      CourtHouseName: "Crown Court at Leeds",
+      CourtHouseAddress: {
+        CourtHouseAddressLine: ["1 Oxford Row"],
+        CourtHouseAddressTown: "Leeds",
+        CourtHouseAddressCounty: "West Yorkshire",
+        CourtHouseAddressPostCode: "LS1 3BG",
+        CourtHouseAddressPhone: "0113 306 2500",
+        CourtHouseAddressEmail: "leedscc@justice.gov.uk"
+      }
+    },
+    CourtLists: []
+  }
 };
 
 describe("renderCrownDailyListData", () => {
@@ -23,7 +37,7 @@ describe("renderCrownDailyListData", () => {
     (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
   });
 
-  it("should render header with location name from venue when no DB location", async () => {
+  it("should render header with location name from CrownCourt when no DB location", async () => {
     const result = await renderCrownDailyListData(baseInput, {
       locationId: "100",
       contentDate: new Date("2025-01-01"),
@@ -33,7 +47,6 @@ describe("renderCrownDailyListData", () => {
     expect(result.header.locationName).toBe("Crown Court at Leeds");
     expect(result.header.addressLines).toEqual(["1 Oxford Row", "Leeds", "West Yorkshire", "LS1 3BG"]);
     expect(result.header.contentDate).toBe("01 January 2025");
-    expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
   });
 
   it("should use Welsh location name when locale is cy and welshName is present", async () => {
@@ -51,7 +64,7 @@ describe("renderCrownDailyListData", () => {
     expect(result.header.locationName).toBe("Llys y Goron yn Leeds");
   });
 
-  it("should render open justice contact details", async () => {
+  it("should render open justice contact details from CrownCourt.CourtHouseAddress", async () => {
     const result = await renderCrownDailyListData(baseInput, {
       locationId: "100",
       contentDate: new Date("2025-01-01"),
@@ -63,152 +76,36 @@ describe("renderCrownDailyListData", () => {
     expect(result.openJustice.phone).toBe("0113 306 2500");
   });
 
-  it("should format sitting time and extract defendant names", async () => {
-    const inputWithCases = {
-      ...baseInput,
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
-              {
-                courtRoomName: "Court 1",
-                session: [
-                  {
-                    judiciary: [{ johKnownAs: "HHJ Smith", isPresiding: true }],
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        hearing: [
-                          {
-                            hearingDescription: "Trial",
-                            case: [
-                              {
-                                caseNumber: "T20250001",
-                                prosecutingAuthority: "CPS",
-                                party: [
-                                  {
-                                    partyRole: "DEFENDANT",
-                                    individualDetails: {
-                                      individualForenames: "John",
-                                      individualSurname: "Smith"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    };
-
-    const result = await renderCrownDailyListData(inputWithCases, {
-      locationId: "100",
-      contentDate: new Date("2025-01-01"),
-      locale: "en"
-    });
-
-    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
-    expect(session.formattedJudiciaries).toBe("HHJ Smith");
-
-    const sitting = session.sittings[0];
-    expect(sitting.time).toBe("10am");
-
-    const hearing = sitting.hearing[0];
-    expect(hearing.displayHearingType).toBe("Trial");
-
-    const caseItem = hearing.case[0];
-    expect(caseItem.defendants).toBe("John Smith");
-  });
-
-  it("should handle multiple defendants", async () => {
-    const inputWithMultipleDefendants = {
-      ...baseInput,
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
-              {
-                courtRoomName: "Court 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        hearing: [
-                          {
-                            case: [
-                              {
-                                caseNumber: "T20250002",
-                                party: [
-                                  {
-                                    partyRole: "DEFENDANT",
-                                    individualDetails: { individualForenames: "Alice", individualSurname: "Jones" }
-                                  },
-                                  {
-                                    partyRole: "DEFENDANT",
-                                    individualDetails: { individualForenames: "Bob", individualSurname: "Brown" }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    };
-
-    const result = await renderCrownDailyListData(inputWithMultipleDefendants, {
-      locationId: "100",
-      contentDate: new Date("2025-01-01"),
-      locale: "en"
-    });
-
-    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
-    expect(caseItem.defendants).toBe("Alice Jones, Bob Brown");
-  });
-
-  it("should format afternoon time correctly", async () => {
+  it("should group sittings by CourtRoomNumber into courtRoom", async () => {
     const input = {
       ...baseInput,
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
               {
-                courtRoomName: "Court 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T14:30:00.000Z",
-                        hearing: [{ case: [{ caseNumber: "T001" }] }]
-                      }
-                    ]
-                  }
-                ]
+                CourtRoomNumber: "Court 1",
+                SittingAt: "10:00:00",
+                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Smith" } },
+                Hearings: []
+              },
+              {
+                CourtRoomNumber: "Court 2",
+                SittingAt: "11:00:00",
+                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Jones" } },
+                Hearings: []
+              },
+              {
+                CourtRoomNumber: "Court 1",
+                SittingAt: "14:00:00",
+                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Smith" } },
+                Hearings: []
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     };
 
     const result = await renderCrownDailyListData(input, {
@@ -217,11 +114,217 @@ describe("renderCrownDailyListData", () => {
       locale: "en"
     });
 
-    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0];
-    expect(sitting.time).toBe("2:30pm");
+    const courtRooms = result.listData.courtLists[0].courtHouse.courtRoom;
+    expect(courtRooms).toHaveLength(2);
+    expect(courtRooms[0].courtRoomName).toBe("Court 1");
+    expect(courtRooms[0].session).toHaveLength(2);
+    expect(courtRooms[1].courtRoomName).toBe("Court 2");
+    expect(courtRooms[1].session).toHaveLength(1);
   });
 
-  it("should handle Welsh locale for content date", async () => {
+  it("should format sitting time from SittingAt HH:MM:SS", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: "Court 1",
+                SittingAt: "10:00:00",
+                Judiciary: {
+                  Judge: { CitizenNameForename: "John", CitizenNameSurname: "Smith" }
+                },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "T20250001",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: { CitizenNameForename: "Jane", CitizenNameSurname: "Doe" },
+                          IsMasked: "no" as const
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect(session.sittings[0].time).toBe("10am");
+  });
+
+  it("should format afternoon sitting time with minutes from SittingAt", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: "Court 1",
+                SittingAt: "14:30:00",
+                Judiciary: { Judge: {} },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].time).toBe("2:30pm");
+  });
+
+  it("should extract defendant names from Defendants[].PersonalDetails", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: "Court 1",
+                SittingAt: "10:00:00",
+                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Smith" } },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "T20250001",
+                    Prosecution: { ProsecutingAuthority: "CPS" },
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
+                          IsMasked: "no" as const
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.defendants).toBe("John Smith");
+    expect(caseItem.prosecutingAuthority).toBe("CPS");
+    expect(caseItem.caseNumber).toBe("T20250001");
+  });
+
+  it("should use MaskedName when IsMasked is yes", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: "Court 1",
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: {},
+                    CaseNumber: "T20250002",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
+                          MaskedName: "Defendant A",
+                          IsMasked: "yes" as const
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.defendants).toBe("Defendant A");
+  });
+
+  it("should format judiciary names from Judge and Justice[]", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: "Court 1",
+                Judiciary: {
+                  Judge: {
+                    CitizenNameTitle: "HHJ",
+                    CitizenNameForename: "James",
+                    CitizenNameSurname: "Smith"
+                  },
+                  Justice: [
+                    { CitizenNameForename: "Alice", CitizenNameSurname: "Jones" },
+                    { CitizenNameForename: "Bob", CitizenNameSurname: "Brown" }
+                  ]
+                },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect(session.formattedJudiciaries).toBe("HHJ James Smith, Alice Jones, Bob Brown");
+  });
+
+  it("should use Welsh locale for content date", async () => {
     const result = await renderCrownDailyListData(baseInput, {
       locationId: "100",
       contentDate: new Date("2025-01-01"),

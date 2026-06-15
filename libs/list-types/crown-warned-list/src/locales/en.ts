@@ -15,11 +15,8 @@ export const en = {
   listingNotes: "Listing notes",
   reportingRestrictions: "Reporting Restriction",
   categoryLabels: {
-    "For Trial": "For Trial",
-    "For Plea": "For Plea",
-    "For Sentence": "For Sentence",
-    "For Appeal": "For Appeal",
-    "To be allocated": "To be allocated"
+    WithFixedDate: "With Fixed Date",
+    WithoutFixedDate: "Without Fixed Date"
   },
   reportingRestrictionsTitle: "Restrictions on publishing or writing about these cases",
   reportingRestrictionsBody:

@@ -4,43 +4,41 @@ import { validateCrownWarnedList } from "./json-validator.js";
 describe("validateCrownWarnedList", () => {
   it("should validate a correct crown warned list", () => {
     const validData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z",
-        documentName: "Crown Warned List",
-        weekCommencing: "2025-11-10",
-        version: "1.0"
-      },
-      venue: {
-        venueName: "Crown Court at Birmingham",
-        venueAddress: {
-          line: ["Newton Street"],
-          town: "Birmingham",
-          postCode: "B4 7NA"
-        }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Birmingham",
-            courtRoom: [
+      WarnedList: {
+        DocumentID: "CWPL-2025-001",
+        ListHeader: {
+          StartDate: "2025-11-10",
+          LastPublicationDate: "2025-11-12",
+          PublishedTime: "09:00:00"
+        },
+        CrownCourt: {
+          CourtHouseName: "Crown Court at Birmingham",
+          CourtHouseAddress: {
+            CourtHouseAddressLine: ["Newton Street"],
+            CourtHouseAddressTown: "Birmingham",
+            CourtHouseAddressPostCode: "B4 7NA"
+          }
+        },
+        CourtLists: [
+          {
+            CourtHouse: { CourtHouseName: "Crown Court at Birmingham" },
+            WithFixedDate: [
               {
-                courtRoomName: "Court 2",
-                session: [
+                Fixture: [
                   {
-                    sittings: [
+                    FixedDate: "2025-11-22",
+                    Cases: [
                       {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        hearing: [
+                        CaseNumber: "T20250001",
+                        Defendants: [
                           {
-                            hearingDescription: "For Trial",
-                            case: [
-                              {
-                                caseNumber: "B20250001",
-                                fixedFor: "2025-11-12"
-                              }
-                            ]
+                            PersonalDetails: {
+                              Name: { CitizenNameForename: "Alice", CitizenNameSurname: "Williams" },
+                              IsMasked: "no"
+                            }
                           }
-                        ]
+                        ],
+                        Prosecution: { ProsecutingAuthority: "CPS" }
                       }
                     ]
                   }
@@ -48,8 +46,8 @@ describe("validateCrownWarnedList", () => {
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     };
 
     const result = validateCrownWarnedList(validData);
@@ -59,74 +57,58 @@ describe("validateCrownWarnedList", () => {
   });
 
   it("should return errors for missing required fields", () => {
-    const result = validateCrownWarnedList({ document: { publicationDate: "2025-11-12T09:00:00.000Z" } });
+    const result = validateCrownWarnedList({});
 
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for invalid publication date format", () => {
+  it("should return errors when WarnedList is missing DocumentID", () => {
     const result = validateCrownWarnedList({
-      document: { publicationDate: "bad-date" },
-      venue: { venueName: "Test Court", venueAddress: { line: ["Addr"], postCode: "B1 1AA" } },
-      courtLists: []
+      WarnedList: {
+        ListHeader: { StartDate: "2025-11-10" },
+        CrownCourt: { CourtHouseName: "Crown Court at Birmingham" },
+        CourtLists: []
+      }
     });
 
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing venue", () => {
+  it("should return errors when WarnedList is missing CrownCourt", () => {
     const result = validateCrownWarnedList({
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      courtLists: []
+      WarnedList: {
+        DocumentID: "CWPL-2025-001",
+        ListHeader: { StartDate: "2025-11-10" },
+        CourtLists: []
+      }
     });
 
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing courtRoomName in nested structure", () => {
-    const invalidData = {
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      venue: { venueName: "Crown Court at Birmingham", venueAddress: { line: ["Newton Street"], postCode: "B4 7NA" } },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Birmingham",
-            courtRoom: [
-              {
-                session: [{ sittings: [{ sittingStart: "2025-11-12T10:00:00.000Z", hearing: [] }] }]
-              }
-            ]
-          }
-        }
-      ]
-    };
-
-    const result = validateCrownWarnedList(invalidData);
+  it("should return errors when CrownCourt is missing CourtHouseName", () => {
+    const result = validateCrownWarnedList({
+      WarnedList: {
+        DocumentID: "CWPL-2025-001",
+        ListHeader: { StartDate: "2025-11-10" },
+        CrownCourt: {},
+        CourtLists: []
+      }
+    });
 
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing sittingStart in nested structure", () => {
-    const invalidData = {
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      venue: { venueName: "Crown Court at Birmingham", venueAddress: { line: ["Newton Street"], postCode: "B4 7NA" } },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Birmingham",
-            courtRoom: [
-              {
-                courtRoomName: "Court 2",
-                session: [{ sittings: [{ hearing: [] }] }]
-              }
-            ]
-          }
-        }
-      ]
-    };
-
-    const result = validateCrownWarnedList(invalidData);
+  it("should return errors for HTML injection in DocumentID", () => {
+    const result = validateCrownWarnedList({
+      WarnedList: {
+        DocumentID: "<script>alert(1)</script>",
+        ListHeader: { StartDate: "2025-11-10" },
+        CrownCourt: { CourtHouseName: "Crown Court at Birmingham" },
+        CourtLists: []
+      }
+    });
 
     expect(result.isValid).toBe(false);
   });

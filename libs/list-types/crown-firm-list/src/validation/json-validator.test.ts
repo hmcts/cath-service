@@ -4,50 +4,41 @@ import { validateCrownFirmList } from "./json-validator.js";
 describe("validateCrownFirmList", () => {
   it("should validate a correct crown firm list", () => {
     const validData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z",
-        documentName: "Crown Firm List",
-        version: "1.0"
-      },
-      venue: {
-        venueName: "Crown Court at Manchester",
-        venueAddress: {
-          line: ["Crown Square"],
-          town: "Manchester",
-          postCode: "M3 3FL"
-        }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Manchester",
-            courtRoom: [
+      FirmList: {
+        DocumentID: "CFPL-2025-001",
+        ListHeader: {
+          ListDate: "2025-11-12",
+          LastPublicationDate: "2025-11-12",
+          PublishedTime: "09:00:00"
+        },
+        CrownCourt: {
+          CourtHouseName: "Crown Court at Manchester",
+          CourtHouseAddress: {
+            CourtHouseAddressLine: ["Crown Square"],
+            CourtHouseAddressTown: "Manchester",
+            CourtHouseAddressPostCode: "M3 3FL"
+          }
+        },
+        CourtLists: [
+          {
+            SittingDate: "2025-11-12",
+            Sittings: [
               {
-                courtRoomName: "Court 3",
-                session: [
+                CourtRoomNumber: "Court 3",
+                Judiciary: {
+                  Judge: { CitizenNameSurname: "Brown" }
+                },
+                Hearings: [
                   {
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        hearing: [
-                          {
-                            hearingDescription: "Plea",
-                            case: [
-                              {
-                                caseNumber: "M20250001"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
+                    HearingDetails: { HearingDescription: "Plea" },
+                    CaseNumber: "M20250001"
                   }
                 ]
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     };
 
     const result = validateCrownFirmList(validData);
@@ -57,74 +48,71 @@ describe("validateCrownFirmList", () => {
   });
 
   it("should return errors for missing required fields", () => {
-    const result = validateCrownFirmList({ document: { publicationDate: "2025-11-12T09:00:00.000Z" } });
+    const result = validateCrownFirmList({});
 
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for invalid publication date format", () => {
+  it("should return errors for missing CrownCourt", () => {
     const result = validateCrownFirmList({
-      document: { publicationDate: "not-a-date" },
-      venue: { venueName: "Test Court", venueAddress: { line: ["Addr"], postCode: "M1 1AA" } },
-      courtLists: []
+      FirmList: {
+        DocumentID: "CFPL-2025-001",
+        ListHeader: {},
+        CourtLists: []
+      }
     });
 
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing venue", () => {
+  it("should return errors for missing CourtLists", () => {
     const result = validateCrownFirmList({
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      courtLists: []
+      FirmList: {
+        DocumentID: "CFPL-2025-001",
+        ListHeader: {},
+        CrownCourt: { CourtHouseName: "Crown Court at Manchester" }
+      }
     });
 
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing courtRoomName in nested structure", () => {
-    const invalidData = {
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      venue: { venueName: "Crown Court at Manchester", venueAddress: { line: ["Crown Square"], postCode: "M3 3FL" } },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Manchester",
-            courtRoom: [
+  it("should return errors for missing CourtRoomNumber in sitting", () => {
+    const result = validateCrownFirmList({
+      FirmList: {
+        DocumentID: "CFPL-2025-001",
+        ListHeader: {},
+        CrownCourt: { CourtHouseName: "Crown Court at Manchester" },
+        CourtLists: [
+          {
+            SittingDate: "2025-11-12",
+            Sittings: [
               {
-                session: [{ sittings: [{ sittingStart: "2025-11-12T10:00:00.000Z", hearing: [] }] }]
+                Judiciary: { Judge: {} }
               }
             ]
           }
-        }
-      ]
-    };
-
-    const result = validateCrownFirmList(invalidData);
+        ]
+      }
+    });
 
     expect(result.isValid).toBe(false);
   });
 
-  it("should return errors for missing sittingStart in nested structure", () => {
-    const invalidData = {
-      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
-      venue: { venueName: "Crown Court at Manchester", venueAddress: { line: ["Crown Square"], postCode: "M3 3FL" } },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Crown Court at Manchester",
-            courtRoom: [
-              {
-                courtRoomName: "Court 3",
-                session: [{ sittings: [{ hearing: [] }] }]
-              }
-            ]
+  it("should return errors for missing SittingDate in court list", () => {
+    const result = validateCrownFirmList({
+      FirmList: {
+        DocumentID: "CFPL-2025-001",
+        ListHeader: {},
+        CrownCourt: { CourtHouseName: "Crown Court at Manchester" },
+        CourtLists: [
+          {
+            Sittings: []
           }
-        }
-      ]
-    };
-
-    const result = validateCrownFirmList(invalidData);
+        ]
+      }
+    });
 
     expect(result.isValid).toBe(false);
   });

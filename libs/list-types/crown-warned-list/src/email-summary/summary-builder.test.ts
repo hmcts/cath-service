@@ -2,58 +2,44 @@ import { describe, expect, it } from "vitest";
 import type { CrownWarnedListData } from "../models/types.js";
 import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
 
-const buildTestData = (overrides?: Partial<CrownWarnedListData>): CrownWarnedListData => ({
-  document: { publicationDate: "2025-01-28T10:00:00Z", weekCommencing: "2025-01-27" },
-  venue: {
-    venueName: "Crown Court at Birmingham",
-    venueAddress: { line: ["Newton Street"], postCode: "B4 7NA" }
-  },
-  courtLists: [],
-  ...overrides
+const buildTestData = (overrides?: Partial<CrownWarnedListData["WarnedList"]>): CrownWarnedListData => ({
+  WarnedList: {
+    DocumentID: "CWL-2025-001",
+    ListHeader: { StartDate: "2025-01-27" },
+    CrownCourt: { CourtHouseName: "Crown Court at Birmingham" },
+    CourtLists: [],
+    ...overrides
+  }
 });
 
 describe("extractCaseSummary", () => {
-  it("should extract case summaries with defendant name, case reference and prosecuting authority", () => {
+  it("should extract case summaries from WithFixedDate cases", () => {
     const testData = buildTestData({
-      courtLists: [
+      CourtLists: [
         {
-          courtHouse: {
-            courtHouseName: "Crown Court at Birmingham",
-            courtRoom: [
-              {
-                courtRoomName: "Court 2",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-01-28T10:00:00Z",
-                        hearing: [
-                          {
-                            hearingDescription: "For Trial",
-                            case: [
-                              {
-                                caseNumber: "B20250001",
-                                prosecutingAuthority: "CPS",
-                                party: [
-                                  {
-                                    partyRole: "DEFENDANT",
-                                    individualDetails: {
-                                      individualForenames: "Alice",
-                                      individualSurname: "Williams"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  FixedDate: "2025-02-10",
+                  Cases: [
+                    {
+                      CaseNumber: "B20250001",
+                      Prosecution: { ProsecutingAuthority: "CPS" },
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: "Alice", CitizenNameSurname: "Williams" },
+                            IsMasked: "no"
                           }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     });
@@ -68,42 +54,29 @@ describe("extractCaseSummary", () => {
     ]);
   });
 
-  it("should include defendants in custody using DEFENDANT_IN_CUSTODY role", () => {
+  it("should extract case summaries from WithoutFixedDate cases", () => {
     const testData = buildTestData({
-      courtLists: [
+      CourtLists: [
         {
-          courtHouse: {
-            courtHouseName: "Crown Court at Birmingham",
-            courtRoom: [
-              {
-                courtRoomName: "Court 2",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-01-28T10:00:00Z",
-                        hearing: [
-                          {
-                            case: [
-                              {
-                                caseNumber: "B20250002",
-                                party: [
-                                  {
-                                    partyRole: "DEFENDANT_IN_CUSTODY",
-                                    individualDetails: { individualForenames: "Tom", individualSurname: "Hardy" }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
+          WithoutFixedDate: [
+            {
+              Cases: [
+                {
+                  CaseNumber: "B20250002",
+                  Prosecution: { ProsecutingAuthority: "CPS" },
+                  Defendants: [
+                    {
+                      PersonalDetails: {
+                        Name: { CitizenNameForename: "Tom", CitizenNameSurname: "Hardy" },
+                        IsMasked: "no",
+                        CustodyStatus: "On remand"
                       }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     });
@@ -115,26 +88,22 @@ describe("extractCaseSummary", () => {
 
   it("should not include defendant field when no defendants", () => {
     const testData = buildTestData({
-      courtLists: [
+      CourtLists: [
         {
-          courtHouse: {
-            courtHouseName: "Crown Court at Birmingham",
-            courtRoom: [
-              {
-                courtRoomName: "Court 2",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-01-28T10:00:00Z",
-                        hearing: [{ case: [{ caseNumber: "B20250003", party: [] }] }]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250003",
+                      Defendants: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     });

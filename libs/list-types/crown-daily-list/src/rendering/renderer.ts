@@ -1,6 +1,7 @@
-import { createPartyDetails, formatContentDate, formatPublicationDateTime, formatTime } from "@hmcts/list-types-common";
+import { formatContentDate } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import type {
+  CitizenName,
   CrownDailyCaseRendered,
   CrownDailyCourtRoomRendered,
   CrownDailyHearingRendered,
@@ -8,124 +9,154 @@ import type {
   CrownDailyListRendered,
   CrownDailySessionRendered,
   CrownDailySittingRendered,
-  Party,
-  RenderOptions,
-  Session
+  PddaDefendant,
+  PddaHearing,
+  PddaJudiciary,
+  PddaSitting,
+  RenderOptions
 } from "../models/types.js";
 
 export async function renderCrownDailyListData(jsonData: CrownDailyListData, options: RenderOptions) {
   const location = await getLocationById(Number.parseInt(options.locationId, 10));
-  const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || jsonData.venue.venueName;
+  const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || jsonData.DailyList.CrownCourt.CourtHouseName;
+
+  const address = jsonData.DailyList.CrownCourt.CourtHouseAddress;
+  const addressLines = formatAddress(address);
+
+  const lastPubDate = jsonData.DailyList.ListHeader.LastPublicationDate;
+  const lastUpdated = lastPubDate ? formatContentDate(new Date(lastPubDate), options.locale) : "";
 
   const header = {
     locationName,
-    addressLines: formatAddress(jsonData.venue.venueAddress),
+    addressLines,
     contentDate: formatContentDate(options.contentDate, options.locale),
-    lastUpdated: formatPublicationDateTime(jsonData.document.publicationDate, options.locale)
+    lastUpdated
   };
 
   const openJustice = {
-    venueName: jsonData.venue.venueName,
-    email: jsonData.venue.venueContact?.venueEmail || "",
-    phone: jsonData.venue.venueContact?.venueTelephone || ""
+    venueName: jsonData.DailyList.CrownCourt.CourtHouseName,
+    email: address?.CourtHouseAddressEmail || "",
+    phone: address?.CourtHouseAddressPhone || ""
   };
 
   const listData: CrownDailyListRendered = {
-    courtLists: jsonData.courtLists.map((courtList) => ({
-      courtHouse: {
-        courtHouseName: courtList.courtHouse.courtHouseName,
-        courtHouseAddress: courtList.courtHouse.courtHouseAddress,
-        courtRoom: courtList.courtHouse.courtRoom.map(renderCourtRoom)
-      }
-    }))
+    courtLists: jsonData.DailyList.CourtLists.map((courtList) => {
+      const courtHouseName = courtList.CourtHouse?.CourtHouseName || jsonData.DailyList.CrownCourt.CourtHouseName;
+      const courtRoom = groupSittingsByCourtRoom(courtList.Sittings);
+      return {
+        courtHouse: {
+          courtHouseName,
+          courtRoom
+        }
+      };
+    })
   };
 
   return { header, openJustice, listData };
 }
 
-function formatAddress(address: CrownDailyListData["venue"]["venueAddress"]): string[] {
+function formatAddress(address: CrownDailyListData["DailyList"]["CrownCourt"]["CourtHouseAddress"]): string[] {
+  if (!address) return [];
   const parts: string[] = [];
-  for (const line of address.line) {
-    if (line && line.length > 0) parts.push(line);
+  for (const line of address.CourtHouseAddressLine ?? []) {
+    if (line) parts.push(line);
   }
-  if (address.town && address.town.length > 0) parts.push(address.town);
-  if (address.county && address.county.length > 0) parts.push(address.county);
-  if (address.postCode && address.postCode.length > 0) parts.push(address.postCode);
+  if (address.CourtHouseAddressTown) parts.push(address.CourtHouseAddressTown);
+  if (address.CourtHouseAddressCounty) parts.push(address.CourtHouseAddressCounty);
+  if (address.CourtHouseAddressPostCode) parts.push(address.CourtHouseAddressPostCode);
   return parts;
 }
 
-function renderCourtRoom(courtRoom: CrownDailyListData["courtLists"][0]["courtHouse"]["courtRoom"][0]): CrownDailyCourtRoomRendered {
-  return {
-    courtRoomName: courtRoom.courtRoomName,
-    session: courtRoom.session.map(renderSession)
-  };
-}
-
-function renderSession(session: Session): CrownDailySessionRendered {
-  return {
-    formattedJudiciaries: formatJudiciaries(session),
-    sittings: session.sittings.map(renderSitting)
-  };
-}
-
-function formatJudiciaries(session: Session): string {
-  const presiding: string[] = [];
-  const others: string[] = [];
-  for (const judiciary of session.judiciary ?? []) {
-    const name = judiciary.johKnownAs?.trim();
-    if (name) {
-      if (judiciary.isPresiding) {
-        presiding.push(name);
-      } else {
-        others.push(name);
-      }
+function groupSittingsByCourtRoom(sittings: PddaSitting[]): CrownDailyCourtRoomRendered[] {
+  const roomMap = new Map<string, PddaSitting[]>();
+  for (const sitting of sittings) {
+    const room = sitting.CourtRoomNumber;
+    const existing = roomMap.get(room);
+    if (existing) {
+      existing.push(sitting);
+    } else {
+      roomMap.set(room, [sitting]);
     }
   }
-  return [...presiding, ...others].join(", ");
-}
-
-function renderSitting(sitting: CrownDailyListData["courtLists"][0]["courtHouse"]["courtRoom"][0]["session"][0]["sittings"][0]): CrownDailySittingRendered {
-  return {
-    time: formatTime(sitting.sittingStart),
-    hearing: sitting.hearing.map(renderHearing)
-  };
-}
-
-function renderHearing(
-  hearing: CrownDailyListData["courtLists"][0]["courtHouse"]["courtRoom"][0]["session"][0]["sittings"][0]["hearing"][0]
-): CrownDailyHearingRendered {
-  return {
-    displayHearingType: hearing.hearingDescription || hearing.hearingType || "",
-    case: hearing.case.map(renderCase)
-  };
-}
-
-function renderCase(
-  caseItem: CrownDailyListData["courtLists"][0]["courtHouse"]["courtRoom"][0]["session"][0]["sittings"][0]["hearing"][0]["case"][0]
-): CrownDailyCaseRendered {
-  const defendants: string[] = [];
-  let representative = "";
-
-  for (const party of caseItem.party ?? []) {
-    const details = createPartyDetails(party as Party).trim();
-    if (!details) continue;
-
-    if (party.partyRole === "DEFENDANT") {
-      defendants.push(details);
-    } else if (party.partyRole === "DEFENDANT_REPRESENTATIVE") {
-      if (representative.length > 0) representative += ", ";
-      representative += details;
-    }
+  const result: CrownDailyCourtRoomRendered[] = [];
+  for (const [roomName, roomSittings] of roomMap) {
+    result.push({
+      courtRoomName: roomName,
+      session: roomSittings.map(renderSession)
+    });
   }
+  return result;
+}
 
-  const restrictions = caseItem.reportingRestrictionDetail?.filter((r) => r.length > 0) || [];
-
+function renderSession(sitting: PddaSitting): CrownDailySessionRendered {
   return {
-    caseNumber: caseItem.caseNumber,
-    prosecutingAuthority: caseItem.prosecutingAuthority || "",
-    listingNotes: caseItem.listingNotes || "",
-    defendants: defendants.join(", "),
-    representative: representative.trim(),
-    formattedReportingRestriction: restrictions.join(", ")
+    formattedJudiciaries: formatJudiciary(sitting.Judiciary),
+    sittings: [renderSitting(sitting)]
   };
+}
+
+function renderSitting(sitting: PddaSitting): CrownDailySittingRendered {
+  return {
+    time: formatSittingTime(sitting.SittingAt),
+    hearing: (sitting.Hearings ?? []).map(renderHearing)
+  };
+}
+
+function renderHearing(hearing: PddaHearing): CrownDailyHearingRendered {
+  return {
+    displayHearingType: hearing.HearingDetails.HearingDescription || hearing.HearingDetails.HearingType || "",
+    case: [renderCase(hearing)]
+  };
+}
+
+function renderCase(hearing: PddaHearing): CrownDailyCaseRendered {
+  const defendants = (hearing.Defendants ?? []).map(formatDefendantName).filter(Boolean).join(", ");
+  return {
+    caseNumber: hearing.CaseNumber,
+    prosecutingAuthority: hearing.Prosecution?.ProsecutingAuthority || "",
+    listingNotes: hearing.ListNote || "",
+    defendants,
+    representative: "",
+    formattedReportingRestriction: ""
+  };
+}
+
+function formatSittingTime(timeStr: string | undefined): string {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length < 2) return timeStr;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return timeStr;
+  const ampm = hours >= 12 ? "pm" : "am";
+  const displayHours = hours % 12 || 12;
+  if (minutes === 0) {
+    return `${displayHours}${ampm}`;
+  }
+  return `${displayHours}:${String(minutes).padStart(2, "0")}${ampm}`;
+}
+
+function formatCitizenName(name: CitizenName): string {
+  const parts = [name.CitizenNameTitle, name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean);
+  return parts.join(" ");
+}
+
+function formatJudiciary(judiciary: PddaJudiciary): string {
+  const names: string[] = [];
+  const judgeName = formatCitizenName(judiciary.Judge).trim();
+  if (judgeName) names.push(judgeName);
+  for (const justice of judiciary.Justice ?? []) {
+    const justiceName = formatCitizenName(justice).trim();
+    if (justiceName) names.push(justiceName);
+  }
+  return names.join(", ");
+}
+
+function formatDefendantName(defendant: PddaDefendant): string {
+  if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
+    return defendant.PersonalDetails.MaskedName;
+  }
+  const name = defendant.PersonalDetails.Name;
+  const parts = [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean);
+  return parts.join(" ");
 }

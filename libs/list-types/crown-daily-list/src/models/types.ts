@@ -1,71 +1,91 @@
-export type { Party } from "@hmcts/list-types-common";
-
-export interface CrownDailyCase {
-  caseNumber: string;
-  prosecutingAuthority?: string;
-  listingNotes?: string;
-  reportingRestrictionDetail?: string[];
-  party?: Party[];
+export interface CitizenName {
+  CitizenNameTitle?: string;
+  CitizenNameForename?: string;
+  CitizenNameSurname?: string;
+  CitizenNameRequestedName?: string;
 }
 
-export interface CrownDailyHearing {
-  hearingDescription?: string;
-  hearingType?: string;
-  case: CrownDailyCase[];
+export interface PersonalDetails {
+  Name: CitizenName;
+  MaskedName?: string;
+  IsMasked: "yes" | "no";
+  DateOfBirth?: string;
+  Age?: number;
+  Sex?: string;
 }
 
-export interface Sitting {
-  sittingStart: string;
-  sittingEnd?: string;
-  hearing: CrownDailyHearing[];
+export interface PddaDefendant {
+  PersonalDetails: PersonalDetails;
+  URN?: string;
+  PrisonerID?: string;
+  PrisonLocation?: string;
 }
 
-export interface Session {
-  judiciary?: Array<{
-    johKnownAs: string;
-    isPresiding?: boolean;
-  }>;
-  sittings: Sitting[];
+export interface PddaHearingDetails {
+  HearingDescription?: string;
+  HearingType?: string;
 }
 
-export interface CourtRoom {
-  courtRoomName: string;
-  session: Session[];
-}
-
-export interface CourtHouse {
-  courtHouseName: string;
-  courtHouseAddress?: {
-    line?: string[];
-    town?: string;
-    county?: string;
-    postCode?: string;
+export interface PddaHearing {
+  HearingSequenceNumber?: string;
+  HearingDetails: PddaHearingDetails;
+  CaseNumber: string;
+  CaseNumberCaTH?: string;
+  CommittingCourt?: string;
+  ListNote?: string;
+  Prosecution?: {
+    ProsecutingReference?: string;
+    ProsecutingOrganisation?: string;
+    ProsecutingAuthority?: string;
   };
-  courtRoom: CourtRoom[];
+  Defendants?: PddaDefendant[];
+}
+
+export interface PddaJudiciary {
+  Judge: CitizenName;
+  Justice?: CitizenName[];
+}
+
+export interface PddaSitting {
+  CourtRoomNumber: string;
+  SittingAt?: string;
+  Judiciary: PddaJudiciary;
+  Hearings?: PddaHearing[];
+}
+
+export interface PddaCourtHouseAddress {
+  CourtHouseAddressLine?: string[];
+  CourtHouseAddressTown?: string;
+  CourtHouseAddressCounty?: string;
+  CourtHouseAddressPostCode?: string;
+  CourtHouseAddressPhone?: string;
+  CourtHouseAddressEmail?: string;
+}
+
+export interface PddaCourtHouse {
+  CourtHouseName: string;
+  CourtHouseCode?: string;
+  CourtHouseAddress?: PddaCourtHouseAddress;
+}
+
+export interface PddaListHeader {
+  ListDate?: string;
+  LastPublicationDate?: string;
+  PublishedTime?: string;
+  Version?: string;
+  StartDate?: string;
 }
 
 export interface CrownDailyListData {
-  document: {
-    publicationDate: string;
-    documentName?: string;
-    version?: string;
+  DailyList: {
+    DocumentID: string;
+    ListHeader: PddaListHeader;
+    CrownCourt: PddaCourtHouse;
+    CourtLists: Array<{
+      CourtHouse?: PddaCourtHouse;
+      Sittings: PddaSitting[];
+    }>;
   };
-  venue: {
-    venueName: string;
-    venueAddress: {
-      line: string[];
-      town?: string;
-      county?: string;
-      postCode: string;
-    };
-    venueContact?: {
-      venueTelephone?: string;
-      venueEmail?: string;
-    };
-  };
-  courtLists: Array<{
-    courtHouse: CourtHouse;
-  }>;
 }
 
 export interface RenderOptions {
@@ -107,7 +127,6 @@ export interface CrownDailyListRendered {
   courtLists: Array<{
     courtHouse: {
       courtHouseName: string;
-      courtHouseAddress?: CourtHouse["courtHouseAddress"];
       courtRoom: CrownDailyCourtRoomRendered[];
     };
   }>;

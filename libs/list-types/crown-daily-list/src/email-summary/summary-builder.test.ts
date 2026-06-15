@@ -2,58 +2,42 @@ import { describe, expect, it } from "vitest";
 import type { CrownDailyListData } from "../models/types.js";
 import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
 
-const buildTestData = (overrides?: Partial<CrownDailyListData>): CrownDailyListData => ({
-  document: { publicationDate: "2025-01-28T10:00:00Z" },
-  venue: {
-    venueName: "Crown Court at Leeds",
-    venueAddress: { line: ["1 Oxford Row"], postCode: "LS1 3BG" }
-  },
-  courtLists: [],
-  ...overrides
+const buildTestData = (overrides?: Partial<CrownDailyListData["DailyList"]>): CrownDailyListData => ({
+  DailyList: {
+    DocumentID: "CDL-2025-001",
+    ListHeader: { LastPublicationDate: "2025-01-28" },
+    CrownCourt: { CourtHouseName: "Crown Court at Leeds" },
+    CourtLists: [],
+    ...overrides
+  }
 });
 
 describe("extractCaseSummary", () => {
   it("should extract case summaries with defendant name and hearing type", () => {
     const testData = buildTestData({
-      courtLists: [
+      CourtLists: [
         {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
-              {
-                courtRoomName: "Court 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-01-28T10:00:00Z",
-                        hearing: [
-                          {
-                            hearingDescription: "Trial",
-                            case: [
-                              {
-                                caseNumber: "T20250001",
-                                prosecutingAuthority: "CPS",
-                                party: [
-                                  {
-                                    partyRole: "DEFENDANT",
-                                    individualDetails: {
-                                      individualForenames: "John",
-                                      individualSurname: "Smith"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
+          Sittings: [
+            {
+              CourtRoomNumber: "Court 1",
+              Judiciary: { Judge: {} },
+              Hearings: [
+                {
+                  HearingDetails: { HearingDescription: "Trial" },
+                  CaseNumber: "T20250001",
+                  Prosecution: { ProsecutingAuthority: "CPS" },
+                  Defendants: [
+                    {
+                      PersonalDetails: {
+                        Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
+                        IsMasked: "no"
                       }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     });
@@ -69,38 +53,23 @@ describe("extractCaseSummary", () => {
     ]);
   });
 
-  it("should not include defendant field when no defendant party present", () => {
+  it("should not include defendant field when no defendants present", () => {
     const testData = buildTestData({
-      courtLists: [
+      CourtLists: [
         {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
-              {
-                courtRoomName: "Court 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-01-28T10:00:00Z",
-                        hearing: [
-                          {
-                            hearingDescription: "Plea",
-                            case: [
-                              {
-                                caseNumber: "T20250002",
-                                party: []
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+          Sittings: [
+            {
+              CourtRoomNumber: "Court 1",
+              Judiciary: { Judge: {} },
+              Hearings: [
+                {
+                  HearingDetails: { HearingDescription: "Plea" },
+                  CaseNumber: "T20250002",
+                  Defendants: []
+                }
+              ]
+            }
+          ]
         }
       ]
     });
@@ -112,36 +81,20 @@ describe("extractCaseSummary", () => {
 
   it("should use hearingType fallback when hearingDescription is absent", () => {
     const testData = buildTestData({
-      courtLists: [
+      CourtLists: [
         {
-          courtHouse: {
-            courtHouseName: "Crown Court at Leeds",
-            courtRoom: [
-              {
-                courtRoomName: "Court 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-01-28T10:00:00Z",
-                        hearing: [
-                          {
-                            hearingType: "Sentence",
-                            case: [
-                              {
-                                caseNumber: "T20250003",
-                                party: []
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+          Sittings: [
+            {
+              CourtRoomNumber: "Court 1",
+              Judiciary: { Judge: {} },
+              Hearings: [
+                {
+                  HearingDetails: { HearingType: "Sentence" },
+                  CaseNumber: "T20250003"
+                }
+              ]
+            }
+          ]
         }
       ]
     });

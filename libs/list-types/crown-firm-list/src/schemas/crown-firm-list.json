@@ -1,291 +1,173 @@
 {
-  "$defs": {
-    "address": {
-      "title": "Address Details",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Crown Firm PDDA List",
+  "type": "object",
+  "required": ["FirmList"],
+  "properties": {
+    "FirmList": {
       "type": "object",
+      "required": ["DocumentID", "ListHeader", "CrownCourt", "CourtLists"],
       "properties": {
-        "line": {
-          "title": "Address Line",
-          "type": "array",
-          "default": [],
-          "items": {
-            "type": "string",
-            "default": "",
-            "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+        "DocumentID": {
+          "type": "string",
+          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+        },
+        "ListHeader": {
+          "type": "object",
+          "properties": {
+            "ListDate": { "type": "string" },
+            "LastPublicationDate": { "type": "string" },
+            "PublishedTime": { "type": "string" },
+            "Version": { "type": "string" }
           }
         },
-        "town": {
-          "title": "Town",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+        "CrownCourt": {
+          "type": "object",
+          "required": ["CourtHouseName"],
+          "properties": {
+            "CourtHouseName": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+            "CourtHouseCode": { "type": "string" },
+            "CourtHouseAddress": {
+              "type": "object",
+              "properties": {
+                "CourtHouseAddressLine": { "type": "array", "items": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" } },
+                "CourtHouseAddressTown": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                "CourtHouseAddressCounty": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                "CourtHouseAddressPostCode": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                "CourtHouseAddressPhone": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                "CourtHouseAddressEmail": { "type": "string" }
+              }
+            }
+          }
         },
-        "county": {
-          "title": "County",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+        "ReserveList": {
+          "type": "array",
+          "items": { "type": "object" }
         },
-        "postCode": {
-          "title": "Address Postcode",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        }
-      }
-    },
-    "venueContact": {
-      "title": "Contact Details for a venue",
-      "type": "object",
-      "properties": {
-        "venueTelephone": {
-          "title": "Venue Telephone",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        },
-        "venueEmail": {
-          "title": "Venue Email",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        }
-      }
-    },
-    "judiciary": {
-      "title": "Judiciary",
-      "type": "object",
-      "properties": {
-        "johKnownAs": {
-          "title": "JOH Known As",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        },
-        "isPresiding": {
-          "title": "Is Presiding",
-          "type": "boolean",
-          "default": false
-        }
-      }
-    }
-  },
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Root",
-  "type": "object",
-  "required": ["document", "venue", "courtLists"],
-  "properties": {
-    "document": {
-      "title": "document",
-      "type": "object",
-      "required": ["publicationDate"],
-      "properties": {
-        "documentName": {
-          "title": "Document Name",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        },
-        "publicationDate": {
-          "title": "Publication date",
-          "type": "string",
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
-        },
-        "version": {
-          "title": "Version",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        }
-      }
-    },
-    "venue": {
-      "title": "venue",
-      "type": "object",
-      "required": ["venueName", "venueAddress"],
-      "properties": {
-        "venueName": {
-          "title": "Venue Name",
-          "type": "string",
-          "default": "",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-        },
-        "venueAddress": {
-          "$ref": "#/$defs/address",
-          "required": ["line", "postCode"]
-        },
-        "venueContact": {
-          "$ref": "#/$defs/venueContact"
-        }
-      }
-    },
-    "courtLists": {
-      "title": "Court Lists",
-      "type": "array",
-      "items": {
-        "title": "Court list",
-        "type": "object",
-        "required": ["courtHouse"],
-        "properties": {
-          "courtHouse": {
-            "title": "Court House",
+        "CourtLists": {
+          "type": "array",
+          "items": {
             "type": "object",
-            "required": ["courtRoom", "courtHouseName"],
+            "required": ["SittingDate", "Sittings"],
             "properties": {
-              "courtHouseName": {
-                "title": "Court House Name",
-                "type": "string",
-                "default": "",
-                "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+              "SittingDate": { "type": "string" },
+              "CourtHouse": {
+                "type": "object",
+                "properties": {
+                  "CourtHouseName": { "type": "string" },
+                  "CourtHouseCode": { "type": "string" }
+                }
               },
-              "courtHouseAddress": {
-                "$ref": "#/$defs/address"
-              },
-              "courtRoom": {
+              "Sittings": {
                 "type": "array",
                 "items": {
-                  "title": "Court Room",
                   "type": "object",
-                  "required": ["courtRoomName", "session"],
+                  "required": ["CourtRoomNumber", "Judiciary"],
                   "properties": {
-                    "courtRoomName": {
-                      "title": "Court Room Name",
-                      "type": "string",
-                      "default": "",
-                      "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+                    "CourtRoomNumber": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                    "SittingAt": { "type": "string" },
+                    "Judiciary": {
+                      "type": "object",
+                      "required": ["Judge"],
+                      "properties": {
+                        "Judge": {
+                          "type": "object",
+                          "properties": {
+                            "CitizenNameTitle": { "type": "string" },
+                            "CitizenNameForename": { "type": "string" },
+                            "CitizenNameSurname": { "type": "string" },
+                            "CitizenNameRequestedName": { "type": "string" }
+                          }
+                        },
+                        "Justice": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "CitizenNameTitle": { "type": "string" },
+                              "CitizenNameForename": { "type": "string" },
+                              "CitizenNameSurname": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
                     },
-                    "session": {
+                    "Hearings": {
                       "type": "array",
                       "items": {
-                        "title": "Session",
                         "type": "object",
-                        "required": ["sittings"],
+                        "required": ["HearingDetails", "CaseNumber"],
                         "properties": {
-                          "judiciary": {
-                            "type": "array",
-                            "items": {
-                              "$ref": "#/$defs/judiciary"
+                          "HearingSequenceNumber": { "type": "string" },
+                          "HearingDetails": {
+                            "type": "object",
+                            "properties": {
+                              "HearingDescription": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                              "HearingType": { "type": "string" }
                             }
                           },
-                          "sittings": {
-                            "title": "Sittings",
+                          "CaseNumber": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                          "CaseNumberCaTH": { "type": "string" },
+                          "CommittingCourt": { "type": "string" },
+                          "ListNote": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                          "Prosecution": {
+                            "type": "object",
+                            "properties": {
+                              "ProsecutingReference": { "type": "string" },
+                              "ProsecutingOrganisation": { "type": "string" },
+                              "ProsecutingAuthority": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" }
+                            }
+                          },
+                          "Defendants": {
                             "type": "array",
-                            "default": [],
                             "items": {
                               "type": "object",
-                              "required": ["sittingStart", "hearing"],
+                              "required": ["PersonalDetails"],
                               "properties": {
-                                "sittingStart": {
-                                  "title": "Sitting Start",
-                                  "type": "string",
-                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+                                "PersonalDetails": {
+                                  "type": "object",
+                                  "required": ["Name", "IsMasked"],
+                                  "properties": {
+                                    "Name": {
+                                      "type": "object",
+                                      "properties": {
+                                        "CitizenNameTitle": { "type": "string" },
+                                        "CitizenNameForename": { "type": "string" },
+                                        "CitizenNameSurname": { "type": "string" },
+                                        "CitizenNameRequestedName": { "type": "string" }
+                                      }
+                                    },
+                                    "MaskedName": { "type": "string" },
+                                    "IsMasked": { "type": "string", "enum": ["yes", "no"] },
+                                    "DateOfBirth": { "type": "string" },
+                                    "Age": { "type": "number" },
+                                    "Sex": { "type": "string" }
+                                  }
                                 },
-                                "sittingEnd": {
-                                  "title": "Sitting End",
-                                  "type": "string",
-                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
-                                },
-                                "hearing": {
+                                "Counsel": {
                                   "type": "array",
                                   "items": {
-                                    "title": "Hearing",
                                     "type": "object",
-                                    "required": ["case"],
                                     "properties": {
-                                      "hearingDescription": {
-                                        "title": "Hearing Description",
-                                        "type": "string",
-                                        "default": "",
-                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                      },
-                                      "hearingType": {
-                                        "title": "Hearing Type",
-                                        "type": "string",
-                                        "default": "",
-                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                      },
-                                      "case": {
+                                      "Solicitor": {
                                         "type": "array",
                                         "items": {
-                                          "title": "Case",
                                           "type": "object",
-                                          "required": ["caseNumber"],
                                           "properties": {
-                                            "caseNumber": {
-                                              "title": "Case Number",
-                                              "type": "string",
-                                              "default": "",
-                                              "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                            },
-                                            "prosecutingAuthority": {
-                                              "title": "Prosecuting Authority",
-                                              "type": "string",
-                                              "default": "",
-                                              "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                            },
-                                            "listingNotes": {
-                                              "title": "Listing Notes",
-                                              "type": "string",
-                                              "default": "",
-                                              "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                            },
-                                            "reportingRestrictionDetail": {
-                                              "title": "Reporting Restrictions Detail",
-                                              "type": "array",
-                                              "items": {
-                                                "type": "string",
-                                                "default": "",
-                                                "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                              }
-                                            },
-                                            "party": {
-                                              "title": "Party",
-                                              "type": "array",
-                                              "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "partyRole": {
-                                                    "title": "Party Role",
-                                                    "type": "string",
-                                                    "default": "",
-                                                    "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                                  },
-                                                  "individualDetails": {
-                                                    "title": "Individual Details",
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "title": {
-                                                        "type": "string",
-                                                        "default": "",
-                                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                                      },
-                                                      "individualForenames": {
-                                                        "type": "string",
-                                                        "default": "",
-                                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                                      },
-                                                      "individualMiddleName": {
-                                                        "type": "string",
-                                                        "default": "",
-                                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                                      },
-                                                      "individualSurname": {
-                                                        "type": "string",
-                                                        "default": "",
-                                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                                      }
-                                                    }
-                                                  },
-                                                  "organisationDetails": {
-                                                    "title": "Organisation Details",
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "organisationName": {
-                                                        "type": "string",
-                                                        "default": "",
-                                                        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
-                                                      }
-                                                    }
+                                            "Party": {
+                                              "type": "object",
+                                              "properties": {
+                                                "Person": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "CitizenNameForename": { "type": "string" },
+                                                    "CitizenNameSurname": { "type": "string" }
+                                                  }
+                                                },
+                                                "Organisation": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "OrganisationName": { "type": "string" }
                                                   }
                                                 }
                                               }
@@ -295,7 +177,9 @@
                                       }
                                     }
                                   }
-                                }
+                                },
+                                "URN": { "type": "string" },
+                                "PrisonerID": { "type": "string" }
                               }
                             }
                           }

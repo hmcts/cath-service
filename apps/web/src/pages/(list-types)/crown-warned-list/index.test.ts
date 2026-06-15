@@ -169,7 +169,7 @@ describe("crown-warned-list controller", () => {
       contentDate: mockArtefact.contentDate,
       locale: "en"
     });
-    const renderCall = vi.mocked(res.render).mock.calls[0];
+    const renderCall = vi.mocked(res.render!).mock.calls[0]!;
     expect(renderCall[0]).toBe("crown-warned-list");
     expect(renderCall[1]).toHaveProperty("en");
     expect(renderCall[1]).toHaveProperty("cy");
