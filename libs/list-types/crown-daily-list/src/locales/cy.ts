@@ -1,10 +1,15 @@
 export const cy = {
   title: "Rhestr Ddyddiol y Goron",
   pageTitle: "Rhestr Ddyddiol y Goron ar gyfer",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   listFor: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
+  version: "Fersiwn",
   publicationDate: "Dyddiad cyhoeddi",
   courtroom: "Ystafell Llys",
+  court: "LLYS",
   beforeJudge: "Gerbron",
   sittingAt: "Yn eistedd am",
   hearingTime: "Amser gwrandawiad",
@@ -15,10 +20,16 @@ export const cy = {
   listingNotes: "Nodiadau rhestru",
   reportingRestrictions: "Cyfyngiad Adrodd",
   reportingRestrictionsTitle: "Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn",
-  reportingRestrictionsBody:
-    "Rhaid i chi wirio a oes unrhyw gyfyngiadau adrodd yn berthnasol cyn cyhoeddi manylion am unrhyw un o'r achosion a restrir yma naill ai ar bapur, mewn darllediad neu dros y rhyngrwyd, gan gynnwys cyfryngau cymdeithasol.\nRhybudd Byddwch yn euog o ddirmyg llys os byddwch yn cyhoeddi unrhyw wybodaeth sydd wedi'i diogelu gan gyfyngiad adrodd. Gallech gael dirwy, dedfryd o garchar neu'r ddau.\nBydd cyfyngiadau penodol a orchmynnwyd gan y llys yn cael eu crybwyll ar yr achosion a restrir yma.\nFodd bynnag, nid yw cyfyngiadau bob amser yn cael eu rhestru. Mae rhai yn berthnasol yn awtomatig. Er enghraifft, anhysbysrwydd a roddir i ddioddefwyr troseddau rhywiol penodol.\nI ddarganfod pa gyfyngiadau adrodd sy'n berthnasol i achos penodol, cysylltwch â:\n• y llys yn uniongyrchol\n• Gwasanaeth Llysoedd a Thribiwnlysoedd Ei Fawrhydi ar 0330 808 4407",
-  version: "Fersiwn",
-  court: "LLYS",
+  reportingRestrictionsBodyIntro:
+    "Rhaid i chi wirio a oes unrhyw gyfyngiadau adrodd yn berthnasol cyn cyhoeddi manylion am unrhyw un o'r achosion a restrir yma naill ai ar bapur, mewn darllediad neu dros y rhyngrwyd, gan gynnwys cyfryngau cymdeithasol.",
+  reportingRestrictionsWarning:
+    "Byddwch yn euog o ddirmyg llys os byddwch yn cyhoeddi unrhyw wybodaeth sydd wedi'i diogelu gan gyfyngiad adrodd. Gallech gael dirwy, dedfryd o garchar neu'r ddau.",
+  reportingRestrictionsBodySpecific: "Bydd cyfyngiadau penodol a orchmynnwyd gan y llys yn cael eu crybwyll ar yr achosion a restrir yma.",
+  reportingRestrictionsBodyHowever:
+    "Fodd bynnag, nid yw cyfyngiadau bob amser yn cael eu rhestru. Mae rhai yn berthnasol yn awtomatig. Er enghraifft, anhysbysrwydd a roddir i ddioddefwyr troseddau rhywiol penodol.",
+  reportingRestrictionsBodyContact: "I ddarganfod pa gyfyngiadau adrodd sy'n berthnasol i achos penodol, cysylltwch â:",
+  reportingRestrictionsContactCourt: "y llys yn uniongyrchol",
+  reportingRestrictionsContactHmcts: "Gwasanaeth Llysoedd a Thribiwnlysoedd Ei Fawrhydi ar 0330 808 4407",
   searchCases: "Chwilio achosion",
   dataSource: "Ffynhonnell Data",
   errorTitle: "Cyhoeddiad ddim ar gael",

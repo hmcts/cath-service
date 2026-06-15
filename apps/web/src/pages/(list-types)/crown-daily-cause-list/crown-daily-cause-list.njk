@@ -22,25 +22,44 @@
     <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
 
     <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="govuk-body govuk-!-margin-bottom-1">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+
+    {% if header.version | length %}
+      <p class="govuk-body govuk-!-margin-bottom-1">{{ t.version }} {{ header.version }}</p>
+    {% endif %}
+
+    <p class="govuk-body govuk-!-margin-top-2">
       {% for line in header.addressLines %}
         {{ line }}{% if not loop.last %}<br>{% endif %}
       {% endfor %}
     </p>
 
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
-    <p class="govuk-body govuk-!-margin-bottom-1">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
-    {% if header.version | length %}
-      <p class="govuk-body">{{ t.version }} {{ header.version }}</p>
-    {% endif %}
-
-    <div class="govuk-inset-text govuk-!-margin-top-6">
+    <div class="govuk-inset-text">
       <h2 class="govuk-heading-m">{{ t.reportingRestrictionsTitle }}</h2>
-      <p class="govuk-body" style="white-space: pre-line;">{{ t.reportingRestrictionsBody }}</p>
+      <p class="govuk-body">{{ t.reportingRestrictionsBodyIntro }}</p>
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          {{ t.reportingRestrictionsWarning }}
+        </strong>
+      </div>
+      <p class="govuk-body">{{ t.reportingRestrictionsBodySpecific }}</p>
+      <p class="govuk-body">{{ t.reportingRestrictionsBodyHowever }}</p>
+      <p class="govuk-body">{{ t.reportingRestrictionsBodyContact }}</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>{{ t.reportingRestrictionsContactCourt }}</li>
+        <li>{{ t.reportingRestrictionsContactHmcts }}</li>
+      </ul>
     </div>
 
-    <div class="govuk-form-group govuk-!-margin-bottom-6">
-      <label class="govuk-label" for="searchCases">{{ t.searchCases }}</label>
-      <input class="govuk-input" id="searchCases" name="searchCases" type="text">
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
     </div>
 
     <div id="court-lists-container">
