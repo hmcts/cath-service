@@ -8,6 +8,7 @@ import type {
   CrownFirmGroupedDay,
   CrownFirmHearingRendered,
   CrownFirmListData,
+  PddaCourtHouse,
   PddaDefendant,
   PddaJudiciary,
   RenderOptions
@@ -27,7 +28,12 @@ export async function renderCrownFirmListData(jsonData: CrownFirmListData, optio
     : "";
 
   const startDate = FirmList.ListHeader.StartDate;
-  const contentDate = startDate ? formatContentDate(new Date(startDate), options.locale) : formatContentDate(options.contentDate, options.locale);
+  const endDate = FirmList.ListHeader.EndDate;
+
+  const formattedStart = startDate ? formatContentDate(new Date(startDate), options.locale) : formatContentDate(options.contentDate, options.locale);
+  const formattedEnd = endDate ? formatContentDate(new Date(endDate), options.locale) : "";
+  const dateSeparator = options.locale === "cy" ? "i" : "to";
+  const contentDate = formattedEnd ? `${formattedStart} ${dateSeparator} ${formattedEnd}` : formattedStart;
 
   const header = {
     locationName,
@@ -63,7 +69,24 @@ function formatSittingDate(dateStr: string, locale: string): string {
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   const dt = DateTime.fromISO(dateStr);
   if (!dt.isValid) return dateStr;
-  return dt.toJSDate().toLocaleDateString(localeCode, { day: "2-digit", month: "long", year: "numeric" });
+  const weekday = dt.toJSDate().toLocaleDateString(localeCode, { weekday: "long" });
+  const date = dt.toJSDate().toLocaleDateString(localeCode, { day: "numeric", month: "long", year: "numeric" });
+  return `${weekday} ${date}`;
+}
+
+function formatCourtHouseInfo(courtHouse: PddaCourtHouse) {
+  const addressLines: string[] = [];
+  for (const line of courtHouse.CourtHouseAddress?.Line ?? []) {
+    if (line) addressLines.push(line);
+  }
+  if (courtHouse.CourtHouseAddress?.PostCode) {
+    addressLines.push(courtHouse.CourtHouseAddress.PostCode);
+  }
+  return {
+    name: courtHouse.CourtHouseName,
+    addressLines,
+    phone: courtHouse.CourtHouseTelephone || ""
+  };
 }
 
 function formatSittingTime(timeStr: string | undefined): string {
@@ -123,6 +146,7 @@ function renderHearing(hearing: NonNullable<CrownFirmListData["FirmList"]["Court
   const defendants = hearing.Defendants ?? [];
   const caseRendered: CrownFirmCaseRendered = {
     caseNumber: hearing.CaseNumber,
+    timeMarkingNote: hearing.TimeMarkingNote || "",
     prosecutingAuthority: hearing.Prosecution?.ProsecutingAuthority || "",
     listingNotes: hearing.ListNote || "",
     defendants: defendants.map(formatDefendantName).filter(Boolean).join(", "),
@@ -137,10 +161,11 @@ function renderHearing(hearing: NonNullable<CrownFirmListData["FirmList"]["Court
 }
 
 function buildGroupedListData(jsonData: CrownFirmListData, locale: string): CrownFirmGroupedDay[] {
-  const dayMap = new Map<string, CrownFirmDaySitting[]>();
+  const dayMap = new Map<string, { courtHouseInfo: ReturnType<typeof formatCourtHouseInfo>; sittings: CrownFirmDaySitting[] }>();
 
   for (const courtList of jsonData.FirmList.CourtLists) {
     const day = formatSittingDate(courtList.SittingDate, locale);
+    const courtHouseInfo = formatCourtHouseInfo(courtList.CourtHouse);
 
     for (const sitting of courtList.Sittings) {
       const daySitting: CrownFirmDaySitting = {
@@ -152,12 +177,12 @@ function buildGroupedListData(jsonData: CrownFirmListData, locale: string): Crow
 
       const existing = dayMap.get(day);
       if (existing) {
-        existing.push(daySitting);
+        existing.sittings.push(daySitting);
       } else {
-        dayMap.set(day, [daySitting]);
+        dayMap.set(day, { courtHouseInfo, sittings: [daySitting] });
       }
     }
   }
 
-  return Array.from(dayMap.entries()).map(([day, sittings]) => ({ day, sittings }));
+  return Array.from(dayMap.entries()).map(([day, data]) => ({ day, courtHouseInfo: data.courtHouseInfo, sittings: data.sittings }));
 }

@@ -8,6 +8,12 @@ vi.mock("@hmcts/location", () => ({
 
 import { getLocationById } from "@hmcts/location";
 
+const testCourtHouse = {
+  CourtHouseName: "Test Court House",
+  CourtHouseAddress: { Line: ["1 Test Street"], PostCode: "TE1 1ST" },
+  CourtHouseTelephone: "01234567890"
+};
+
 const baseInput: CrownFirmListData = {
   FirmList: {
     DocumentID: { UniqueID: "CFPL-2025-001", DocumentType: "crown_firm_pdda_list" },
@@ -46,14 +52,33 @@ describe("renderCrownFirmListData", () => {
     expect(result.header.contentDate).toBe("12 November 2025");
   });
 
-  it("should group sittings by SittingDate into groupedListData", async () => {
-    const input = {
+  it("should format date range when EndDate is present", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        ListHeader: { ...baseInput.FirmList.ListHeader, StartDate: "2025-09-10", EndDate: "2025-09-11" }
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-09-10"),
+      locale: "en"
+    });
+
+    expect(result.header.contentDate).toBe("10 September 2025 to 11 September 2025");
+  });
+
+  it("should group sittings by SittingDate into groupedListData with courtHouseInfo", async () => {
+    const input: CrownFirmListData = {
       ...baseInput,
       FirmList: {
         ...baseInput.FirmList,
         CourtLists: [
           {
             SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
             Sittings: [
               {
                 CourtRoomNumber: 3,
@@ -83,18 +108,21 @@ describe("renderCrownFirmListData", () => {
 
     expect(result.groupedListData).toHaveLength(1);
     expect(result.groupedListData[0].day).toBe("Tuesday 22 April 2025");
+    expect(result.groupedListData[0].courtHouseInfo.name).toBe("Test Court House");
+    expect(result.groupedListData[0].courtHouseInfo.addressLines).toEqual(["1 Test Street", "TE1 1ST"]);
     expect(result.groupedListData[0].sittings).toHaveLength(1);
     expect(result.groupedListData[0].sittings[0].courtRoomName).toBe("3");
   });
 
   it("should format sitting time from SittingAt HH:MM:SS", async () => {
-    const input = {
+    const input: CrownFirmListData = {
       ...baseInput,
       FirmList: {
         ...baseInput.FirmList,
         CourtLists: [
           {
             SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
             Sittings: [
               {
                 CourtRoomNumber: 1,
@@ -117,6 +145,46 @@ describe("renderCrownFirmListData", () => {
     expect(result.groupedListData[0].sittings[0].time).toBe("9:30am");
   });
 
+  it("should map TimeMarkingNote and ListNote to timeMarkingNote and listingNotes", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "M20250010",
+                    TimeMarkingNote: "10am",
+                    ListNote: "After lunch",
+                    Defendants: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.timeMarkingNote).toBe("10am");
+    expect(caseItem.listingNotes).toBe("After lunch");
+  });
+
   it("should format defendants from PersonalDetails", async () => {
     const input: CrownFirmListData = {
       ...baseInput,
@@ -125,6 +193,7 @@ describe("renderCrownFirmListData", () => {
         CourtLists: [
           {
             SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
             Sittings: [
               {
                 CourtRoomNumber: 1,
@@ -168,6 +237,7 @@ describe("renderCrownFirmListData", () => {
         CourtLists: [
           {
             SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
             Sittings: [
               {
                 CourtRoomNumber: 1,
@@ -232,6 +302,7 @@ describe("renderCrownFirmListData", () => {
         CourtLists: [
           {
             SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
             Sittings: [
               {
                 CourtRoomNumber: 1,

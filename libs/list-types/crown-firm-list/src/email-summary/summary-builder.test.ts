@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { CrownFirmListData } from "../models/types.js";
 import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
 
+const testCourtHouse = { CourtHouseName: "Crown Court at Manchester" };
+
 const buildTestData = (overrides?: Partial<CrownFirmListData["FirmList"]>): CrownFirmListData => ({
   FirmList: {
     DocumentID: { UniqueID: "CFPL-2025-001", DocumentType: "crown_firm_pdda_list" },
@@ -18,6 +20,7 @@ describe("extractCaseSummary", () => {
       CourtLists: [
         {
           SittingDate: "2025-01-28",
+          CourtHouse: testCourtHouse,
           Sittings: [
             {
               CourtRoomNumber: 3,
@@ -59,6 +62,7 @@ describe("extractCaseSummary", () => {
       CourtLists: [
         {
           SittingDate: "2025-01-28",
+          CourtHouse: testCourtHouse,
           Sittings: [
             {
               CourtRoomNumber: 3,

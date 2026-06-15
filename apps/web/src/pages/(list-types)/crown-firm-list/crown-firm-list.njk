@@ -87,79 +87,77 @@
       <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
     </div>
 
-    {% if courtHouseInfo %}
-      <div class="site-header govuk-!-margin-bottom-6" tabindex="0" aria-label="{{ t.courtHouseDetails }}">
-        <h2 class="govuk-heading-l site-address">{{ courtHouseInfo.name }}</h2>
-        {% for line in courtHouseInfo.addressLines %}
-          <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ line }}</p>
-        {% endfor %}
-        {% if courtHouseInfo.phone | length %}
-          <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ courtHouseInfo.phone }}</p>
-        {% endif %}
-      </div>
-    {% endif %}
-
     <div id="court-lists-container">
-      <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-default">
-        {% for dayGroup in groupedListData %}
-          <div class="govuk-accordion__section govuk-accordion__section--expanded">
-            <div class="govuk-accordion__section-header">
-              <h2 class="govuk-accordion__section-heading">
-                <span class="govuk-accordion__section-button">
-                  {{ dayGroup.day }}
-                </span>
-              </h2>
-            </div>
-            <div class="govuk-accordion__section-content">
-              {% for sitting in dayGroup.sittings %}
-                <div class="govuk-!-margin-bottom-6" tabindex="0" aria-label="{{ t.courtHouseDetails }}">
-                  <h3 class="govuk-heading-s govuk-!-margin-bottom-1">
+      {% for dayGroup in groupedListData %}
+        <div class="site-header govuk-!-margin-bottom-3" tabindex="0" aria-label="{{ t.courtHouseDetails }}">
+          <h2 class="govuk-heading-l">{{ dayGroup.day }}</h2>
+          <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ dayGroup.courtHouseInfo.name }}</p>
+          {% for line in dayGroup.courtHouseInfo.addressLines %}
+            <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ line }}</p>
+          {% endfor %}
+          {% if dayGroup.courtHouseInfo.phone | length %}
+            <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ dayGroup.courtHouseInfo.phone }}</p>
+          {% endif %}
+        </div>
+
+        <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-day-{{ loop.index }}">
+          {% for sitting in dayGroup.sittings %}
+            <div class="govuk-accordion__section govuk-accordion__section--expanded">
+              <div class="govuk-accordion__section-header">
+                <h2 class="govuk-accordion__section-heading">
+                  <span class="govuk-accordion__section-button">
                     {% if sitting.formattedJudiciaries | length %}
-                      {{ t.court }} {{ sitting.courtRoomName }}: {{ sitting.formattedJudiciaries }}
+                      {{ t.courtroom }} {{ sitting.courtRoomName }}: {{ sitting.formattedJudiciaries }}
                     {% else %}
-                      {{ t.court }} {{ sitting.courtRoomName }}
+                      {{ t.courtroom }} {{ sitting.courtRoomName }}
                     {% endif %}
-                  </h3>
-                  <p class="govuk-body govuk-!-font-weight-bold">{{ t.sittingAt }} {{ sitting.time }}</p>
-                  <table class="govuk-table overflow-table" data-module="moj-sortable-table">
-                    <thead class="govuk-table__head">
-                      <tr class="govuk-table__row">
-                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseNumber }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.defendant }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingType }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.representative }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.prosecutingAuthority }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.listingNotes }}</th>
-                      </tr>
-                    </thead>
-                    <tbody class="govuk-table__body">
-                      {% for hearing in sitting.hearing %}
-                        {% for case in hearing.case %}
-                          <tr class="govuk-table__row">
-                            <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
-                            <td class="govuk-table__cell">{{ case.defendants }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ hearing.displayHearingType }}</td>
-                            <td class="govuk-table__cell">{{ case.representative }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ case.prosecutingAuthority }}</td>
-                            <td class="govuk-table__cell">{{ case.listingNotes }}</td>
-                          </tr>
-                          {% if case.formattedReportingRestriction | length %}
-                            <tr class="govuk-table__row">
-                              <td class="govuk-table__cell" colspan="6">
-                                <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
-                              </td>
-                            </tr>
-                          {% endif %}
-                        {% endfor %}
-                      {% endfor %}
-                    </tbody>
-                  </table>
+                  </span>
+                </h2>
+                <div class="govuk-accordion__section-summary">
+                  {{ t.sittingAt }} {{ sitting.time }}
                 </div>
-              {% endfor %}
+              </div>
+              <div class="govuk-accordion__section-content">
+                <table class="govuk-table overflow-table" data-module="moj-sortable-table">
+                  <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingTime }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseNumber }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.defendant }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingType }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.representative }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.prosecutingAuthority }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.listingNotes }}</th>
+                    </tr>
+                  </thead>
+                  <tbody class="govuk-table__body">
+                    {% for hearing in sitting.hearing %}
+                      {% for case in hearing.case %}
+                        <tr class="govuk-table__row">
+                          <td class="govuk-table__cell no-wrap">{{ case.timeMarkingNote }}</td>
+                          <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
+                          <td class="govuk-table__cell">{{ case.defendants }}</td>
+                          <td class="govuk-table__cell no-wrap">{{ hearing.displayHearingType }}</td>
+                          <td class="govuk-table__cell">{{ case.representative }}</td>
+                          <td class="govuk-table__cell no-wrap">{{ case.prosecutingAuthority }}</td>
+                          <td class="govuk-table__cell">{{ case.listingNotes }}</td>
+                        </tr>
+                        {% if case.formattedReportingRestriction | length %}
+                          <tr class="govuk-table__row">
+                            <td class="govuk-table__cell" colspan="7">
+                              <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
+                            </td>
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        {% endfor %}
-      </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
     </div>
 
     <p class="govuk-body-s govuk-!-margin-top-6">

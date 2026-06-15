@@ -44,6 +44,7 @@ export interface PddaHearing {
   HearingDetails: PddaHearingDetails;
   CaseNumber: string;
   CaseNumberCaTH?: string;
+  TimeMarkingNote?: string;
   ListNote?: string;
   Prosecution?: {
     ProsecutingReference?: string;
@@ -107,6 +108,7 @@ export interface RenderOptions {
 
 export interface CrownFirmCaseRendered {
   caseNumber: string;
+  timeMarkingNote: string;
   prosecutingAuthority: string;
   listingNotes: string;
   defendants: string;
@@ -126,7 +128,14 @@ export interface CrownFirmDaySitting {
   hearing: CrownFirmHearingRendered[];
 }
 
+export interface CrownFirmCourtHouseInfo {
+  name: string;
+  addressLines: string[];
+  phone: string;
+}
+
 export interface CrownFirmGroupedDay {
   day: string;
+  courtHouseInfo: CrownFirmCourtHouseInfo;
   sittings: CrownFirmDaySitting[];
 }

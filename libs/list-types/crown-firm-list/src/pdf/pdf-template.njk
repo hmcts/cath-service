@@ -39,29 +39,27 @@
     </ul>
   </div>
 
-  {% if courtHouseInfo %}
-    <div class="court-house-info">
-      <h2>{{ courtHouseInfo.name }}</h2>
-      {% for line in courtHouseInfo.addressLines %}
-        <p>{{ line }}</p>
-      {% endfor %}
-      {% if courtHouseInfo.phone | length %}
-        <p>{{ courtHouseInfo.phone }}</p>
-      {% endif %}
-    </div>
-  {% endif %}
-
   {% for dayGroup in groupedListData %}
     <div class="court-section">
       <div class="section-heading">{{ dayGroup.day }}</div>
+
+      <div class="court-house-info">
+        <p><strong>{{ dayGroup.courtHouseInfo.name }}</strong></p>
+        {% for line in dayGroup.courtHouseInfo.addressLines %}
+          <p>{{ line }}</p>
+        {% endfor %}
+        {% if dayGroup.courtHouseInfo.phone | length %}
+          <p>{{ dayGroup.courtHouseInfo.phone }}</p>
+        {% endif %}
+      </div>
 
       {% for sitting in dayGroup.sittings %}
         <div class="court-room-section">
           <div class="section-heading">
             {% if sitting.formattedJudiciaries | length %}
-              {{ t.court }} {{ sitting.courtRoomName }}: {{ sitting.formattedJudiciaries }}
+              {{ t.courtroom }} {{ sitting.courtRoomName }}: {{ sitting.formattedJudiciaries }}
             {% else %}
-              {{ t.court }} {{ sitting.courtRoomName }}
+              {{ t.courtroom }} {{ sitting.courtRoomName }}
             {% endif %}
           </div>
 
@@ -70,6 +68,7 @@
           <table>
             <thead>
               <tr>
+                <th class="no-wrap">{{ t.hearingTime }}</th>
                 <th class="no-wrap">{{ t.caseNumber }}</th>
                 <th class="no-wrap">{{ t.defendant }}</th>
                 <th class="no-wrap">{{ t.hearingType }}</th>
@@ -82,6 +81,7 @@
               {% for hearing in sitting.hearing %}
                 {% for case in hearing.case %}
                   <tr>
+                    <td class="no-wrap">{{ case.timeMarkingNote }}</td>
                     <td class="no-wrap">{{ case.caseNumber }}</td>
                     <td>{{ case.defendants }}</td>
                     <td class="no-wrap">{{ hearing.displayHearingType }}</td>
@@ -91,7 +91,7 @@
                   </tr>
                   {% if case.formattedReportingRestriction | length %}
                     <tr class="restriction-row">
-                      <td colspan="6">
+                      <td colspan="7">
                         <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
                       </td>
                     </tr>
