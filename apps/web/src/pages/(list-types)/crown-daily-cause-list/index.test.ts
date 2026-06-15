@@ -165,7 +165,7 @@ describe("crown-daily-list controller", () => {
       locale: "en"
     });
     const renderCall = vi.mocked(res.render!).mock.calls[0]!;
-    expect(renderCall[0]).toBe("crown-daily-list");
+    expect(renderCall[0]).toBe("crown-daily-cause-list");
     expect(renderCall[1]).toHaveProperty("en");
     expect(renderCall[1]).toHaveProperty("cy");
     expect(renderCall[1]).toHaveProperty("header");
@@ -188,7 +188,7 @@ describe("crown-daily-list controller", () => {
       contentDate: mockArtefact.contentDate,
       locale: "cy"
     });
-    expect(res.render).toHaveBeenCalledWith("crown-daily-list", expect.any(Object));
+    expect(res.render).toHaveBeenCalledWith("crown-daily-cause-list", expect.any(Object));
   });
 
   it("should use provenance label for data source", async () => {
@@ -200,7 +200,7 @@ describe("crown-daily-list controller", () => {
 
     await GET(req as Request, res as Response);
 
-    expect(res.render).toHaveBeenCalledWith("crown-daily-list", expect.objectContaining({ dataSource: "Manual Upload" }));
+    expect(res.render).toHaveBeenCalledWith("crown-daily-cause-list", expect.objectContaining({ dataSource: "Manual Upload" }));
   });
 
   it("should return 500 on unexpected error", async () => {
