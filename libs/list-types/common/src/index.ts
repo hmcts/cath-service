@@ -41,6 +41,7 @@ export {
 } from "./pdf/pdf-utilities.js";
 export {
   createPartyDetails,
+  extractPddaSittingsSummary,
   formatContentDate,
   formatPublicationDateTime,
   formatTime,

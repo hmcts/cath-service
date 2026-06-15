@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import type { CaseSummary } from "../email-summary/case-summary-formatter.js";
 
 export interface Party {
   partyRole: string;
@@ -57,4 +58,53 @@ export function formatPublicationDateTime(isoDateTime: string, locale: string): 
   const hour12 = hours % 12 || 12;
   const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
   return `${dateStr} at ${hour12}${minuteStr}${period}`;
+}
+
+interface PddaPersonalDetailsLike {
+  IsMasked: "yes" | "no";
+  MaskedName?: string;
+  Name: { CitizenNameForename?: string[]; CitizenNameSurname?: string };
+}
+
+interface PddaSittingLike {
+  Hearings?: Array<{
+    Defendants?: Array<{ PersonalDetails: PddaPersonalDetailsLike }>;
+    HearingDetails: { HearingDescription?: string; HearingType?: string };
+    CaseNumber: string;
+    Prosecution?: { ProsecutingAuthority?: string };
+  }>;
+}
+
+function formatPddaDefendantName(personalDetails: PddaPersonalDetailsLike): string {
+  if (personalDetails.IsMasked === "yes" && personalDetails.MaskedName) {
+    return personalDetails.MaskedName;
+  }
+  const name = personalDetails.Name;
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
+}
+
+export function extractPddaSittingsSummary(courtLists: Array<{ Sittings: PddaSittingLike[] }>): CaseSummary[] {
+  const summaries: CaseSummary[] = [];
+
+  for (const courtList of courtLists) {
+    for (const sitting of courtList.Sittings) {
+      for (const hearing of sitting.Hearings ?? []) {
+        const defendants = (hearing.Defendants ?? []).map((d) => formatPddaDefendantName(d.PersonalDetails)).filter((n) => n.length > 0);
+        const hearingType = hearing.HearingDetails.HearingDescription || hearing.HearingDetails.HearingType || "";
+        const fields: CaseSummary = [];
+
+        if (defendants.length > 0) {
+          fields.push({ label: "Defendant name(s)", value: defendants.join(", ") });
+        }
+        fields.push({ label: "Case reference", value: hearing.CaseNumber });
+        fields.push({ label: "Prosecuting authority", value: hearing.Prosecution?.ProsecutingAuthority || "" });
+        fields.push({ label: "Hearing type", value: hearingType });
+
+        summaries.push(fields);
+      }
+    }
+  }
+
+  return summaries;
 }
