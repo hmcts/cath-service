@@ -5,23 +5,28 @@ describe("validateCrownWarnedList", () => {
   it("should validate a correct crown warned list", () => {
     const validData = {
       WarnedList: {
-        DocumentID: "CWPL-2025-001",
+        DocumentID: { UniqueID: "CWPL-2025-001", DocumentType: "crown_warned_pdda_list" },
         ListHeader: {
           StartDate: "2025-11-10",
-          LastPublicationDate: "2025-11-12",
-          PublishedTime: "09:00:00"
+          PublishedTime: "2025-11-10T09:00:00",
+          Version: "1.0"
         },
         CrownCourt: {
+          CourtHouseType: "Crown Court",
+          CourtHouseCode: 1001,
           CourtHouseName: "Crown Court at Birmingham",
           CourtHouseAddress: {
-            CourtHouseAddressLine: ["Newton Street"],
-            CourtHouseAddressTown: "Birmingham",
-            CourtHouseAddressPostCode: "B4 7NA"
+            Line: ["Newton Street"],
+            PostCode: "B4 7NA"
           }
         },
         CourtLists: [
           {
-            CourtHouse: { CourtHouseName: "Crown Court at Birmingham" },
+            CourtHouse: {
+              CourtHouseType: "Crown Court",
+              CourtHouseCode: 1001,
+              CourtHouseName: "Crown Court at Birmingham"
+            },
             WithFixedDate: [
               {
                 Fixture: [
@@ -30,15 +35,15 @@ describe("validateCrownWarnedList", () => {
                     Cases: [
                       {
                         CaseNumber: "T20250001",
+                        CaseNumberCaTH: "CaTH001",
                         Defendants: [
                           {
                             PersonalDetails: {
-                              Name: { CitizenNameForename: "Alice", CitizenNameSurname: "Williams" },
+                              Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" },
                               IsMasked: "no"
                             }
                           }
-                        ],
-                        Prosecution: { ProsecutingAuthority: "CPS" }
+                        ]
                       }
                     ]
                   }

@@ -20,11 +20,12 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
   const location = await getLocationById(Number.parseInt(options.locationId, 10));
   const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || jsonData.DailyList.CrownCourt.CourtHouseName;
 
-  const address = jsonData.DailyList.CrownCourt.CourtHouseAddress;
+  const crownCourt = jsonData.DailyList.CrownCourt;
+  const address = crownCourt.CourtHouseAddress;
   const addressLines = formatAddress(address);
 
-  const lastPubDate = jsonData.DailyList.ListHeader.LastPublicationDate;
-  const lastUpdated = lastPubDate ? formatContentDate(new Date(lastPubDate), options.locale) : "";
+  const publishedTime = jsonData.DailyList.ListHeader.PublishedTime;
+  const lastUpdated = publishedTime ? formatContentDate(new Date(publishedTime), options.locale) : "";
 
   const header = {
     locationName,
@@ -34,9 +35,9 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
   };
 
   const openJustice = {
-    venueName: jsonData.DailyList.CrownCourt.CourtHouseName,
-    email: address?.CourtHouseAddressEmail || "",
-    phone: address?.CourtHouseAddressPhone || ""
+    venueName: crownCourt.CourtHouseName,
+    email: "",
+    phone: crownCourt.CourtHouseTelephone || ""
   };
 
   const listData: CrownDailyListRendered = {
@@ -58,19 +59,17 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
 function formatAddress(address: CrownDailyListData["DailyList"]["CrownCourt"]["CourtHouseAddress"]): string[] {
   if (!address) return [];
   const parts: string[] = [];
-  for (const line of address.CourtHouseAddressLine ?? []) {
+  for (const line of address.Line ?? []) {
     if (line) parts.push(line);
   }
-  if (address.CourtHouseAddressTown) parts.push(address.CourtHouseAddressTown);
-  if (address.CourtHouseAddressCounty) parts.push(address.CourtHouseAddressCounty);
-  if (address.CourtHouseAddressPostCode) parts.push(address.CourtHouseAddressPostCode);
+  if (address.PostCode) parts.push(address.PostCode);
   return parts;
 }
 
 function groupSittingsByCourtRoom(sittings: PddaSitting[]): CrownDailyCourtRoomRendered[] {
   const roomMap = new Map<string, PddaSitting[]>();
   for (const sitting of sittings) {
-    const room = sitting.CourtRoomNumber;
+    const room = String(sitting.CourtRoomNumber);
     const existing = roomMap.get(room);
     if (existing) {
       existing.push(sitting);
@@ -137,8 +136,8 @@ function formatSittingTime(timeStr: string | undefined): string {
 }
 
 function formatCitizenName(name: CitizenName): string {
-  const parts = [name.CitizenNameTitle, name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean);
-  return parts.join(" ");
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
 function formatJudiciary(judiciary: PddaJudiciary): string {
@@ -156,7 +155,5 @@ function formatDefendantName(defendant: PddaDefendant): string {
   if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
     return defendant.PersonalDetails.MaskedName;
   }
-  const name = defendant.PersonalDetails.Name;
-  const parts = [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean);
-  return parts.join(" ");
+  return formatCitizenName(defendant.PersonalDetails.Name);
 }

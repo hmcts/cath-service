@@ -4,7 +4,7 @@ import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WA
 
 const buildTestData = (overrides?: Partial<CrownWarnedListData["WarnedList"]>): CrownWarnedListData => ({
   WarnedList: {
-    DocumentID: "CWL-2025-001",
+    DocumentID: { UniqueID: "CWL-2025-001", DocumentType: "crown_warned_pdda_list" },
     ListHeader: { StartDate: "2025-01-27" },
     CrownCourt: { CourtHouseName: "Crown Court at Birmingham" },
     CourtLists: [],
@@ -29,7 +29,7 @@ describe("extractCaseSummary", () => {
                       Defendants: [
                         {
                           PersonalDetails: {
-                            Name: { CitizenNameForename: "Alice", CitizenNameSurname: "Williams" },
+                            Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" },
                             IsMasked: "no"
                           }
                         }
@@ -60,17 +60,21 @@ describe("extractCaseSummary", () => {
         {
           WithoutFixedDate: [
             {
-              Cases: [
+              Fixture: [
                 {
-                  CaseNumber: "B20250002",
-                  Prosecution: { ProsecutingAuthority: "CPS" },
-                  Defendants: [
+                  Cases: [
                     {
-                      PersonalDetails: {
-                        Name: { CitizenNameForename: "Tom", CitizenNameSurname: "Hardy" },
-                        IsMasked: "no",
-                        CustodyStatus: "On remand"
-                      }
+                      CaseNumber: "B20250002",
+                      Prosecution: { ProsecutingAuthority: "CPS" },
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Tom"], CitizenNameSurname: "Hardy" },
+                            IsMasked: "no",
+                            CustodyStatus: "On remand"
+                          }
+                        }
+                      ]
                     }
                   ]
                 }

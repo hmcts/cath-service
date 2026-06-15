@@ -8,7 +8,8 @@ function formatDefendantName(defendant: PddaDefendant): string {
     return defendant.PersonalDetails.MaskedName;
   }
   const name = defendant.PersonalDetails.Name;
-  return [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean).join(" ");
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
 function buildCaseSummary(caseItem: PddaCase): CaseSummary {
@@ -37,8 +38,10 @@ export function extractCaseSummary(jsonData: CrownWarnedListData): CaseSummary[]
     }
 
     for (const entry of courtList.WithoutFixedDate ?? []) {
-      for (const caseItem of entry.Cases ?? []) {
-        summaries.push(buildCaseSummary(caseItem));
+      for (const fixture of entry.Fixture ?? []) {
+        for (const caseItem of fixture.Cases ?? []) {
+          summaries.push(buildCaseSummary(caseItem));
+        }
       }
     }
   }

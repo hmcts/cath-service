@@ -1,6 +1,6 @@
 export interface CitizenName {
   CitizenNameTitle?: string;
-  CitizenNameForename?: string;
+  CitizenNameForename?: string[];
   CitizenNameSurname?: string;
   CitizenNameRequestedName?: string;
 }
@@ -22,6 +22,7 @@ export interface PddaDefendant {
 
 export interface PddaCase {
   CaseNumber?: string;
+  CaseNumberCaTH?: string;
   Hearing?: Array<{
     ListNote?: string;
   }>;
@@ -41,36 +42,33 @@ export interface PddaFixture {
 
 export interface PddaCourtListEntry {
   Fixture?: PddaFixture[];
-  Cases?: PddaCase[];
 }
 
-export interface PddaCourtHouseAddress {
-  CourtHouseAddressLine?: string[];
-  CourtHouseAddressTown?: string;
-  CourtHouseAddressCounty?: string;
-  CourtHouseAddressPostCode?: string;
-  CourtHouseAddressPhone?: string;
-  CourtHouseAddressEmail?: string;
+export interface PddaAddress {
+  Line?: string[];
+  PostCode?: string;
 }
 
 export interface PddaCourtHouse {
   CourtHouseName: string;
-  CourtHouseCode?: string;
-  CourtHouseAddress?: PddaCourtHouseAddress;
+  CourtHouseType?: string;
+  CourtHouseCode?: number;
+  CourtHouseAddress?: PddaAddress;
+  CourtHouseTelephone?: string;
 }
 
 export interface CrownWarnedListData {
   WarnedList: {
-    DocumentID: string;
+    DocumentID: { UniqueID: string; DocumentType: string };
     ListHeader: {
       StartDate?: string;
-      LastPublicationDate?: string;
-      PublishedTime?: string;
+      EndDate?: string;
       Version?: string;
+      PublishedTime?: string;
     };
     CrownCourt: PddaCourtHouse;
     CourtLists: Array<{
-      CourtHouse?: PddaCourtHouse;
+      CourtHouse: PddaCourtHouse;
       WithFixedDate?: PddaCourtListEntry[];
       WithoutFixedDate?: PddaCourtListEntry[];
     }>;

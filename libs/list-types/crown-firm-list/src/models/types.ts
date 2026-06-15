@@ -1,6 +1,6 @@
 export interface CitizenName {
   CitizenNameTitle?: string;
-  CitizenNameForename?: string;
+  CitizenNameForename?: string[];
   CitizenNameSurname?: string;
   CitizenNameRequestedName?: string;
 }
@@ -40,15 +40,14 @@ export interface PddaHearingDetails {
 }
 
 export interface PddaHearing {
-  HearingSequenceNumber?: string;
+  HearingSequenceNumber?: number;
   HearingDetails: PddaHearingDetails;
   CaseNumber: string;
   CaseNumberCaTH?: string;
-  CommittingCourt?: string;
   ListNote?: string;
   Prosecution?: {
     ProsecutingReference?: string;
-    ProsecutingOrganisation?: string;
+    ProsecutingOrganisation?: { OrganisationName?: string };
     ProsecutingAuthority?: string;
   };
   Defendants?: PddaDefendant[];
@@ -60,43 +59,41 @@ export interface PddaJudiciary {
 }
 
 export interface PddaSitting {
-  CourtRoomNumber: string;
+  CourtRoomNumber: number;
   SittingAt?: string;
   Judiciary: PddaJudiciary;
   Hearings?: PddaHearing[];
 }
 
-export interface PddaCourtHouseAddress {
-  CourtHouseAddressLine?: string[];
-  CourtHouseAddressTown?: string;
-  CourtHouseAddressCounty?: string;
-  CourtHouseAddressPostCode?: string;
-  CourtHouseAddressPhone?: string;
-  CourtHouseAddressEmail?: string;
+export interface PddaAddress {
+  Line?: string[];
+  PostCode?: string;
 }
 
 export interface PddaCourtHouse {
   CourtHouseName: string;
-  CourtHouseCode?: string;
-  CourtHouseAddress?: PddaCourtHouseAddress;
+  CourtHouseType?: string;
+  CourtHouseCode?: number;
+  CourtHouseAddress?: PddaAddress;
+  CourtHouseTelephone?: string;
 }
 
 export interface PddaListHeader {
-  ListDate?: string;
-  LastPublicationDate?: string;
-  PublishedTime?: string;
+  StartDate?: string;
+  EndDate?: string;
   Version?: string;
+  PublishedTime?: string;
 }
 
 export interface CrownFirmListData {
   FirmList: {
-    DocumentID: string;
+    DocumentID: { UniqueID: string; DocumentType: string };
     ListHeader: PddaListHeader;
     CrownCourt: PddaCourtHouse;
     ReserveList?: unknown[];
     CourtLists: Array<{
       SittingDate: string;
-      CourtHouse?: PddaCourtHouse;
+      CourtHouse: PddaCourtHouse;
       Sittings: PddaSitting[];
     }>;
   };

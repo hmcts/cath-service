@@ -8,7 +8,8 @@ function formatDefendantName(defendant: PddaDefendant): string {
     return defendant.PersonalDetails.MaskedName;
   }
   const name = defendant.PersonalDetails.Name;
-  return [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean).join(" ");
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
 export function extractCaseSummary(jsonData: CrownDailyListData): CaseSummary[] {

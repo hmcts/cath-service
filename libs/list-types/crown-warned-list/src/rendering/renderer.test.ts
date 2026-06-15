@@ -9,20 +9,18 @@ import { getLocationById } from "@hmcts/location";
 
 const baseInput = {
   WarnedList: {
-    DocumentID: "CWPL-2025-001",
+    DocumentID: { UniqueID: "CWPL-2025-001", DocumentType: "crown_warned_pdda_list" },
     ListHeader: {
       StartDate: "2025-11-10",
-      LastPublicationDate: "2025-11-12",
-      PublishedTime: "09:00:00"
+      PublishedTime: "2025-11-12T09:00:00",
+      Version: "1.0"
     },
     CrownCourt: {
       CourtHouseName: "Crown Court at Birmingham",
+      CourtHouseTelephone: "0121 681 3400",
       CourtHouseAddress: {
-        CourtHouseAddressLine: ["Newton Street"],
-        CourtHouseAddressTown: "Birmingham",
-        CourtHouseAddressPostCode: "B4 7NA",
-        CourtHouseAddressPhone: "0121 681 3400",
-        CourtHouseAddressEmail: "birminghamcc@justice.gov.uk"
+        Line: ["Newton Street"],
+        PostCode: "B4 7NA"
       }
     },
     CourtLists: []
@@ -84,7 +82,7 @@ describe("renderCrownWarnedListData", () => {
                         Defendants: [
                           {
                             PersonalDetails: {
-                              Name: { CitizenNameForename: "Alice", CitizenNameSurname: "Williams" },
+                              Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" },
                               IsMasked: "no" as const
                             }
                           }
@@ -124,11 +122,15 @@ describe("renderCrownWarnedListData", () => {
           {
             WithoutFixedDate: [
               {
-                Cases: [
+                Fixture: [
                   {
-                    CaseNumber: "T20250002",
-                    Defendants: [],
-                    Prosecution: { ProsecutingAuthority: "CPS" }
+                    Cases: [
+                      {
+                        CaseNumber: "T20250002",
+                        Defendants: [],
+                        Prosecution: { ProsecutingAuthority: "CPS" }
+                      }
+                    ]
                   }
                 ]
               }
@@ -169,7 +171,7 @@ describe("renderCrownWarnedListData", () => {
                         Defendants: [
                           {
                             PersonalDetails: {
-                              Name: { CitizenNameForename: "Tom", CitizenNameSurname: "Hardy" },
+                              Name: { CitizenNameForename: ["Tom"], CitizenNameSurname: "Hardy" },
                               IsMasked: "no" as const,
                               CustodyStatus: "On remand"
                             }
@@ -206,16 +208,20 @@ describe("renderCrownWarnedListData", () => {
           {
             WithoutFixedDate: [
               {
-                Cases: [
+                Fixture: [
                   {
-                    CaseNumber: "T20250011",
-                    Defendants: [
+                    Cases: [
                       {
-                        PersonalDetails: {
-                          Name: { CitizenNameForename: "Jane", CitizenNameSurname: "Doe" },
-                          IsMasked: "no" as const,
-                          CustodyStatus: "In custody"
-                        }
+                        CaseNumber: "T20250011",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Doe" },
+                              IsMasked: "no" as const,
+                              CustodyStatus: "In custody"
+                            }
+                          }
+                        ]
                       }
                     ]
                   }
@@ -246,16 +252,20 @@ describe("renderCrownWarnedListData", () => {
           {
             WithoutFixedDate: [
               {
-                Cases: [
+                Fixture: [
                   {
-                    CaseNumber: "T20250012",
-                    Defendants: [
+                    Cases: [
                       {
-                        PersonalDetails: {
-                          Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
-                          IsMasked: "no" as const,
-                          CustodyStatus: "On bail"
-                        }
+                        CaseNumber: "T20250012",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
+                              IsMasked: "no" as const,
+                              CustodyStatus: "On bail"
+                            }
+                          }
+                        ]
                       }
                     ]
                   }
@@ -286,11 +296,15 @@ describe("renderCrownWarnedListData", () => {
           {
             WithoutFixedDate: [
               {
-                Cases: [
+                Fixture: [
                   {
-                    CaseNumber: "T20250020",
-                    LinkedCases: [{ CaseNumber: "T20240001" }, { CaseNumber: "T20240002" }],
-                    Defendants: []
+                    Cases: [
+                      {
+                        CaseNumber: "T20250020",
+                        LinkedCases: [{ CaseNumber: "T20240001" }, { CaseNumber: "T20240002" }],
+                        Defendants: []
+                      }
+                    ]
                   }
                 ]
               }
@@ -357,16 +371,20 @@ describe("renderCrownWarnedListData", () => {
           {
             WithoutFixedDate: [
               {
-                Cases: [
+                Fixture: [
                   {
-                    CaseNumber: "T20250040",
-                    Defendants: [
+                    Cases: [
                       {
-                        PersonalDetails: {
-                          Name: { CitizenNameForename: "Real", CitizenNameSurname: "Name" },
-                          MaskedName: "Restricted",
-                          IsMasked: "yes" as const
-                        }
+                        CaseNumber: "T20250040",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
+                              MaskedName: "Restricted",
+                              IsMasked: "yes" as const
+                            }
+                          }
+                        ]
                       }
                     ]
                   }

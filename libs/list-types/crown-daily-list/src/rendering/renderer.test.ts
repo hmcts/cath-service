@@ -9,22 +9,18 @@ import { getLocationById } from "@hmcts/location";
 
 const baseInput = {
   DailyList: {
-    DocumentID: "CDPL-2025-001",
+    DocumentID: { UniqueID: "CDPL-2025-001", DocumentType: "crown_daily_pdda_list" },
     ListHeader: {
-      ListDate: "2025-11-12",
-      LastPublicationDate: "2025-11-12",
-      PublishedTime: "09:00:00",
+      StartDate: "2025-11-12",
+      PublishedTime: "2025-11-12T09:00:00",
       Version: "1.0"
     },
     CrownCourt: {
       CourtHouseName: "Crown Court at Leeds",
+      CourtHouseTelephone: "0113 306 2500",
       CourtHouseAddress: {
-        CourtHouseAddressLine: ["1 Oxford Row"],
-        CourtHouseAddressTown: "Leeds",
-        CourtHouseAddressCounty: "West Yorkshire",
-        CourtHouseAddressPostCode: "LS1 3BG",
-        CourtHouseAddressPhone: "0113 306 2500",
-        CourtHouseAddressEmail: "leedscc@justice.gov.uk"
+        Line: ["1 Oxford Row"],
+        PostCode: "LS1 3BG"
       }
     },
     CourtLists: []
@@ -45,7 +41,7 @@ describe("renderCrownDailyListData", () => {
     });
 
     expect(result.header.locationName).toBe("Crown Court at Leeds");
-    expect(result.header.addressLines).toEqual(["1 Oxford Row", "Leeds", "West Yorkshire", "LS1 3BG"]);
+    expect(result.header.addressLines).toEqual(["1 Oxford Row", "LS1 3BG"]);
     expect(result.header.contentDate).toBe("01 January 2025");
   });
 
@@ -72,7 +68,7 @@ describe("renderCrownDailyListData", () => {
     });
 
     expect(result.openJustice.venueName).toBe("Crown Court at Leeds");
-    expect(result.openJustice.email).toBe("leedscc@justice.gov.uk");
+    expect(result.openJustice.email).toBe("");
     expect(result.openJustice.phone).toBe("0113 306 2500");
   });
 
@@ -85,21 +81,21 @@ describe("renderCrownDailyListData", () => {
           {
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 SittingAt: "10:00:00",
-                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Smith" } },
+                Judiciary: { Judge: { CitizenNameForename: ["HHJ"], CitizenNameSurname: "Smith" } },
                 Hearings: []
               },
               {
-                CourtRoomNumber: "Court 2",
+                CourtRoomNumber: 2,
                 SittingAt: "11:00:00",
-                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Jones" } },
+                Judiciary: { Judge: { CitizenNameForename: ["HHJ"], CitizenNameSurname: "Jones" } },
                 Hearings: []
               },
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 SittingAt: "14:00:00",
-                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Smith" } },
+                Judiciary: { Judge: { CitizenNameForename: ["HHJ"], CitizenNameSurname: "Smith" } },
                 Hearings: []
               }
             ]
@@ -116,9 +112,9 @@ describe("renderCrownDailyListData", () => {
 
     const courtRooms = result.listData.courtLists[0].courtHouse.courtRoom;
     expect(courtRooms).toHaveLength(2);
-    expect(courtRooms[0].courtRoomName).toBe("Court 1");
+    expect(courtRooms[0].courtRoomName).toBe("1");
     expect(courtRooms[0].session).toHaveLength(2);
-    expect(courtRooms[1].courtRoomName).toBe("Court 2");
+    expect(courtRooms[1].courtRoomName).toBe("2");
     expect(courtRooms[1].session).toHaveLength(1);
   });
 
@@ -131,10 +127,10 @@ describe("renderCrownDailyListData", () => {
           {
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 SittingAt: "10:00:00",
                 Judiciary: {
-                  Judge: { CitizenNameForename: "John", CitizenNameSurname: "Smith" }
+                  Judge: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" }
                 },
                 Hearings: [
                   {
@@ -143,7 +139,7 @@ describe("renderCrownDailyListData", () => {
                     Defendants: [
                       {
                         PersonalDetails: {
-                          Name: { CitizenNameForename: "Jane", CitizenNameSurname: "Doe" },
+                          Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Doe" },
                           IsMasked: "no" as const
                         }
                       }
@@ -176,7 +172,7 @@ describe("renderCrownDailyListData", () => {
           {
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 SittingAt: "14:30:00",
                 Judiciary: { Judge: {} },
                 Hearings: []
@@ -205,9 +201,9 @@ describe("renderCrownDailyListData", () => {
           {
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 SittingAt: "10:00:00",
-                Judiciary: { Judge: { CitizenNameForename: "HHJ", CitizenNameSurname: "Smith" } },
+                Judiciary: { Judge: { CitizenNameForename: ["HHJ"], CitizenNameSurname: "Smith" } },
                 Hearings: [
                   {
                     HearingDetails: { HearingDescription: "Trial" },
@@ -216,7 +212,7 @@ describe("renderCrownDailyListData", () => {
                     Defendants: [
                       {
                         PersonalDetails: {
-                          Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
+                          Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
                           IsMasked: "no" as const
                         }
                       }
@@ -251,7 +247,7 @@ describe("renderCrownDailyListData", () => {
           {
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 Judiciary: { Judge: {} },
                 Hearings: [
                   {
@@ -260,7 +256,7 @@ describe("renderCrownDailyListData", () => {
                     Defendants: [
                       {
                         PersonalDetails: {
-                          Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
+                          Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
                           MaskedName: "Defendant A",
                           IsMasked: "yes" as const
                         }
@@ -294,16 +290,16 @@ describe("renderCrownDailyListData", () => {
           {
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 Judiciary: {
                   Judge: {
                     CitizenNameTitle: "HHJ",
-                    CitizenNameForename: "James",
+                    CitizenNameForename: ["James"],
                     CitizenNameSurname: "Smith"
                   },
                   Justice: [
-                    { CitizenNameForename: "Alice", CitizenNameSurname: "Jones" },
-                    { CitizenNameForename: "Bob", CitizenNameSurname: "Brown" }
+                    { CitizenNameForename: ["Alice"], CitizenNameSurname: "Jones" },
+                    { CitizenNameForename: ["Bob"], CitizenNameSurname: "Brown" }
                   ]
                 },
                 Hearings: []

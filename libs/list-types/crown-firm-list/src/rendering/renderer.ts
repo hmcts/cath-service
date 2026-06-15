@@ -22,13 +22,13 @@ export async function renderCrownFirmListData(jsonData: CrownFirmListData, optio
     locationName,
     addressLines: formatAddress(FirmList.CrownCourt),
     contentDate: formatContentDate(options.contentDate, options.locale),
-    lastUpdated: formatLastPublished(FirmList.ListHeader.LastPublicationDate, options.locale)
+    lastUpdated: formatLastPublished(FirmList.ListHeader.PublishedTime, options.locale)
   };
 
   const openJustice = {
     venueName: FirmList.CrownCourt.CourtHouseName,
-    email: FirmList.CrownCourt.CourtHouseAddress?.CourtHouseAddressEmail || "",
-    phone: FirmList.CrownCourt.CourtHouseAddress?.CourtHouseAddressPhone || ""
+    email: "",
+    phone: FirmList.CrownCourt.CourtHouseTelephone || ""
   };
 
   const groupedListData = buildGroupedListData(jsonData, options.locale);
@@ -40,12 +40,10 @@ function formatAddress(court: CrownFirmListData["FirmList"]["CrownCourt"]): stri
   const parts: string[] = [];
   const addr = court.CourtHouseAddress;
   if (!addr) return parts;
-  for (const line of addr.CourtHouseAddressLine ?? []) {
+  for (const line of addr.Line ?? []) {
     if (line) parts.push(line);
   }
-  if (addr.CourtHouseAddressTown) parts.push(addr.CourtHouseAddressTown);
-  if (addr.CourtHouseAddressCounty) parts.push(addr.CourtHouseAddressCounty);
-  if (addr.CourtHouseAddressPostCode) parts.push(addr.CourtHouseAddressPostCode);
+  if (addr.PostCode) parts.push(addr.PostCode);
   return parts;
 }
 
@@ -78,7 +76,8 @@ function formatSittingTime(timeStr: string | undefined): string {
 }
 
 function formatCitizenName(name: CitizenName): string {
-  return [name.CitizenNameTitle, name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean).join(" ");
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
 function formatJudiciary(judiciary: PddaJudiciary): string {
@@ -96,8 +95,7 @@ function formatDefendantName(defendant: PddaDefendant): string {
   if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
     return defendant.PersonalDetails.MaskedName;
   }
-  const name = defendant.PersonalDetails.Name;
-  return [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean).join(" ");
+  return formatCitizenName(defendant.PersonalDetails.Name);
 }
 
 function extractRepresentative(defendants: PddaDefendant[]): string {
@@ -108,7 +106,7 @@ function extractRepresentative(defendants: PddaDefendant[]): string {
         if (solicitor.Party?.Organisation?.OrganisationName) {
           reps.push(solicitor.Party.Organisation.OrganisationName);
         } else if (solicitor.Party?.Person) {
-          const name = [solicitor.Party.Person.CitizenNameForename, solicitor.Party.Person.CitizenNameSurname].filter(Boolean).join(" ");
+          const name = formatCitizenName(solicitor.Party.Person);
           if (name) reps.push(name);
         }
       }
@@ -142,7 +140,7 @@ function buildGroupedListData(jsonData: CrownFirmListData, locale: string): Crow
 
     for (const sitting of courtList.Sittings) {
       const daySitting: CrownFirmDaySitting = {
-        courtRoomName: sitting.CourtRoomNumber,
+        courtRoomName: String(sitting.CourtRoomNumber),
         formattedJudiciaries: formatJudiciary(sitting.Judiciary),
         time: formatSittingTime(sitting.SittingAt),
         hearing: (sitting.Hearings ?? []).map(renderHearing)

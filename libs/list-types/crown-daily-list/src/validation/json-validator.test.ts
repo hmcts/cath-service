@@ -5,38 +5,37 @@ describe("validateCrownDailyList", () => {
   it("should validate a correct crown daily list", () => {
     const validData = {
       DailyList: {
-        DocumentID: "CDPL-2025-001",
+        DocumentID: { UniqueID: "CDPL-2025-001", DocumentType: "crown_daily_pdda_list" },
         ListHeader: {
-          ListDate: "2025-11-12",
-          LastPublicationDate: "2025-11-12",
-          PublishedTime: "09:00:00",
+          StartDate: "2025-11-12",
+          PublishedTime: "2025-11-12T09:00:00",
           Version: "1.0"
         },
         CrownCourt: {
+          CourtHouseType: "Crown Court",
+          CourtHouseCode: 1001,
           CourtHouseName: "Crown Court at Leeds",
           CourtHouseAddress: {
-            CourtHouseAddressLine: ["1 Oxford Row"],
-            CourtHouseAddressTown: "Leeds",
-            CourtHouseAddressPostCode: "LS1 3BG"
+            Line: ["1 Oxford Row"],
+            PostCode: "LS1 3BG"
           }
         },
         CourtLists: [
           {
+            CourtHouse: {
+              CourtHouseType: "Crown Court",
+              CourtHouseCode: 1001,
+              CourtHouseName: "Crown Court at Leeds"
+            },
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 Judiciary: {
                   Judge: {
-                    CitizenNameForename: "James",
+                    CitizenNameForename: ["James"],
                     CitizenNameSurname: "Smith"
                   }
-                },
-                Hearings: [
-                  {
-                    HearingDetails: { HearingDescription: "Trial" },
-                    CaseNumber: "T20250001"
-                  }
-                ]
+                }
               }
             ]
           }

@@ -4,8 +4,8 @@ import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WA
 
 const buildTestData = (overrides?: Partial<CrownDailyListData["DailyList"]>): CrownDailyListData => ({
   DailyList: {
-    DocumentID: "CDL-2025-001",
-    ListHeader: { LastPublicationDate: "2025-01-28" },
+    DocumentID: { UniqueID: "CDL-2025-001", DocumentType: "crown_daily_pdda_list" },
+    ListHeader: { StartDate: "2025-01-28", PublishedTime: "2025-01-28T09:00:00", Version: "1.0" },
     CrownCourt: { CourtHouseName: "Crown Court at Leeds" },
     CourtLists: [],
     ...overrides
@@ -19,7 +19,7 @@ describe("extractCaseSummary", () => {
         {
           Sittings: [
             {
-              CourtRoomNumber: "Court 1",
+              CourtRoomNumber: 1,
               Judiciary: { Judge: {} },
               Hearings: [
                 {
@@ -29,7 +29,7 @@ describe("extractCaseSummary", () => {
                   Defendants: [
                     {
                       PersonalDetails: {
-                        Name: { CitizenNameForename: "John", CitizenNameSurname: "Smith" },
+                        Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
                         IsMasked: "no"
                       }
                     }
@@ -59,7 +59,7 @@ describe("extractCaseSummary", () => {
         {
           Sittings: [
             {
-              CourtRoomNumber: "Court 1",
+              CourtRoomNumber: 1,
               Judiciary: { Judge: {} },
               Hearings: [
                 {
@@ -85,7 +85,7 @@ describe("extractCaseSummary", () => {
         {
           Sittings: [
             {
-              CourtRoomNumber: "Court 1",
+              CourtRoomNumber: 1,
               Judiciary: { Judge: {} },
               Hearings: [
                 {

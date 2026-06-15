@@ -17,14 +17,14 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     locationName,
     addressLines: formatAddress(address),
     contentDate: formatContentDate(options.contentDate, options.locale),
-    lastUpdated: formatDate(WarnedList.ListHeader.LastPublicationDate, options.locale),
+    lastUpdated: formatDate(WarnedList.ListHeader.PublishedTime, options.locale),
     weekCommencing: formatDate(WarnedList.ListHeader.StartDate, options.locale)
   };
 
   const openJustice = {
     venueName: WarnedList.CrownCourt.CourtHouseName,
-    email: address?.CourtHouseAddressEmail || "",
-    phone: address?.CourtHouseAddressPhone || ""
+    email: "",
+    phone: WarnedList.CrownCourt.CourtHouseTelephone || ""
   };
 
   const categoryMap: Map<string, CrownWarnedCaseRow[]> = new Map();
@@ -43,9 +43,11 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     }
 
     for (const entry of courtList.WithoutFixedDate ?? []) {
-      for (const caseItem of entry.Cases ?? []) {
-        const row = processCase(caseItem, undefined, options.locale);
-        categoryMap.get("WithoutFixedDate")!.push(row);
+      for (const fixture of entry.Fixture ?? []) {
+        for (const caseItem of fixture.Cases ?? []) {
+          const row = processCase(caseItem, undefined, options.locale);
+          categoryMap.get("WithoutFixedDate")!.push(row);
+        }
       }
     }
   }
@@ -64,12 +66,10 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
 function formatAddress(address: CrownWarnedListData["WarnedList"]["CrownCourt"]["CourtHouseAddress"]): string[] {
   if (!address) return [];
   const parts: string[] = [];
-  for (const line of address.CourtHouseAddressLine ?? []) {
+  for (const line of address.Line ?? []) {
     if (line && line.length > 0) parts.push(line);
   }
-  if (address.CourtHouseAddressTown && address.CourtHouseAddressTown.length > 0) parts.push(address.CourtHouseAddressTown);
-  if (address.CourtHouseAddressCounty && address.CourtHouseAddressCounty.length > 0) parts.push(address.CourtHouseAddressCounty);
-  if (address.CourtHouseAddressPostCode && address.CourtHouseAddressPostCode.length > 0) parts.push(address.CourtHouseAddressPostCode);
+  if (address.PostCode && address.PostCode.length > 0) parts.push(address.PostCode);
   return parts;
 }
 
@@ -82,7 +82,8 @@ function formatDate(dateStr: string | undefined, locale: string): string {
 }
 
 function formatCitizenName(name: CitizenName): string {
-  return [name.CitizenNameForename, name.CitizenNameSurname].filter(Boolean).join(" ");
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
 function formatDefendantName(defendant: PddaDefendant): string {

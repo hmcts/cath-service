@@ -1,6 +1,85 @@
 {
+  "$defs": {
+    "CitizenName": {
+      "type": "object",
+      "properties": {
+        "CitizenNameTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 35
+        },
+        "CitizenNameForename": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "CitizenNameSurname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 35
+        },
+        "CitizenNameSuffix": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 35
+        },
+        "CitizenNameRequestedName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 70
+        }
+      }
+    },
+    "PersonalDetails": {
+      "type": "object",
+      "required": ["Name", "IsMasked"],
+      "properties": {
+        "Name": {
+          "$ref": "#/$defs/CitizenName"
+        },
+        "MaskedName": { "type": "string" },
+        "IsMasked": { "type": "string", "enum": ["yes", "no"] },
+        "DateOfBirth": {
+          "type": "object",
+          "properties": {
+            "BirthDate": { "type": "string", "format": "date" },
+            "VerifiedBy": {
+              "type": "string",
+              "enum": [
+                "not verified",
+                "accepted on balance of probabilities",
+                "secondary certificate",
+                "certified copy of birth certificate",
+                "short form birth certificate or certificate of registration of birth",
+                "birth certificate"
+              ]
+            }
+          }
+        },
+        "Age": { "type": "integer" },
+        "Sex": {
+          "type": "string",
+          "enum": ["unknown", "male", "female", "indeterminate"]
+        },
+        "Address": {
+          "$ref": "#/$defs/Address"
+        },
+        "Nationality": { "type": "string" }
+      }
+    },
+    "Address": {
+      "type": "object",
+      "properties": {
+        "Line": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "type": "string" }
+        },
+        "PostCode": { "type": "string" }
+      }
+    }
+  },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Crown Daily PDDA List",
+  "title": "Root",
   "type": "object",
   "required": ["DailyList"],
   "properties": {
@@ -9,49 +88,60 @@
       "required": ["DocumentID", "ListHeader", "CrownCourt", "CourtLists"],
       "properties": {
         "DocumentID": {
-          "type": "string",
-          "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$"
+          "type": "object",
+          "required": ["UniqueID", "DocumentType"],
+          "properties": {
+            "UniqueID": { "type": "string" },
+            "DocumentType": { "type": "string" }
+          }
         },
         "ListHeader": {
           "type": "object",
+          "required": ["StartDate", "Version", "PublishedTime"],
           "properties": {
-            "ListDate": { "type": "string" },
-            "LastPublicationDate": { "type": "string" },
-            "PublishedTime": { "type": "string" },
+            "StartDate": { "type": "string", "format": "date" },
+            "EndDate": { "type": "string", "format": "date" },
             "Version": { "type": "string" },
-            "StartDate": { "type": "string" }
+            "PublishedTime": { "type": "string", "format": "date-time" }
           }
         },
         "CrownCourt": {
           "type": "object",
-          "required": ["CourtHouseName"],
+          "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
           "properties": {
-            "CourtHouseName": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-            "CourtHouseCode": { "type": "string" },
+            "CourtHouseType": {
+              "type": "string",
+              "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+            },
+            "CourtHouseCode": { "type": "integer" },
+            "CourtHouseName": { "type": "string" },
             "CourtHouseAddress": {
-              "type": "object",
-              "properties": {
-                "CourtHouseAddressLine": { "type": "array", "items": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" } },
-                "CourtHouseAddressTown": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                "CourtHouseAddressCounty": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                "CourtHouseAddressPostCode": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                "CourtHouseAddressPhone": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                "CourtHouseAddressEmail": { "type": "string" }
-              }
-            }
+              "$ref": "#/$defs/Address"
+            },
+            "CourtHouseTelephone": { "type": "string" }
           }
         },
         "CourtLists": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["Sittings"],
+            "required": ["CourtHouse", "Sittings"],
             "properties": {
               "CourtHouse": {
                 "type": "object",
+                "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
                 "properties": {
+                  "CourtHouseType": {
+                    "type": "string",
+                    "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+                  },
+                  "CourtHouseCode": { "type": "integer" },
+                  "CourtHouseShortName": { "type": "string" },
                   "CourtHouseName": { "type": "string" },
-                  "CourtHouseCode": { "type": "string" }
+                  "CourtHouseAddress": {
+                    "$ref": "#/$defs/Address"
+                  },
+                  "CourtHouseTelephone": { "type": "string" }
                 }
               },
               "Sittings": {
@@ -60,30 +150,27 @@
                   "type": "object",
                   "required": ["CourtRoomNumber", "Judiciary"],
                   "properties": {
-                    "CourtRoomNumber": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                    "SittingAt": { "type": "string" },
+                    "CourtRoomNumber": { "type": "integer" },
+                    "SittingAt": { "type": "string", "format": "time" },
+                    "SittingPriority": {
+                      "type": "string",
+                      "enum": ["T", "F", "R"]
+                    },
+                    "SittingNote": { "type": "string" },
                     "Judiciary": {
                       "type": "object",
                       "required": ["Judge"],
                       "properties": {
                         "Judge": {
-                          "type": "object",
-                          "properties": {
-                            "CitizenNameTitle": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                            "CitizenNameForename": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                            "CitizenNameSurname": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                            "CitizenNameRequestedName": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" }
-                          }
+                          "$ref": "#/$defs/CitizenName",
+                          "required": ["CitizenNameSurname"]
                         },
                         "Justice": {
                           "type": "array",
+                          "maxItems": 4,
                           "items": {
-                            "type": "object",
-                            "properties": {
-                              "CitizenNameTitle": { "type": "string" },
-                              "CitizenNameForename": { "type": "string" },
-                              "CitizenNameSurname": { "type": "string" }
-                            }
+                            "$ref": "#/$defs/CitizenName",
+                            "required": ["CitizenNameSurname"]
                           }
                         }
                       }
@@ -92,28 +179,67 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["HearingDetails", "CaseNumber"],
+                        "required": ["HearingSequenceNumber", "HearingDetails", "CaseNumber", "CaseNumberCaTH"],
                         "properties": {
-                          "HearingSequenceNumber": { "type": "string" },
+                          "HearingSequenceNumber": { "type": "integer" },
                           "HearingDetails": {
                             "type": "object",
+                            "required": ["HearingDescription"],
                             "properties": {
-                              "HearingDescription": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                              "HearingType": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" }
+                              "HearingDescription": { "type": "string" },
+                              "HearingType": { "type": "string" }
                             }
                           },
-                          "CaseNumber": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                          "CaseNumberCaTH": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                          "CommittingCourt": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                          "ListNote": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
+                          "TimeMarkingNote": { "type": "string" },
+                          "CaseNumber": { "type": "string" },
+                          "CaseNumberCaTH": { "type": "string" },
                           "Prosecution": {
                             "type": "object",
                             "properties": {
                               "ProsecutingReference": { "type": "string" },
-                              "ProsecutingOrganisation": { "type": "string" },
-                              "ProsecutingAuthority": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" }
+                              "ProsecutingOrganisation": {
+                                "type": "object",
+                                "required": ["OrganisationName"],
+                                "properties": {
+                                  "OrganisationName": { "type": "string" }
+                                }
+                              },
+                              "ProsecutingAuthority": {
+                                "type": "string",
+                                "enum": [
+                                  "Crown Prosecution Service",
+                                  "Customs and Excise",
+                                  "Department of Trade and Industry",
+                                  "Inland Revenue",
+                                  "Other Prosecutor"
+                                ]
+                              },
+                              "Advocate": {
+                                "type": "object",
+                                "required": ["PersonalDetails"],
+                                "properties": {
+                                  "PersonalDetails": {
+                                    "description": "Personal details of the advocate",
+                                    "$ref": "#/$defs/PersonalDetails"
+                                  }
+                                }
+                              }
                             }
                           },
+                          "CommittingCourt": {
+                            "type": "object",
+                            "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+                            "properties": {
+                              "CourtHouseType": {
+                                "type": "string",
+                                "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+                              },
+                              "CourtHouseCode": { "type": "integer" },
+                              "CourtHouseShortName": { "type": "string" },
+                              "CourtHouseName": { "type": "string" }
+                            }
+                          },
+                          "ListNote": { "type": "string" },
                           "Defendants": {
                             "type": "array",
                             "items": {
@@ -121,30 +247,39 @@
                               "required": ["PersonalDetails"],
                               "properties": {
                                 "PersonalDetails": {
-                                  "type": "object",
-                                  "required": ["Name", "IsMasked"],
-                                  "properties": {
-                                    "Name": {
-                                      "type": "object",
-                                      "properties": {
-                                        "CitizenNameTitle": { "type": "string" },
-                                        "CitizenNameForename": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                                        "CitizenNameSurname": { "type": "string", "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$" },
-                                        "CitizenNameRequestedName": { "type": "string" }
-                                      }
-                                    },
-                                    "MaskedName": { "type": "string" },
-                                    "IsMasked": { "type": "string", "enum": ["yes", "no"] },
-                                    "DateOfBirth": { "type": "string" },
-                                    "Age": { "type": "number" },
-                                    "Sex": { "type": "string" }
-                                  }
+                                  "description": "Personal details of the defendant",
+                                  "$ref": "#/$defs/PersonalDetails"
                                 },
                                 "URN": { "type": "string" },
                                 "PrisonerID": { "type": "string" },
-                                "PrisonLocation": { "type": "string" }
+                                "PrisonLocation": {
+                                  "type": "object",
+                                  "required": ["Location"],
+                                  "properties": {
+                                    "Location": {
+                                      "type": "array",
+                                      "items": { "type": "string" }
+                                    }
+                                  }
+                                },
+                                "Charges": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "required": ["OffenceStatement"],
+                                    "properties": {
+                                      "OffenceStatement": { "type": "string" },
+                                      "IndictmentCountNumber": { "type": "integer" },
+                                      "CJSoffenceCode": { "type": "string" }
+                                    }
+                                  }
+                                }
                               }
                             }
+                          },
+                          "Respondent": {
+                            "type": "array",
+                            "items": { "type": "string" }
                           }
                         }
                       }

@@ -5,35 +5,35 @@ describe("validateCrownFirmList", () => {
   it("should validate a correct crown firm list", () => {
     const validData = {
       FirmList: {
-        DocumentID: "CFPL-2025-001",
+        DocumentID: { UniqueID: "CFPL-2025-001", DocumentType: "crown_firm_pdda_list" },
         ListHeader: {
-          ListDate: "2025-11-12",
-          LastPublicationDate: "2025-11-12",
-          PublishedTime: "09:00:00"
+          StartDate: "2025-11-12",
+          PublishedTime: "2025-11-12T09:00:00",
+          Version: "1.0"
         },
         CrownCourt: {
+          CourtHouseType: "Crown Court",
+          CourtHouseCode: 1001,
           CourtHouseName: "Crown Court at Manchester",
           CourtHouseAddress: {
-            CourtHouseAddressLine: ["Crown Square"],
-            CourtHouseAddressTown: "Manchester",
-            CourtHouseAddressPostCode: "M3 3FL"
+            Line: ["Crown Square"],
+            PostCode: "M3 3FL"
           }
         },
         CourtLists: [
           {
             SittingDate: "2025-11-12",
+            CourtHouse: {
+              CourtHouseType: "Crown Court",
+              CourtHouseCode: 1001,
+              CourtHouseName: "Crown Court at Manchester"
+            },
             Sittings: [
               {
-                CourtRoomNumber: "Court 3",
+                CourtRoomNumber: 3,
                 Judiciary: {
                   Judge: { CitizenNameSurname: "Brown" }
-                },
-                Hearings: [
-                  {
-                    HearingDetails: { HearingDescription: "Plea" },
-                    CaseNumber: "M20250001"
-                  }
-                ]
+                }
               }
             ]
           }

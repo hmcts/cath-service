@@ -4,8 +4,8 @@ import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WA
 
 const buildTestData = (overrides?: Partial<CrownFirmListData["FirmList"]>): CrownFirmListData => ({
   FirmList: {
-    DocumentID: "CFPL-2025-001",
-    ListHeader: { LastPublicationDate: "2025-01-28" },
+    DocumentID: { UniqueID: "CFPL-2025-001", DocumentType: "crown_firm_pdda_list" },
+    ListHeader: { StartDate: "2025-01-28", PublishedTime: "2025-01-28T09:00:00", Version: "1.0" },
     CrownCourt: { CourtHouseName: "Crown Court at Manchester" },
     CourtLists: [],
     ...overrides
@@ -20,7 +20,7 @@ describe("extractCaseSummary", () => {
           SittingDate: "2025-01-28",
           Sittings: [
             {
-              CourtRoomNumber: "Court 3",
+              CourtRoomNumber: 3,
               Judiciary: { Judge: {} },
               Hearings: [
                 {
@@ -30,7 +30,7 @@ describe("extractCaseSummary", () => {
                   Defendants: [
                     {
                       PersonalDetails: {
-                        Name: { CitizenNameForename: "Jane", CitizenNameSurname: "Doe" },
+                        Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Doe" },
                         IsMasked: "no"
                       }
                     }
@@ -61,7 +61,7 @@ describe("extractCaseSummary", () => {
           SittingDate: "2025-01-28",
           Sittings: [
             {
-              CourtRoomNumber: "Court 3",
+              CourtRoomNumber: 3,
               Judiciary: { Judge: {} },
               Hearings: [
                 {

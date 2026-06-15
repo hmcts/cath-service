@@ -10,20 +10,18 @@ import { getLocationById } from "@hmcts/location";
 
 const baseInput: CrownFirmListData = {
   FirmList: {
-    DocumentID: "CFPL-2025-001",
+    DocumentID: { UniqueID: "CFPL-2025-001", DocumentType: "crown_firm_pdda_list" },
     ListHeader: {
-      ListDate: "2025-11-12",
-      LastPublicationDate: "2025-11-12",
-      PublishedTime: "09:00:00"
+      StartDate: "2025-11-12",
+      PublishedTime: "2025-11-12T09:00:00",
+      Version: "1.0"
     },
     CrownCourt: {
       CourtHouseName: "Crown Court at Manchester",
+      CourtHouseTelephone: "0161 954 1800",
       CourtHouseAddress: {
-        CourtHouseAddressLine: ["Crown Square"],
-        CourtHouseAddressTown: "Manchester",
-        CourtHouseAddressPostCode: "M3 3FL",
-        CourtHouseAddressPhone: "0161 954 1800",
-        CourtHouseAddressEmail: "manchestercc@justice.gov.uk"
+        Line: ["Crown Square"],
+        PostCode: "M3 3FL"
       }
     },
     CourtLists: []
@@ -44,7 +42,7 @@ describe("renderCrownFirmListData", () => {
     });
 
     expect(result.header.locationName).toBe("Crown Court at Manchester");
-    expect(result.header.addressLines).toEqual(["Crown Square", "Manchester", "M3 3FL"]);
+    expect(result.header.addressLines).toEqual(["Crown Square", "M3 3FL"]);
     expect(result.header.contentDate).toBe("15 March 2025");
   });
 
@@ -58,10 +56,10 @@ describe("renderCrownFirmListData", () => {
             SittingDate: "2025-04-22",
             Sittings: [
               {
-                CourtRoomNumber: "Court 3",
+                CourtRoomNumber: 3,
                 SittingAt: "10:00:00",
                 Judiciary: {
-                  Judge: { CitizenNameTitle: "HHJ", CitizenNameForename: "", CitizenNameSurname: "Brown" }
+                  Judge: { CitizenNameTitle: "HHJ", CitizenNameForename: [], CitizenNameSurname: "Brown" }
                 },
                 Hearings: [
                   {
@@ -86,7 +84,7 @@ describe("renderCrownFirmListData", () => {
     expect(result.groupedListData).toHaveLength(1);
     expect(result.groupedListData[0].day).toBe("22 April 2025");
     expect(result.groupedListData[0].sittings).toHaveLength(1);
-    expect(result.groupedListData[0].sittings[0].courtRoomName).toBe("Court 3");
+    expect(result.groupedListData[0].sittings[0].courtRoomName).toBe("3");
   });
 
   it("should format sitting time from SittingAt HH:MM:SS", async () => {
@@ -99,7 +97,7 @@ describe("renderCrownFirmListData", () => {
             SittingDate: "2025-04-22",
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 SittingAt: "09:30:00",
                 Judiciary: { Judge: {} },
                 Hearings: []
@@ -129,7 +127,7 @@ describe("renderCrownFirmListData", () => {
             SittingDate: "2025-04-22",
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 Judiciary: { Judge: {} },
                 Hearings: [
                   {
@@ -138,7 +136,7 @@ describe("renderCrownFirmListData", () => {
                     Defendants: [
                       {
                         PersonalDetails: {
-                          Name: { CitizenNameForename: "Bob", CitizenNameSurname: "Green" },
+                          Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Green" },
                           IsMasked: "no"
                         }
                       }
@@ -172,7 +170,7 @@ describe("renderCrownFirmListData", () => {
             SittingDate: "2025-04-22",
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 Judiciary: { Judge: {} },
                 Hearings: [
                   {
@@ -181,7 +179,7 @@ describe("renderCrownFirmListData", () => {
                     Defendants: [
                       {
                         PersonalDetails: {
-                          Name: { CitizenNameForename: "Alice", CitizenNameSurname: "Smith" },
+                          Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Smith" },
                           IsMasked: "no"
                         },
                         Counsel: [
@@ -236,7 +234,7 @@ describe("renderCrownFirmListData", () => {
             SittingDate: "2025-04-22",
             Sittings: [
               {
-                CourtRoomNumber: "Court 1",
+                CourtRoomNumber: 1,
                 Judiciary: { Judge: {} },
                 Hearings: [
                   {
@@ -245,7 +243,7 @@ describe("renderCrownFirmListData", () => {
                     Defendants: [
                       {
                         PersonalDetails: {
-                          Name: { CitizenNameForename: "Real", CitizenNameSurname: "Name" },
+                          Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
                           MaskedName: "Reporting Restriction Applied",
                           IsMasked: "yes"
                         }
