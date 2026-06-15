@@ -1,13 +1,16 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { TEMP_STORAGE_BASE } from "@hmcts/list-types-common";
+import { fileURLToPath } from "node:url";
+import { crownFirmListCy as cy, crownFirmListEn as en, renderCrownFirmListData, validateCrownFirmList } from "@hmcts/crown-firm-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
-import { renderCrownDailyListData } from "../rendering/renderer.js";
-import { validateCrownDailyList } from "../validation/json-validator.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
+const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -57,12 +60,13 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const jsonFilePath = path.join(TEMP_STORAGE_BASE, `${artefactId}.json`);
+    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
 
     let jsonContent: string;
     try {
       jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch {
+    } catch (error) {
+      console.error(`[crown-firm-list] Error reading JSON file at ${jsonFilePath}:`, error);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -73,8 +77,9 @@ export const GET = async (req: Request, res: Response) => {
 
     const jsonData = JSON.parse(jsonContent);
 
-    const validationResult = validateCrownDailyList(jsonData);
+    const validationResult = validateCrownFirmList(jsonData);
     if (!validationResult.isValid) {
+      console.error("[crown-firm-list] Validation errors:", validationResult.errors);
       return res.status(400).render("errors/common", {
         en,
         cy,
@@ -83,7 +88,7 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const { header, openJustice, listData } = await renderCrownDailyListData(jsonData, {
+    const { header, openJustice, listData, groupedListData } = await renderCrownFirmListData(jsonData, {
       locationId: artefact.locationId,
       contentDate: artefact.contentDate,
       locale
@@ -91,18 +96,19 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
 
-    res.render("crown-daily-list", {
+    res.render("crown-firm-list", {
       en,
       cy,
       title: t.title,
       header,
       openJustice,
       listData,
+      groupedListData,
       dataSource,
       t
     });
   } catch (error) {
-    console.error("[crown-daily-list] Unexpected error:", { artefactId, error: error instanceof Error ? error.message : String(error) });
+    console.error("[crown-firm-list] Unexpected error:", error);
     return res.status(500).render("errors/common", {
       en,
       cy,
