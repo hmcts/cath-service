@@ -35,12 +35,16 @@ vi.mock("@hmcts/location", () => ({
   ]
 }));
 
-vi.mock("../rendering/renderer.js", () => ({
-  renderSscsDailyHearingListData: vi.fn()
-}));
+vi.mock("@hmcts/sscs-daily-hearing-list", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/sscs-daily-hearing-list")>();
+  return {
+    ...actual,
+    renderSscsDailyHearingListData: vi.fn()
+  };
+});
 
 import { getArtefactById } from "@hmcts/publication";
-import { renderSscsDailyHearingListData } from "../rendering/renderer.js";
+import { renderSscsDailyHearingListData } from "@hmcts/sscs-daily-hearing-list";
 import { GET } from "./index.js";
 
 describe("SSCS Daily Hearing List page controller", () => {
@@ -118,7 +122,7 @@ describe("SSCS Daily Hearing List page controller", () => {
         })
       );
 
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("sscs-daily-hearing-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
@@ -340,9 +344,9 @@ describe("SSCS Daily Hearing List page controller", () => {
 
       await GET(req as Request, res as Response);
 
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[1]).toHaveProperty("importantInformationText");
-      expect(renderCall[1].importantInformationText).toContain("sscsa-sutton@justice.gov.uk");
+      expect((renderCall[1] as any).importantInformationText).toContain("sscsa-sutton@justice.gov.uk");
     });
   });
 });

@@ -4,25 +4,28 @@ import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
 import { listTypeData } from "@hmcts/location";
 import { getArtefactById } from "@hmcts/publication";
+import {
+  sscsDailyHearingListCy as cy,
+  sscsDailyHearingListEn as en,
+  importantInformationByListType,
+  renderSscsDailyHearingListData,
+  type SscsDailyHearingList
+} from "@hmcts/sscs-daily-hearing-list";
+import { schemaPath } from "@hmcts/sscs-daily-hearing-list/config";
 import type { Request, Response } from "express";
-import type { SscsDailyHearingList } from "../models/types.js";
-import { renderSscsDailyHearingListData } from "../rendering/renderer.js";
-import { cy } from "./cy.js";
-import { en, importantInformationByListType } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
-const schemaPath = path.join(__dirname, "../schemas/sscs-daily-hearing-list.json");
 const validate = createJsonValidator(schemaPath);
 
 function getListTypeName(listTypeId: number): string | undefined {
   return listTypeData.find((lt) => lt.id === listTypeId)?.name;
 }
 
-function getImportantInformationText(listTypeName: string | undefined, _t: typeof en): string {
+function getImportantInformationText(listTypeName: string | undefined): string {
   if (listTypeName && importantInformationByListType[listTypeName]) {
     return importantInformationByListType[listTypeName];
   }
@@ -99,7 +102,7 @@ export const GET = async (req: Request, res: Response) => {
       listTitle
     });
 
-    const importantInformationText = getImportantInformationText(listTypeName, en);
+    const importantInformationText = getImportantInformationText(listTypeName);
     const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
 
     res.render("sscs-daily-hearing-list", {
