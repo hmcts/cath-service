@@ -168,6 +168,23 @@ interface UpdateListTypeData {
   subJurisdictionIds: number[];
 }
 
+export async function findListTypesBySubJurisdictionIds(subJurisdictionIds: number[]) {
+  return prisma.listType.findMany({
+    where: {
+      deletedAt: null,
+      subJurisdictions: {
+        some: { subJurisdictionId: { in: subJurisdictionIds } }
+      }
+    },
+    select: {
+      id: true,
+      name: true,
+      friendlyName: true,
+      welshFriendlyName: true
+    }
+  });
+}
+
 export async function findNonStrategicListTypes() {
   return prisma.listType.findMany({
     where: { isNonStrategic: true, deletedAt: null },

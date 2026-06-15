@@ -1,9 +1,10 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import { getParam } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 
 export const DELETE = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = getParam(req.params, "userId");
 
     if (!userId) {
       return res.status(400).json({ error: "userId is required" });

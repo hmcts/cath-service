@@ -9,3 +9,4 @@ export const pageRoutes = {
   path: path.join(__dirname, "pages")
 };
 export const assets = path.join(__dirname, "assets/");
+export const schemaPath = path.join(__dirname, "schemas/administrative-court-daily-cause-list.json");
