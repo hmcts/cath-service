@@ -3,6 +3,7 @@ export interface CitizenName {
   CitizenNameForename?: string[];
   CitizenNameSurname?: string;
   CitizenNameRequestedName?: string;
+  CitizenNameSuffix?: string;
 }
 
 export interface PersonalDetails {
@@ -31,6 +32,7 @@ export interface PddaHearing {
   CaseNumber: string;
   CaseNumberCaTH?: string;
   ListNote?: string;
+  TimeMarkingNote?: string;
   Prosecution?: {
     ProsecutingReference?: string;
     ProsecutingOrganisation?: { OrganisationName?: string };
@@ -93,6 +95,7 @@ export interface CrownDailyCaseRendered {
   caseNumber: string;
   prosecutingAuthority: string;
   listingNotes: string;
+  timeMarkingNote: string;
   defendants: string;
   representative: string;
   formattedReportingRestriction: string;
@@ -110,6 +113,7 @@ export interface CrownDailySittingRendered {
 
 export interface CrownDailySessionRendered {
   formattedJudiciaries: string;
+  hasListingNotes: boolean;
   sittings: CrownDailySittingRendered[];
 }
 
@@ -122,6 +126,8 @@ export interface CrownDailyListRendered {
   courtLists: Array<{
     courtHouse: {
       courtHouseName: string;
+      courtHouseAddressLines: string[];
+      courtHousePhone: string;
       courtRoom: CrownDailyCourtRoomRendered[];
     };
   }>;

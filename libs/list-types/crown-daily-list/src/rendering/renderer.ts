@@ -31,7 +31,8 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
     locationName,
     addressLines,
     contentDate: formatContentDate(options.contentDate, options.locale),
-    lastUpdated
+    lastUpdated,
+    version: jsonData.DailyList.ListHeader.Version || ""
   };
 
   const openJustice = {
@@ -43,10 +44,14 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
   const listData: CrownDailyListRendered = {
     courtLists: jsonData.DailyList.CourtLists.map((courtList) => {
       const courtHouseName = courtList.CourtHouse?.CourtHouseName || jsonData.DailyList.CrownCourt.CourtHouseName;
+      const courtHouseAddressLines = formatAddress(courtList.CourtHouse?.CourtHouseAddress);
+      const courtHousePhone = courtList.CourtHouse?.CourtHouseTelephone || "";
       const courtRoom = groupSittingsByCourtRoom(courtList.Sittings);
       return {
         courtHouse: {
           courtHouseName,
+          courtHouseAddressLines,
+          courtHousePhone,
           courtRoom
         }
       };
@@ -88,8 +93,10 @@ function groupSittingsByCourtRoom(sittings: PddaSitting[]): CrownDailyCourtRoomR
 }
 
 function renderSession(sitting: PddaSitting): CrownDailySessionRendered {
+  const hasListingNotes = (sitting.Hearings ?? []).some((h) => !!h.ListNote);
   return {
     formattedJudiciaries: formatJudiciary(sitting.Judiciary),
+    hasListingNotes,
     sittings: [renderSitting(sitting)]
   };
 }
@@ -114,6 +121,7 @@ function renderCase(hearing: PddaHearing): CrownDailyCaseRendered {
     caseNumber: hearing.CaseNumber,
     prosecutingAuthority: hearing.Prosecution?.ProsecutingAuthority || "",
     listingNotes: hearing.ListNote || "",
+    timeMarkingNote: hearing.TimeMarkingNote || "",
     defendants,
     representative: "",
     formattedReportingRestriction: ""
@@ -136,8 +144,11 @@ function formatSittingTime(timeStr: string | undefined): string {
 }
 
 function formatCitizenName(name: CitizenName): string {
+  if (name.CitizenNameRequestedName) {
+    return [name.CitizenNameTitle, name.CitizenNameRequestedName, name.CitizenNameSuffix].filter(Boolean).join(" ");
+  }
   const forenames = (name.CitizenNameForename ?? []).join(" ");
-  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
+  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname, name.CitizenNameSuffix].filter(Boolean).join(" ");
 }
 
 function formatJudiciary(judiciary: PddaJudiciary): string {

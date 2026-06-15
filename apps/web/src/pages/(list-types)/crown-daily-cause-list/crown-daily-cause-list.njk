@@ -28,37 +28,35 @@
     </p>
 
     <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
-    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    <p class="govuk-body govuk-!-margin-bottom-1">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    {% if header.version | length %}
+      <p class="govuk-body">{{ t.version }} {{ header.version }}</p>
+    {% endif %}
 
     <div class="govuk-inset-text govuk-!-margin-top-6">
       <h2 class="govuk-heading-m">{{ t.reportingRestrictionsTitle }}</h2>
       <p class="govuk-body" style="white-space: pre-line;">{{ t.reportingRestrictionsBody }}</p>
     </div>
 
+    <div class="govuk-form-group govuk-!-margin-bottom-6">
+      <label class="govuk-label" for="searchCases">{{ t.searchCases }}</label>
+      <input class="govuk-input" id="searchCases" name="searchCases" type="text">
+    </div>
+
     <div id="court-lists-container">
     {% for courtList in listData.courtLists %}
       {% set courtHouse = courtList.courtHouse %}
-      {% if courtHouse.courtHouseAddress %}
-        <div class="govuk-!-margin-bottom-6">
-          <h2 class="govuk-heading-l">{{ courtHouse.courtHouseName }}</h2>
-          {% for line in courtHouse.courtHouseAddress.line %}
-            {% if line | length %}
-              <p class="govuk-body">{{ line }}</p>
-            {% endif %}
-          {% endfor %}
-          {% if courtHouse.courtHouseAddress.town | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.town }}</p>
-          {% endif %}
-          {% if courtHouse.courtHouseAddress.county | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.county }}</p>
-          {% endif %}
-          {% if courtHouse.courtHouseAddress.postCode | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.postCode }}</p>
-          {% endif %}
-        </div>
-      {% endif %}
+      <div class="govuk-!-margin-bottom-6">
+        <h2 class="govuk-heading-l">{{ courtHouse.courtHouseName }}</h2>
+        {% for line in courtHouse.courtHouseAddressLines %}
+          <p class="govuk-body govuk-!-margin-bottom-1">{{ line }}</p>
+        {% endfor %}
+        {% if courtHouse.courtHousePhone | length %}
+          <p class="govuk-body">{{ courtHouse.courtHousePhone }}</p>
+        {% endif %}
+      </div>
 
-      <div class="govuk-accordion" data-module="govuk-accordion">
+      <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-{{ loop.index }}">
         {% for courtRoom in courtHouse.courtRoom %}
           {% for session in courtRoom.session %}
             <div class="govuk-accordion__section govuk-accordion__section--expanded">
@@ -66,9 +64,9 @@
                 <h2 class="govuk-accordion__section-heading">
                   <span class="govuk-accordion__section-button">
                     {% if session.formattedJudiciaries | length %}
-                      {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }}: {{ session.formattedJudiciaries }}
+                      {{ t.court }} {{ courtRoom.courtRoomName }}: {{ session.formattedJudiciaries }}
                     {% else %}
-                      {{ courtRoom.courtRoomName }}
+                      {{ t.court }} {{ courtRoom.courtRoomName }}
                     {% endif %}
                   </span>
                 </h2>
@@ -84,23 +82,27 @@
                         <th scope="col" class="govuk-table__header no-wrap">{{ t.defendant }}</th>
                         <th scope="col" class="govuk-table__header no-wrap">{{ t.hearingType }}</th>
                         <th scope="col" class="govuk-table__header no-wrap">{{ t.prosecutingAuthority }}</th>
-                        <th scope="col" class="govuk-table__header no-wrap">{{ t.listingNotes }}</th>
+                        {% if session.hasListingNotes %}
+                          <th scope="col" class="govuk-table__header no-wrap">{{ t.listingNotes }}</th>
+                        {% endif %}
                       </tr>
                     </thead>
                     <tbody class="govuk-table__body">
                       {% for hearing in sitting.hearing %}
                         {% for case in hearing.case %}
                           <tr class="govuk-table__row">
-                            <td class="govuk-table__cell no-wrap">{{ sitting.time }}</td>
+                            <td class="govuk-table__cell no-wrap">{{ case.timeMarkingNote }}</td>
                             <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
                             <td class="govuk-table__cell">{{ case.defendants }}</td>
                             <td class="govuk-table__cell no-wrap">{{ hearing.displayHearingType }}</td>
                             <td class="govuk-table__cell no-wrap">{{ case.prosecutingAuthority }}</td>
-                            <td class="govuk-table__cell">{{ case.listingNotes }}</td>
+                            {% if session.hasListingNotes %}
+                              <td class="govuk-table__cell">{{ case.listingNotes }}</td>
+                            {% endif %}
                           </tr>
                           {% if case.formattedReportingRestriction | length %}
                             <tr class="govuk-table__row">
-                              <td class="govuk-table__cell" colspan="6">
+                              <td class="govuk-table__cell" colspan="{% if session.hasListingNotes %}6{% else %}5{% endif %}">
                                 <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
                               </td>
                             </tr>

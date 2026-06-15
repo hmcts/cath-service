@@ -329,4 +329,201 @@ describe("renderCrownDailyListData", () => {
 
     expect(result.header.contentDate).toContain("Ionawr");
   });
+
+  it("should include version in header from ListHeader.Version", async () => {
+    const result = await renderCrownDailyListData(baseInput, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.header.version).toBe("1.0");
+  });
+
+  it("should use CitizenNameRequestedName as primary name when present", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: {
+                  Judge: {
+                    CitizenNameTitle: "HHJ",
+                    CitizenNameForename: ["James"],
+                    CitizenNameSurname: "Smith",
+                    CitizenNameRequestedName: "JudgeRequested"
+                  }
+                },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect(session.formattedJudiciaries).toBe("HHJ JudgeRequested");
+  });
+
+  it("should append CitizenNameSuffix when present", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: {
+                  Judge: {},
+                  Justice: [
+                    {
+                      CitizenNameTitle: "Ms",
+                      CitizenNameForename: ["Alice"],
+                      CitizenNameSurname: "Jones",
+                      CitizenNameSuffix: "Sr"
+                    }
+                  ]
+                },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect(session.formattedJudiciaries).toBe("Ms Alice Jones Sr");
+  });
+
+  it("should include timeMarkingNote in rendered case", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "T20250001",
+                    TimeMarkingNote: "10:00 FIXED",
+                    Defendants: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.timeMarkingNote).toBe("10:00 FIXED");
+  });
+
+  it("should set hasListingNotes true when a hearing has ListNote", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: {},
+                    CaseNumber: "T20250001",
+                    ListNote: "Custody time limit expires",
+                    Defendants: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
+    expect(session.hasListingNotes).toBe(true);
+  });
+
+  it("should set hasListingNotes false when no hearings have ListNote", async () => {
+    const result = await renderCrownDailyListData(baseInput, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const session = result.listData.courtLists[0]?.courtHouse.courtRoom[0]?.session[0];
+    expect(session?.hasListingNotes ?? false).toBe(false);
+  });
+
+  it("should include courtHouseAddressLines and courtHousePhone from CourtHouse", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            CourtHouse: {
+              CourtHouseName: "Crown Court at Leeds",
+              CourtHouseAddress: { Line: ["1 Oxford Row"], PostCode: "LS1 3BG" },
+              CourtHouseTelephone: "0113 306 2500"
+            },
+            Sittings: []
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input as any, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const courtHouse = result.listData.courtLists[0].courtHouse;
+    expect(courtHouse.courtHouseAddressLines).toEqual(["1 Oxford Row", "LS1 3BG"]);
+    expect(courtHouse.courtHousePhone).toBe("0113 306 2500");
+  });
 });

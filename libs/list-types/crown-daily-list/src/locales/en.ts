@@ -17,6 +17,9 @@ export const en = {
   reportingRestrictionsTitle: "Restrictions on publishing or writing about these cases",
   reportingRestrictionsBody:
     "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.\nWarning You'll be in contempt of court if you publish any information which is protected by a reporting restriction. You could get a fine, prison sentence or both.\nSpecific restrictions ordered by the court will be mentioned on the cases listed here.\nHowever, restrictions are not always listed. Some apply automatically. For example, anonymity given to the victims of certain sexual offences.\nTo find out which reporting restrictions apply on a specific case, contact:\n• the court directly\n• HM Courts and Tribunals Service on 0330 808 4407",
+  version: "Version",
+  court: "COURT",
+  searchCases: "Search Cases",
   dataSource: "Data Source",
   errorTitle: "Publication not available",
   errorMessage:
