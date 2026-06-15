@@ -25,8 +25,6 @@ const baseConfig = createBaseViteConfig([
   listTypesCommonAssets
 ]);
 
-const isProduction = process.env.VITE_DEV_BUILD !== "true";
-
 export default defineConfig(
   mergeConfig(baseConfig, {
     build: {
@@ -35,15 +33,6 @@ export default defineConfig(
           ...baseConfig.build?.rollupOptions?.input,
           web_css: path.join(__dirname, "src/assets/css/index.scss"),
           web_js: path.join(__dirname, "src/assets/js/index.ts")
-        },
-        output: {
-          entryFileNames: isProduction ? "js/[name]-[hash].js" : "js/[name].js",
-          chunkFileNames: isProduction ? "js/[name]-[hash].js" : "js/[name].js",
-          assetFileNames: (assetInfo) => {
-            const ext = assetInfo.name?.split(".").pop();
-            if (ext === "css") return isProduction ? "css/[name]-[hash][extname]" : "css/[name][extname]";
-            return isProduction ? "assets/[name]-[hash][extname]" : "assets/[name][extname]";
-          }
         }
       }
     },
