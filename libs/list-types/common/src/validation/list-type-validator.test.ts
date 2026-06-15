@@ -10,6 +10,10 @@ const testListTypes: ListTypeInfo[] = [
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" }
 ];
 
+// Mock the dynamic import for @hmcts/civil-daily-cause-list as an empty module (no validate function)
+// Vitest hangs on unresolvable workspace packages without a mock
+vi.mock("@hmcts/civil-daily-cause-list", () => ({}));
+
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   validateCivilFamilyCauseList: vi.fn().mockReturnValue({
