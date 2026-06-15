@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderCrownWarnedListData } from "./renderer.js";
+import { renderCrownWarnedListData, TO_BE_ALLOCATED_KEY } from "./renderer.js";
 
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
@@ -12,6 +12,7 @@ const baseInput = {
     DocumentID: { UniqueID: "CWPL-2025-001", DocumentType: "crown_warned_pdda_list" },
     ListHeader: {
       StartDate: "2025-11-10",
+      EndDate: "2025-11-11",
       PublishedTime: "2025-11-12T09:00:00",
       Version: "1.0"
     },
@@ -41,10 +42,11 @@ describe("renderCrownWarnedListData", () => {
     });
 
     expect(result.header.locationName).toBe("Crown Court at Birmingham");
-    expect(result.header.contentDate).toBe("10 November 2025");
+    expect(result.header.dateRange).toBe("10 November 2025 to 11 November 2025");
+    expect(result.header.version).toBe("1.0");
   });
 
-  it("should set weekCommencing from ListHeader.StartDate", async () => {
+  it("should set weekCommencing from contentDate option", async () => {
     const result = await renderCrownWarnedListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
@@ -64,7 +66,7 @@ describe("renderCrownWarnedListData", () => {
     expect(result.groupedCategories).toHaveLength(0);
   });
 
-  it("should group WithFixedDate cases into WithFixedDate category", async () => {
+  it("should group WithFixedDate cases by HearingDescription", async () => {
     const input = {
       ...baseInput,
       WarnedList: {
@@ -73,6 +75,7 @@ describe("renderCrownWarnedListData", () => {
           {
             WithFixedDate: [
               {
+                HearingDescription: "TestHearingDescription",
                 Fixture: [
                   {
                     FixedDate: "2025-11-22",
@@ -106,14 +109,54 @@ describe("renderCrownWarnedListData", () => {
     });
 
     expect(result.groupedCategories).toHaveLength(1);
-    const group = result.groupedCategories.find((g) => g.category === "WithFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === "TestHearingDescription");
     expect(group?.cases).toHaveLength(1);
     expect(group?.cases[0].caseNumber).toBe("T20250001");
     expect(group?.cases[0].defendants).toBe("Alice Williams");
-    expect(group?.cases[0].fixedFor).toBe("22 November 2025");
+    expect(group?.cases[0].fixedFor).toBe("22/11/2025");
   });
 
-  it("should group WithoutFixedDate cases into WithoutFixedDate category", async () => {
+  it("should use empty string as category key when HearingDescription is absent", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "2025-11-22",
+                    Cases: [
+                      {
+                        CaseNumber: "T20250001",
+                        Defendants: [],
+                        Prosecution: { ProsecutingAuthority: "CPS" }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.groupedCategories).toHaveLength(1);
+    const group = result.groupedCategories.find((g) => g.category === "");
+    expect(group?.cases).toHaveLength(1);
+    expect(group?.cases[0].fixedFor).toBe("22/11/2025");
+  });
+
+  it("should group WithoutFixedDate cases under TO_BE_ALLOCATED_KEY", async () => {
     const input = {
       ...baseInput,
       WarnedList: {
@@ -147,7 +190,7 @@ describe("renderCrownWarnedListData", () => {
     });
 
     expect(result.groupedCategories).toHaveLength(1);
-    const group = result.groupedCategories.find((g) => g.category === "WithoutFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
     expect(group?.cases).toHaveLength(1);
     expect(group?.cases[0].caseNumber).toBe("T20250002");
     expect(group?.cases[0].fixedFor).toBe("");
@@ -162,6 +205,7 @@ describe("renderCrownWarnedListData", () => {
           {
             WithFixedDate: [
               {
+                HearingDescription: "TestCategory",
                 Fixture: [
                   {
                     FixedDate: "2025-11-22",
@@ -194,7 +238,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    const group = result.groupedCategories.find((g) => g.category === "WithFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === "TestCategory");
     expect(group?.cases[0].isInCustody).toBe(true);
     expect(group?.cases[0].defendants).toBe("Tom Hardy");
   });
@@ -239,7 +283,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    const group = result.groupedCategories.find((g) => g.category === "WithoutFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
     expect(group?.cases[0].isInCustody).toBe(true);
   });
 
@@ -283,7 +327,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    const group = result.groupedCategories.find((g) => g.category === "WithoutFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
     expect(group?.cases[0].isInCustody).toBe(false);
   });
 
@@ -320,7 +364,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    const group = result.groupedCategories.find((g) => g.category === "WithoutFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
     expect(group?.cases[0].linkedCases).toBe("T20240001, T20240002");
   });
 
@@ -333,6 +377,7 @@ describe("renderCrownWarnedListData", () => {
           {
             WithFixedDate: [
               {
+                HearingDescription: "TestCategory",
                 Fixture: [
                   {
                     FixedDate: "2025-11-22",
@@ -358,7 +403,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    const group = result.groupedCategories.find((g) => g.category === "WithFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === "TestCategory");
     expect(group?.cases[0].listingNotes).toBe("Interpreter required");
   });
 
@@ -402,7 +447,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    const group = result.groupedCategories.find((g) => g.category === "WithoutFixedDate");
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
     expect(group?.cases[0].defendants).toBe("Restricted");
   });
 });

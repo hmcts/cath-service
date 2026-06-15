@@ -41,6 +41,7 @@ export interface PddaFixture {
 }
 
 export interface PddaCourtListEntry {
+  HearingDescription?: string;
   Fixture?: PddaFixture[];
 }
 
