@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 
 const API_BASE_URL = "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/v1/publication`;
@@ -230,5 +231,26 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
 
     // Should either be rejected by auth (401) or validation (400) or size limit (413)
     expect([400, 401, 413, 500]).toContain(response.status());
+  });
+
+  test("submits publication using provenance location ID as court_id for SNL provenance @nightly", async ({ request }) => {
+    const token = await getApiAuthToken();
+
+    const response = await request.post(ENDPOINT, {
+      data: {
+        ...validPayload,
+        court_id: "9001",
+        provenance: "SNL"
+      },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    // 201 = ingested and matched to a location, 200 = ingested but no matching location found
+    expect([200, 201]).toContain(response.status());
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    expect(body.artefact_id).toBeDefined();
   });
 });

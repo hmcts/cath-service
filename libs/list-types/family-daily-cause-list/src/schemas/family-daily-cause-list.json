@@ -1,0 +1,347 @@
+{
+  "$defs": {
+    "address": {
+      "title": "Address Details",
+      "type": "object",
+      "properties": {
+        "line": {
+          "title": "Address Line",
+          "type": "array",
+          "default": [],
+          "items": {
+            "title": "Items",
+            "type": "string",
+            "default": "",
+            "examples": ["THE LAW COURTS"],
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        },
+        "town": {
+          "title": "Town",
+          "description": "The town for the address",
+          "type": "string",
+          "default": "",
+          "examples": ["Cambridge"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "county": {
+          "title": "County",
+          "description": "The county for the address",
+          "type": "string",
+          "default": "",
+          "examples": ["Cambridgeshire"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "postCode": {
+          "title": "Address Postcode",
+          "type": "string",
+          "default": "",
+          "examples": ["PR1 2LL"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    },
+    "venueContact": {
+      "title": "Contact Details for a venue",
+      "type": "object",
+      "properties": {
+        "venueTelephone": {
+          "description": "Telephone number for the venue",
+          "title": "Venue Telephone",
+          "type": "string",
+          "default": "",
+          "examples": ["01772 844700"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "venueEmail": {
+          "description": "Email for the venue",
+          "title": "Venue Email",
+          "type": "string",
+          "default": "",
+          "examples": ["court1@moj.gov.uk"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    },
+    "judiciary": {
+      "title": "Judiciary",
+      "description": "An array of judiciary",
+      "type": "object",
+      "properties": {
+        "johKnownAs": {
+          "description": "Name and salutations, titles to be presented on publications",
+          "title": "JOH Known As",
+          "type": "string",
+          "examples": ["judge"],
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "isPresiding": {
+          "description": "A flag to indicate whether a judiciary is presiding",
+          "title": "Is Presiding",
+          "type": "boolean",
+          "examples": [true],
+          "default": ""
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Root",
+  "type": "object",
+  "required": ["document", "venue", "courtLists"],
+  "properties": {
+    "document": {
+      "title": "document",
+      "type": "object",
+      "required": ["publicationDate"],
+      "properties": {
+        "documentName": {
+          "description": "Defined for the title of a publications",
+          "title": "Document Name",
+          "type": "string",
+          "default": "",
+          "examples": ["Standard List FINAL V4"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "publicationDate": {
+          "title": "Publication date",
+          "description": "The date + time the list was published",
+          "type": "string",
+          "examples": ["2016-09-13T23:30:52.123Z"],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string",
+          "default": "",
+          "examples": ["1.0"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    },
+    "venue": {
+      "title": "venue",
+      "type": "object",
+      "required": ["venueName", "venueAddress"],
+      "properties": {
+        "venueName": {
+          "description": "Full venue name",
+          "title": "Venue Name",
+          "type": "string",
+          "default": "",
+          "examples": ["Preston"],
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "venueAddress": {
+          "description": "Full venue address",
+          "$ref": "#/$defs/address",
+          "required": ["line", "postCode"]
+        },
+        "venueContact": {
+          "description": "Contact details for the venue",
+          "title": "Venue Contact",
+          "$ref": "#/$defs/venueContact"
+        }
+      }
+    },
+    "courtLists": {
+      "title": "Court Lists",
+      "type": "array",
+      "items": {
+        "title": "Court list",
+        "type": "object",
+        "required": ["courtHouse"],
+        "properties": {
+          "courtHouse": {
+            "title": "Court House",
+            "description": "The court house that owns the court rooms",
+            "type": "object",
+            "required": ["courtRoom", "courtHouseName"],
+            "properties": {
+              "courtHouseName": {
+                "description": "Name of the court house",
+                "title": "Court House Name",
+                "type": "string",
+                "default": "",
+                "examples": ["PRESTON"],
+                "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+              },
+              "courtHouseAddress": {
+                "description": "The address for the court house",
+                "title": "Court House Address",
+                "$ref": "#/$defs/address"
+              },
+              "courtRoom": {
+                "type": "array",
+                "items": {
+                  "title": "Court Room",
+                  "type": "object",
+                  "required": ["courtRoomName", "session"],
+                  "properties": {
+                    "courtRoomName": {
+                      "description": "Name for the court room",
+                      "title": "Court Room Name",
+                      "type": "string",
+                      "default": "",
+                      "examples": ["Room 1"],
+                      "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                    },
+                    "session": {
+                      "type": "array",
+                      "items": {
+                        "title": "Session",
+                        "type": "object",
+                        "required": ["sittings"],
+                        "properties": {
+                          "judiciary": {
+                            "type": "array",
+                            "description": "Judiciary for the session",
+                            "title": "Judiciary",
+                            "items": {
+                              "type": "object",
+                              "$ref": "#/$defs/judiciary"
+                            }
+                          },
+                          "sessionChannel": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                            }
+                          },
+                          "sittings": {
+                            "title": "Sittings",
+                            "type": "array",
+                            "default": [],
+                            "items": {
+                              "type": "object",
+                              "required": ["sittingStart", "hearing"],
+                              "properties": {
+                                "sittingStart": {
+                                  "description": "Sitting Start Time",
+                                  "title": "Sitting Start",
+                                  "type": "string",
+                                  "default": "",
+                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+                                },
+                                "sittingEnd": {
+                                  "description": "Sitting End Time",
+                                  "title": "Sitting End",
+                                  "type": "string",
+                                  "default": "",
+                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+                                },
+                                "channel": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                  }
+                                },
+                                "hearing": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "title": "Hearing",
+                                    "required": ["case"],
+                                    "properties": {
+                                      "hearingType": {
+                                        "description": "Type of hearing being presented",
+                                        "title": "Hearing Type",
+                                        "type": "string",
+                                        "examples": ["Family Hearing"],
+                                        "default": "",
+                                        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                      },
+                                      "case": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "title": "Case",
+                                          "required": ["caseName", "caseNumber"],
+                                          "properties": {
+                                            "caseName": {
+                                              "title": "Case Name",
+                                              "type": "string",
+                                              "default": "",
+                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                            },
+                                            "caseNumber": {
+                                              "title": "Case Number",
+                                              "type": "string",
+                                              "default": "",
+                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                            },
+                                            "caseSequenceIndicator": {
+                                              "title": "Case Sequence Indicator",
+                                              "type": "string",
+                                              "default": "",
+                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                            },
+                                            "caseType": {
+                                              "title": "Case Type",
+                                              "type": "string",
+                                              "default": "",
+                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                            },
+                                            "reportingRestrictionDetail": {
+                                              "title": "Reporting Restrictions Detail",
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string",
+                                                "default": "",
+                                                "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                              }
+                                            },
+                                            "party": {
+                                              "title": "Party",
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "partyRole": {
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                  },
+                                                  "individualDetails": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "title": { "type": "string", "default": "" },
+                                                      "individualForenames": { "type": "string", "default": "" },
+                                                      "individualMiddleName": { "type": "string", "default": "" },
+                                                      "individualSurname": { "type": "string", "default": "" }
+                                                    }
+                                                  },
+                                                  "organisationDetails": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "organisationName": { "type": "string", "default": "" }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,12 +1,13 @@
 import type {} from "@hmcts/auth";
 import type { NextFunction, Request, Response } from "express";
-import { logAction } from "./logger.js";
+import type {} from "multer";
+import { type AuditLogAction, logAction } from "./logger.js";
 
 declare module "express-serve-static-core" {
   interface Request {
     auditMetadata?: {
       shouldLog?: boolean;
-      action?: string;
+      action?: AuditLogAction;
       entityInfo?: string;
       [key: string]: string | number | boolean | undefined;
     };

@@ -1,8 +1,8 @@
-import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 // @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
 import ExcelJSPkg from "exceljs";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
@@ -76,10 +76,7 @@ test.describe
       await expect(fileErrorMessage).toBeVisible();
 
       // STEP 3: Test accessibility with error state
-      let accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
+      let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // STEP 4: Test invalid file type validation
@@ -201,7 +198,7 @@ test.describe
       }
 
       // Test accessibility on summary page
-      accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // STEP 9: Confirm upload
@@ -226,7 +223,7 @@ test.describe
       await expect(homeLink).toBeVisible();
 
       // Test accessibility on success page
-      accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // STEP 11: Test Welsh on success page

@@ -11,10 +11,12 @@ import {
   extractCaseSummary as extractCivilFamilySummary,
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
+import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
 import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -59,6 +61,14 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
     extract: extractCivilFamilySummary as SummaryExtractor,
     format: formatCivilFamilySummaryForEmail
+  },
+  CIVIL_DAILY_CAUSE_LIST: {
+    extract: extractCivilSummary as SummaryExtractor,
+    format: formatCivilSummaryForEmail
+  },
+  FAMILY_DAILY_CAUSE_LIST: {
+    extract: extractFamilySummary as SummaryExtractor,
+    format: formatFamilySummaryForEmail
   },
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
     extract: extractCareStandardsSummary as SummaryExtractor,

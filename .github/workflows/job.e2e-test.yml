@@ -25,10 +25,40 @@ jobs:
       pull-requests: write
       actions: read
       id-token: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Load e2e test credentials from bootstrap Key Vault
+        run: |
+          KV="cath-bootstrap-stg-kv"
+          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+
+          echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_SYSTEM_ADMIN_PASSWORD=$(fetch sso-test-system-admin-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_EMAIL=$(fetch sso-test-admin-local-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_PASSWORD=$(fetch sso-test-admin-local-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_EMAIL=$(fetch sso-test-admin-account-ctsc-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_PASSWORD=$(fetch sso-test-admin-account-ctsc-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_EMAIL=$(fetch sso-test-no-roles-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_PASSWORD=$(fetch sso-test-no-roles-account-pwd)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT=$(fetch cft-valid-test-account)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-valid-test-account-password)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT=$(fetch cft-invalid-test-account)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-invalid-test-account-password)" >> $GITHUB_ENV
+          echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
+          echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
+          echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=$(fetch app-tenant)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -80,27 +110,6 @@ jobs:
 
       - name: Run E2E tests
         id: e2e-tests
-        env:
-          # SSO Test credentials
-          SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
-          SSO_TEST_SYSTEM_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_PWD }}
-          SSO_TEST_LOCAL_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_USER }}
-          SSO_TEST_LOCAL_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_PWD }}
-          SSO_TEST_CTSC_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_USER }}
-          SSO_TEST_CTSC_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_PWD }}
-          SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
-          SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
-          # CFT IDAM Test credentials
-          CFT_VALID_TEST_ACCOUNT: ${{ secrets.CFT_VALID_TEST_ACCOUNT }}
-          CFT_VALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_VALID_TEST_ACCOUNT_PASSWORD }}
-          CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
-          CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
-          # GOV.UK Notify
-          GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY }}
-          # Azure API credentials
-          AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
-          AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
-          AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
         run: |
           # Capture all output including server logs
           set -o pipefail
@@ -116,6 +125,7 @@ jobs:
           path: e2e-tests/junit-results.xml
           reporter: java-junit
           fail-on-error: false
+          search-files: filesystem
 
       # Upload artifacts on failure for debugging
       - name: Upload Playwright test results

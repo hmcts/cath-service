@@ -11,6 +11,7 @@ export async function searchLocations(query: string, language: "en" | "cy"): Pro
 
   const locations = await searchLocationsByName(searchTerm, language);
 
+  // Separate starts-with from partial matches for better UX
   const startsWithMatches: Location[] = [];
   const partialMatches: Location[] = [];
 

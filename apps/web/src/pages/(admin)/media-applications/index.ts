@@ -1,0 +1,29 @@
+import { getPendingApplications } from "@hmcts/admin-pages";
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+
+  try {
+    const applications = await getPendingApplications();
+
+    res.render("media-applications/index", {
+      pageTitle: lang.pageTitle,
+      tableHeaders: lang.tableHeaders,
+      viewLink: lang.viewLink,
+      noApplications: lang.noApplications,
+      applications
+    });
+  } catch (_error) {
+    res.render("media-applications/index", {
+      pageTitle: lang.pageTitle,
+      error: lang.errorMessages.loadFailed,
+      applications: []
+    });
+  }
+};
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.INTERNAL_ADMIN_CTSC]), getHandler];

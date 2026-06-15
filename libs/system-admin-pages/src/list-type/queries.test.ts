@@ -62,6 +62,7 @@ describe("list-type-queries", () => {
           defaultSensitivity: true,
           allowedProvenance: true,
           isNonStrategic: true,
+          locationType: true,
           deletedAt: true,
           subJurisdictions: {
             select: {

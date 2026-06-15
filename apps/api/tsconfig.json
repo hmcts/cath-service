@@ -7,5 +7,12 @@
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"],
-  "references": [{ "path": "../../libs/cloud-native-platform" }, { "path": "../../libs/postgres-prisma" }]
+  "references": [
+    { "path": "../../libs/postgres-prisma" },
+    { "path": "../../libs/api" },
+    { "path": "../../libs/location" },
+    { "path": "../../libs/public-pages" },
+    { "path": "../../libs/auth" },
+    { "path": "../../libs/test-support" }
+  ]
 }

@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe
@@ -37,7 +37,7 @@ test.describe
       await expect(errorSummary).toBeVisible();
 
       // Accessibility check
-      let accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      let accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Test Welsh content
@@ -45,7 +45,7 @@ test.describe
       await expect(heading).toContainText("Dod o hyd i'r metadata lleoliad i'w reoli");
 
       // Accessibility check in Welsh
-      accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
@@ -72,7 +72,7 @@ test.describe
       await expect(searchLink).toBeVisible();
 
       // Accessibility check
-      let accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      let accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Test Welsh
@@ -82,7 +82,7 @@ test.describe
       await expect(panelTitle).toContainText("Metadata lleoliad wedi'i greu");
 
       // Accessibility check in Welsh
-      accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
   });

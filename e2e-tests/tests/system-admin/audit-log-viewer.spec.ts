@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe
@@ -52,7 +52,7 @@ test.describe
       }
 
       // Accessibility check
-      const accessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const accessibilityResults = await axeCheck(page).analyze();
       expect(accessibilityResults.violations).toEqual([]);
 
       // Test keyboard navigation
@@ -78,7 +78,7 @@ test.describe
       await expect(page.locator('button:has-text("Cymhwyso hidlyddion")')).toBeVisible();
 
       // Accessibility check in Welsh
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Switch back to English

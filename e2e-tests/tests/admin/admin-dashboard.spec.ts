@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe
@@ -57,7 +57,7 @@ test.describe
       await expect(mediaApplicationsTile).not.toBeVisible();
 
       // Test accessibility
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Test keyboard navigation - verify tiles are keyboard accessible
@@ -118,7 +118,7 @@ test.describe
       await expect(mediaApplicationsTile).toContainText("Manage Media Account Requests");
 
       // Test accessibility
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
 
@@ -144,7 +144,7 @@ test.describe
       await expect(adminDashboardLink).toHaveText("Admin Dashboard");
 
       // Test accessibility
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
     });
   });

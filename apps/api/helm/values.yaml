@@ -10,7 +10,7 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
   keyVaults:
-    cath:
+    cath-ss-kv:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
@@ -24,5 +24,9 @@ nodejs:
           alias: AZURE_CLIENT_ID
         - name: app-pip-data-management-scope
           alias: AZURE_SCOPE
+        - name: xhibit-s3-access-key
+          alias: AWS_ACCESS_KEY_ID
+        - name: xhibit-s3-access-key-secret
+          alias: AWS_SECRET_ACCESS_KEY
         - name: govuk-notify-api-key
           alias: GOVUK_NOTIFY_API_KEY

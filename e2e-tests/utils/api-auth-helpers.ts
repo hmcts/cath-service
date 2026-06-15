@@ -24,12 +24,12 @@ export async function getApiAuthToken(): Promise<string> {
   }
 
   const tenantId = process.env.AZURE_TENANT_ID;
-  const clientId = process.env.AZURE_API_CLIENT_ID;
-  const clientSecret = process.env.AZURE_API_CLIENT_SECRET;
+  const clientId = process.env.AZURE_API_CLIENT_ID || process.env.AZURE_CLIENT_ID;
+  const clientSecret = process.env.AZURE_API_CLIENT_SECRET || process.env.AZURE_CLIENT_SECRET;
 
   if (!tenantId || !clientId || !clientSecret) {
     throw new Error(
-      "Missing Azure AD credentials. Ensure AZURE_TENANT_ID, AZURE_API_CLIENT_ID, and AZURE_API_CLIENT_SECRET are set. " +
+      "Missing Azure AD credentials. Ensure AZURE_TENANT_ID and either AZURE_API_CLIENT_ID/AZURE_API_CLIENT_SECRET or AZURE_CLIENT_ID/AZURE_CLIENT_SECRET are set. " +
         "Run tests with: node run-with-credentials.js"
     );
   }
