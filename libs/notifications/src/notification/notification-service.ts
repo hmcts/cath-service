@@ -16,6 +16,7 @@ import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { extractCaseSummary as extractCrownDailySummary, formatCaseSummaryForEmail as formatCrownDailySummaryForEmail } from "@hmcts/crown-daily-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
@@ -89,6 +90,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCourtOfAppealSummary as SummaryExtractor,
     format: formatCourtOfAppealSummaryForEmail
+  },
+  CROWN_DAILY_LIST: {
+    extract: extractCrownDailySummary as SummaryExtractor,
+    format: formatCrownDailySummaryForEmail
   },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
