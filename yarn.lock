@@ -2272,7 +2272,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list":
+"@hmcts/crown-daily-list@workspace:*, @hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list"
   dependencies:
@@ -2291,7 +2291,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list":
+"@hmcts/crown-firm-list@workspace:*, @hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list"
   dependencies:
@@ -2310,7 +2310,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list":
+"@hmcts/crown-warned-list@workspace:*, @hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list"
   dependencies:
@@ -2450,6 +2450,9 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/crown-warned-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
@@ -2539,6 +2542,9 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/crown-warned-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
