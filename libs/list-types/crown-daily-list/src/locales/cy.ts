@@ -31,6 +31,7 @@ export const cy = {
   reportingRestrictionsContactCourt: "y llys yn uniongyrchol",
   reportingRestrictionsContactHmcts: "Gwasanaeth Llysoedd a Thribiwnlysoedd Ei Fawrhydi ar 0330 808 4407",
   searchCases: "Chwilio achosion",
+  backToTop: "Yn ôl i frig y dudalen",
   courtHouseDetails: "Manylion y Llys",
   dataSource: "Ffynhonnell Data",
   errorTitle: "Cyhoeddiad ddim ar gael",
