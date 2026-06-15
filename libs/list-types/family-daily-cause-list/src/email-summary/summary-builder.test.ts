@@ -16,7 +16,7 @@ const makeData = (cases: object[]): CauseListData => ({
 });
 
 describe("extractCaseSummary", () => {
-  it("should extract applicant and respondent", () => {
+  it("should extract applicant", () => {
     const data = makeData([
       {
         caseNumber: "FA12345",
@@ -34,12 +34,29 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Applicant", value: "Alice Smith" },
-      { label: "Respondent", value: "Bob Jones" },
       { label: "Case reference", value: "FA12345" },
       { label: "Case name", value: "Smith v Jones" },
       { label: "Case type", value: "Family" },
       { label: "Hearing type", value: "Final Hearing" }
     ]);
+  });
+
+  it("should not include respondent field even when RESPONDENT party is present", () => {
+    const data = makeData([
+      {
+        caseNumber: "FA12345",
+        caseName: "Smith v Jones",
+        caseType: "Family",
+        party: [
+          { partyRole: "APPLICANT_PETITIONER", individualDetails: { individualForenames: "Alice", individualSurname: "Smith" } },
+          { partyRole: "RESPONDENT", individualDetails: { individualForenames: "Bob", individualSurname: "Jones" } }
+        ]
+      }
+    ]);
+
+    const result = extractCaseSummary(data);
+
+    expect(result[0].find((f) => f.label === "Respondent")).toBeUndefined();
   });
 
   it("should not include applicant field when no APPLICANT_PETITIONER party present", () => {
@@ -48,37 +65,6 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result[0].find((f) => f.label === "Applicant")).toBeUndefined();
-  });
-
-  it("should not include respondent field when no RESPONDENT party present", () => {
-    const data = makeData([
-      {
-        caseNumber: "FC11111",
-        caseName: "Applicant Only",
-        caseType: "Family",
-        party: [{ partyRole: "APPLICANT_PETITIONER", individualDetails: { individualForenames: "Jane", individualSurname: "Doe" } }]
-      }
-    ]);
-
-    const result = extractCaseSummary(data);
-
-    expect(result[0].find((f) => f.label === "Respondent")).toBeUndefined();
-    expect(result[0].find((f) => f.label === "Applicant")?.value).toBe("Jane Doe");
-  });
-
-  it("should use organisation name for respondent", () => {
-    const data = makeData([
-      {
-        caseNumber: "FD22222",
-        caseName: "Person v Org",
-        caseType: "Family",
-        party: [{ partyRole: "RESPONDENT", organisationDetails: { organisationName: "Family Services Ltd" } }]
-      }
-    ]);
-
-    const result = extractCaseSummary(data);
-
-    expect(result[0].find((f) => f.label === "Respondent")?.value).toBe("Family Services Ltd");
   });
 
   it("should include title and middle name in names", () => {
@@ -169,7 +155,6 @@ describe("formatCaseSummaryForEmail", () => {
     const summaries = [
       [
         { label: "Applicant", value: "Alice Smith" },
-        { label: "Respondent", value: "Bob Jones" },
         { label: "Case reference", value: "FA12345" },
         { label: "Case name", value: "Smith v Jones" },
         { label: "Case type", value: "Family" },
@@ -180,11 +165,11 @@ describe("formatCaseSummaryForEmail", () => {
     const result = formatCaseSummaryForEmail(summaries);
 
     expect(result).toContain("Applicant - Alice Smith");
-    expect(result).toContain("Respondent - Bob Jones");
     expect(result).toContain("Case reference - FA12345");
     expect(result).toContain("Case name - Smith v Jones");
     expect(result).toContain("Case type - Family");
     expect(result).toContain("Hearing type - Final Hearing");
+    expect(result).not.toContain("Respondent");
   });
 
   it("should return no cases message for empty list", () => {
