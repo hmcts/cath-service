@@ -48,8 +48,9 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Defendant", value: "Alice Williams" },
+      { label: "Fixed for", value: "10/02/2025" },
       { label: "Case reference", value: "B20250001" },
+      { label: "Defendant name(s)", value: "Alice Williams" },
       { label: "Prosecuting authority", value: "CPS" }
     ]);
   });
@@ -87,7 +88,8 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant")?.value).toBe("Tom Hardy");
+    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Tom Hardy");
+    expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("");
   });
 
   it("should not include defendant field when no defendants", () => {
@@ -114,7 +116,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant name(s)")).toBeUndefined();
   });
 
   it("should return empty array when no court lists", () => {
@@ -126,14 +128,16 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format summaries for email", () => {
     const result = formatCaseSummaryForEmail([
       [
-        { label: "Defendant", value: "Alice Williams" },
+        { label: "Fixed for", value: "10/02/2025" },
         { label: "Case reference", value: "B20250001" },
+        { label: "Defendant name(s)", value: "Alice Williams" },
         { label: "Prosecuting authority", value: "CPS" }
       ]
     ]);
 
-    expect(result).toContain("Defendant - Alice Williams");
+    expect(result).toContain("Fixed for - 10/02/2025");
     expect(result).toContain("Case reference - B20250001");
+    expect(result).toContain("Defendant name(s) - Alice Williams");
     expect(result).toContain("Prosecuting authority - CPS");
   });
 

@@ -1,4 +1,5 @@
 import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
+import { DateTime } from "luxon";
 import type { CrownWarnedListData, PddaCase, PddaDefendant } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
@@ -12,14 +13,24 @@ function formatDefendantName(defendant: PddaDefendant): string {
   return [forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
-function buildCaseSummary(caseItem: PddaCase): CaseSummary {
+function formatShortDate(dateStr: string | undefined): string {
+  if (!dateStr) return "";
+  const dt = DateTime.fromISO(dateStr);
+  if (!dt.isValid) return dateStr;
+  return dt.toFormat("dd/MM/yyyy");
+}
+
+function buildCaseSummary(caseItem: PddaCase, fixedDate: string | undefined): CaseSummary {
   const defendants = (caseItem.Defendants ?? []).map(formatDefendantName).filter((n) => n.length > 0);
   const fields: CaseSummary = [];
 
-  if (defendants.length > 0) {
-    fields.push({ label: "Defendant", value: defendants.join(", ") });
-  }
+  fields.push({ label: "Fixed for", value: formatShortDate(fixedDate) });
   fields.push({ label: "Case reference", value: caseItem.CaseNumber ?? "" });
+
+  if (defendants.length > 0) {
+    fields.push({ label: "Defendant name(s)", value: defendants.join(", ") });
+  }
+
   fields.push({ label: "Prosecuting authority", value: caseItem.Prosecution?.ProsecutingAuthority || "" });
 
   return fields;
@@ -32,7 +43,7 @@ export function extractCaseSummary(jsonData: CrownWarnedListData): CaseSummary[]
     for (const entry of courtList.WithFixedDate ?? []) {
       for (const fixture of entry.Fixture ?? []) {
         for (const caseItem of fixture.Cases ?? []) {
-          summaries.push(buildCaseSummary(caseItem));
+          summaries.push(buildCaseSummary(caseItem, fixture.FixedDate));
         }
       }
     }
@@ -40,7 +51,7 @@ export function extractCaseSummary(jsonData: CrownWarnedListData): CaseSummary[]
     for (const entry of courtList.WithoutFixedDate ?? []) {
       for (const fixture of entry.Fixture ?? []) {
         for (const caseItem of fixture.Cases ?? []) {
-          summaries.push(buildCaseSummary(caseItem));
+          summaries.push(buildCaseSummary(caseItem, fixture.FixedDate));
         }
       }
     }
