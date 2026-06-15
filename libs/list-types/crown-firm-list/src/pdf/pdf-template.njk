@@ -39,9 +39,21 @@
     </ul>
   </div>
 
+  {% if courtHouseInfo %}
+    <div class="court-house-info">
+      <h2>{{ courtHouseInfo.name }}</h2>
+      {% for line in courtHouseInfo.addressLines %}
+        <p>{{ line }}</p>
+      {% endfor %}
+      {% if courtHouseInfo.phone | length %}
+        <p>{{ courtHouseInfo.phone }}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
   {% for dayGroup in groupedListData %}
     <div class="court-section">
-      <div class="section-heading">{{ t.day }}: {{ dayGroup.day }}</div>
+      <div class="section-heading">{{ dayGroup.day }}</div>
 
       {% for sitting in dayGroup.sittings %}
         <div class="court-room-section">

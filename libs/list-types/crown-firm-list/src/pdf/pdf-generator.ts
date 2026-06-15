@@ -45,6 +45,7 @@ export async function generateCrownFirmListPdf(options: PdfGenerationOptions): P
       header: renderedData.header,
       openJustice: renderedData.openJustice,
       groupedListData: renderedData.groupedListData,
+      courtHouseInfo: renderedData.courtHouseInfo,
       dataSource: provenanceLabel,
       t: translations,
       pdfStyles: PDF_BASE_STYLES + PDF_CIVIL_FAMILY_STYLES

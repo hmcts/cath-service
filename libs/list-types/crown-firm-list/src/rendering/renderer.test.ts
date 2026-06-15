@@ -82,7 +82,7 @@ describe("renderCrownFirmListData", () => {
     });
 
     expect(result.groupedListData).toHaveLength(1);
-    expect(result.groupedListData[0].day).toBe("22 April 2025");
+    expect(result.groupedListData[0].day).toBe("Tuesday 22 April 2025");
     expect(result.groupedListData[0].sittings).toHaveLength(1);
     expect(result.groupedListData[0].sittings[0].courtRoomName).toBe("3");
   });

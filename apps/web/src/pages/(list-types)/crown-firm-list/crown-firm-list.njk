@@ -87,6 +87,18 @@
       <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
     </div>
 
+    {% if courtHouseInfo %}
+      <div class="site-header govuk-!-margin-bottom-6" tabindex="0" aria-label="{{ t.courtHouseDetails }}">
+        <h2 class="govuk-heading-l site-address">{{ courtHouseInfo.name }}</h2>
+        {% for line in courtHouseInfo.addressLines %}
+          <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ line }}</p>
+        {% endfor %}
+        {% if courtHouseInfo.phone | length %}
+          <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ courtHouseInfo.phone }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
     <div id="court-lists-container">
       <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-default">
         {% for dayGroup in groupedListData %}
@@ -94,7 +106,7 @@
             <div class="govuk-accordion__section-header">
               <h2 class="govuk-accordion__section-heading">
                 <span class="govuk-accordion__section-button">
-                  {{ t.day }}: {{ dayGroup.day }}
+                  {{ dayGroup.day }}
                 </span>
               </h2>
             </div>
