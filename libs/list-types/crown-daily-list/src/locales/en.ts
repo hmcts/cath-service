@@ -31,6 +31,7 @@ export const en = {
   reportingRestrictionsContactCourt: "the court directly",
   reportingRestrictionsContactHmcts: "HM Courts and Tribunals Service on 0330 808 4407",
   searchCases: "Search Cases",
+  courtHouseDetails: "Court House Details",
   dataSource: "Data Source",
   errorTitle: "Publication not available",
   errorMessage:

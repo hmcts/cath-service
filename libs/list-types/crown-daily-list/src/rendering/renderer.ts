@@ -1,4 +1,4 @@
-import { formatContentDate } from "@hmcts/list-types-common";
+import { formatContentDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import type {
   CitizenName,
@@ -25,7 +25,12 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
   const addressLines = formatAddress(address);
 
   const publishedTime = jsonData.DailyList.ListHeader.PublishedTime;
-  const lastUpdated = publishedTime ? formatContentDate(new Date(publishedTime), options.locale) : "";
+  const lastUpdated = publishedTime
+    ? (() => {
+        const { date, time } = formatLastUpdatedDateTime(publishedTime, options.locale);
+        return `${date} at ${time}`;
+      })()
+    : "";
 
   const header = {
     locationName,
