@@ -51,7 +51,7 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Defendant name(s)", value: "Jane Doe" },
-      { label: "Case number", value: "M20250001" },
+      { label: "Case reference", value: "M20250001" },
       { label: "Prosecuting authority", value: "CPS" },
       { label: "Hearing type", value: "Plea" }
     ]);
