@@ -294,6 +294,287 @@ describe("renderCrownFirmListData", () => {
     expect(result.header.contentDate).toContain("Tachwedd");
   });
 
+  it("should use Welsh dateSeparator 'i' when locale is cy and EndDate is present", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        ListHeader: { ...baseInput.FirmList.ListHeader, StartDate: "2025-09-10", EndDate: "2025-09-11" }
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-09-10"),
+      locale: "cy"
+    });
+
+    expect(result.header.contentDate).toContain(" i ");
+  });
+
+  it("should use location name from getLocationById when available", async () => {
+    (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 101, name: "Manchester Crown Court", welshName: null });
+
+    const result = await renderCrownFirmListData(baseInput, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.header.locationName).toBe("Manchester Crown Court");
+  });
+
+  it("should use Welsh location name when locale is cy and welshName is available", async () => {
+    (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 101, name: "Manchester Crown Court", welshName: "Llys y Goron Manceinion" });
+
+    const result = await renderCrownFirmListData(baseInput, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "cy"
+    });
+
+    expect(result.header.locationName).toBe("Llys y Goron Manceinion");
+  });
+
+  it("should return empty lastUpdated when PublishedTime is absent", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        ListHeader: { StartDate: "2025-03-15", Version: "1.0" }
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.header.lastUpdated).toBe("");
+  });
+
+  it("should handle court with no address", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CrownCourt: { CourtHouseName: "No Address Court" }
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.header.addressLines).toEqual([]);
+  });
+
+  it("should include judiciary with Justice array", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                SittingAt: "10:00:00",
+                Judiciary: {
+                  Judge: { CitizenNameTitle: "HHJ", CitizenNameForename: [], CitizenNameSurname: "Brown" },
+                  Justice: [{ CitizenNameTitle: "Mr", CitizenNameForename: ["John"], CitizenNameSurname: "Doe" }]
+                },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.groupedListData[0].sittings[0].formattedJudiciaries).toContain("Brown");
+    expect(result.groupedListData[0].sittings[0].formattedJudiciaries).toContain("John Doe");
+  });
+
+  it("should extract representative from Counsel Solicitor Person", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Sentence" },
+                    CaseNumber: "M20250099",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Smith" },
+                          IsMasked: "no"
+                        },
+                        Counsel: [
+                          {
+                            Solicitor: [
+                              {
+                                Party: {
+                                  Person: {
+                                    CitizenNameForename: ["Jane"],
+                                    CitizenNameSurname: "Counsel"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.representative).toContain("Jane Counsel");
+  });
+
+  it("should use HearingType when HearingDescription is absent", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingType: "PCM" },
+                    CaseNumber: "M20250098",
+                    Defendants: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.groupedListData[0].sittings[0].hearing[0].displayHearingType).toBe("PCM");
+  });
+
+  it("should handle sitting at undefined time", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.groupedListData[0].sittings[0].time).toBe("");
+  });
+
+  it("should accumulate sittings from same day across court lists", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                SittingAt: "09:00:00",
+                Judiciary: { Judge: {} },
+                Hearings: []
+              }
+            ]
+          },
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 2,
+                SittingAt: "10:00:00",
+                Judiciary: { Judge: {} },
+                Hearings: []
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.groupedListData).toHaveLength(1);
+    expect(result.groupedListData[0].sittings).toHaveLength(2);
+  });
+
   it("should use MaskedName when IsMasked is yes", async () => {
     const input: CrownFirmListData = {
       ...baseInput,

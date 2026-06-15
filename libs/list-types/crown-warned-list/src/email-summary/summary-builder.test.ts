@@ -122,6 +122,166 @@ describe("extractCaseSummary", () => {
   it("should return empty array when no court lists", () => {
     expect(extractCaseSummary(buildTestData())).toHaveLength(0);
   });
+
+  it("should use unmasked name when IsMasked is yes but MaskedName is absent", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250010",
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Smith" },
+                            IsMasked: "yes"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Bob Smith");
+  });
+
+  it("should handle undefined CitizenNameForename when building defendant name", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithoutFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250011",
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameSurname: "OnlyLastName" },
+                            IsMasked: "no"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("OnlyLastName");
+  });
+
+  it("should handle fixedDate that is invalid ISO string", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  FixedDate: "not-a-date",
+                  Cases: [
+                    {
+                      CaseNumber: "B20250012",
+                      Defendants: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("not-a-date");
+  });
+
+  it("should use empty string for Fixed for when fixedDate is undefined", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250013",
+                      Defendants: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("");
+  });
+
+  it("should join multiple defendants with comma", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  FixedDate: "2025-02-10",
+                  Cases: [
+                    {
+                      CaseNumber: "B20250014",
+                      Prosecution: { ProsecutingAuthority: "CPS" },
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "One" },
+                            IsMasked: "no"
+                          }
+                        },
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Two" },
+                            IsMasked: "no"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Alice One, Bob Two");
+  });
 });
 
 describe("formatCaseSummaryForEmail", () => {

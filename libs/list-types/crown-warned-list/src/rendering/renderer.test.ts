@@ -406,6 +406,191 @@ describe("renderCrownWarnedListData", () => {
     expect(group?.cases[0].listingNotes).toBe("Interpreter required");
   });
 
+  it("should use Welsh dateSeparator 'i' when locale is cy", async () => {
+    const result = await renderCrownWarnedListData(baseInput, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "cy"
+    });
+
+    expect(result.header.dateRange).toContain(" i ");
+  });
+
+  it("should use location name from getLocationById when available", async () => {
+    (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 102, name: "Birmingham Crown Court", welshName: null });
+
+    const result = await renderCrownWarnedListData(baseInput, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.header.locationName).toBe("Birmingham Crown Court");
+  });
+
+  it("should use Welsh location name when locale is cy and welshName is available", async () => {
+    (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 102, name: "Birmingham Crown Court", welshName: "Llys y Goron Birmingham" });
+
+    const result = await renderCrownWarnedListData(baseInput, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "cy"
+    });
+
+    expect(result.header.locationName).toBe("Llys y Goron Birmingham");
+  });
+
+  it("should render dateRange with only StartDate when EndDate is missing", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        ListHeader: {
+          StartDate: "2025-11-10",
+          PublishedTime: "2025-11-12T09:00:00",
+          Version: "1.0"
+        }
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.header.dateRange).toBe("10 November 2025");
+  });
+
+  it("should render empty dateRange when neither StartDate nor EndDate", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        ListHeader: {
+          PublishedTime: "2025-11-12T09:00:00",
+          Version: "1.0"
+        }
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.header.dateRange).toBe("");
+  });
+
+  it("should set isInCustody=true for In care custody status", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "2025-11-22",
+                    Cases: [
+                      {
+                        CaseNumber: "T20250050",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: { CitizenNameForename: ["Sam"], CitizenNameSurname: "Jones" },
+                              IsMasked: "no" as const,
+                              CustodyStatus: "In care"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === "");
+    expect(group?.cases[0].isInCustody).toBe(true);
+  });
+
+  it("should handle defendant with CivizenNameTitle in name", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithoutFixedDate: [
+              {
+                Fixture: [
+                  {
+                    Cases: [
+                      {
+                        CaseNumber: "T20250060",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: { CitizenNameTitle: "Dr", CitizenNameForename: ["Emma"], CitizenNameSurname: "Watson" },
+                              IsMasked: "no" as const
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
+    expect(group?.cases[0].defendants).toContain("Emma Watson");
+  });
+
+  it("should handle court with no address", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CrownCourt: {
+          CourtHouseName: "No Address Court"
+        }
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.header.addressLines).toEqual([]);
+  });
+
   it("should use MaskedName when IsMasked is yes", async () => {
     const input = {
       ...baseInput,

@@ -13,8 +13,7 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:pdf-templates && yarn build:schemas",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc && yarn build:pdf-templates && yarn build:schemas",
     "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
     "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
@@ -35,7 +34,7 @@
     "@types/luxon": "3.7.1",
     "@types/node": "24.10.4",
     "@types/nunjucks": "3.2.6",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vitest": "4.1.8"
   },
   "peerDependencies": {
