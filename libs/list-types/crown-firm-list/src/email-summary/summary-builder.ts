@@ -23,7 +23,7 @@ export function extractCaseSummary(jsonData: CrownFirmListData): CaseSummary[] {
         const fields: CaseSummary = [];
 
         if (defendants.length > 0) {
-          fields.push({ label: "Defendant", value: defendants.join(", ") });
+          fields.push({ label: "Defendant name(s)", value: defendants.join(", ") });
         }
         fields.push({ label: "Case number", value: hearing.CaseNumber });
         fields.push({ label: "Prosecuting authority", value: hearing.Prosecution?.ProsecutingAuthority || "" });

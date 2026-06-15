@@ -44,7 +44,7 @@ export async function generateCrownFirmListPdf(options: PdfGenerationOptions): P
     const html = env.render("pdf-template.njk", {
       header: renderedData.header,
       openJustice: renderedData.openJustice,
-      listData: renderedData.listData,
+      groupedListData: renderedData.groupedListData,
       dataSource: provenanceLabel,
       t: translations,
       pdfStyles: PDF_BASE_STYLES + PDF_CIVIL_FAMILY_STYLES

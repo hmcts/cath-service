@@ -47,7 +47,7 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Defendant", value: "Jane Doe" },
+      { label: "Defendant name(s)", value: "Jane Doe" },
       { label: "Case number", value: "M20250001" },
       { label: "Prosecuting authority", value: "CPS" },
       { label: "Hearing type", value: "Plea" }
@@ -78,7 +78,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant name(s)")).toBeUndefined();
   });
 
   it("should return empty array when no court lists", () => {
@@ -90,12 +90,12 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format summaries for email", () => {
     const result = formatCaseSummaryForEmail([
       [
-        { label: "Defendant", value: "Jane Doe" },
+        { label: "Defendant name(s)", value: "Jane Doe" },
         { label: "Case number", value: "M20250001" }
       ]
     ]);
 
-    expect(result).toContain("Defendant - Jane Doe");
+    expect(result).toContain("Defendant name(s) - Jane Doe");
     expect(result).toContain("Case number - M20250001");
   });
 

@@ -43,7 +43,7 @@ describe("renderCrownFirmListData", () => {
 
     expect(result.header.locationName).toBe("Crown Court at Manchester");
     expect(result.header.addressLines).toEqual(["Crown Square", "M3 3FL"]);
-    expect(result.header.contentDate).toBe("15 March 2025");
+    expect(result.header.contentDate).toBe("12 November 2025");
   });
 
   it("should group sittings by SittingDate into groupedListData", async () => {
@@ -221,7 +221,7 @@ describe("renderCrownFirmListData", () => {
       locale: "cy"
     });
 
-    expect(result.header.contentDate).toContain("Ionawr");
+    expect(result.header.contentDate).toContain("Tachwedd");
   });
 
   it("should use MaskedName when IsMasked is yes", async () => {

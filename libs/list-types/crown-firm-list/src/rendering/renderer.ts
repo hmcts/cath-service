@@ -1,4 +1,4 @@
-import { formatContentDate } from "@hmcts/list-types-common";
+import { formatContentDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
 import type {
@@ -18,11 +18,23 @@ export async function renderCrownFirmListData(jsonData: CrownFirmListData, optio
   const location = await getLocationById(Number.parseInt(options.locationId, 10));
   const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || FirmList.CrownCourt.CourtHouseName;
 
+  const publishedTime = FirmList.ListHeader.PublishedTime;
+  const lastUpdated = publishedTime
+    ? (() => {
+        const { date, time } = formatLastUpdatedDateTime(publishedTime, options.locale);
+        return `${date} at ${time}`;
+      })()
+    : "";
+
+  const startDate = FirmList.ListHeader.StartDate;
+  const contentDate = startDate ? formatContentDate(new Date(startDate), options.locale) : formatContentDate(options.contentDate, options.locale);
+
   const header = {
     locationName,
     addressLines: formatAddress(FirmList.CrownCourt),
-    contentDate: formatContentDate(options.contentDate, options.locale),
-    lastUpdated: formatLastPublished(FirmList.ListHeader.PublishedTime, options.locale)
+    contentDate,
+    lastUpdated,
+    version: FirmList.ListHeader.Version || ""
   };
 
   const openJustice = {
@@ -45,14 +57,6 @@ function formatAddress(court: CrownFirmListData["FirmList"]["CrownCourt"]): stri
   }
   if (addr.PostCode) parts.push(addr.PostCode);
   return parts;
-}
-
-function formatLastPublished(dateStr: string | undefined, locale: string): string {
-  if (!dateStr) return "";
-  const dt = DateTime.fromISO(dateStr);
-  if (!dt.isValid) return dateStr;
-  const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
-  return dt.toJSDate().toLocaleDateString(localeCode, { day: "2-digit", month: "long", year: "numeric" });
 }
 
 function formatSittingDate(dateStr: string, locale: string): string {

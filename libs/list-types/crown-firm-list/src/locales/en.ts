@@ -1,10 +1,15 @@
 export const en = {
   title: "Crown Firm List",
   pageTitle: "Crown Firm List for",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   listFor: "List for",
   lastUpdated: "Last updated",
+  version: "Version",
   publicationDate: "Publication date",
   day: "Day",
+  court: "COURT",
   courtroom: "Courtroom",
   beforeJudge: "Before",
   sittingAt: "Sitting at",
@@ -16,8 +21,19 @@ export const en = {
   listingNotes: "Listing notes",
   reportingRestrictions: "Reporting Restriction",
   reportingRestrictionsTitle: "Restrictions on publishing or writing about these cases",
-  reportingRestrictionsBody:
-    "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.\nWarning You'll be in contempt of court if you publish any information which is protected by a reporting restriction. You could get a fine, prison sentence or both.\nSpecific restrictions ordered by the court will be mentioned on the cases listed here.\nHowever, restrictions are not always listed. Some apply automatically. For example, anonymity given to the victims of certain sexual offences.\nTo find out which reporting restrictions apply on a specific case, contact:\n• the court directly\n• HM Courts and Tribunals Service on 0330 808 4407",
+  reportingRestrictionsBodyIntro:
+    "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.",
+  reportingRestrictionsWarning:
+    "You'll be in contempt of court if you publish any information which is protected by a reporting restriction. You could get a fine, prison sentence or both.",
+  reportingRestrictionsBodySpecific: "Specific restrictions ordered by the court will be mentioned on the cases listed here.",
+  reportingRestrictionsBodyHowever:
+    "However, restrictions are not always listed. Some apply automatically. For example, anonymity given to the victims of certain sexual offences.",
+  reportingRestrictionsBodyContact: "To find out which reporting restrictions apply on a specific case, contact:",
+  reportingRestrictionsContactCourt: "the court directly",
+  reportingRestrictionsContactHmcts: "HM Courts and Tribunals Service on 0330 808 4407",
+  searchCases: "Search Cases",
+  backToTop: "Back to top",
+  courtHouseDetails: "Court House Details",
   dataSource: "Data Source",
   errorTitle: "Publication not available",
   errorMessage:
