@@ -10,6 +10,9 @@ const testListTypes: ListTypeInfo[] = [
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" }
 ];
 
+// Mock @hmcts/civil-daily-cause-list as empty - simulates a list type with no validation function
+vi.mock("@hmcts/civil-daily-cause-list", () => ({}));
+
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   validateCivilFamilyCauseList: vi.fn().mockReturnValue({
@@ -75,7 +78,7 @@ describe("list-type-validator", () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0].message).toContain("No JSON schema available");
+      expect(result.errors[0].message).toContain("JSON schemas are not available");
     });
 
     it("should validate Civil and Family Daily Cause List with valid data", async () => {
