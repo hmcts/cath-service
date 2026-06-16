@@ -41,8 +41,8 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
 
     const translations = await loadTranslations(
       options.locale,
-      () => import("../pages/en.js"),
-      () => import("../pages/cy.js")
+      () => import("../sjp-press-list/en.js"),
+      () => import("../sjp-press-list/cy.js")
     );
 
     const t = translations.common as Record<string, string>;

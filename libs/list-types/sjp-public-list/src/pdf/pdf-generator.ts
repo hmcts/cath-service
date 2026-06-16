@@ -39,8 +39,8 @@ export async function generateSjpPublicListPdf(options: PdfGenerationOptions): P
 
     const translations = await loadTranslations(
       options.locale,
-      () => import("../pages/en.js"),
-      () => import("../pages/cy.js")
+      () => import("../sjp-public-list/en.js"),
+      () => import("../sjp-public-list/cy.js")
     );
 
     const listTypeTranslations = translations[options.listTypeName] as Record<string, string>;
