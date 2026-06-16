@@ -200,6 +200,24 @@ export const locationData: {
       name: "Care Standards Tribunal",
       welshName: "Tribiwnlys Safonau Gofal",
       jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 10,
+      name: "Special Educational Needs and Disability Tribunal",
+      welshName: "Tribiwnlys Anghenion Addysgol Arbennig ac Anabledd",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 11,
+      name: "Criminal Injuries Compensation Tribunal",
+      welshName: "Tribiwnlys Iawndal am Anafiadau Troseddol",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 12,
+      name: "Asylum Support Tribunal",
+      welshName: "Tribiwnlys Cymorth Lloches",
+      jurisdictionId: 4
     }
   ]
 };

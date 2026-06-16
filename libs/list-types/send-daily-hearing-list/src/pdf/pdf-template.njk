@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>{{ pdfStyles | safe }}</style>
+  <meta charset="UTF-8"/>
+  <meta name="subject" content="Accessible PDF template"/>
+  <meta name="author" content="HMCTS Court and Tribunal Hearings"/>
+  <meta name="description" content="SEND Daily Hearing List"/>
+  <title>{{ t.listName }}</title>
+</head>
+<body>
+<div>
+  <h2 id="page-heading" class="govuk-heading-l">{{ t.listName }}</h2>
+  <p class="govuk-body">
+    <a class="govuk-link" href="{{ t.factLink }}">{{ t.factLinkText1 }}</a><span>{{ t.factLinkText2 }}</span>
+  </p>
+  <p id="list-date" class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">
+    {{ t.listDate }}{{ header.contentDate }}
+  </p>
+  <p id="last-updated-date" class="govuk-body">
+    {{ t.lastUpdated }}{{ header.lastUpdatedDate }} {{ t.at }}{{ header.lastUpdatedTime }}
+  </p>
+
+  <details class="govuk-details" data-module="govuk-details" open="">
+    <summary class="govuk-details__summary">
+      <p class="govuk-details__summary-text">{{ t.importantInformationHeading }}</p>
+    </summary>
+    <div class="govuk-details__text">
+      <p class="govuk-body">{{ t.importantInformationLine1 }}</p>
+      <p class="govuk-body">{{ t.importantInformationLine2 }}</p>
+      <p class="govuk-body">{{ t.importantInformationLine3 }}</p>
+      <p class="govuk-body">{{ t.importantInformationLine4 }}</p>
+      <p class="govuk-body">{{ t.importantInformationLine5 }}</p>
+    </div>
+  </details>
+
+  <div aria-label="Hearing list" class="landscape">
+    <table class="govuk-table">
+      <thead class="govuk-table__header">
+        <tr>
+          <th scope="col" class="govuk-table__header">{{ t.tableHeaders.time }}</th>
+          <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseReferenceNumber }}</th>
+          <th scope="col" class="govuk-table__header">{{ t.tableHeaders.respondent }}</th>
+          <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingType }}</th>
+          <th scope="col" class="govuk-table__header">{{ t.tableHeaders.venue }}</th>
+          <th scope="col" class="govuk-table__header">{{ t.tableHeaders.timeEstimate }}</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for hearing in hearings %}
+        <tr>
+          <td class="govuk-table__cell">{{ hearing.time }}</td>
+          <td class="govuk-table__cell">{{ hearing.caseReferenceNumber }}</td>
+          <td class="govuk-table__cell">{{ hearing.respondent }}</td>
+          <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
+          <td class="govuk-table__cell">{{ hearing.venue }}</td>
+          <td class="govuk-table__cell">{{ hearing.timeEstimate }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <section>
+    <p class="govuk-body">{{ t.dataSource }}{{ dataSource }}</p>
+    <hr/>
+    <p class="govuk-body">{{ t.bottomLegal1 }}</p>
+    <p class="govuk-body">{{ t.bottomLegal2 }}</p>
+    <hr/>
+    <p class="govuk-body">{{ t.thanks }}</p>
+  </section>
+</div>
+</body>
+</html>

@@ -1,17 +1,20 @@
 import { randomUUID } from "node:crypto";
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
 import { getNonStrategicUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
+import "@hmcts/ast-daily-hearing-list"; // Register AST converter
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
+import "@hmcts/cic-weekly-hearing-list"; // Register CIC converter
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import { getLocationById } from "@hmcts/location";
 import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
 import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
+import "@hmcts/send-daily-hearing-list"; // Register SEND converter
 import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
-import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
 import type { Request, RequestHandler, Response } from "express";
 
 async function resolveUploadDisplayNames(uploadData: { locationId: string; listType?: string }, locale: string) {

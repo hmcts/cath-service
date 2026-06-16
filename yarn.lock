@@ -2139,6 +2139,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/ast-daily-hearing-list@workspace:libs/list-types/ast-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ast-daily-hearing-list@workspace:libs/list-types/ast-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.8"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/auth@workspace:*, @hmcts/auth@workspace:libs/auth":
   version: 0.0.0-use.local
   resolution: "@hmcts/auth@workspace:libs/auth"
@@ -2182,6 +2200,24 @@ __metadata:
 "@hmcts/care-standards-tribunal-weekly-hearing-list@workspace:*, @hmcts/care-standards-tribunal-weekly-hearing-list@workspace:libs/list-types/care-standards-tribunal-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/care-standards-tribunal-weekly-hearing-list@workspace:libs/list-types/care-standards-tribunal-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.8"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
@@ -2523,6 +2559,24 @@ __metadata:
     typescript: "npm:6.0.3"
   peerDependencies:
     redis: ^4.0.0 || ^5.0.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.8"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 

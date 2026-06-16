@@ -316,5 +316,41 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SJP Public List (New cases)",
     subJurisdictionIds: [7]
+  },
+  {
+    id: 28,
+    name: "SEND_DAILY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
+    provenance: "NON_STRATEGIC",
+    urlPath: "send-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Private",
+    shortenedFriendlyName: "SEND Daily Hearing list",
+    subJurisdictionIds: [10]
+  },
+  {
+    id: 29,
+    name: "CIC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Criminal Injuries Compensation Weekly Hearing List",
+    welshFriendlyName: "Criminal Injuries Compensation Weekly Hearing List",
+    provenance: "NON_STRATEGIC",
+    urlPath: "cic-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "CIC Weekly Hearing List",
+    subJurisdictionIds: [11]
+  },
+  {
+    id: 30,
+    name: "AST_DAILY_HEARING_LIST",
+    englishFriendlyName: "Asylum Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Asylum Support Tribunal Daily Hearing List",
+    provenance: "NON_STRATEGIC",
+    urlPath: "ast-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "AST Daily Hearing List",
+    subJurisdictionIds: [12]
   }
 ];

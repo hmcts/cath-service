@@ -4,8 +4,10 @@ import "./session.js"; // Session type augmentation
 import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot } from "@hmcts/administrative-court-daily-cause-list/config";
+import { moduleRoot as astDailyHearingListModuleRoot } from "@hmcts/ast-daily-hearing-list/config";
 import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
+import { moduleRoot as cicWeeklyHearingListModuleRoot } from "@hmcts/cic-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
@@ -19,6 +21,7 @@ import {
   moduleRoot as publicPagesModuleRoot
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-cause-list/config";
+import { moduleRoot as sendDailyHearingListModuleRoot } from "@hmcts/send-daily-hearing-list/config";
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
 import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
@@ -91,10 +94,13 @@ export async function createApp(): Promise<Express> {
     adminModuleRoot,
     authModuleRoot,
     listTypesCommonModuleRoot,
+    astDailyHearingListModuleRoot,
     careStandardsTribunalModuleRoot,
+    cicWeeklyHearingListModuleRoot,
     civilFamilyCauseListModuleRoot,
     civilDailyCauseListModuleRoot,
     familyDailyCauseListModuleRoot,
+    sendDailyHearingListModuleRoot,
     sjpPressListModuleRoot,
     sjpPublicListModuleRoot,
     rcjStandardModuleRoot,

@@ -3,10 +3,13 @@ export const meta = {
   description: 'Migrate views and accompanying logic from pip services',
   phases: [
     { title: 'Discover', detail: 'Parse ticket and fetch pages from pip-frontend' },
+    { title: 'Database Setup', detail: 'Create list type enums, database entries, and configure access control' },
+    { title: 'Migrate Backend', detail: 'Create schemas, PDFs, email summary, and error handling from pip-data-management' },
     { title: 'Migrate Frontend', detail: 'Create content modules and page controllers' },
-    { title: 'Migrate Backend', detail: 'Create schemas, PDFs, and email summary from pip-data-management' },
+    { title: 'Register Services', detail: 'Register list types across all services (upload form, validation, PDF registry)' },
     { title: 'Tests', detail: 'Generate unit and E2E tests for all components' },
     { title: 'Verify', detail: 'Verify all components against ticket requirements' },
+    { title: 'Fix Issues', detail: 'Automatically fix verification issues (up to 3 attempts)' },
   ],
 };
 
@@ -20,12 +23,21 @@ const ISSUE_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: { type: 'string', description: 'Page name in kebab-case (e.g., "siac-weekly-hearing-list")' },
-          route: { type: 'string', description: 'Route path (e.g., "/siac-weekly-hearing-list")' },
-          description: { type: 'string', description: 'Full display name (e.g., "Special Immigration Appeals Commission Weekly Hearing List")' },
-          listTypeConstant: { type: 'string', description: 'Java constant name from pip-data-management (e.g., "SIAC_WEEKLY_HEARING_LIST")' }
+          name: { type: 'string', description: 'Page name in kebab-case (e.g., "send-daily-hearing-list")' },
+          route: { type: 'string', description: 'Route path (e.g., "/send-daily-hearing-list")' },
+          fullDisplayName: { type: 'string', description: 'Full display name for frontend (e.g., "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List")' },
+          uploadFormName: { type: 'string', description: 'Short name for upload form (e.g., "SEND Daily Hearing List")' },
+          listTypeConstant: { type: 'string', description: 'Java constant name from pip-data-management (e.g., "SEND_DAILY_HEARING_LIST")' },
+          jurisdiction: { type: 'string', description: 'Jurisdiction (e.g., "Tribunal", "Civil")' },
+          region: { type: 'string', description: 'Region (e.g., "National", "London")' },
+          frequency: { type: 'string', description: 'Publishing frequency (e.g., "daily", "weekly")' },
+          accessLevel: { type: 'string', description: 'Access level (e.g., "public", "private")' },
+          fieldsToDisplay: { type: 'array', items: { type: 'string' }, description: 'Fields to display in style guide' },
+          emailSummaryFields: { type: 'array', items: { type: 'string' }, description: 'Fields for email summary' },
+          openingStatement: { type: 'string', description: 'Opening statement for important information accordion' },
+          staticAddress: { type: 'string', description: 'Static tribunal address if specified' }
         },
-        required: ['name', 'route', 'description']
+        required: ['name', 'route', 'fullDisplayName', 'uploadFormName', 'listTypeConstant']
       }
     },
     contentRequirements: {
@@ -101,9 +113,11 @@ const BACKEND_WORK_SCHEMA = {
   properties: {
     page: { type: 'string' },
     validationSchemaCreated: { type: 'boolean' },
+    validationErrorHandlerCreated: { type: 'boolean' },
     pdfTemplateCreated: { type: 'boolean' },
     emailSummaryCreated: { type: 'boolean' },
     listManipulationCreated: { type: 'boolean' },
+    localesCreated: { type: 'boolean' },
     issues: { type: 'array', items: { type: 'string' } }
   }
 };
@@ -143,22 +157,30 @@ const ticketInfo = await agent(
      - "Immigration and Asylum Chamber Daily List – Additional Cases" → /immigration-and-asylum-chamber-daily-list-additional-cases
 
   FOR EACH LIST/PAGE, EXTRACT:
-  - Display name (full name shown in frontend)
-  - Upload form name (if different/specified)
-  - Derived route (kebab-case)
+  - Full display name: Complete name for frontend summary (e.g., "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List")
+  - Upload form name: Shorter name for upload form (e.g., "SEND Daily Hearing List")
+  - Derived route: Convert uploadFormName (if specified) or fullDisplayName to kebab-case
   - List type constant: Derive Java constant name for pip-data-management lookup
     * Convert to SCREAMING_SNAKE_CASE
-    * Example: "SIAC Weekly Hearing List" → "SIAC_WEEKLY_HEARING_LIST"
+    * Example: "SEND Daily Hearing List" → "SEND_DAILY_HEARING_LIST"
     * Example: "RPT Eastern Weekly Hearing List" → "RPT_EASTERN_WEEKLY_HEARING_LIST"
-  - Jurisdiction (Civil, Tribunal, etc.)
-  - Region (National, London, Yorkshire, etc.)
-  - Frequency (daily, weekly, rarely, etc.)
-  - Fields to display (if specified in "fields to be displayed" sections)
-  - Opening statements or special messages (from accordion or summary page)
-  - Ordering/priority rules (if specified)
+  - Jurisdiction: (Civil, Tribunal, Family, etc.)
+  - Region: (National, London, Yorkshire, etc.)
+  - Frequency: (daily, weekly, rarely, etc.)
+  - Access level: (public, private) - look for "private hearings", "classified", or "user groups"
+  - Fields to display: Extract from "Data fields to be displayed within the [list name]" sections
+  - Email summary fields: Extract from "fields to be published in the email summary" sections
+  - Opening statement: Full text from "opening statement displayed within the important information accordion"
+  - Static address: Any tribunal/court address mentioned (e.g., "East London Tribunal Service, HMCTS...")
+  - Ordering/priority rules: (if specified)
+
+  IMPORTANT: For display names vs upload form names:
+  - "full list names shall be displayed as follows in the front-end summary" → fullDisplayName
+  - "On the Excel file upload form, the lists will be displayed as" → uploadFormName
+  - Use uploadFormName for route derivation if both are provided
 
   Return structured data:
-  - pages: [{name: route without slash, route: with slash, description: display name, listTypeConstant: SCREAMING_SNAKE_CASE}]
+  - pages: Array with all extracted fields per schema
   - contentRequirements: ALL acceptance criteria bullets as array of strings (preserve exact wording)`,
   {
     label: 'parse-ticket',
@@ -212,85 +234,80 @@ if (legacyPages.matchingNotes) {
   log(`Route matching: ${legacyPages.matchingNotes}`);
 }
 
-// Phase 2: Migrate pages in parallel
-phase('Migrate');
+// Phase 2: Database Setup - Add list types to configuration
+phase('Database Setup');
 
-const migrations = await pipeline(
-  legacyPages.pages,
+log('Adding new list types to database configuration');
 
-  // Stage 1: Create lib module with content files
-  (page) => agent(
-    `Migrate page "${page.name}" to new structure.
+await agent(
+  `Add new list types to database configuration.
 
-    IMPORTANT: Follow all conventions from CLAUDE.md and .claude/rules/:
-    - GOV.UK Design System patterns (.claude/rules/design.md)
-    - Naming conventions (camelCase vars, kebab-case files, snake_case DB)
-    - Functional style (no classes unless shared state)
-    - ES modules with .js extensions in imports
-    - AAA pattern for tests (.claude/rules/testing.md)
+  List types to create: ${JSON.stringify(ticketInfo.pages)}
 
-    Legacy page data: ${JSON.stringify(page)}
-    ${page.legacyRoute && page.legacyRoute !== page.route ? `Note: This page was "${page.legacyRoute}" in pip-frontend, now "${page.route}" in new app.` : ''}
-    ${page.notes ? `Migration notes: ${page.notes}` : ''}
-    Ticket requirements: ${JSON.stringify(ticketInfo)}
+  STEP 1 - Check if list types already exist:
+  - Read libs/location/src/list-type-data.ts
+  - Check if these list type constants already exist in the listTypeData array
+  - Note which ones are new vs existing
 
-    SPECIAL HANDLING FOR TRIBUNAL STYLE GUIDE PAGES:
-    - Many tribunal pages use shared controllers (e.g., nonStrategicTribunalListsController)
-    - Templates might be dynamically generated or use partials
-    - Content is often in JSON keyed by list-type slug
-    - Opening statements are in "important information" accordion sections
+  STEP 2 - Find next available ID:
+  - Get the highest ID in listTypeData array
+  - Use next sequential ID for new entries
 
-    NOTE: This creates frontend-only components. The unified list-type module (with schemas, PDF, etc.)
-    will be created in the Backend phase. This separation allows parallel work.
+  STEP 3 - Add new list types to listTypeData:
+  For each new list type from ticket, add to libs/location/src/list-type-data.ts:
 
-    Step 1: Extract i18n content from pip-frontend
-    - Fetch i18n files from pip-frontend (locales/en/*.json and cy/*.json)
-    - Extract content specific to this list type
-    - Prepare for creation in list-types module (will be created in Backend phase)
+  {
+    id: <next-id>,
+    name: "<LIST_TYPE_CONSTANT>",  // e.g., "SEND_DAILY_HEARING_LIST"
+    englishFriendlyName: "<fullDisplayName>",  // e.g., "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List"
+    welshFriendlyName: "<fullDisplayName>",  // Same as English if no Welsh translation provided yet
+    provenance: "NON_STRATEGIC",  // For non-strategic publishing route
+    urlPath: "<route-without-slash>",  // e.g., "send-daily-hearing-list"
+    isNonStrategic: true,
+    defaultSensitivity: "<accessLevel>",  // "Public" or "Private" from ticket
+    shortenedFriendlyName: "<uploadFormName>",  // e.g., "SEND Daily Hearing List"
+    subJurisdictionIds: [<mapped-ids>]  // Map jurisdiction+region to sub-jurisdiction IDs (check existing patterns)
+  }
 
-    Step 2: Create page template at apps/web/src/pages/(list-types)/${page.name}/
-    - Create ${page.name}.njk (Nunjucks template)
-    - Follow the GOV.UK style guide page pattern
-    - Include "important information" details component with opening statement
-    - Display fields as specified in ticket (Date, Time, Case Reference, etc.)
-    - Ensure proper heading hierarchy
-    - Use GOV.UK Design System components
-    - Use i18n variables for all text content
+  STEP 4 - Map jurisdiction and region to subJurisdictionIds:
+  - Read existing listTypeData entries to understand sub-jurisdiction mapping
+  - Tribunal + National → sub-jurisdiction ID (check existing tribunal entries)
+  - Tribunal + London → sub-jurisdiction ID (check existing tribunal entries)
+  - If unclear, document the mapping needed and suggest consulting existing data
 
-    Step 3: Create page controller (if needed for non-standard behavior)
-    - Most list types use shared rendering logic
-    - Only create custom controller if page has unique behavior
-    - Location: apps/web/src/pages/(list-types)/${page.name}/index.ts
-    - Import locales from list-types module (will be available after Backend phase)
+  STEP 5 - Verify the additions:
+  - Ensure all required fields are populated
+  - Verify IDs are sequential and unique
+  - Check that shortenedFriendlyName matches uploadFormName from ticket
+  - Check that englishFriendlyName matches fullDisplayName from ticket
 
-    Report what was created and note that the unified list-type module will be created in Backend phase.`,
-    {
-      label: `migrate-${page.name}`,
-      phase: 'Migrate',
-      schema: MIGRATION_RESULT_SCHEMA
-    }
-  )
+  Report:
+  - How many list types were added
+  - What IDs were assigned
+  - Any sub-jurisdiction mappings that need verification`,
+  {
+    label: 'database-setup'
+  }
 );
 
-const successfulMigrations = migrations.filter(Boolean).filter(m => m.libCreated && m.controllerCreated);
-log(`Successfully migrated ${successfulMigrations.length}/${legacyPages.pages.length} pages`);
+log('Database configuration updated - list types registered');
 
 // Phase 3: Backend work - fetch schemas and templates from pip-data-management
-phase('Backend');
+phase('Migrate Backend');
 
 const backendWork = await pipeline(
-  successfulMigrations,
+  legacyPages.pages,
 
-  (migration) => agent(
-    `Migrate backend components for "${migration.page}" from pip-data-management.
+  (page) => agent(
+    `Migrate backend components for "${page.name}" from pip-data-management.
 
     CRITICAL: All backend components already exist in pip-data-management and must be migrated.
     If you cannot find any component after thorough searching, STOP and ask the developer for help.
     Do NOT create placeholder code - migrate existing implementations.
 
     List type information:
-    - Page name: ${migration.page}
-    - List type constant: ${ticketInfo.pages.find(p => p.name === migration.page)?.listTypeConstant || 'UNKNOWN'}
+    - Page name: ${page.name}
+    - List type constant: ${ticketInfo.pages.find(p => p.name === page.name)?.listTypeConstant || 'UNKNOWN'}
     - Use this constant to find components in pip-data-management
 
     Follow conventions from CLAUDE.md and .claude/rules/backend.md:
@@ -298,28 +315,38 @@ const backendWork = await pipeline(
     - Functional style
     - ES modules with .js extensions
 
-    Page: ${migration.page}
+    Page: ${page.name}
     Ticket requirements: ${JSON.stringify(ticketInfo)}
 
-    IMPORTANT: Create a unified list-type module at libs/list-types/${migration.page}/
+    IMPORTANT: Create a unified list-type module at libs/list-types/${page.name}/
     This module will contain: schemas, locales (i18n), email-summary, PDF, conversion, models
 
-    STEP 1 - Create Locales from pip-frontend i18n:
+    STEP 1 - Create Locales from pip-frontend i18n AND ticket data:
     - Fetch i18n files from pip-frontend (locales/en/*.json and cy/*.json)
     - Extract content specific to this list type
-    - Create: libs/list-types/${migration.page}/src/locales/en.ts
+    - Create: libs/list-types/${page.name}/src/locales/en.ts
       * Convert JSON to TypeScript object
-      * Include: page title, fields, opening statement, labels
-    - Create: libs/list-types/${migration.page}/src/locales/cy.ts
+      * Include: page title, fields, opening statement (from ticket), labels
+      * Add staticAddress if specified in ticket (e.g., AST tribunal address)
+      * Add any contact emails or special instructions from ticket
+    - Create: libs/list-types/${page.name}/src/locales/cy.ts
       * Welsh translation (if exists in pip-frontend)
-      * Otherwise create with TODO comments
+      * Otherwise create with TODO comments for translations
+      * Include same structure as en.ts (staticAddress, contact details, etc.)
 
-    STEP 2 - Fetch JSON Validation Schema:
-    Search pip-data-management repo for schema:
+    STEP 2 - Fetch JSON Validation Schema AND Create Error Handling:
+    A) Fetch schema from pip-data-management:
     - Try: https://raw.githubusercontent.com/hmcts/pip-data-management/master/src/main/resources/schemas/
-    - Search for files matching list type (e.g., "siac", "poac", "tribunal")
+    - Search for files matching list type (e.g., "send", "cic", "ast", "tribunal")
     - Fetch JSON schema using curl
-    - Copy to: libs/publication/src/validation/schemas/${migration.page}-schema.json
+    - Copy to: libs/publication/src/validation/schemas/${page.name}-schema.json
+
+    B) Create validation error handler:
+    - Create: libs/list-types/${page.name}/src/validation/error-formatter.ts
+    - Implement function to format AJV validation errors into user-friendly messages
+    - Map JSON schema paths to field labels (e.g., "/hearings/0/time" → "Time in first hearing")
+    - Follow pattern from existing list types
+    - Export formatValidationErrors(errors: ErrorObject[]) → string[]
 
     STEP 3 - Fetch PDF Generation Logic:
     PDF templates are at:
@@ -330,7 +357,7 @@ const backendWork = await pipeline(
     1. Find the Java file generation service for this list type (search filegeneration/ directory)
     2. Find the Thymeleaf template (search templates/ directory)
     3. Convert Java/Thymeleaf to TypeScript + Nunjucks/HTML
-    4. Create: libs/pdf-generation/src/templates/${migration.page}-pdf.ts
+    4. Create: libs/pdf-generation/src/templates/${page.name}-pdf.ts
     5. Use generatePdf from libs/pdf-generation/src/generator.ts
     6. Include all fields from ticket
 
@@ -345,7 +372,7 @@ const backendWork = await pipeline(
     - Example: SIAC_WEEKLY_HEARING_LIST: List.of(TIME, CASE_REFERENCE_NUMBER, CASE_NAME)
     - Extract the fields list for this specific list type
 
-    Create: libs/list-types/${migration.page}/src/email-summary/summary-builder.ts
+    Create: libs/list-types/${page.name}/src/email-summary/summary-builder.ts
     - Import CaseSummary types from @hmcts/list-types-common
     - Implement extractCaseSummary() function
     - Map Java field names to proper labels (TIME → "Time", CASE_REFERENCE_NUMBER → "Case reference number")
@@ -359,21 +386,21 @@ const backendWork = await pipeline(
     - Check for field mapping and data manipulation
     - Convert Java logic to TypeScript functional style
 
-    Create: libs/list-types/${migration.page}/src/conversion/${migration.page}-config.ts
+    Create: libs/list-types/${page.name}/src/conversion/${page.name}-config.ts
     - Field mapping configuration for publication JSON
     - Data transformation functions
     - Sorting/filtering logic
     - Follow pattern from: libs/list-types/rcj-standard-daily-cause-list/src/conversion/
 
     Also create TypeScript types for publication JSON data (NOT database):
-    - libs/list-types/${migration.page}/src/models/${migration.page}.types.ts
+    - libs/list-types/${page.name}/src/models/${page.name}.types.ts
     - Define interfaces for the publication JSON structure
     - Example: HearingList, Hearing, CaseDetails (from the JSON schema)
 
     STEP 6 - Create List-Type Module Structure and Register:
 
     A) Create module configuration files:
-    1. package.json - "@hmcts/list-types-${migration.page}" with proper exports
+    1. package.json - "@hmcts/list-types-${page.name}" with proper exports
     2. tsconfig.json - extends root, excludes tests/assets
     3. src/config.ts - exports moduleRoot path
     4. src/index.ts - exports schemas, email summary, PDF, conversion, types
@@ -381,37 +408,167 @@ const backendWork = await pipeline(
     B) Register email summary in notification service:
     Update: libs/notifications/src/notification/notification-service.ts
     \`\`\`typescript
-    import { extractCaseSummary as extract${migration.page.replace(/-/g, '')}, formatCaseSummaryForEmail } from "@hmcts/list-types-${migration.page}";
+    import { extractCaseSummary as extract${page.name.replace(/-/g, '')}, formatCaseSummaryForEmail } from "@hmcts/list-types-${page.name}";
 
-    const ${migration.page.replace(/-/g, '')}Config: EmailBuilderConfig = {
-      extract: extract${migration.page.replace(/-/g, '')} as SummaryExtractor,
+    const ${page.name.replace(/-/g, '')}Config: EmailBuilderConfig = {
+      extract: extract${page.name.replace(/-/g, '')} as SummaryExtractor,
       format: formatCaseSummaryForEmail
     };
 
-    // Find the list type ID by searching for ${ticketInfo.pages.find(p => p.name === migration.page)?.listTypeConstant || 'LIST_TYPE_CONSTANT'}
+    // Find the list type ID by searching for ${ticketInfo.pages.find(p => p.name === page.name)?.listTypeConstant || 'LIST_TYPE_CONSTANT'}
     // in the ListType enum or database. Add to EMAIL_BUILDER_CONFIGS:
     const EMAIL_BUILDER_CONFIGS: EmailBuilderConfigs = {
-      [LIST_TYPE_ID]: ${migration.page.replace(/-/g, '')}Config,
+      [LIST_TYPE_ID]: ${page.name.replace(/-/g, '')}Config,
       // ... existing configs
     };
     \`\`\`
 
     C) Update root tsconfig.json:
-    Add path: "@hmcts/list-types-${migration.page}": ["libs/list-types/${migration.page}/src"]
+    Add path: "@hmcts/list-types-${page.name}": ["libs/list-types/${page.name}/src"]
 
     Report what was migrated, what was created new, and any issues.`,
     {
-      label: `backend-${migration.page}`,
-      phase: 'Backend',
+      label: `backend-${page.name}`,
+      phase: 'Migrate Backend',
       schema: BACKEND_WORK_SCHEMA
     }
   )
 );
 
 const successfulBackendWork = backendWork.filter(Boolean).filter(b => b.validationSchemaCreated);
-log(`Successfully created backend components for ${successfulBackendWork.length}/${successfulMigrations.length} pages`);
+log(`Successfully created backend components for ${successfulBackendWork.length}/${legacyPages.pages.length} pages`);
 
-// Phase 4: Generate tests in parallel
+// Phase 3: Frontend migration - create page controllers and templates
+phase('Migrate Frontend');
+
+const migrations = await pipeline(
+  successfulBackendWork,
+
+  (backendResult) => {
+    const page = legacyPages.pages.find(p => p.name === backendResult.page);
+    if (!page) return null;
+
+    return agent(
+      `Migrate frontend components for page "${page.name}".
+
+      IMPORTANT: Follow all conventions from CLAUDE.md and .claude/rules/:
+      - GOV.UK Design System patterns (.claude/rules/design.md)
+      - Naming conventions (camelCase vars, kebab-case files, snake_case DB)
+      - Functional style (no classes unless shared state)
+      - ES modules with .js extensions in imports
+      - AAA pattern for tests (.claude/rules/testing.md)
+
+      Legacy page data: ${JSON.stringify(page)}
+      ${page.legacyRoute && page.legacyRoute !== page.route ? `Note: This page was "${page.legacyRoute}" in pip-frontend, now "${page.route}" in new app.` : ''}
+      ${page.notes ? `Migration notes: ${page.notes}` : ''}
+      Ticket requirements: ${JSON.stringify(ticketInfo)}
+
+      SPECIAL HANDLING FOR TRIBUNAL STYLE GUIDE PAGES:
+      - Many tribunal pages use shared controllers (e.g., nonStrategicTribunalListsController)
+      - Templates might be dynamically generated or use partials
+      - Content is often in JSON keyed by list-type slug
+      - Opening statements are in "important information" accordion sections
+
+      NOTE: The unified list-type module (libs/list-types/${page.name}/) has already been created in the Backend phase
+      with locales (i18n), schemas, PDF, and email summary. You can now import from it.
+
+      Step 1: Create page template at apps/web/src/pages/(list-types)/${page.name}/
+      - Create index.njk (Nunjucks template)
+      - Follow the GOV.UK style guide page pattern
+      - Include "important information" details component with opening statement
+      - Display fields as specified in ticket (Date, Time, Case Reference, etc.)
+      - Ensure proper heading hierarchy
+      - Use GOV.UK Design System components
+      - Use i18n variables from the list-type module
+
+      Step 2: Create page controller
+      - Location: apps/web/src/pages/(list-types)/${page.name}/index.ts
+      - Import locales from @hmcts/list-types-${page.name}
+      - Implement GET handler to render the page
+      - Follow pattern from existing list-type pages
+
+      Report what was created.`,
+      {
+        label: `frontend-${page.name}`,
+        phase: 'Migrate Frontend',
+        schema: MIGRATION_RESULT_SCHEMA
+      }
+    );
+  }
+);
+
+const successfulMigrations = migrations.filter(Boolean).filter(m => m.controllerCreated && m.templateMigrated);
+log(`Successfully migrated frontend for ${successfulMigrations.length}/${successfulBackendWork.length} pages`);
+
+// Phase 4: Register Services - Register list types across all services
+phase('Register Services');
+
+log('Registering list types across services (upload form, validation, PDF registry)');
+
+await agent(
+  `Register migrated list types across all services.
+
+  List types to register: ${JSON.stringify(successfulMigrations.map(m => m.page))}
+  Ticket information: ${JSON.stringify(ticketInfo)}
+
+  STEP 1 - Register in Upload Form Service:
+  The upload form needs to display list types for file uploads.
+
+  A) Find upload form configuration:
+  - Search for files related to file upload, list type dropdown, or Excel upload
+  - Look in apps/web or libs for upload form logic
+  - Check for list type selection components
+
+  B) Add list types to upload form:
+  - Use uploadFormName from ticket (short name, e.g., "SEND Daily Hearing List")
+  - Map to list type ID from database
+  - Ensure list types appear in correct jurisdiction/region dropdowns
+  - Follow existing pattern in upload form code
+
+  STEP 2 - Register in Validation Service:
+  Update: libs/publication/src/validation/validator.ts (or similar)
+
+  For each list type:
+  - Import schema from './schemas/<list-type-name>-schema.json'
+  - Register schema with validator for this list type ID
+  - Map list type constant to schema
+  - Follow existing validation registration pattern
+
+  STEP 3 - Register in PDF Generation Service:
+  Update: libs/pdf-generation/src/pdf-registry.ts (or similar)
+
+  For each list type:
+  - Import PDF generator from list-type module
+  - Register PDF generator for this list type ID
+  - Map list type constant to PDF generation function
+  - Follow existing PDF registration pattern
+
+  STEP 4 - Verify Email Summary Registration:
+  Check: libs/notifications/src/notification/notification-service.ts
+
+  - Verify email summary was registered in Backend phase
+  - Ensure EMAIL_BUILDER_CONFIGS includes entries for new list types
+  - Verify list type IDs match database configuration
+
+  STEP 5 - Verify Route Registration:
+  Check: apps/web/src/app.ts
+
+  - Verify module roots are imported and added to modulePaths
+  - Ensure pages are discoverable (apps/web/src/pages/(list-types)/)
+  - Test that routes are accessible
+
+  Report:
+  - Which services were updated
+  - Any manual configuration steps needed
+  - Any issues or missing registrations`,
+  {
+    label: 'register-services'
+  }
+);
+
+log('Service registration complete');
+
+// Phase 5: Generate tests
 phase('Tests');
 
 const tests = await pipeline(
@@ -466,6 +623,13 @@ const tests = await pipeline(
     - Test data transformation functions
     - Test sorting/filtering logic
 
+    Step 6: Create validation error handler test
+    - Location: libs/list-types/${migration.page}/src/validation/error-formatter.test.ts
+    - Test formatValidationErrors with various AJV error objects
+    - Test field path mapping (JSON path → friendly label)
+    - Test with missing fields, invalid types, constraint violations
+    - Verify user-friendly error messages
+
     Report what was created.`,
     {
       label: `tests-${migration.page}`,
@@ -490,36 +654,47 @@ const verifications = await pipeline(
       Ticket requirements: ${JSON.stringify(ticketInfo)}
 
       FRONTEND VERIFICATION:
-      1. Read apps/web/src/pages/(core)/${migration.page}/index.njk
+      1. Read apps/web/src/pages/(list-types)/${migration.page}/index.njk
          - Check all fields from ticket are displayed
-         - Check opening statement is present
+         - Check opening statement in "important information" accordion
          - Check GOV.UK Design System components used correctly
+         - Check static content (addresses, contact details) if specified
 
-      2. Read libs/${migration.page}/src/${migration.page}-page/en.ts
-         - Check all content from ticket is present
-         - Check field labels, headings, body text
+      2. Read apps/web/src/pages/(list-types)/${migration.page}/index.ts
+         - Check controller imports locales from list-type module
+         - Check GET handler renders with correct data
 
-      3. Read libs/${migration.page}/src/${migration.page}-page/cy.ts
-         - Check Welsh translation is complete
-         - Check all en.ts content has Welsh equivalent
+      BACKEND VERIFICATION:
+      3. Read libs/list-types/${migration.page}/src/locales/en.ts
+         - Check all content from ticket (page title, fields, opening statement)
+         - Check static address if specified in ticket
+         - Check field labels match ticket requirements
 
-      BACKEND VERIFICATION (if backend work was done):
-      4. Read libs/list-types/${migration.page}/src/schemas/${migration.page}.json
+      4. Read libs/list-types/${migration.page}/src/locales/cy.ts
+         - Check Welsh translation structure matches en.ts
+
+      5. Read libs/publication/src/validation/schemas/${migration.page}-schema.json
          - Check schema includes all fields from ticket
-         - Check required fields match ticket requirements
 
-      5. Read libs/list-types/${migration.page}/src/email-summary/summary-builder.ts
-         - Check extractCaseSummary extracts correct fields
-         - From ticket: "fields to be published for the email summary" (e.g., Date, Time, Case Reference)
+      6. Read libs/list-types/${migration.page}/src/validation/error-formatter.ts
+         - Check error handler exists
 
-      6. Read libs/list-types/${migration.page}/src/pdf/pdf-template.njk
-         - Check PDF template includes all fields from ticket
-         - Check formatting matches GOV.UK standards
+      7. Read libs/list-types/${migration.page}/src/email-summary/summary-builder.ts
+         - Check extractCaseSummary extracts correct fields from ticket
 
-      7. Check libs/notifications/src/notification/notification-service.ts
-         - Verify email summary is registered in EMAIL_BUILDER_CONFIGS
+      8. Check PDF template exists at libs/list-types/${migration.page}/src/pdf/
 
-      Return verification results with specific missing items for both frontend and backend.`,
+      REGISTRATION VERIFICATION:
+      9. Check libs/location/src/list-type-data.ts
+         - Verify list type added with correct displayName, uploadFormName, jurisdiction, region
+
+      10. Check libs/notifications/src/notification/notification-service.ts
+         - Verify email summary registered in EMAIL_BUILDER_CONFIGS
+
+      11. Check apps/web/src/app.ts
+         - Verify module roots imported and registered
+
+      Return verification results with specific missing items.`,
       {
         label: `verify-${migration.page}`,
         phase: 'Verify',
@@ -529,12 +704,97 @@ const verifications = await pipeline(
   }
 );
 
-const contentIssues = verifications
+let contentIssues = verifications
   .filter(Boolean)
   .filter(v => !v.contentComplete);
 
 if (contentIssues.length > 0) {
   log(`⚠️  Content verification found issues in ${contentIssues.length} pages`);
+}
+
+// Phase 8: Fix Issues - Self-correction loop (max 3 attempts)
+phase('Fix Issues');
+
+const MAX_FIX_ATTEMPTS = 3;
+let fixAttempt = 0;
+
+while (contentIssues.length > 0 && fixAttempt < MAX_FIX_ATTEMPTS) {
+  fixAttempt++;
+  log(`Fix attempt ${fixAttempt}/${MAX_FIX_ATTEMPTS} - Fixing ${contentIssues.length} pages with issues`);
+
+  const fixes = await pipeline(
+    contentIssues,
+
+    (issue) => agent(
+      `Fix verification issues for "${issue.page}".
+
+      Issues found:
+      ${issue.missingContent?.map(m => `- ${m}`).join('\n') || 'No specific issues listed'}
+
+      Suggestions:
+      ${issue.suggestions?.map(s => `- ${s}`).join('\n') || 'No suggestions provided'}
+
+      Ticket requirements: ${JSON.stringify(ticketInfo.pages.find(p => p.name === issue.page))}
+
+      INSTRUCTIONS:
+      1. Read the files mentioned in the issues
+      2. Fix ONLY the specific problems listed
+      3. For missing files: Create them following existing patterns
+      4. For incorrect fields: Update to match ticket requirements exactly
+      5. For content mismatches: Update to match ticket wording exactly
+
+      CRITICAL:
+      - Use pip-data-management as source of truth where possible
+      - For email summary fields, use EXACT fields from ticket
+      - For opening statements, use EXACT text from ticket
+      - Create missing error-formatter.ts if it doesn't exist
+
+      Report what was fixed.`,
+      {
+        label: `fix-${issue.page}-attempt-${fixAttempt}`,
+        phase: 'Fix Issues'
+      }
+    )
+  );
+
+  log(`Completed ${fixes.filter(Boolean).length} fixes, re-verifying...`);
+
+  // Re-verify the pages that had issues
+  const reVerifications = await pipeline(
+    contentIssues,
+
+    (issue) => agent(
+      `Re-verify migrated components for "${issue.page}" after fixes.
+
+      Original issues:
+      ${issue.missingContent?.map(m => `- ${m}`).join('\n')}
+
+      Use the same verification checklist as before to check if issues are resolved.
+
+      Return verification results.`,
+      {
+        label: `reverify-${issue.page}-attempt-${fixAttempt}`,
+        phase: 'Fix Issues',
+        schema: VERIFICATION_SCHEMA
+      }
+    )
+  );
+
+  // Update contentIssues with remaining issues
+  contentIssues = reVerifications
+    .filter(Boolean)
+    .filter(v => !v.contentComplete);
+
+  if (contentIssues.length > 0) {
+    log(`${contentIssues.length} pages still have issues after fix attempt ${fixAttempt}`);
+  } else {
+    log('✅ All issues resolved!');
+    break;
+  }
+}
+
+if (contentIssues.length > 0) {
+  log(`⚠️ ${contentIssues.length} pages still have unresolved issues after ${MAX_FIX_ATTEMPTS} attempts - manual review needed`);
 }
 
 // Final step: Update app.ts with route registrations
@@ -567,25 +827,31 @@ const summary = {
   migrated: successfulMigrations.length,
   backendCompleted: successfulBackendWork.length,
   tested: tests.filter(Boolean).length,
-  contentIssues: contentIssues.length,
+  fixAttempts: fixAttempt,
+  unresolvedIssues: contentIssues.length,
   pages: successfulMigrations.map(m => {
     const backend = backendWork.find(b => b && b.page === m.page);
+    const remainingIssues = contentIssues.find(v => v.page === m.page);
+
     return {
       name: m.page,
       hasTests: tests.some(t => t && t.page === m.page),
-      contentComplete: !contentIssues.some(v => v.page === m.page),
+      contentComplete: !remainingIssues,
       backendComplete: backend ?
         (backend.validationSchemaCreated && backend.pdfTemplateCreated && backend.emailSummaryCreated) :
         false,
-      issues: [
-        ...m.issues || [],
-        ...verifications.find(v => v && v.page === m.page)?.missingContent || [],
-        ...backend?.issues || []
-      ]
+      issues: remainingIssues ? [
+        ...remainingIssues.missingContent || [],
+        ...remainingIssues.suggestions || []
+      ] : []
     };
   })
 };
 
-log(`\n✅ Migration complete: ${summary.migrated} pages migrated, ${summary.backendCompleted} with backend, ${summary.tested} with tests`);
+if (summary.unresolvedIssues > 0) {
+  log(`\n⚠️ Migration complete with ${summary.unresolvedIssues} pages needing manual review after ${fixAttempt} fix attempts`);
+} else {
+  log(`\n✅ Migration complete: ${summary.migrated} pages migrated, all issues auto-resolved in ${fixAttempt} fix attempts`);
+}
 
 return summary;
