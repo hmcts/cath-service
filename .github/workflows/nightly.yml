@@ -9,6 +9,7 @@ permissions:
   contents: read
   checks: write
   actions: read
+  id-token: write
 
 jobs:
   e2e:
@@ -47,46 +48,17 @@ jobs:
       # Application configuration
       BASE_URL: https://localhost:8080
       PORT: 8080
-      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
       # Database Configuration (using service containers)
       DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
       REDIS_URL: redis://localhost:6379
 
-      # SSO Configuration (using existing GitHub Secrets)
-      SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
-      SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
-      SSO_IDENTITY_METADATA: ${{ secrets.SSO_ISSUER_URL }}
-      SSO_SYSTEM_ADMIN_GROUP_ID: ${{ secrets.SSO_SG_SYSTEM_ADMIN }}
-      SSO_INTERNAL_ADMIN_CTSC_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_CTSC }}
-      SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_LOCAL }}
+      # SSO Configuration
       SSO_ALLOW_HTTP_REDIRECT: false
-
-      # Test user credentials (using existing GitHub Secrets)
-      SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
-      SSO_TEST_SYSTEM_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_PWD }}
-      SSO_TEST_LOCAL_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_USER }}
-      SSO_TEST_LOCAL_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_PWD }}
-      SSO_TEST_CTSC_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_USER }}
-      SSO_TEST_CTSC_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_PWD }}
-      SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
-      SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
 
       # CFT IDAM Configuration
       ENABLE_CFT_IDAM: true
       CFT_IDAM_URL: https://idam-web-public.aat.platform.hmcts.net
-      CFT_IDAM_CLIENT_SECRET: ${{ secrets.CFT_IDAM_CLIENT_SECRET }}
-
-      # CFT IDAM Test Credentials
-      CFT_VALID_TEST_ACCOUNT: ${{ secrets.CFT_VALID_TEST_ACCOUNT }}
-      CFT_VALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_VALID_TEST_ACCOUNT_PASSWORD }}
-      CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
-      CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
-
-      # API Authentication Configuration (for blob ingestion endpoint)
-      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
-      APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
 
       # Azure B2C Configuration (mocked in CI until delete endpoint is deployed)
       MOCK_AZURE_B2C: "true"
@@ -96,13 +68,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Load e2e test credentials from bootstrap Key Vault
+        run: |
+          KV="cath-bootstrap-stg-kv"
+          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+
+          echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_SYSTEM_ADMIN_PASSWORD=$(fetch sso-test-system-admin-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_EMAIL=$(fetch sso-test-admin-local-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_PASSWORD=$(fetch sso-test-admin-local-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_EMAIL=$(fetch sso-test-admin-account-ctsc-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_PASSWORD=$(fetch sso-test-admin-account-ctsc-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_EMAIL=$(fetch sso-test-no-roles-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_PASSWORD=$(fetch sso-test-no-roles-account-pwd)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT=$(fetch cft-valid-test-account)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-valid-test-account-password)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT=$(fetch cft-invalid-test-account)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-invalid-test-account-password)" >> $GITHUB_ENV
+          echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
+          echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
+          echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
+
       - name: Enable Corepack
         run: corepack enable
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v5

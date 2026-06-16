@@ -11,6 +11,7 @@ const mockPrisma = {
     upsert: vi.fn()
   },
   subJurisdiction: {
+    count: vi.fn(),
     upsert: vi.fn()
   },
   location: {
@@ -24,6 +25,10 @@ const mockPrisma = {
   locationSubJurisdiction: {
     deleteMany: vi.fn(),
     createMany: vi.fn()
+  },
+  locationReference: {
+    deleteMany: vi.fn(),
+    create: vi.fn()
   }
 };
 
@@ -107,14 +112,14 @@ describe("seed-data", () => {
   });
 
   describe("shouldSeed", () => {
-    it("should return false when NODE_ENV is production", async () => {
-      process.env.NODE_ENV = "production";
+    it("should return false when ENVIRONMENT is prod", async () => {
+      process.env.ENVIRONMENT = "prod";
       const { seedLocationData } = await import("./seed-data.js");
 
       await seedLocationData();
 
       expect(consoleLogSpy).toHaveBeenCalledWith("Checking if location data seeding is needed...");
-      expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: NODE_ENV is production");
+      expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: ENVIRONMENT is prod");
       expect(mockPrisma.region.count).not.toHaveBeenCalled();
     });
 
@@ -135,6 +140,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(1);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
 
       const { seedLocationData } = await import("./seed-data.js");
@@ -150,6 +156,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(1);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
 
       const { seedLocationData } = await import("./seed-data.js");
@@ -164,6 +171,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(1);
 
       const { seedLocationData } = await import("./seed-data.js");
@@ -178,6 +186,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
       mockPrisma.region.upsert.mockResolvedValue({});
       mockPrisma.jurisdiction.upsert.mockResolvedValue({});
@@ -187,6 +196,8 @@ describe("seed-data", () => {
       mockPrisma.locationSubJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.locationRegion.createMany.mockResolvedValue({ count: 1 });
       mockPrisma.locationSubJurisdiction.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.locationReference.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.locationReference.create.mockResolvedValue({});
 
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
@@ -202,6 +213,7 @@ describe("seed-data", () => {
       process.env.CI = "false";
       mockPrisma.region.count.mockResolvedValue(0);
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
+      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
       mockPrisma.region.upsert.mockResolvedValue({});
       mockPrisma.jurisdiction.upsert.mockResolvedValue({});
@@ -211,6 +223,8 @@ describe("seed-data", () => {
       mockPrisma.locationSubJurisdiction.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.locationRegion.createMany.mockResolvedValue({ count: 1 });
       mockPrisma.locationSubJurisdiction.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.locationReference.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.locationReference.create.mockResolvedValue({});
     });
 
     it("should seed regions correctly", async () => {
@@ -334,6 +348,26 @@ describe("seed-data", () => {
       expect(mockPrisma.locationSubJurisdiction.createMany).toHaveBeenCalledTimes(locationsWithSubJurisdictions.length);
       expect(mockPrisma.locationSubJurisdiction.createMany).toHaveBeenCalledWith({
         data: [{ locationId: 1, subJurisdictionId: 1 }]
+      });
+    });
+
+    it("should delete and create SNL location reference records for each location", async () => {
+      const { seedLocationData } = await import("./seed-data.js");
+      await seedLocationData();
+
+      expect(mockPrisma.locationReference.deleteMany).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockPrisma.locationReference.deleteMany).toHaveBeenCalledWith({
+        where: { locationId: 1 }
+      });
+
+      expect(mockPrisma.locationReference.create).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockPrisma.locationReference.create).toHaveBeenCalledWith({
+        data: {
+          locationId: 1,
+          provenance: "SNL",
+          provenanceLocationId: "101",
+          provenanceLocationType: "VENUE"
+        }
       });
     });
 

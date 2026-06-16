@@ -1,6 +1,6 @@
 # Local Development Helm Values
 # This file is used when LOCAL_DEV=true is set in .env (local development only)
-# It references the cath Key Vault with -dev suffixed SSO secrets
+# It references the cath-ss-kv-stg Key Vault (VAULT_URI_SUFFIX=stg in .env)
 # For pipeline deployments, see values.yaml
 
 nodejs:
@@ -21,8 +21,7 @@ nodejs:
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
-    # Local development uses cath Key Vault with -dev suffixed SSO secrets
-    cath:
+    cath-ss-kv:
       secrets:
         # SSO secrets for local development
         - name: sso-client-id-dev
@@ -30,7 +29,7 @@ nodejs:
         - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
-          alias: SSO_IDENTITY_METADATA
+          alias: SSO_ISSUER_URL
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
         - name: sso-sg-admin-ctsc
@@ -57,3 +56,8 @@ nodejs:
           alias: B2C_CLIENT_ID
         - name: auto-pip-stg-pip-frontend-stg-pwd
           alias: B2C_CLIENT_SECRET
+        # Third-party push secrets (Courtel)
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE

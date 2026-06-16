@@ -8,9 +8,17 @@
       "production": "./dist/index.js",
       "default": "./src/index.ts"
     },
-    "./config": {
-      "production": "./dist/config.js",
-      "default": "./src/config.ts"
+    "./middleware/oauth-middleware": {
+      "production": "./dist/middleware/oauth-middleware.js",
+      "default": "./src/middleware/oauth-middleware.ts"
+    },
+    "./repository/model": {
+      "production": "./dist/blob-ingestion/repository/model.js",
+      "default": "./src/blob-ingestion/repository/model.ts"
+    },
+    "./repository/service": {
+      "production": "./dist/blob-ingestion/repository/service.js",
+      "default": "./src/blob-ingestion/repository/service.ts"
     }
   },
   "scripts": {
@@ -26,16 +34,19 @@
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
+    "@hmcts/pdda-html-upload": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
-    "@hmcts/system-admin-pages": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*",
+    "multer": "1.4.5-lts.2"
   },
   "peerDependencies": {
     "express": "^5.2.0"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
-    "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "@types/multer": "1.4.13",
+    "typescript": "6.0.3",
+    "vitest": "4.1.8"
   }
 }

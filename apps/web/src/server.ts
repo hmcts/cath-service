@@ -21,6 +21,15 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 async function startServer() {
   const app = await createApp();
 
+  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
+  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  try {
+    const { seedLocationData } = await import("@hmcts/location");
+    await seedLocationData();
+  } catch (error) {
+    console.error("Location data seeding failed, continuing server startup:", error);
+  }
+
   // Check if we should use HTTPS (local development with certificates)
   const certsDir = path.join(__dirname, "..", "certs");
   const certPath = path.join(certsDir, "localhost.pem");

@@ -68,6 +68,12 @@ variable "ci_service_principal_object_id" {
   default     = null
 }
 
+variable "e2e_oidc_object_id" {
+  description = "Azure AD object ID for the GitHub Actions OIDC app registration (AZURE_CLIENT_ID) used by e2e test workflows"
+  type        = string
+  default     = "9a5a8d6f-c926-46e3-89d4-ed3472ea0edc"
+}
+
 variable "builtFrom" {
   description = "GitHub repository URL for tagging (auto-set in CI)"
   type        = string
