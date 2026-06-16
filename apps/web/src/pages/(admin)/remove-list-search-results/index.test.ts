@@ -39,7 +39,8 @@ describe("remove-list-search-results page", () => {
       } as unknown as Request;
 
       const mockRes = {
-        redirect: vi.fn()
+        redirect: vi.fn(),
+        locals: {}
       } as unknown as Response;
 
       await handler(mockReq, mockRes);
@@ -79,7 +80,8 @@ describe("remove-list-search-results page", () => {
       } as unknown as Request;
 
       const mockRes = {
-        render: vi.fn()
+        render: vi.fn(),
+        locals: {}
       } as unknown as Response;
 
       await handler(mockReq, mockRes);
@@ -137,7 +139,8 @@ describe("remove-list-search-results page", () => {
       } as unknown as Request;
 
       const mockRes = {
-        render: vi.fn()
+        render: vi.fn(),
+        locals: {}
       } as unknown as Response;
 
       await handler(mockReq, mockRes);
@@ -187,7 +190,8 @@ describe("remove-list-search-results page", () => {
       } as unknown as Request;
 
       const mockRes = {
-        render: vi.fn()
+        render: vi.fn(),
+        locals: {}
       } as unknown as Response;
 
       await handler(mockReq, mockRes);
@@ -221,7 +225,8 @@ describe("remove-list-search-results page", () => {
       } as unknown as Request;
 
       const mockRes = {
-        redirect: vi.fn()
+        redirect: vi.fn(),
+        locals: {}
       } as unknown as Response;
 
       await handler(mockReq, mockRes);
