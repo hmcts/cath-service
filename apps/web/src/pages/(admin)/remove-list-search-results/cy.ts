@@ -6,10 +6,10 @@ export const cy = {
   resultsText: "canlyniad(au)",
   noResults: "Ni chanfuwyd cyhoeddiadau ar gyfer y lleoliad hwn",
   tableHeaders: {
-    listType: "Math o restr",
-    courtName: "Enw llys neu dribiwnlys",
-    contentDate: "Dyddiad cynnwys",
-    displayDates: "Dyddiadau arddangos",
+    listType: "Math o Restr",
+    courtName: "Enw Llys neu Dribiwnlys",
+    contentDate: "Dyddiad Cynnwys",
+    displayDates: "Dyddiadau Arddangos",
     language: "Iaith",
     sensitivity: "Sensitifrwydd",
     select: "Dewis"
