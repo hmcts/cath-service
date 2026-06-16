@@ -12,8 +12,8 @@ export const generateUtlcDailyHearingListPdf = createDailyHearingListPdfGenerato
   "Upper Tribunal (Lands Chamber)",
   "Upper Tribunal (Lands Chamber) Daily Hearing list",
   renderUtlcDailyHearingListData,
-  () => import("../pages/en.js"),
-  () => import("../pages/cy.js"),
+  () => import("../locales/en.js"),
+  () => import("../locales/cy.js"),
   __dirname,
   PROVENANCE_LABELS,
   generatePdfFromHtml

@@ -12,8 +12,8 @@ export const generateUtccDailyHearingListPdf = createDailyHearingListPdfGenerato
   "Upper Tribunal Tax and Chancery Chamber",
   "Upper Tribunal Tax and Chancery Chamber Daily Hearing list",
   renderUtccDailyHearingListData,
-  () => import("../pages/en.js"),
-  () => import("../pages/cy.js"),
+  () => import("../locales/en.js"),
+  () => import("../locales/cy.js"),
   __dirname,
   PROVENANCE_LABELS,
   generatePdfFromHtml

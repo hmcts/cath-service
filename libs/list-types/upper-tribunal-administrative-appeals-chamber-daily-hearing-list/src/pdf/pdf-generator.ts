@@ -12,8 +12,8 @@ export const generateUtaacDailyHearingListPdf = createDailyHearingListPdfGenerat
   "Upper Tribunal (Administrative Appeals Chamber)",
   "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list",
   renderUtaacDailyHearingListData,
-  () => import("../pages/en.js"),
-  () => import("../pages/cy.js"),
+  () => import("../locales/en.js"),
+  () => import("../locales/cy.js"),
   __dirname,
   PROVENANCE_LABELS,
   generatePdfFromHtml
