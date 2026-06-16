@@ -3,18 +3,20 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
 import { getArtefactById } from "@hmcts/publication";
+import {
+  upperTribunalAdministrativeAppealsChamberDailyHearingListCy as cy,
+  upperTribunalAdministrativeAppealsChamberDailyHearingListEn as en,
+  renderUtaacDailyHearingListData,
+  type UtaacHearingList
+} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import { schemaPath } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
 import type { Request, Response } from "express";
-import type { UtaacHearingList } from "../models/types.js";
-import { renderUtaacDailyHearingListData } from "../rendering/renderer.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
-const schemaPath = path.join(__dirname, "../schemas/upper-tribunal-administrative-appeals-chamber-daily-hearing-list.json");
 const validate = createJsonValidator(schemaPath);
 
 export const GET = async (req: Request, res: Response) => {

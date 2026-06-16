@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assets, moduleRoot, pageRoutes } from "./config.js";
+import { assets, moduleRoot, schemaPath } from "./config.js";
 
 describe("upper-tribunal-lands-chamber-daily-hearing-list config", () => {
   describe("moduleRoot", () => {
@@ -19,31 +19,22 @@ describe("upper-tribunal-lands-chamber-daily-hearing-list config", () => {
     });
   });
 
-  describe("pageRoutes", () => {
-    it("should have path property", () => {
-      expect(pageRoutes.path).toBeDefined();
-      expect(typeof pageRoutes.path).toBe("string");
+  describe("schemaPath", () => {
+    it("should be defined", () => {
+      expect(schemaPath).toBeDefined();
+      expect(typeof schemaPath).toBe("string");
     });
 
-    it("should have prefix property", () => {
-      expect(pageRoutes.prefix).toBeDefined();
-      expect(typeof pageRoutes.prefix).toBe("string");
+    it("should point to the schema file", () => {
+      expect(schemaPath).toContain("upper-tribunal-lands-chamber-daily-hearing-list.json");
     });
 
-    it("should have correct prefix", () => {
-      expect(pageRoutes.prefix).toBe("/upper-tribunal-lands-chamber-daily-hearing-list");
+    it("should be an absolute path", () => {
+      expect(path.isAbsolute(schemaPath)).toBe(true);
     });
 
-    it("should point to pages directory", () => {
-      expect(pageRoutes.path).toContain("pages");
-    });
-
-    it("should have absolute path", () => {
-      expect(path.isAbsolute(pageRoutes.path)).toBe(true);
-    });
-
-    it("should point to existing directory", () => {
-      expect(existsSync(pageRoutes.path)).toBe(true);
+    it("should point to existing schema file", () => {
+      expect(existsSync(schemaPath)).toBe(true);
     });
   });
 
@@ -68,15 +59,8 @@ describe("upper-tribunal-lands-chamber-daily-hearing-list config", () => {
     it("should end with trailing slash", () => {
       expect(assets).toMatch(/\/$/);
     });
-  });
 
-  describe("path relationships", () => {
-    it("pageRoutes.path should be subdirectory of moduleRoot", () => {
-      const relativePath = path.relative(moduleRoot, pageRoutes.path);
-      expect(relativePath).toBe("pages");
-    });
-
-    it("assets should be subdirectory of moduleRoot", () => {
+    it("should be subdirectory of moduleRoot", () => {
       expect(assets.startsWith(moduleRoot)).toBe(true);
     });
   });
