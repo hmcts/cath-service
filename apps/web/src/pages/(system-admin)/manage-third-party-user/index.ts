@@ -5,12 +5,12 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const content = locale === "cy" ? cy : en;
   const userId = req.query.id as string | undefined;
 
   if (!userId) {
-    return res.redirect(`/manage-third-party-users${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(`/manage-third-party-users${locale === "cy" ? "?lng=cy" : ""}`);
   }
 
   const user = await findThirdPartyUserById(userId);
@@ -18,6 +18,8 @@ const getHandler = async (req: Request, res: Response) => {
   if (!user) {
     return res.render("manage-third-party-user/index", {
       ...content,
+      en,
+      cy,
       errors: [{ text: content.userNotFound }]
     });
   }
@@ -26,6 +28,8 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("manage-third-party-user/index", {
     ...content,
+    en,
+    cy,
     user,
     highestSensitivity
   });

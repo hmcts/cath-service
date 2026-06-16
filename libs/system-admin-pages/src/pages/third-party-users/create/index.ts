@@ -13,26 +13,26 @@ interface ThirdPartyCreateSession extends Session {
   };
 }
 
-type Language = "en" | "cy";
-
 export const getHandler = async (req: Request, res: Response) => {
-  const language: Language = req.query.lng === "cy" ? "cy" : "en";
-  const t = language === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as ThirdPartyCreateSession;
-  const lngParam = language === "cy" ? "?lng=cy" : "";
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
 
   res.render("third-party-users/create/index", {
     ...t,
+    en,
+    cy,
     lngParam,
     data: { name: session.thirdPartyCreate?.name ?? "" }
   });
 };
 
 export const postHandler = async (req: Request, res: Response) => {
-  const language: Language = req.query.lng === "cy" ? "cy" : "en";
-  const t = language === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as ThirdPartyCreateSession;
-  const lngParam = language === "cy" ? "?lng=cy" : "";
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
 
   const name = (req.body.name as string | undefined) ?? "";
   const error = validateName(name);
@@ -40,6 +40,8 @@ export const postHandler = async (req: Request, res: Response) => {
   if (error) {
     return res.render("third-party-users/create/index", {
       ...t,
+      en,
+      cy,
       lngParam,
       errors: [error],
       data: { name }

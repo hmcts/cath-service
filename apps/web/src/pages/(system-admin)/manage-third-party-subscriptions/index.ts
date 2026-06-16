@@ -15,12 +15,12 @@ interface ManageThirdPartyUserSession {
 }
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const content = locale === "cy" ? cy : en;
   const userId = req.query.id as string | undefined;
 
   if (!userId) {
-    return res.redirect(`/manage-third-party-users${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(`/manage-third-party-users${locale === "cy" ? "?lng=cy" : ""}`);
   }
 
   const user = await findThirdPartyUserById(userId);
@@ -28,6 +28,8 @@ const getHandler = async (req: Request, res: Response) => {
   if (!user) {
     return res.render("manage-third-party-subscriptions/index", {
       ...content,
+      en,
+      cy,
       errors: [{ text: content.userNotFound }]
     });
   }
@@ -49,6 +51,8 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("manage-third-party-subscriptions/index", {
     ...content,
+    en,
+    cy,
     listTypes,
     currentSensitivities,
     useRadioButtons,
@@ -57,11 +61,11 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
+  const locale = res.locals.locale || "en";
   const session = req.session as ManageThirdPartyUserSession;
 
   if (!session.manageThirdPartyUser) {
-    return res.redirect(`/manage-third-party-users${language === "cy" ? "?lng=cy" : ""}`);
+    return res.redirect(`/manage-third-party-users${locale === "cy" ? "?lng=cy" : ""}`);
   }
 
   const listTypes = await findAllListTypes();
@@ -98,7 +102,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   delete session.manageThirdPartyUser;
 
-  res.redirect(`/third-party-subscriptions-updated${language === "cy" ? "?lng=cy" : ""}`);
+  res.redirect(`/third-party-subscriptions-updated${locale === "cy" ? "?lng=cy" : ""}`);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

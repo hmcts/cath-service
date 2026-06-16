@@ -5,8 +5,6 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-type Language = "en" | "cy";
-
 interface ThirdPartyOauthConfigSession {
   thirdPartyOauthConfig?: {
     userId: string;
@@ -20,9 +18,9 @@ interface ThirdPartyOauthConfigSession {
 }
 
 export const getHandler = async (req: Request, res: Response) => {
-  const language: Language = req.query.lng === "cy" ? "cy" : "en";
-  const t = language === "cy" ? cy : en;
-  const lngParam = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
   const { id } = req.params;
 
   const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
@@ -34,6 +32,8 @@ export const getHandler = async (req: Request, res: Response) => {
   if (sessionConfig && sessionConfig.userId === id) {
     return res.render("third-party-users/[id]/oauth-config/index", {
       ...t,
+      en,
+      cy,
       lngParam,
       userId: user.id,
       isExisting: sessionConfig.isExisting,
@@ -60,6 +60,8 @@ export const getHandler = async (req: Request, res: Response) => {
 
   res.render("third-party-users/[id]/oauth-config/index", {
     ...t,
+    en,
+    cy,
     lngParam,
     userId: user.id,
     isExisting,
@@ -75,9 +77,9 @@ export const getHandler = async (req: Request, res: Response) => {
 };
 
 export const postHandler = async (req: Request, res: Response) => {
-  const language: Language = req.query.lng === "cy" ? "cy" : "en";
-  const t = language === "cy" ? cy : en;
-  const lngParam = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
   const { id } = req.params;
 
   const { destinationUrl, tokenUrl, scope, clientId, clientSecret } = req.body as {
@@ -99,6 +101,8 @@ export const postHandler = async (req: Request, res: Response) => {
   if (errors.length > 0) {
     return res.render("third-party-users/[id]/oauth-config/index", {
       ...t,
+      en,
+      cy,
       lngParam,
       userId: id,
       isExisting,

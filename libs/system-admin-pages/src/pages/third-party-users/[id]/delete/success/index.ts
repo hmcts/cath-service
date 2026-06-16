@@ -3,15 +3,15 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-type Language = "en" | "cy";
-
 export const getHandler = async (req: Request, res: Response) => {
-  const language: Language = req.query.lng === "cy" ? "cy" : "en";
-  const t = language === "cy" ? cy : en;
-  const lngParam = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
 
   res.render("third-party-users/[id]/delete/success/index", {
     ...t,
+    en,
+    cy,
     lngParam
   });
 };
