@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 test.describe("Landing Page", () => {
   test("user can view landing page and navigate to view options", async ({ page }) => {
@@ -37,7 +37,7 @@ test.describe("Landing Page", () => {
     await expect(niLink).toHaveAttribute("href", "https://www.justice-ni.gov.uk/topics/courts-and-tribunals");
 
     // Accessibility check
-    const accessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityResults = await axeCheck(page).analyze();
     expect(accessibilityResults.violations).toEqual([]);
 
     // Keyboard navigation - tab to Continue button and activate
@@ -92,7 +92,7 @@ test.describe("Landing Page", () => {
     await expect(niLink).toBeVisible();
 
     // Accessibility check in Welsh
-    const accessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityResults = await axeCheck(page).analyze();
     expect(accessibilityResults.violations).toEqual([]);
 
     // Navigate using Welsh continue button

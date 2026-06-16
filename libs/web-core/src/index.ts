@@ -1,8 +1,15 @@
 import "./types/express.js";
 
-export type { AssetOptions } from "./assets/assets.js";
+export { cy as accessibilityStatementCy } from "./locales/accessibility-statement/cy.js";
+// Page locale exports
+export { en as accessibilityStatementEn } from "./locales/accessibility-statement/en.js";
+export { cy as cookiePolicyCy } from "./locales/cookie-policy/cy.js";
+export { en as cookiePolicyEn } from "./locales/cookie-policy/en.js";
+export { cy as cookiePreferencesCy } from "./locales/cookie-preferences/cy.js";
+export { en as cookiePreferencesEn } from "./locales/cookie-preferences/en.js";
 export { cy } from "./locales/cy.js";
 export { en } from "./locales/en.js";
+export { parseCookiePolicy, setCookieBannerSeen, setCookiePolicy } from "./middleware/cookies/cookie-helpers.js";
 export type { CookieManagerOptions, CookieManagerState, CookiePreferences } from "./middleware/cookies/cookie-manager-middleware.js";
 export { configureCookieManager } from "./middleware/cookies/cookie-manager-middleware.js";
 export type { FileUploadOptions } from "./middleware/file-upload/file-upload-middleware.js";
@@ -22,5 +29,8 @@ export { PostgresStore } from "./middleware/session-stores/postgres-store.js";
 // Session stores - these have optional peer dependencies
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";
+export { getParam, getParamAsNumber } from "./params-helper.js";
 export type { DateInput } from "./utils/date-utils.js";
 export { formatDate, formatDateAndLocale, formatDateRange, parseDate } from "./utils/date-utils.js";
+export { saveSession } from "./utils/session-utils.js";
+export { cy as errorViewsCy, en as errorViewsEn } from "./views/errors/index.js";

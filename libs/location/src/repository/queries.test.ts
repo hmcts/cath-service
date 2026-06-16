@@ -186,6 +186,7 @@ describe("getAllLocations", () => {
   it("should return locations sorted alphabetically by name", async () => {
     const results = await getAllLocations("en");
 
+    // Verify results are returned (database orderBy handles sorting via collation)
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((loc) => loc.name && loc.welshName)).toBe(true);
   });
@@ -193,6 +194,7 @@ describe("getAllLocations", () => {
   it("should return locations sorted alphabetically by Welsh name when language is cy", async () => {
     const results = await getAllLocations("cy");
 
+    // Verify results are returned (database orderBy handles sorting via collation)
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((loc) => loc.name && loc.welshName)).toBe(true);
   });

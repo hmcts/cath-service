@@ -53,6 +53,7 @@ model ListType {
   defaultSensitivity    String?   @map("default_sensitivity") @db.VarChar(50)
   allowedProvenance     String    @map("allowed_provenance") @db.VarChar(50)
   isNonStrategic        Boolean   @default(false) @map("is_non_strategic")
+  locationType          String?   @map("location_type") @db.VarChar(50)
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   deletedAt             DateTime? @map("deleted_at")
@@ -74,8 +75,22 @@ model Location {
   locationRegions          LocationRegion[]
   locationSubJurisdictions LocationSubJurisdiction[]
   locationMetadata         LocationMetadata?
+  locationReferences       LocationReference[]
 
   @@map("location")
+}
+
+model LocationReference {
+  locationReferenceId    String @id @default(cuid()) @map("location_reference_id")
+  locationId             Int    @map("location_id")
+  provenance             String @map("provenance") @db.VarChar(50)
+  provenanceLocationId   String @map("provenance_location_id") @db.VarChar(255)
+  provenanceLocationType String @map("provenance_location_type") @db.VarChar(50)
+
+  location Location @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+
+  @@unique([provenance, provenanceLocationId])
+  @@map("location_reference")
 }
 
 model LocationRegion {

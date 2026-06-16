@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assets, moduleRoot, pageRoutes } from "./config.js";
+import { assets, moduleRoot } from "./config.js";
 
 describe("care-standards-tribunal-weekly-hearing-list config", () => {
   describe("moduleRoot", () => {
@@ -16,34 +16,6 @@ describe("care-standards-tribunal-weekly-hearing-list config", () => {
 
     it("should be an absolute path", () => {
       expect(path.isAbsolute(moduleRoot)).toBe(true);
-    });
-  });
-
-  describe("pageRoutes", () => {
-    it("should have path property", () => {
-      expect(pageRoutes.path).toBeDefined();
-      expect(typeof pageRoutes.path).toBe("string");
-    });
-
-    it("should have prefix property", () => {
-      expect(pageRoutes.prefix).toBeDefined();
-      expect(typeof pageRoutes.prefix).toBe("string");
-    });
-
-    it("should have correct prefix", () => {
-      expect(pageRoutes.prefix).toBe("/care-standards-tribunal-weekly-hearing-list");
-    });
-
-    it("should point to pages directory", () => {
-      expect(pageRoutes.path).toContain("pages");
-    });
-
-    it("should have absolute path", () => {
-      expect(path.isAbsolute(pageRoutes.path)).toBe(true);
-    });
-
-    it("should point to existing directory", () => {
-      expect(existsSync(pageRoutes.path)).toBe(true);
     });
   });
 
@@ -70,15 +42,8 @@ describe("care-standards-tribunal-weekly-hearing-list config", () => {
     it("should end with trailing slash", () => {
       expect(assets).toMatch(/\/$/);
     });
-  });
 
-  describe("path relationships", () => {
-    it("pageRoutes.path should be subdirectory of moduleRoot", () => {
-      const relativePath = path.relative(moduleRoot, pageRoutes.path);
-      expect(relativePath).toBe("pages");
-    });
-
-    it("assets should be subdirectory of moduleRoot", () => {
+    it("should be subdirectory of moduleRoot", () => {
       expect(assets.startsWith(moduleRoot)).toBe(true);
     });
   });

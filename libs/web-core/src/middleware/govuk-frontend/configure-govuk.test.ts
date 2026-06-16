@@ -104,9 +104,9 @@ describe("configureGovuk", () => {
 
     // Check that middleware was added
     expect(useSpy).toHaveBeenCalled();
-    // Should add locale middleware, render interceptor, translation middleware, static assets, and pageUrl middleware
+    // Should add locale middleware, render interceptor, translation middleware, and pageUrl middleware
     const middlewareCalls = useSpy.mock.calls;
-    expect(middlewareCalls.length).toBeGreaterThanOrEqual(5); // 3 i18n middlewares + static assets + pageUrl middleware
+    expect(middlewareCalls.length).toBeGreaterThanOrEqual(4); // 3 i18n middlewares + pageUrl middleware
   });
 
   it("should not set up i18n middleware when i18nContentPath is not provided", async () => {
@@ -120,7 +120,7 @@ describe("configureGovuk", () => {
       assetOptions: { distPath: testDir }
     });
 
-    // Should add the static assets middleware and pageUrl middleware (2 total)
+    // Should add the assets middleware and the pageUrl middleware (2 total)
     const middlewareCalls = useSpy.mock.calls;
     expect(middlewareCalls.length).toBe(2);
   });

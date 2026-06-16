@@ -9,11 +9,10 @@ vi.mock("@hmcts/publication", () => ({
   processPublication: vi.fn(),
   Provenance: {
     MANUAL_UPLOAD: "MANUAL_UPLOAD",
-    XHIBIT: "XHIBIT",
-    LIBRA: "LIBRA",
-    SJP: "SJP",
     SNL: "SNL",
-    COMMON_PLATFORM: "COMMON_PLATFORM"
+    COMMON_PLATFORM: "COMMON_PLATFORM",
+    CP_CATH: "CP_CATH",
+    PDDA: "PDDA"
   }
 }));
 
@@ -43,7 +42,7 @@ describe("processBlobIngestion", async () => {
 
   const validRequest: BlobIngestionRequest = {
     court_id: "123",
-    provenance: "XHIBIT",
+    provenance: "MANUAL_UPLOAD",
     content_date: "2025-01-25",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
@@ -61,7 +60,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     const result = await processBlobIngestion(validRequest, 1000);
 
@@ -74,7 +73,7 @@ describe("processBlobIngestion", async () => {
     expect(createIngestionLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "SUCCESS",
-        sourceSystem: "XHIBIT",
+        sourceSystem: "MANUAL_UPLOAD",
         courtId: "123"
       })
     );
@@ -88,7 +87,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     const result = await processBlobIngestion(validRequest, 1000);
 
@@ -156,7 +155,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion({ ...validRequest, provenance: "LIBRA" }, 1000);
 
@@ -175,7 +174,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -196,7 +195,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -296,7 +295,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -310,9 +309,64 @@ describe("processBlobIngestion", async () => {
       contentDate: expect.any(Date),
       locale: "en",
       jsonData: expect.anything(),
-      provenance: "XHIBIT",
+      provenance: "MANUAL_UPLOAD",
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: expect.any(Date),
+      displayTo: expect.any(Date),
+      isUpdate: false,
       logPrefix: "[blob-ingestion]"
     });
+  });
+
+  it("should use resolvedLocationId when provenance is external", async () => {
+    vi.mocked(validateBlobRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8,
+      resolvedLocationId: "456"
+    });
+
+    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+
+    const externalRequest = { ...validRequest, provenance: "SNL", court_id: "snl-ext-id" };
+    await processBlobIngestion(externalRequest, 1000);
+
+    expect(createArtefact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locationId: "456"
+      })
+    );
+
+    // Wait for async processing
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(processPublication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locationId: "456"
+      })
+    );
+  });
+
+  it("should fall back to court_id when resolvedLocationId is undefined", async () => {
+    vi.mocked(validateBlobRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: false,
+      listTypeId: 8,
+      resolvedLocationId: undefined
+    });
+
+    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+
+    await processBlobIngestion(validRequest, 1000);
+
+    expect(createArtefact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locationId: "123"
+      })
+    );
   });
 
   it("should not call processPublication when noMatch is true", async () => {
@@ -323,7 +377,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -343,7 +397,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
     vi.mocked(processPublication).mockRejectedValue(new Error("Processing failed"));
 
     const result = await processBlobIngestion(validRequest, 1000);
@@ -372,7 +426,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     const welshRequest = { ...validRequest, language: "WELSH" };
     await processBlobIngestion(welshRequest, 1000);

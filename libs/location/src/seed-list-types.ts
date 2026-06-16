@@ -4,8 +4,11 @@ import { listTypeData } from "./list-type-data.js";
 export async function seedListTypes() {
   console.log("Checking if list type data seeding is needed...");
 
-  if (process.env.NODE_ENV === "production") {
-    console.log("Skipping list type seed: NODE_ENV is production");
+  // Skip seeding in production only — STG and other non-prod environments should be seeded.
+  // Use ENVIRONMENT (set via Helm to the cluster environment name e.g. "stg", "prod")
+  // rather than NODE_ENV, which is always "production" for any deployed Node.js server.
+  if (process.env.ENVIRONMENT === "prod") {
+    console.log("Skipping list type seed: ENVIRONMENT is prod");
     return;
   }
 

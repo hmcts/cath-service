@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { assertAuthenticated, assertNotAuthenticated, loginWithCftIdam, logout } from "../../utils/cft-idam-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
@@ -90,10 +90,7 @@ test.describe("CFT IDAM Login Flow", () => {
     await expect(signInLink).toHaveAttribute("href", "/sign-in");
 
     // Run accessibility checks in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
@@ -239,10 +236,7 @@ test.describe("CFT IDAM Rejected Page", () => {
     await expect(signInLink).toHaveAttribute("href", "/sign-in");
 
     // Run accessibility checks
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 

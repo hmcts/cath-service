@@ -85,6 +85,7 @@ cath-service/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API server (Express 5.x)
 │   ├── web/                    # Web frontend (Express 5.x + Nunjucks)
+│   │   └── src/pages/          # Page controllers, templates, tests (auto-discovered)
 │   └── postgres/               # Database configuration (Prisma)
 ├── libs/                       # Modular packages (explicitly registered)
 │   ├── cloud-native-platform/  # Cloud Native Platform features
@@ -93,10 +94,13 @@ cath-service/
 │   ├── footer-pages/           # Module with example footer pages
 │   └── [your-module]/          # Your feature modules
 │       └── src/
-│           ├── pages/          # Page routes (imported in web app)
-│           ├── routes/         # API routes (imported in API app)
+│           ├── index.ts        # Business logic + content exports
+│           ├── config.ts       # Module configuration (moduleRoot, assets)
+│           ├── [page-name]/    # Page content (cy.ts, en.ts)
+│           ├── routes/         # API routes (auto-discovered)
 │           ├── prisma/         # Prisma schema
-│           ├── locales/        # Translations (loaded by govuk-starter)
+│           ├── locales/        # Shared translations
+│           ├── views/          # Shared templates
 │           └── assets/         # Module assets (compiled by vite)
 ├── e2e-tests/                  # End-to-end tests (Playwright)
 ├── docs/                       # Documentation and ADRs
@@ -294,7 +298,7 @@ For local development, configuration is split between Azure Key Vault (for sensi
 **Secrets loaded from Azure Key Vault** (requires `az login`):
 - `SSO_CLIENT_ID` - Azure AD application client ID
 - `SSO_CLIENT_SECRET` - Azure AD application client secret
-- `SSO_IDENTITY_METADATA` - OpenID Connect metadata endpoint
+- `SSO_ISSUER_URL` - Azure AD issuer URL
 - `SSO_SYSTEM_ADMIN_GROUP_ID` - System admin Azure AD group ID
 - `SSO_INTERNAL_ADMIN_CTSC_GROUP_ID` - CTSC admin Azure AD group ID
 - `SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID` - Local admin Azure AD group ID
@@ -332,7 +336,7 @@ SSO_ALLOW_HTTP_REDIRECT=true
 |------------------------|---------------------|-------------|
 | `sso-client-id` | `SSO_CLIENT_ID` | Azure AD application client ID |
 | `sso-client-secret` | `SSO_CLIENT_SECRET` | Azure AD application client secret |
-| `sso-config-endpoint` | `SSO_IDENTITY_METADATA` | OpenID Connect metadata endpoint |
+| `sso-issuer-url` | `SSO_ISSUER_URL` | Azure AD issuer URL |
 | `sso-sg-system-admin` | `SSO_SYSTEM_ADMIN_GROUP_ID` | System admin Azure AD group ID |
 | `sso-sg-admin-ctsc` | `SSO_INTERNAL_ADMIN_CTSC_GROUP_ID` | CTSC admin Azure AD group ID |
 | `sso-sg-admin-local` | `SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID` | Local admin Azure AD group ID |
