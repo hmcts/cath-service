@@ -1,6 +1,6 @@
 # Local Development Helm Values
 # This file is used when LOCAL_DEV=true is set in .env (local development only)
-# It references the cath Key Vault with -dev suffixed SSO secrets
+# It references the cath-ss-kv-stg Key Vault (VAULT_URI_SUFFIX=stg in .env)
 # For pipeline deployments, see values.yaml
 
 nodejs:
@@ -21,8 +21,7 @@ nodejs:
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
-    # Local development uses cath Key Vault with -dev suffixed SSO secrets
-    cath:
+    cath-ss-kv:
       secrets:
         # SSO secrets for local development
         - name: sso-client-id-dev

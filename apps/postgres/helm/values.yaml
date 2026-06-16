@@ -7,7 +7,7 @@ nodejs:
   environment:
     POSTGRES_DATABASE: cath
   keyVaults:
-    cath:
+    cath-ss-kv:
       secrets:
         - name: postgres-url
           alias: DATABASE_URL
