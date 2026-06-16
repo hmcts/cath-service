@@ -222,8 +222,8 @@ export async function createCaseSubscription(
   await createCaseSubscriptionRecord(userId, searchType, searchValue, caseName, caseNumber);
 }
 
-export async function getCourtSubscriptionsByUserId(userId: string, locale = "en") {
-  return getAllSubscriptionsByUserId(userId, locale);
+export async function getCourtSubscriptionsByUserId(userId: string, locale = "en"): Promise<CourtSubscriptionDto[]> {
+  return getAllSubscriptionsByUserId(userId, locale) as Promise<CourtSubscriptionDto[]>;
 }
 
 export async function getSubscriptionDetailsForConfirmation(subscriptionIds: string[], userId: string, locale = "en") {
@@ -247,17 +247,17 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
   }
 
   const removedLocationIds = toDelete
-    .filter((s) => s.searchType === "LOCATION_ID")
-    .map((s) => Number.parseInt(s.searchValue, 10))
-    .filter((id) => !Number.isNaN(id));
+    .filter((s: { searchType: string }) => s.searchType === "LOCATION_ID")
+    .map((s: { searchValue: string }) => Number.parseInt(s.searchValue, 10))
+    .filter((id: number) => !Number.isNaN(id));
 
   const count = await deleteSubscriptionsByIdsQuery(subscriptionIds, userId);
 
   const remainingSubscriptions = await findSubscriptionsByUserId(userId);
   const remainingLocationIds = remainingSubscriptions
-    .filter((s) => s.searchType === "LOCATION_ID")
-    .map((s) => Number.parseInt(s.searchValue, 10))
-    .filter((id) => !Number.isNaN(id));
+    .filter((s: { searchType: string }) => s.searchType === "LOCATION_ID")
+    .map((s: { searchValue: string }) => Number.parseInt(s.searchValue, 10))
+    .filter((id: number) => !Number.isNaN(id));
 
   await pruneStaleListTypesForUser(userId, removedLocationIds, remainingLocationIds);
 

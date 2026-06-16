@@ -1,8 +1,10 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
+import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
+import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -60,7 +62,9 @@ const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p,
 const sjpPressGenerator: PdfGenerator = (p) => generateSjpPressListPdf({ ...p, jsonData: p.jsonData as SjpJson });
 
 const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
+  CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCauseListPdf({ ...p, jsonData: p.jsonData as CauseListData }),
+  FAMILY_DAILY_CAUSE_LIST: (p) => generateFamilyDailyCauseListPdf({ ...p, jsonData: p.jsonData as FamilyCauseListData }),
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: (p) =>
     generateCareStandardsTribunalWeeklyHearingListPdf({
       ...p,

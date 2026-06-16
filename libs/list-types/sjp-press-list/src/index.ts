@@ -2,4 +2,6 @@
 
 export { generateSjpPressListPdf } from "./pdf/pdf-generator.js";
 export type { ValidationResult } from "./validation/json-validator.js";
+export { cy as sjpPressListCy } from "./sjp-press-list/cy.js";
+export { en as sjpPressListEn } from "./sjp-press-list/en.js";
 export { validateSjpPressList } from "./validation/json-validator.js";

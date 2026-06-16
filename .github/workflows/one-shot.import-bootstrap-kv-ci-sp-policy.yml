@@ -1,0 +1,201 @@
+name: One-Shot - Import Bootstrap KV CI SP Access Policy Into State
+
+on:
+  workflow_dispatch:
+
+jobs:
+  import-stg:
+    name: Import - STG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (STG)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Import STG Bootstrap KV CI SP Policy Into State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatestg \
+            --resource-group jenkins-state-stg \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-stg" \
+            -backend-config="storage_account_name=sdsstatestg" \
+            -backend-config="container_name=tfstate-stg" \
+            -backend-config="key=cath-service/stg/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          POLICY_ID="/subscriptions/74dacd4f-a248-45bb-a2f0-af700dc4cf68/resourceGroups/cath-bootstrap-stg-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-stg-kv/objectId/69aa7255-12ea-45a3-af45-e9d249cddfe0"
+
+          terraform import "azurerm_key_vault_access_policy.bootstrap_kv_ci_sp" "$POLICY_ID" \
+            && echo "Imported bootstrap_kv_ci_sp for STG" \
+            || echo "WARNING: could not import (may already be in state)"
+
+  import-test:
+    name: Import - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Import Test Bootstrap KV CI SP Policy Into State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          POLICY_ID="/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/cath-bootstrap-test-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-test-kv/objectId/69aa7255-12ea-45a3-af45-e9d249cddfe0"
+
+          terraform import "azurerm_key_vault_access_policy.bootstrap_kv_ci_sp" "$POLICY_ID" \
+            && echo "Imported bootstrap_kv_ci_sp for Test" \
+            || echo "WARNING: could not import (may already be in state)"
+
+  import-ithc:
+    name: Import - ITHC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (ITHC)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Import ITHC Bootstrap KV CI SP Policy Into State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-ithc" \
+            -backend-config="storage_account_name=sdsstateithc" \
+            -backend-config="container_name=tfstate-ithc" \
+            -backend-config="key=cath-service/ithc/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          POLICY_ID="/subscriptions/ba71a911-e0d6-4776-a1a6-079af1df7139/resourceGroups/cath-bootstrap-ithc-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-ithc-kv/objectId/69aa7255-12ea-45a3-af45-e9d249cddfe0"
+
+          terraform import "azurerm_key_vault_access_policy.bootstrap_kv_ci_sp" "$POLICY_ID" \
+            && echo "Imported bootstrap_kv_ci_sp for ITHC" \
+            || echo "WARNING: could not import (may already be in state)"
+
+  import-demo:
+    name: Import - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Demo)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Import Demo Bootstrap KV CI SP Policy Into State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-demo" \
+            -backend-config="storage_account_name=sdsstatedemo" \
+            -backend-config="container_name=tfstate-demo" \
+            -backend-config="key=cath-service/demo/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          POLICY_ID="/subscriptions/c68a4bed-4c3d-4956-af51-4ae164c1957c/resourceGroups/cath-bootstrap-demo-rg/providers/Microsoft.KeyVault/vaults/cath-bootstrap-demo-kv/objectId/69aa7255-12ea-45a3-af45-e9d249cddfe0"
+
+          terraform import "azurerm_key_vault_access_policy.bootstrap_kv_ci_sp" "$POLICY_ID" \
+            && echo "Imported bootstrap_kv_ci_sp for Demo" \
+            || echo "WARNING: could not import (may already be in state)"
