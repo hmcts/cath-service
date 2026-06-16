@@ -11,17 +11,14 @@ const testListTypes: ListTypeInfo[] = [
 ];
 
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
-vi.mock("@hmcts/civil-and-family-daily-cause-list", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/civil-and-family-daily-cause-list")>();
-  return {
-    ...actual,
-    validateCivilFamilyCauseList: vi.fn().mockReturnValue({
-      isValid: true,
-      errors: [],
-      schemaVersion: "1.0.0"
-    })
-  };
-});
+vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
+  validateCivilFamilyCauseList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0.0"
+  }),
+  extractCaseSummary: vi.fn()
+}));
 
 // Mock the dynamic import for @hmcts/sjp-press-list (used by both SJP_PRESS_LIST and SJP_DELTA_PRESS_LIST)
 vi.mock("@hmcts/sjp-press-list", () => ({
