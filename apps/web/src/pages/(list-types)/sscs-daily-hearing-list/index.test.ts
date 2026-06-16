@@ -8,11 +8,15 @@ vi.mock("node:fs/promises", () => ({
   readFile: vi.fn()
 }));
 
-vi.mock("@hmcts/list-types-common", () => ({
-  createJsonValidator: () => mockValidate,
-  provenanceLabelsEn: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform" },
-  provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform" }
-}));
+vi.mock("@hmcts/list-types-common", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
+  return {
+    ...actual,
+    createJsonValidator: () => mockValidate,
+    provenanceLabelsEn: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform" },
+    provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform" }
+  };
+});
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn()
