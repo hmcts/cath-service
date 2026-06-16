@@ -10,6 +10,9 @@ const testListTypes: ListTypeInfo[] = [
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" }
 ];
 
+// Mock @hmcts/civil-daily-cause-list with no validation function to simulate a list type without a JSON schema
+vi.mock("@hmcts/civil-daily-cause-list", () => ({}));
+
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   validateCivilFamilyCauseList: vi.fn().mockReturnValue({
