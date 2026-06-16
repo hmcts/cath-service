@@ -4,20 +4,24 @@ import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-typ
 
 // Test data matching ListTypeInfo interface
 const testListTypes: ListTypeInfo[] = [
-  { id: 1, name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: "Civil Daily Cause List" },
+  { id: 1, name: "LEGACY_UNSUPPORTED_LIST", friendlyName: "Legacy Unsupported List" },
   { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
   { id: 26, name: "SJP_DELTA_PRESS_LIST", friendlyName: "Single Justice Procedure Press List (New cases)" },
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" }
 ];
 
 // Mock the dynamic import for @hmcts/civil-and-family-daily-cause-list
-vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
-  validateCivilFamilyCauseList: vi.fn().mockReturnValue({
-    isValid: true,
-    errors: [],
-    schemaVersion: "1.0.0"
-  })
-}));
+vi.mock("@hmcts/civil-and-family-daily-cause-list", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/civil-and-family-daily-cause-list")>();
+  return {
+    ...actual,
+    validateCivilFamilyCauseList: vi.fn().mockReturnValue({
+      isValid: true,
+      errors: [],
+      schemaVersion: "1.0.0"
+    })
+  };
+});
 
 // Mock the dynamic import for @hmcts/sjp-press-list (used by both SJP_PRESS_LIST and SJP_DELTA_PRESS_LIST)
 vi.mock("@hmcts/sjp-press-list", () => ({
