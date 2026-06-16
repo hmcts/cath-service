@@ -32,6 +32,15 @@ echo "Resolving any failed migrations..."
 printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;" | \
   npx prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
 
+# Remove stale migration records so Prisma re-runs the idempotent versions.
+# Both 20260527140208 and 20260528115459 were modified after being applied to some
+# databases: 20260527140208 was deleted then restored with idempotent content;
+# 20260528115459 had its bare ALTER TABLE wrapped in a DO block. Deleting the DB
+# records lets Prisma reapply both idempotent versions regardless of stored checksums.
+echo "Clearing stale migration records for 20260527140208 and 20260528115459..."
+printf "DELETE FROM _prisma_migrations WHERE migration_name IN ('20260527140208', '20260528115459_add_third_party_push_log');" | \
+  npx prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
+
 echo "Running database migrations..."
 npx prisma migrate deploy --config=./prisma.config.ts
 
