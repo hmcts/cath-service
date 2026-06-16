@@ -85,6 +85,17 @@ jobs:
             '${{ inputs.timestamp }}' \
             "${APPLICATION_NAME}"
 
+      - name: Clear stuck Helm release
+        if: inputs.environment == 'dev'
+        run: |
+          STATUS=$(helm status "${{ env.RELEASE_NAME }}" -n "${{ env.TEAM_NAME }}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
+          if [[ "$STATUS" == "pending-install" || "$STATUS" == "pending-upgrade" || "$STATUS" == "pending-rollback" ]]; then
+            echo "Release ${{ env.RELEASE_NAME }} is stuck in status: $STATUS. Uninstalling..."
+            helm uninstall "${{ env.RELEASE_NAME }}" -n "${{ env.TEAM_NAME }}" --wait=false || true
+          else
+            echo "Release status: ${STATUS:-not found}. No cleanup needed."
+          fi
+
       - name: Deploy to DEV
         if: inputs.environment == 'dev'
         id: deploy-dev
