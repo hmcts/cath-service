@@ -72,12 +72,13 @@ describe("Upper Tribunal Tax and Chancery Chamber page controller", () => {
       const mockJsonData = [
         {
           time: "10:00am",
-          caseReference: "UTTC/2026/0001",
+          caseReferenceNumber: "UTTC/2026/0001",
           caseName: "Smith v HMRC",
           judges: "Judge Smith",
           members: "Member Jones",
           hearingType: "Substantive hearing",
-          venue: "Field House"
+          venue: "Field House",
+          additionalInformation: ""
         }
       ];
 
@@ -204,7 +205,7 @@ describe("Upper Tribunal Tax and Chancery Chamber page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify([{ time: "10:00am" }]));
-      mockValidate.mockReturnValue({ isValid: false, errors: ["Missing required field: caseReference"] });
+      mockValidate.mockReturnValue({ isValid: false, errors: ["Missing required field: caseReferenceNumber"] });
 
       // Act
       await GET(req as Request, res as Response);

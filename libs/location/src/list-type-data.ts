@@ -320,7 +320,7 @@ export const listTypeData: ListTypeData[] = [
   {
     id: 28,
     name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
-    englishFriendlyName: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list",
+    englishFriendlyName: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri",
     provenance: "MANUAL_UPLOAD",
     urlPath: "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list",
@@ -332,7 +332,7 @@ export const listTypeData: ListTypeData[] = [
   {
     id: 29,
     name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
-    englishFriendlyName: "Upper Tribunal (Lands Chamber) Daily Hearing list",
+    englishFriendlyName: "Upper Tribunal (Lands Chamber) Daily Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
     provenance: "MANUAL_UPLOAD",
     urlPath: "upper-tribunal-lands-chamber-daily-hearing-list",
@@ -344,7 +344,7 @@ export const listTypeData: ListTypeData[] = [
   {
     id: 30,
     name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
-    englishFriendlyName: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list",
+    englishFriendlyName: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
     provenance: "MANUAL_UPLOAD",
     urlPath: "upper-tribunal-administrative-appeals-chamber-daily-hearing-list",

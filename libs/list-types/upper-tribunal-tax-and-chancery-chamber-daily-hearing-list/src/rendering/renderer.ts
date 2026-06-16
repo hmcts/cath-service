@@ -25,7 +25,7 @@ export function renderUtccDailyHearingListData(hearingList: UtccHearingList, opt
 
   const renderedHearings = hearingList.map((hearing) => ({
     time: hearing.time,
-    caseReference: hearing.caseReference,
+    caseReferenceNumber: hearing.caseReferenceNumber,
     caseName: hearing.caseName,
     judges: hearing.judges,
     members: hearing.members,

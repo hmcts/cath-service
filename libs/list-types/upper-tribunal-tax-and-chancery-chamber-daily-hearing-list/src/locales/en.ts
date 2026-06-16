@@ -1,6 +1,9 @@
 export const en = {
-  pageTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list",
+  pageTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
   downloadPdf: "Download as PDF",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   listForDate: "List for",
   lastUpdated: "Last updated",
   at: "at",
@@ -15,7 +18,7 @@ export const en = {
   searchCasesLabel: "Search by case reference, case name, judge, venue, or other details",
   tableHeaders: {
     time: "Time",
-    caseReference: "Case Reference",
+    caseReferenceNumber: "Case Reference Number",
     caseName: "Case Name",
     judges: "Judge(s)",
     members: "Member(s)",

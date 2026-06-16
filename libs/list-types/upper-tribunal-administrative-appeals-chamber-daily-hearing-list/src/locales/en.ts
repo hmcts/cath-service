@@ -1,6 +1,9 @@
 export const en = {
-  pageTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list",
+  pageTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List",
   downloadPdf: "Download as PDF",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   listForDate: "List for",
   lastUpdated: "Last updated",
   at: "at",
@@ -28,7 +31,6 @@ export const en = {
     time: "Time",
     appellant: "Appellant",
     caseReferenceNumber: "Case Reference Number",
-    caseName: "Case Name",
     judges: "Judge(s)",
     members: "Member(s)",
     modeOfHearing: "Mode of Hearing",

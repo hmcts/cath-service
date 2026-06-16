@@ -13,6 +13,8 @@
   <div class="header-section">
     <h1>{{ header.listTitle }}</h1>
 
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
     <p class="bold header-date">{{ t.listForDate }} {{ header.hearingDate }}</p>
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
   </div>
@@ -40,7 +42,6 @@
           <th class="no-wrap">{{ t.tableHeaders.time }}</th>
           <th>{{ t.tableHeaders.appellant }}</th>
           <th>{{ t.tableHeaders.caseReferenceNumber }}</th>
-          <th>{{ t.tableHeaders.caseName }}</th>
           <th>{{ t.tableHeaders.judges }}</th>
           <th>{{ t.tableHeaders.members }}</th>
           <th>{{ t.tableHeaders.modeOfHearing }}</th>
@@ -54,7 +55,6 @@
             <td class="no-wrap">{{ hearing.time }}</td>
             <td>{{ hearing.appellant }}</td>
             <td>{{ hearing.caseReferenceNumber }}</td>
-            <td>{{ hearing.caseName }}</td>
             <td>{{ hearing.judges }}</td>
             <td>{{ hearing.members }}</td>
             <td>{{ hearing.modeOfHearing }}</td>

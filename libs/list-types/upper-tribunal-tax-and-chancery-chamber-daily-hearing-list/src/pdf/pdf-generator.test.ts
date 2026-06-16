@@ -22,7 +22,7 @@ import { generateUtccDailyHearingListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
-    listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list",
+    listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
     hearingDate: "15 January 2025",
     lastUpdatedDate: "15 January 2025",
     lastUpdatedTime: "9am"
@@ -33,12 +33,13 @@ const mockRenderedData = {
 const mockHearingList = [
   {
     time: "10:00am",
-    caseReference: "UTTC/2025/0001",
+    caseReferenceNumber: "UTTC/2025/0001",
     caseName: "Smith v HMRC",
     judges: "Judge Smith",
     members: "Member Jones",
     hearingType: "Substantive hearing",
-    venue: "Field House"
+    venue: "Field House",
+    additionalInformation: ""
   }
 ];
 
@@ -155,7 +156,7 @@ describe("generateUtccDailyHearingListPdf", () => {
       courtName: "Upper Tribunal Tax and Chancery Chamber",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list"
+      listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List"
     });
   });
 });

@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const generateUtaacDailyHearingListPdf = createDailyHearingListPdfGenerator<UtaacHearingList>(
   "Upper Tribunal (Administrative Appeals Chamber)",
-  "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list",
+  "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List",
   renderUtaacDailyHearingListData,
   () => import("../locales/en.js"),
   () => import("../locales/cy.js"),

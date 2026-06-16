@@ -22,7 +22,7 @@ import { generateUtlcDailyHearingListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
-    listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing list",
+    listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing List",
     hearingDate: "15 January 2025",
     lastUpdatedDate: "15 January 2025",
     lastUpdatedTime: "9am"
@@ -33,13 +33,14 @@ const mockRenderedData = {
 const mockHearingList = [
   {
     time: "10:00am",
-    caseReference: "LC/2025/0001",
+    caseReferenceNumber: "LC/2025/0001",
     caseName: "Smith v Jones",
     judges: "Judge Smith",
     members: "Member Jones",
     hearingType: "Substantive hearing",
     venue: "Royal Courts of Justice",
-    modeOfHearing: "CVP"
+    modeOfHearing: "CVP",
+    additionalInformation: ""
   }
 ];
 
@@ -156,7 +157,7 @@ describe("generateUtlcDailyHearingListPdf", () => {
       courtName: "Upper Tribunal (Lands Chamber)",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing list"
+      listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing List"
     });
   });
 });

@@ -74,11 +74,11 @@ describe("Upper Tribunal Administrative Appeals Chamber page controller", () => 
           time: "10:00am",
           appellant: "Mr Smith",
           caseReferenceNumber: "UTAAC/2026/0001",
-          caseName: "Smith v Secretary of State",
           judges: "Judge Smith",
           members: "Member Jones",
           modeOfHearing: "CVP",
-          venue: "London"
+          venue: "London",
+          additionalInformation: ""
         }
       ];
 

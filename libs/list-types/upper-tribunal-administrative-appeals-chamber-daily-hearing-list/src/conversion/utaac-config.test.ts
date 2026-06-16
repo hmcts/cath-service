@@ -4,31 +4,21 @@ import { UTAAC_EXCEL_CONFIG } from "./utaac-config.js";
 describe("UTAAC_EXCEL_CONFIG", () => {
   it("should have correct configuration structure", () => {
     expect(UTAAC_EXCEL_CONFIG).toBeDefined();
-    expect(UTAAC_EXCEL_CONFIG.fields).toHaveLength(9);
+    expect(UTAAC_EXCEL_CONFIG.fields).toHaveLength(8);
     expect(UTAAC_EXCEL_CONFIG.minRows).toBe(1);
   });
 
   it("should have all expected field names", () => {
     const fieldNames = UTAAC_EXCEL_CONFIG.fields.map((f) => f.fieldName);
-    expect(fieldNames).toEqual([
-      "time",
-      "appellant",
-      "caseReferenceNumber",
-      "caseName",
-      "judges",
-      "members",
-      "modeOfHearing",
-      "venue",
-      "additionalInformation"
-    ]);
+    expect(fieldNames).toEqual(["time", "appellant", "caseReferenceNumber", "judges", "members", "modeOfHearing", "venue", "additionalInformation"]);
   });
 
   it("should have correct required flags", () => {
     const requiredFields = UTAAC_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
     const optionalFields = UTAAC_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
 
-    expect(requiredFields).toEqual(["time", "caseReferenceNumber", "caseName"]);
-    expect(optionalFields).toEqual(["appellant", "judges", "members", "modeOfHearing", "venue", "additionalInformation"]);
+    expect(requiredFields).toEqual(["time", "appellant", "caseReferenceNumber", "judges", "members", "modeOfHearing", "venue", "additionalInformation"]);
+    expect(optionalFields).toEqual([]);
   });
 
   describe("field validators", () => {

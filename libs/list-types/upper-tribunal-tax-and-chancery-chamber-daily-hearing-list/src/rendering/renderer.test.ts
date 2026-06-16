@@ -8,14 +8,14 @@ describe("renderUtccDailyHearingListData", () => {
     courtName: "Upper Tribunal Tax and Chancery Chamber",
     contentDate: new Date(2025, 0, 15),
     lastReceivedDate: "2025-01-15T09:55:00Z",
-    listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list"
+    listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List"
   };
 
   it("should render hearing list with header", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
@@ -27,7 +27,7 @@ describe("renderUtccDailyHearingListData", () => {
 
     const result = renderUtccDailyHearingListData(hearingList, baseOptions);
 
-    expect(result.header.listTitle).toBe("Upper Tribunal Tax and Chancery Chamber Daily Hearing list");
+    expect(result.header.listTitle).toBe("Upper Tribunal Tax and Chancery Chamber Daily Hearing List");
     expect(result.header.hearingDate).toBe("15 January 2025");
     expect(result.header.lastUpdatedDate).toBe("15 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
@@ -37,47 +37,50 @@ describe("renderUtccDailyHearingListData", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
         hearingType: "Substantive hearing",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       },
       {
         time: "2:00pm",
-        caseReference: "UTTC/2025/0002",
+        caseReferenceNumber: "UTTC/2025/0002",
         caseName: "Brown v HMRC",
         judges: "Judge Brown",
         members: "Member Davis",
         hearingType: "Preliminary hearing",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       }
     ];
 
     const result = renderUtccDailyHearingListData(hearingList, baseOptions);
 
     expect(result.hearings).toHaveLength(2);
-    expect(result.hearings[0].caseReference).toBe("UTTC/2025/0001");
-    expect(result.hearings[1].caseReference).toBe("UTTC/2025/0002");
+    expect(result.hearings[0].caseReferenceNumber).toBe("UTTC/2025/0001");
+    expect(result.hearings[1].caseReferenceNumber).toBe("UTTC/2025/0002");
   });
 
-  it("should handle optional additionalInformation field", () => {
+  it("should include additionalInformation in rendered data", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
         hearingType: "Substantive hearing",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: "Remote hearing"
       }
     ];
 
     const result = renderUtccDailyHearingListData(hearingList, baseOptions);
 
-    expect(result.hearings[0].additionalInformation).toBeUndefined();
+    expect(result.hearings[0].additionalInformation).toBe("Remote hearing");
   });
 
   it("should handle empty hearing list", () => {
@@ -86,19 +89,20 @@ describe("renderUtccDailyHearingListData", () => {
     const result = renderUtccDailyHearingListData(hearingList, baseOptions);
 
     expect(result.hearings).toHaveLength(0);
-    expect(result.header.listTitle).toBe("Upper Tribunal Tax and Chancery Chamber Daily Hearing list");
+    expect(result.header.listTitle).toBe("Upper Tribunal Tax and Chancery Chamber Daily Hearing List");
   });
 
   it("should format AM times correctly", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
         hearingType: "Substantive hearing",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       }
     ];
 
@@ -112,12 +116,13 @@ describe("renderUtccDailyHearingListData", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
         hearingType: "Substantive hearing",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       }
     ];
 
@@ -131,12 +136,13 @@ describe("renderUtccDailyHearingListData", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
         hearingType: "Substantive hearing",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       }
     ];
 
@@ -150,7 +156,7 @@ describe("renderUtccDailyHearingListData", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:30am",
-        caseReference: "UTTC/2025/0001/A",
+        caseReferenceNumber: "UTTC/2025/0001/A",
         caseName: "Smith & Jones v HMRC",
         judges: "Judge Smith; Judge Brown",
         members: "Member Jones, Member Davis",
@@ -163,7 +169,7 @@ describe("renderUtccDailyHearingListData", () => {
     const result = renderUtccDailyHearingListData(hearingList, baseOptions);
 
     expect(result.hearings[0].time).toBe("10:30am");
-    expect(result.hearings[0].caseReference).toBe("UTTC/2025/0001/A");
+    expect(result.hearings[0].caseReferenceNumber).toBe("UTTC/2025/0001/A");
     expect(result.hearings[0].caseName).toBe("Smith & Jones v HMRC");
     expect(result.hearings[0].judges).toBe("Judge Smith; Judge Brown");
     expect(result.hearings[0].members).toBe("Member Jones, Member Davis");

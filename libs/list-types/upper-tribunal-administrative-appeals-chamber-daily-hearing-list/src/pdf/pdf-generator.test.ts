@@ -22,7 +22,7 @@ import { generateUtaacDailyHearingListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
-    listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list",
+    listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List",
     hearingDate: "15 January 2025",
     lastUpdatedDate: "15 January 2025",
     lastUpdatedTime: "9am"
@@ -35,11 +35,11 @@ const mockHearingList = [
     time: "10:00am",
     appellant: "Smith",
     caseReferenceNumber: "UTAAC/2025/0001",
-    caseName: "Smith v Secretary of State",
     judges: "Judge Smith",
     members: "Member Jones",
     modeOfHearing: "CVP",
-    venue: "Field House"
+    venue: "Field House",
+    additionalInformation: ""
   }
 ];
 
@@ -156,7 +156,7 @@ describe("generateUtaacDailyHearingListPdf", () => {
       courtName: "Upper Tribunal (Administrative Appeals Chamber)",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list"
+      listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List"
     });
   });
 });

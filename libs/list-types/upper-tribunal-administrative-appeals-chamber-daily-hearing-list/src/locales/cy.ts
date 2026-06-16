@@ -1,6 +1,9 @@
 export const cy = {
   pageTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
   downloadPdf: "Lawrlwytho fel PDF",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.",
   listForDate: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",
@@ -28,7 +31,6 @@ export const cy = {
     time: "Amser",
     appellant: "Apelydd",
     caseReferenceNumber: "Rhif Cyfeirnod Achos",
-    caseName: "Enw'r Achos",
     judges: "Barnwr/Barnwyr",
     members: "Aelod/Aelodau",
     modeOfHearing: "Dull Gwrandawiad",

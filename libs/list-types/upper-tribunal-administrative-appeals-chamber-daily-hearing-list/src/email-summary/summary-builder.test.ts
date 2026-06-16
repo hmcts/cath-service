@@ -16,21 +16,21 @@ describe("extractCaseSummary", () => {
         time: "10:00am",
         appellant: "Smith",
         caseReferenceNumber: "UTAAC/2025/0001",
-        caseName: "Smith v Secretary of State",
         judges: "Judge Smith",
         members: "Member Jones",
         modeOfHearing: "CVP",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       },
       {
         time: "2:00pm",
         appellant: "Brown",
         caseReferenceNumber: "UTAAC/2025/0002",
-        caseName: "Brown v DWP",
         judges: "Judge Brown",
         members: "Member Davis",
         modeOfHearing: "In person",
-        venue: "Field House"
+        venue: "Field House",
+        additionalInformation: ""
       }
     ];
 
@@ -39,11 +39,13 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual([
       { label: "Time", value: "10:00am" },
-      { label: "Case Reference Number", value: "UTAAC/2025/0001" }
+      { label: "Case Reference Number", value: "UTAAC/2025/0001" },
+      { label: "Appellant", value: "Smith" }
     ]);
     expect(result[1]).toEqual([
       { label: "Time", value: "2:00pm" },
-      { label: "Case Reference Number", value: "UTAAC/2025/0002" }
+      { label: "Case Reference Number", value: "UTAAC/2025/0002" },
+      { label: "Appellant", value: "Brown" }
     ]);
   });
 
@@ -61,11 +63,11 @@ describe("extractCaseSummary", () => {
         time: "",
         appellant: "",
         caseReferenceNumber: "",
-        caseName: "",
         judges: "",
         members: "",
         modeOfHearing: "",
-        venue: ""
+        venue: "",
+        additionalInformation: ""
       }
     ];
 
@@ -74,7 +76,8 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Time", value: "" },
-      { label: "Case Reference Number", value: "" }
+      { label: "Case Reference Number", value: "" },
+      { label: "Appellant", value: "" }
     ]);
   });
 });
@@ -84,7 +87,8 @@ describe("formatCaseSummaryForEmail", () => {
     const items = [
       [
         { label: "Time", value: "10:00am" },
-        { label: "Case Reference Number", value: "UTAAC/2025/0001" }
+        { label: "Case Reference Number", value: "UTAAC/2025/0001" },
+        { label: "Appellant", value: "Smith" }
       ]
     ];
 
@@ -93,6 +97,7 @@ describe("formatCaseSummaryForEmail", () => {
     expect(result).toContain("---");
     expect(result).toContain("Time - 10:00am");
     expect(result).toContain("Case Reference Number - UTAAC/2025/0001");
+    expect(result).toContain("Appellant - Smith");
   });
 
   it("should handle empty case list", () => {

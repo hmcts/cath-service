@@ -72,13 +72,14 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       const mockJsonData = [
         {
           time: "10:00am",
-          caseReference: "UTLC/2026/0001",
+          caseReferenceNumber: "UTLC/2026/0001",
           caseName: "Jones v Secretary of State",
           judges: "Judge Smith",
           members: "Member Jones",
           hearingType: "Substantive hearing",
           venue: "Royal Courts of Justice",
-          modeOfHearing: "In Person"
+          modeOfHearing: "In Person",
+          additionalInformation: ""
         }
       ];
 
@@ -203,7 +204,7 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(readFile).mockResolvedValue(JSON.stringify([{ time: "10:00am" }]));
-      mockValidate.mockReturnValue({ isValid: false, errors: ["Missing required field: caseReference"] });
+      mockValidate.mockReturnValue({ isValid: false, errors: ["Missing required field: caseReferenceNumber"] });
 
       // Act
       await GET(req as Request, res as Response);

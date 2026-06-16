@@ -14,7 +14,7 @@ describe("extractCaseSummary", () => {
     const hearingList: UtlcHearingList = [
       {
         time: "10:00am",
-        caseReference: "LC/2025/0001",
+        caseReferenceNumber: "LC/2025/0001",
         caseName: "Smith v Jones",
         judges: "Judge Smith",
         members: "Member Jones",
@@ -24,7 +24,7 @@ describe("extractCaseSummary", () => {
       },
       {
         time: "2:00pm",
-        caseReference: "LC/2025/0002",
+        caseReferenceNumber: "LC/2025/0002",
         caseName: "Brown v Green",
         judges: "Judge Brown",
         members: "Member Davis",
@@ -39,11 +39,13 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual([
       { label: "Time", value: "10:00am" },
-      { label: "Case Reference Number", value: "LC/2025/0001" }
+      { label: "Case Reference Number", value: "LC/2025/0001" },
+      { label: "Case Name", value: "Smith v Jones" }
     ]);
     expect(result[1]).toEqual([
       { label: "Time", value: "2:00pm" },
-      { label: "Case Reference Number", value: "LC/2025/0002" }
+      { label: "Case Reference Number", value: "LC/2025/0002" },
+      { label: "Case Name", value: "Brown v Green" }
     ]);
   });
 
@@ -59,7 +61,7 @@ describe("extractCaseSummary", () => {
     const hearingList: UtlcHearingList = [
       {
         time: "",
-        caseReference: "",
+        caseReferenceNumber: "",
         caseName: "",
         judges: "",
         members: "",
@@ -74,7 +76,8 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Time", value: "" },
-      { label: "Case Reference Number", value: "" }
+      { label: "Case Reference Number", value: "" },
+      { label: "Case Name", value: "" }
     ]);
   });
 });
@@ -84,7 +87,8 @@ describe("formatCaseSummaryForEmail", () => {
     const items = [
       [
         { label: "Time", value: "10:00am" },
-        { label: "Case Reference Number", value: "LC/2025/0001" }
+        { label: "Case Reference Number", value: "LC/2025/0001" },
+        { label: "Case Name", value: "Smith v Jones" }
       ]
     ];
 
@@ -93,6 +97,7 @@ describe("formatCaseSummaryForEmail", () => {
     expect(result).toContain("---");
     expect(result).toContain("Time - 10:00am");
     expect(result).toContain("Case Reference Number - LC/2025/0001");
+    expect(result).toContain("Case Name - Smith v Jones");
   });
 
   it("should handle empty case list", () => {

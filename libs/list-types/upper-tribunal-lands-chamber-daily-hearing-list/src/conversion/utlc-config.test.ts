@@ -10,15 +10,35 @@ describe("UTLC_EXCEL_CONFIG", () => {
 
   it("should have all expected field names", () => {
     const fieldNames = UTLC_EXCEL_CONFIG.fields.map((f) => f.fieldName);
-    expect(fieldNames).toEqual(["time", "caseReference", "caseName", "judges", "members", "hearingType", "venue", "modeOfHearing", "additionalInformation"]);
+    expect(fieldNames).toEqual([
+      "time",
+      "caseReferenceNumber",
+      "caseName",
+      "judges",
+      "members",
+      "hearingType",
+      "venue",
+      "modeOfHearing",
+      "additionalInformation"
+    ]);
   });
 
   it("should have correct required flags", () => {
     const requiredFields = UTLC_EXCEL_CONFIG.fields.filter((f) => f.required).map((f) => f.fieldName);
     const optionalFields = UTLC_EXCEL_CONFIG.fields.filter((f) => !f.required).map((f) => f.fieldName);
 
-    expect(requiredFields).toEqual(["time", "caseReference", "caseName"]);
-    expect(optionalFields).toEqual(["judges", "members", "hearingType", "venue", "modeOfHearing", "additionalInformation"]);
+    expect(requiredFields).toEqual([
+      "time",
+      "caseReferenceNumber",
+      "caseName",
+      "judges",
+      "members",
+      "hearingType",
+      "venue",
+      "modeOfHearing",
+      "additionalInformation"
+    ]);
+    expect(optionalFields).toEqual([]);
   });
 
   describe("field validators", () => {

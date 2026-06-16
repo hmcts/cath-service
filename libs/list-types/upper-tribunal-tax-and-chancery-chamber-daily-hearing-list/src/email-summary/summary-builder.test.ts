@@ -14,7 +14,7 @@ describe("extractCaseSummary", () => {
     const hearingList: UtccHearingList = [
       {
         time: "10:00am",
-        caseReference: "UTTC/2025/0001",
+        caseReferenceNumber: "UTTC/2025/0001",
         caseName: "Smith v HMRC",
         judges: "Judge Smith",
         members: "Member Jones",
@@ -23,7 +23,7 @@ describe("extractCaseSummary", () => {
       },
       {
         time: "2:00pm",
-        caseReference: "UTTC/2025/0002",
+        caseReferenceNumber: "UTTC/2025/0002",
         caseName: "Brown v HMRC",
         judges: "Judge Brown",
         members: "Member Davis",
@@ -37,11 +37,13 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual([
       { label: "Time", value: "10:00am" },
-      { label: "Case Reference Number", value: "UTTC/2025/0001" }
+      { label: "Case Reference Number", value: "UTTC/2025/0001" },
+      { label: "Case Name", value: "Smith v HMRC" }
     ]);
     expect(result[1]).toEqual([
       { label: "Time", value: "2:00pm" },
-      { label: "Case Reference Number", value: "UTTC/2025/0002" }
+      { label: "Case Reference Number", value: "UTTC/2025/0002" },
+      { label: "Case Name", value: "Brown v HMRC" }
     ]);
   });
 
@@ -57,7 +59,7 @@ describe("extractCaseSummary", () => {
     const hearingList: UtccHearingList = [
       {
         time: "",
-        caseReference: "",
+        caseReferenceNumber: "",
         caseName: "",
         judges: "",
         members: "",
@@ -71,7 +73,8 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Time", value: "" },
-      { label: "Case Reference Number", value: "" }
+      { label: "Case Reference Number", value: "" },
+      { label: "Case Name", value: "" }
     ]);
   });
 });
@@ -81,7 +84,8 @@ describe("formatCaseSummaryForEmail", () => {
     const items = [
       [
         { label: "Time", value: "10:00am" },
-        { label: "Case Reference Number", value: "UTTC/2025/0001" }
+        { label: "Case Reference Number", value: "UTTC/2025/0001" },
+        { label: "Case Name", value: "Smith v HMRC" }
       ]
     ];
 
@@ -90,6 +94,7 @@ describe("formatCaseSummaryForEmail", () => {
     expect(result).toContain("---");
     expect(result).toContain("Time - 10:00am");
     expect(result).toContain("Case Reference Number - UTTC/2025/0001");
+    expect(result).toContain("Case Name - Smith v HMRC");
   });
 
   it("should handle empty case list", () => {

@@ -1,6 +1,9 @@
 export const cy = {
   pageTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
   downloadPdf: "Lawrlwytho fel PDF",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.",
   listForDate: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",
@@ -15,7 +18,7 @@ export const cy = {
   searchCasesLabel: "Chwilio yn ôl cyfeirnod achos, enw'r achos, barnwr, lleoliad, neu fanylion eraill",
   tableHeaders: {
     time: "Amser",
-    caseReference: "Cyfeirnod Achos",
+    caseReferenceNumber: "Rhif Cyfeirnod Achos",
     caseName: "Enw'r Achos",
     judges: "Barnwr/Barnwyr",
     members: "Aelod/Aelodau",

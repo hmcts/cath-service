@@ -27,7 +27,6 @@ export function renderUtaacDailyHearingListData(hearingList: UtaacHearingList, o
     time: hearing.time,
     appellant: hearing.appellant,
     caseReferenceNumber: hearing.caseReferenceNumber,
-    caseName: hearing.caseName,
     judges: hearing.judges,
     members: hearing.members,
     modeOfHearing: hearing.modeOfHearing,

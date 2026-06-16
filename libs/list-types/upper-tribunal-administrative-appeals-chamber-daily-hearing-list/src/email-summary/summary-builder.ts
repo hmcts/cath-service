@@ -6,6 +6,7 @@ export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 export function extractCaseSummary(jsonData: UtaacHearingList): CaseSummary[] {
   return jsonData.map((hearing) => [
     { label: "Time", value: hearing.time || "" },
-    { label: "Case Reference Number", value: hearing.caseReferenceNumber || "" }
+    { label: "Case Reference Number", value: hearing.caseReferenceNumber || "" },
+    { label: "Appellant", value: hearing.appellant || "" }
   ]);
 }
