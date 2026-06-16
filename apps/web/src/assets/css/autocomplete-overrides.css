@@ -1,0 +1,7 @@
+/* Override autocomplete width - reduce from 30em to 20em for better layout */
+/* Increase specificity to override library defaults without !important */
+.autocomplete__wrapper.autocomplete__wrapper,
+.autocomplete__hint.autocomplete__hint,
+.autocomplete__input.autocomplete__input {
+  max-width: 20em;
+}
