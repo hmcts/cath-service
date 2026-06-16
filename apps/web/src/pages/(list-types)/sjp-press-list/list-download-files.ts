@@ -2,9 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres-prisma";
+import { sjpPressListCy as cy, sjpPressListEn as en } from "@hmcts/sjp-press-list";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +56,9 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   res.render("list-download-files", {
-    ...t,
+    en,
+    cy,
+    t,
     artefactId,
     locale,
     files

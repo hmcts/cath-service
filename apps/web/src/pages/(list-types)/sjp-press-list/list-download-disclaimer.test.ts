@@ -87,7 +87,7 @@ describe("List Download Disclaimer Controller", () => {
       expect(res.render).toHaveBeenCalledWith(
         "list-download-disclaimer",
         expect.objectContaining({
-          pageTitle: "Telerau ac amodau",
+          t: expect.objectContaining({ pageTitle: "Telerau ac amodau" }),
           locale: "cy"
         })
       );

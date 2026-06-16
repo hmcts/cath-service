@@ -1,7 +1,6 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import { sjpPressListCy as cy, sjpPressListEn as en } from "@hmcts/sjp-press-list";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -43,7 +42,9 @@ const getHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy.disclaimer : en.disclaimer;
 
   res.render("list-download-disclaimer", {
-    ...t,
+    en,
+    cy,
+    t,
     artefactId,
     locale,
     errors: null
@@ -63,7 +64,9 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (!agreed) {
     return res.render("list-download-disclaimer", {
-      ...t,
+      en,
+      cy,
+      t,
       artefactId,
       locale,
       errors: [{ text: t.errorCheckbox, href: "#agreed" }]

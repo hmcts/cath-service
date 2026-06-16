@@ -3,19 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { sjpPressListCy, sjpPressListEn, validateSjpPressList } from "@hmcts/sjp-press-list";
+import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
-
-const cy = sjpPressListCy;
-const en = sjpPressListEn;
-
-const PROVENANCE_LABELS: Record<string, string> = {
-  MANUAL_UPLOAD: "Manual Upload",
-  XHIBIT: "XHIBIT",
-  SNL: "SNL",
-  COMMON_PLATFORM: "Common Platform"
-};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,10 +61,11 @@ const getHandler = async (req: Request, res: Response) => {
     const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
 
     res.render("sjp-press-list", {
-      ...t.common,
-      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
       en,
       cy,
+      t,
+      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
+      ...t.common,
       locale,
       list: buildListMetadata(artefactId, validatedData, artefact),
       cases: paginatedCases,

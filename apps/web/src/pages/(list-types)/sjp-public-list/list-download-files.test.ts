@@ -137,7 +137,7 @@ describe("List Download Files Controller", () => {
     expect(res.render).toHaveBeenCalledWith(
       "list-download-files",
       expect.objectContaining({
-        pageTitle: "Lawrlwytho eich ffeil",
+        t: expect.objectContaining({ pageTitle: "Lawrlwytho eich ffeil" }),
         locale: "cy"
       })
     );

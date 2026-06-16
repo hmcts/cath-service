@@ -2,12 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
-import { sjpPublicListCy, sjpPublicListEn } from "@hmcts/sjp-public-list";
+import { sjpPublicListCy as cy, sjpPublicListEn as en } from "@hmcts/sjp-public-list";
 import type { Request, Response } from "express";
 import type { ParsedQs } from "qs";
-
-const cy = sjpPublicListCy;
-const en = sjpPublicListEn;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -92,10 +89,11 @@ export const GET = async (req: Request, res: Response) => {
   const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
 
   res.render("sjp-public-list", {
-    ...t.common,
-    title: req.path.includes("delta") ? t.SJP_DELTA_PUBLIC_LIST.title : t.SJP_PUBLIC_LIST.title,
     en,
     cy,
+    t,
+    title: req.path.includes("delta") ? t.SJP_DELTA_PUBLIC_LIST.title : t.SJP_PUBLIC_LIST.title,
+    ...t.common,
     locale,
     list,
     cases,
