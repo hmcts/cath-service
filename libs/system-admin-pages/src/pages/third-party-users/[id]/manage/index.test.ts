@@ -15,7 +15,7 @@ describe("third-party-users manage user page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {

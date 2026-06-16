@@ -1,6 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../../../../audit-log/logger.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -63,7 +64,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
   req.auditMetadata = {
     shouldLog: true,
-    action: "DELETE_THIRD_PARTY_USER",
+    action: AuditLogAction.DELETE_THIRD_PARTY_USER,
     entityInfo: `Name: ${user.name}, ID: ${id}`
   };
 

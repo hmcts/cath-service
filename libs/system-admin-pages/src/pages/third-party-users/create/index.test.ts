@@ -15,7 +15,7 @@ describe("third-party-users create page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -46,7 +46,7 @@ describe("third-party-users create page", () => {
 
     it("should render in Welsh", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
 
       // Act
       await getHandler(req as Request, res as Response);
@@ -90,7 +90,7 @@ describe("third-party-users create page", () => {
 
     it("should redirect to Welsh summary on valid name with Welsh param", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       req.body = { name: "Valid Name" };
       vi.mocked(validateName).mockReturnValue(null);
 

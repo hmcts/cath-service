@@ -9,7 +9,7 @@ describe("third-party-users oauth-config success page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, params: { id: "user-1" } };
-    res = { render: vi.fn() };
+    res = { render: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -30,7 +30,7 @@ describe("third-party-users oauth-config success page", () => {
 
     it("should render success page with Welsh content", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
 
       // Act
       await getHandler(req as Request, res as Response);

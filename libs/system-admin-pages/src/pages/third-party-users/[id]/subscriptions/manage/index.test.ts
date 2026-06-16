@@ -39,7 +39,7 @@ describe("third-party-users subscriptions page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" }, user: { id: "admin-1" } as never };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -87,7 +87,7 @@ describe("third-party-users subscriptions page", () => {
     it("should render subscriptions page in Welsh", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
 
       // Act
       await getHandler(req as Request, res as Response);
@@ -169,7 +169,7 @@ describe("third-party-users subscriptions page", () => {
       // Assert
       expect(req.auditMetadata).toMatchObject({
         shouldLog: true,
-        action: "UPDATE_THIRD_PARTY_SUBSCRIPTIONS"
+        action: "Update third party subscriptions"
       });
     });
   });

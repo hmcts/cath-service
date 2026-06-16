@@ -15,7 +15,7 @@ describe("third-party-users list page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -40,7 +40,7 @@ describe("third-party-users list page", () => {
 
     it("should render in Welsh when lng=cy query param is set", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       vi.mocked(findAllThirdPartyUsers).mockResolvedValue([]);
 
       // Act

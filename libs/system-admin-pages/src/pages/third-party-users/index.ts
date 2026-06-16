@@ -4,7 +4,7 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-export const getHandler = async (req: Request, res: Response) => {
+export const getHandler = async (_req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";

@@ -27,7 +27,7 @@ describe("third-party-users oauth-config form page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -203,7 +203,7 @@ describe("third-party-users oauth-config form page", () => {
 
     it("should redirect with Welsh param when language is cy", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       req.body = {
         destinationUrl: "https://dest.example.com",
         tokenUrl: "https://token.example.com",

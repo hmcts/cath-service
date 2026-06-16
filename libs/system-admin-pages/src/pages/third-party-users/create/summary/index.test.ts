@@ -15,7 +15,7 @@ describe("third-party-users create summary page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -91,7 +91,7 @@ describe("third-party-users create summary page", () => {
       // Assert
       expect(req.auditMetadata).toMatchObject({
         shouldLog: true,
-        action: "CREATE_THIRD_PARTY_USER",
+        action: "Create third party user",
         entityInfo: "Name: Audit User"
       });
     });

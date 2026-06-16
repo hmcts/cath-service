@@ -18,7 +18,7 @@ describe("third-party-users delete page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -108,14 +108,14 @@ describe("third-party-users delete page", () => {
       // Assert
       expect(req.auditMetadata).toMatchObject({
         shouldLog: true,
-        action: "DELETE_THIRD_PARTY_USER",
+        action: "Delete third party user",
         entityInfo: "Name: Test Corp, ID: user-1"
       });
     });
 
     it("should redirect to Welsh success page on delete with Welsh param", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
       vi.mocked(deleteThirdPartyUser).mockResolvedValue(undefined);
       req.body = { confirmDelete: "yes" };

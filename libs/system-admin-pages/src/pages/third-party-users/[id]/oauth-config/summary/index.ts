@@ -2,6 +2,7 @@ import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { prisma } from "@hmcts/postgres-prisma";
 import { createKeyVaultSecretName, findThirdPartyUserById, setSecret } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../../../../audit-log/logger.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -65,7 +66,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
   req.auditMetadata = {
     shouldLog: true,
-    action: "UPDATE_THIRD_PARTY_OAUTH_CONFIG",
+    action: AuditLogAction.UPDATE_THIRD_PARTY_OAUTH_CONFIG,
     entityInfo: `Name: ${user.name}, ID: ${id}`
   };
 

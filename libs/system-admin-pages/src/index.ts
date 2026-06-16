@@ -1,6 +1,5 @@
 // Business logic exports
 export * from "./audit-log/logger.js";
-export { isFeatureEnabled } from "./feature-flags/launch-darkly.js";
 export * from "./audit-log/middleware.js";
 export * from "./audit-log/repository.js";
 export * from "./audit-log/service.js";
@@ -10,6 +9,7 @@ export {
   validateLocationSelected,
   validateRadioSelection as validateDeleteCourtRadioSelection
 } from "./delete-court/validation.js";
+export { isFeatureEnabled } from "./feature-flags/launch-darkly.js";
 export * from "./list-type/queries.js";
 export * from "./list-type/service.js";
 export * from "./list-type/types.js";

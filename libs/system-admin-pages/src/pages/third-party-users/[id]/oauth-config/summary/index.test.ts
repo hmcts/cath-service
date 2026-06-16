@@ -41,7 +41,7 @@ describe("third-party-users oauth-config summary page", () => {
       session: { thirdPartyOauthConfig: mockOauthConfig } as never,
       params: { id: "user-1" }
     };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
   describe("getHandler", () => {
@@ -145,14 +145,14 @@ describe("third-party-users oauth-config summary page", () => {
       // Assert
       expect(req.auditMetadata).toMatchObject({
         shouldLog: true,
-        action: "UPDATE_THIRD_PARTY_OAUTH_CONFIG",
+        action: "Update third party OAuth config",
         entityInfo: "Name: Test Corp, ID: user-1"
       });
     });
 
     it("should redirect to Welsh success page when language is cy", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
       vi.mocked(setSecret).mockResolvedValue(undefined);
 

@@ -3,6 +3,7 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { findThirdPartyUserById, updateThirdPartySubscriptions } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
 import type { Session } from "express-session";
+import { AuditLogAction } from "../../../../../audit-log/logger.js";
 import { isFeatureEnabled } from "../../../../../feature-flags/launch-darkly.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -120,7 +121,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
   req.auditMetadata = {
     shouldLog: true,
-    action: "UPDATE_THIRD_PARTY_SUBSCRIPTIONS",
+    action: AuditLogAction.UPDATE_THIRD_PARTY_SUBSCRIPTIONS,
     entityInfo: `User: ${user.name}, Before: [${beforeSubscriptions}], After: [${afterSubscriptions}]`
   };
 
