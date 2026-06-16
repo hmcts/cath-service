@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 
 test.describe("Crime IDAM", () => {
   test("valid user can sign in via Crime IDAM @nightly", async ({ page }) => {
@@ -30,10 +30,7 @@ test.describe("Crime IDAM", () => {
     await expect(page).toHaveURL(/lng=cy/);
 
     // Accessibility check
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
@@ -46,10 +43,7 @@ test.describe("Crime IDAM", () => {
     await expect(page.getByRole("link", { name: /return to sign in page/i })).toHaveAttribute("href", "/sign-in");
 
     // Accessibility check
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Welsh

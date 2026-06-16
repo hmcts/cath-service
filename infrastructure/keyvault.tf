@@ -44,3 +44,13 @@ resource "azurerm_key_vault_access_policy" "legacy_kv_app_mi" {
 
   secret_permissions = ["Get", "List"]
 }
+
+# Grant the GitHub Actions OIDC app registration Get/List access to the application KV
+# so the app server can load secrets via DefaultAzureCredential during E2E tests
+resource "azurerm_key_vault_access_policy" "application_kv_e2e_oidc_sp" {
+  key_vault_id = module.application_key_vault.key_vault_id
+  tenant_id    = var.tenant_id
+  object_id    = var.e2e_oidc_object_id
+
+  secret_permissions = ["Get", "List"]
+}
