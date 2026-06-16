@@ -85,6 +85,26 @@ jobs:
             '${{ inputs.timestamp }}' \
             "${APPLICATION_NAME}"
 
+      - name: Set up Helm (cleanup)
+        if: inputs.environment == 'dev'
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Azure Login (cleanup)
+        if: inputs.environment == 'dev'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEV }}
+
+      - name: Get AKS credentials (cleanup)
+        if: inputs.environment == 'dev'
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ss-dev-00-rg
+          cluster-name: ss-dev-00-aks
+          admin: 'true'
+
       - name: Clear stuck Helm release
         if: inputs.environment == 'dev'
         run: |
