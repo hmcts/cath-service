@@ -5,5 +5,6 @@ export {
   deleteThirdPartyUser,
   findAllThirdPartyUsers,
   findThirdPartyUserById,
+  findThirdPartyUserByName,
   updateThirdPartySubscriptions
 } from "./third-party-user-service.js";

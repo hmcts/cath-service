@@ -16,9 +16,6 @@ export const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-subscribers${lngParam}`);
   }
 
-  const sensitivities = [...new Set(user.subscriptions.map((s) => s.sensitivity))];
-  const sensitivityDisplay = sensitivities.length > 0 ? sensitivities.join(", ") : "—";
-
   res.render("third-party-subscribers/[id]/manage/index", {
     ...t,
     en,
@@ -27,8 +24,7 @@ export const getHandler = async (req: Request, res: Response) => {
     userId: user.id,
     name: user.name,
     createdAt: user.createdAt.toLocaleDateString("en-GB"),
-    subscriptionCount: user.subscriptions.length,
-    sensitivity: sensitivityDisplay
+    subscriptionCount: user.subscriptions.length
   });
 };
 

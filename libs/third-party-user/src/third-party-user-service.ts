@@ -16,6 +16,13 @@ export async function findThirdPartyUserById(id: string) {
   });
 }
 
+export async function findThirdPartyUserByName(name: string) {
+  return prisma.thirdPartyUser.findFirst({
+    where: { name: { equals: name.trim(), mode: "insensitive" } },
+    select: { id: true, name: true }
+  });
+}
+
 export async function createThirdPartyUser(name: string) {
   const existing = await prisma.thirdPartyUser.findFirst({ where: { name } });
   if (existing) {

@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { validateName } from "@hmcts/third-party-user";
+import { findThirdPartyUserByName, validateName } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
 import type { Session } from "express-session";
 import { cy } from "./cy.js";
@@ -44,6 +44,18 @@ export const postHandler = async (req: Request, res: Response) => {
       cy,
       lngParam,
       errors: [error],
+      data: { name }
+    });
+  }
+
+  const existing = await findThirdPartyUserByName(name);
+  if (existing) {
+    return res.render("third-party-subscribers/create/index", {
+      ...t,
+      en,
+      cy,
+      lngParam,
+      errors: [{ href: "#name", text: t.duplicateNameError }],
       data: { name }
     });
   }

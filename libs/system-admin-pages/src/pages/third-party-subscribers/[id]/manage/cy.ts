@@ -3,8 +3,7 @@ export const cy = {
   tableHeadings: {
     name: "Enw",
     createdDate: "Crëwyd Dyddiad",
-    subscriptionCount: "Nifer y tanysgrifiadau",
-    sensitivity: "Sensitifrwydd"
+    subscriptionCount: "Nifer y tanysgrifiadau"
   },
   manageSubscriptionsButton: "Rheoli tanysgrifiadau",
   manageOauthConfigButton: "Rheoli ffurfweddiad OAuth",

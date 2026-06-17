@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHandler, postHandler } from "./index.js";
 
 vi.mock("@hmcts/third-party-user", () => ({
+  findThirdPartyUserByName: vi.fn(),
   validateName: vi.fn()
 }));
 
-import { validateName } from "@hmcts/third-party-user";
+import { findThirdPartyUserByName, validateName } from "@hmcts/third-party-user";
 
 describe("third-party-subscribers create page", () => {
   let req: Partial<Request>;
@@ -14,6 +15,7 @@ describe("third-party-subscribers create page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(findThirdPartyUserByName).mockResolvedValue(null);
     req = { query: {}, body: {}, session: {} as never };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
@@ -86,6 +88,26 @@ describe("third-party-subscribers create page", () => {
           data: { name: "" }
         })
       );
+    });
+
+    it("should show error when subscriber with same name already exists", async () => {
+      // Arrange
+      req.body = { name: "Existing Subscriber" };
+      vi.mocked(validateName).mockReturnValue(null);
+      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "existing-id", name: "Existing Subscriber" });
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "third-party-subscribers/create/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#name" })]),
+          data: { name: "Existing Subscriber" }
+        })
+      );
+      expect(res.redirect).not.toHaveBeenCalled();
     });
 
     it("should redirect to Welsh summary on valid name with Welsh param", async () => {

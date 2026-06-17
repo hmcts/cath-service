@@ -48,13 +48,12 @@ describe("third-party-subscribers manage user page", () => {
         expect.objectContaining({
           pageTitle: "Manage subscriber",
           name: "Test Corp",
-          subscriptionCount: 1,
-          sensitivity: "PUBLIC"
+          subscriptionCount: 1
         })
       );
     });
 
-    it("should show dash for sensitivity when no subscriptions", async () => {
+    it("should render with zero subscription count when no subscriptions", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
         id: "user-1",
@@ -67,7 +66,7 @@ describe("third-party-subscribers manage user page", () => {
       await getHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ sensitivity: "—", subscriptionCount: 0 }));
+      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ subscriptionCount: 0 }));
     });
   });
 });
