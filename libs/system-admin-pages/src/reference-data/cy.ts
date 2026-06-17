@@ -9,15 +9,15 @@ export const cy = {
       href: "/reference-data-upload"
     },
     {
-      value: "manage-jurisdiction-data",
-      label: "Rheoli Data Awdurdodaeth",
-      description: "Gweld, diweddaru a dileu metadata awdurdodaeth",
-      href: "/jurisdiction-data"
+      value: "manage-region-data",
+      label: "Rheoli Data Rhanbarthau",
+      description: "Gweld, diweddaru a dileu data rhanbarthau",
+      href: "/region-data"
     },
     {
       value: "manage-location-jurisdiction-data",
-      label: "Rheoli Data Awdurdodaeth Lleoliad",
-      description: "Gweld a diweddaru data awdurdodaeth lleoliad",
+      label: "Rheoli Data Awdurdodaeth a Rhanbarth Lleoliad",
+      description: "Gweld a diweddaru data awdurdodaeth a rhanbarth lleoliad",
       href: "/location-jurisdiction-search"
     },
     {

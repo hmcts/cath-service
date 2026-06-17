@@ -1,6 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
@@ -43,10 +44,21 @@
         errorMessage: { text: welshNameError.text } if welshNameError else undefined
       }) }}
 
+      {% if type === "Sub-Jurisdiction" %}
+        {% set jurisdictionIdError = (errors | selectattr("href", "equalto", "#jurisdictionId") | first) if errors else undefined %}
+        {{ govukSelect({
+          id: "jurisdictionId",
+          name: "jurisdictionId",
+          label: { text: jurisdictionLabel },
+          items: jurisdictionItems,
+          value: data.jurisdictionId,
+          errorMessage: { text: jurisdictionIdError.text } if jurisdictionIdError else undefined
+        }) }}
+      {% endif %}
+
       {{ govukButton({
         text: confirmButton
       }) }}
-    </form>
 
   </div>
 </div>

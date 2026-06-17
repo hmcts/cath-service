@@ -23,6 +23,7 @@ export interface CreateJurisdictionInput {
 export interface UpdateJurisdictionInput {
   name: string;
   welshName: string;
+  jurisdictionId?: number;
 }
 
 export interface ValidationError {
@@ -54,6 +55,11 @@ export async function createJurisdictionData(data: CreateJurisdictionInput): Pro
 
 export async function updateJurisdictionData(id: number, type: JurisdictionDataType, data: UpdateJurisdictionInput): Promise<ValidationError[]> {
   const errors = await validateJurisdictionFields(data.name, data.welshName, type);
+
+  if (type === "Sub-Jurisdiction" && !data.jurisdictionId) {
+    errors.push({ text: "Select a jurisdiction", href: "#jurisdictionId" });
+  }
+
   if (errors.length > 0) return errors;
 
   const duplicateErrors = await checkUniqueness(data.name, data.welshName, type, id);

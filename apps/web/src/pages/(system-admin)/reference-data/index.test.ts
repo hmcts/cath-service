@@ -60,13 +60,13 @@ describe("reference-data landing page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/reference-data-upload");
     });
 
-    it("should redirect to jurisdiction data when manage-jurisdiction-data selected", async () => {
-      req.body = { action: "manage-jurisdiction-data" };
+    it("should redirect to region data when manage-region-data selected", async () => {
+      req.body = { action: "manage-region-data" };
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(res.redirect).toHaveBeenCalledWith("/jurisdiction-data");
+      expect(res.redirect).toHaveBeenCalledWith("/region-data");
     });
 
     it("should redirect to location jurisdiction search when manage-location-jurisdiction-data selected", async () => {

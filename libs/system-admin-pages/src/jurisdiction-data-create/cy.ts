@@ -7,8 +7,7 @@ export const cy = {
   typePlaceholder: "Dewiswch fath",
   typeOptions: [
     { value: "Jurisdiction", text: "Awdurdodaeth" },
-    { value: "Sub-Jurisdiction", text: "Is-awdurdodaeth" },
-    { value: "Region", text: "Rhanbarth" }
+    { value: "Sub-Jurisdiction", text: "Is-awdurdodaeth" }
   ],
   jurisdictionLabel: "Rhiant Awdurdodaeth",
   jurisdictionPlaceholder: "Dewiswch awdurdodaeth",

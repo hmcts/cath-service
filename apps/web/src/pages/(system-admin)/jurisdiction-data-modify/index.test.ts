@@ -77,7 +77,33 @@ describe("jurisdiction-data-modify page", () => {
         id: 1,
         type: "Jurisdiction",
         name: "Civil",
-        welshName: "Sifil"
+        welshName: "Sifil",
+        jurisdictionId: undefined
+      });
+    });
+
+    it("should store jurisdictionId in session for Sub-Jurisdiction type", async () => {
+      // Arrange
+      req.query = { id: "10", type: "Sub-Jurisdiction" };
+      vi.mocked(findJurisdictionDataById).mockResolvedValue({
+        subJurisdictionId: 10,
+        name: "County Court",
+        welshName: "Llys Sirol",
+        jurisdictionId: 2,
+        deletedAt: null
+      });
+
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      expect((req.session as any).jurisdictionData).toEqual({
+        id: 10,
+        type: "Sub-Jurisdiction",
+        name: "County Court",
+        welshName: "Llys Sirol",
+        jurisdictionId: 2
       });
     });
 

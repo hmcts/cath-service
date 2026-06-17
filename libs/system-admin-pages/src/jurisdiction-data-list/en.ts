@@ -1,11 +1,16 @@
 export const en = {
   title: "Modify an existing jurisdiction or sub-jurisdiction",
+  back: "Back",
   backLink: "/jurisdiction-data",
   filterHeading: "Filter",
-  jurisdictionFilterLabel: "Jurisdiction",
-  subJurisdictionFilterLabel: "Sub-Jurisdiction",
-  filterHint: "Must be an exact match",
+  selectedFiltersHeading: "Selected filters",
+  clearFilters: "Clear filters",
+  typeHeading: "Type",
   applyFiltersButton: "Apply filters",
+  typeLabels: {
+    Jurisdiction: "Jurisdiction",
+    "Sub-Jurisdiction": "Sub-Jurisdiction"
+  },
   nameColumn: "Name",
   typeColumn: "Type",
   actionColumn: "",

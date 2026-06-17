@@ -1,11 +1,16 @@
 export const cy = {
   title: "Addasu awdurdodaeth neu is-awdurdodaeth bresennol",
+  back: "Yn ôl",
   backLink: "/jurisdiction-data",
   filterHeading: "Ffiltro",
-  jurisdictionFilterLabel: "Awdurdodaeth",
-  subJurisdictionFilterLabel: "Is-awdurdodaeth",
-  filterHint: "Rhaid bod yn gyfatebiaeth union",
+  selectedFiltersHeading: "Hidlwyr a ddewiswyd",
+  clearFilters: "Clirio hidlwyr",
+  typeHeading: "Math",
   applyFiltersButton: "Cadarnhau hidlwyr",
+  typeLabels: {
+    Jurisdiction: "Awdurdodaeth",
+    "Sub-Jurisdiction": "Is-awdurdodaeth"
+  },
   nameColumn: "Enw",
   typeColumn: "Math",
   actionColumn: "",

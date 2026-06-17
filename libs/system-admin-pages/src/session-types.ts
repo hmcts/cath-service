@@ -14,6 +14,7 @@ export interface JurisdictionDataSession {
     type: "Jurisdiction" | "Sub-Jurisdiction" | "Region";
     name: string;
     welshName: string;
+    jurisdictionId?: number;
   };
   jurisdictionDataErrors?: Array<{ text: string; href: string }>;
 

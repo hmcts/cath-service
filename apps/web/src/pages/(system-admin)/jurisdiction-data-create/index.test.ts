@@ -61,8 +61,7 @@ describe("jurisdiction-data-create page", () => {
           typeItems: [
             { value: "", text: "Select a type" },
             { value: "Jurisdiction", text: "Jurisdiction" },
-            { value: "Sub-Jurisdiction", text: "Sub-Jurisdiction" },
-            { value: "Region", text: "Region" }
+            { value: "Sub-Jurisdiction", text: "Sub-Jurisdiction" }
           ],
           errors: undefined
         })

@@ -45,6 +45,11 @@ export const cy = {
       title: "Ffurfweddu Math Rhestr",
       description: "Ychwanegu a rheoli ffurfweddiadau math rhestr",
       href: "/configure-list-type-enter-details"
+    },
+    {
+      title: "Rheoli Data Awdurdodaeth",
+      description: "Gweld, creu, diweddaru a dileu awdurdodaethau ac is-awdurdodaethau",
+      href: "/jurisdiction-data"
     }
   ]
 };

@@ -1,53 +1,76 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
-{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
 {% block backLink %}
   {{ govukBackLink({
-    text: back,
-    href: backLink
+    text: t.back,
+    href: t.backLink
   }) }}
 {% endblock %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-one-quarter">
-    <form method="get" novalidate>
-      <h2 class="govuk-heading-m">{{ filterHeading }}</h2>
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ t.title }}</h1>
+  </div>
+</div>
 
-      {{ govukInput({
-        id: "jurisdiction",
-        name: "jurisdiction",
-        label: { text: jurisdictionFilterLabel },
-        hint: { text: filterHint },
-        value: filterValues.jurisdiction
-      }) }}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-quarter filter-column">
+    <div style="border: 1px solid #b1b4b6;">
 
-      {{ govukInput({
-        id: "subJurisdiction",
-        name: "subJurisdiction",
-        label: { text: subJurisdictionFilterLabel },
-        hint: { text: filterHint },
-        value: filterValues.subJurisdiction
-      }) }}
+      <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
+        <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ t.filterHeading }}</h2>
+      </div>
 
-      {{ govukButton({
-        text: applyFiltersButton
-      }) }}
-    </form>
+      <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
+        <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ t.selectedFiltersHeading }}</h3>
+        <a href="/jurisdiction-data-list" class="govuk-link">{{ t.clearFilters }}</a>
+        {% if selectedTypes.length > 0 %}
+          <div class="filter-tags govuk-!-margin-top-4">
+            {% for i in range(0, selectedTypes.length) %}
+              <span class="filter-tag">
+                {{ selectedTypesDisplay[i] }}
+                <a href="{{ typeRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedTypesDisplay[i] }} filter">×</a>
+              </span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="govuk-!-padding-4">
+        <form method="get" novalidate>
+          {{ govukButton({ text: t.applyFiltersButton }) }}
+
+          <div class="filter-section">
+            <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="type-section">
+              <span class="filter-section-heading">{{ t.typeHeading }}</span>
+              <span class="filter-section-icon" aria-hidden="true">−</span>
+            </button>
+            <div id="type-section" class="filter-section-content">
+              {{ govukCheckboxes({
+                name: "type",
+                classes: "govuk-checkboxes--small",
+                items: typeItems
+              }) }}
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
   </div>
 
-  <div class="govuk-grid-column-three-quarters">
-    <h1 class="govuk-heading-l">{{ title }}</h1>
-
+  <div class="govuk-grid-column-three-quarters courts-column">
     {% if tableRows.length > 0 %}
       <table class="govuk-table">
         <thead class="govuk-table__head">
           <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">{{ nameColumn }}</th>
-            <th scope="col" class="govuk-table__header">{{ typeColumn }}</th>
-            <th scope="col" class="govuk-table__header">{{ actionColumn }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.nameColumn }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.typeColumn }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.actionColumn }}</th>
           </tr>
         </thead>
         <tbody class="govuk-table__body">
@@ -61,7 +84,7 @@
         </tbody>
       </table>
     {% else %}
-      <p class="govuk-body">{{ noResultsText }}</p>
+      <p class="govuk-body">{{ t.noResultsText }}</p>
     {% endif %}
   </div>
 </div>

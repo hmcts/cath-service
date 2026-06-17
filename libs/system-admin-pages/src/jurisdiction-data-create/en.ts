@@ -7,8 +7,7 @@ export const en = {
   typePlaceholder: "Select a type",
   typeOptions: [
     { value: "Jurisdiction", text: "Jurisdiction" },
-    { value: "Sub-Jurisdiction", text: "Sub-Jurisdiction" },
-    { value: "Region", text: "Region" }
+    { value: "Sub-Jurisdiction", text: "Sub-Jurisdiction" }
   ],
   jurisdictionLabel: "Parent Jurisdiction",
   jurisdictionPlaceholder: "Select a jurisdiction",

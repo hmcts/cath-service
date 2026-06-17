@@ -125,21 +125,34 @@ export async function createJurisdictionRecord(data: { name: string; welshName: 
   }
 }
 
-export async function updateJurisdictionRecord(id: number, type: JurisdictionDataType, data: { name?: string; welshName?: string }): Promise<void> {
-  const updateData: Record<string, string> = {};
-  if (data.name !== undefined) updateData.name = data.name.trim();
-  if (data.welshName !== undefined) updateData.welshName = data.welshName.trim();
-
+export async function updateJurisdictionRecord(
+  id: number,
+  type: JurisdictionDataType,
+  data: { name?: string; welshName?: string; jurisdictionId?: number }
+): Promise<void> {
   switch (type) {
-    case "Jurisdiction":
+    case "Jurisdiction": {
+      const updateData: Record<string, string> = {};
+      if (data.name !== undefined) updateData.name = data.name.trim();
+      if (data.welshName !== undefined) updateData.welshName = data.welshName.trim();
       await prisma.jurisdiction.update({ where: { jurisdictionId: id }, data: updateData });
       break;
-    case "Sub-Jurisdiction":
+    }
+    case "Sub-Jurisdiction": {
+      const updateData: Record<string, string | number> = {};
+      if (data.name !== undefined) updateData.name = data.name.trim();
+      if (data.welshName !== undefined) updateData.welshName = data.welshName.trim();
+      if (data.jurisdictionId !== undefined) updateData.jurisdictionId = data.jurisdictionId;
       await prisma.subJurisdiction.update({ where: { subJurisdictionId: id }, data: updateData });
       break;
-    case "Region":
+    }
+    case "Region": {
+      const updateData: Record<string, string> = {};
+      if (data.name !== undefined) updateData.name = data.name.trim();
+      if (data.welshName !== undefined) updateData.welshName = data.welshName.trim();
       await prisma.region.update({ where: { regionId: id }, data: updateData });
       break;
+    }
   }
 }
 

@@ -28,9 +28,11 @@ const getHandler = async (req: Request, res: Response) => {
 
   const name = "name" in record ? record.name : "";
   const welshName = "welshName" in record ? record.welshName : "";
+  const jurisdictionId =
+    type === "Sub-Jurisdiction" && "jurisdictionId" in record && record.jurisdictionId != null ? (record.jurisdictionId as number) : undefined;
 
   const session = req.session as JurisdictionDataSession;
-  session.jurisdictionData = { id, type, name, welshName };
+  session.jurisdictionData = { id, type, name, welshName, jurisdictionId };
 
   res.render("jurisdiction-data-modify/index", {
     en,

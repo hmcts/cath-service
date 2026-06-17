@@ -17,12 +17,19 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
 
 import { listJurisdictionData } from "@hmcts/system-admin-pages";
 
+const ALL_DATA = [
+  { id: 1, name: "Civil", welshName: "Sifil", type: "Jurisdiction" },
+  { id: 10, name: "County Court", welshName: "Llys Sirol", type: "Sub-Jurisdiction" },
+  { id: 20, name: "North West", welshName: "Gogledd Orllewin", type: "Region" }
+];
+
 describe("jurisdiction-data-list page", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(listJurisdictionData).mockResolvedValue(ALL_DATA);
     req = { query: {} };
     res = {
       render: vi.fn(),
@@ -31,70 +38,115 @@ describe("jurisdiction-data-list page", () => {
   });
 
   describe("GET", () => {
-    it("should render list with no filter when no query params", async () => {
+    it("should render all records when no type filter is selected", async () => {
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      expect(listJurisdictionData).toHaveBeenCalledWith();
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      // Region is always excluded from this page
+      expect(renderArgs.tableRows).toHaveLength(2);
+    });
+
+    it("should filter to Jurisdiction type when type=Jurisdiction", async () => {
       // Arrange
-      vi.mocked(listJurisdictionData).mockResolvedValue([
-        { id: 1, name: "Civil", welshName: "Sifil", type: "Jurisdiction" },
-        { id: 10, name: "County Court", welshName: "Llys Sirol", type: "Sub-Jurisdiction" }
+      req.query = { type: "Jurisdiction" };
+
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.tableRows).toHaveLength(1);
+      expect(renderArgs.tableRows[0][0].text).toBe("Civil");
+    });
+
+    it("should filter to multiple types when type is an array", async () => {
+      // Arrange
+      req.query = { type: ["Jurisdiction", "Sub-Jurisdiction"] };
+
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.tableRows).toHaveLength(2);
+    });
+
+    it("should build typeItems with correct checked state", async () => {
+      // Arrange
+      req.query = { type: "Jurisdiction" };
+
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.typeItems).toEqual([
+        { value: "Jurisdiction", text: "Jurisdiction", checked: true },
+        { value: "Sub-Jurisdiction", text: "Sub-Jurisdiction", checked: false }
       ]);
-
-      // Act
-      const handler = GET[GET.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      // Assert
-      expect(listJurisdictionData).toHaveBeenCalledWith(undefined);
-      expect(res.render).toHaveBeenCalledWith(
-        "jurisdiction-data-list/index",
-        expect.objectContaining({
-          tableRows: expect.arrayContaining([expect.arrayContaining([{ text: "Civil" }, { text: "Jurisdiction" }])])
-        })
-      );
     });
 
-    it("should pass jurisdiction filter from query params", async () => {
+    it("should build remove URLs that exclude the removed type", async () => {
       // Arrange
-      req.query = { jurisdiction: "Civil" };
-      vi.mocked(listJurisdictionData).mockResolvedValue([{ id: 1, name: "Civil", welshName: "Sifil", type: "Jurisdiction" }]);
+      req.query = { type: ["Jurisdiction", "Sub-Jurisdiction"] };
 
       // Act
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(listJurisdictionData).toHaveBeenCalledWith({ jurisdiction: "Civil" });
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.typeRemoveUrls[0]).toBe("/jurisdiction-data-list?type=Sub-Jurisdiction");
+      expect(renderArgs.typeRemoveUrls[1]).toBe("/jurisdiction-data-list?type=Jurisdiction");
     });
 
-    it("should pass subJurisdiction filter from query params", async () => {
+    it("should build clear-all remove URL when only one type selected", async () => {
       // Arrange
-      req.query = { subJurisdiction: "County Court" };
-      vi.mocked(listJurisdictionData).mockResolvedValue([]);
+      req.query = { type: "Jurisdiction" };
 
       // Act
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(listJurisdictionData).toHaveBeenCalledWith({ subJurisdiction: "County Court" });
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.typeRemoveUrls[0]).toBe("/jurisdiction-data-list");
     });
 
     it("should render modify links with correct query params", async () => {
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.tableRows[0][2].html).toContain("/jurisdiction-data-modify?id=1&type=Jurisdiction");
+      expect(renderArgs.tableRows[0][2].html).toContain("Modify");
+    });
+
+    it("should use localised type labels in table rows", async () => {
       // Arrange
-      vi.mocked(listJurisdictionData).mockResolvedValue([{ id: 5, name: "Family", welshName: "Teulu", type: "Jurisdiction" }]);
+      res.locals = { locale: "cy" };
 
       // Act
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       // Assert
-      const renderCall = vi.mocked(res.render!).mock.calls[0][1] as any;
-      expect(renderCall.tableRows[0][2].html).toContain("/jurisdiction-data-modify?id=5&type=Jurisdiction");
-      expect(renderCall.tableRows[0][2].html).toContain("Modify");
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.tableRows[0][1].text).toBe("Awdurdodaeth");
     });
 
-    it("should preserve filter values in render for form repopulation", async () => {
+    it("should render empty state when no results match filter", async () => {
       // Arrange
-      req.query = { jurisdiction: "Civil", subJurisdiction: "Crown" };
+      req.query = { type: "Sub-Jurisdiction" };
       vi.mocked(listJurisdictionData).mockResolvedValue([]);
 
       // Act
@@ -102,29 +154,8 @@ describe("jurisdiction-data-list page", () => {
       await handler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith(
-        "jurisdiction-data-list/index",
-        expect.objectContaining({
-          filterValues: { jurisdiction: "Civil", subJurisdiction: "Crown" }
-        })
-      );
-    });
-
-    it("should render empty state when no results", async () => {
-      // Arrange
-      vi.mocked(listJurisdictionData).mockResolvedValue([]);
-
-      // Act
-      const handler = GET[GET.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      // Assert
-      expect(res.render).toHaveBeenCalledWith(
-        "jurisdiction-data-list/index",
-        expect.objectContaining({
-          tableRows: []
-        })
-      );
+      const renderArgs = vi.mocked(res.render!).mock.calls[0][1] as any;
+      expect(renderArgs.tableRows).toHaveLength(0);
     });
   });
 });

@@ -70,7 +70,6 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const locale = res.locals.locale || "en";
   const session = req.session as JurisdictionDataSession;
 
   if (!session.locationJurisdiction) {

@@ -9,15 +9,15 @@ export const en = {
       href: "/reference-data-upload"
     },
     {
-      value: "manage-jurisdiction-data",
-      label: "Manage Jurisdiction Data",
-      description: "View, update and remove jurisdiction metadata",
-      href: "/jurisdiction-data"
+      value: "manage-region-data",
+      label: "Manage Region Data",
+      description: "View, update and remove region data",
+      href: "/region-data"
     },
     {
       value: "manage-location-jurisdiction-data",
-      label: "Manage Location Jurisdiction Data",
-      description: "View and update location jurisdiction data",
+      label: "Manage Location Jurisdiction and Region Data",
+      description: "View and update location jurisdiction and region data",
       href: "/location-jurisdiction-search"
     },
     {
