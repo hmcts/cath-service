@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 
 export const GET = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const user = await prisma.thirdPartyUser.findUnique({
       where: { id },
@@ -23,7 +23,7 @@ export const GET = async (req: Request, res: Response) => {
 
 export const DELETE = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     await prisma.thirdPartyUser.delete({
       where: { id }
