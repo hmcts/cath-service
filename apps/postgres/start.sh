@@ -30,8 +30,12 @@ fi
 
 PRISMA="./node_modules/.bin/prisma"
 
-# On fresh PR deployments the Azure Flexible Server database is provisioned by ASO
-# after Helm installs, so the pod must wait. Kubernetes will kill via startup probe if needed.
+# Start the health server immediately so Kubernetes startup/liveness probes pass
+# while the pod waits for the database and runs migrations.
+echo "Starting health proxy on port 5555..."
+node health-server.mjs &
+HEALTH_PID=$!
+
 echo "Waiting for database to become available..."
 until $PRISMA db execute --stdin --config=./prisma.config.ts 2>/dev/null <<'SQL'
 SELECT 1;
@@ -46,11 +50,6 @@ echo "Resolving any failed migrations..."
 printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;" | \
   $PRISMA db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
 
-# Remove stale migration records so Prisma re-runs the idempotent versions.
-# Both 20260527140208 and 20260528115459 were modified after being applied to some
-# databases: 20260527140208 was deleted then restored with idempotent content;
-# 20260528115459 had its bare ALTER TABLE wrapped in a DO block. Deleting the DB
-# records lets Prisma reapply both idempotent versions regardless of stored checksums.
 echo "Clearing stale migration records for 20260527140208 and 20260528115459..."
 printf "DELETE FROM _prisma_migrations WHERE migration_name IN ('20260527140208', '20260528115459_add_third_party_push_log');" | \
   $PRISMA db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
@@ -58,19 +57,9 @@ printf "DELETE FROM _prisma_migrations WHERE migration_name IN ('20260527140208'
 echo "Running database migrations..."
 $PRISMA migrate deploy --config=./prisma.config.ts
 
-if [ $? -eq 0 ]; then
-  echo "Migrations completed successfully"
-  echo "Starting health proxy on port 5555..."
-  node health-server.mjs &
-  HEALTH_PID=$!
+echo "Migrations completed successfully"
+echo "Starting Prisma Studio on port 5556..."
+$PRISMA studio --config=./prisma.config.ts --port 5556 --browser none &
+STUDIO_PID=$!
 
-  echo "Starting Prisma Studio on port 5556..."
-  $PRISMA studio --config=./prisma.config.ts --port 5556 --browser none &
-  STUDIO_PID=$!
-
-  # Wait for both processes
-  wait $HEALTH_PID $STUDIO_PID
-else
-  echo "Migration failed, exiting..."
-  exit 1
-fi
+wait $HEALTH_PID $STUDIO_PID
