@@ -13,6 +13,5 @@ export const en = {
   scopeRequired: "Enter a scope",
   clientIdRequired: "Enter a client ID",
   clientSecretRequired: "Enter a client secret",
-  cancelButton: "Cancel",
   back: "Back"
 };
