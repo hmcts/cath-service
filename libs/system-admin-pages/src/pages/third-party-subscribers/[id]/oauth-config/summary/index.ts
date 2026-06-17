@@ -22,7 +22,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const config = (req.session as ThirdPartyOauthConfigSession).thirdPartyOauthConfig;
   if (!config || config.userId !== id) {
@@ -42,7 +42,7 @@ export const getHandler = async (req: Request, res: Response) => {
 export const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const config = (req.session as ThirdPartyOauthConfigSession).thirdPartyOauthConfig;
   if (!config || config.userId !== id) {

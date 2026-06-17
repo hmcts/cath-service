@@ -22,7 +22,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
   const page = Math.max(1, Number.parseInt((req.query.page as string) ?? "1", 10) || 1);
 
   const user = await findThirdPartyUserById(id);
@@ -61,7 +61,7 @@ export const getHandler = async (req: Request, res: Response) => {
     userName: user.name,
     useDropdown,
     listTypes: pageListTypes,
-    currentSubscriptions: session.thirdPartySubscriptions.pending,
+    currentSubscriptions: session.thirdPartySubscriptions!.pending,
     currentPage: page,
     totalPages,
     isLastPage: page >= totalPages,
@@ -72,7 +72,7 @@ export const getHandler = async (req: Request, res: Response) => {
 export const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
   const page = Math.max(1, Number.parseInt((req.query.page as string) ?? "1", 10) || 1);
 
   const user = await findThirdPartyUserById(id);
@@ -95,9 +95,9 @@ export const postHandler = async (req: Request, res: Response) => {
   for (const listType of pageListTypes) {
     const value = req.body[listType.name] as string | undefined;
     if (value && value !== "UNSELECTED" && value !== "") {
-      session.thirdPartySubscriptions.pending[listType.name] = value;
+      session.thirdPartySubscriptions!.pending[listType.name] = value;
     } else {
-      delete session.thirdPartySubscriptions.pending[listType.name];
+      delete session.thirdPartySubscriptions!.pending[listType.name];
     }
   }
 
@@ -111,11 +111,11 @@ export const postHandler = async (req: Request, res: Response) => {
 
   const listTypeNameById = new Map(listTypes.map((lt) => [lt.id, lt.name]));
   const beforeSubscriptions = user.subscriptions.map((s) => `${listTypeNameById.get(s.listTypeId) ?? s.listTypeId}:${s.sensitivity}`).join(", ");
-  const afterSubscriptions = Object.entries(session.thirdPartySubscriptions.pending)
+  const afterSubscriptions = Object.entries(session.thirdPartySubscriptions!.pending)
     .map(([lt, sens]) => `${lt}:${sens}`)
     .join(", ");
 
-  await updateThirdPartySubscriptions(id, session.thirdPartySubscriptions.pending);
+  await updateThirdPartySubscriptions(id, session.thirdPartySubscriptions!.pending);
 
   delete session.thirdPartySubscriptions;
 

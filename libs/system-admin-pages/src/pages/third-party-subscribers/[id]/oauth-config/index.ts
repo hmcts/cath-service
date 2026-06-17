@@ -21,7 +21,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
   if (!user) {
@@ -80,7 +80,7 @@ export const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const { destinationUrl, tokenUrl, scope, clientId, clientSecret } = req.body as {
     destinationUrl: string;

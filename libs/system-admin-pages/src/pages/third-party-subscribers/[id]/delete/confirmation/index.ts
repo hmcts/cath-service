@@ -29,7 +29,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const user = await findThirdPartyUserById(id);
   if (!user) {
@@ -43,7 +43,7 @@ export const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const user = await findThirdPartyUserById(id);
   if (!user) {
