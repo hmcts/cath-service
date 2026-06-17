@@ -65,7 +65,7 @@
     "@isaacs/brace-expansion": "5.0.1",
     "ajv": "8.20.0",
     "axios": "1.18.0",
-    "body-parser": "2.2.2",
+    "body-parser": "2.3.0",
     "glob": "13.0.6",
     "jws": "4.0.1",
     "lodash": "4.18.1",
