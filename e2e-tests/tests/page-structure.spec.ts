@@ -1,14 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 test.describe("Page Structure", () => {
   test("page structure displays correctly with header, beta banner, and footer", async ({ page }) => {
     await page.goto("/");
 
-    // GOV.UK header link
-    const govukLink = page.locator(".govuk-header__link--homepage");
+    // GOV.UK header link (logo is an SVG with an accessible name from govuk-frontend v6)
+    const govukLink = page.locator(".govuk-header__homepage-link");
     await expect(govukLink).toBeVisible();
-    await expect(govukLink).toHaveText("GOV.UK");
+    await expect(govukLink).toHaveAccessibleName("GOV.UK");
     await expect(govukLink).toHaveAttribute("href", "https://www.gov.uk");
 
     // Service navigation with service name
@@ -138,10 +139,7 @@ test.describe("Page Structure", () => {
     await expect(cookiesLink).toHaveText("Cwcis");
 
     // Accessibility check in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["link-name", "target-size"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["link-name", "target-size"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Switch back to English
@@ -170,10 +168,7 @@ test.describe("Page Structure", () => {
     await expect(footer).toBeVisible();
 
     // Accessibility check on 404 page
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["link-name", "target-size"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["link-name", "target-size"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

@@ -4,8 +4,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    clearMocks: true,
     coverage: {
       provider: "v8",
+      reporter: ["lcov", "text"],
+      reportsDirectory: "coverage",
       exclude: [
         "**/node_modules/**",
         "**/dist/**",

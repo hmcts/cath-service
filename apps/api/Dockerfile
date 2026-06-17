@@ -14,6 +14,9 @@ RUN yarn build
 
 # ---- Runtime image ----
 FROM base AS runtime
+USER root
+RUN apk add --no-cache chromium
+USER hmcts
 COPY --from=build /opt/app/apps/api/dist ./apps/api/dist
 COPY --from=build /opt/app/libs ./libs
 

@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
-    "typeRoots": ["../../node_modules/@types", "../../types"]
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts", "dist", "node_modules"]

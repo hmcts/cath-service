@@ -48,7 +48,7 @@ describe("crime-idam-config", () => {
       const config = getCrimeIdamConfig();
 
       // Assert
-      expect(config.scope).toBe("openid profile roles");
+      expect(config.scope).toBe("openid profile email");
     });
 
     it("should use default BASE_URL when not provided", () => {

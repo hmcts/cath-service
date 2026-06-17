@@ -1,17 +1,17 @@
 ---
-paths: [libs/**/src/**/*.ts, apps/api/**/*.ts, libs/postgres-prisma/prisma/schema/*.prisma]
+paths: [apps/api/src/routes/**/*.ts, libs/**/src/routes/**/*.ts, apps/api/**/*.ts, libs/postgres-prisma/prisma/schema/*.prisma]
 ---
 
 # Backend Development Rules
 
 ## API Route Pattern
 
-Routes live in `src/routes/` directories of `libs` and export named HTTP method functions. Routes are auto-discovered by `createSimpleRouter`.
+API routes live primarily in `apps/api/src/routes/`. Feature-specific or test routes can optionally live in `libs/*/src/routes/` and are registered via config exports. All routes export named HTTP method functions and are auto-discovered by `createSimpleRouter`.
 
 ### Route Structure
 
 ```typescript
-// libs/[module]/src/routes/[resource].ts
+// apps/api/src/routes/[resource].ts
 import type { Request, Response } from "express";
 
 // GET /api/resource
@@ -32,17 +32,32 @@ export const POST = async (req: Request, res: Response) => {
 };
 ```
 
+**Optional: Feature-specific routes in libs** (registered via config):
+```typescript
+// libs/test-support/src/routes/test-support/health.ts
+export const GET = async (req: Request, res: Response) => {
+  res.json({ status: "ok" });
+};
+
+// libs/test-support/src/config.ts
+export const apiRoutes = { path: path.join(__dirname, "routes") };
+
+// Registered in apps/api/src/app.ts:
+// const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+// app.use(await createSimpleRouter(testSupportRoutes));
+```
+
 ### Dynamic Routes
 
 Use bracket notation for URL parameters:
 
 ```
-routes/users/[id].ts     → /api/users/:id
-routes/cases/[caseId].ts → /api/cases/:caseId
+apps/api/src/routes/users/[id].ts     → /api/users/:id
+apps/api/src/routes/cases/[caseId].ts → /api/cases/:caseId
 ```
 
 ```typescript
-// routes/users/[id].ts
+// apps/api/src/routes/users/[id].ts
 export const GET = async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = await userService.findById(id);
@@ -617,17 +632,35 @@ res.status(400).json({
 
 ## File Organization
 
+**Primary API routes (apps/api):**
+```
+apps/api/src/routes/
+├── users.ts                    # /api/users
+├── users.test.ts
+├── users/
+│   ├── [id].ts                 # /api/users/:id
+│   └── [id].test.ts
+├── locations.ts                # /api/locations
+└── v1/
+    └── publication.ts          # /api/v1/publication
+```
+
+**Feature-specific routes (optional in libs):**
+```
+libs/test-support/
+└── src/
+    ├── config.ts               # Exports apiRoutes config
+    └── routes/
+        └── test-support/       # /api/test-support/*
+            ├── health.ts
+            └── users.ts
+```
+
+**Domain logic (libs):**
 ```
 libs/my-module/
 └── src/
-    ├── config.ts               # Module configuration (apiRoutes, etc.)
     ├── index.ts                # Business logic exports
-    ├── routes/                 # API route handlers
-    │   ├── resource.ts         # /api/resource
-    │   ├── resource.test.ts
-    │   └── resource/
-    │       ├── [id].ts         # /api/resource/:id
-    │       └── [id].test.ts
     └── resource/               # Domain logic
         ├── resource-service.ts
         ├── resource-service.test.ts
@@ -638,11 +671,12 @@ libs/my-module/
 ## Testing API Routes
 
 ```typescript
-// routes/users.test.ts
+// apps/api/src/routes/users.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET, POST } from "./users.js";
+import { findAllUsers, createUser } from "@hmcts/user-management";
 
-vi.mock("../user/user-service.js", () => ({
+vi.mock("@hmcts/user-management", () => ({
   findAllUsers: vi.fn(),
   createUser: vi.fn()
 }));

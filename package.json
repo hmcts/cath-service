@@ -34,7 +34,7 @@
     "dev:up": "docker compose up -d && yarn db:migrate:dev && yarn db:seed",
     "dev:down": "docker compose down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
-    "db:seed": "tsx --env-file-if-exists=.env libs/location/src/seed-data.ts",
+    "db:seed": "tsx --env-file-if-exists=.env apps/postgres/prisma/seed.ts",
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
     "db:generate": "yarn workspace @hmcts/postgres-prisma run generate",
     "db:studio": "yarn workspace @hmcts/postgres run studio",
@@ -49,32 +49,33 @@
     "@biomejs/cli-linux-arm64": "^2.3.6",
     "@types/jsonwebtoken": "9.0.10",
     "@types/node": "24.10.4",
-    "@types/passport-azure-ad": "4.3.6",
     "@types/supertest": "7.2.0",
-    "@vitest/coverage-v8": "4.1.7",
-    "@vitest/ui": "4.1.7",
+    "@vitest/coverage-v8": "4.1.9",
+    "@vitest/ui": "4.1.9",
     "concurrently": "9.2.1",
     "happy-dom": "^20.0.5",
     "supertest": "7.2.2",
-    "tsx": "4.21.0",
-    "turbo": "2.9.14",
-    "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "tsx": "4.22.4",
+    "turbo": "2.9.18",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "packageManager": "yarn@4.14.1",
   "resolutions": {
     "@isaacs/brace-expansion": "5.0.1",
     "ajv": "8.20.0",
-    "axios": "1.16.1",
-    "body-parser": "2.2.2",
+    "axios": "1.18.0",
+    "body-parser": "2.3.0",
     "glob": "13.0.6",
     "jws": "4.0.1",
     "lodash": "4.18.1",
     "node-forge": "1.4.0",
+    "pg": "8.21.0",
+    "pg-connection-string": "2.13.0",
     "qs": "6.15.2",
-    "tar": "7.5.15",
-    "undici": "7.25.0",
-    "vite": "7.3.3"
+    "tar": "7.5.16",
+    "undici": "7.27.2",
+    "vite": "7.3.5"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "3.0.7",
@@ -83,8 +84,8 @@
     "jsonwebtoken": "9.0.3",
     "jwks-rsa": "4.0.1",
     "notifications-node-client": "^8.2.1",
+    "openid-client": "6.8.4",
     "passport": "0.7.0",
-    "passport-azure-ad": "4.3.5",
-    "pg": "8.20.0"
+    "pg": "8.21.0"
   }
 }

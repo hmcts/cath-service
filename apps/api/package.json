@@ -14,17 +14,29 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts-cft/cloud-native-platform": "2.1.0",
+    "@hmcts-cft/simple-router": "2.1.0",
     "@hmcts/blob-ingestion": "workspace:*",
-    "@hmcts/cloud-native-platform": "workspace:*",
+    "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/location": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
-    "@hmcts/simple-router": "workspace:*",
     "@hmcts/test-support": "workspace:*",
+    "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
     "config": "4.4.1",
+    "connect-redis": "9.0.0",
     "cors": "2.8.6",
     "express": "5.2.1",
-    "jwks-rsa": "4.0.1"
+    "express-session": "1.19.0",
+    "govuk-frontend": "6.2.0",
+    "helmet": "8.0.0",
+    "jwks-rsa": "4.0.1",
+    "multer": "2.1.1",
+    "nunjucks": "3.2.4",
+    "passport": "0.7.0",
+    "pg": "8.21.0",
+    "pg-format": "1.0.4",
+    "redis": "5.12.1"
   },
   "devDependencies": {
     "@types/compression": "1.8.1",
@@ -32,6 +44,7 @@
     "@types/express": "5.0.6",
     "@types/supertest": "^7.0.0",
     "nodemon": "3.1.14",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "typescript": "6.0.3"
   }
 }

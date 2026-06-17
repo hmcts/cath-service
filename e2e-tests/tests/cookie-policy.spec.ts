@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 test.describe("Cookie Policy Page", () => {
   test("should complete full cookie policy user journey", async ({ page, context }) => {
@@ -133,7 +133,7 @@ test.describe("Cookie Policy Page", () => {
     await expect(page.locator("h3:has-text('I fesur faint o bobl')")).toBeVisible();
 
     // Check accessibility in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Save preferences in Welsh
@@ -177,7 +177,7 @@ test.describe("Cookie Policy Page - Accessibility", () => {
     await page.waitForLoadState("load");
 
     // Run axe accessibility scan
-    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Verify all radio buttons have associated labels

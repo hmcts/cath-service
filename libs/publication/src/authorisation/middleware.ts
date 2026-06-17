@@ -1,5 +1,6 @@
 import type { UserProfile } from "@hmcts/auth";
 import { prisma } from "@hmcts/postgres-prisma";
+import { getParam } from "@hmcts/web-core";
 import { cy as errorCy, en as errorEn } from "@hmcts/web-core/errors";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { Artefact } from "../repository/model.js";
@@ -68,7 +69,7 @@ async function fetchArtefact(publicationId: string): Promise<Artefact | null> {
  */
 function createPublicationAccessMiddleware(checkAccess: AccessCheck, useCustom403Message = false): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const publicationId = req.params.id;
+    const publicationId = getParam(req.params, "id");
     const locale = res.locals.locale || "en";
 
     if (!publicationId) {

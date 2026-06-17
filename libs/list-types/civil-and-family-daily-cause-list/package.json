@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks && yarn build:pdf-templates",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build:nunjucks": "mkdir -p dist/pdf && cd src/pdf && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pdf/$(dirname {}) && cp {} ../../dist/pdf/{}' \\;",
     "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
     "dev": "tsc --watch",
     "test": "vitest run",
@@ -24,6 +24,7 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/daily-cause-list-common": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "luxon": "3.7.2",
@@ -33,8 +34,8 @@
     "@types/luxon": "3.7.1",
     "@types/node": "24.10.4",
     "@types/nunjucks": "3.2.6",
-    "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "peerDependencies": {
     "express": "^5.2.0"

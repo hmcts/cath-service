@@ -1,9 +1,10 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import { getParam } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 
 export const GET = async (req: Request, res: Response) => {
   try {
-    const { artefactId } = req.params;
+    const artefactId = getParam(req.params, "artefactId");
 
     const artefact = await prisma.artefact.findUnique({
       where: { artefactId }
@@ -22,7 +23,7 @@ export const GET = async (req: Request, res: Response) => {
 
 export const DELETE = async (req: Request, res: Response) => {
   try {
-    const { artefactId } = req.params;
+    const artefactId = getParam(req.params, "artefactId");
 
     await prisma.artefact.delete({
       where: { artefactId }
