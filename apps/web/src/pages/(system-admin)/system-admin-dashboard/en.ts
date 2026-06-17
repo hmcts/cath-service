@@ -22,11 +22,6 @@ export const en = {
       href: "/third-party-subscribers"
     },
     {
-      title: "Manage Third-Party Subscribers",
-      description: "View, create, update and remove third-party subscribers and their OAuth configuration",
-      href: "/third-party-users"
-    },
-    {
       title: "User Management",
       description: "Find, update and delete users",
       href: "/find-users"
