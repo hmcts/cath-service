@@ -44,6 +44,13 @@ export async function findThirdPartyUserById(id: string) {
   });
 }
 
+export async function findThirdPartyUserByName(name: string) {
+  return prisma.legacyThirdPartyUser.findFirst({
+    where: { name: { equals: name.trim(), mode: "insensitive" } },
+    select: { id: true, name: true }
+  });
+}
+
 export async function createThirdPartyUser(name: string) {
   return prisma.legacyThirdPartyUser.create({
     data: {
