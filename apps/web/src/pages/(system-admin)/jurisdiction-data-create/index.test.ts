@@ -7,16 +7,16 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () => ({
-  createJurisdictionData: vi.fn()
-}));
+vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
+  return {
+    ...actual,
+    createJurisdictionData: vi.fn(),
+    getAllJurisdictions: vi.fn()
+  };
+});
 
-vi.mock("../../reference-data-upload/repository/sub-jurisdiction-repository.js", () => ({
-  getAllJurisdictions: vi.fn()
-}));
-
-import { createJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
-import { getAllJurisdictions } from "../../reference-data-upload/repository/sub-jurisdiction-repository.js";
+import { createJurisdictionData, getAllJurisdictions } from "@hmcts/system-admin-pages";
 
 describe("jurisdiction-data-create page", () => {
   let req: Partial<Request>;
@@ -35,7 +35,8 @@ describe("jurisdiction-data-create page", () => {
     };
     res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: { locale: "en" }
     };
   });
 
@@ -50,7 +51,7 @@ describe("jurisdiction-data-create page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data-create/index",
         expect.objectContaining({
-          title: "Create Jurisdiction Data",
+          t: expect.objectContaining({ title: "Create Jurisdiction Data" }),
           data: { name: "", welshName: "", type: "", jurisdictionId: "" },
           jurisdictionItems: [
             { value: "", text: "Select a jurisdiction" },

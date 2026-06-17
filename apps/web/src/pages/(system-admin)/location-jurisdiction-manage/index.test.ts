@@ -7,11 +7,15 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () => ({
-  getLocationJurisdictionDetails: vi.fn()
-}));
+vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
+  return {
+    ...actual,
+    getLocationJurisdictionDetails: vi.fn()
+  };
+});
 
-import { getLocationJurisdictionDetails } from "../../jurisdiction-management/jurisdiction-management-service.js";
+import { getLocationJurisdictionDetails } from "@hmcts/system-admin-pages";
 
 describe("location-jurisdiction-manage page", () => {
   let req: Partial<Request>;
@@ -25,7 +29,11 @@ describe("location-jurisdiction-manage page", () => {
         locationJurisdiction: { locationId: 100, locationName: "Test Court", locationWelshName: "Llys Prawf" }
       } as any
     };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = {
+      render: vi.fn(),
+      redirect: vi.fn(),
+      locals: { locale: "en" }
+    };
   });
 
   describe("GET", () => {

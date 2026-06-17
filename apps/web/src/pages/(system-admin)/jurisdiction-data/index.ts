@@ -1,21 +1,21 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { jurisdictionDataCy as cy, jurisdictionDataEn as en } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const REDIRECT_MAP: Record<string, string> = {
   create: "/jurisdiction-data-create",
   modify: "/jurisdiction-data-list"
 };
 
-const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+const getHandler = async (_req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
 
   res.render("jurisdiction-data/index", {
-    ...content,
-    back: language === "cy" ? "Yn ôl" : "Back",
-    radioItems: content.options.map((option) => ({
+    en,
+    cy,
+    t,
+    radioItems: t.options.map((option) => ({
       value: option.value,
       text: option.label
     })),
@@ -25,26 +25,26 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const selected = req.body.action;
 
   if (!selected || !REDIRECT_MAP[selected]) {
-    const errors = [{ text: content.noSelectionError, href: "#action" }];
+    const errors = [{ text: t.noSelectionError, href: "#action" }];
     return res.render("jurisdiction-data/index", {
-      ...content,
-      back: language === "cy" ? "Yn ôl" : "Back",
-      radioItems: content.options.map((option) => ({
+      en,
+      cy,
+      t,
+      radioItems: t.options.map((option) => ({
         value: option.value,
         text: option.label
       })),
-      radioError: { text: content.noSelectionError },
+      radioError: { text: t.noSelectionError },
       errors
     });
   }
 
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
-  res.redirect(`${REDIRECT_MAP[selected]}${langSuffix}`);
+  res.redirect(REDIRECT_MAP[selected]);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

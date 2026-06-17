@@ -1,25 +1,19 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { jurisdictionDataUpdateSuccessCy as cy, jurisdictionDataUpdateSuccessEn as en, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
-
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.jurisdictionData) {
-    return res.redirect(`/jurisdiction-data-list${langSuffix}`);
+    return res.redirect("/jurisdiction-data-list");
   }
 
   delete session.jurisdictionData;
 
-  res.render("jurisdiction-data-update-success/index", {
-    ...content
-  });
+  res.render("jurisdiction-data-update-success/index", { en, cy, t });
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

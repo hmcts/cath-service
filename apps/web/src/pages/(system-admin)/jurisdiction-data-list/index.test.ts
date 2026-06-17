@@ -7,11 +7,15 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () => ({
-  listJurisdictionData: vi.fn()
-}));
+vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
+  return {
+    ...actual,
+    listJurisdictionData: vi.fn()
+  };
+});
 
-import { listJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
+import { listJurisdictionData } from "@hmcts/system-admin-pages";
 
 describe("jurisdiction-data-list page", () => {
   let req: Partial<Request>;
@@ -20,7 +24,10 @@ describe("jurisdiction-data-list page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     req = { query: {} };
-    res = { render: vi.fn() };
+    res = {
+      render: vi.fn(),
+      locals: { locale: "en" }
+    };
   });
 
   describe("GET", () => {

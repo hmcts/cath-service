@@ -19,14 +19,21 @@ describe("location-jurisdiction-delete-success page", () => {
         locationJurisdiction: { locationId: 100, locationName: "Test Court", locationWelshName: "Llys Prawf" }
       } as any
     };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = {
+      render: vi.fn(),
+      redirect: vi.fn(),
+      locals: { locale: "en" }
+    };
   });
 
   it("should render success panel when session data exists", async () => {
     const handler = GET[GET.length - 1];
     await handler(req as Request, res as Response, vi.fn());
 
-    expect(res.render).toHaveBeenCalledWith("location-jurisdiction-delete-success/index", expect.objectContaining({ panelTitle: "Jurisdiction Data Deleted" }));
+    expect(res.render).toHaveBeenCalledWith(
+      "location-jurisdiction-delete-success/index",
+      expect.objectContaining({ t: expect.objectContaining({ panelTitle: "Jurisdiction Data Deleted" }) })
+    );
   });
 
   it("should clear session data after rendering", async () => {

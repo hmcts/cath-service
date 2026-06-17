@@ -1,35 +1,37 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import {
+  createJurisdictionData,
+  jurisdictionDataCreateCy as cy,
+  jurisdictionDataCreateEn as en,
+  getAllJurisdictions,
+  type JurisdictionDataSession
+} from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { createJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
-import { getAllJurisdictions } from "../../reference-data-upload/repository/sub-jurisdiction-repository.js";
-import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
-const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const typeItems = [{ value: "", text: content.typePlaceholder }, ...content.typeOptions];
+const getHandler = async (_req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  const typeItems = [{ value: "", text: t.typePlaceholder }, ...t.typeOptions];
   const jurisdictions = await getAllJurisdictions();
   const jurisdictionItems = [
-    { value: "", text: content.jurisdictionPlaceholder },
+    { value: "", text: t.jurisdictionPlaceholder },
     ...jurisdictions.map((j) => ({ value: j.jurisdictionId.toString(), text: j.displayName }))
   ];
 
   res.render("jurisdiction-data-create/index", {
-    ...content,
+    en,
+    cy,
+    t,
     typeItems,
     jurisdictionItems,
-    back: language === "cy" ? "Yn ôl" : "Back",
     data: { name: "", welshName: "", type: "", jurisdictionId: "" },
     errors: undefined
   });
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
 
   const formData = {
     name: (req.body.name || "").trim(),
@@ -48,17 +50,18 @@ const postHandler = async (req: Request, res: Response) => {
   });
 
   if (errors.length > 0) {
-    const typeItems = [{ value: "", text: content.typePlaceholder }, ...content.typeOptions];
+    const typeItems = [{ value: "", text: t.typePlaceholder }, ...t.typeOptions];
     const jurisdictions = await getAllJurisdictions();
     const jurisdictionItems = [
-      { value: "", text: content.jurisdictionPlaceholder },
+      { value: "", text: t.jurisdictionPlaceholder },
       ...jurisdictions.map((j) => ({ value: j.jurisdictionId.toString(), text: j.displayName }))
     ];
     return res.render("jurisdiction-data-create/index", {
-      ...content,
+      en,
+      cy,
+      t,
       typeItems,
       jurisdictionItems,
-      back: language === "cy" ? "Yn ôl" : "Back",
       data: formData,
       errors
     });
@@ -72,7 +75,7 @@ const postHandler = async (req: Request, res: Response) => {
     welshName: formData.welshName
   };
 
-  res.redirect(`/jurisdiction-data-create-success${langSuffix}`);
+  res.redirect("/jurisdiction-data-create-success");
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

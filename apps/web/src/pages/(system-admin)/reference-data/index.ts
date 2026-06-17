@@ -1,19 +1,19 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { referenceDataCy as cy, referenceDataEn as en } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const LANDING_PAGE_VARIANT: "tiles" | "radios" = "tiles";
 
-const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+const getHandler = async (_req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const template = LANDING_PAGE_VARIANT === "tiles" ? "reference-data/index-tiles" : "reference-data/index-radios";
 
   res.render(template, {
-    ...content,
-    back: language === "cy" ? "Yn ôl" : "Back",
-    radioItems: content.options.map((option) => ({
+    en,
+    cy,
+    t,
+    radioItems: t.options.map((option) => ({
       value: option.value,
       text: option.label,
       hint: { text: option.description }
@@ -24,29 +24,29 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const selected = req.body.action;
 
   if (!selected) {
-    const errors = [{ text: content.noSelectionError, href: "#action" }];
+    const errors = [{ text: t.noSelectionError, href: "#action" }];
     return res.render("reference-data/index-radios", {
-      ...content,
-      back: language === "cy" ? "Yn ôl" : "Back",
-      radioItems: content.options.map((option) => ({
+      en,
+      cy,
+      t,
+      radioItems: t.options.map((option) => ({
         value: option.value,
         text: option.label,
         hint: { text: option.description }
       })),
-      radioError: { text: content.noSelectionError },
+      radioError: { text: t.noSelectionError },
       errors
     });
   }
 
-  const option = content.options.find((o) => o.value === selected);
+  const option = t.options.find((o) => o.value === selected);
   const redirectUrl = option?.href ?? "/reference-data";
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
-  res.redirect(`${redirectUrl}${langSuffix}`);
+  res.redirect(redirectUrl);
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

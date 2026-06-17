@@ -1,18 +1,19 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import {
+  locationJurisdictionManageCy as cy,
+  locationJurisdictionManageEn as en,
+  getLocationJurisdictionDetails,
+  type JurisdictionDataSession
+} from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { getLocationJurisdictionDetails } from "../../jurisdiction-management/jurisdiction-management-service.js";
-import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.locationJurisdiction) {
-    return res.redirect(`/location-jurisdiction-search${langSuffix}`);
+    return res.redirect("/location-jurisdiction-search");
   }
 
   const { locationId, locationName } = session.locationJurisdiction;
@@ -26,12 +27,13 @@ const getHandler = async (req: Request, res: Response) => {
     ]) || [];
 
   res.render("location-jurisdiction-manage/index", {
-    ...content,
-    back: language === "cy" ? "Yn ôl" : "Back",
+    en,
+    cy,
+    t,
     locationName,
     tableRows,
-    updateHref: `/location-jurisdiction-update${langSuffix}`,
-    deleteHref: `/location-jurisdiction-delete${langSuffix}`
+    updateHref: "/location-jurisdiction-update",
+    deleteHref: "/location-jurisdiction-delete"
   });
 };
 

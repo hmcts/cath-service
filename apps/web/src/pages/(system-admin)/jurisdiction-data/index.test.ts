@@ -16,7 +16,8 @@ describe("jurisdiction-data landing page", () => {
     req = { query: {}, body: {} };
     res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: { locale: "en" }
     };
   });
 
@@ -30,15 +31,15 @@ describe("jurisdiction-data landing page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data/index",
         expect.objectContaining({
-          title: "What do you want to do?",
+          t: expect.objectContaining({ title: "What do you want to do?" }),
           radioItems: expect.arrayContaining([expect.objectContaining({ value: "create" }), expect.objectContaining({ value: "modify" })])
         })
       );
     });
 
-    it("should render in Welsh when lng=cy", async () => {
+    it("should render in Welsh when locale is cy", async () => {
       // Arrange
-      req.query = { lng: "cy" };
+      res.locals = { locale: "cy" };
 
       // Act
       const handler = GET[GET.length - 1];
@@ -48,7 +49,7 @@ describe("jurisdiction-data landing page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data/index",
         expect.objectContaining({
-          title: "Beth yr ydych eisiau ei wneud?"
+          t: expect.objectContaining({ title: "Beth yr ydych eisiau ei wneud?" })
         })
       );
     });
@@ -95,19 +96,6 @@ describe("jurisdiction-data landing page", () => {
           radioError: { text: "Please select one option" }
         })
       );
-    });
-
-    it("should append lng=cy to redirect when in Welsh", async () => {
-      // Arrange
-      req.query = { lng: "cy" };
-      req.body = { action: "create" };
-
-      // Act
-      const handler = POST[POST.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/jurisdiction-data-create?lng=cy");
     });
   });
 });

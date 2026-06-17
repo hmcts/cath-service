@@ -7,11 +7,15 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () => ({
-  updateJurisdictionData: vi.fn()
-}));
+vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
+  return {
+    ...actual,
+    updateJurisdictionData: vi.fn()
+  };
+});
 
-import { updateJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
+import { updateJurisdictionData } from "@hmcts/system-admin-pages";
 
 describe("jurisdiction-data-update page", () => {
   let req: Partial<Request>;
@@ -28,7 +32,8 @@ describe("jurisdiction-data-update page", () => {
     };
     res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: { locale: "en" }
     };
   });
 

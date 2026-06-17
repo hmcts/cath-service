@@ -1,21 +1,24 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import {
+  locationJurisdictionUpdateCy as cy,
+  locationJurisdictionUpdateEn as en,
+  getLocationJurisdictionDetails,
+  type JurisdictionDataSession,
+  listJurisdictionsWithSubJurisdictions,
+  listRegions,
+  updateLocationJurisdictionData
+} from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { listJurisdictionsWithSubJurisdictions, listRegions } from "../../jurisdiction-management/jurisdiction-management-queries.js";
-import { getLocationJurisdictionDetails, updateLocationJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
-import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const LOCATION_JURISDICTION_UPDATE_VARIANT: "dropdowns" | "accordions" = "dropdowns";
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.locationJurisdiction) {
-    return res.redirect(`/location-jurisdiction-search${langSuffix}`);
+    return res.redirect("/location-jurisdiction-search");
   }
 
   const { locationId, locationName } = session.locationJurisdiction;
@@ -29,10 +32,10 @@ const getHandler = async (req: Request, res: Response) => {
   const currentRegionIds = locationData?.locationRegions?.map((lr: any) => lr.region?.regionId) || [];
 
   const jurisdictionLabelMap: Record<string, string> = {
-    Civil: content.civilCourtLabel,
-    Crime: content.criminalCourtLabel,
-    Family: content.familyCourtLabel,
-    Tribunal: content.tribunalLabel
+    Civil: t.civilCourtLabel,
+    Crime: t.criminalCourtLabel,
+    Family: t.familyCourtLabel,
+    Tribunal: t.tribunalLabel
   };
 
   const subJurisdictionGroups = jurisdictionsWithSubs
@@ -56,22 +59,22 @@ const getHandler = async (req: Request, res: Response) => {
     LOCATION_JURISDICTION_UPDATE_VARIANT === "dropdowns" ? "location-jurisdiction-update/index-dropdowns" : "location-jurisdiction-update/index-accordions";
 
   res.render(template, {
-    ...content,
-    back: language === "cy" ? "Yn ôl" : "Back",
+    en,
+    cy,
+    t,
     locationName,
     subJurisdictionGroups,
     regionCheckboxes,
-    cancelHref: `${content.cancelHref}${langSuffix}`
+    cancelHref: t.cancelHref
   });
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
   const session = req.session as JurisdictionDataSession;
 
   if (!session.locationJurisdiction) {
-    return res.redirect(`/location-jurisdiction-search${langSuffix}`);
+    return res.redirect("/location-jurisdiction-search");
   }
 
   const { locationId } = session.locationJurisdiction;
@@ -91,7 +94,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   await updateLocationJurisdictionData(locationId, { subJurisdictionIds, regionIds }, performedBy);
 
-  res.redirect(`/location-jurisdiction-update-success${langSuffix}`);
+  res.redirect("/location-jurisdiction-update-success");
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

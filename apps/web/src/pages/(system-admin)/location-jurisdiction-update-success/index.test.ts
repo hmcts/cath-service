@@ -19,7 +19,11 @@ describe("location-jurisdiction-update-success page", () => {
         locationJurisdiction: { locationId: 100, locationName: "Test Court", locationWelshName: "Llys Prawf" }
       } as any
     };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = {
+      render: vi.fn(),
+      redirect: vi.fn(),
+      locals: { locale: "en" }
+    };
   });
 
   it("should render success panel when session data exists", async () => {
@@ -28,7 +32,7 @@ describe("location-jurisdiction-update-success page", () => {
 
     expect(res.render).toHaveBeenCalledWith(
       "location-jurisdiction-update-success/index",
-      expect.objectContaining({ panelTitle: "Location Jurisdiction Data Updated" })
+      expect.objectContaining({ t: expect.objectContaining({ panelTitle: "Location Jurisdiction Data Updated" }) })
     );
   });
 

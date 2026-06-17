@@ -21,7 +21,8 @@ describe("jurisdiction-data-create-success page", () => {
     };
     res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: { locale: "en" }
     };
   });
 
@@ -35,7 +36,7 @@ describe("jurisdiction-data-create-success page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data-create-success/index",
         expect.objectContaining({
-          panelTitle: "Jurisdiction Data Created"
+          t: expect.objectContaining({ panelTitle: "Jurisdiction Data Created" })
         })
       );
     });

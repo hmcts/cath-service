@@ -1,38 +1,39 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import {
+  jurisdictionDataUpdateCy as cy,
+  jurisdictionDataUpdateEn as en,
+  type JurisdictionDataSession,
+  updateJurisdictionData
+} from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { updateJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
-import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.jurisdictionData) {
-    return res.redirect(`/jurisdiction-data-list${langSuffix}`);
+    return res.redirect("/jurisdiction-data-list");
   }
 
   const { name, welshName } = session.jurisdictionData;
 
   res.render("jurisdiction-data-update/index", {
-    ...content,
-    back: language === "cy" ? "Yn ôl" : "Back",
+    en,
+    cy,
+    t,
     data: { name, welshName },
     errors: undefined
   });
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.jurisdictionData) {
-    return res.redirect(`/jurisdiction-data-list${langSuffix}`);
+    return res.redirect("/jurisdiction-data-list");
   }
 
   const { id, type } = session.jurisdictionData;
@@ -46,14 +47,15 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (errors.length > 0) {
     return res.render("jurisdiction-data-update/index", {
-      ...content,
-      back: language === "cy" ? "Yn ôl" : "Back",
+      en,
+      cy,
+      t,
       data: formData,
       errors
     });
   }
 
-  res.redirect(`/jurisdiction-data-update-success${langSuffix}`);
+  res.redirect("/jurisdiction-data-update-success");
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

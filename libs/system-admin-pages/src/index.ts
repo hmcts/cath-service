@@ -1,4 +1,5 @@
 // Business logic exports
+
 export * from "./audit-log/logger.js";
 export * from "./audit-log/middleware.js";
 export * from "./audit-log/repository.js";
@@ -9,6 +10,26 @@ export {
   validateLocationSelected,
   validateRadioSelection as validateDeleteCourtRadioSelection
 } from "./delete-court/validation.js";
+export { cy as jurisdictionDataCy } from "./jurisdiction-data/cy.js";
+export { en as jurisdictionDataEn } from "./jurisdiction-data/en.js";
+export { cy as jurisdictionDataCreateCy } from "./jurisdiction-data-create/cy.js";
+export { en as jurisdictionDataCreateEn } from "./jurisdiction-data-create/en.js";
+export { cy as jurisdictionDataCreateSuccessCy } from "./jurisdiction-data-create-success/cy.js";
+export { en as jurisdictionDataCreateSuccessEn } from "./jurisdiction-data-create-success/en.js";
+export { cy as jurisdictionDataDeleteCy } from "./jurisdiction-data-delete/cy.js";
+export { en as jurisdictionDataDeleteEn } from "./jurisdiction-data-delete/en.js";
+export { cy as jurisdictionDataDeleteSuccessCy } from "./jurisdiction-data-delete-success/cy.js";
+export { en as jurisdictionDataDeleteSuccessEn } from "./jurisdiction-data-delete-success/en.js";
+export { cy as jurisdictionDataListCy } from "./jurisdiction-data-list/cy.js";
+export { en as jurisdictionDataListEn } from "./jurisdiction-data-list/en.js";
+export { cy as jurisdictionDataModifyCy } from "./jurisdiction-data-modify/cy.js";
+export { en as jurisdictionDataModifyEn } from "./jurisdiction-data-modify/en.js";
+export { cy as jurisdictionDataUpdateCy } from "./jurisdiction-data-update/cy.js";
+export { en as jurisdictionDataUpdateEn } from "./jurisdiction-data-update/en.js";
+export { cy as jurisdictionDataUpdateSuccessCy } from "./jurisdiction-data-update-success/cy.js";
+export { en as jurisdictionDataUpdateSuccessEn } from "./jurisdiction-data-update-success/en.js";
+export * from "./jurisdiction-management/jurisdiction-management-queries.js";
+export * from "./jurisdiction-management/jurisdiction-management-service.js";
 export * from "./list-type/queries.js";
 export * from "./list-type/service.js";
 export * from "./list-type/types.js";
@@ -18,6 +39,20 @@ export {
   validateListTypeDetails,
   validateSubJurisdictions
 } from "./list-type/validation.js";
+export { cy as locationJurisdictionDeleteCy } from "./location-jurisdiction-delete/cy.js";
+export { en as locationJurisdictionDeleteEn } from "./location-jurisdiction-delete/en.js";
+export { cy as locationJurisdictionDeleteSuccessCy } from "./location-jurisdiction-delete-success/cy.js";
+export { en as locationJurisdictionDeleteSuccessEn } from "./location-jurisdiction-delete-success/en.js";
+export { cy as locationJurisdictionManageCy } from "./location-jurisdiction-manage/cy.js";
+export { en as locationJurisdictionManageEn } from "./location-jurisdiction-manage/en.js";
+export { cy as locationJurisdictionSearchCy } from "./location-jurisdiction-search/cy.js";
+export { en as locationJurisdictionSearchEn } from "./location-jurisdiction-search/en.js";
+export { cy as locationJurisdictionUpdateCy } from "./location-jurisdiction-update/cy.js";
+export { en as locationJurisdictionUpdateEn } from "./location-jurisdiction-update/en.js";
+export { cy as locationJurisdictionUpdateSuccessCy } from "./location-jurisdiction-update-success/cy.js";
+export { en as locationJurisdictionUpdateSuccessEn } from "./location-jurisdiction-update-success/en.js";
+export { cy as referenceDataCy } from "./reference-data/cy.js";
+export { en as referenceDataEn } from "./reference-data/en.js";
 export type {
   CsvRow,
   EnrichedLocationData,
@@ -39,7 +74,7 @@ export * from "./reference-data-upload/validation/sub-jurisdiction-validation.js
 export { validateLocationData } from "./reference-data-upload/validation/validation.js";
 export * from "./services/formatting.js";
 export * from "./services/service.js";
-export type { LocationMetadataSession } from "./session-types.js";
+export type { JurisdictionDataSession, LocationMetadataSession } from "./session-types.js";
 export * from "./third-party-user/queries.js";
 
 export {

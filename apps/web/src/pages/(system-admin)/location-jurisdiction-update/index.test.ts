@@ -7,18 +7,18 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () => ({
-  getLocationJurisdictionDetails: vi.fn(),
-  updateLocationJurisdictionData: vi.fn()
-}));
+vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
+  return {
+    ...actual,
+    getLocationJurisdictionDetails: vi.fn(),
+    listJurisdictionsWithSubJurisdictions: vi.fn(),
+    listRegions: vi.fn(),
+    updateLocationJurisdictionData: vi.fn()
+  };
+});
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-queries.js", () => ({
-  listJurisdictionsWithSubJurisdictions: vi.fn(),
-  listRegions: vi.fn()
-}));
-
-import { listJurisdictionsWithSubJurisdictions, listRegions } from "../../jurisdiction-management/jurisdiction-management-queries.js";
-import { getLocationJurisdictionDetails, updateLocationJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
+import { getLocationJurisdictionDetails, listJurisdictionsWithSubJurisdictions, listRegions, updateLocationJurisdictionData } from "@hmcts/system-admin-pages";
 
 describe("location-jurisdiction-update page", () => {
   let req: Partial<Request>;
@@ -34,7 +34,11 @@ describe("location-jurisdiction-update page", () => {
       } as any,
       user: { email: "admin@example.com" } as any
     };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = {
+      render: vi.fn(),
+      redirect: vi.fn(),
+      locals: { locale: "en" }
+    };
   });
 
   describe("GET", () => {

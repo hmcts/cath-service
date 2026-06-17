@@ -1,23 +1,25 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import {
+  jurisdictionDataDeleteCy as cy,
+  deleteJurisdictionData,
+  jurisdictionDataDeleteEn as en,
+  type JurisdictionDataSession
+} from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { deleteJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
-import type { JurisdictionDataSession } from "../jurisdiction-data-session.js";
-import { cy } from "./cy.js";
-import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.jurisdictionData) {
-    return res.redirect(`/jurisdiction-data-list${langSuffix}`);
+    return res.redirect("/jurisdiction-data-list");
   }
 
   res.render("jurisdiction-data-delete/index", {
-    ...content,
-    back: language === "cy" ? "Yn ôl" : "Back",
+    en,
+    cy,
+    t,
     record: { name: session.jurisdictionData.name, type: session.jurisdictionData.type },
     radioError: undefined,
     errors: undefined
@@ -25,32 +27,30 @@ const getHandler = async (req: Request, res: Response) => {
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const language = req.query.lng === "cy" ? "cy" : "en";
-  const content = language === "cy" ? cy : en;
-  const langSuffix = language === "cy" ? "?lng=cy" : "";
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const session = req.session as JurisdictionDataSession;
 
   if (!session.jurisdictionData) {
-    return res.redirect(`/jurisdiction-data-list${langSuffix}`);
+    return res.redirect("/jurisdiction-data-list");
   }
 
   const selection = req.body.confirmation;
 
   if (!selection) {
-    const errors = [{ text: content.noSelectionError, href: "#confirmation" }];
+    const errors = [{ text: t.noSelectionError, href: "#confirmation" }];
     return res.render("jurisdiction-data-delete/index", {
-      ...content,
-      back: language === "cy" ? "Yn ôl" : "Back",
+      en,
+      cy,
+      t,
       record: { name: session.jurisdictionData.name, type: session.jurisdictionData.type },
-      radioError: { text: content.noSelectionError },
+      radioError: { text: t.noSelectionError },
       errors
     });
   }
 
   if (selection === "no") {
-    return res.redirect(
-      `/jurisdiction-data-modify?id=${session.jurisdictionData.id}&type=${encodeURIComponent(session.jurisdictionData.type)}${langSuffix ? `&lng=cy` : ""}`
-    );
+    return res.redirect(`/jurisdiction-data-modify?id=${session.jurisdictionData.id}&type=${encodeURIComponent(session.jurisdictionData.type)}`);
   }
 
   const { id, type } = session.jurisdictionData;
@@ -60,15 +60,16 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (deleteErrors.length > 0) {
     return res.render("jurisdiction-data-delete/index", {
-      ...content,
-      back: language === "cy" ? "Yn ôl" : "Back",
+      en,
+      cy,
+      t,
       record: { name: session.jurisdictionData.name, type: session.jurisdictionData.type },
       radioError: undefined,
       errors: deleteErrors
     });
   }
 
-  res.redirect(`/jurisdiction-data-delete-success${langSuffix}`);
+  res.redirect("/jurisdiction-data-delete-success");
 };
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];

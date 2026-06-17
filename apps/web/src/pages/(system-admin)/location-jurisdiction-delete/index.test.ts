@@ -7,11 +7,15 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("../../jurisdiction-management/jurisdiction-management-service.js", () => ({
-  deleteLocationJurisdictionData: vi.fn()
-}));
+vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
+  return {
+    ...actual,
+    deleteLocationJurisdictionData: vi.fn()
+  };
+});
 
-import { deleteLocationJurisdictionData } from "../../jurisdiction-management/jurisdiction-management-service.js";
+import { deleteLocationJurisdictionData } from "@hmcts/system-admin-pages";
 
 describe("location-jurisdiction-delete page", () => {
   let req: Partial<Request>;
@@ -27,7 +31,11 @@ describe("location-jurisdiction-delete page", () => {
       } as any,
       user: { email: "admin@example.com" } as any
     };
-    res = { render: vi.fn(), redirect: vi.fn() };
+    res = {
+      render: vi.fn(),
+      redirect: vi.fn(),
+      locals: { locale: "en" }
+    };
   });
 
   describe("GET", () => {
@@ -37,7 +45,7 @@ describe("location-jurisdiction-delete page", () => {
 
       expect(res.render).toHaveBeenCalledWith(
         "location-jurisdiction-delete/index",
-        expect.objectContaining({ title: "Are you sure you want to delete this data?" })
+        expect.objectContaining({ t: expect.objectContaining({ title: "Are you sure you want to delete this data?" }) })
       );
     });
 
