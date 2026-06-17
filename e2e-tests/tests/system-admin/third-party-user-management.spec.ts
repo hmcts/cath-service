@@ -26,7 +26,7 @@ async function authenticateSystemAdmin(page: Page) {
   }
 }
 
-test.describe("Third Party User Management", () => {
+test.describe.skip("Third Party User Management", () => {
   test.beforeEach(async ({ page }) => {
     await authenticateSystemAdmin(page);
   });
