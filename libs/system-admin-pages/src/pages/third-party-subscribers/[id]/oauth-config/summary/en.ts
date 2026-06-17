@@ -4,7 +4,6 @@ export const en = {
   tokenUrlLabel: "Token URL",
   scopeLabel: "Scope",
   clientIdLabel: "Client ID",
-  clientSecretLabel: "Client secret",
   changeLink: "Change",
   confirmButton: "Confirm",
   back: "Back"

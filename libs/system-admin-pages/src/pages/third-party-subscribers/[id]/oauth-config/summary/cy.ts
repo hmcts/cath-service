@@ -4,7 +4,6 @@ export const cy = {
   tokenUrlLabel: "URL tocyn",
   scopeLabel: "Cwmpas",
   clientIdLabel: "ID y cleient",
-  clientSecretLabel: "Cyfrinach y cleient",
   changeLink: "Newid",
   confirmButton: "Cadarnhau",
   back: "Yn ôl"
