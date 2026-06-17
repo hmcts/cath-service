@@ -40,7 +40,7 @@ jobs:
     if: needs.detect-infra-changes.outputs.has-changes == 'true'
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
-      plan-only: false
+      plan-only: true
     secrets: inherit
 
   deploy-stage:
