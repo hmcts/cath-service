@@ -108,7 +108,10 @@ describe("manage-third-party-subscriptions page", () => {
       const mockUser = {
         id: "user-123",
         name: "Test User",
-        subscriptions: [{ listTypeId: 1, sensitivity: "PUBLIC" }, { listTypeId: 2, sensitivity: "PRIVATE" }]
+        subscriptions: [
+          { listTypeId: 1, sensitivity: "PUBLIC" },
+          { listTypeId: 2, sensitivity: "PRIVATE" }
+        ]
       };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 

@@ -66,11 +66,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   const channel = (req.body.channel as string) || "API";
   const sensitivity = req.body.sensitivity as string | undefined;
-  const listTypeIds = Array.isArray(req.body.listTypes)
-    ? req.body.listTypes.map(Number)
-    : req.body.listTypes
-      ? [Number(req.body.listTypes)]
-      : [];
+  const listTypeIds = Array.isArray(req.body.listTypes) ? req.body.listTypes.map(Number) : req.body.listTypes ? [Number(req.body.listTypes)] : [];
 
   const validationError = validateSensitivity(sensitivity);
   if (validationError) {

@@ -26,7 +26,8 @@ describe("manage-third-party-user page", () => {
 
     res = {
       render: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: { locale: "en" }
     };
   });
 
@@ -39,7 +40,7 @@ describe("manage-third-party-user page", () => {
     });
 
     it("should redirect to manage users page with Welsh locale when no id", async () => {
-      req.query = { lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
@@ -86,6 +87,7 @@ describe("manage-third-party-user page", () => {
 
     it("should render user details in Welsh", async () => {
       req.query = { id: "user-123", lng: "cy" };
+      (res as any).locals = { locale: "cy" };
       const mockUser = {
         id: "user-123",
         name: "Test User",
