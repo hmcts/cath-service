@@ -4,10 +4,11 @@ import { getHandler, postHandler } from "./index.js";
 
 vi.mock("@hmcts/third-party-user", () => ({
   findThirdPartyUserById: vi.fn(),
-  deleteThirdPartyUser: vi.fn()
+  deleteThirdPartyUser: vi.fn(),
+  deleteSecrets: vi.fn()
 }));
 
-import { deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
+import { deleteSecrets, deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
 
 const mockUser = { id: "user-1", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
 
@@ -82,9 +83,10 @@ describe("third-party-subscribers delete page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/manage");
     });
 
-    it("should delete user and redirect to success page when Yes is selected", async () => {
+    it("should delete secrets and user then redirect to success page when Yes is selected", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
+      vi.mocked(deleteSecrets).mockResolvedValue(undefined);
       vi.mocked(deleteThirdPartyUser).mockResolvedValue(undefined);
       req.body = { confirmDelete: "yes" };
 
@@ -92,6 +94,7 @@ describe("third-party-subscribers delete page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
+      expect(deleteSecrets).toHaveBeenCalledWith("user-1");
       expect(deleteThirdPartyUser).toHaveBeenCalledWith("user-1");
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/delete/success");
     });

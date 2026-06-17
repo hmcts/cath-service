@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
+import { deleteSecrets, deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
 import { AuditLogAction } from "../../../../../audit-log/logger.js";
 import { cy } from "./cy.js";
@@ -60,6 +60,7 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-subscribers/${id}/manage${lngParam}`);
   }
 
+  await deleteSecrets(id);
   await deleteThirdPartyUser(id);
 
   req.auditMetadata = {

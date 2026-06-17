@@ -27,6 +27,31 @@ export async function getSecret(secretName: string): Promise<string | undefined>
   }
 }
 
+export async function deleteSecrets(userId: string): Promise<void> {
+  const secretTypes: Array<"scope" | "client-id" | "client-secret" | "destination-url" | "token-url"> = [
+    "destination-url",
+    "token-url",
+    "scope",
+    "client-id",
+    "client-secret"
+  ];
+  const client = createSecretClient();
+  await Promise.all(
+    secretTypes.map(async (type) => {
+      const name = createKeyVaultSecretName(userId, type);
+      if (!client) {
+        await prisma.thirdPartySecret.deleteMany({ where: { name } });
+        return;
+      }
+      try {
+        await client.beginDeleteSecret(name);
+      } catch {
+        // secret may not exist — ignore
+      }
+    })
+  );
+}
+
 export async function setSecret(secretName: string, value: string): Promise<void> {
   const client = createSecretClient();
   if (!client) {
