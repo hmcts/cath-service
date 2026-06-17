@@ -148,76 +148,62 @@ function validateJurisdictionFields(name: string, welshName: string, type: Juris
   return errors;
 }
 
-async function checkUniqueness(name: string, welshName: string, type: JurisdictionDataType, excludeId?: number): Promise<ValidationError[]> {
+type FindFirstFn = (nameValue: string, welshNameValue: string) => Promise<[unknown, unknown]>;
+
+async function checkNameUniqueness(nameFinder: FindFirstFn, trimmedName: string, trimmedWelshName: string): Promise<ValidationError[]> {
+  const [nameMatch, welshMatch] = await nameFinder(trimmedName, trimmedWelshName);
   const errors: ValidationError[] = [];
+  if (nameMatch) errors.push({ text: "A record with this name already exists", href: "#name" });
+  if (welshMatch) errors.push({ text: "A record with this Welsh name already exists", href: "#welshName" });
+  return errors;
+}
+
+async function checkUniqueness(name: string, welshName: string, type: JurisdictionDataType, excludeId?: number): Promise<ValidationError[]> {
   const trimmedName = name.trim();
   const trimmedWelshName = welshName.trim();
 
   switch (type) {
-    case "Jurisdiction": {
-      const [nameMatch, welshMatch] = await Promise.all([
-        prisma.jurisdiction.findFirst({
-          where: {
-            name: { equals: trimmedName, mode: "insensitive" },
-            deletedAt: null,
-            ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {})
-          }
-        }),
-        prisma.jurisdiction.findFirst({
-          where: {
-            welshName: { equals: trimmedWelshName, mode: "insensitive" },
-            deletedAt: null,
-            ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {})
-          }
-        })
-      ]);
-      if (nameMatch) errors.push({ text: "A record with this name already exists", href: "#name" });
-      if (welshMatch) errors.push({ text: "A record with this Welsh name already exists", href: "#welshName" });
-      break;
-    }
-    case "Sub-Jurisdiction": {
-      const [nameMatch, welshMatch] = await Promise.all([
-        prisma.subJurisdiction.findFirst({
-          where: {
-            name: { equals: trimmedName, mode: "insensitive" },
-            deletedAt: null,
-            ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {})
-          }
-        }),
-        prisma.subJurisdiction.findFirst({
-          where: {
-            welshName: { equals: trimmedWelshName, mode: "insensitive" },
-            deletedAt: null,
-            ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {})
-          }
-        })
-      ]);
-      if (nameMatch) errors.push({ text: "A record with this name already exists", href: "#name" });
-      if (welshMatch) errors.push({ text: "A record with this Welsh name already exists", href: "#welshName" });
-      break;
-    }
-    case "Region": {
-      const [nameMatch, welshMatch] = await Promise.all([
-        prisma.region.findFirst({
-          where: {
-            name: { equals: trimmedName, mode: "insensitive" },
-            deletedAt: null,
-            ...(excludeId ? { NOT: { regionId: excludeId } } : {})
-          }
-        }),
-        prisma.region.findFirst({
-          where: {
-            welshName: { equals: trimmedWelshName, mode: "insensitive" },
-            deletedAt: null,
-            ...(excludeId ? { NOT: { regionId: excludeId } } : {})
-          }
-        })
-      ]);
-      if (nameMatch) errors.push({ text: "A record with this name already exists", href: "#name" });
-      if (welshMatch) errors.push({ text: "A record with this Welsh name already exists", href: "#welshName" });
-      break;
-    }
+    case "Jurisdiction":
+      return checkNameUniqueness(
+        (n, w) =>
+          Promise.all([
+            prisma.jurisdiction.findFirst({
+              where: { name: { equals: n, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {}) }
+            }),
+            prisma.jurisdiction.findFirst({
+              where: { welshName: { equals: w, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {}) }
+            })
+          ]),
+        trimmedName,
+        trimmedWelshName
+      );
+    case "Sub-Jurisdiction":
+      return checkNameUniqueness(
+        (n, w) =>
+          Promise.all([
+            prisma.subJurisdiction.findFirst({
+              where: { name: { equals: n, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {}) }
+            }),
+            prisma.subJurisdiction.findFirst({
+              where: { welshName: { equals: w, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {}) }
+            })
+          ]),
+        trimmedName,
+        trimmedWelshName
+      );
+    case "Region":
+      return checkNameUniqueness(
+        (n, w) =>
+          Promise.all([
+            prisma.region.findFirst({
+              where: { name: { equals: n, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { regionId: excludeId } } : {}) }
+            }),
+            prisma.region.findFirst({
+              where: { welshName: { equals: w, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { regionId: excludeId } } : {}) }
+            })
+          ]),
+        trimmedName,
+        trimmedWelshName
+      );
   }
-
-  return errors;
 }
