@@ -1,16 +1,14 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { AuditLogAction, findAllListTypes, findThirdPartyUserById, isFeatureEnabled, updateThirdPartySubscriptions } from "@hmcts/system-admin-pages";
+import { AuditLogAction, findAllListTypes, findThirdPartyUserById, updateThirdPartySubscriptions, validateSensitivity } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-const LD_FLAG_RADIO_BUTTONS = "third-party-subscriptions-radio-buttons";
 
 interface ManageThirdPartyUserSession {
   manageThirdPartyUser?: {
     userId: string;
     userName: string;
-    originalSubscriptions: Array<{ listTypeId: number; sensitivity: string }>;
+    originalSubscriptions: number[];
   };
 }
 
@@ -38,66 +36,82 @@ const getHandler = async (req: Request, res: Response) => {
   session.manageThirdPartyUser = {
     userId: user.id,
     userName: user.name,
-    originalSubscriptions: user.subscriptions.map((s) => ({ listTypeId: s.listTypeId, sensitivity: s.sensitivity }))
+    originalSubscriptions: user.subscriptions.map((s) => s.listTypeId)
   };
 
-  const currentSensitivities: Record<string, string> = {};
-  for (const sub of user.subscriptions) {
-    currentSensitivities[sub.listTypeId] = sub.sensitivity;
-  }
-
+  const currentSensitivity = user.subscriptions.length > 0 ? user.subscriptions[0].sensitivity : "";
+  const currentListTypeIds = user.subscriptions.map((s) => s.listTypeId);
   const listTypes = await findAllListTypes();
-  const useRadioButtons = await isFeatureEnabled(LD_FLAG_RADIO_BUTTONS, userId);
 
   res.render("manage-third-party-subscriptions/index", {
     ...content,
     en,
     cy,
     listTypes,
-    currentSensitivities,
-    useRadioButtons,
+    currentChannel: "API",
+    currentSensitivity,
+    currentListTypeIds,
     errors: undefined
   });
 };
 
 const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
+  const content = locale === "cy" ? cy : en;
   const session = req.session as ManageThirdPartyUserSession;
 
   if (!session.manageThirdPartyUser) {
     return res.redirect(`/manage-third-party-users${locale === "cy" ? "?lng=cy" : ""}`);
   }
 
-  const listTypes = await findAllListTypes();
+  const channel = (req.body.channel as string) || "API";
+  const sensitivity = req.body.sensitivity as string | undefined;
+  const listTypeIds = Array.isArray(req.body.listTypes)
+    ? req.body.listTypes.map(Number)
+    : req.body.listTypes
+      ? [Number(req.body.listTypes)]
+      : [];
 
-  const subscriptions: Array<{ listTypeId: number; channel: string; sensitivity: string }> = [];
-
-  for (const listType of listTypes) {
-    const sensitivity = req.body[`sensitivity_${listType.id}`] as string | undefined;
-    if (sensitivity && ["PUBLIC", "PRIVATE", "CLASSIFIED"].includes(sensitivity)) {
-      subscriptions.push({ listTypeId: listType.id, channel: "API", sensitivity });
-    }
+  const validationError = validateSensitivity(sensitivity);
+  if (validationError) {
+    const listTypes = await findAllListTypes();
+    return res.render("manage-third-party-subscriptions/index", {
+      ...content,
+      en,
+      cy,
+      listTypes,
+      currentChannel: channel,
+      currentSensitivity: sensitivity || "",
+      currentListTypeIds: listTypeIds,
+      errors: [{ ...validationError, text: content.sensitivityRequired }]
+    });
   }
+
+  const subscriptions = listTypeIds.map((listTypeId: number) => ({
+    listTypeId,
+    channel,
+    sensitivity: sensitivity!
+  }));
 
   await updateThirdPartySubscriptions(session.manageThirdPartyUser.userId, subscriptions);
 
-  const getListTypeSummary = (subs: Array<{ listTypeId: number; sensitivity: string }>) =>
-    subs
-      .map((sub) => {
-        const listType = listTypes.find((lt) => lt.id === sub.listTypeId);
-        const name = listType?.friendlyName || listType?.name;
-        return name ? `${name}:${sub.sensitivity}` : null;
+  const listTypes = await findAllListTypes();
+  const getListTypeNames = (ids: number[]) =>
+    ids
+      .map((id) => {
+        const lt = listTypes.find((l) => l.id === id);
+        return lt?.friendlyName || lt?.name;
       })
-      .filter((s): s is string => Boolean(s))
+      .filter(Boolean)
       .join(", ") || "None";
 
-  const previousSummary = getListTypeSummary(session.manageThirdPartyUser.originalSubscriptions);
-  const currentSummary = getListTypeSummary(subscriptions.map((s) => ({ listTypeId: s.listTypeId, sensitivity: s.sensitivity })));
+  const previousListTypes = getListTypeNames(session.manageThirdPartyUser.originalSubscriptions);
+  const currentListTypes = getListTypeNames(listTypeIds);
 
   req.auditMetadata = {
     shouldLog: true,
     action: AuditLogAction.UPDATE_THIRD_PARTY_SUBSCRIPTIONS,
-    entityInfo: `ID: ${session.manageThirdPartyUser.userId}, Name: ${session.manageThirdPartyUser.userName}, Previous: [${previousSummary}], Current: [${currentSummary}]`
+    entityInfo: `ID: ${session.manageThirdPartyUser.userId}, Name: ${session.manageThirdPartyUser.userName}, Sensitivity: ${sensitivity}, Previous List Types: [${previousListTypes}], Current List Types: [${currentListTypes}]`
   };
 
   delete session.manageThirdPartyUser;

@@ -1,17 +1,14 @@
 export const en = {
   pageTitle: "Manage third party subscriptions",
-  listTypeHeader: "List type",
-  publicHeader: "Public",
-  privateHeader: "Private",
-  classifiedHeader: "Classified",
-  unselectedHeader: "Unselected",
-  sensitivityHeader: "Sensitivity",
-  publicOption: "Public",
-  privateOption: "Private",
-  classifiedOption: "Classified",
-  unselectedOption: "Unselected",
+  channelLabel: "Please select a Channel",
+  channelApiOption: "API",
+  sensitivityLabel: "Please select sensitivity",
+  sensitivityPublicOption: "Public",
+  sensitivityPrivateOption: "Private",
+  sensitivityClassifiedOption: "Classified",
+  listTypesLabel: "Please select list types",
   saveButtonText: "Save subscriptions",
   errorSummaryTitle: "There is a problem",
-  userNotFound: "User not found",
-  noListTypesText: "No list types available."
+  sensitivityRequired: "Select a sensitivity level",
+  userNotFound: "User not found"
 };

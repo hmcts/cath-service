@@ -1,10 +1,20 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% macro getError(errors, fieldId) -%}
+  {%- if errors -%}
+    {%- for error in errors -%}
+      {%- if error.href == fieldId -%}{{ error.text }}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endmacro %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-full">
+  <div class="govuk-grid-column-two-thirds">
 
     {% if errors %}
       {{ govukErrorSummary({
@@ -17,93 +27,74 @@
 
     <form method="post" novalidate>
 
+      {{ govukRadios({
+        name: "channel",
+        fieldset: {
+          legend: {
+            text: channelLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        items: [
+          {
+            value: "API",
+            text: channelApiOption,
+            checked: currentChannel == "API"
+          }
+        ]
+      }) }}
+
+      {% set sensitivityErrorText = getError(errors, "#sensitivity") %}
+      {{ govukRadios({
+        name: "sensitivity",
+        fieldset: {
+          legend: {
+            text: sensitivityLabel,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        errorMessage: { text: sensitivityErrorText } if sensitivityErrorText and sensitivityErrorText | length > 0 else undefined,
+        items: [
+          {
+            value: "PUBLIC",
+            text: sensitivityPublicOption,
+            checked: currentSensitivity == "PUBLIC"
+          },
+          {
+            value: "PRIVATE",
+            text: sensitivityPrivateOption,
+            checked: currentSensitivity == "PRIVATE"
+          },
+          {
+            value: "CLASSIFIED",
+            text: sensitivityClassifiedOption,
+            checked: currentSensitivity == "CLASSIFIED"
+          }
+        ]
+      }) }}
+
       {% if listTypes and listTypes.length > 0 %}
+        {% set checkboxItems = [] %}
+        {% for listType in listTypes %}
+          {% set isChecked = currentListTypeIds and (listType.id in currentListTypeIds) %}
+          {% set listTypeName = listType.welshFriendlyName if locale == 'cy' else listType.friendlyName %}
+          {% set checkboxItems = (checkboxItems.push({
+            value: listType.id,
+            text: listTypeName,
+            checked: isChecked
+          }), checkboxItems) %}
+        {% endfor %}
 
-        {% if not useRadioButtons %}
-
-          <table class="govuk-table">
-            <thead class="govuk-table__head">
-              <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header">{{ listTypeHeader }}</th>
-                <th scope="col" class="govuk-table__header">{{ sensitivityHeader }}</th>
-              </tr>
-            </thead>
-            <tbody class="govuk-table__body">
-              {% for listType in listTypes %}
-                {% set listTypeName = listType.welshFriendlyName if locale == 'cy' else listType.friendlyName %}
-                <tr class="govuk-table__row">
-                  <td class="govuk-table__cell">{{ listTypeName }}</td>
-                  <td class="govuk-table__cell">
-                    <select class="govuk-select" id="sensitivity_{{ listType.id }}" name="sensitivity_{{ listType.id }}" aria-label="{{ listTypeName }}">
-                      <option value="">{{ unselectedOption }}</option>
-                      <option value="PUBLIC" {% if currentSensitivities[listType.id] == "PUBLIC" %}selected{% endif %}>{{ publicOption }}</option>
-                      <option value="PRIVATE" {% if currentSensitivities[listType.id] == "PRIVATE" %}selected{% endif %}>{{ privateOption }}</option>
-                      <option value="CLASSIFIED" {% if currentSensitivities[listType.id] == "CLASSIFIED" %}selected{% endif %}>{{ classifiedOption }}</option>
-                    </select>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-
-        {% else %}
-
-          <table class="govuk-table">
-            <thead class="govuk-table__head">
-              <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header">{{ listTypeHeader }}</th>
-                <th scope="col" class="govuk-table__header">{{ publicHeader }}</th>
-                <th scope="col" class="govuk-table__header">{{ privateHeader }}</th>
-                <th scope="col" class="govuk-table__header">{{ classifiedHeader }}</th>
-                <th scope="col" class="govuk-table__header">{{ unselectedHeader }}</th>
-              </tr>
-            </thead>
-            <tbody class="govuk-table__body">
-              {% for listType in listTypes %}
-                {% set listTypeName = listType.welshFriendlyName if locale == 'cy' else listType.friendlyName %}
-                <tr class="govuk-table__row">
-                  <td class="govuk-table__cell">{{ listTypeName }}</td>
-                  <td class="govuk-table__cell">
-                    <div class="govuk-radios__item">
-                      <input class="govuk-radios__input" type="radio" name="sensitivity_{{ listType.id }}" id="sensitivity_{{ listType.id }}_public" value="PUBLIC" {% if currentSensitivities[listType.id] == "PUBLIC" %}checked{% endif %}>
-                      <label class="govuk-label govuk-radios__label" for="sensitivity_{{ listType.id }}_public">
-                        <span class="govuk-visually-hidden">{{ listTypeName }} - {{ publicOption }}</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td class="govuk-table__cell">
-                    <div class="govuk-radios__item">
-                      <input class="govuk-radios__input" type="radio" name="sensitivity_{{ listType.id }}" id="sensitivity_{{ listType.id }}_private" value="PRIVATE" {% if currentSensitivities[listType.id] == "PRIVATE" %}checked{% endif %}>
-                      <label class="govuk-label govuk-radios__label" for="sensitivity_{{ listType.id }}_private">
-                        <span class="govuk-visually-hidden">{{ listTypeName }} - {{ privateOption }}</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td class="govuk-table__cell">
-                    <div class="govuk-radios__item">
-                      <input class="govuk-radios__input" type="radio" name="sensitivity_{{ listType.id }}" id="sensitivity_{{ listType.id }}_classified" value="CLASSIFIED" {% if currentSensitivities[listType.id] == "CLASSIFIED" %}checked{% endif %}>
-                      <label class="govuk-label govuk-radios__label" for="sensitivity_{{ listType.id }}_classified">
-                        <span class="govuk-visually-hidden">{{ listTypeName }} - {{ classifiedOption }}</span>
-                      </label>
-                    </div>
-                  </td>
-                  <td class="govuk-table__cell">
-                    <div class="govuk-radios__item">
-                      <input class="govuk-radios__input" type="radio" name="sensitivity_{{ listType.id }}" id="sensitivity_{{ listType.id }}_unselected" value="" {% if not currentSensitivities[listType.id] %}checked{% endif %}>
-                      <label class="govuk-label govuk-radios__label" for="sensitivity_{{ listType.id }}_unselected">
-                        <span class="govuk-visually-hidden">{{ listTypeName }} - {{ unselectedOption }}</span>
-                      </label>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-
-        {% endif %}
-
-      {% else %}
-        <p class="govuk-body">{{ noListTypesText }}</p>
+        {{ govukCheckboxes({
+          name: "listTypes",
+          fieldset: {
+            legend: {
+              text: listTypesLabel,
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: checkboxItems
+        }) }}
       {% endif %}
 
       {{ govukButton({
