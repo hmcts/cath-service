@@ -28,7 +28,7 @@ if [ -d "/mnt/secrets" ]; then
   done
 fi
 
-PRISMA="./node_modules/.bin/prisma"
+PRISMA="npx prisma"
 
 # Start the health server immediately so Kubernetes startup/liveness probes pass
 # while the pod waits for the database and runs migrations.
