@@ -27,9 +27,6 @@ jobs:
       subscription: DTS-SHAREDSERVICES-DEMO
       aks-subscription: DTS-SHAREDSERVICES-DEMO
       storage-account: nonprod
-      state-store-resource-group: jenkins-state-demo
-      state-store-account-name: sdsstatedemo
-      state-store-container-name: tfstate-demo
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
@@ -43,9 +40,6 @@ jobs:
       subscription: DTS-SHAREDSERVICES-TEST
       aks-subscription: DTS-SHAREDSERVICES-TEST
       storage-account: nonprod
-      state-store-resource-group: jenkins-state-test
-      state-store-account-name: sdsstatetest
-      state-store-container-name: tfstate-test
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
@@ -59,9 +53,6 @@ jobs:
       subscription: DTS-SHAREDSERVICES-ITHC
       aks-subscription: DTS-SHAREDSERVICES-ITHC
       storage-account: nonprod
-      state-store-resource-group: jenkins-state-ithc
-      state-store-account-name: sdsstateithc
-      state-store-container-name: tfstate-ithc
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
@@ -75,9 +66,6 @@ jobs:
       subscription: DTS-SHAREDSERVICES-STG
       aks-subscription: DTS-SHAREDSERVICES-STG
       storage-account: nonprod
-      state-store-resource-group: jenkins-state-stg
-      state-store-account-name: sdsstatenonprod
-      state-store-container-name: tfstate-stg
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
@@ -85,7 +73,7 @@ jobs:
   terraform-aat:
     name: Terraform AAT
     needs: [terraform-fmt]
-    uses: ./.github/workflows/job.terraform.yml
+    uses: ./.github/workflows/job.terraform-cnp.yml
     with:
       environment: aat
       subscription: DCD-CNP-DEV
