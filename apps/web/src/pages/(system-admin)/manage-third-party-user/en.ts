@@ -5,7 +5,6 @@ export const en = {
   numberOfSubscriptionsLabel: "Number of subscriptions",
   sensitivityLabel: "Sensitivity",
   manageSubscriptionsButton: "Manage subscriptions",
-  manageOauthConfigButton: "Manage OAuth configuration",
   deleteUserButton: "Delete user",
   userNotFound: "User not found",
   classified: "Classified",

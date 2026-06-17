@@ -32,7 +32,7 @@ test.describe("Third Party User Management", () => {
   });
 
   test("user can create a third party user @nightly", async ({ page }) => {
-    await page.goto("/third-party-users");
+    await page.goto("/third-party-subscribers");
 
     // Check English heading
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage third party users");
@@ -50,7 +50,7 @@ test.describe("Third Party User Management", () => {
 
     // Navigate to create (govukButton with href renders with role="button")
     await page.getByRole("button", { name: "Create new user" }).click();
-    await page.waitForURL("**/third-party-users/create");
+    await page.waitForURL("**/third-party-subscribers/create");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create third party user");
 
     // Test validation - empty name
@@ -70,7 +70,7 @@ test.describe("Third Party User Management", () => {
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Check summary page
-    await page.waitForURL("**/third-party-users/create/summary");
+    await page.waitForURL("**/third-party-subscribers/create/summary");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create third party user summary");
     await expect(page.locator(".govuk-summary-list")).toContainText(uniqueName);
 
@@ -82,23 +82,23 @@ test.describe("Third Party User Management", () => {
 
     // Test Change link
     await page.getByRole("link", { name: "Change" }).click();
-    await page.waitForURL("**/third-party-users/create");
+    await page.waitForURL("**/third-party-subscribers/create");
     await expect(page.getByLabel("Name")).toHaveValue(uniqueName);
 
     // Go back to summary and confirm
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.waitForURL("**/third-party-users/create/summary");
+    await page.waitForURL("**/third-party-subscribers/create/summary");
     await page.getByRole("button", { name: "Confirm" }).click();
 
     // Check confirmation page
-    await page.waitForURL("**/third-party-users/create/confirmation");
+    await page.waitForURL("**/third-party-subscribers/create/confirmation");
     await expect(page.locator(".govuk-panel--confirmation")).toBeVisible();
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third party user created");
     await expect(page.locator(".govuk-panel--confirmation")).toContainText(uniqueName);
 
     // Navigate back to the list to verify user exists
     await page.getByRole("link", { name: "Manage third party users" }).click();
-    await page.waitForURL("**/third-party-users");
+    await page.waitForURL("**/third-party-subscribers");
     await expect(page.locator(".govuk-table")).toContainText(uniqueName);
 
     // Note: Cleanup handled by global teardown via test prefix
@@ -109,7 +109,7 @@ test.describe("Third Party User Management", () => {
     const uniqueName = `${getTestPrefix()}Sub Test Corp`;
     const testUser = await createTestThirdPartyUser({ name: uniqueName });
 
-    await page.goto(`/third-party-users/${testUser.id}/manage`);
+    await page.goto(`/third-party-subscribers/${testUser.id}/manage`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage user");
     await expect(page.locator(".govuk-summary-list")).toContainText(testUser.name);
 
@@ -121,7 +121,7 @@ test.describe("Third Party User Management", () => {
 
     // Navigate to subscriptions (govukButton with href renders with role="button")
     await page.getByRole("button", { name: "Manage subscriptions" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions/manage**`);
+    await page.waitForURL(`**/third-party-subscribers/${testUser.id}/subscriptions/manage**`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage subscriptions");
 
     // Test Welsh on subscriptions page
@@ -157,7 +157,7 @@ test.describe("Third Party User Management", () => {
     }
 
     // Check confirmation
-    await page.waitForURL(`**/third-party-users/${testUser.id}/subscriptions/success`);
+    await page.waitForURL(`**/third-party-subscribers/${testUser.id}/subscriptions/success`);
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third Party Subscriptions Updated");
     await expect(page.getByRole("link", { name: "Manage third party users" })).toBeVisible();
 
@@ -169,11 +169,11 @@ test.describe("Third Party User Management", () => {
     const uniqueName = `${getTestPrefix()}Delete Test Corp`;
     const testUser = await createTestThirdPartyUser({ name: uniqueName });
 
-    await page.goto(`/third-party-users/${testUser.id}/manage`);
+    await page.goto(`/third-party-subscribers/${testUser.id}/manage`);
 
     // Navigate to delete (govukButton with href renders with role="button")
     await page.getByRole("button", { name: "Delete user" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/confirmation`);
+    await page.waitForURL(`**/third-party-subscribers/${testUser.id}/delete/confirmation`);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Are you sure you want to delete");
 
     // Test accessibility
@@ -194,17 +194,17 @@ test.describe("Third Party User Management", () => {
     // Select No - should redirect back to manage user
     await page.locator('input[value="no"]').check();
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/manage`);
+    await page.waitForURL(`**/third-party-subscribers/${testUser.id}/manage`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Manage user");
 
     // Go back to delete and confirm Yes
     await page.getByRole("button", { name: "Delete user" }).click();
-    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/confirmation`);
+    await page.waitForURL(`**/third-party-subscribers/${testUser.id}/delete/confirmation`);
     await page.locator('input[value="yes"]').check();
     await page.getByRole("button", { name: "Continue" }).click();
 
     // Check deletion success
-    await page.waitForURL(`**/third-party-users/${testUser.id}/delete/success`);
+    await page.waitForURL(`**/third-party-subscribers/${testUser.id}/delete/success`);
     await expect(page.locator(".govuk-panel--confirmation")).toContainText("Third party user deleted");
     await expect(page.getByRole("heading", { name: "What do you want to do next?" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Manage another third party user" })).toBeVisible();
@@ -212,7 +212,7 @@ test.describe("Third Party User Management", () => {
 
     // Verify user is deleted from list
     await page.getByRole("link", { name: "Manage another third party user" }).click();
-    await page.waitForURL("**/third-party-users");
+    await page.waitForURL("**/third-party-subscribers");
     await expect(page.locator("body")).not.toContainText(testUser.name);
 
     // Note: User already deleted via UI, no cleanup needed

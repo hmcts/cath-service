@@ -1,0 +1,80 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/password-input/macro.njk" import govukPasswordInput %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block backLink %}
+  <a href="/third-party-subscribers/{{ userId }}/manage{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="isExisting" value="{{ isExisting }}">
+
+      {{ govukInput({
+        id: "destinationUrl",
+        name: "destinationUrl",
+        label: { text: destinationUrlLabel },
+        value: data.destinationUrl,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#destinationUrl") | first | default(null)
+      }) }}
+
+      {{ govukInput({
+        id: "tokenUrl",
+        name: "tokenUrl",
+        label: { text: tokenUrlLabel },
+        value: data.tokenUrl,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#tokenUrl") | first | default(null)
+      }) }}
+
+      {{ govukInput({
+        id: "scope",
+        name: "scope",
+        label: { text: scopeLabel },
+        value: data.scope,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#scope") | first | default(null)
+      }) }}
+
+      {{ govukInput({
+        id: "clientId",
+        name: "clientId",
+        label: { text: clientIdLabel },
+        value: data.clientId,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#clientId") | first | default(null)
+      }) }}
+
+      {{ govukPasswordInput({
+        id: "clientSecret",
+        name: "clientSecret",
+        label: { text: clientSecretLabel },
+        value: data.clientSecret,
+        errorMessage: errors | default([]) | selectattr("href", "==", "#clientSecret") | first | default(null)
+      }) }}
+
+      {{ govukButton({
+        text: buttonText
+      }) }}
+
+      {{ govukButton({
+        text: cancelButton,
+        classes: "govuk-button--secondary",
+        href: "/third-party-subscribers/" + userId + "/manage" + lngParam
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

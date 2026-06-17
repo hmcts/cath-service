@@ -1,0 +1,75 @@
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
+import type { Request, RequestHandler, Response } from "express";
+import { AuditLogAction } from "../../../../../audit-log/logger.js";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+function renderDeletePage(
+  res: Response,
+  t: typeof en | typeof cy,
+  userId: string,
+  userName: string,
+  lngParam: string,
+  errors?: Array<{ text: string; href?: string }>
+) {
+  res.render("third-party-subscribers/[id]/delete/confirmation/index", {
+    ...t,
+    en,
+    cy,
+    lngParam,
+    userId,
+    userName,
+    pageTitle: t.pageTitle(userName),
+    errors
+  });
+}
+
+export const getHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
+  const { id } = req.params;
+
+  const user = await findThirdPartyUserById(id);
+  if (!user) {
+    return res.redirect(`/third-party-subscribers${lngParam}`);
+  }
+
+  renderDeletePage(res, t, user.id, user.name, lngParam);
+};
+
+export const postHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  const lngParam = locale === "cy" ? "?lng=cy" : "";
+  const { id } = req.params;
+
+  const user = await findThirdPartyUserById(id);
+  if (!user) {
+    return res.redirect(`/third-party-subscribers${lngParam}`);
+  }
+
+  const confirmDelete = req.body.confirmDelete as string | undefined;
+
+  if (!confirmDelete) {
+    return renderDeletePage(res, t, user.id, user.name, lngParam, [{ text: t.noRadioSelected, href: "#confirm-delete" }]);
+  }
+
+  if (confirmDelete === "no") {
+    return res.redirect(`/third-party-subscribers/${id}/manage${lngParam}`);
+  }
+
+  await deleteThirdPartyUser(id);
+
+  req.auditMetadata = {
+    shouldLog: true,
+    action: AuditLogAction.DELETE_THIRD_PARTY_USER,
+    entityInfo: `Name: ${user.name}, ID: ${id}`
+  };
+
+  res.redirect(`/third-party-subscribers/${id}/delete/success${lngParam}`);
+};
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];

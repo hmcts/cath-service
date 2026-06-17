@@ -17,6 +17,16 @@ export const cy = {
       href: "/manage-third-party-users"
     },
     {
+      title: "Rheoli Tanysgrifwyr Trydydd Parti",
+      description: "Gweld, creu, diweddaru a dileu tanysgrifwyr trydydd parti a'u ffurfweddiad OAuth",
+      href: "/third-party-subscribers"
+    },
+    {
+      title: "Rheoli Tanysgrifwyr Trydydd Parti",
+      description: "Gweld, creu, diweddaru a dileu tanysgrifwyr trydydd parti a'u ffurfweddiad OAuth",
+      href: "/third-party-users"
+    },
+    {
       title: "Rheoli Defnyddwyr",
       description: "Dod o hyd i, diweddaru a dileu defnyddwyr",
       href: "/find-users"

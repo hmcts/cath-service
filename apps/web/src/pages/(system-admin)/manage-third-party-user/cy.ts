@@ -5,7 +5,6 @@ export const cy = {
   numberOfSubscriptionsLabel: "Nifer y tanysgrifiadau",
   sensitivityLabel: "Sensitifrwydd",
   manageSubscriptionsButton: "Rheoli tanysgrifiadau",
-  manageOauthConfigButton: "Rheoli ffurfweddiad OAuth",
   deleteUserButton: "Dileu Defnyddiwr",
   userNotFound: "Ni chanfuwyd defnyddiwr",
   classified: "Cyfrinachol",
