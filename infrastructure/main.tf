@@ -1,27 +1,24 @@
-locals {
-  business_area = var.env == "aat" || var.env == "prod" ? "cft" : "sds"
+provider "azurerm" {
+  features {
+  }
+  subscription_id = var.subscription
 }
 
+provider "azurerm" {
+  alias           = "postgres_network"
+  subscription_id = var.aks_subscription_id
+  features {}
+}
+
+# Shared resource group (managed by separate pipeline)
+# Contains Key Vault and other shared resources
+data "azurerm_resource_group" "shared" {
+  name = "${var.product}-${var.env}"
+}
+
+# Resource group for resources managed by this terraform
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.product}-${var.env}"
-  location = var.location
-  tags     = var.common_tags
-}
-
-resource "azurerm_resource_group" "ss_kv_rg" {
-  name     = "${var.product}-ss-kv-${var.env}-rg"
-  location = var.location
-  tags     = var.common_tags
-}
-
-resource "azurerm_resource_group" "postgres_rg" {
-  name     = "flexible-cath-${var.env}-rg"
-  location = var.location
-  tags     = var.common_tags
-}
-
-resource "azurerm_resource_group" "redis_rg" {
-  name     = "cath-cache-${var.env}"
+  name     = "${var.product}-${var.env}-${var.component}"
   location = var.location
   tags     = var.common_tags
 }

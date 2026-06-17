@@ -1,5 +1,5 @@
 variable "env" {
-  description = "Environment name (e.g., demo, test, ithc, stg, aat)"
+  description = "Environment name (e.g., aat, prod)"
   type        = string
 }
 
@@ -10,7 +10,7 @@ variable "product" {
 }
 
 variable "component" {
-  description = "Component name"
+  description = "Component name for resource group naming"
   type        = string
   default     = "cath"
 }
@@ -37,25 +37,8 @@ variable "common_tags" {
   default     = {}
 }
 
-variable "product_group_name" {
-  description = "AD group name for Key Vault access"
-  type        = string
-  default     = "DTS SDS Developers"
-}
-
-variable "active_directory_group" {
-  description = "AD group name for bootstrap Key Vault access"
-  type        = string
-  default     = "DTS SDS Developers"
-}
-
-variable "jenkins_AAD_objectId" {
-  description = "Object ID of the Jenkins/CI service principal for Key Vault access"
-  type        = string
-  default     = ""
-}
-
 # Optional variables - auto-derived from Azure credentials in CI
+
 variable "tenant_id" {
   description = "Azure AD tenant ID (auto-derived from CI credentials)"
   type        = string
@@ -66,12 +49,6 @@ variable "ci_service_principal_object_id" {
   description = "Azure AD object ID for CI/CD service principal (auto-derived from CI credentials)"
   type        = string
   default     = null
-}
-
-variable "e2e_oidc_object_id" {
-  description = "Azure AD object ID for the GitHub Actions OIDC app registration (AZURE_CLIENT_ID) used by e2e test workflows"
-  type        = string
-  default     = "9a5a8d6f-c926-46e3-89d4-ed3472ea0edc"
 }
 
 variable "builtFrom" {
