@@ -100,8 +100,8 @@ Once CNP has been running cleanly:
 
 ## Task list
 
-- [ ] Add `AZURE_CREDENTIALS_CFT_PREVIEW` secret to the cath-service GitHub repo
-- [ ] Add `terraform-aat` job to `stage.infrastructure.yml`
+- [x] Add `AZURE_CREDENTIALS_CFT_PREVIEW` secret to the cath-service GitHub repo
+- [x] Add `terraform-aat` job to `stage.infrastructure.yml`
 - [ ] Open migration PR — pipeline runs AAT Terraform apply via the temporary `plan-only: false` change
 - [ ] Add `apps/cath/` kustomizations to `cnp-flux-config` (aat + preview)
 - [ ] Regenerate SOPS secrets, encrypt with CNP key, commit to `cnp-flux-config`

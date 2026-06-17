@@ -69,3 +69,16 @@ jobs:
       plan-only: ${{ inputs.plan-only }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+
+  terraform-aat:
+    name: Terraform AAT
+    needs: [terraform-fmt]
+    uses: ./.github/workflows/job.terraform.yml
+    with:
+      environment: aat
+      subscription: DCD-CNP-DEV
+      aks-subscription: DCD-CFTAPPS-STG
+      storage-account: nonprod
+      plan-only: ${{ inputs.plan-only }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
