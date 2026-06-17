@@ -1,5 +1,5 @@
 export const cy = {
-  pageTitle: "Creu defnyddiwr trydydd parti",
+  pageTitle: "Creu tanysgrifwr trydydd parti",
   nameLabel: "Enw'r",
   continueButton: "Parhau",
   errorSummaryTitle: "Mae yna broblem",

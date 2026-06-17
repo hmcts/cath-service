@@ -31,7 +31,7 @@ describe("third-party-subscribers list page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/index",
         expect.objectContaining({
-          pageTitle: "Manage third party users",
+          pageTitle: "Manage third-party subscribers",
           users: [{ id: "1", name: "Test User", createdAt: "01/01/2026" }],
           lngParam: ""
         })
@@ -50,7 +50,7 @@ describe("third-party-subscribers list page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/index",
         expect.objectContaining({
-          pageTitle: "Rheoli defnyddwyr trydydd parti",
+          pageTitle: "Rheoli tanysgrifwyr trydydd parti",
           lngParam: "?lng=cy"
         })
       );

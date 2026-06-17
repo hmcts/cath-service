@@ -38,7 +38,7 @@ describe("third-party-subscribers create summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/create/summary/index",
         expect.objectContaining({
-          pageTitle: "Create third party user summary",
+          pageTitle: "Create third party subscriber summary",
           name: "Test User"
         })
       );

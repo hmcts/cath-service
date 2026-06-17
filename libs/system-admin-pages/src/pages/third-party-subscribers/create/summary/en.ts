@@ -1,10 +1,10 @@
 export const en = {
-  pageTitle: "Create third party user summary",
+  pageTitle: "Create third party subscriber summary",
   nameLabel: "Name",
   changeLink: "Change",
   changeLinkAriaLabel: (name: string) => `Change name for ${name}`,
   confirmButton: "Confirm",
   errorSummaryTitle: "There is a problem",
-  duplicateNameError: "A third party user with this name already exists",
+  duplicateNameError: "A third party subscriber with this name already exists",
   back: "Back"
 };

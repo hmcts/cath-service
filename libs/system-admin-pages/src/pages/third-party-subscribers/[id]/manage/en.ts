@@ -1,5 +1,5 @@
 export const en = {
-  pageTitle: "Manage user",
+  pageTitle: "Manage subscriber",
   tableHeadings: {
     name: "Name",
     createdDate: "Created date",
@@ -8,7 +8,7 @@ export const en = {
   },
   manageSubscriptionsButton: "Manage subscriptions",
   manageOauthConfigButton: "Manage OAuth configuration",
-  deleteUserButton: "Delete user",
-  userNotFound: "Third party user not found.",
+  deleteUserButton: "Delete subscriber",
+  userNotFound: "Third party subscriber not found.",
   back: "Back"
 };

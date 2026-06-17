@@ -1,7 +1,7 @@
 export const en = {
-  pageTitle: "Third party user created",
-  panelTitle: "Third party user created",
-  panelBody: "The third party user has been successfully created",
-  manageUsersLink: "Manage third party users",
+  pageTitle: "Third party subscriber created",
+  panelTitle: "Third party subscriber created",
+  panelBody: "The third party subscriber has been successfully created",
+  manageUsersLink: "Manage third party subscribers",
   back: "Back"
 };

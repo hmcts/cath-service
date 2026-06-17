@@ -27,7 +27,7 @@ describe("third-party-subscribers create page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/create/index",
         expect.objectContaining({
-          pageTitle: "Create third party user",
+          pageTitle: "Create third party subscriber",
           data: { name: "" }
         })
       );
@@ -52,7 +52,7 @@ describe("third-party-subscribers create page", () => {
       await getHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/create/index", expect.objectContaining({ pageTitle: "Creu defnyddiwr trydydd parti" }));
+      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/create/index", expect.objectContaining({ pageTitle: "Creu tanysgrifwr trydydd parti" }));
     });
   });
 

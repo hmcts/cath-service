@@ -46,7 +46,7 @@ describe("third-party-subscribers manage user page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/[id]/manage/index",
         expect.objectContaining({
-          pageTitle: "Manage user",
+          pageTitle: "Manage subscriber",
           name: "Test Corp",
           subscriptionCount: 1,
           sensitivity: "PUBLIC"

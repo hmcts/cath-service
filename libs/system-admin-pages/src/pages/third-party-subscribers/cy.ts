@@ -1,12 +1,12 @@
 export const cy = {
-  pageTitle: "Rheoli defnyddwyr trydydd parti",
+  pageTitle: "Rheoli tanysgrifwyr trydydd parti",
   tableHeadings: {
-    name: "Enw'r",
+    name: "Enw",
     createdDate: "Crëwyd Dyddiad",
     actions: "Camau gweithredu"
   },
-  createNewUserButton: "Creu defnyddiwr newydd",
+  createNewUserButton: "Creu tanysgrifwr newydd",
   manageLink: "Rheoli",
-  noUsersMessage: "Nid oes defnyddwyr trydydd parti.",
+  noUsersMessage: "Nid oes tanysgrifwyr trydydd parti.",
   back: "Yn ôl"
 };

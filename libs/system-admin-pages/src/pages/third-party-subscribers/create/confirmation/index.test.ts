@@ -24,7 +24,7 @@ describe("third-party-subscribers create confirmation page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/create/confirmation/index",
         expect.objectContaining({
-          panelTitle: "Third party user created",
+          panelTitle: "Third party subscriber created",
           createdName: "Confirmed User"
         })
       );
@@ -42,7 +42,7 @@ describe("third-party-subscribers create confirmation page", () => {
       // Assert
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/create/confirmation/index",
-        expect.objectContaining({ panelTitle: "Crëwyd defnyddiwr trydydd parti" })
+        expect.objectContaining({ panelTitle: "Crëwyd tanysgrifwr trydydd parti" })
       );
     });
   });

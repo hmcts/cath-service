@@ -21,8 +21,8 @@ describe("third-party-subscribers delete success page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/[id]/delete/success/index",
         expect.objectContaining({
-          panelTitle: "Third party user deleted",
-          panelBody: "The third party user and associated subscriptions have been removed"
+          panelTitle: "Third party subscriber deleted",
+          panelBody: "The third party subscriber and associated subscriptions have been removed"
         })
       );
     });
@@ -37,7 +37,7 @@ describe("third-party-subscribers delete success page", () => {
       // Assert
       expect(res.render).toHaveBeenCalledWith(
         "third-party-subscribers/[id]/delete/success/index",
-        expect.objectContaining({ panelTitle: "Defnyddiwr trydydd parti wedi'i ddileu" })
+        expect.objectContaining({ panelTitle: "Tanysgrifwr trydydd parti wedi'i ddileu" })
       );
     });
   });

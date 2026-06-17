@@ -33,7 +33,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const listTypes = await prisma.listType.findMany({
     where: { deletedAt: null },
     orderBy: { name: "asc" },
-    select: { id: true, name: true }
+    select: { id: true, name: true, friendlyName: true, welshFriendlyName: true }
   });
 
   const session = req.session as ThirdPartySubscriptionsSession;
@@ -83,7 +83,7 @@ export const postHandler = async (req: Request, res: Response) => {
   const listTypes = await prisma.listType.findMany({
     where: { deletedAt: null },
     orderBy: { name: "asc" },
-    select: { id: true, name: true }
+    select: { id: true, name: true, friendlyName: true, welshFriendlyName: true }
   });
 
   const session = req.session as ThirdPartySubscriptionsSession;
