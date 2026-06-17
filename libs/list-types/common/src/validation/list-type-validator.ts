@@ -83,12 +83,7 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     // If the module doesn't exist, it means no schema is available for this list type
-    if (
-      errorMessage.includes("Cannot find") ||
-      errorMessage.includes("Failed to resolve") ||
-      errorMessage.includes("Cannot find package") ||
-      errorMessage.includes("[vitest]")
-    ) {
+    if (errorMessage.includes("Cannot find") || errorMessage.includes("Failed to resolve") || errorMessage.includes("Cannot find package")) {
       return {
         isValid: false,
         errors: [
