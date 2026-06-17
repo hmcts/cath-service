@@ -30,23 +30,15 @@ fi
 
 PRISMA="./node_modules/.bin/prisma"
 
-# Wait for the database to become available (up to 10 minutes).
 # On fresh PR deployments the Azure Flexible Server database is provisioned by ASO
-# after Helm installs, so the pod must wait rather than crash-loop immediately.
+# after Helm installs, so the pod must wait. Kubernetes will kill via startup probe if needed.
 echo "Waiting for database to become available..."
-WAIT_SECONDS=0
-MAX_WAIT=600
 until $PRISMA db execute --stdin --config=./prisma.config.ts 2>/dev/null <<'SQL'
 SELECT 1;
 SQL
 do
-  if [ "$WAIT_SECONDS" -ge "$MAX_WAIT" ]; then
-    echo "Database not available after ${MAX_WAIT}s, giving up."
-    exit 1
-  fi
-  echo "  Database not ready, retrying in 10s... (${WAIT_SECONDS}s elapsed)"
+  echo "  Database not ready, retrying in 10s..."
   sleep 10
-  WAIT_SECONDS=$((WAIT_SECONDS + 10))
 done
 echo "Database is available."
 

@@ -103,7 +103,7 @@ jobs:
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
-          timeout: 15m0s
+          timeout: 30m0s
 
       - name: Deploy to STG
         if: inputs.environment == 'stg'
@@ -124,7 +124,7 @@ jobs:
           oci-registry: ${{ env.REGISTRY }}
           oci-username: ${{ secrets.REGISTRY_USERNAME }}
           oci-password: ${{ secrets.REGISTRY_PASSWORD }}
-          timeout: 15m0s
+          timeout: 30m0s
 
       - name: Register DNS for STG
         if: inputs.environment == 'stg'
