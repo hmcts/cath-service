@@ -9,7 +9,7 @@ module "postgresql" {
   env                 = var.env
   product             = var.product
   component           = var.component
-  business_area       = "sds"
+  business_area       = local.business_area
   common_tags         = var.common_tags
 
   # Use expanded subnet - original postgresql subnet is full

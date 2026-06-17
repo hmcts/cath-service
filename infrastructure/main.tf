@@ -1,3 +1,7 @@
+locals {
+  business_area = var.env == "aat" || var.env == "prod" ? "cft" : "sds"
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "${var.product}-${var.env}"
   location = var.location

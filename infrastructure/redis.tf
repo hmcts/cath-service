@@ -7,7 +7,7 @@ module "redis" {
   location            = var.location
   env                 = var.env
   common_tags         = var.common_tags
-  business_area       = "sds"
+  business_area       = local.business_area
 
   private_endpoint_enabled      = true
   public_network_access_enabled = false
