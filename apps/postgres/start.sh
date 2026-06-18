@@ -33,7 +33,7 @@ printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at I
   npx --ignore-scripts prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
 
 echo "Clearing stale migration records for removed migrations..."
-printf "DELETE FROM _prisma_migrations WHERE migration_name IN ('20260527140208', '20260528115459_add_third_party_push_log');" | \
+printf "DELETE FROM _prisma_migrations WHERE migration_name IN ('20260527140208', '20260528115459_add_third_party_push_log', '20260529131401_add_soft_delete_and_admin_audit_log');" | \
   npx --ignore-scripts prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
 
 echo "Running database migrations..."
