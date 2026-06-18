@@ -73,12 +73,12 @@ describe("list-type-validator", () => {
     });
 
     it("should return error for list type without JSON schema", async () => {
-      // Using list type ID 1 (CIVIL_DAILY_CAUSE_LIST) which doesn't have a schema package
+      // Using list type ID 1 (CROWN_DAILY_LIST) which doesn't have a schema package
       const result = await validateListTypeJson("1", { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0].message).toContain("JSON schemas are not available");
+      expect(result.errors[0].message).toContain("does not support JSON uploads");
     });
 
     it("should validate Civil and Family Daily Cause List with valid data", async () => {
