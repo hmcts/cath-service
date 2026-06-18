@@ -2041,12 +2041,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hmcts-cft/simple-router@npm:2.1.0":
-  version: 2.1.0
-  resolution: "@hmcts-cft/simple-router@npm:2.1.0"
+"@hmcts-cft/simple-router@npm:2.2.0":
+  version: 2.2.0
+  resolution: "@hmcts-cft/simple-router@npm:2.2.0"
   peerDependencies:
     express: ^5.1.0
-  checksum: 10c0/e8cf3701a59eb481b13dda5e906ade5a51d721d56ee923eac694f057db5aa37341e9f45f9a95d44b97b5cf5bdc9672ef1c8bebdc3b9b8a6df5d3ed340a0fee08
+  checksum: 10c0/8f11c27622b7bd9a4727ef9debe1164b2304d014adcfa5e58823cd5001bc7803a783ff2905130697da43e7a537908d3df7cb64b707a81c8f4e39ae3ee3668843
   languageName: node
   linkType: hard
 
@@ -2107,7 +2107,7 @@ __metadata:
   resolution: "@hmcts/api@workspace:apps/api"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
-    "@hmcts-cft/simple-router": "npm:2.1.0"
+    "@hmcts-cft/simple-router": "npm:2.2.0"
     "@hmcts/blob-ingestion": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/location": "workspace:*"
@@ -2646,7 +2646,7 @@ __metadata:
   resolution: "@hmcts/web@workspace:apps/web"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
-    "@hmcts-cft/simple-router": "npm:2.1.0"
+    "@hmcts-cft/simple-router": "npm:2.2.0"
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
