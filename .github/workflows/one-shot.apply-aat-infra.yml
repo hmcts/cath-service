@@ -8,6 +8,11 @@ name: One-Shot - Apply AAT Infrastructure
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'infrastructure/**'
 
 jobs:
   terraform:
