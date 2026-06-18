@@ -10,10 +10,10 @@ provider "azurerm" {
   features {}
 }
 
-# Shared resource group (managed by separate pipeline)
-# Contains Key Vault and other shared resources
-data "azurerm_resource_group" "shared" {
-  name = "${var.product}-${var.env}"
+resource "azurerm_resource_group" "shared" {
+  name     = "${var.product}-${var.env}"
+  location = var.location
+  tags     = var.common_tags
 }
 
 # Resource group for resources managed by this terraform
