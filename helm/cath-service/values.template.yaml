@@ -21,6 +21,7 @@ cath-web:
     environment:
       BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
+      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # API application configuration
 cath-api:
@@ -29,6 +30,7 @@ cath-api:
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.staging.platform.hmcts.net"
     environment:
       ENABLE_TEST_SUPPORT: "true"
+      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Crons application configuration
 cath-crons:
