@@ -3,6 +3,10 @@
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 
+{% set svgUpDown %}<svg width="22" height="22" focusable="false" aria-hidden="true" role="img" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.1875 9.5L10.9609 3.95703L13.7344 9.5H8.1875Z" fill="currentColor"/><path d="M13.7344 12.0781L10.9609 17.6211L8.1875 12.0781H13.7344Z" fill="currentColor"/></svg>{% endset %}
+{% set svgUp %}<svg width="22" height="22" focusable="false" aria-hidden="true" role="img" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.5625 15.5L11 6.63125L15.4375 15.5H6.5625Z" fill="currentColor"/></svg>{% endset %}
+{% set svgDown %}<svg width="22" height="22" focusable="false" aria-hidden="true" role="img" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.4375 7L11 15.8687L6.5625 7L15.4375 7Z" fill="currentColor"/></svg>{% endset %}
+
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
@@ -16,54 +20,91 @@
 
     <h1 class="govuk-heading-l">{{ heading }}</h1>
 
+    {% if resultCount > 0 %}
+      <h2 class="govuk-label govuk-label--m">{{ subHeading }}</h2>
+    {% endif %}
+
     <p class="govuk-body">{{ showingResults }} {{ resultCount }} {{ resultsText }}</p>
 
     {% if resultCount > 0 %}
-      <h2 class="govuk-label govuk-label--m">{{ subHeading }}</h2>
-
       <form method="post" novalidate>
         <div class="govuk-table-container">
           <table class="govuk-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable"
+                  {% if sortBy == 'listType' and not isDefaultSort %}
+                    aria-sort="{{ 'descending' if order == 'desc' else 'ascending' }}"
+                  {% else %}
+                    aria-sort="none"
+                  {% endif %}>
                   <a href="?sort=listType&order={{ 'desc' if sortBy == 'listType' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.listType }}
-                    {% if sortBy == 'listType' %}
-                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% if sortBy == 'listType' and not isDefaultSort %}
+                      {{ svgDown | safe if order == 'desc' else svgUp | safe }}
+                    {% else %}
+                      {{ svgUpDown | safe }}
                     {% endif %}
                   </a>
                 </th>
-                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable"
+                  {% if sortBy == 'courtName' and not isDefaultSort %}
+                    aria-sort="{{ 'descending' if order == 'desc' else 'ascending' }}"
+                  {% else %}
+                    aria-sort="none"
+                  {% endif %}>
                   <a href="?sort=courtName&order={{ 'desc' if sortBy == 'courtName' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.courtName }}
-                    {% if sortBy == 'courtName' %}
-                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% if sortBy == 'courtName' and not isDefaultSort %}
+                      {{ svgDown | safe if order == 'desc' else svgUp | safe }}
+                    {% else %}
+                      {{ svgUpDown | safe }}
                     {% endif %}
                   </a>
                 </th>
-                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable"
+                  {% if sortBy == 'contentDate' and not isDefaultSort %}
+                    aria-sort="{{ 'descending' if order == 'desc' else 'ascending' }}"
+                  {% else %}
+                    aria-sort="none"
+                  {% endif %}>
                   <a href="?sort=contentDate&order={{ 'desc' if sortBy == 'contentDate' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.contentDate }}
-                    {% if sortBy == 'contentDate' %}
-                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% if sortBy == 'contentDate' and not isDefaultSort %}
+                      {{ svgDown | safe if order == 'desc' else svgUp | safe }}
+                    {% else %}
+                      {{ svgUpDown | safe }}
                     {% endif %}
                   </a>
                 </th>
                 <th scope="col" class="govuk-table__header">{{ tableHeaders.displayDates }}</th>
-                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable"
+                  {% if sortBy == 'language' and not isDefaultSort %}
+                    aria-sort="{{ 'descending' if order == 'desc' else 'ascending' }}"
+                  {% else %}
+                    aria-sort="none"
+                  {% endif %}>
                   <a href="?sort=language&order={{ 'desc' if sortBy == 'language' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.language }}
-                    {% if sortBy == 'language' %}
-                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% if sortBy == 'language' and not isDefaultSort %}
+                      {{ svgDown | safe if order == 'desc' else svgUp | safe }}
+                    {% else %}
+                      {{ svgUpDown | safe }}
                     {% endif %}
                   </a>
                 </th>
-                <th scope="col" class="govuk-table__header govuk-table__header--sortable">
+                <th scope="col" class="govuk-table__header govuk-table__header--sortable"
+                  {% if sortBy == 'sensitivity' and not isDefaultSort %}
+                    aria-sort="{{ 'descending' if order == 'desc' else 'ascending' }}"
+                  {% else %}
+                    aria-sort="none"
+                  {% endif %}>
                   <a href="?sort=sensitivity&order={{ 'desc' if sortBy == 'sensitivity' and order == 'asc' else 'asc' }}{{ '&lng=cy' if locale == 'cy' else '' }}" class="govuk-link govuk-link--no-visited-state">
                     {{ tableHeaders.sensitivity }}
-                    {% if sortBy == 'sensitivity' %}
-                      <span aria-hidden="true">{{ '↓' if order == 'desc' else '↑' }}</span>
+                    {% if sortBy == 'sensitivity' and not isDefaultSort %}
+                      {{ svgDown | safe if order == 'desc' else svgUp | safe }}
+                    {% else %}
+                      {{ svgUpDown | safe }}
                     {% endif %}
                   </a>
                 </th>
@@ -75,7 +116,7 @@
               <tr class="govuk-table__row">
                 <td class="govuk-table__cell">{{ row.listType }}</td>
                 <td class="govuk-table__cell">{{ row.courtName }}</td>
-                <td class="govuk-table__cell">{{ row.contentDate }}</td>
+                <td class="govuk-table__cell govuk-table__cell--nowrap">{{ row.contentDate }}</td>
                 <td class="govuk-table__cell">{{ row.displayDates }}</td>
                 <td class="govuk-table__cell">{{ row.language }}</td>
                 <td class="govuk-table__cell">{{ row.sensitivity }}</td>
