@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "First-tier Tribunal (Residential and Property Tribunal) Weekly Hearing List",
+  "description": "Schema for First-tier Tribunal (Residential and Property Tribunal) Weekly Hearing Lists from pip-data-management",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["date", "time", "venue", "caseType", "caseReferenceNumber", "judges", "members", "hearingMethod", "additionalInformation"],
+    "properties": {
+      "date": {
+        "title": "Date",
+        "type": "string",
+        "pattern": "^\\d{2}/\\d{2}/\\d{4}$",
+        "examples": ["02/01/2025"]
+      },
+      "time": {
+        "title": "Time",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["10:00am"]
+      },
+      "venue": {
+        "title": "Venue",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["London"]
+      },
+      "caseType": {
+        "title": "Case Type",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["Leasehold"]
+      },
+      "caseReferenceNumber": {
+        "title": "Case Reference Number",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["RPT/00001/2025"]
+      },
+      "judges": {
+        "title": "Judge(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["Judge Smith"]
+      },
+      "members": {
+        "title": "Member(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["Member Jones"]
+      },
+      "hearingMethod": {
+        "title": "Hearing Method",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["In person"]
+      },
+      "additionalInformation": {
+        "title": "Additional Information",
+        "type": "string",
+        "pattern": "^(?!(.|\r|\n)*<[^>]+>)(.|\r|\n)*$",
+        "examples": ["Remote hearing"]
+      }
+    }
+  }
+}

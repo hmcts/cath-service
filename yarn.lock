@@ -2306,6 +2306,60 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/legacy-third-party-fulfilment@workspace:*, @hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment":
   version: 0.0.0-use.local
   resolution: "@hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment"
@@ -2523,6 +2577,24 @@ __metadata:
     typescript: "npm:6.0.3"
   peerDependencies:
     redis: ^4.0.0 || ^5.0.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
