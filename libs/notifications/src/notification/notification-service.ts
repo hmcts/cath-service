@@ -1,4 +1,6 @@
 import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   extractCaseSummary as extractAdminCourtSummary,
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
@@ -28,7 +30,8 @@ import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
-  getSubscriptionTemplateIdForListType,
+  getSubscriptionTemplateId,
+  isSjpListType,
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
@@ -44,7 +47,21 @@ import {
 } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
-const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_PDF_SIZE_BYTES = Number.parseInt(process.env.MAX_PDF_SIZE_BYTES || String(2 * 1024 * 1024), 10);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const STORAGE_DIR = path.join(__dirname, "..", "..", "..", "..", "storage", "temp", "uploads");
+
+async function getExcelFilePath(artefactId: string): Promise<string | null> {
+  const excelPath = path.join(STORAGE_DIR, `${artefactId}.xlsx`);
+  try {
+    await fs.stat(excelPath);
+    return excelPath;
+  } catch {
+    return null;
+  }
+}
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -114,6 +131,7 @@ interface EmailTemplateData {
   templateParameters: TemplateParameters;
   templateId?: string;
   pdfBuffer?: Buffer;
+  excelBuffer?: Buffer;
 }
 
 async function processUserNotification(
@@ -142,7 +160,8 @@ async function processUserNotification(
       emailAddress: subscription.user.email!,
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
-      pdfBuffer: emailData.pdfBuffer
+      pdfBuffer: emailData.pdfBuffer,
+      excelBuffer: emailData.excelBuffer
     });
 
     if (emailResult.success) {
@@ -182,24 +201,20 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
-  console.log("[notification-debug] buildEmailTemplateData:", {
-    listTypeName,
-    hasConfig: !!config,
-    hasJsonData: !!event.jsonData,
-    hasPdfFilePath: !!event.pdfFilePath,
-    pdfFilePath: event.pdfFilePath
-  });
-
   if (config && event.jsonData) {
-    return buildEnhancedEmailData(event, userName, config, caseValue);
+    return buildEnhancedEmailData(event, userName, config, listTypeName, caseValue);
   }
 
-  return buildFallbackEmailData(event, userName, caseValue);
+  return buildFallbackEmailData(event, userName, listTypeName, caseValue);
 }
 
-async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-
+async function buildEnhancedEmailData(
+  event: PublicationEvent,
+  userName: string,
+  config: EmailBuilderConfig,
+  listTypeName?: string,
+  caseValue?: string
+): Promise<EmailTemplateData> {
   try {
     const caseSummaryItems = config.extract(event.jsonData);
     const caseSummary = config.format(caseSummaryItems);
@@ -213,58 +228,70 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
       caseValue
     });
 
-    console.log("[notification-debug] buildEnhancedEmailData: pdfFilePath check:", {
-      listTypeId,
-      hasPdfFilePath: !!event.pdfFilePath,
-      pdfFilePath: event.pdfFilePath
-    });
-
-    if (event.pdfFilePath) {
-      return await buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
+    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return buildFallbackEmailData(event, userName, caseValue);
+    return buildFallbackEmailData(event, userName, listTypeName, caseValue);
   }
 }
 
-async function buildEmailDataWithPdf(pdfFilePath: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
-  const pdfStats = await fs.stat(pdfFilePath);
-  const pdfUnder2MB = pdfStats.size < MAX_PDF_SIZE_BYTES;
+async function buildEmailDataWithFiles(
+  artefactId: string,
+  pdfFilePath: string | undefined,
+  listTypeName: string | undefined,
+  templateParameters: TemplateParameters
+): Promise<EmailTemplateData> {
+  const isSjp = listTypeName ? isSjpListType(listTypeName) : false;
+  const excelFilePath = await getExcelFilePath(artefactId);
 
-  const templateId = getSubscriptionTemplateIdForListType(listTypeId, true, pdfUnder2MB);
+  let hasPdf = false;
+  let pdfUnder2MB = false;
+  let pdfBuffer: Buffer | undefined;
 
-  console.log("[notification-debug] buildEmailDataWithPdf:", {
-    pdfFilePath,
-    sizeBytes: pdfStats.size,
-    pdfUnder2MB,
-    templateId
+  if (pdfFilePath) {
+    const pdfStats = await fs.stat(pdfFilePath);
+    hasPdf = true;
+    pdfUnder2MB = pdfStats.size < MAX_PDF_SIZE_BYTES;
+    if (pdfUnder2MB) {
+      pdfBuffer = await fs.readFile(pdfFilePath);
+    }
+  }
+
+  let hasExcel = false;
+  let excelUnder2MB = false;
+  let excelBuffer: Buffer | undefined;
+
+  if (excelFilePath) {
+    const excelStats = await fs.stat(excelFilePath);
+    hasExcel = true;
+    excelUnder2MB = excelStats.size < MAX_PDF_SIZE_BYTES;
+    if (excelUnder2MB) {
+      excelBuffer = await fs.readFile(excelFilePath);
+    }
+  }
+
+  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
+
+  const templateId = getSubscriptionTemplateId({
+    isSjp,
+    hasPdf: hasPdf && pdfUnder2MB,
+    hasExcel: hasExcel && excelUnder2MB,
+    filesUnder2MB
   });
 
-  if (pdfUnder2MB) {
-    const pdfBuffer = await fs.readFile(pdfFilePath);
-    console.log("[notification-debug] buildEmailDataWithPdf: pdfBuffer loaded, size:", pdfBuffer.length);
-    return { templateParameters, templateId, pdfBuffer };
-  }
-
-  return { templateParameters, templateId };
+  return { templateParameters, templateId, pdfBuffer, excelBuffer };
 }
 
-function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): EmailTemplateData {
-  return {
-    templateParameters: buildTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseValue
-    })
-  };
+async function buildFallbackEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+  const templateParameters = buildTemplateParameters({
+    userName,
+    hearingListName: event.hearingListName,
+    publicationDate: event.publicationDate,
+    locationName: event.locationName,
+    caseValue
+  });
+
+  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
 }
 
 function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {
@@ -365,13 +392,12 @@ async function processListTypeUserNotification(
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
 
-    console.log(`email address: ${subscriber.user.email}`);
-    console.log(`Template ID used for notification: ${emailData.templateId}`);
     const emailResult = await sendEmail({
       emailAddress: subscriber.user.email,
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
-      pdfBuffer: emailData.pdfBuffer
+      pdfBuffer: emailData.pdfBuffer,
+      excelBuffer: emailData.excelBuffer
     });
 
     if (emailResult.success) {

@@ -440,6 +440,21 @@ export async function checkFlatFileExists(artefactId: string): Promise<FlatFileI
   return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
 }
 
+export interface FlatFileListItem {
+  filename: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export interface FlatFileListResponse {
+  artefactId: string;
+  files: FlatFileListItem[];
+}
+
+export async function listFlatFiles(artefactId: string): Promise<FlatFileListResponse> {
+  return callTestSupportApi<FlatFileListResponse>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}&all=true`);
+}
+
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
   const url = `${WEB_BASE_URL}/test-support/flat-files`;

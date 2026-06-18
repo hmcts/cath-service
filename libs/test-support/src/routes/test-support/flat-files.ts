@@ -12,10 +12,28 @@ const STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 export const GET = async (req: Request, res: Response) => {
   try {
-    const { artefactId } = req.query as { artefactId: string };
+    const { artefactId, all } = req.query as { artefactId: string; all?: string };
 
     if (!artefactId) {
       return res.status(400).json({ error: "artefactId query parameter is required" });
+    }
+
+    // When all=true, return all matching files for this artefactId
+    if (all === "true") {
+      const matchingFiles: Array<{ filename: string; sizeBytes: number; createdAt: string }> = [];
+      try {
+        const files = await fs.readdir(STORAGE_BASE);
+        for (const file of files) {
+          if (file.startsWith(artefactId)) {
+            const filePath = path.join(STORAGE_BASE, file);
+            const stats = await fs.stat(filePath);
+            matchingFiles.push({ filename: file, sizeBytes: stats.size, createdAt: stats.birthtime.toISOString() });
+          }
+        }
+      } catch {
+        // Storage directory might not exist
+      }
+      return res.json({ artefactId, files: matchingFiles });
     }
 
     // Find any file matching the artefactId
