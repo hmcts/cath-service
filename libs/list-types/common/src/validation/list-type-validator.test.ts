@@ -4,7 +4,7 @@ import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-typ
 
 // Test data matching ListTypeInfo interface
 const testListTypes: ListTypeInfo[] = [
-  { id: 1, name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: "Civil Daily Cause List" },
+  { id: 1, name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List" },
   { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
   { id: 26, name: "SJP_DELTA_PRESS_LIST", friendlyName: "Single Justice Procedure Press List (New cases)" },
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" },
@@ -85,7 +85,7 @@ describe("list-type-validator", () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0].message).toContain("No JSON schema available");
+      expect(result.errors[0].message).toContain("does not support JSON uploads");
     });
 
     it("should validate Civil and Family Daily Cause List with valid data", async () => {

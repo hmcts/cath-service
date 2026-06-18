@@ -14,14 +14,10 @@ export function extractCaseSummary(jsonData: CauseListData): CaseSummary[] {
           for (const hearing of sitting.hearing) {
             for (const caseItem of hearing.case) {
               const applicant = extractParty(caseItem, "APPLICANT_PETITIONER");
-              const respondent = extractParty(caseItem, "RESPONDENT");
               const fields: CaseSummary = [];
 
               if (applicant) {
                 fields.push({ label: "Applicant", value: applicant });
-              }
-              if (respondent) {
-                fields.push({ label: "Respondent", value: respondent });
               }
               fields.push({ label: "Case reference", value: caseItem.caseNumber || "" });
               fields.push({ label: "Case name", value: caseItem.caseName || "" });
