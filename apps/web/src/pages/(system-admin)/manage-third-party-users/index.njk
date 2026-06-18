@@ -15,12 +15,10 @@
     {% if users and users.length > 0 %}
       {% set tableRows = [] %}
       {% for user in users %}
-        {% set sensitivityText = classified if user.highestSensitivity == 'CLASSIFIED' else (private if user.highestSensitivity == 'PRIVATE' else (public if user.highestSensitivity == 'PUBLIC' else unselected)) %}
         {% set tableRows = (tableRows.push([
           { text: user.name },
           { text: user.createdDate | date('DD/MM/YYYY') },
           { text: user.subscriptions.length },
-          { text: sensitivityText },
           { html: '<a href="/manage-third-party-user?id=' + user.id + ('&lng=cy' if locale == 'cy' else '') + '" class="govuk-link">' + manageLink + '</a>' }
         ]), tableRows) %}
       {% endfor %}
@@ -30,7 +28,6 @@
           { text: nameColumnHeader },
           { text: createdDateColumnHeader },
           { text: numberOfSubscriptionsColumnHeader },
-          { text: sensitivityColumnHeader },
           { text: actionsColumnHeader }
         ],
         rows: tableRows

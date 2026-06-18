@@ -34,7 +34,7 @@
     "passport": "^0.7.0"
   },
   "dependencies": {
-    "@hmcts-cft/cloud-native-platform": "2.1.0",
+    "@hmcts-cft/cloud-native-platform": "2.3.0",
     "@hmcts/account": "*",
     "@microsoft/microsoft-graph-client": "3.0.7",
     "openid-client": "6.8.4"

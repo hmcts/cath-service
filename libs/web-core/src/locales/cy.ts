@@ -21,15 +21,21 @@ export const cy = {
     contentLicence: {
       text: "All content is available under the",
       linkText: "Open Government Licence v3.0",
-      suffix: ", except where otherwise stated"
+      suffix: ", except where otherwise stated."
     },
     attribution: {
       heading: "When you use this information under the OGL, you should include the following attribution:",
       textPrefix: "Contains public sector information licensed under the",
       linkText: "Open Government Licence v3.0",
+      textSuffix: ".",
       disclaimerPrefix: "The",
       disclaimerSuffix:
         "does not cover use of any personal data in the Court and tribunal hearings service. Personal data is subject to applicable data protection laws."
+    },
+    openJusticeLicence: {
+      textPrefix: "Contains information licensed under the",
+      linkText: "Open Justice Licence v2.0",
+      suffix: "."
     }
   },
   language: {

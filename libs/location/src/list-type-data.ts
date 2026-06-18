@@ -327,7 +327,7 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     shortenedFriendlyName: "UT (T and CC) Daily Hearing List",
-    subJurisdictionIds: [10]
+    subJurisdictionIds: [30]
   },
   {
     id: 29,
@@ -339,7 +339,7 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     shortenedFriendlyName: "UT (LC) Daily Hearing List",
-    subJurisdictionIds: [11]
+    subJurisdictionIds: [29]
   },
   {
     id: 30,
@@ -351,6 +351,6 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     shortenedFriendlyName: "UT (AAC) Daily Hearing List",
-    subJurisdictionIds: [12]
+    subJurisdictionIds: [26]
   }
 ];

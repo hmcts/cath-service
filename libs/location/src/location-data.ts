@@ -46,7 +46,7 @@ export const locationData: {
       locationId: 6,
       name: "Leeds Combined Court Centre",
       welshName: "Canolfan Llysoedd Cyfun Leeds",
-      regions: [4],
+      regions: [6],
       subJurisdictions: [1, 4]
     },
     {
@@ -74,7 +74,7 @@ export const locationData: {
       locationId: 10,
       name: "Newcastle Combined Court Centre",
       welshName: "Canolfan Llysoedd Cyfun Newcastle",
-      regions: [4],
+      regions: [9],
       subJurisdictions: [1, 4]
     },
     {
@@ -95,22 +95,22 @@ export const locationData: {
       locationId: 13,
       name: "Upper Tribunal Tax and Chancery Chamber",
       welshName: "Tribiwnlys Uwch Siambr Dreth a Siawnsri",
-      regions: [7],
-      subJurisdictions: [10]
+      regions: [8],
+      subJurisdictions: [30]
     },
     {
       locationId: 14,
       name: "Upper Tribunal Lands Chamber",
       welshName: "Tribiwnlys Uwch (Siambr Tiroedd)",
-      regions: [7],
-      subJurisdictions: [11]
+      regions: [8],
+      subJurisdictions: [29]
     },
     {
       locationId: 15,
       name: "Upper Tribunal Administrative Appeals Chamber",
       welshName: "Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
       regions: [1],
-      subJurisdictions: [12]
+      subJurisdictions: [26]
     }
   ],
   regions: [
@@ -127,12 +127,12 @@ export const locationData: {
     {
       regionId: 3,
       name: "South East",
-      welshName: "De Ddwyrain"
+      welshName: "De-ddwyrain Lloegr"
     },
     {
       regionId: 4,
-      name: "North",
-      welshName: "Gogledd"
+      name: "North West",
+      welshName: "Gogledd Orllewin Lloegr"
     },
     {
       regionId: 5,
@@ -142,12 +142,42 @@ export const locationData: {
     {
       regionId: 6,
       name: "Yorkshire",
-      welshName: "Swydd Efrog"
+      welshName: "Swydd Efrog Lloegr"
     },
     {
       regionId: 7,
+      name: "East of England",
+      welshName: "Dwyrain Lloegr"
+    },
+    {
+      regionId: 8,
       name: "National",
       welshName: "Cenedlaethol"
+    },
+    {
+      regionId: 9,
+      name: "North East",
+      welshName: "Gogledd-ddwyrain Lloegr"
+    },
+    {
+      regionId: 10,
+      name: "Northern Ireland",
+      welshName: "Gogledd Iwerddon"
+    },
+    {
+      regionId: 11,
+      name: "Royal Courts of Justice Group",
+      welshName: "Grŵp y Llysoedd Barn Brenhinol"
+    },
+    {
+      regionId: 12,
+      name: "Scotland",
+      welshName: "Yr Alban"
+    },
+    {
+      regionId: 13,
+      name: "South West",
+      welshName: "De-orllewin Lloegr"
     }
   ],
   jurisdictions: [
@@ -164,7 +194,7 @@ export const locationData: {
     {
       jurisdictionId: 3,
       name: "Crime",
-      welshName: "Trosedd"
+      welshName: "Troseddau"
     },
     {
       jurisdictionId: 4,
@@ -199,14 +229,14 @@ export const locationData: {
     },
     {
       subJurisdictionId: 5,
-      name: "Court of Appeal",
-      welshName: "Llys Apêl",
+      name: "Court of Appeal (Civil Division)",
+      welshName: "Y Llys Apêl (Adran Sifil)",
       jurisdictionId: 1
     },
     {
       subJurisdictionId: 6,
-      name: "Immigration and Asylum Tribunal",
-      welshName: "Tribiwnlys Mewnfudo a Lloches",
+      name: "Immigration and Asylum Chamber",
+      welshName: "Siambr Mewnfudo a Lloches",
       jurisdictionId: 4
     },
     {
@@ -218,7 +248,7 @@ export const locationData: {
     {
       subJurisdictionId: 8,
       name: "Social Security and Child Support",
-      welshName: "Nawdd Cymdeithasol a Chynhaliaeth Plant",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant",
       jurisdictionId: 4
     },
     {
@@ -229,20 +259,128 @@ export const locationData: {
     },
     {
       subJurisdictionId: 10,
-      name: "Upper Tribunal Tax and Chancery Chamber",
-      welshName: "Tribiwnlys Uwch Siambr Dreth a Siawnsri",
-      jurisdictionId: 4
+      name: "High Court",
+      welshName: "Yr Uchel Lys",
+      jurisdictionId: 1
     },
     {
       subJurisdictionId: 11,
-      name: "Upper Tribunal Lands Chamber",
-      welshName: "Tribiwnlys Uwch (Siambr Tiroedd)",
-      jurisdictionId: 4
+      name: "High Court of the Family Division",
+      welshName: "Adran Deulu yr Uchel Lys",
+      jurisdictionId: 2
     },
     {
       subJurisdictionId: 12,
-      name: "Upper Tribunal Administrative Appeals Chamber",
-      welshName: "Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
+      name: "Court of Appeal (Criminal Division)",
+      welshName: "Y Llys Apêl (Adran Troseddol)",
+      jurisdictionId: 3
+    },
+    {
+      subJurisdictionId: 13,
+      name: "Asylum Support Tribunal",
+      welshName: "Tribiwnlys Cefnogi Ceiswyr Lloches",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 14,
+      name: "Criminal Injuries Compensation Tribunal",
+      welshName: "Tribiwnlys Digolledu am Anafiadau Troseddol",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 15,
+      name: "First-Tier Tribunal (Lands Registration Tribunal)",
+      welshName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 16,
+      name: "First-Tier Tribunal (Tax Chamber)",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Treth)",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 17,
+      name: "First-Tier Tribunal (War Pensions and Armed Forces Compensation)",
+      welshName: "Tribiwnlys Haen Gyntaf (Iawndal Pensiynau Rhyfel a'r Lluoedd Arfog)",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 18,
+      name: "First-tier Tribunal (Special Educational Needs and Disability)",
+      welshName: "Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 19,
+      name: "General Regulatory Chamber",
+      welshName: "Siambr Rheoleiddio Cyffredinol",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 20,
+      name: "Mental Health Tribunal",
+      welshName: "Tribiwnlys Iechyd Meddwl",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 21,
+      name: "Pathogens Access Appeal Commission",
+      welshName: "Comisiwn Apeliadau Mynediad Pathogenau",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 22,
+      name: "Primary Health Tribunal",
+      welshName: "Tribiwnlys Iechyd Sylfaenol",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 23,
+      name: "Proscribed Organisations Appeal Commission",
+      welshName: "Comisiwn Apeliadau Sefydliadau Gwaharddedig",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 24,
+      name: "Residential Property Tribunal",
+      welshName: "Tribiwnlys Eiddo Preswyl",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 25,
+      name: "Special Immigration Appeals Commission",
+      welshName: "Comisiwn Apeliadau Mewnfudo Arbennig",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 26,
+      name: "Upper Tribunal (Administrative Appeals Chamber)",
+      welshName: "Uwch Dribiwnlys (Siambr Apeliadau Gweinyddol)",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 27,
+      name: "Upper Tribunal (Immigration and Asylum) - Judicial Review",
+      welshName: "Siambr Uwch Dribiwnlys (Mewnfudo a Lloches) - Adolygiadau Barnwrol",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 28,
+      name: "Upper Tribunal (Immigration and Asylum) - Statutory Appeal",
+      welshName: "Siambr Uwch Dribiwnlys (Mewnfudo a Lloches) - Apeliadau Statudol",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 29,
+      name: "Upper Tribunal (Lands Chamber)",
+      welshName: "Uwch Dribiwnlys (Siambr Tiroedd)",
+      jurisdictionId: 4
+    },
+    {
+      subJurisdictionId: 30,
+      name: "Upper Tribunal (Tax and Chancery Chamber)",
+      welshName: "Uwch Dribiwnlys (Siambr Treth a Siawnsri)",
       jurisdictionId: 4
     }
   ]
