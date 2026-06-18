@@ -5,7 +5,7 @@ module "key_vault" {
   env                 = var.env
   tenant_id           = var.tenant_id
   object_id           = var.ci_service_principal_object_id
-  resource_group_name = data.azurerm_resource_group.shared.name
+  resource_group_name = azurerm_resource_group.shared.name
 
   product_group_name      = "DTS CFT Developers"
   common_tags             = var.common_tags
@@ -14,6 +14,6 @@ module "key_vault" {
 
 data "azurerm_key_vault" "key_vault" {
   name                = module.key_vault.key_vault_name
-  resource_group_name = data.azurerm_resource_group.shared.name
+  resource_group_name = azurerm_resource_group.shared.name
   depends_on          = [module.key_vault]
 }
