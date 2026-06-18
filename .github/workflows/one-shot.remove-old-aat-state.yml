@@ -1,0 +1,143 @@
+name: One-Shot - Remove Old AAT Resources From State
+
+# Removes old CNP AAT resources from terraform state so the next apply
+# creates new CNP infra without attempting to destroy locked/inaccessible
+# old resources. Old Azure resources are left in place for manual cleanup.
+#
+# Also imports existing cath-cache-aat RG into the new redis module path.
+#
+# Run this ONCE then re-run the AAT infrastructure apply.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'infrastructure/**'
+
+jobs:
+  remove-old-aat-state:
+    name: Remove Old AAT Resources From State
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.5/terraform_1.15.5_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (CNP)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Remove Old AAT Resources From State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name mgmtstorestorenonprod \
+            --resource-group mgmt-state-store-nonprod \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=mgmt-state-store-nonprod" \
+            -backend-config="storage_account_name=mgmtstorestorenonprod" \
+            -backend-config="container_name=mgmtstatestorecontaineraat" \
+            -backend-config="key=cath-service/aat/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove old KV secrets
+          for r in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Key Vault modules
+          for r in \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.application_key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.key_vault.azurerm_key_vault.kv" \
+            "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old RGs
+          for r in \
+            azurerm_resource_group.ss_kv_rg \
+            azurerm_resource_group.app_kv_rg \
+            azurerm_resource_group.rg; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old App Insights
+          for r in \
+            "module.application_insights.azurerm_application_insights.this" \
+            "module.application_insights.azurerm_monitor_activity_log_alert.main[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old PostgreSQL
+          for r in \
+            "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_configuration.pgsql_server_config[\"backslash_quote\"]" \
+            "module.postgresql.null_resource.set-user-permissions-additionaldbs[\"cath\"]" \
+            "module.postgresql.azurerm_resource_group.rg[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Redis
+          for r in \
+            "module.redis.azurerm_redis_cache.redis" \
+            "module.redis.azurerm_private_endpoint.this[0]" \
+            "module.redis.azurerm_resource_group.cache-resourcegroup[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Import existing cath-cache-aat RG into new redis module path
+          SUBSCRIPTION_ID=$(az account show --subscription "DCD-CNP-DEV" --query id -o tsv)
+          AKS_SUBSCRIPTION_ID=$(az account show --subscription "DCD-CFTAPPS-STG" --query id -o tsv)
+
+          terraform import \
+            -var "subscription=${SUBSCRIPTION_ID}" \
+            -var "aks_subscription_id=${AKS_SUBSCRIPTION_ID}" \
+            -var "env=aat" \
+            -var "product=cath" \
+            "module.redis.azurerm_resource_group.cache-resourcegroup[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-cache-aat" \
+            && echo "Imported cath-cache-aat RG" \
+            || echo "WARNING: import failed, may not be needed"
