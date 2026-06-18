@@ -1,6 +1,3 @@
-# Application Insights configuration
-# Creates App Insights using the HMCTS module
-
 module "application_insights" {
   source = "git::https://github.com/hmcts/terraform-module-application-insights?ref=4.x"
 
@@ -13,7 +10,6 @@ module "application_insights" {
   common_tags = var.common_tags
 }
 
-# Secret name must match Helm values (apps/*/helm/values.yaml)
 resource "azurerm_key_vault_secret" "app_insights_connection_string" {
   name         = "app-insights-connection-string"
   value        = module.application_insights.connection_string

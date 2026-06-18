@@ -6,7 +6,6 @@ variable "env" {
 variable "product" {
   description = "Product name"
   type        = string
-  default     = "cath"
 }
 
 variable "component" {
@@ -38,6 +37,7 @@ variable "common_tags" {
 }
 
 # Optional variables - auto-derived from Azure credentials in CI
+# Only needed if creating resources (e.g., Key Vault)
 
 variable "tenant_id" {
   description = "Azure AD tenant ID (auto-derived from CI credentials)"

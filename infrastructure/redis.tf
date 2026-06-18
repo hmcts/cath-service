@@ -1,13 +1,12 @@
 module "redis" {
   source = "git::https://github.com/hmcts/cnp-module-redis?ref=master"
 
-  product             = var.product
-  name                = "cath-redis-${var.env}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
-  env                 = var.env
-  common_tags         = var.common_tags
-  business_area       = "cft"
+  product       = var.product
+  name          = "${var.product}-${var.component}-${var.env}"
+  location      = var.location
+  env           = var.env
+  common_tags   = var.common_tags
+  business_area = "cft"
 
   private_endpoint_enabled      = true
   public_network_access_enabled = false

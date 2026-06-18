@@ -43,10 +43,6 @@ on:
         type: string
         default: ""
         description: "Override container name for Terraform state (default: mgmtstatestorecontainer{environment})"
-    secrets:
-      AZURE_CREDENTIALS:
-        required: true
-        description: "Azure service principal credentials JSON for the target subscription"
     outputs:
       plan-exitcode:
         description: "Terraform plan exit code (0=no changes, 2=changes)"
@@ -68,4 +64,4 @@ jobs:
       plan-only: ${{ inputs.plan-only }}
       helm-chart-path: helm/cath-service/Chart.yaml
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
