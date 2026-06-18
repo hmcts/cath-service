@@ -160,10 +160,12 @@ describe("extractCaseSummary", () => {
 });
 
 describe("formatCaseSummaryForEmail", () => {
-  it("should format case summaries for email", () => {
+  it("should format case summaries for email containing all required fields", () => {
     const summaries = [
       [
         { label: "Case reference", value: "12345" },
+        { label: "Case name", value: "Smith v Jones" },
+        { label: "Case type", value: "Civil" },
         { label: "Hearing type", value: "Trial" }
       ]
     ];
@@ -171,6 +173,8 @@ describe("formatCaseSummaryForEmail", () => {
     const result = formatCaseSummaryForEmail(summaries);
 
     expect(result).toContain("Case reference - 12345");
+    expect(result).toContain("Case name - Smith v Jones");
+    expect(result).toContain("Case type - Civil");
     expect(result).toContain("Hearing type - Trial");
   });
 
