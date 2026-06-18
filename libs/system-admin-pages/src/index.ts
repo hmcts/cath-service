@@ -46,7 +46,6 @@ export * from "./third-party-user/queries.js";
 export {
   type ErrorItem as ThirdPartyUserErrorItem,
   validateRadioSelection as validateThirdPartyUserRadioSelection,
-  validateSensitivity,
   validateThirdPartyUserName
 } from "./third-party-user/validation.js";
 

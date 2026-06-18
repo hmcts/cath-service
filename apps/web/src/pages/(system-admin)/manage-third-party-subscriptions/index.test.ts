@@ -11,12 +11,11 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
     },
     findAllListTypes: vi.fn(),
     findThirdPartyUserById: vi.fn(),
-    updateThirdPartySubscriptions: vi.fn(),
-    validateSensitivity: vi.fn()
+    updateThirdPartySubscriptions: vi.fn()
   };
 });
 
-import { findAllListTypes, findThirdPartyUserById, updateThirdPartySubscriptions, validateSensitivity } from "@hmcts/system-admin-pages";
+import { findAllListTypes, findThirdPartyUserById, updateThirdPartySubscriptions } from "@hmcts/system-admin-pages";
 
 describe("manage-third-party-subscriptions page", () => {
   let req: Partial<Request>;
@@ -30,7 +29,6 @@ describe("manage-third-party-subscriptions page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(findAllListTypes).mockResolvedValue(mockListTypes as any);
-    vi.mocked(validateSensitivity).mockReturnValue(null);
 
     req = {
       query: {},
@@ -42,7 +40,7 @@ describe("manage-third-party-subscriptions page", () => {
     res = {
       render: vi.fn(),
       redirect: vi.fn(),
-      locals: { locale: "en" } as any
+      locals: {}
     };
   });
 
@@ -54,8 +52,8 @@ describe("manage-third-party-subscriptions page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/manage-third-party-users");
     });
 
-    it("should redirect with Welsh locale when no id", async () => {
-      res.locals = { locale: "cy" } as any;
+    it("should redirect to manage users page with Welsh locale when no id", async () => {
+      (res as any).locals = { locale: "cy" };
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
@@ -77,15 +75,12 @@ describe("manage-third-party-subscriptions page", () => {
       );
     });
 
-    it("should render page with current sensitivity and list type IDs from user subscriptions", async () => {
+    it("should render page with current list type IDs from user subscriptions", async () => {
       req.query = { id: "user-123" };
       const mockUser = {
         id: "user-123",
         name: "Test User",
-        subscriptions: [
-          { listTypeId: 1, sensitivity: "PUBLIC" },
-          { listTypeId: 2, sensitivity: "PUBLIC" }
-        ]
+        subscriptions: [{ listTypeId: 1 }]
       };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 
@@ -95,9 +90,7 @@ describe("manage-third-party-subscriptions page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-subscriptions/index",
         expect.objectContaining({
-          currentChannel: "API",
-          currentSensitivity: "PUBLIC",
-          currentListTypeIds: [1, 2],
+          currentListTypeIds: [1],
           errors: undefined
         })
       );
@@ -109,8 +102,8 @@ describe("manage-third-party-subscriptions page", () => {
         id: "user-123",
         name: "Test User",
         subscriptions: [
-          { listTypeId: 1, sensitivity: "PUBLIC" },
-          { listTypeId: 2, sensitivity: "PRIVATE" }
+          { listTypeId: 1 },
+          { listTypeId: 2 }
         ]
       };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
@@ -136,7 +129,6 @@ describe("manage-third-party-subscriptions page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-subscriptions/index",
         expect.objectContaining({
-          currentSensitivity: "",
           currentListTypeIds: []
         })
       );
@@ -152,81 +144,38 @@ describe("manage-third-party-subscriptions page", () => {
     });
 
     it("should redirect with Welsh locale when no session data", async () => {
-      res.locals = { locale: "cy" } as any;
+      (res as any).locals = { locale: "cy" };
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       expect(res.redirect).toHaveBeenCalledWith("/manage-third-party-users?lng=cy");
     });
 
-    it("should show validation error when sensitivity not selected", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [] };
-      req.body = { channel: "API", listTypes: ["1"] };
-      vi.mocked(validateSensitivity).mockReturnValue({ href: "#sensitivity" });
+    it("should update subscriptions and redirect to success page", async () => {
+      (req.session as any).manageThirdPartyUser = {
+        userId: "user-123",
+        userName: "Test User",
+        originalSubscriptions: [1]
+      };
+      req.body = { listTypes: ["1", "2"] };
+      (updateThirdPartySubscriptions as any).mockResolvedValue(undefined);
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(res.render).toHaveBeenCalledWith(
-        "manage-third-party-subscriptions/index",
-        expect.objectContaining({
-          errors: expect.arrayContaining([expect.objectContaining({ href: "#sensitivity" })])
-        })
-      );
-    });
-
-    it("should update subscriptions with selected list types and sensitivity", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [1] };
-      req.body = { channel: "API", sensitivity: "PUBLIC", listTypes: ["1", "2"] };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
-
-      const handler = POST[POST.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [
-        { listTypeId: 1, channel: "API", sensitivity: "PUBLIC" },
-        { listTypeId: 2, channel: "API", sensitivity: "PUBLIC" }
-      ]);
-    });
-
-    it("should handle single listType as string", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [] };
-      req.body = { channel: "API", sensitivity: "PRIVATE", listTypes: "1" };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
-
-      const handler = POST[POST.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1, channel: "API", sensitivity: "PRIVATE" }]);
-    });
-
-    it("should handle no listTypes selected", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [1] };
-      req.body = { channel: "API", sensitivity: "PUBLIC" };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
-
-      const handler = POST[POST.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", []);
-    });
-
-    it("should redirect to success page on completion", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [] };
-      req.body = { channel: "API", sensitivity: "PUBLIC", listTypes: ["1"] };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
-
-      const handler = POST[POST.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1 }, { listTypeId: 2 }]);
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscriptions-updated");
     });
 
     it("should redirect with Welsh locale on success", async () => {
-      res.locals = { locale: "cy" } as any;
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [] };
-      req.body = { channel: "API", sensitivity: "PUBLIC", listTypes: "1" };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
+      (res as any).locals = { locale: "cy" };
+      (req.session as any).manageThirdPartyUser = {
+        userId: "user-123",
+        userName: "Test User",
+        originalSubscriptions: []
+      };
+      req.body = { listTypes: "1" };
+      (updateThirdPartySubscriptions as any).mockResolvedValue(undefined);
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -234,41 +183,68 @@ describe("manage-third-party-subscriptions page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscriptions-updated?lng=cy");
     });
 
+    it("should handle single listType as string", async () => {
+      (req.session as any).manageThirdPartyUser = {
+        userId: "user-123",
+        userName: "Test User",
+        originalSubscriptions: []
+      };
+      req.body = { listTypes: "1" };
+      (updateThirdPartySubscriptions as any).mockResolvedValue(undefined);
+
+      const handler = POST[POST.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1 }]);
+    });
+
+    it("should handle no listTypes selected", async () => {
+      (req.session as any).manageThirdPartyUser = {
+        userId: "user-123",
+        userName: "Test User",
+        originalSubscriptions: [1]
+      };
+      req.body = {};
+      (updateThirdPartySubscriptions as any).mockResolvedValue(undefined);
+
+      const handler = POST[POST.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", []);
+    });
+
     it("should set audit metadata with before and after list types", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [1] };
-      req.body = { channel: "API", sensitivity: "PUBLIC", listTypes: ["2"] };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
+      (req.session as any).manageThirdPartyUser = {
+        userId: "user-123",
+        userName: "Test User",
+        originalSubscriptions: [1]
+      };
+      req.body = { listTypes: ["2"] };
+      (updateThirdPartySubscriptions as any).mockResolvedValue(undefined);
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
-        action: "UPDATE_THIRD_PARTY_SUBSCRIPTIONS",
-        entityInfo: expect.stringMatching(/ID: user-123, Name: Test User, Sensitivity: PUBLIC, Previous List Types: \[.*\], Current List Types: \[.*\]/)
+        action: "Update third party subscriptions",
+        entityInfo: expect.stringMatching(/ID: user-123, Name: Test User, Previous List Types: \[.*\], Current List Types: \[.*\]/)
       });
     });
 
     it("should clear session data after successful update", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [] };
-      req.body = { channel: "API", sensitivity: "PUBLIC" };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
+      (req.session as any).manageThirdPartyUser = {
+        userId: "user-123",
+        userName: "Test User",
+        originalSubscriptions: []
+      };
+      req.body = { listTypes: [] };
+      (updateThirdPartySubscriptions as any).mockResolvedValue(undefined);
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       expect((req.session as any).manageThirdPartyUser).toBeUndefined();
-    });
-
-    it("should default channel to API if not provided", async () => {
-      (req.session as any).manageThirdPartyUser = { userId: "user-123", userName: "Test User", originalSubscriptions: [] };
-      req.body = { sensitivity: "PUBLIC", listTypes: ["1"] };
-      vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined as any);
-
-      const handler = POST[POST.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1, channel: "API", sensitivity: "PUBLIC" }]);
     });
   });
 });

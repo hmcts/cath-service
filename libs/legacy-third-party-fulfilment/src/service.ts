@@ -65,7 +65,7 @@ export async function sendThirdPartyPublications(params: ThirdPartyPushParams): 
   const secrets = resolveCourtelSecrets(logPrefix);
   if (!secrets) return;
 
-  const subscribers = await findSubscribersByListType(listTypeId, sensitivity);
+  const subscribers = await findSubscribersByListType(listTypeId);
   if (subscribers.length === 0) {
     console.info(`${logPrefix} Third-party push skipped: no subscribers for listTypeId ${listTypeId}`);
     return;
@@ -88,7 +88,7 @@ export async function sendThirdPartyDeletion(params: ThirdPartyDeletionParams): 
   const secrets = resolveCourtelSecrets(logPrefix);
   if (!secrets) return;
 
-  const subscribers = await findSubscribersByListType(listTypeId, sensitivity);
+  const subscribers = await findSubscribersByListType(listTypeId);
   if (subscribers.length === 0) {
     console.info(`${logPrefix} Third-party deletion push skipped: no subscribers for listTypeId ${listTypeId}`);
     return;

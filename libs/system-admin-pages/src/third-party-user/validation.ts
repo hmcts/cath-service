@@ -27,20 +27,3 @@ export function validateRadioSelection(value: string | undefined): ErrorItem | n
 
   return null;
 }
-
-export function validateSensitivity(value: string | undefined): ErrorItem | null {
-  if (!value) {
-    return {
-      href: "#sensitivity"
-    };
-  }
-
-  const validValues = ["PUBLIC", "PRIVATE", "CLASSIFIED"];
-  if (!validValues.includes(value)) {
-    return {
-      href: "#sensitivity"
-    };
-  }
-
-  return null;
-}
