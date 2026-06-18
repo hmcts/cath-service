@@ -6,9 +6,6 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
   return {
     ...actual,
-    AuditLogAction: {
-      UPDATE_THIRD_PARTY_SUBSCRIPTIONS: "UPDATE_THIRD_PARTY_SUBSCRIPTIONS"
-    },
     findAllListTypes: vi.fn(),
     findThirdPartyUserById: vi.fn(),
     updateThirdPartySubscriptions: vi.fn()
@@ -101,10 +98,7 @@ describe("manage-third-party-subscriptions page", () => {
       const mockUser = {
         id: "user-123",
         name: "Test User",
-        subscriptions: [
-          { listTypeId: 1 },
-          { listTypeId: 2 }
-        ]
+        subscriptions: [{ listTypeId: 1 }, { listTypeId: 2 }]
       };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 
