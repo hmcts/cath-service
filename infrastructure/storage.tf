@@ -12,8 +12,8 @@ module "sa" {
   common_tags              = var.common_tags
 
   containers = [
-    { name = "artefact",    access_type = "private" },
-    { name = "files",       access_type = "private" },
+    { name = "artefact", access_type = "private" },
+    { name = "files", access_type = "private" },
     { name = "publications", access_type = "private" },
   ]
 
