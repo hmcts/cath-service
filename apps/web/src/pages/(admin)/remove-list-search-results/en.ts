@@ -6,10 +6,10 @@ export const en = {
   resultsText: "result(s)",
   noResults: "No publications found for this location",
   tableHeaders: {
-    listType: "List type",
-    courtName: "Court or tribunal name",
-    contentDate: "Content date",
-    displayDates: "Display dates",
+    listType: "List Type",
+    courtName: "Court or Tribunal Name",
+    contentDate: "Content Date",
+    displayDates: "Display Dates",
     language: "Language",
     sensitivity: "Sensitivity",
     select: "Select"

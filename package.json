@@ -60,7 +60,7 @@
     "typescript": "6.0.3",
     "vitest": "4.1.9"
   },
-  "packageManager": "yarn@4.14.1",
+  "packageManager": "yarn@4.17.0",
   "resolutions": {
     "@isaacs/brace-expansion": "5.0.1",
     "ajv": "8.20.0",
@@ -74,7 +74,7 @@
     "pg-connection-string": "2.13.0",
     "qs": "6.15.2",
     "tar": "7.5.16",
-    "undici": "7.27.2",
+    "undici": "7.28.0",
     "vite": "7.3.5"
   },
   "dependencies": {
