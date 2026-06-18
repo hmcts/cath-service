@@ -1,14 +1,14 @@
 -- AlterTable
-ALTER TABLE "jurisdiction" ADD COLUMN     "deleted_at" TIMESTAMP(3);
+ALTER TABLE "jurisdiction" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMP(3);
 
 -- AlterTable
-ALTER TABLE "region" ADD COLUMN     "deleted_at" TIMESTAMP(3);
+ALTER TABLE "region" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMP(3);
 
 -- AlterTable
-ALTER TABLE "sub_jurisdiction" ADD COLUMN     "deleted_at" TIMESTAMP(3);
+ALTER TABLE "sub_jurisdiction" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMP(3);
 
 -- CreateTable
-CREATE TABLE "admin_audit_log" (
+CREATE TABLE IF NOT EXISTS "admin_audit_log" (
     "id" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "entity_type" TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE "admin_audit_log" (
 );
 
 -- CreateIndex
-CREATE INDEX "admin_audit_log_performed_at_idx" ON "admin_audit_log"("performed_at");
+CREATE INDEX IF NOT EXISTS "admin_audit_log_performed_at_idx" ON "admin_audit_log"("performed_at");
 
 -- CreateIndex
-CREATE INDEX "admin_audit_log_entity_type_idx" ON "admin_audit_log"("entity_type");
+CREATE INDEX IF NOT EXISTS "admin_audit_log_entity_type_idx" ON "admin_audit_log"("entity_type");
