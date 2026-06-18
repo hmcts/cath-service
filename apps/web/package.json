@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@hmcts-cft/cloud-native-platform": "2.3.0",
-    "@hmcts-cft/simple-router": "2.1.0",
+    "@hmcts-cft/simple-router": "2.2.0",
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/auth": "workspace:*",

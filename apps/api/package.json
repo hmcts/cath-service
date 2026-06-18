@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@hmcts-cft/cloud-native-platform": "2.3.0",
-    "@hmcts-cft/simple-router": "2.1.0",
+    "@hmcts-cft/simple-router": "2.2.0",
     "@hmcts/blob-ingestion": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/location": "workspace:*",
