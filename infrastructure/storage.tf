@@ -17,12 +17,8 @@ module "sa" {
     { name = "publications", access_type = "private" },
   ]
 
-  role_assignments = [
-    {
-      role_definition_name = "Storage Blob Data Contributor"
-      principal_id         = data.azurerm_user_assigned_identity.app_mi.principal_id
-    },
-  ]
+  managed_identity_object_id = data.azurerm_user_assigned_identity.app_mi.principal_id
+  role_assignments           = ["Storage Blob Data Contributor"]
 }
 
 resource "azurerm_key_vault_secret" "storageaccount_connection_string" {
