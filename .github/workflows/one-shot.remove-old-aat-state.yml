@@ -47,6 +47,8 @@ jobs:
       - name: Remove Old AAT Resources From State
         working-directory: infrastructure
         run: |
+          az account set --subscription "DCD-CNP-DEV"
+
           STORAGE_KEY=$(az storage account keys list \
             --account-name mgmtstorestorenonprod \
             --resource-group mgmt-state-store-nonprod \
