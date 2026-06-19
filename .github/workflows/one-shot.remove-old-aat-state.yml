@@ -272,3 +272,19 @@ jobs:
           import_resource "module.application_insights.azurerm_monitor_activity_log_alert.main[0]" \
             "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-cath/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-cath-appinsights-aat" \
             "cath-cath-appinsights-aat activity log alert"
+
+          import_resource "azurerm_key_vault_secret.redis_host" \
+            "https://cath-aat.vault.azure.net/secrets/redis-host/de0747b70d8b47ed9094cdf759808439" \
+            "cath-aat redis-host KV secret"
+
+          import_resource "azurerm_key_vault_secret.redis_port" \
+            "https://cath-aat.vault.azure.net/secrets/redis-port/ccc7799bde9e4de7a0f5f58464c5c466" \
+            "cath-aat redis-port KV secret"
+
+          import_resource "azurerm_key_vault_secret.redis_access_key" \
+            "https://cath-aat.vault.azure.net/secrets/redis-access-key/4f885f7f8fd040d68593008f42aff54f" \
+            "cath-aat redis-access-key KV secret"
+
+          import_resource "azurerm_key_vault_secret.redis_url" \
+            "https://cath-aat.vault.azure.net/secrets/redis-url/3c264de5d0d04d57a59f984420981834" \
+            "cath-aat redis-url KV secret"
