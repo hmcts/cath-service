@@ -42,14 +42,14 @@ jobs:
           echo "Active subscription: $(az account show --query '[name, id]' -o tsv)"
 
           STORAGE_KEY=$(az storage account keys list \
-            --account-name mgmtstorestorenonprod \
+            --account-name mgmtstatestorenonprod \
             --resource-group mgmt-state-store-nonprod \
             --query "[0].value" \
             --output tsv)
 
           terraform init \
             -backend-config="resource_group_name=mgmt-state-store-nonprod" \
-            -backend-config="storage_account_name=mgmtstorestorenonprod" \
+            -backend-config="storage_account_name=mgmtstatestorenonprod" \
             -backend-config="container_name=mgmtstatestorecontaineraat" \
             -backend-config="key=cath-service/aat/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
