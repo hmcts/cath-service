@@ -224,3 +224,51 @@ jobs:
           import_resource "module.sa.azurerm_storage_account.storage_account" \
             "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-cath/providers/Microsoft.Storage/storageAccounts/cathsaaat" \
             "cathsaaat storage account"
+
+          import_resource 'module.sa.azurerm_storage_container.container["artefact"]' \
+            "https://cathsaaat.blob.core.windows.net/artefact" \
+            "cathsaaat/artefact container"
+
+          import_resource 'module.sa.azurerm_storage_container.container["files"]' \
+            "https://cathsaaat.blob.core.windows.net/files" \
+            "cathsaaat/files container"
+
+          import_resource 'module.sa.azurerm_storage_container.container["publications"]' \
+            "https://cathsaaat.blob.core.windows.net/publications" \
+            "cathsaaat/publications container"
+
+          import_resource "azurerm_key_vault_secret.app_insights_connection_string" \
+            "https://cath-aat.vault.azure.net/secrets/app-insights-connection-string/9982370c496f47ba977216a558069df5" \
+            "cath-aat app-insights-connection-string KV secret"
+
+          import_resource "azurerm_key_vault_secret.postgres_host" \
+            "https://cath-aat.vault.azure.net/secrets/postgres-host/8bc81b12b4d048c5a18da42099f83b13" \
+            "cath-aat postgres-host KV secret"
+
+          import_resource "azurerm_key_vault_secret.postgres_user" \
+            "https://cath-aat.vault.azure.net/secrets/postgres-user/e8ba7a6299ee4e00bdb50850639b01e9" \
+            "cath-aat postgres-user KV secret"
+
+          import_resource "azurerm_key_vault_secret.postgres_password" \
+            "https://cath-aat.vault.azure.net/secrets/postgres-password/00747e5bbcd347ce87d058faaf4cca72" \
+            "cath-aat postgres-password KV secret"
+
+          import_resource "azurerm_key_vault_secret.postgres_port" \
+            "https://cath-aat.vault.azure.net/secrets/postgres-port/289ea4bb118247cb92bb7282d8fce101" \
+            "cath-aat postgres-port KV secret"
+
+          import_resource "azurerm_key_vault_secret.postgres_url" \
+            "https://cath-aat.vault.azure.net/secrets/postgres-url/890a74c9936943959a567086e5e40049" \
+            "cath-aat postgres-url KV secret"
+
+          import_resource "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-data-aat/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-aat-aat/administrators/69aa7255-12ea-45a3-af45-e9d249cddfe0" \
+            "cath-aat postgres SP admin"
+
+          import_resource "module.redis.azurerm_private_endpoint.this[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-cache-aat/providers/Microsoft.Network/privateEndpoints/cath-aat" \
+            "cath-aat redis private endpoint"
+
+          import_resource "module.application_insights.azurerm_monitor_activity_log_alert.main[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-cath/providers/Microsoft.Insights/activityLogAlerts/Application-Insights-daily-cap-reached-cath-cath-appinsights-aat" \
+            "cath-cath-appinsights-aat activity log alert"
