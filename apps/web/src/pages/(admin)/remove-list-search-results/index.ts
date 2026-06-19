@@ -46,97 +46,21 @@ function sortArtefacts(rows: ArtefactRow[], sortBy: SortColumn, order: SortOrder
   });
 }
 
-const getHandler = async (req: Request, res: Response) => {
-  const lang = req.query.lng === "cy" ? cy : en;
-  const locale = req.query.lng === "cy" ? "cy" : "en";
+async function buildArtefactRows(
+  locationId: string,
+  locale: string,
+  sortBy: SortColumn,
+  order: SortOrder
+): Promise<{ artefactRows: ArtefactRow[]; resultCount: number; courtName: string }> {
+  const artefacts = await getArtefactsByLocation(locationId);
+  const location = await getLocationById(Number.parseInt(locationId, 10));
+  const courtName = location ? (locale === "cy" ? location.welshName : location.name) : locationId;
 
-  const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId) {
-    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
-    return res.redirect(`/remove-list-search${lng}`);
-  }
-
-  const sortBy = (req.query.sort as SortColumn) || "contentDate";
-  const order = (req.query.order as SortOrder) || "desc";
-
-  const artefacts = await getArtefactsByLocation(sessionData.locationId);
-
-  const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
-  const courtName = location ? (locale === "cy" ? location.welshName : location.name) : sessionData.locationId;
-
-  // Fetch list types from database and create a map for quick lookup
   const listTypes = await findAllListTypes();
   const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
 
-  let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
-    const listType = listTypeMap.get(artefact.listTypeId);
-    let listTypeName = String(artefact.listTypeId);
-    if (listType) {
-      if (locale === "cy") {
-        listTypeName = listType.welshFriendlyName || listType.friendlyName || String(artefact.listTypeId);
-      } else {
-        listTypeName = listType.friendlyName || String(artefact.listTypeId);
-      }
-    }
-
-    return {
-      artefactId: artefact.artefactId,
-      listType: listTypeName,
-      courtName,
-      contentDate: formatDateString(artefact.contentDate),
-      contentDateRaw: artefact.contentDate,
-      displayDates: formatDateRangeString(artefact.displayFrom, artefact.displayTo),
-      language: LANGUAGE_LABELS[artefact.language] || artefact.language,
-      sensitivity: SENSITIVITY_LABELS[artefact.sensitivity] || artefact.sensitivity
-    };
-  });
-
-  artefactRows = sortArtefacts(artefactRows, sortBy, order);
-
-  res.render("remove-list-search-results/index", {
-    pageTitle: lang.pageTitle,
-    heading: lang.heading,
-    subHeading: lang.subHeading,
-    showingResults: lang.showingResults,
-    resultsText: lang.resultsText,
-    noResults: lang.noResults,
-    tableHeaders: lang.tableHeaders,
-    continueButton: lang.continueButton,
-    artefactRows,
-    resultCount: artefacts.length,
-    sortBy,
-    order
-  });
-};
-
-const postHandler = async (req: Request, res: Response) => {
-  const lang = req.query.lng === "cy" ? cy : en;
-  const locale = req.query.lng === "cy" ? "cy" : "en";
-
-  const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId) {
-    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
-    return res.redirect(`/remove-list-search${lng}`);
-  }
-
-  const selectedArtefacts = Array.isArray(req.body.artefacts) ? req.body.artefacts : req.body.artefacts ? [req.body.artefacts] : [];
-
-  if (selectedArtefacts.length === 0) {
-    const sortBy = (req.query.sort as SortColumn) || "contentDate";
-    const order = (req.query.order as SortOrder) || "desc";
-
-    const artefacts = await getArtefactsByLocation(sessionData.locationId);
-    const location = await getLocationById(Number.parseInt(sessionData.locationId, 10));
-    let courtName = sessionData.locationId;
-    if (location) {
-      courtName = locale === "cy" ? location.welshName : location.name;
-    }
-
-    // Fetch list types from database and create a map for quick lookup
-    const listTypes = await findAllListTypes();
-    const listTypeMap = new Map(listTypes.map((lt) => [lt.id, lt]));
-
-    let artefactRows: ArtefactRow[] = artefacts.map((artefact) => {
+  const artefactRows = sortArtefacts(
+    artefacts.map((artefact) => {
       const listType = listTypeMap.get(artefact.listTypeId);
       let listTypeName = String(artefact.listTypeId);
       if (listType) {
@@ -157,30 +81,85 @@ const postHandler = async (req: Request, res: Response) => {
         language: LANGUAGE_LABELS[artefact.language] || artefact.language,
         sensitivity: SENSITIVITY_LABELS[artefact.sensitivity] || artefact.sensitivity
       };
-    });
+    }),
+    sortBy,
+    order
+  );
 
-    artefactRows = sortArtefacts(artefactRows, sortBy, order);
+  return { artefactRows, resultCount: artefacts.length, courtName };
+}
+
+const getHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+
+  const sessionData = req.session.removalData;
+  if (!sessionData || !sessionData.locationId) {
+    const lng = locale === "cy" ? "?lng=cy" : "";
+    return res.redirect(`/remove-list-search${lng}`);
+  }
+
+  const sortBy = (req.query.sort as SortColumn) || "contentDate";
+  const order = (req.query.order as SortOrder) || "desc";
+
+  const { artefactRows, resultCount } = await buildArtefactRows(sessionData.locationId, locale, sortBy, order);
+
+  res.render("remove-list-search-results/index", {
+    pageTitle: t.pageTitle,
+    heading: t.heading,
+    subHeading: t.subHeading,
+    showingResults: t.showingResults,
+    resultsText: t.resultsText,
+    noResults: t.noResults,
+    tableHeaders: t.tableHeaders,
+    continueButton: t.continueButton,
+    artefactRows,
+    resultCount,
+    sortBy,
+    order,
+    isDefaultSort: req.query.sort === undefined
+  });
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+
+  const sessionData = req.session.removalData;
+  if (!sessionData || !sessionData.locationId) {
+    const lng = locale === "cy" ? "?lng=cy" : "";
+    return res.redirect(`/remove-list-search${lng}`);
+  }
+
+  const selectedArtefacts = Array.isArray(req.body.artefacts) ? req.body.artefacts : req.body.artefacts ? [req.body.artefacts] : [];
+
+  if (selectedArtefacts.length === 0) {
+    const sortBy = (req.query.sort as SortColumn) || "contentDate";
+    const order = (req.query.order as SortOrder) || "desc";
+
+    const { artefactRows, resultCount } = await buildArtefactRows(sessionData.locationId, locale, sortBy, order);
 
     return res.render("remove-list-search-results/index", {
-      pageTitle: lang.pageTitle,
-      heading: lang.heading,
-      subHeading: lang.subHeading,
-      showingResults: lang.showingResults,
-      resultsText: lang.resultsText,
-      noResults: lang.noResults,
-      tableHeaders: lang.tableHeaders,
-      continueButton: lang.continueButton,
+      pageTitle: t.pageTitle,
+      heading: t.heading,
+      subHeading: t.subHeading,
+      showingResults: t.showingResults,
+      resultsText: t.resultsText,
+      noResults: t.noResults,
+      tableHeaders: t.tableHeaders,
+      continueButton: t.continueButton,
       artefactRows,
-      resultCount: artefacts.length,
+      resultCount,
       sortBy,
       order,
+      isDefaultSort: req.query.sort === undefined,
       errors: [
         {
-          text: lang.errorNoSelection,
+          text: t.errorNoSelection,
           href: "#artefacts"
         }
       ],
-      errorSummaryTitle: lang.errorSummaryTitle
+      errorSummaryTitle: t.errorSummaryTitle
     });
   }
 
@@ -188,7 +167,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   await saveSession(req.session);
 
-  const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+  const lng = locale === "cy" ? "?lng=cy" : "";
   res.redirect(`/remove-list-confirmation${lng}`);
 };
 

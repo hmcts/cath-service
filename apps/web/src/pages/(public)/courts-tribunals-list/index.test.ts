@@ -4,15 +4,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mockJurisdictions = [
   { jurisdictionId: 1, name: "Civil", welshName: "Sifil" },
   { jurisdictionId: 2, name: "Family", welshName: "Teulu" },
-  { jurisdictionId: 3, name: "Crime", welshName: "Trosedd" },
+  { jurisdictionId: 3, name: "Crime", welshName: "Troseddau" },
   { jurisdictionId: 4, name: "Tribunal", welshName: "Tribiwnlys" }
 ];
 
 const mockRegions = [
   { regionId: 1, name: "London", welshName: "Llundain" },
   { regionId: 2, name: "Midlands", welshName: "Canolbarth Lloegr" },
-  { regionId: 3, name: "South East", welshName: "De Ddwyrain" },
-  { regionId: 4, name: "North", welshName: "Gogledd" },
+  { regionId: 3, name: "South East", welshName: "De-ddwyrain Lloegr" },
+  { regionId: 4, name: "North West", welshName: "Gogledd Orllewin Lloegr" },
   { regionId: 5, name: "Wales", welshName: "Cymru" }
 ];
 

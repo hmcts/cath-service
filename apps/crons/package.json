@@ -14,11 +14,11 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts-cft/cloud-native-platform": "2.1.0",
+    "@hmcts-cft/cloud-native-platform": "2.3.0",
     "config": "4.4.1"
   },
   "devDependencies": {
-    "@types/config": "3.3.5",
+    "@types/config": "4.4.0",
     "@types/node": "24.10.4"
   }
 }
