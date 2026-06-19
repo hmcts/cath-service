@@ -208,3 +208,19 @@ jobs:
           import_resource "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
             "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-data-aat/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-aat-aat" \
             "cath-aat postgres server"
+
+          import_resource "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-data-aat/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-aat-aat/databases/cath" \
+            "cath-aat postgres database"
+
+          import_resource "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-data-aat/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-aat-aat/administrators/3c52c98b-07a3-4a97-92b9-298e86bb1ca9" \
+            "cath-aat postgres AAD admin"
+
+          import_resource "module.redis.azurerm_redis_cache.redis" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-cache-aat/providers/Microsoft.Cache/redis/cath-cath-aat" \
+            "cath-cath-aat redis cache"
+
+          import_resource "module.sa.azurerm_storage_account.storage_account" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-cath/providers/Microsoft.Storage/storageAccounts/cathsaaat" \
+            "cathsaaat storage account"
