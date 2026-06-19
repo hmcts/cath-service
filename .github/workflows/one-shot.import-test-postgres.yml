@@ -1,0 +1,62 @@
+name: One-Shot - Import Test Postgres Into State
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/one-shot.import-test-postgres.yml'
+
+jobs:
+  import-test-postgres:
+    name: Import Test Postgres Into State
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.6
+
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Terraform Init
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+      - name: Import Postgres Flexible Server
+        working-directory: infrastructure
+        run: |
+          terraform import \
+            -var="env=test" \
+            -var="subscription=3eec5bde-7feb-4566-bfb6-805df6e10b90" \
+            -var="aks_subscription_id=3eec5bde-7feb-4566-bfb6-805df6e10b90" \
+            module.postgresql.azurerm_postgresql_flexible_server.pgsql_server \
+            "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/flexible-cath-test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/flexible-cath-test"
