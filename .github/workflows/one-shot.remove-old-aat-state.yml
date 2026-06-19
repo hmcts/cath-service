@@ -39,6 +39,7 @@ jobs:
         working-directory: infrastructure
         run: |
           az account set --subscription "DCD-CNP-DEV"
+          echo "Active subscription: $(az account show --query '[name, id]' -o tsv)"
 
           STORAGE_KEY=$(az storage account keys list \
             --account-name mgmtstorestorenonprod \
