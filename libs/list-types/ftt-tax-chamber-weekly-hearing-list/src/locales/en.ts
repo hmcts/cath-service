@@ -9,8 +9,12 @@ export const en = {
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
-  importantInformationText:
-    "Open justice is a fundamental principle of our justice system. You can attend a public hearing in person, or you can apply for permission to observe remotely.\n\nMembers of the public and the media can ask to join any telephone or video hearing remotely. Contact the Tribunal before the hearing to ask for permission to attend by emailing taxappeals@justice.gov.uk.\n\nThe subject line for the email should contain the following wording: \"HEARING ACCESS REQUEST – [Appellant's name] v [Respondent's name, for example HMRC] – [case reference] – [hearing date]\". You will be sent instructions on how to join the hearing.\n\nThe judge may refuse a request and can also decide a hearing must be held in private, in such cases you will not be able to attend.",
+  importantInformationParagraphs: [
+    "Open justice is a fundamental principle of our justice system. You can attend a public hearing in person, or you can apply for permission to observe remotely.",
+    "Members of the public and the media can ask to join any telephone or video hearing remotely. Contact the Tribunal before the hearing to ask for permission to attend by emailing taxappeals@justice.gov.uk.",
+    "The subject line for the email should contain the following wording: \"HEARING ACCESS REQUEST – [Appellant's name] v [Respondent's name, for example HMRC] – [case reference] – [hearing date]\". You will be sent instructions on how to join the hearing.",
+    "The judge may refuse a request and can also decide a hearing must be held in private, in such cases you will not be able to attend."
+  ],
   importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Search Cases",

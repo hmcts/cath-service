@@ -21,17 +21,17 @@ describe("renderFttRptData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region",
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"
     };
 
     // Act
     const result = renderFttRptData(hearingList, options);
 
     // Assert
-    expect(result.header.listTitle).toBe("First-tier Tribunal (Residential and Property Tribunal) Eastern Region Weekly Hearing List");
+    expect(result.header.listTitle).toBe("First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List");
     expect(result.header.weekCommencingDate).toBe("2 January 2025");
     expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
@@ -77,10 +77,10 @@ describe("renderFttRptData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Northern Region",
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Northern Region Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"
     };
 
     // Act
@@ -98,10 +98,10 @@ describe("renderFttRptData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) London Region",
+      courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) London Region Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"
     };
 
     // Act
@@ -109,7 +109,7 @@ describe("renderFttRptData", () => {
 
     // Assert
     expect(result.hearings).toHaveLength(0);
-    expect(result.header.listTitle).toBe("First-tier Tribunal (Residential and Property Tribunal) London Region Weekly Hearing List");
+    expect(result.header.listTitle).toBe("First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List");
   });
 
   it("should format lastUpdated time correctly", () => {
@@ -130,10 +130,10 @@ describe("renderFttRptData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Southern Region",
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T14:30:00Z",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Southern Region Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"
     };
 
     // Act

@@ -69,7 +69,7 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const courtName = "First-tier Tribunal (Residential and Property Tribunal) Northern Region";
+    const courtName = "First-tier Tribunal (Residential Property Tribunal): Northern region";
     const listTitle = t.rptNorthernPageTitle;
 
     const { header, hearings } = renderFttRptData(jsonData, {

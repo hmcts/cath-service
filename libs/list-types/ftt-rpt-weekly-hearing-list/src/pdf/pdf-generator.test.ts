@@ -22,7 +22,7 @@ import { generateFttRptWeeklyHearingListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
-    listTitle: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region Weekly Hearing List",
+    listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
     weekCommencingDate: "01 January 2025",
     lastUpdatedDate: "12 November 2025",
     lastUpdatedTime: "9am"
@@ -69,8 +69,8 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region Weekly Hearing List"
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"
     });
 
     // Assert
@@ -96,8 +96,8 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) London Region",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) London Region Weekly Hearing List"
+      courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"
     });
 
     // Assert
@@ -119,8 +119,8 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Midlands Region",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Midlands Region Weekly Hearing List"
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List"
     });
 
     // Assert
@@ -145,17 +145,17 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList,
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Northern Region",
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Northern Region Weekly Hearing List"
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"
     });
 
     // Assert
     expect(renderFttRptData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      courtName: "First-tier Tribunal (Residential and Property Tribunal) Northern Region",
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "First-tier Tribunal (Residential and Property Tribunal) Northern Region Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"
     });
   });
 });

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "First-tier Tribunal (Residential and Property Tribunal) Weekly Hearing List",
-  "description": "Schema for First-tier Tribunal (Residential and Property Tribunal) Weekly Hearing Lists from pip-data-management",
+  "title": "First-tier Tribunal (Residential Property Tribunal) Weekly Hearing List",
+  "description": "Schema for First-tier Tribunal (Residential Property Tribunal) Weekly Hearing Lists from pip-data-management",
   "type": "array",
   "items": {
     "type": "object",

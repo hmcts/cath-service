@@ -2306,13 +2306,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list":
+"@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:*, @hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -2324,13 +2323,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list":
+"@hmcts/ftt-rpt-weekly-hearing-list@workspace:*, @hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -2342,13 +2340,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list":
+"@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:*, @hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -2447,10 +2444,14 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     notifications-node-client: "npm:8.4.0"
     typescript: "npm:6.0.3"
   peerDependencies:
@@ -2537,6 +2538,9 @@ __metadata:
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
     "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
@@ -2545,6 +2549,7 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
@@ -2580,13 +2585,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list":
+"@hmcts/siac-poac-paac-weekly-hearing-list@workspace:*, @hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"

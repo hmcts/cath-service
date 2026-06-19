@@ -32,9 +32,9 @@ export const en = {
   cautionReporting:
     "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
   provenanceLabels,
-  rptEasternPageTitle: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region Weekly Hearing List",
-  rptLondonPageTitle: "First-tier Tribunal (Residential and Property Tribunal) London Region Weekly Hearing List",
-  rptMidlandsPageTitle: "First-tier Tribunal (Residential and Property Tribunal) Midlands Region Weekly Hearing List",
-  rptNorthernPageTitle: "First-tier Tribunal (Residential and Property Tribunal) Northern Region Weekly Hearing List",
-  rptSouthernPageTitle: "First-tier Tribunal (Residential and Property Tribunal) Southern Region Weekly Hearing List"
+  rptEasternPageTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
+  rptLondonPageTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
+  rptMidlandsPageTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
+  rptNorthernPageTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List",
+  rptSouthernPageTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"
 };

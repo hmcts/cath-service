@@ -18,7 +18,9 @@
 
   <div class="info-box">
     <h3>{{ t.importantInformationTitle }}</h3>
-    <p>{{ t.importantInformationText }}</p>
+    {% for paragraph in t.importantInformationParagraphs %}
+      <p>{{ paragraph }}</p>
+    {% endfor %}
     <p><a href="{{ t.importantInformationLinkUrl }}">{{ t.importantInformationLinkText }}</a></p>
   </div>
 

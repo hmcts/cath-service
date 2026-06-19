@@ -21,7 +21,9 @@
         </span>
       </summary>
       <div class="govuk-details__text">
-        <p class="govuk-body">{{ t.importantInformationText }}</p>
+        {% for paragraph in t.importantInformationParagraphs %}
+          <p class="govuk-body">{{ paragraph }}</p>
+        {% endfor %}
         <p class="govuk-body">
           <a href="{{ t.importantInformationLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
             {{ t.importantInformationLinkText }}

@@ -66,7 +66,7 @@ describe("FTT RPT Eastern Weekly Hearing List page controller", () => {
       ];
       const mockRenderedData = {
         header: {
-          listTitle: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region Weekly Hearing List",
+          listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
           weekCommencingDate: "1 January 2026",
           lastUpdatedDate: "1 January 2026",
           lastUpdatedTime: "12pm"
@@ -86,7 +86,7 @@ describe("FTT RPT Eastern Weekly Hearing List page controller", () => {
       // Assert
       expect(renderFttRptData).toHaveBeenCalledWith(
         mockJsonData,
-        expect.objectContaining({ courtName: "First-tier Tribunal (Residential and Property Tribunal) Eastern Region" })
+        expect.objectContaining({ courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region" })
       );
       const renderCall = vi.mocked(res.render).mock.calls[0];
       expect(renderCall[0]).toBe("ftt-rpt-eastern-weekly-hearing-list");

@@ -26,6 +26,9 @@
     "@hmcts/civil-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/family-daily-cause-list": "workspace:*",
+    "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*",
+    "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*",
+    "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*",
     "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
@@ -34,6 +37,7 @@
     "@hmcts/notifications": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "ajv": "8.20.0"
   },
