@@ -24,25 +24,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Terraform
-        run: |
-          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.5/terraform_1.15.5_linux_amd64.zip
-          unzip -o /tmp/terraform.zip -d /usr/local/bin/
-          terraform version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version_file: infrastructure/.terraform-version
+          terraform_wrapper: false
 
-      - name: Azure Login (CNP)
-        run: |
-          echo '${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}' | python3 -c "
-          import sys, json, subprocess
-          creds = json.load(sys.stdin)
-          subprocess.run([
-            'az', 'login', '--service-principal',
-            '--username', creds['clientId'],
-            '--password', creds['clientSecret'],
-            '--tenant', creds['tenantId']
-          ], check=True)
-          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
-          "
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
 
       - name: Remove Old AAT Resources From State
         working-directory: infrastructure
@@ -61,6 +52,11 @@ jobs:
             -backend-config="container_name=mgmtstatestorecontaineraat" \
             -backend-config="key=cath-service/aat/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove old storage account module (causes terraform init to fail trying to load it)
+          for r in $(terraform state list 2>/dev/null | grep "^module\.sa\."); do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
 
           # Remove old KV secrets
           for r in \
