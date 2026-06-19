@@ -51,13 +51,23 @@ jobs:
             -backend-config="key=cath-service/test/terraform.tfstate" \
             -backend-config="access_key=${STORAGE_KEY}"
 
-      - name: Import Postgres Flexible Server
+      - name: Import Postgres Resources
         working-directory: infrastructure
         run: |
-          terraform import \
-            -var="env=test" \
-            -var="subscription=3eec5bde-7feb-4566-bfb6-805df6e10b90" \
-            -var="aks_subscription_id=3eec5bde-7feb-4566-bfb6-805df6e10b90" \
-            -var="ci_service_principal_object_id=69aa7255-12ea-45a3-af45-e9d249cddfe0" \
+          IMPORT_VARS="-var=env=test -var=subscription=3eec5bde-7feb-4566-bfb6-805df6e10b90 -var=aks_subscription_id=3eec5bde-7feb-4566-bfb6-805df6e10b90 -var=ci_service_principal_object_id=69aa7255-12ea-45a3-af45-e9d249cddfe0"
+          BASE="/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/flexible-cath-test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/flexible-cath-test"
+
+          terraform import $IMPORT_VARS \
             module.postgresql.azurerm_postgresql_flexible_server.pgsql_server \
-            "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/flexible-cath-test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/flexible-cath-test"
+            "${BASE}" \
+            || echo "pgsql_server already in state, skipping"
+
+          terraform import $IMPORT_VARS \
+            'module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases["cath"]' \
+            "${BASE}/databases/cath" \
+            || echo "pg_databases[cath] already in state, skipping"
+
+          terraform import $IMPORT_VARS \
+            module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin \
+            "${BASE}/administrators/3c52c98b-07a3-4a97-92b9-298e86bb1ca9" \
+            || echo "pgsql_adadmin already in state, skipping"
