@@ -89,7 +89,7 @@ describe("FTT RPT Midlands Weekly Hearing List page controller", () => {
         expect.objectContaining({ courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region" })
       );
       const renderCall = vi.mocked(res.render).mock.calls[0];
-      expect(renderCall[0]).toBe("ftt-rpt-midlands-weekly-hearing-list");
+      expect(renderCall[0]).toBe("ftt-rpt-weekly-hearing-list");
       expect(renderCall[1]).toMatchObject({ dataSource: "Manual Upload" });
     });
 
