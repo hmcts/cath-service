@@ -154,16 +154,34 @@ jobs:
 
           IMPORT_VARS="-var subscription=${SUBSCRIPTION_ID} -var aks_subscription_id=${AKS_SUBSCRIPTION_ID} -var env=aat -var product=cath"
 
-          # Import existing cath-cache-aat RG into new redis module path
-          terraform import $IMPORT_VARS \
-            "module.redis.azurerm_resource_group.cache-resourcegroup[0]" \
-            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-cache-aat" \
-            && echo "Imported cath-cache-aat RG" \
-            || echo "WARNING: redis RG import failed, may not be needed"
+          # Import resources that already exist in Azure but aren't in state
+          import_resource() {
+            local addr="$1" id="$2" label="$3"
+            terraform import $IMPORT_VARS "$addr" "$id" \
+              && echo "Imported $label" \
+              || echo "WARNING: $label import failed, may not be needed"
+          }
 
-          # Import existing cath-aat KV developer access policy (already exists in Azure)
-          terraform import $IMPORT_VARS \
-            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+          import_resource "azurerm_resource_group.rg" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-cath" \
+            "cath-aat-cath RG"
+
+          import_resource "module.postgresql.azurerm_resource_group.rg[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-data-aat" \
+            "cath-aat-data-aat RG"
+
+          import_resource "module.redis.azurerm_resource_group.cache-resourcegroup[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-cache-aat" \
+            "cath-cache-aat RG"
+
+          import_resource "module.key_vault.azurerm_key_vault.kv" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat" \
+            "cath-aat Key Vault"
+
+          import_resource "module.key_vault.azurerm_user_assigned_identity.managed_identity[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/managed-identities-aat-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cath-aat-mi" \
+            "cath-aat-mi managed identity"
+
+          import_resource "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat/objectId/b2a1773c-a5ae-48b5-b5fa-95b0e05eee05" \
-            && echo "Imported cath-aat KV developer access policy" \
-            || echo "WARNING: KV developer access policy import failed, may not be needed"
+            "cath-aat KV developer access policy"
