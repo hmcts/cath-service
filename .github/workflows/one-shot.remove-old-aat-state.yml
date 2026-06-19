@@ -151,8 +151,11 @@ jobs:
 
           SUBSCRIPTION_ID=$(az account show --subscription "DCD-CNP-DEV" --query id -o tsv)
           AKS_SUBSCRIPTION_ID=$(az account show --subscription "DCD-CFTAPPS-STG" --query id -o tsv)
+          TENANT_ID=$(az account show --query tenantId -o tsv)
+          CLIENT_ID=$(az account show --query user.name -o tsv)
+          SP_OBJECT_ID=$(az ad sp show --id "$CLIENT_ID" --query id -o tsv)
 
-          IMPORT_VARS="-var subscription=${SUBSCRIPTION_ID} -var aks_subscription_id=${AKS_SUBSCRIPTION_ID} -var env=aat -var product=cath"
+          IMPORT_VARS="-var subscription=${SUBSCRIPTION_ID} -var aks_subscription_id=${AKS_SUBSCRIPTION_ID} -var env=aat -var product=cath -var tenant_id=${TENANT_ID} -var ci_service_principal_object_id=${SP_OBJECT_ID}"
 
           # Import resources that already exist in Azure but aren't in state
           import_resource() {
