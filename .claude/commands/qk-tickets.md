@@ -13,7 +13,7 @@ Query requirements.db for approved tickets ready to work on.
 ## Usage
 
 ```
-/list-tickets
+/qk-tickets
 ```
 
 ## What it does

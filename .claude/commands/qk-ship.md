@@ -51,7 +51,7 @@ PROMPT:
 **Worktree Setup:**
 
 Branch name: issue-$ARGUMENT
-Worktree path: ../cath-$ARGUMENT
+Worktree path: .claude/worktrees/issue-$ARGUMENT
 
 **Steps:**
 
@@ -68,36 +68,36 @@ Worktree path: ../cath-$ARGUMENT
 3. Create worktree:
    - If branch doesn't exist locally or remotely:
      \`\`\`bash
-     git worktree add -b issue-$ARGUMENT ../cath-$ARGUMENT master
+     git worktree add -b issue-$ARGUMENT .claude/worktrees/issue-$ARGUMENT master
      \`\`\`
    - If branch exists:
      \`\`\`bash
-     git worktree add ../cath-$ARGUMENT issue-$ARGUMENT
+     git worktree add .claude/worktrees/issue-$ARGUMENT issue-$ARGUMENT
      \`\`\`
 
 4. Verify worktree:
    \`\`\`bash
-   cd ../cath-$ARGUMENT && git status
+   cd .claude/worktrees/issue-$ARGUMENT && git status
    \`\`\`
 
 5. Add to VS Code:
    \`\`\`bash
-   code --add ../cath-$ARGUMENT
+   code --add .claude/worktrees/issue-$ARGUMENT
    \`\`\`
 
 **Return:**
-- Worktree path: ../cath-$ARGUMENT
+- Worktree path: .claude/worktrees/issue-$ARGUMENT
 - Branch: issue-$ARGUMENT
 - Status: created/already-exists
 
-**IMPORTANT:** All subsequent work in this session will be done in the worktree at ../cath-$ARGUMENT"
+**IMPORTANT:** All subsequent work in this session will be done in the worktree at .claude/worktrees/issue-$ARGUMENT"
 
 WAIT FOR AGENT
 ```
 
 *Mark "Create worktree for issue" as completed*
 
-**From this point forward, all commands must be run in the worktree directory: ../cath-$ARGUMENT**
+**From this point forward, all commands must be run in the worktree directory: .claude/worktrees/issue-$ARGUMENT**
 
 ## ═══════════════════════════════════════
 ## PHASE 1: PLANNING
@@ -241,7 +241,6 @@ PROMPT:
 - Conflicts: docs/tickets/$ARGUMENT/conflicts.md
 - Checklist: docs/tickets/$ARGUMENT/checklist.md
 - Codebase Findings: docs/tickets/$ARGUMENT/findings.md
-- Architecture: @CLAUDE.md
 
 **Task:**
 Create docs/tickets/$ARGUMENT/plan.md that covers EVERY acceptance criteria point from the checklist.
@@ -305,9 +304,11 @@ For EACH acceptance criterion in the checklist, describe the implementation appr
 - Reference integration patterns from findings.md
 
 ## Testing Approach
-- Unit tests required
-- E2E test scenarios
-- Accessibility testing
+- Unit tests (co-located *.test.ts files, AAA pattern)
+- E2E test scenarios (if user journey - see .claude/rules/e2e-testing.md)
+  - Include AxeBuilder accessibility checks INLINE in journey tests
+  - NO separate accessibility test files
+  - Check Welsh translations within the same journey test
 
 ## Implementation Notes
 - Any assumptions or clarifications needed
@@ -315,7 +316,7 @@ For EACH acceptance criterion in the checklist, describe the implementation appr
 - Performance considerations
 - Edge cases to handle
 
-**CRITICAL:**
+**Planning Requirements:**
 - Every AC must be covered
 - Follow @CLAUDE.md architecture patterns
 - Reference similar patterns from findings.md
@@ -368,10 +369,11 @@ PROMPT:
 "Implement issue #$ARGUMENT with ALL integrations complete.
 
 **CRITICAL: Worktree Isolation**
-- You are working in a git worktree at ../worktrees/issue-$ARGUMENT
+- You are working in a git worktree at .claude/worktrees/issue-$ARGUMENT
 - This is a separate working directory with its own branch
 - The main repository is unaffected by your changes
 - Multiple agents can work in parallel in their own worktrees
+- **NEVER use `git stash`** - worktree isolation makes stashing unnecessary
 
 **Context:**
 Read: 
@@ -403,7 +405,7 @@ Read:
 
 3. **Implement EVERY integration point**
    
-   ⚠️ CRITICAL: Go through the checklist one by one
+   ⚠️ IMPORTANT: Go through the checklist one by one
    
    For each integration point:
    - Read the 'What' - understand what needs wiring
@@ -543,7 +545,7 @@ WAIT FOR ALL THREE AGENTS
 ## PHASE 4: VERIFICATION & FINAL GUARDS
 ## ═══════════════════════════════════════
 
-## Step 9: Verification [CRITICAL]
+## Step 9: Verification
 
 *Mark "Verify (build/lint/test)" as in_progress*
 
