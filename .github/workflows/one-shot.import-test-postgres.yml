@@ -58,5 +58,6 @@ jobs:
             -var="env=test" \
             -var="subscription=3eec5bde-7feb-4566-bfb6-805df6e10b90" \
             -var="aks_subscription_id=3eec5bde-7feb-4566-bfb6-805df6e10b90" \
+            -var="ci_service_principal_object_id=69aa7255-12ea-45a3-af45-e9d249cddfe0" \
             module.postgresql.azurerm_postgresql_flexible_server.pgsql_server \
             "/subscriptions/3eec5bde-7feb-4566-bfb6-805df6e10b90/resourceGroups/flexible-cath-test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/flexible-cath-test"
