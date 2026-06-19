@@ -316,5 +316,65 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SJP Public List (New cases)",
     subJurisdictionIds: [7]
+  },
+  {
+    id: 28,
+    name: "GRC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "General Regulatory Chamber Weekly Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Wythnosol y Siambr Reoleiddio Gyffredinol",
+    shortenedFriendlyName: "GRC Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "grc-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [19]
+  },
+  {
+    id: 29,
+    name: "WPAFCC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Siambr Pensiynau Rhyfel a Digollediad Lluoedd Arfog",
+    shortenedFriendlyName: "WPAFCC Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "wpafcc-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [17]
+  },
+  {
+    id: 30,
+    name: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Siambr Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol - Apeliadau Statudol",
+    shortenedFriendlyName: "UTIAC Statutory Appeal Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-statutory-appeal-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [28]
+  },
+  {
+    id: 31,
+    name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR London Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-london-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 32,
+    name: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Leeds Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-leeds-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
   }
 ];

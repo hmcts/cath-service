@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GRC Weekly Hearing List",
+  "description": "Schema for General Regulatory Chamber Weekly Hearing List",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["date", "hearingTime", "caseReferenceNumber", "caseName", "judges", "modeOfHearing", "venue"],
+    "properties": {
+      "date": {
+        "title": "Date",
+        "type": "string",
+        "pattern": "^\\d{2}/\\d{2}/\\d{4}$",
+        "examples": ["02/01/2025"]
+      },
+      "hearingTime": {
+        "title": "Hearing time",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["10:00am"]
+      },
+      "caseReferenceNumber": {
+        "title": "Case reference number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["GRC/2025/001"]
+      },
+      "caseName": {
+        "title": "Case name",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["A Vs B"]
+      },
+      "judges": {
+        "title": "Judge(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Judge Smith"]
+      },
+      "members": {
+        "title": "Member(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Member Jones"]
+      },
+      "modeOfHearing": {
+        "title": "Mode of hearing",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Remote"]
+      },
+      "venue": {
+        "title": "Venue",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["GRC Hearing Centre"]
+      },
+      "additionalInformation": {
+        "title": "Additional information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Remote hearing"]
+      }
+    }
+  }
+}

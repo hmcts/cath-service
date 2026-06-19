@@ -17,6 +17,7 @@ import {
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
+import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -24,6 +25,19 @@ import {
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
+import {
+  extractCaseSummary as extractUtiacJrLeedsSummary,
+  formatCaseSummaryForEmail as formatUtiacJrLeedsSummaryForEmail
+} from "@hmcts/utiac-jr-leeds-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtiacJrLondonSummary,
+  formatCaseSummaryForEmail as formatUtiacJrLondonSummaryForEmail
+} from "@hmcts/utiac-jr-london-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtiacSaSummary,
+  formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
+} from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
+import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
@@ -93,7 +107,27 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  GRC_WEEKLY_HEARING_LIST: {
+    extract: extractGrcSummary as SummaryExtractor,
+    format: formatGrcSummaryForEmail
+  },
+  WPAFCC_WEEKLY_HEARING_LIST: {
+    extract: extractWpafccSummary as SummaryExtractor,
+    format: formatWpafccSummaryForEmail
+  },
+  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: {
+    extract: extractUtiacSaSummary as SummaryExtractor,
+    format: formatUtiacSaSummaryForEmail
+  },
+  UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLondonSummary as SummaryExtractor,
+    format: formatUtiacJrLondonSummaryForEmail
+  },
+  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  }
 };
 
 export interface NotificationResult {
