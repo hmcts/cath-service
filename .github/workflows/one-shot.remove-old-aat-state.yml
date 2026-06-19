@@ -96,7 +96,34 @@ jobs:
           for r in \
             azurerm_resource_group.ss_kv_rg \
             azurerm_resource_group.app_kv_rg \
-            azurerm_resource_group.rg; do
+            azurerm_resource_group.rg \
+            azurerm_resource_group.redis_rg \
+            azurerm_resource_group.bootstrap_rg \
+            azurerm_resource_group.postgres_rg; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old bootstrap / third-party KV modules
+          for r in \
+            "module.key_vault_bootstrap.azurerm_key_vault.kv" \
+            "module.key_vault_bootstrap.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.key_vault_bootstrap.azurerm_key_vault_access_policy.developer[0]" \
+            "module.key_vault_bootstrap.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.key_vault_bootstrap.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.key_vault_bootstrap.azurerm_user_assigned_identity.managed_identity[0]" \
+            "module.third_party_key_vault.azurerm_key_vault.kv" \
+            "module.third_party_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.third_party_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.third_party_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.third_party_key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "module.third_party_key_vault.azurerm_user_assigned_identity.managed_identity[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove remaining old PostgreSQL resources
+          for r in \
+            "module.postgresql.random_password.password" \
+            "module.postgresql.terraform_data.trigger_password_reset"; do
             terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
           done
 
@@ -127,16 +154,21 @@ jobs:
             terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
           done
 
-          # Import existing cath-cache-aat RG into new redis module path
           SUBSCRIPTION_ID=$(az account show --subscription "DCD-CNP-DEV" --query id -o tsv)
           AKS_SUBSCRIPTION_ID=$(az account show --subscription "DCD-CFTAPPS-STG" --query id -o tsv)
 
-          terraform import \
-            -var "subscription=${SUBSCRIPTION_ID}" \
-            -var "aks_subscription_id=${AKS_SUBSCRIPTION_ID}" \
-            -var "env=aat" \
-            -var "product=cath" \
+          IMPORT_VARS="-var subscription=${SUBSCRIPTION_ID} -var aks_subscription_id=${AKS_SUBSCRIPTION_ID} -var env=aat -var product=cath"
+
+          # Import existing cath-cache-aat RG into new redis module path
+          terraform import $IMPORT_VARS \
             "module.redis.azurerm_resource_group.cache-resourcegroup[0]" \
             "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-cache-aat" \
             && echo "Imported cath-cache-aat RG" \
-            || echo "WARNING: import failed, may not be needed"
+            || echo "WARNING: redis RG import failed, may not be needed"
+
+          # Import existing cath-aat KV developer access policy (already exists in Azure)
+          terraform import $IMPORT_VARS \
+            "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat/objectId/b2a1773c-a5ae-48b5-b5fa-95b0e05eee05" \
+            && echo "Imported cath-aat KV developer access policy" \
+            || echo "WARNING: KV developer access policy import failed, may not be needed"
