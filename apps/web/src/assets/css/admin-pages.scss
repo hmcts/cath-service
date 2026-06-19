@@ -133,13 +133,19 @@
   border-left: 10px solid #b1b4b6;
 }
 
+// Prevent wrapping in table cells
+.govuk-table__cell--nowrap {
+  white-space: nowrap;
+}
+
 // Sortable table headers
 .govuk-table__header--sortable {
   a {
     color: inherit;
     text-decoration: none;
-    display: block;
-    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 
     &:hover {
       text-decoration: underline;
@@ -153,9 +159,9 @@
       color: #0b0c0c;
     }
 
-    span {
-      margin-left: 5px;
-      font-size: 1.2em;
+    svg {
+      flex-shrink: 0;
+      vertical-align: middle;
     }
   }
 }

@@ -6,12 +6,11 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
   return {
     ...actual,
-    findAllThirdPartyUsers: vi.fn(),
-    getHighestSensitivity: vi.fn()
+    findAllThirdPartyUsers: vi.fn()
   };
 });
 
-import { findAllThirdPartyUsers, getHighestSensitivity } from "@hmcts/system-admin-pages";
+import { findAllThirdPartyUsers } from "@hmcts/system-admin-pages";
 
 describe("manage-third-party-users page", () => {
   let req: Partial<Request>;
@@ -36,7 +35,6 @@ describe("manage-third-party-users page", () => {
         { id: "2", name: "User Two", subscriptions: [{ listTypeId: 1 }] }
       ];
       (findAllThirdPartyUsers as any).mockResolvedValue(mockUsers);
-      (getHighestSensitivity as any).mockReturnValue("PUBLIC");
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -47,10 +45,7 @@ describe("manage-third-party-users page", () => {
         expect.objectContaining({
           en: expect.objectContaining({ pageTitle: "Manage third party users" }),
           cy: expect.objectContaining({ pageTitle: "Rheoli defnyddiwr trydydd parti" }),
-          users: expect.arrayContaining([
-            expect.objectContaining({ id: "1", name: "User One", highestSensitivity: "PUBLIC" }),
-            expect.objectContaining({ id: "2", name: "User Two", highestSensitivity: "PUBLIC" })
-          ])
+          users: mockUsers
         })
       );
     });
@@ -67,23 +62,6 @@ describe("manage-third-party-users page", () => {
           en: expect.any(Object),
           cy: expect.any(Object),
           users: []
-        })
-      );
-    });
-
-    it("should calculate highest sensitivity for each user", async () => {
-      const mockUsers = [{ id: "1", name: "User One", subscriptions: [{ listTypeId: 1, sensitivity: "CLASSIFIED" }] }];
-      (findAllThirdPartyUsers as any).mockResolvedValue(mockUsers);
-      (getHighestSensitivity as any).mockReturnValue("CLASSIFIED");
-
-      const handler = GET[GET.length - 1];
-      await handler(req as Request, res as Response, vi.fn());
-
-      expect(getHighestSensitivity).toHaveBeenCalledWith([{ listTypeId: 1, sensitivity: "CLASSIFIED" }]);
-      expect(res.render).toHaveBeenCalledWith(
-        "manage-third-party-users/index",
-        expect.objectContaining({
-          users: expect.arrayContaining([expect.objectContaining({ highestSensitivity: "CLASSIFIED" })])
         })
       );
     });
