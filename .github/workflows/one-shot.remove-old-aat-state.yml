@@ -10,11 +10,6 @@ name: One-Shot - Remove Old AAT Resources From State
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - master
-    paths:
-      - 'infrastructure/**'
 
 jobs:
   remove-old-aat-state:
