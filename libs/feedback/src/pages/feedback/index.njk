@@ -1,0 +1,105 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block pageTitle %}{{ t.pageTitle }} - Court and Tribunal Hearings{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors and errors.length > 0 %}
+      {{ govukErrorSummary({
+        titleText: t.errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ t.heading }}</h1>
+    <p class="govuk-body">{{ t.introText }}</p>
+
+    <form method="post">
+
+      {{ govukSelect({
+        id: "rating",
+        name: "rating",
+        label: {
+          text: t.ratingLabel
+        },
+        hint: {
+          text: t.ratingHint
+        },
+        items: [
+          { value: "", text: "Choose a rating" },
+          { value: "1", text: t.rating1 },
+          { value: "2", text: t.rating2 },
+          { value: "3", text: t.rating3 },
+          { value: "4", text: t.rating4 },
+          { value: "5", text: t.rating5 }
+        ],
+        value: data.rating,
+        errorMessage: errors | selectattr("href", "equalto", "#rating") | first | attr("text") if errors else null
+      }) }}
+
+      {{ govukRadios({
+        idPrefix: "category",
+        name: "category",
+        fieldset: {
+          legend: {
+            text: t.categoryLabel
+          }
+        },
+        items: [
+          { value: "General", text: t.categoryGeneral },
+          { value: "Bug Report", text: t.categoryBug },
+          { value: "Feature Request", text: t.categoryFeature },
+          { value: "Accessibility", text: t.categoryAccessibility },
+          { value: "Other", text: t.categoryOther }
+        ],
+        value: data.category,
+        errorMessage: errors | selectattr("href", "equalto", "#category") | first | attr("text") if errors else null
+      }) }}
+
+      {{ govukTextarea({
+        id: "comments",
+        name: "comments",
+        label: {
+          text: t.commentsLabel
+        },
+        hint: {
+          text: t.commentsHint
+        },
+        value: data.comments,
+        errorMessage: errors | selectattr("href", "equalto", "#comments") | first | attr("text") if errors else null
+      }) }}
+
+      {{ govukInput({
+        id: "email",
+        name: "email",
+        type: "email",
+        label: {
+          text: t.emailLabel
+        },
+        hint: {
+          text: t.emailHint
+        },
+        value: data.email,
+        errorMessage: errors | selectattr("href", "equalto", "#email") | first | attr("text") if errors else null
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: t.submitButton
+        }) }}
+        <a class="govuk-link">{{ t.cancelLink }}</a>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

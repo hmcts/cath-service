@@ -1,0 +1,20 @@
+model Feedback {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String?  @map("user_id") @db.Uuid
+  email         String?
+  rating        Int
+  category      String
+  comments      String   @db.Text
+  pageUrl       String   @map("page_url")
+  userAgent     String   @map("user_agent")
+  ipAddress     String   @map("ip_address")
+  createdAt     DateTime @default(now()) @map("created_at")
+  isResolved    Boolean  @default(false) @map("is_resolved")
+  resolvedBy    String?  @map("resolved_by")
+  resolvedAt    DateTime? @map("resolved_at")
+  adminNotes    String?  @map("admin_notes") @db.Text
+
+  @@map("feedbacks")
+  @@index([createdAt], name: "idx_feedback_created")
+  @@index([userId], name: "idx_feedback_user")
+}
