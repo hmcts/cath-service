@@ -188,3 +188,23 @@ jobs:
           import_resource "module.key_vault.azurerm_key_vault_access_policy.developer[0]" \
             "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat/objectId/b2a1773c-a5ae-48b5-b5fa-95b0e05eee05" \
             "cath-aat KV developer access policy"
+
+          import_resource "module.key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat/objectId/69aa7255-12ea-45a3-af45-e9d249cddfe0" \
+            "cath-aat KV creator access policy"
+
+          import_resource "module.key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat/objectId/b2a1773c-a5ae-48b5-b5fa-95b0e05eee05" \
+            "cath-aat KV product team access policy"
+
+          import_resource "module.key_vault.azurerm_monitor_diagnostic_setting.kv-ds" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat/providers/Microsoft.KeyVault/vaults/cath-aat|cath-aat" \
+            "cath-aat KV diagnostic setting"
+
+          import_resource "module.application_insights.azurerm_application_insights.this" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-cath/providers/Microsoft.Insights/components/cath-cath-appinsights-aat" \
+            "cath-cath-appinsights-aat"
+
+          import_resource "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/cath-aat-data-aat/providers/Microsoft.DBforPostgreSQL/flexibleServers/cath-aat-aat" \
+            "cath-aat postgres server"
