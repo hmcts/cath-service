@@ -21,7 +21,11 @@ import {
 import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-cause-list/config";
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
-import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
+import {
+  fileUploadRoutes as systemAdminFileUploadRoutes,
+  moduleRoot as systemAdminModuleRoot,
+  pages as systemAdminPages
+} from "@hmcts/system-admin-pages/config";
 import {
   configureCookieManager,
   configureGovuk,
@@ -159,7 +163,7 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(publicPagesApiRoutes));
 
   // Register all pages from apps/web/src/pages (includes route groups and admin)
-  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }));
+  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, systemAdminPages));
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {

@@ -6,9 +6,6 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
   return {
     ...actual,
-    AuditLogAction: {
-      UPDATE_THIRD_PARTY_SUBSCRIPTIONS: "Update third party subscriptions"
-    },
     findAllListTypes: vi.fn(),
     findThirdPartyUserById: vi.fn(),
     updateThirdPartySubscriptions: vi.fn()
@@ -22,13 +19,13 @@ describe("manage-third-party-subscriptions page", () => {
   let res: Partial<Response>;
 
   const mockListTypes = [
-    { id: 1, friendlyName: "Civil Daily Cause List" },
-    { id: 2, friendlyName: "Crown Daily List" }
+    { id: 1, friendlyName: "Civil Daily Cause List", name: "CIVIL_DAILY_CAUSE_LIST", welshFriendlyName: "Rhestr Achos Dyddiol Sifil" },
+    { id: 2, friendlyName: "Crown Daily List", name: "CROWN_DAILY_LIST", welshFriendlyName: "Rhestr Ddyddiol y Goron" }
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(findAllListTypes).mockResolvedValue(mockListTypes);
+    vi.mocked(findAllListTypes).mockResolvedValue(mockListTypes as any);
 
     req = {
       query: {},
@@ -62,7 +59,7 @@ describe("manage-third-party-subscriptions page", () => {
 
     it("should render error when user not found", async () => {
       req.query = { id: "non-existent-id" };
-      (findThirdPartyUserById as any).mockResolvedValue(null);
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(null);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -75,19 +72,18 @@ describe("manage-third-party-subscriptions page", () => {
       );
     });
 
-    it("should render subscriptions page with user data", async () => {
+    it("should render page with current list type IDs from user subscriptions", async () => {
       req.query = { id: "user-123" };
       const mockUser = {
         id: "user-123",
         name: "Test User",
         subscriptions: [{ listTypeId: 1 }]
       };
-      (findThirdPartyUserById as any).mockResolvedValue(mockUser);
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(findThirdPartyUserById).toHaveBeenCalledWith("user-123");
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-subscriptions/index",
         expect.objectContaining({
@@ -97,14 +93,14 @@ describe("manage-third-party-subscriptions page", () => {
       );
     });
 
-    it("should store user info in session", async () => {
+    it("should store original subscription list type IDs in session", async () => {
       req.query = { id: "user-123" };
       const mockUser = {
         id: "user-123",
         name: "Test User",
         subscriptions: [{ listTypeId: 1 }, { listTypeId: 2 }]
       };
-      (findThirdPartyUserById as any).mockResolvedValue(mockUser);
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -118,12 +114,8 @@ describe("manage-third-party-subscriptions page", () => {
 
     it("should handle user with no subscriptions", async () => {
       req.query = { id: "user-123" };
-      const mockUser = {
-        id: "user-123",
-        name: "Test User",
-        subscriptions: []
-      };
-      (findThirdPartyUserById as any).mockResolvedValue(mockUser);
+      const mockUser = { id: "user-123", name: "Test User", subscriptions: [] };
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());

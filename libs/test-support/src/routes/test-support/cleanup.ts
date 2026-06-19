@@ -19,7 +19,8 @@ export const DELETE = async (req: Request, res: Response) => {
       users: 0,
       locations: 0,
       listTypes: 0,
-      mediaApplications: 0
+      mediaApplications: 0,
+      thirdPartyUsers: 0
     };
 
     // Delete artefacts at locations with the prefix
@@ -92,6 +93,16 @@ export const DELETE = async (req: Request, res: Response) => {
       }
     });
     results.mediaApplications = mediaAppResult.count;
+
+    // Delete third party users with prefix in name
+    // Also delete users with hyphenated prefix (used for UI-created users where underscores aren't valid)
+    const hyphenatedPrefix = prefix.replace(/_/g, "-");
+    const thirdPartyUserResult = await prisma.thirdPartyUser.deleteMany({
+      where: {
+        OR: [{ name: { startsWith: prefix } }, { name: { startsWith: hyphenatedPrefix } }]
+      }
+    });
+    results.thirdPartyUsers = thirdPartyUserResult.count;
 
     const totalDeleted = Object.values(results).reduce((a, b) => a + b, 0);
 

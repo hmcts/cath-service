@@ -6,11 +6,12 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
   return {
     ...actual,
+    findThirdPartyUserByName: vi.fn(),
     validateThirdPartyUserName: vi.fn()
   };
 });
 
-import { validateThirdPartyUserName } from "@hmcts/system-admin-pages";
+import { findThirdPartyUserByName, validateThirdPartyUserName } from "@hmcts/system-admin-pages";
 
 describe("create-third-party-user page", () => {
   let req: Partial<Request>;
@@ -18,6 +19,7 @@ describe("create-third-party-user page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(findThirdPartyUserByName).mockResolvedValue(null);
 
     req = {
       query: {},
@@ -160,6 +162,40 @@ describe("create-third-party-user page", () => {
       await handler(req as Request, res as Response, vi.fn());
 
       expect((req.session as any).createThirdPartyUser.idempotencyToken).toBeDefined();
+    });
+
+    it("should show duplicate name error when user with same name already exists", async () => {
+      req.body = { name: "Existing User" };
+      (validateThirdPartyUserName as any).mockReturnValue(null);
+      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "existing-id", name: "Existing User" });
+
+      const handler = POST[POST.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      expect(res.render).toHaveBeenCalledWith(
+        "create-third-party-user/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#name" })]),
+          name: "Existing User"
+        })
+      );
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should be case-insensitive for duplicate name check", async () => {
+      req.body = { name: "existing user" };
+      (validateThirdPartyUserName as any).mockReturnValue(null);
+      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "existing-id", name: "Existing User" });
+
+      const handler = POST[POST.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      expect(res.render).toHaveBeenCalledWith(
+        "create-third-party-user/index",
+        expect.objectContaining({
+          errors: expect.arrayContaining([expect.objectContaining({ href: "#name" })])
+        })
+      );
     });
   });
 });
