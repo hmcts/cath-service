@@ -69,5 +69,10 @@ jobs:
 
           terraform import $IMPORT_VARS \
             module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin \
-            "${BASE}/administrators/69aa7255-12ea-45a3-af45-e9d249cddfe0" \
+            "${BASE}/administrators/3c52c98b-07a3-4a97-92b9-298e86bb1ca9" \
             || echo "pgsql_adadmin already in state, skipping"
+
+          terraform import $IMPORT_VARS \
+            'module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]' \
+            "${BASE}/administrators/69aa7255-12ea-45a3-af45-e9d249cddfe0" \
+            || echo "pgsql_principal_admin[0] already in state, skipping"
