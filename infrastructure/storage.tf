@@ -10,6 +10,7 @@ module "sa" {
   account_replication_type = var.sa_account_replication_type
   access_tier              = var.sa_access_tier
   common_tags              = var.common_tags
+  default_action           = "Allow"
 
   containers = [
     { name = "artefact", access_type = "private" },
