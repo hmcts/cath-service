@@ -8,10 +8,6 @@ module "application_insights" {
   resource_group_name = azurerm_resource_group.rg.name
 
   common_tags = var.common_tags
-
-  # SP lacks actionGroups/read on the PTL subscription; activity log alert returns 403.
-  # alert_limit_reached=true switches to a scheduled query alert that does not need it.
-  alert_limit_reached = true
 }
 
 resource "azurerm_key_vault_secret" "app_insights_connection_string" {
