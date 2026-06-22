@@ -7,13 +7,12 @@ describe("renderUtiacJrCardiffDailyHearingListData", () => {
     // Arrange
     const hearingList: UtiacJrCardiffHearingList = [
       {
-        hearingTime: "10:00am",
-        caseTitle: "Smith v Secretary of State",
-        representative: "Smith & Co",
-        caseReferenceNumber: "JR/2025/001",
+        venue: "Cardiff Civil Justice Centre",
         judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
         hearingType: "Permission",
-        location: "Field House",
         additionalInformation: ""
       }
     ];
@@ -36,13 +35,12 @@ describe("renderUtiacJrCardiffDailyHearingListData", () => {
     expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
-    expect(result.hearings[0].hearingTime).toBe("10:00am");
-    expect(result.hearings[0].caseTitle).toBe("Smith v Secretary of State");
-    expect(result.hearings[0].representative).toBe("Smith & Co");
-    expect(result.hearings[0].caseReferenceNumber).toBe("JR/2025/001");
+    expect(result.hearings[0].venue).toBe("Cardiff Civil Justice Centre");
     expect(result.hearings[0].judges).toBe("Judge Smith");
+    expect(result.hearings[0].hearingTime).toBe("10:00am");
+    expect(result.hearings[0].caseReferenceNumber).toBe("JR/2025/001");
+    expect(result.hearings[0].caseTitle).toBe("Smith v Secretary of State");
     expect(result.hearings[0].hearingType).toBe("Permission");
-    expect(result.hearings[0].location).toBe("Field House");
     expect(result.hearings[0].additionalInformation).toBe("");
   });
 
@@ -50,23 +48,21 @@ describe("renderUtiacJrCardiffDailyHearingListData", () => {
     // Arrange
     const hearingList: UtiacJrCardiffHearingList = [
       {
-        hearingTime: "10:00am",
-        caseTitle: "Smith v Secretary of State",
-        representative: "",
-        caseReferenceNumber: "JR/2025/001",
+        venue: "Cardiff Civil Justice Centre",
         judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
         hearingType: "Permission",
-        location: "Field House",
         additionalInformation: ""
       },
       {
-        hearingTime: "2:00pm",
-        caseTitle: "Brown v Home Office",
-        representative: "Brown Solicitors",
-        caseReferenceNumber: "JR/2025/002",
+        venue: "Cardiff Civil Justice Centre",
         judges: "Judge Brown",
+        hearingTime: "2:00pm",
+        caseReferenceNumber: "JR/2025/002",
+        caseTitle: "Brown v Home Office",
         hearingType: "Full hearing",
-        location: "Manchester",
         additionalInformation: "Remote"
       }
     ];
@@ -112,13 +108,12 @@ describe("renderUtiacJrCardiffDailyHearingListData", () => {
     // Arrange
     const hearingList: UtiacJrCardiffHearingList = [
       {
-        hearingTime: "10:00am",
-        caseTitle: "Smith v Secretary of State",
-        representative: "",
-        caseReferenceNumber: "JR/2025/001",
+        venue: "Cardiff Civil Justice Centre",
         judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
         hearingType: "Permission",
-        location: "Field House",
         additionalInformation: ""
       }
     ];
