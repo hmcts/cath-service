@@ -49,11 +49,9 @@
       <p class="govuk-body">{{ t.version }} {{ header.version }}</p>
     {% endif %}
 
-    <p class="govuk-body">
-      {% for line in header.addressLines %}
-        {{ line }}{% if not loop.last %}<br>{% endif %}
-      {% endfor %}
-    </p>
+    {% for line in header.addressLines %}
+      <p class="govuk-body govuk-!-margin-bottom-1">{{ line }}</p>
+    {% endfor %}
 
     {% if header.weekCommencing | length %}
       <p class="govuk-body">{{ t.preStatementPrefix }} {{ header.weekCommencing }}</p>

@@ -1,4 +1,4 @@
-import { formatContentDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
+import { formatContentDate } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
 import type {
@@ -20,12 +20,7 @@ export async function renderCrownFirmListData(jsonData: CrownFirmListData, optio
   const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || FirmList.CrownCourt.CourtHouseName;
 
   const publishedTime = FirmList.ListHeader.PublishedTime;
-  const lastUpdated = publishedTime
-    ? (() => {
-        const { date, time } = formatLastUpdatedDateTime(publishedTime, options.locale);
-        return `${date} at ${time}`;
-      })()
-    : "";
+  const lastUpdated = publishedTime ? formatCrownLastUpdated(publishedTime, options.locale) : "";
 
   const startDate = FirmList.ListHeader.StartDate;
   const endDate = FirmList.ListHeader.EndDate;
@@ -52,6 +47,17 @@ export async function renderCrownFirmListData(jsonData: CrownFirmListData, optio
   const groupedListData = buildGroupedListData(jsonData, options.locale);
 
   return { header, openJustice, listData: null, groupedListData };
+}
+
+function formatCrownLastUpdated(isoDateTime: string, locale: string): string {
+  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
+  const date = dt.toFormat("dd MMMM yyyy");
+  const hours = dt.hour;
+  const minutes = dt.minute;
+  const period = hours >= 12 ? "pm" : "am";
+  const hour12 = hours % 12 || 12;
+  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
+  return `${date} at ${hour12}${minuteStr}${period}`;
 }
 
 function formatAddress(court: CrownFirmListData["FirmList"]["CrownCourt"]): string[] {
@@ -103,6 +109,9 @@ function formatSittingTime(timeStr: string | undefined): string {
 }
 
 function formatCitizenName(name: CitizenName): string {
+  if (name.CitizenNameRequestedName) {
+    return [name.CitizenNameTitle, name.CitizenNameRequestedName].filter(Boolean).join(" ");
+  }
   const forenames = (name.CitizenNameForename ?? []).join(" ");
   return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }

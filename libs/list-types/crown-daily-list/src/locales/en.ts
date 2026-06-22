@@ -14,7 +14,7 @@ export const en = {
   sittingAt: "Sitting at",
   hearingTime: "Hearing time",
   caseRef: "Case reference",
-  defendant: "Defendant(s)",
+  defendant: "Defendant Name(s)",
   hearingType: "Hearing type",
   prosecutingAuthority: "Prosecuting authority",
   listingNotes: "Listing notes",

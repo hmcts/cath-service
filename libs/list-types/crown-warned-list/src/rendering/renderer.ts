@@ -88,6 +88,9 @@ function formatShortDate(dateStr: string | undefined): string {
 }
 
 function formatCitizenName(name: CitizenName): string {
+  if (name.CitizenNameRequestedName) {
+    return [name.CitizenNameTitle, name.CitizenNameRequestedName].filter(Boolean).join(" ");
+  }
   const forenames = (name.CitizenNameForename ?? []).join(" ");
   return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
