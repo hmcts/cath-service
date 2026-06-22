@@ -376,5 +376,41 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
+  },
+  {
+    id: 33,
+    name: "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Manchester Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-manchester-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 34,
+    name: "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Birmingham Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-birmingham-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 35,
+    name: "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Cardiff Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-cardiff-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
   }
 ];

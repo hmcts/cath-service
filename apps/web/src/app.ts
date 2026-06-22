@@ -23,8 +23,11 @@ import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-c
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
 import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
+import { moduleRoot as utiacJrBirminghamModuleRoot } from "@hmcts/utiac-jr-birmingham-daily-hearing-list/config";
+import { moduleRoot as utiacJrCardiffModuleRoot } from "@hmcts/utiac-jr-cardiff-daily-hearing-list/config";
 import { moduleRoot as utiacJrLeedsModuleRoot } from "@hmcts/utiac-jr-leeds-daily-hearing-list/config";
 import { moduleRoot as utiacJrLondonModuleRoot } from "@hmcts/utiac-jr-london-daily-hearing-list/config";
+import { moduleRoot as utiacJrManchesterModuleRoot } from "@hmcts/utiac-jr-manchester-daily-hearing-list/config";
 import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
   configureCookieManager,
@@ -112,7 +115,10 @@ export async function createApp(): Promise<Express> {
     wpafccWeeklyHearingListModuleRoot,
     utiacStatutoryAppealModuleRoot,
     utiacJrLondonModuleRoot,
-    utiacJrLeedsModuleRoot
+    utiacJrLeedsModuleRoot,
+    utiacJrManchesterModuleRoot,
+    utiacJrBirminghamModuleRoot,
+    utiacJrCardiffModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
