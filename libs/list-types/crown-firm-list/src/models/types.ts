@@ -3,6 +3,7 @@ export interface CitizenName {
   CitizenNameForename?: string[];
   CitizenNameSurname?: string;
   CitizenNameRequestedName?: string;
+  CitizenNameSuffix?: string;
 }
 
 export interface PersonalDetails {
@@ -15,7 +16,13 @@ export interface PersonalDetails {
 }
 
 export interface SolicitorParty {
-  Person?: CitizenName;
+  Person?: {
+    PersonalDetails?: {
+      Name: CitizenName;
+      MaskedName?: string;
+      IsMasked?: string;
+    };
+  };
   Organisation?: {
     OrganisationName?: string;
   };

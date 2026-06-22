@@ -436,8 +436,13 @@ describe("renderCrownFirmListData", () => {
                               {
                                 Party: {
                                   Person: {
-                                    CitizenNameForename: ["Jane"],
-                                    CitizenNameSurname: "Counsel"
+                                    PersonalDetails: {
+                                      Name: {
+                                        CitizenNameForename: ["Jane"],
+                                        CitizenNameSurname: "Counsel"
+                                      },
+                                      IsMasked: "no"
+                                    }
                                   }
                                 }
                               }
@@ -737,7 +742,12 @@ describe("renderCrownFirmListData", () => {
                             Solicitor: [
                               {
                                 Party: {
-                                  Person: {}
+                                  Person: {
+                                    PersonalDetails: {
+                                      Name: {},
+                                      IsMasked: "no"
+                                    }
+                                  }
                                 }
                               }
                             ]
@@ -804,7 +814,7 @@ describe("renderCrownFirmListData", () => {
       locale: "en"
     });
 
-    expect(result.groupedListData[0].sittings[0].formattedJudiciaries).toBe("Mr TestRequestedName");
+    expect(result.groupedListData[0].sittings[0].formattedJudiciaries).toBe("TestRequestedName");
   });
 
   it("should use CitizenNameRequestedName for defendant when present", async () => {
@@ -853,6 +863,6 @@ describe("renderCrownFirmListData", () => {
     });
 
     const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
-    expect(caseItem.defendants).toBe("Ms RequestedName");
+    expect(caseItem.defendants).toBe("RequestedName");
   });
 });

@@ -46,10 +46,10 @@
       <div class="court-house-info">
         <p><strong>{{ dayGroup.courtHouseInfo.name }}</strong></p>
         {% for line in dayGroup.courtHouseInfo.addressLines %}
-          <p>{{ line }}</p>
+          <p><strong>{{ line }}</strong></p>
         {% endfor %}
         {% if dayGroup.courtHouseInfo.phone | length %}
-          <p>{{ dayGroup.courtHouseInfo.phone }}</p>
+          <p><strong>{{ dayGroup.courtHouseInfo.phone }}</strong></p>
         {% endif %}
       </div>
 

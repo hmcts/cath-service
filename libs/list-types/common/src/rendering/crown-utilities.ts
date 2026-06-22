@@ -71,28 +71,49 @@ export function formatPublicationDateTime(isoDateTime: string, locale: string): 
   return `${dateStr} at ${hour12}${minuteStr}${period}`;
 }
 
-interface PddaPersonalDetailsLike {
-  IsMasked: "yes" | "no";
-  MaskedName?: string;
-  Name: { CitizenNameForename?: string[]; CitizenNameSurname?: string };
+export interface PddaCitizenName {
+  CitizenNameTitle?: string;
+  CitizenNameForename?: string[];
+  CitizenNameSurname?: string;
+  CitizenNameRequestedName?: string;
+  CitizenNameSuffix?: string;
+}
+
+export function formatPddaCitizenName(name: PddaCitizenName): string {
+  if (name.CitizenNameRequestedName) {
+    return name.CitizenNameRequestedName;
+  }
+  const forenames = (name.CitizenNameForename ?? []).join(" ");
+  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname, name.CitizenNameSuffix].filter(Boolean).join(" ");
+}
+
+export function formatPddaDefendantName(personalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "yes" | "no" }): string {
+  if (personalDetails.IsMasked === "yes" && !personalDetails.Name.CitizenNameRequestedName && personalDetails.MaskedName) {
+    return personalDetails.MaskedName;
+  }
+  return formatPddaCitizenName(personalDetails.Name);
+}
+
+export function formatPddaSittingTime(timeStr: string | undefined): string {
+  if (!timeStr) return "";
+  const parts = timeStr.split(":");
+  if (parts.length < 2) return timeStr;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return timeStr;
+  const ampm = hours >= 12 ? "pm" : "am";
+  const displayHours = hours % 12 || 12;
+  if (minutes === 0) return `${displayHours}${ampm}`;
+  return `${displayHours}:${String(minutes).padStart(2, "0")}${ampm}`;
 }
 
 interface PddaSittingLike {
   Hearings?: Array<{
-    Defendants?: Array<{ PersonalDetails: PddaPersonalDetailsLike }>;
+    Defendants?: Array<{ PersonalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "yes" | "no" } }>;
     HearingDetails: { HearingDescription?: string; HearingType?: string };
     CaseNumber: string;
     Prosecution?: { ProsecutingAuthority?: string };
   }>;
-}
-
-function formatPddaDefendantName(personalDetails: PddaPersonalDetailsLike): string {
-  if (personalDetails.IsMasked === "yes" && personalDetails.MaskedName) {
-    return personalDetails.MaskedName;
-  }
-  const name = personalDetails.Name;
-  const forenames = (name.CitizenNameForename ?? []).join(" ");
-  return [forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
 }
 
 export function extractPddaSittingsSummary(courtLists: Array<{ Sittings: PddaSittingLike[] }>): CaseSummary[] {

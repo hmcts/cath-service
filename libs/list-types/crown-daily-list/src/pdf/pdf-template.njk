@@ -43,15 +43,15 @@
     {% set courtHouse = courtList.courtHouse %}
     <div class="court-section">
       <h2>{{ courtHouse.courtHouseName }}</h2>
-      {% if courtHouse.courtHouseAddressLines | length %}
+      {% if courtHouse.courtHouseAddressLines | length or courtHouse.courtHousePhone | length %}
         <div class="address">
           {% for line in courtHouse.courtHouseAddressLines %}
-            <p>{{ line }}</p>
+            <p><strong>{{ line }}</strong></p>
           {% endfor %}
+          {% if courtHouse.courtHousePhone | length %}
+            <p><strong>{{ courtHouse.courtHousePhone }}</strong></p>
+          {% endif %}
         </div>
-      {% endif %}
-      {% if courtHouse.courtHousePhone | length %}
-        <p class="address">{{ courtHouse.courtHousePhone }}</p>
       {% endif %}
 
       {% for courtRoom in courtHouse.courtRoom %}

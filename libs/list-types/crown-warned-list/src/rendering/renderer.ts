@@ -1,7 +1,7 @@
-import { formatContentDate } from "@hmcts/list-types-common";
+import { formatContentDate, formatCrownLastUpdated, formatPddaDefendantName } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
-import type { CitizenName, CrownWarnedCaseRow, CrownWarnedListData, GroupedHearingCategory, PddaCase, PddaDefendant, RenderOptions } from "../models/types.js";
+import type { CrownWarnedCaseRow, CrownWarnedListData, GroupedHearingCategory, PddaCase, PddaDefendant, RenderOptions } from "../models/types.js";
 
 export const TO_BE_ALLOCATED_KEY = "TO_BE_ALLOCATED";
 const CUSTODY_STATUSES = ["On remand", "In custody", "In care"];
@@ -21,7 +21,7 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     locationName,
     addressLines: formatAddress(address),
     dateRange,
-    lastUpdated: formatLongDate(WarnedList.ListHeader.PublishedTime, options.locale),
+    lastUpdated: WarnedList.ListHeader.PublishedTime ? formatCrownLastUpdated(WarnedList.ListHeader.PublishedTime, options.locale) : "",
     weekCommencing: formatContentDate(options.contentDate, options.locale),
     version: WarnedList.ListHeader.Version || ""
   };
@@ -91,19 +91,8 @@ function formatShortDate(dateStr: string | undefined): string {
   return dt.toFormat("dd/MM/yyyy");
 }
 
-function formatCitizenName(name: CitizenName): string {
-  if (name.CitizenNameRequestedName) {
-    return [name.CitizenNameTitle, name.CitizenNameRequestedName].filter(Boolean).join(" ");
-  }
-  const forenames = (name.CitizenNameForename ?? []).join(" ");
-  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
-}
-
 function formatDefendantName(defendant: PddaDefendant): string {
-  if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
-    return defendant.PersonalDetails.MaskedName;
-  }
-  return formatCitizenName(defendant.PersonalDetails.Name);
+  return formatPddaDefendantName(defendant.PersonalDetails);
 }
 
 function isDefendantInCustody(defendant: PddaDefendant): boolean {

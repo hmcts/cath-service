@@ -46,6 +46,16 @@ describe("renderCrownWarnedListData", () => {
     expect(result.header.version).toBe("1.0");
   });
 
+  it("should format lastUpdated with date and time from PublishedTime", async () => {
+    const result = await renderCrownWarnedListData(baseInput, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
+  });
+
   it("should set weekCommencing from contentDate option", async () => {
     const result = await renderCrownWarnedListData(baseInput, {
       locationId: "102",
@@ -635,6 +645,54 @@ describe("renderCrownWarnedListData", () => {
     expect(group?.cases[0].defendants).toBe("Restricted");
   });
 
+  it("should use CitizenNameRequestedName over MaskedName when IsMasked is yes and RequestedName is present", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithoutFixedDate: [
+              {
+                Fixture: [
+                  {
+                    Cases: [
+                      {
+                        CaseNumber: "T20250041",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: {
+                                CitizenNameForename: ["Real"],
+                                CitizenNameSurname: "Name",
+                                CitizenNameRequestedName: "TestDefendantRequestedName"
+                              },
+                              MaskedName: "TestMaskedName2",
+                              IsMasked: "yes" as const
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
+    expect(group?.cases[0].defendants).toBe("TestDefendantRequestedName");
+  });
+
   it("should use CitizenNameRequestedName for defendant when present", async () => {
     const input = {
       ...baseInput,
@@ -682,7 +740,7 @@ describe("renderCrownWarnedListData", () => {
     });
 
     const group = result.groupedCategories.find((g) => g.category === "For Trial");
-    expect(group?.cases[0].defendants).toBe("Mr RequestedName");
+    expect(group?.cases[0].defendants).toBe("RequestedName");
   });
 
   it("should place a case in multiple categories when it has multiple HearingDescriptions", async () => {

@@ -281,6 +281,53 @@ describe("renderCrownDailyListData", () => {
     expect(caseItem.defendants).toBe("Defendant A");
   });
 
+  it("should use CitizenNameRequestedName over MaskedName when IsMasked is yes and RequestedName is present", async () => {
+    const input = {
+      ...baseInput,
+      DailyList: {
+        ...baseInput.DailyList,
+        CourtLists: [
+          {
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: {},
+                    CaseNumber: "T20250003",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: {
+                            CitizenNameForename: ["John"],
+                            CitizenNameSurname: "Smith",
+                            CitizenNameRequestedName: "RequestedName"
+                          },
+                          MaskedName: "Defendant A",
+                          IsMasked: "yes" as const
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownDailyListData(input, {
+      locationId: "100",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.defendants).toBe("RequestedName");
+  });
+
   it("should format judiciary names from Judge and Justice[]", async () => {
     const input = {
       ...baseInput,
@@ -373,7 +420,7 @@ describe("renderCrownDailyListData", () => {
     });
 
     const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
-    expect(session.formattedJudiciaries).toBe("HHJ JudgeRequested");
+    expect(session.formattedJudiciaries).toBe("JudgeRequested");
   });
 
   it("should append CitizenNameSuffix when present", async () => {

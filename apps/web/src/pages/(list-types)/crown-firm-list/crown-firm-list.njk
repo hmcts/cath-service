@@ -91,7 +91,7 @@
           <h2 class="govuk-heading-l">{{ dayGroup.day }}</h2>
           <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ dayGroup.courtHouseInfo.name }}</p>
           {% for line in dayGroup.courtHouseInfo.addressLines %}
-            <p class="govuk-body govuk-!-margin-bottom-1">{{ line }}</p>
+            <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ line }}</p>
           {% endfor %}
           {% if dayGroup.courtHouseInfo.phone | length %}
             <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ dayGroup.courtHouseInfo.phone }}</p>

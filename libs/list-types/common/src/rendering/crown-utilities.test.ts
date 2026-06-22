@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { createPartyDetails, extractPddaSittingsSummary, formatContentDate, formatPublicationDateTime, formatTime } from "./crown-utilities.js";
+import {
+  createPartyDetails,
+  extractPddaSittingsSummary,
+  formatContentDate,
+  formatPddaCitizenName,
+  formatPddaDefendantName,
+  formatPddaSittingTime,
+  formatPublicationDateTime,
+  formatTime
+} from "./crown-utilities.js";
 
 describe("createPartyDetails", () => {
   it("should return individual full name with title, forenames, middle name, and surname", () => {

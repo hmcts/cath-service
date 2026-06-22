@@ -1,7 +1,6 @@
-import { formatContentDate, formatCrownLastUpdated } from "@hmcts/list-types-common";
+import { formatContentDate, formatCrownLastUpdated, formatPddaCitizenName, formatPddaDefendantName, formatPddaSittingTime } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import type {
-  CitizenName,
   CrownDailyCaseRendered,
   CrownDailyCourtRoomRendered,
   CrownDailyHearingRendered,
@@ -106,7 +105,7 @@ function renderSession(sitting: PddaSitting): CrownDailySessionRendered {
 
 function renderSitting(sitting: PddaSitting): CrownDailySittingRendered {
   return {
-    time: formatSittingTime(sitting.SittingAt),
+    time: formatPddaSittingTime(sitting.SittingAt),
     hearing: (sitting.Hearings ?? []).map(renderHearing)
   };
 }
@@ -131,43 +130,17 @@ function renderCase(hearing: PddaHearing): CrownDailyCaseRendered {
   };
 }
 
-function formatSittingTime(timeStr: string | undefined): string {
-  if (!timeStr) return "";
-  const parts = timeStr.split(":");
-  if (parts.length < 2) return timeStr;
-  const hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return timeStr;
-  const ampm = hours >= 12 ? "pm" : "am";
-  const displayHours = hours % 12 || 12;
-  if (minutes === 0) {
-    return `${displayHours}${ampm}`;
-  }
-  return `${displayHours}:${String(minutes).padStart(2, "0")}${ampm}`;
-}
-
-function formatCitizenName(name: CitizenName): string {
-  if (name.CitizenNameRequestedName) {
-    return [name.CitizenNameTitle, name.CitizenNameRequestedName, name.CitizenNameSuffix].filter(Boolean).join(" ");
-  }
-  const forenames = (name.CitizenNameForename ?? []).join(" ");
-  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname, name.CitizenNameSuffix].filter(Boolean).join(" ");
-}
-
 function formatJudiciary(judiciary: PddaJudiciary): string {
   const names: string[] = [];
-  const judgeName = formatCitizenName(judiciary.Judge).trim();
+  const judgeName = formatPddaCitizenName(judiciary.Judge).trim();
   if (judgeName) names.push(judgeName);
   for (const justice of judiciary.Justice ?? []) {
-    const justiceName = formatCitizenName(justice).trim();
+    const justiceName = formatPddaCitizenName(justice).trim();
     if (justiceName) names.push(justiceName);
   }
   return names.join(", ");
 }
 
 function formatDefendantName(defendant: PddaDefendant): string {
-  if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
-    return defendant.PersonalDetails.MaskedName;
-  }
-  return formatCitizenName(defendant.PersonalDetails.Name);
+  return formatPddaDefendantName(defendant.PersonalDetails);
 }

@@ -32,8 +32,11 @@ export const PDF_BASE_STYLES = `
     .bold { font-weight: 700; }
     .header-date { margin-bottom: 5px; }
     .address { margin-bottom: 15px; }
+    .address p { margin-bottom: 0; }
     .location { margin-bottom: 15px; }
     .location p { margin-bottom: 0; }
+    .court-house-info { margin-bottom: 15px; }
+    .court-house-info p { margin-bottom: 0; }
     .info-box {
       background-color: #f3f2f1;
       padding: 15px;

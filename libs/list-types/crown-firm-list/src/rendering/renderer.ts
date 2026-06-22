@@ -1,8 +1,7 @@
-import { formatContentDate, formatCrownLastUpdated } from "@hmcts/list-types-common";
+import { formatContentDate, formatCrownLastUpdated, formatPddaCitizenName, formatPddaDefendantName, formatPddaSittingTime } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
 import type {
-  CitizenName,
   CrownFirmCaseRendered,
   CrownFirmDaySitting,
   CrownFirmGroupedDay,
@@ -84,43 +83,19 @@ function formatCourtHouseInfo(courtHouse: PddaCourtHouse) {
   };
 }
 
-function formatSittingTime(timeStr: string | undefined): string {
-  if (!timeStr) return "";
-  const parts = timeStr.split(":");
-  if (parts.length < 2) return timeStr;
-  const hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return timeStr;
-  const ampm = hours >= 12 ? "pm" : "am";
-  const displayHours = hours % 12 || 12;
-  if (minutes === 0) return `${displayHours}${ampm}`;
-  return `${displayHours}:${String(minutes).padStart(2, "0")}${ampm}`;
-}
-
-function formatCitizenName(name: CitizenName): string {
-  if (name.CitizenNameRequestedName) {
-    return [name.CitizenNameTitle, name.CitizenNameRequestedName].filter(Boolean).join(" ");
-  }
-  const forenames = (name.CitizenNameForename ?? []).join(" ");
-  return [name.CitizenNameTitle, forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
-}
-
 function formatJudiciary(judiciary: PddaJudiciary): string {
   const names: string[] = [];
-  const judge = formatCitizenName(judiciary.Judge).trim();
+  const judge = formatPddaCitizenName(judiciary.Judge).trim();
   if (judge) names.push(judge);
   for (const justice of judiciary.Justice ?? []) {
-    const name = formatCitizenName(justice).trim();
+    const name = formatPddaCitizenName(justice).trim();
     if (name) names.push(name);
   }
   return names.join(", ");
 }
 
 function formatDefendantName(defendant: PddaDefendant): string {
-  if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
-    return defendant.PersonalDetails.MaskedName;
-  }
-  return formatCitizenName(defendant.PersonalDetails.Name);
+  return formatPddaDefendantName(defendant.PersonalDetails);
 }
 
 function extractRepresentative(defendants: PddaDefendant[]): string {
@@ -130,8 +105,8 @@ function extractRepresentative(defendants: PddaDefendant[]): string {
       for (const solicitor of counsel.Solicitor ?? []) {
         if (solicitor.Party?.Organisation?.OrganisationName) {
           reps.push(solicitor.Party.Organisation.OrganisationName);
-        } else if (solicitor.Party?.Person) {
-          const name = formatCitizenName(solicitor.Party.Person);
+        } else if (solicitor.Party?.Person?.PersonalDetails?.Name) {
+          const name = formatPddaCitizenName(solicitor.Party.Person.PersonalDetails.Name);
           if (name) reps.push(name);
         }
       }
@@ -169,7 +144,7 @@ function buildGroupedListData(jsonData: CrownFirmListData, locale: string): Crow
       const daySitting: CrownFirmDaySitting = {
         courtRoomName: String(sitting.CourtRoomNumber),
         formattedJudiciaries: formatJudiciary(sitting.Judiciary),
-        time: formatSittingTime(sitting.SittingAt),
+        time: formatPddaSittingTime(sitting.SittingAt),
         hearing: (sitting.Hearings ?? []).map(renderHearing)
       };
 
