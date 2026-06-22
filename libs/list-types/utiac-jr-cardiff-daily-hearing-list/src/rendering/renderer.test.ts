@@ -1,0 +1,135 @@
+import { describe, expect, it } from "vitest";
+import type { UtiacJrCardiffHearingList } from "../models/types.js";
+import { renderUtiacJrCardiffDailyHearingListData } from "./renderer.js";
+
+describe("renderUtiacJrCardiffDailyHearingListData", () => {
+  it("should render hearing list with formatted display date", () => {
+    // Arrange
+    const hearingList: UtiacJrCardiffHearingList = [
+      {
+        venue: "Cardiff Civil Justice Centre",
+        judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
+        hearingType: "Permission",
+        additionalInformation: ""
+      }
+    ];
+
+    const options = {
+      locale: "en",
+      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      displayFrom: new Date(2025, 0, 15),
+      lastReceivedDate: "2025-01-14T09:55:00Z",
+      listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"
+    };
+
+    // Act
+    const result = renderUtiacJrCardiffDailyHearingListData(hearingList, options);
+
+    // Assert
+    expect(result.header.listTitle).toBe("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List");
+    expect(result.header.listForDate).toBe("15 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("14 January 2025");
+    expect(result.header.lastUpdatedTime).toContain("am");
+
+    expect(result.hearings).toHaveLength(1);
+    expect(result.hearings[0].venue).toBe("Cardiff Civil Justice Centre");
+    expect(result.hearings[0].judges).toBe("Judge Smith");
+    expect(result.hearings[0].hearingTime).toBe("10:00am");
+    expect(result.hearings[0].caseReferenceNumber).toBe("JR/2025/001");
+    expect(result.hearings[0].caseTitle).toBe("Smith v Secretary of State");
+    expect(result.hearings[0].hearingType).toBe("Permission");
+    expect(result.hearings[0].additionalInformation).toBe("");
+  });
+
+  it("should render multiple hearings", () => {
+    // Arrange
+    const hearingList: UtiacJrCardiffHearingList = [
+      {
+        venue: "Cardiff Civil Justice Centre",
+        judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
+        hearingType: "Permission",
+        additionalInformation: ""
+      },
+      {
+        venue: "Cardiff Civil Justice Centre",
+        judges: "Judge Brown",
+        hearingTime: "2:00pm",
+        caseReferenceNumber: "JR/2025/002",
+        caseTitle: "Brown v Home Office",
+        hearingType: "Full hearing",
+        additionalInformation: "Remote"
+      }
+    ];
+
+    const options = {
+      locale: "en",
+      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      displayFrom: new Date(2025, 0, 15),
+      lastReceivedDate: "2025-01-14T09:55:00Z",
+      listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"
+    };
+
+    // Act
+    const result = renderUtiacJrCardiffDailyHearingListData(hearingList, options);
+
+    // Assert
+    expect(result.hearings).toHaveLength(2);
+    expect(result.hearings[0].caseTitle).toBe("Smith v Secretary of State");
+    expect(result.hearings[1].caseTitle).toBe("Brown v Home Office");
+  });
+
+  it("should handle empty hearing list", () => {
+    // Arrange
+    const hearingList: UtiacJrCardiffHearingList = [];
+
+    const options = {
+      locale: "en",
+      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      displayFrom: new Date(2025, 0, 15),
+      lastReceivedDate: "2025-01-14T09:55:00Z",
+      listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"
+    };
+
+    // Act
+    const result = renderUtiacJrCardiffDailyHearingListData(hearingList, options);
+
+    // Assert
+    expect(result.hearings).toHaveLength(0);
+    expect(result.header.listTitle).toBe("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List");
+  });
+
+  it("should format PM times correctly", () => {
+    // Arrange
+    const hearingList: UtiacJrCardiffHearingList = [
+      {
+        venue: "Cardiff Civil Justice Centre",
+        judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
+        hearingType: "Permission",
+        additionalInformation: ""
+      }
+    ];
+
+    const options = {
+      locale: "en",
+      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      displayFrom: new Date(2025, 0, 15),
+      lastReceivedDate: "2025-01-14T14:30:00Z",
+      listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"
+    };
+
+    // Act
+    const result = renderUtiacJrCardiffDailyHearingListData(hearingList, options);
+
+    // Assert
+    expect(result.header.lastUpdatedTime).toBe("2:30pm");
+  });
+});
