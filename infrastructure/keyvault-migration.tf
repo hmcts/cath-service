@@ -10,6 +10,14 @@ data "azurerm_key_vault" "old_kv" {
   resource_group_name = "${var.product}-ss-kv-${var.env}-rg"
 }
 
+resource "azurerm_key_vault_access_policy" "old_kv_ci_read" {
+  key_vault_id = data.azurerm_key_vault.old_kv.id
+  tenant_id    = var.tenant_id
+  object_id    = var.ci_service_principal_object_id
+
+  secret_permissions = ["Get", "List"]
+}
+
 locals {
   migrated_secrets = [
     "session-secret",
@@ -39,6 +47,8 @@ data "azurerm_key_vault_secret" "old" {
   for_each     = toset(local.migrated_secrets)
   name         = each.key
   key_vault_id = data.azurerm_key_vault.old_kv.id
+
+  depends_on = [azurerm_key_vault_access_policy.old_kv_ci_read]
 }
 
 resource "azurerm_key_vault_secret" "migrated" {
