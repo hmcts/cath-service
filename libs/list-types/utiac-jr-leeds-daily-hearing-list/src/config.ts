@@ -7,3 +7,5 @@ const __dirname = path.dirname(__filename);
 export const moduleRoot = __dirname;
 export const assets = path.join(__dirname, "assets/");
 export const schemaPath = path.join(__dirname, "schemas/utiac-jr-leeds-daily-hearing-list.json");
+// Shared PDF template directory used by Manchester, Birmingham, and Cardiff variants
+export const pdfTemplateDir = path.join(__dirname, "pdf");

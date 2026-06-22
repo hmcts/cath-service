@@ -1,11 +1,1 @@
-export interface UtiacJrCardiffHearing {
-  venue: string;
-  judges: string;
-  hearingTime: string;
-  caseReferenceNumber: string;
-  caseTitle: string;
-  hearingType: string;
-  additionalInformation: string;
-}
-
-export type UtiacJrCardiffHearingList = UtiacJrCardiffHearing[];
+export type { UtiacJrHearing as UtiacJrCardiffHearing, UtiacJrHearingList as UtiacJrCardiffHearingList } from "@hmcts/utiac-jr-leeds-daily-hearing-list";

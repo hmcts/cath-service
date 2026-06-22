@@ -43,3 +43,6 @@ export function renderUtiacJrLeedsDailyHearingListData(hearingList: UtiacJrLeeds
     hearings: renderedHearings
   };
 }
+
+// Shared alias used by Manchester, Birmingham, and Cardiff variants
+export const renderUtiacJrDailyHearingListData = renderUtiacJrLeedsDailyHearingListData;

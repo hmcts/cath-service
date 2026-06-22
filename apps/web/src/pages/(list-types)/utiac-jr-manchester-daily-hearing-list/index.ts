@@ -84,7 +84,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
 
-    res.render("utiac-jr-manchester-daily-hearing-list", {
+    res.render("utiac-jr-daily-hearing-list", {
       en,
       cy,
       t,

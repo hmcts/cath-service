@@ -1,5 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   type BasePdfGenerationOptions,
   configureNunjucks,
@@ -11,11 +9,9 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { pdfTemplateDir } from "@hmcts/utiac-jr-leeds-daily-hearing-list/config";
 import type { UtiacJrManchesterHearingList } from "../models/types.js";
 import { renderUtiacJrManchesterDailyHearingListData } from "../rendering/renderer.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<UtiacJrManchesterHearingList> {
   displayFrom: Date;
@@ -39,7 +35,7 @@ export async function generateUtiacJrManchesterDailyHearingListPdf(options: PdfG
 
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
-    const env = configureNunjucks(__dirname);
+    const env = configureNunjucks(pdfTemplateDir);
     const html = env.render("pdf-template.njk", {
       header: renderedData.header,
       hearings: renderedData.hearings,

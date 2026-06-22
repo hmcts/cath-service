@@ -9,3 +9,7 @@ export interface UtiacJrLeedsHearing {
 }
 
 export type UtiacJrLeedsHearingList = UtiacJrLeedsHearing[];
+
+// Shared aliases used by Manchester, Birmingham, and Cardiff variants
+export type UtiacJrHearing = UtiacJrLeedsHearing;
+export type UtiacJrHearingList = UtiacJrLeedsHearingList;

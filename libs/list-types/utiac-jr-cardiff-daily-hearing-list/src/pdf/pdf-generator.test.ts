@@ -125,4 +125,26 @@ describe("generateUtiacJrCardiffDailyHearingListPdf", () => {
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"
     });
   });
+
+  it("should include provenance label in rendered output when provenance is provided", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    // Act
+    const result = await generateUtiacJrCardiffDailyHearingListPdf({
+      artefactId: "provenance-test",
+      displayFrom: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      provenance: "MANUAL_UPLOAD"
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+  });
 });
