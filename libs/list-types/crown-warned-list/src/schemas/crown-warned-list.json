@@ -49,15 +49,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Root",
   "type": "object",
-  "required": ["WarnedList"],
+  "required": [
+    "WarnedList"
+  ],
   "properties": {
     "WarnedList": {
       "type": "object",
-      "required": ["DocumentID", "ListHeader", "CrownCourt", "CourtLists"],
+      "required": [
+        "DocumentID",
+        "ListHeader",
+        "CrownCourt",
+        "CourtLists"
+      ],
       "properties": {
         "DocumentID": {
           "type": "object",
-          "required": ["UniqueID", "DocumentType"],
+          "required": [
+            "UniqueID",
+            "DocumentType"
+          ],
           "properties": {
             "UniqueID": {
               "type": "string"
@@ -69,7 +79,11 @@
         },
         "ListHeader": {
           "type": "object",
-          "required": ["StartDate", "Version", "PublishedTime"],
+          "required": [
+            "StartDate",
+            "Version",
+            "PublishedTime"
+          ],
           "properties": {
             "StartDate": {
               "type": "string",
@@ -90,11 +104,19 @@
         },
         "CrownCourt": {
           "type": "object",
-          "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+          "required": [
+            "CourtHouseType",
+            "CourtHouseCode",
+            "CourtHouseName"
+          ],
           "properties": {
             "CourtHouseType": {
               "type": "string",
-              "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+              "enum": [
+                "Crown Court",
+                "Magistrates Court",
+                "Youth Court"
+              ]
             },
             "CourtHouseCode": { "type": "integer" },
             "CourtHouseName": {
@@ -119,15 +141,25 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["CourtHouse"],
+            "required": [
+              "CourtHouse"
+            ],
             "properties": {
               "CourtHouse": {
                 "type": "object",
-                "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+                "required": [
+                  "CourtHouseType",
+                  "CourtHouseCode",
+                  "CourtHouseName"
+                ],
                 "properties": {
                   "CourtHouseType": {
                     "type": "string",
-                    "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+                    "enum": [
+                      "Crown Court",
+                      "Magistrates Court",
+                      "Youth Court"
+                    ]
                   },
                   "CourtHouseCode": { "type": "integer" },
                   "CourtHouseShortName": {
@@ -148,7 +180,9 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["Fixture"],
+                  "required": [
+                    "Fixture"
+                  ],
                   "properties": {
                     "HearingType": {
                       "type": "string",
@@ -171,7 +205,11 @@
                             "type": "array",
                             "items": {
                               "type": "object",
-                              "required": ["CaseNumber", "Defendants", "CaseNumberCaTH"],
+                              "required": [
+                                "CaseNumber",
+                                "Defendants",
+                                "CaseNumberCaTH"
+                              ],
                               "properties": {
                                 "CaseNumber": { "type": "string" },
                                 "CaseNumberCaTH": { "type": "string" },
@@ -183,7 +221,9 @@
                                   "type": "array",
                                   "items": {
                                     "type": "object",
-                                    "required": ["HearingDescription"],
+                                    "required": [
+                                      "HearingDescription"
+                                    ],
                                     "properties": {
                                       "HearingDescription": {
                                         "type": "string"
@@ -210,11 +250,16 @@
                                   "type": "array",
                                   "items": {
                                     "type": "object",
-                                    "required": ["PersonalDetails"],
+                                    "required": [
+                                      "PersonalDetails"
+                                    ],
                                     "properties": {
                                       "PersonalDetails": {
                                         "type": "object",
-                                        "required": ["Name", "IsMasked"],
+                                        "required": [
+                                          "Name",
+                                          "IsMasked"
+                                        ],
                                         "properties": {
                                           "Name": {
                                             "type": "object",
@@ -250,7 +295,10 @@
                                           },
                                           "IsMasked": {
                                             "type": "string",
-                                            "enum": ["yes", "no"]
+                                            "enum": [
+                                              "yes",
+                                              "no"
+                                            ]
                                           },
                                           "DateOfBirth": {
                                             "type": "object",
@@ -277,7 +325,12 @@
                                           },
                                           "Sex": {
                                             "type": "string",
-                                            "enum": ["unknown", "male", "female", "indeterminate"]
+                                            "enum": [
+                                              "unknown",
+                                              "male",
+                                              "female",
+                                              "indeterminate"
+                                            ]
                                           },
                                           "Address": {
                                             "$ref": "#/$defs/Address"
@@ -295,7 +348,9 @@
                                       },
                                       "PrisonLocation": {
                                         "type": "object",
-                                        "required": ["Location"],
+                                        "required": [
+                                          "Location"
+                                        ],
                                         "properties": {
                                           "Location": {
                                             "type": "array",
@@ -307,7 +362,13 @@
                                       },
                                       "CustodyStatus": {
                                         "type": "string",
-                                        "enum": ["On bail", "On remand", "In care", "In custody", "Not applicable"]
+                                        "enum": [
+                                          "On bail",
+                                          "On remand",
+                                          "In care",
+                                          "In custody",
+                                          "Not applicable"
+                                        ]
                                       },
                                       "Counsel": {
                                         "type": "array",
@@ -324,7 +385,9 @@
                                                     "properties": {
                                                       "Organisation": {
                                                         "type": "object",
-                                                        "required": ["OrganisationName"],
+                                                        "required": [
+                                                          "OrganisationName"
+                                                        ],
                                                         "properties": {
                                                           "OrganisationName": {
                                                             "type": "string"
@@ -343,7 +406,9 @@
                                         "type": "array",
                                         "items": {
                                           "type": "object",
-                                          "required": ["OffenceStatement"],
+                                          "required": [
+                                            "OffenceStatement"
+                                          ],
                                           "properties": {
                                             "OffenceStatement": {
                                               "type": "string"
@@ -365,7 +430,9 @@
                                   "properties": {
                                     "ProsecutingOrganisation": {
                                       "type": "object",
-                                      "required": ["OrganisationName"],
+                                      "required": [
+                                        "OrganisationName"
+                                      ],
                                       "properties": {
                                         "OrganisationName": {
                                           "type": "string"
@@ -388,7 +455,9 @@
                                   "type": "array",
                                   "items": {
                                     "type": "object",
-                                    "required": ["CaseNumber"],
+                                    "required": [
+                                      "CaseNumber"
+                                    ],
                                     "properties": {
                                       "CaseNumber": {
                                         "type": "string"
@@ -432,7 +501,11 @@
                             "type": "array",
                             "items": {
                               "type": "object",
-                              "required": ["CaseNumber", "Defendants", "CaseNumberCaTH"],
+                              "required": [
+                                "CaseNumber",
+                                "Defendants",
+                                "CaseNumberCaTH"
+                              ],
                               "properties": {
                                 "CaseNumber": { "type": "string" },
                                 "CaseNumberCaTH": { "type": "string" },
@@ -475,7 +548,10 @@
                                     "properties": {
                                       "PersonalDetails": {
                                         "type": "object",
-                                        "required": ["Name", "IsMasked"],
+                                        "required": [
+                                          "Name",
+                                          "IsMasked"
+                                        ],
                                         "properties": {
                                           "Name": {
                                             "type": "object",
@@ -511,7 +587,10 @@
                                           },
                                           "IsMasked": {
                                             "type": "string",
-                                            "enum": ["yes", "no"]
+                                            "enum": [
+                                              "yes",
+                                              "no"
+                                            ]
                                           },
                                           "DateOfBirth": {
                                             "type": "object",
@@ -538,7 +617,12 @@
                                           },
                                           "Sex": {
                                             "type": "string",
-                                            "enum": ["unknown", "male", "female", "indeterminate"]
+                                            "enum": [
+                                              "unknown",
+                                              "male",
+                                              "female",
+                                              "indeterminate"
+                                            ]
                                           },
                                           "Address": {
                                             "$ref": "#/$defs/Address"
@@ -568,7 +652,13 @@
                                       },
                                       "CustodyStatus": {
                                         "type": "string",
-                                        "enum": ["On bail", "On remand", "In care", "In custody", "Not applicable"]
+                                        "enum": [
+                                          "On bail",
+                                          "On remand",
+                                          "In care",
+                                          "In custody",
+                                          "Not applicable"
+                                        ]
                                       },
                                       "Counsel": {
                                         "type": "array",
@@ -585,7 +675,9 @@
                                                     "properties": {
                                                       "Organisation": {
                                                         "type": "object",
-                                                        "required": ["OrganisationName"],
+                                                        "required": [
+                                                          "OrganisationName"
+                                                        ],
                                                         "properties": {
                                                           "OrganisationName": {
                                                             "type": "string"
@@ -604,7 +696,9 @@
                                         "type": "array",
                                         "items": {
                                           "type": "object",
-                                          "required": ["OffenceStatement"],
+                                          "required": [
+                                            "OffenceStatement"
+                                          ],
                                           "properties": {
                                             "OffenceStatement": {
                                               "type": "string"
@@ -626,7 +720,9 @@
                                   "properties": {
                                     "ProsecutingOrganisation": {
                                       "type": "object",
-                                      "required": ["OrganisationName"],
+                                      "required": [
+                                        "OrganisationName"
+                                      ],
                                       "properties": {
                                         "OrganisationName": {
                                           "type": "string"
@@ -649,7 +745,9 @@
                                   "type": "array",
                                   "items": {
                                     "type": "object",
-                                    "required": ["CaseNumber"],
+                                    "required": [
+                                      "CaseNumber"
+                                    ],
                                     "properties": {
                                       "CaseNumber": {
                                         "type": "string"
@@ -673,3 +771,4 @@
     }
   }
 }
+

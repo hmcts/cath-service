@@ -48,11 +48,19 @@
   "properties": {
     "FirmList": {
       "type": "object",
-      "required": ["DocumentID", "ListHeader", "CrownCourt", "CourtLists"],
+      "required": [
+        "DocumentID",
+        "ListHeader",
+        "CrownCourt",
+        "CourtLists"
+      ],
       "properties": {
         "DocumentID": {
           "type": "object",
-          "required": ["UniqueID", "DocumentType"],
+          "required": [
+            "UniqueID",
+            "DocumentType"
+          ],
           "properties": {
             "UniqueID": { "type": "string" },
             "DocumentType": { "type": "string" },
@@ -63,7 +71,11 @@
         },
         "ListHeader": {
           "type": "object",
-          "required": ["StartDate", "Version", "PublishedTime"],
+          "required": [
+            "StartDate",
+            "Version",
+            "PublishedTime"
+          ],
           "properties": {
             "StartDate": { "type": "string", "format": "date" },
             "EndDate": { "type": "string", "format": "date" },
@@ -73,11 +85,19 @@
         },
         "CrownCourt": {
           "type": "object",
-          "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+          "required": [
+            "CourtHouseType",
+            "CourtHouseCode",
+            "CourtHouseName"
+          ],
           "properties": {
             "CourtHouseType": {
               "type": "string",
-              "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+              "enum": [
+                "Crown Court",
+                "Magistrates Court",
+                "Youth Court"
+              ]
             },
             "CourtHouseCode": { "type": "integer" },
             "CourtHouseName": { "type": "string" },
@@ -91,16 +111,28 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["SittingDate", "CourtHouse", "Sittings"],
+            "required": [
+              "SittingDate",
+              "CourtHouse",
+              "Sittings"
+            ],
             "properties": {
               "SittingDate": { "type": "string", "format": "date" },
               "CourtHouse": {
                 "type": "object",
-                "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+                "required": [
+                  "CourtHouseType",
+                  "CourtHouseCode",
+                  "CourtHouseName"
+                ],
                 "properties": {
                   "CourtHouseType": {
                     "type": "string",
-                    "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+                    "enum": [
+                      "Crown Court",
+                      "Magistrates Court",
+                      "Youth Court"
+                    ]
                   },
                   "CourtHouseCode": { "type": "integer" },
                   "CourtHouseShortName": { "type": "string" },
@@ -115,7 +147,10 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["CourtRoomNumber", "Judiciary"],
+                  "required": [
+                    "CourtRoomNumber",
+                    "Judiciary"
+                  ],
                   "properties": {
                     "CourtRoomNumber": { "type": "integer" },
                     "SittingAt": { "type": "string", "format": "time" },
@@ -146,7 +181,12 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["HearingSequenceNumber", "HearingDetails", "CaseNumber", "CaseNumberCaTH"],
+                        "required": [
+                          "HearingSequenceNumber",
+                          "HearingDetails",
+                          "CaseNumber",
+                          "CaseNumberCaTH"
+                        ],
                         "properties": {
                           "HearingSequenceNumber": { "type": "integer" },
                           "HearingDetails": {
@@ -207,11 +247,19 @@
                           },
                           "CommittingCourt": {
                             "type": "object",
-                            "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+                            "required": [
+                              "CourtHouseType",
+                              "CourtHouseCode",
+                              "CourtHouseName"
+                            ],
                             "properties": {
                               "CourtHouseType": {
                                 "type": "string",
-                                "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+                                "enum": [
+                                  "Crown Court",
+                                  "Magistrates Court",
+                                  "Youth Court"
+                                ]
                               },
                               "CourtHouseCode": { "type": "integer" },
                               "CourtHouseShortName": { "type": "string" },
@@ -237,7 +285,7 @@
                                     "DateOfBirth": {
                                       "type": "object",
                                       "properties": {
-                                        "BirthDate": { "type": "string", "format": "date" },
+                                        "BirthDate": { "type": "string", "format": "date"},
                                         "VerifiedBy": {
                                           "type": "string",
                                           "enum": [
@@ -254,7 +302,12 @@
                                     "Age": { "type": "integer" },
                                     "Sex": {
                                       "type": "string",
-                                      "enum": ["unknown", "male", "female", "indeterminate"]
+                                      "enum": [
+                                        "unknown",
+                                        "male",
+                                        "female",
+                                        "indeterminate"
+                                      ]
                                     },
                                     "Address": {
                                       "$ref": "#/$defs/Address"
@@ -291,7 +344,10 @@
                                                       },
                                                       "IsMasked": {
                                                         "type": "string",
-                                                        "enum": ["yes", "no"]
+                                                        "enum": [
+                                                          "yes",
+                                                          "no"
+                                                        ]
                                                       },
                                                       "DateOfBirth": {
                                                         "type": "object",
@@ -315,7 +371,12 @@
                                                       },
                                                       "Sex": {
                                                         "type": "string",
-                                                        "enum": ["unknown", "male", "female", "indeterminate"]
+                                                        "enum": [
+                                                          "unknown",
+                                                          "male",
+                                                          "female",
+                                                          "indeterminate"
+                                                        ]
                                                       },
                                                       "Address": {
                                                         "$ref": "#/$defs/Address"
@@ -370,7 +431,11 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["HearingDetails", "CaseNumber", "CaseNumberCaTH"],
+            "required": [
+              "HearingDetails",
+              "CaseNumber",
+              "CaseNumberCaTH"
+            ],
             "properties": {
               "HearingDetails": {
                 "type": "object",
@@ -417,17 +482,31 @@
                   },
                   "ProsecutingAuthority": {
                     "type": "string",
-                    "enum": ["Crown Prosecution Service", "Customs and Excise", "Department of Trade and Industry", "Inland Revenue", "Other Prosecutor"]
+                    "enum": [
+                      "Crown Prosecution Service",
+                      "Customs and Excise",
+                      "Department of Trade and Industry",
+                      "Inland Revenue",
+                      "Other Prosecutor"
+                    ]
                   }
                 }
               },
               "CommittingCourt": {
                 "type": "object",
-                "required": ["CourtHouseType", "CourtHouseCode", "CourtHouseName"],
+                "required": [
+                  "CourtHouseType",
+                  "CourtHouseCode",
+                  "CourtHouseName"
+                ],
                 "properties": {
                   "CourtHouseType": {
                     "type": "string",
-                    "enum": ["Crown Court", "Magistrates Court", "Youth Court"]
+                    "enum": [
+                      "Crown Court",
+                      "Magistrates Court",
+                      "Youth Court"
+                    ]
                   },
                   "CourtHouseCode": { "type": "integer" },
                   "CourtHouseShortName": { "type": "string" },

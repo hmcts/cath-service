@@ -41,7 +41,7 @@
         "DateOfBirth": {
           "type": "object",
           "properties": {
-            "BirthDate": { "type": "string", "format": "date" },
+            "BirthDate": { "type": "string", "format": "date"},
             "VerifiedBy": {
               "type": "string",
               "enum": [
@@ -58,7 +58,12 @@
         "Age": { "type": "integer" },
         "Sex": {
           "type": "string",
-          "enum": ["unknown", "male", "female", "indeterminate"]
+          "enum": [
+            "unknown",
+            "male",
+            "female",
+            "indeterminate"
+          ]
         },
         "Address": {
           "$ref": "#/$defs/Address"
@@ -81,11 +86,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Root",
   "type": "object",
-  "required": ["DailyList"],
+  "required": [
+    "DailyList"
+  ],
   "properties": {
     "DailyList": {
       "type": "object",
-      "required": ["DocumentID", "ListHeader", "CrownCourt", "CourtLists"],
+      "required": [
+        "DocumentID",
+        "ListHeader",
+        "CrownCourt",
+        "CourtLists"
+      ],
       "properties": {
         "DocumentID": {
           "type": "object",
@@ -148,10 +160,13 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["CourtRoomNumber", "Judiciary"],
+                  "required": [
+                    "CourtRoomNumber",
+                    "Judiciary"
+                  ],
                   "properties": {
                     "CourtRoomNumber": { "type": "integer" },
-                    "SittingAt": { "type": "string", "format": "time" },
+                    "SittingAt": { "type": "string", "format": "time"},
                     "SittingPriority": {
                       "type": "string",
                       "enum": ["T", "F", "R"]
@@ -179,7 +194,12 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["HearingSequenceNumber", "HearingDetails", "CaseNumber", "CaseNumberCaTH"],
+                        "required": [
+                          "HearingSequenceNumber",
+                          "HearingDetails",
+                          "CaseNumber",
+                          "CaseNumberCaTH"
+                        ],
                         "properties": {
                           "HearingSequenceNumber": { "type": "integer" },
                           "HearingDetails": {
@@ -206,13 +226,11 @@
                               },
                               "ProsecutingAuthority": {
                                 "type": "string",
-                                "enum": [
-                                  "Crown Prosecution Service",
+                                "enum": ["Crown Prosecution Service",
                                   "Customs and Excise",
                                   "Department of Trade and Industry",
                                   "Inland Revenue",
-                                  "Other Prosecutor"
-                                ]
+                                  "Other Prosecutor"]
                               },
                               "Advocate": {
                                 "type": "object",
