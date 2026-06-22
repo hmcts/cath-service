@@ -106,11 +106,9 @@ jobs:
           chart: helm/${{ env.APPLICATION_NAME }}
           values-template: helm/${{ env.APPLICATION_NAME }}/values.preview.template.yaml
           subchart-paths: apps/*/helm
-          global-environment: preview
+          global-environment: aat
           business-area: Cross-Cutting
           timeout: 15m0s
-          set: |
-            global.enableKeyVaults=false
 
       - name: Deploy to AAT
         if: inputs.environment == 'aat'
