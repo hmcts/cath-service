@@ -18,8 +18,7 @@ describe("extractCaseSummary", () => {
         hearingTime: "10:00am",
         caseReferenceNumber: "WPAFCC/2025/001",
         caseName: "Smith v MOD",
-        judges: "Judge Smith",
-        members: "",
+        panel: "Judge Smith",
         modeOfHearing: "Remote",
         venue: "WPAFCC Hearing Centre",
         additionalInformation: ""
@@ -29,8 +28,7 @@ describe("extractCaseSummary", () => {
         hearingTime: "2:00pm",
         caseReferenceNumber: "WPAFCC/2025/002",
         caseName: "Brown v Armed Forces",
-        judges: "Judge Brown",
-        members: "Member Jones",
+        panel: "Judge Brown, Member Jones",
         modeOfHearing: "In person",
         venue: "WPAFCC Office",
         additionalInformation: ""
@@ -73,8 +71,7 @@ describe("extractCaseSummary", () => {
         hearingTime: "",
         caseReferenceNumber: "",
         caseName: "",
-        judges: "",
-        members: "",
+        panel: "",
         modeOfHearing: "",
         venue: "",
         additionalInformation: ""

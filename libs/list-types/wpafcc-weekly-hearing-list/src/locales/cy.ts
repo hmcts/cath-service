@@ -20,8 +20,7 @@ export const cy = {
     hearingTime: "[WELSH TRANSLATION REQUIRED: 'Hearing time']",
     caseReferenceNumber: "[WELSH TRANSLATION REQUIRED: 'Case reference number']",
     caseName: "[WELSH TRANSLATION REQUIRED: 'Case name']",
-    judges: "[WELSH TRANSLATION REQUIRED: 'Judge(s)']",
-    members: "[WELSH TRANSLATION REQUIRED: 'Member(s)']",
+    panel: "[WELSH TRANSLATION REQUIRED: 'Panel']",
     modeOfHearing: "[WELSH TRANSLATION REQUIRED: 'Mode of hearing']",
     venue: "[WELSH TRANSLATION REQUIRED: 'Venue']",
     additionalInformation: "Gwybodaeth ychwanegol"

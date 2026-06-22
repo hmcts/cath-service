@@ -28,8 +28,7 @@ export function renderWpafccWeeklyHearingListData(hearingList: WpafccWeeklyHeari
     hearingTime: hearing.hearingTime,
     caseReferenceNumber: hearing.caseReferenceNumber,
     caseName: hearing.caseName,
-    judges: hearing.judges,
-    members: hearing.members,
+    panel: hearing.panel,
     modeOfHearing: hearing.modeOfHearing,
     venue: hearing.venue,
     additionalInformation: hearing.additionalInformation

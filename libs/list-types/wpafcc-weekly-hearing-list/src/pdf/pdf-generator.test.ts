@@ -36,8 +36,7 @@ const mockHearingList = [
     hearingTime: "10:00am",
     caseReferenceNumber: "WPAFCC/2025/001",
     caseName: "Smith v MOD",
-    judges: "Judge Smith",
-    members: "",
+    panel: "Judge Smith",
     modeOfHearing: "Remote",
     venue: "WPAFCC Hearing Centre",
     additionalInformation: ""

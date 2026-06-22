@@ -36,16 +36,10 @@ export const WPAFCC_EXCEL_CONFIG: ExcelConverterConfig = {
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case name", rowNumber)]
     },
     {
-      header: "Judge(s)",
-      fieldName: "judges",
+      header: "Panel",
+      fieldName: "panel",
       required: true,
-      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge(s)", rowNumber)]
-    },
-    {
-      header: "Member(s)",
-      fieldName: "members",
-      required: false,
-      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Member(s)", rowNumber)]
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Panel", rowNumber)]
     },
     {
       header: "Mode of hearing",

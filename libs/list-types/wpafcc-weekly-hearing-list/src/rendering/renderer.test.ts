@@ -11,8 +11,7 @@ describe("renderWpafccWeeklyHearingListData", () => {
         hearingTime: "10:00am",
         caseReferenceNumber: "WPAFCC/2025/001",
         caseName: "A Vs B",
-        judges: "Judge Smith",
-        members: "Member Jones",
+        panel: "Judge Smith",
         modeOfHearing: "Remote",
         venue: "WPAFCC Hearing Centre",
         additionalInformation: "Remote hearing"
@@ -41,8 +40,7 @@ describe("renderWpafccWeeklyHearingListData", () => {
     expect(result.hearings[0].hearingTime).toBe("10:00am");
     expect(result.hearings[0].caseReferenceNumber).toBe("WPAFCC/2025/001");
     expect(result.hearings[0].caseName).toBe("A Vs B");
-    expect(result.hearings[0].judges).toBe("Judge Smith");
-    expect(result.hearings[0].members).toBe("Member Jones");
+    expect(result.hearings[0].panel).toBe("Judge Smith");
     expect(result.hearings[0].modeOfHearing).toBe("Remote");
     expect(result.hearings[0].venue).toBe("WPAFCC Hearing Centre");
     expect(result.hearings[0].additionalInformation).toBe("Remote hearing");
@@ -56,8 +54,7 @@ describe("renderWpafccWeeklyHearingListData", () => {
         hearingTime: "10:00am",
         caseReferenceNumber: "WPAFCC/2025/001",
         caseName: "A Vs B",
-        judges: "Judge Smith",
-        members: "",
+        panel: "Judge Smith",
         modeOfHearing: "Remote",
         venue: "WPAFCC Hearing Centre",
         additionalInformation: ""
@@ -67,8 +64,7 @@ describe("renderWpafccWeeklyHearingListData", () => {
         hearingTime: "2:00pm",
         caseReferenceNumber: "WPAFCC/2025/002",
         caseName: "C Vs D",
-        judges: "Judge Brown",
-        members: "Member Green",
+        panel: "Judge Brown, Member Green",
         modeOfHearing: "In person",
         venue: "WPAFCC Office",
         additionalInformation: "In person"
@@ -120,8 +116,7 @@ describe("renderWpafccWeeklyHearingListData", () => {
         hearingTime: "10:00am",
         caseReferenceNumber: "WPAFCC/2025/001",
         caseName: "A Vs B",
-        judges: "Judge Smith",
-        members: "",
+        panel: "Judge Smith",
         modeOfHearing: "Remote",
         venue: "WPAFCC Hearing Centre",
         additionalInformation: ""

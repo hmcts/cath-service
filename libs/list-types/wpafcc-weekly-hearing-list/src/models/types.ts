@@ -3,8 +3,7 @@ export interface WpafccWeeklyHearing {
   hearingTime: string;
   caseReferenceNumber: string;
   caseName: string;
-  judges: string;
-  members: string;
+  panel: string;
   modeOfHearing: string;
   venue: string;
   additionalInformation: string;

@@ -20,8 +20,7 @@ export const en = {
     hearingTime: "Hearing time",
     caseReferenceNumber: "Case reference number",
     caseName: "Case name",
-    judges: "Judge(s)",
-    members: "Member(s)",
+    panel: "Panel",
     modeOfHearing: "Mode of hearing",
     venue: "Venue",
     additionalInformation: "Additional information"
