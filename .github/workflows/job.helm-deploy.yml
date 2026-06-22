@@ -109,6 +109,8 @@ jobs:
           global-environment: preview
           business-area: Cross-Cutting
           timeout: 15m0s
+          set: |
+            global.enableKeyVaults=false
 
       - name: Deploy to AAT
         if: inputs.environment == 'aat'
