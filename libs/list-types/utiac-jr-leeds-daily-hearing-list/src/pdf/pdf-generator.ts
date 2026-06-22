@@ -1,5 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   type BasePdfGenerationOptions,
   configureNunjucks,
@@ -11,24 +9,22 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { pdfTemplateDir } from "../config.js";
 import type { UtiacJrLeedsHearingList } from "../models/types.js";
 import { renderUtiacJrLeedsDailyHearingListData } from "../rendering/renderer.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<UtiacJrLeedsHearingList> {
   displayFrom: Date;
 }
 
-export async function generateUtiacJrLeedsDailyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
+async function generatePdf(options: PdfGenerationOptions, listTitle: string): Promise<PdfGenerationResult> {
   try {
     const renderedData = renderUtiacJrLeedsDailyHearingListData(options.jsonData, {
       locale: options.locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
       displayFrom: options.displayFrom,
       lastReceivedDate: new Date().toISOString(),
-      listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
+      listTitle
     });
 
     const translations = await loadTranslations(
@@ -39,7 +35,7 @@ export async function generateUtiacJrLeedsDailyHearingListPdf(options: PdfGenera
 
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
-    const env = configureNunjucks(__dirname);
+    const env = configureNunjucks(pdfTemplateDir);
     const html = env.render("pdf-template.njk", {
       header: renderedData.header,
       hearings: renderedData.hearings,
@@ -61,4 +57,12 @@ export async function generateUtiacJrLeedsDailyHearingListPdf(options: PdfGenera
   } catch (error) {
     return createPdfErrorResult(error);
   }
+}
+
+export async function generateUtiacJrLeedsDailyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
+  return generatePdf(options, "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List");
+}
+
+export function createUtiacJrDailyHearingListPdfGenerator(listTitle: string) {
+  return (options: PdfGenerationOptions) => generatePdf(options, listTitle);
 }

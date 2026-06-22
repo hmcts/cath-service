@@ -1,7 +1,6 @@
 import { provenanceLabelsEn as provenanceLabels } from "@hmcts/list-types-common";
 
-export const en = {
-  pageTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
+export const baseEn = {
   listForDate: "List for",
   lastUpdated: "Last updated",
   at: "at",
@@ -31,4 +30,9 @@ export const en = {
   cautionReporting:
     "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
   provenanceLabels
+};
+
+export const en = {
+  ...baseEn,
+  pageTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
 };

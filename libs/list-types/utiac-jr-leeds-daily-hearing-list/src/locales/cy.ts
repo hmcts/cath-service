@@ -1,7 +1,6 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
-export const cy = {
-  pageTitle: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
+export const baseCy = {
   listForDate: "[WELSH TRANSLATION REQUIRED: 'List for']",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",
@@ -31,4 +30,9 @@ export const cy = {
   cautionReporting:
     "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
   provenanceLabels
+};
+
+export const cy = {
+  ...baseCy,
+  pageTitle: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']"
 };

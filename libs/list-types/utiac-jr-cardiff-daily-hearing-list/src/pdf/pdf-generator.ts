@@ -1,60 +1,9 @@
-import {
-  type BasePdfGenerationOptions,
-  configureNunjucks,
-  createPdfErrorResult,
-  loadTranslations,
-  PDF_BASE_STYLES,
-  type PdfGenerationResult,
-  savePdfToStorage
-} from "@hmcts/list-types-common";
-import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
-import { pdfTemplateDir } from "@hmcts/utiac-jr-leeds-daily-hearing-list/config";
-import type { UtiacJrCardiffHearingList } from "../models/types.js";
-import { renderUtiacJrCardiffDailyHearingListData } from "../rendering/renderer.js";
+import { createUtiacJrDailyHearingListPdfGenerator } from "@hmcts/utiac-jr-leeds-daily-hearing-list";
 
-interface PdfGenerationOptions extends BasePdfGenerationOptions<UtiacJrCardiffHearingList> {
-  displayFrom: Date;
-}
+type GeneratorFn = ReturnType<typeof createUtiacJrDailyHearingListPdfGenerator>;
 
-export async function generateUtiacJrCardiffDailyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
-  try {
-    const renderedData = renderUtiacJrCardiffDailyHearingListData(options.jsonData, {
-      locale: options.locale,
-      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: options.displayFrom,
-      lastReceivedDate: new Date().toISOString(),
-      listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"
-    });
+const LIST_TITLE = "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List";
 
-    const translations = await loadTranslations(
-      options.locale,
-      () => import("../locales/en.js"),
-      () => import("../locales/cy.js")
-    );
-
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
-
-    const env = configureNunjucks(pdfTemplateDir);
-    const html = env.render("pdf-template.njk", {
-      header: renderedData.header,
-      hearings: renderedData.hearings,
-      dataSource: provenanceLabel,
-      t: translations,
-      pdfStyles: PDF_BASE_STYLES
-    });
-
-    const pdfResult = await generatePdfFromHtml(html);
-
-    if (!pdfResult.success || !pdfResult.pdfBuffer) {
-      return {
-        success: false,
-        error: pdfResult.error || "PDF generation failed"
-      };
-    }
-
-    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
-  } catch (error) {
-    return createPdfErrorResult(error);
-  }
+export function generateUtiacJrCardiffDailyHearingListPdf(options: Parameters<GeneratorFn>[0]): ReturnType<GeneratorFn> {
+  return createUtiacJrDailyHearingListPdfGenerator(LIST_TITLE)(options);
 }
