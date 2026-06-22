@@ -37,9 +37,13 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     for (const entry of courtList.WithFixedDate ?? []) {
       for (const fixture of entry.Fixture ?? []) {
         for (const caseItem of fixture.Cases ?? []) {
-          const label = caseItem.Hearing?.[0]?.HearingDescription || "";
-          if (!categoryMap.has(label)) categoryMap.set(label, []);
-          categoryMap.get(label)!.push(processCase(caseItem, fixture.FixedDate));
+          const hearings = caseItem.Hearing ?? [];
+          const labels = [...new Set(hearings.map((h) => h.HearingDescription || "").filter(Boolean))];
+          const effectiveLabels = labels.length > 0 ? labels : [""];
+          for (const label of effectiveLabels) {
+            if (!categoryMap.has(label)) categoryMap.set(label, []);
+            categoryMap.get(label)!.push(processCase(caseItem, fixture.FixedDate));
+          }
         }
       }
     }
