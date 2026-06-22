@@ -124,7 +124,7 @@ describe("UTIAC JR Birmingham Daily Hearing List page controller", () => {
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List"
       });
       const renderCall = vi.mocked(res.render).mock.calls[0];
-      expect(renderCall[0]).toBe("utiac-jr-birmingham-daily-hearing-list");
+      expect(renderCall[0]).toBe("utiac-jr-daily-hearing-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
         hearings: mockRenderedData.hearings,
