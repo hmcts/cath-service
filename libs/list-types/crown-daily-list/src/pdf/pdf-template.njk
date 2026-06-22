@@ -21,7 +21,7 @@
 
     <div class="address">
       {% for line in header.addressLines %}
-        {{ line }}{% if not loop.last %}<br>{% endif %}
+        <p>{{ line }}</p>
       {% endfor %}
     </div>
   </div>
@@ -46,12 +46,12 @@
       {% if courtHouse.courtHouseAddressLines | length %}
         <div class="address">
           {% for line in courtHouse.courtHouseAddressLines %}
-            <strong>{{ line }}</strong>{% if not loop.last %}<br>{% endif %}
+            <p>{{ line }}</p>
           {% endfor %}
         </div>
       {% endif %}
       {% if courtHouse.courtHousePhone | length %}
-        <p class="address"><strong>{{ courtHouse.courtHousePhone }}</strong></p>
+        <p class="address">{{ courtHouse.courtHousePhone }}</p>
       {% endif %}
 
       {% for courtRoom in courtHouse.courtRoom %}

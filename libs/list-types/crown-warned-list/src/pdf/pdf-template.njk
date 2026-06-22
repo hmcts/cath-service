@@ -19,7 +19,7 @@
 
     <div class="address">
       {% for line in header.addressLines %}
-        {{ line }}{% if not loop.last %}<br>{% endif %}
+        <p>{{ line }}</p>
       {% endfor %}
     </div>
   </div>
