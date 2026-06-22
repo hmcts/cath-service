@@ -1,7 +1,7 @@
-# Base values template for production-like environments (stg, prod)
+# Base values template for production-like environments (aat, prod)
 # Database and cache infrastructure is managed by Terraform, not Helm
 global:
-  environment: ${ENVIRONMENT:-stg}
+  environment: ${ENVIRONMENT:-aat}
 
 # Enable/disable subcharts
 postgres:
@@ -17,9 +17,9 @@ crons:
 cath-web:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
     environment:
-      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
+      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
     keyVaults:
@@ -34,7 +34,7 @@ cath-web:
 cath-api:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.staging.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.aat.platform.hmcts.net"
     environment:
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
@@ -58,7 +58,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.staging.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.aat.platform.hmcts.net"
 
 # Dev dependencies - DISABLED for stg/prod (managed by Terraform)
 postgresql:

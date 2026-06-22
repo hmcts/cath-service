@@ -100,17 +100,39 @@ Once CNP has been running cleanly:
 
 ## Task list
 
+### Infrastructure (bootstrap)
 - [x] Add `AZURE_CREDENTIALS_CFT_PREVIEW` secret to the cath-service GitHub repo
 - [x] Add `terraform-aat` job to `stage.infrastructure.yml`
-- [ ] Open migration PR — pipeline runs AAT Terraform apply via the temporary `plan-only: false` change
+- [x] Open migration PR (#731) and run AAT Terraform via the temporary `plan-only: false`
+- [x] AAT Terraform: postgres, redis, storage, KV, app insights, managed identity provisioned
+- [ ] AAT Terraform: `azurerm_monitor_activity_log_alert` fails with 403 (SP `69aa7255` lacks `Microsoft.Insights/actionGroups/read` on the PTL subscription `1baf5470` for the shared action group). Needs platform ticket to grant that permission — currently the only remaining apply failure.
+
+### Key Vault migration
+- [x] Add `infrastructure/keyvault-migration.tf` — grants the CI SP read on `cath-ss-kv-aat` via access policy and copies the 20 app secrets into the new CNP `cath-aat` KV (postgres/redis/storage/app-insights are excluded — those are created by terraform itself).
+- [x] Switch helm keyVault refs from `cath-ss-kv` → `cath` in `apps/{web,api,postgres}/helm/values.yaml` and `helm/cath-service/values.template.yaml` (chart resolves to `cath-aat` etc).
+
+### Pipeline rename to CNP env labels
+- [x] Rename deploy env labels: `dev` → `preview`, `stg` → `aat` in `workflow.preview.yml`, `workflow.main.yml`, `stage.deploy.yml`, `job.helm-deploy.yml`.
+- [x] Repoint Preview deploy: cluster `cft-preview-01-aks` (sub `DCD-CFTAPPS-DEV`, RG `cft-preview-01-rg`), creds `AZURE_CREDENTIALS_CFT_PREVIEW`.
+- [x] Repoint AAT deploy: cluster `cft-aat-00-aks`, creds `AZURE_CREDENTIALS_CFT_PREVIEW`, DNS zone `aat.platform.hmcts.net`.
+- [x] Update hardcoded hostnames in helm values templates (`dev.platform.hmcts.net` → `preview.platform.hmcts.net`; `staging.platform.hmcts.net` → `aat.platform.hmcts.net`).
+- [x] Drop GH Environment block from `job.helm-deploy.yml` (was producing OIDC subject `:environment:dev` that has no federated credential). The build job's `:pull_request`/`:ref:refs/heads/master` subjects are federated and work for the deploy too.
+- [ ] **Follow-up (optional):** add `repo:hmcts/cath-service:environment:{preview,aat}` subjects to `platops/azure-github-federation-config/app-registrations.yaml` (under `DTS Shared GitHub Actions ACR Publisher 1`) so the GH Environment block can be reintroduced for deployment-tracking UI.
+
+### cnp-flux-config + SOPS
 - [ ] Add `apps/cath/` kustomizations to `cnp-flux-config` (aat + preview)
 - [ ] Regenerate SOPS secrets, encrypt with CNP key, commit to `cnp-flux-config`
+
+### Cutover
 - [ ] Verify CNP pods healthy and smoke tests pass on CNP ingress URL
 - [ ] Drop DNS TTL to 60s
 - [ ] Cut DNS to CNP load balancer
 - [ ] Monitor for 1 week
+
+### Decommission SDS (~1 week after cutover)
 - [ ] Remove `sds-flux-config/apps/cath/`
 - [ ] `terraform destroy` SDS resource groups
 - [ ] Remove SDS jobs from `stage.infrastructure.yml`
 - [ ] Remove `AZURE_CREDENTIALS_SDS_*` GitHub secrets
 - [ ] Revert `workflow.preview.yml` `plan-only` back to `true`
+- [ ] Remove `infrastructure/keyvault-migration.tf` (one-shot)

@@ -1,6 +1,6 @@
 # Global values shared by all subcharts
 global:
-  environment: dev
+  environment: preview
   security:
     allowInsecureImages: true
 
@@ -18,9 +18,9 @@ crons:
 cath-web:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "{{ .Release.Name }}-web.dev.platform.hmcts.net"
+    ingressHost: "{{ .Release.Name }}-web.preview.platform.hmcts.net"
     environment:
-      BASE_URL: "https://{{ .Release.Name }}-web.dev.platform.hmcts.net"
+      BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
       CFT_IDAM_URL: "https://idam-web-public.aat.platform.hmcts.net"
@@ -45,7 +45,7 @@ cath-web:
 cath-api:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "{{ .Release.Name }}-api.dev.platform.hmcts.net"
+    ingressHost: "{{ .Release.Name }}-api.preview.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
       ENABLE_TEST_SUPPORT: "true"
@@ -91,7 +91,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "{{ .Release.Name }}-postgres.dev.platform.hmcts.net"
+    ingressHost: "{{ .Release.Name }}-postgres.preview.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
     secrets:

@@ -26,8 +26,8 @@ on:
       environment:
         required: false
         type: string
-        description: "Deployment environment (dev or stg)"
-        default: "dev"
+        description: "Deployment environment (preview or aat)"
+        default: "preview"
     outputs:
       urls:
         description: "Base64-encoded JSON of deployment URLs"
@@ -47,8 +47,6 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.environment }}
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
       release-name: ${{ env.RELEASE_NAME }}
@@ -94,51 +92,51 @@ jobs:
       - name: ACR login
         run: az acr login --name "${REGISTRY%.azurecr.io}"
 
-      - name: Deploy to DEV
-        if: inputs.environment == 'dev'
-        id: deploy-dev
+      - name: Deploy to PREVIEW
+        if: inputs.environment == 'preview'
+        id: deploy-preview
         uses: hmcts/cnp-githubactions-library/helm-deploy@main
         with:
-          environment: ss-dev-00
+          environment: cft-preview-01
           team-name: ${{ env.TEAM_NAME }}
           application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_SDS_DEV }}
+          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
           release-name: ${{ env.RELEASE_NAME }}
           namespace: ${{ env.TEAM_NAME }}
           chart: helm/${{ env.APPLICATION_NAME }}
           values-template: helm/${{ env.APPLICATION_NAME }}/values.preview.template.yaml
           subchart-paths: apps/*/helm
-          global-environment: stg
+          global-environment: preview
           business-area: Cross-Cutting
           timeout: 15m0s
 
-      - name: Deploy to STG
-        if: inputs.environment == 'stg'
-        id: deploy-stg
+      - name: Deploy to AAT
+        if: inputs.environment == 'aat'
+        id: deploy-aat
         uses: hmcts/cnp-githubactions-library/helm-deploy@main
         with:
-          environment: ss-stg-00
+          environment: cft-aat-00
           team-name: ${{ env.TEAM_NAME }}
           application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
           release-name: ${{ env.RELEASE_NAME }}
           namespace: ${{ env.TEAM_NAME }}
           chart: helm/${{ env.APPLICATION_NAME }}
           values-template: helm/${{ env.APPLICATION_NAME }}/values.template.yaml
           subchart-paths: apps/*/helm
-          global-environment: stg
+          global-environment: aat
           business-area: Cross-Cutting
           timeout: 15m0s
 
-      - name: Register DNS for STG
-        if: inputs.environment == 'stg'
+      - name: Register DNS for AAT
+        if: inputs.environment == 'aat'
         run: |
           # Get Traefik ingress IP
           INGRESS_IP=$(kubectl get svc traefik -n admin -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
           # DNS config (matches Jenkins private-dns-config.yml)
           RESOURCE_GROUP="core-infra-intsvc-rg"
-          ZONE="staging.platform.hmcts.net"
+          ZONE="aat.platform.hmcts.net"
           SUBSCRIPTION="DTS-CFTPTL-INTSVC"
           TTL=300
 
