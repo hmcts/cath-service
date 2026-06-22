@@ -6,31 +6,13 @@
   "minItems": 1,
   "items": {
     "type": "object",
-    "required": ["hearingTime", "caseTitle", "caseReferenceNumber", "judges", "hearingType", "location"],
+    "required": ["venue", "judges", "hearingTime", "caseReferenceNumber", "caseTitle", "hearingType"],
     "properties": {
-      "hearingTime": {
-        "title": "Hearing time",
+      "venue": {
+        "title": "Venue",
         "type": "string",
         "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
-        "examples": ["10:00am"]
-      },
-      "caseTitle": {
-        "title": "Case title",
-        "type": "string",
-        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
-        "examples": ["Smith v Secretary of State"]
-      },
-      "representative": {
-        "title": "Representative",
-        "type": "string",
-        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
-        "examples": ["Smith & Co Solicitors"]
-      },
-      "caseReferenceNumber": {
-        "title": "Case reference number",
-        "type": "string",
-        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
-        "examples": ["JR/2025/001"]
+        "examples": ["Birmingham Civil Justice Centre"]
       },
       "judges": {
         "title": "Judge(s)",
@@ -38,17 +20,29 @@
         "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
         "examples": ["Judge Smith"]
       },
+      "hearingTime": {
+        "title": "Hearing time",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["10:00am"]
+      },
+      "caseReferenceNumber": {
+        "title": "Case reference number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["JR/2025/003"]
+      },
+      "caseTitle": {
+        "title": "Case title",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Smith v Secretary of State"]
+      },
       "hearingType": {
         "title": "Hearing type",
         "type": "string",
         "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
         "examples": ["Permission"]
-      },
-      "location": {
-        "title": "Location",
-        "type": "string",
-        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
-        "examples": ["Field House, London"]
       },
       "additionalInformation": {
         "title": "Additional information",

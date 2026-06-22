@@ -26,26 +26,24 @@
     <table>
       <thead>
         <tr>
-          <th class="no-wrap">{{ t.tableHeaders.hearingTime }}</th>
-          <th>{{ t.tableHeaders.caseTitle }}</th>
-          <th>{{ t.tableHeaders.representative }}</th>
-          <th>{{ t.tableHeaders.caseReferenceNumber }}</th>
+          <th>{{ t.tableHeaders.venue }}</th>
           <th>{{ t.tableHeaders.judges }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingTime }}</th>
+          <th>{{ t.tableHeaders.caseReferenceNumber }}</th>
+          <th>{{ t.tableHeaders.caseTitle }}</th>
           <th>{{ t.tableHeaders.hearingType }}</th>
-          <th>{{ t.tableHeaders.location }}</th>
           <th>{{ t.tableHeaders.additionalInformation }}</th>
         </tr>
       </thead>
       <tbody>
         {% for hearing in hearings %}
           <tr>
-            <td class="no-wrap">{{ hearing.hearingTime }}</td>
-            <td>{{ hearing.caseTitle }}</td>
-            <td>{{ hearing.representative }}</td>
-            <td>{{ hearing.caseReferenceNumber }}</td>
+            <td>{{ hearing.venue }}</td>
             <td>{{ hearing.judges }}</td>
+            <td class="no-wrap">{{ hearing.hearingTime }}</td>
+            <td>{{ hearing.caseReferenceNumber }}</td>
+            <td>{{ hearing.caseTitle }}</td>
             <td>{{ hearing.hearingType }}</td>
-            <td>{{ hearing.location }}</td>
             <td>{{ hearing.additionalInformation }}</td>
           </tr>
         {% endfor %}

@@ -1,11 +1,10 @@
 export interface UtiacJrManchesterHearing {
-  hearingTime: string;
-  caseTitle: string;
-  representative: string;
-  caseReferenceNumber: string;
+  venue: string;
   judges: string;
+  hearingTime: string;
+  caseReferenceNumber: string;
+  caseTitle: string;
   hearingType: string;
-  location: string;
   additionalInformation: string;
 }
 

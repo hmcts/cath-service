@@ -24,13 +24,12 @@ export function renderUtiacJrBirminghamDailyHearingListData(hearingList: UtiacJr
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   const renderedHearings = hearingList.map((hearing) => ({
-    hearingTime: hearing.hearingTime,
-    caseTitle: hearing.caseTitle,
-    representative: hearing.representative,
-    caseReferenceNumber: hearing.caseReferenceNumber,
+    venue: hearing.venue,
     judges: hearing.judges,
+    hearingTime: hearing.hearingTime,
+    caseReferenceNumber: hearing.caseReferenceNumber,
+    caseTitle: hearing.caseTitle,
     hearingType: hearing.hearingType,
-    location: hearing.location,
     additionalInformation: hearing.additionalInformation
   }));
 

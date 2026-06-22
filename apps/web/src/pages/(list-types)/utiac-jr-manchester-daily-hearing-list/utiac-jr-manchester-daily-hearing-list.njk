@@ -41,26 +41,24 @@
       <table class="govuk-table" id="hearings-table" role="table" aria-label="{{ t.pageTitle }}">
         <thead class="govuk-table__head">
           <tr class="govuk-table__row">
-            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingTime }}</th>
-            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseTitle }}</th>
-            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.representative }}</th>
-            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseReferenceNumber }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.venue }}</th>
             <th scope="col" class="govuk-table__header">{{ t.tableHeaders.judges }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingTime }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseReferenceNumber }}</th>
+            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.caseTitle }}</th>
             <th scope="col" class="govuk-table__header">{{ t.tableHeaders.hearingType }}</th>
-            <th scope="col" class="govuk-table__header">{{ t.tableHeaders.location }}</th>
             <th scope="col" class="govuk-table__header">{{ t.tableHeaders.additionalInformation }}</th>
           </tr>
         </thead>
         <tbody class="govuk-table__body">
           {% for hearing in hearings %}
             <tr class="govuk-table__row">
-              <td class="govuk-table__cell">{{ hearing.hearingTime }}</td>
-              <td class="govuk-table__cell">{{ hearing.caseTitle }}</td>
-              <td class="govuk-table__cell">{{ hearing.representative }}</td>
-              <td class="govuk-table__cell">{{ hearing.caseReferenceNumber }}</td>
+              <td class="govuk-table__cell">{{ hearing.venue }}</td>
               <td class="govuk-table__cell">{{ hearing.judges }}</td>
+              <td class="govuk-table__cell">{{ hearing.hearingTime }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseReferenceNumber }}</td>
+              <td class="govuk-table__cell">{{ hearing.caseTitle }}</td>
               <td class="govuk-table__cell">{{ hearing.hearingType }}</td>
-              <td class="govuk-table__cell">{{ hearing.location }}</td>
               <td class="govuk-table__cell">{{ hearing.additionalInformation }}</td>
             </tr>
           {% endfor %}

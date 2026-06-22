@@ -32,13 +32,12 @@ const mockRenderedData = {
 
 const mockHearingList = [
   {
-    hearingTime: "10:00am",
-    caseTitle: "Smith v Secretary of State",
-    representative: "",
-    caseReferenceNumber: "JR/2025/001",
+    venue: "Birmingham Civil Justice Centre",
     judges: "Judge Smith",
+    hearingTime: "10:00am",
+    caseReferenceNumber: "JR/2025/001",
+    caseTitle: "Smith v Secretary of State",
     hearingType: "Permission",
-    location: "Field House",
     additionalInformation: ""
   }
 ];

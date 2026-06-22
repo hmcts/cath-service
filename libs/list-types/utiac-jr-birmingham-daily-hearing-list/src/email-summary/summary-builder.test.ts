@@ -14,23 +14,21 @@ describe("extractCaseSummary", () => {
     // Arrange
     const hearingList: UtiacJrBirminghamHearingList = [
       {
-        hearingTime: "10:00am",
-        caseTitle: "Smith v Secretary of State",
-        representative: "Smith & Co",
-        caseReferenceNumber: "JR/2025/001",
+        venue: "Birmingham Civil Justice Centre",
         judges: "Judge Smith",
+        hearingTime: "10:00am",
+        caseReferenceNumber: "JR/2025/001",
+        caseTitle: "Smith v Secretary of State",
         hearingType: "Permission",
-        location: "Field House",
         additionalInformation: ""
       },
       {
-        hearingTime: "2:00pm",
-        caseTitle: "Brown v Home Office",
-        representative: "",
-        caseReferenceNumber: "JR/2025/002",
+        venue: "Birmingham Civil Justice Centre",
         judges: "Judge Brown",
+        hearingTime: "2:00pm",
+        caseReferenceNumber: "JR/2025/002",
+        caseTitle: "Brown v Home Office",
         hearingType: "Full hearing",
-        location: "Manchester",
         additionalInformation: ""
       }
     ];
@@ -65,13 +63,12 @@ describe("extractCaseSummary", () => {
     // Arrange
     const hearingList: UtiacJrBirminghamHearingList = [
       {
-        hearingTime: "",
-        caseTitle: "",
-        representative: "",
-        caseReferenceNumber: "",
+        venue: "",
         judges: "",
+        hearingTime: "",
+        caseReferenceNumber: "",
+        caseTitle: "",
         hearingType: "",
-        location: "",
         additionalInformation: ""
       }
     ];
