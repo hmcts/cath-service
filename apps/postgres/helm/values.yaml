@@ -3,7 +3,7 @@ nodejs:
   applicationPort: 5555
   aadIdentityName: cath
   ingressHost: cath-postgres.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctspublic.azurecr.io/cath/cath-postgres:latest'
+  image: 'hmctsprod.azurecr.io/cath/cath-postgres:latest'
   environment:
     POSTGRES_DATABASE: cath
   keyVaults:

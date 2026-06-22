@@ -16,7 +16,7 @@ crons:
 # Web application configuration
 cath-web:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
     environment:
       BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
@@ -33,7 +33,7 @@ cath-web:
 # API application configuration
 cath-api:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.aat.platform.hmcts.net"
     environment:
       ENABLE_TEST_SUPPORT: "true"
@@ -49,7 +49,7 @@ cath-api:
 # Crons application configuration
 cath-crons:
   job:
-    image: "hmctspublic.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
@@ -57,7 +57,7 @@ cath-crons:
 # Postgres Prisma Studio service configuration
 cath-postgres:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.aat.platform.hmcts.net"
 
 # Dev dependencies - DISABLED for stg/prod (managed by Terraform)

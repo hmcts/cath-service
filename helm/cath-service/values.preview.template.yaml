@@ -17,7 +17,7 @@ crons:
 # Web application configuration
 cath-web:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
     ingressHost: "{{ .Release.Name }}-web.preview.platform.hmcts.net"
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
@@ -44,7 +44,7 @@ cath-web:
 # API application configuration
 cath-api:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
     ingressHost: "{{ .Release.Name }}-api.preview.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
@@ -67,7 +67,7 @@ cath-api:
 # Crons application configuration
 cath-crons:
   job:
-    image: "hmctspublic.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
@@ -90,7 +90,7 @@ cath-crons:
 # Postgres Prisma Studio service configuration
 cath-postgres:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
     ingressHost: "{{ .Release.Name }}-postgres.preview.platform.hmcts.net"
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
