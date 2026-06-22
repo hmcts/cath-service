@@ -619,4 +619,240 @@ describe("renderCrownFirmListData", () => {
     const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
     expect(caseItem.defendants).toBe("Reporting Restriction Applied");
   });
+
+  it("should return empty displayHearingType when both HearingDescription and HearingType are absent", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: {},
+                    CaseNumber: "M20250097",
+                    Defendants: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.groupedListData[0].sittings[0].hearing[0].displayHearingType).toBe("");
+  });
+
+  it("should skip representative when solicitor has no Party Organisation or Person", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Plea" },
+                    CaseNumber: "M20250096",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: { CitizenNameForename: ["A"], CitizenNameSurname: "B" },
+                          IsMasked: "no"
+                        },
+                        Counsel: [
+                          {
+                            Solicitor: [
+                              {
+                                Party: {}
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.representative).toBe("");
+  });
+
+  it("should skip representative when solicitor Person has no name parts", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Plea" },
+                    CaseNumber: "M20250095",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: { CitizenNameForename: ["A"], CitizenNameSurname: "B" },
+                          IsMasked: "no"
+                        },
+                        Counsel: [
+                          {
+                            Solicitor: [
+                              {
+                                Party: {
+                                  Person: {}
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.representative).toBe("");
+  });
+
+  it("should use CitizenNameRequestedName for judge when present", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: {
+                  Judge: {
+                    CitizenNameTitle: "Mr",
+                    CitizenNameForename: ["TestForename"],
+                    CitizenNameSurname: "TestSurname",
+                    CitizenNameRequestedName: "TestRequestedName"
+                  }
+                },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "M20250008",
+                    Defendants: []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    expect(result.groupedListData[0].sittings[0].formattedJudiciaries).toBe("Mr TestRequestedName");
+  });
+
+  it("should use CitizenNameRequestedName for defendant when present", async () => {
+    const input: CrownFirmListData = {
+      ...baseInput,
+      FirmList: {
+        ...baseInput.FirmList,
+        CourtLists: [
+          {
+            SittingDate: "2025-04-22",
+            CourtHouse: testCourtHouse,
+            Sittings: [
+              {
+                CourtRoomNumber: 1,
+                Judiciary: { Judge: {} },
+                Hearings: [
+                  {
+                    HearingDetails: { HearingDescription: "Trial" },
+                    CaseNumber: "M20250009",
+                    Defendants: [
+                      {
+                        PersonalDetails: {
+                          Name: {
+                            CitizenNameTitle: "Ms",
+                            CitizenNameForename: ["RealForename"],
+                            CitizenNameSurname: "RealSurname",
+                            CitizenNameRequestedName: "RequestedName"
+                          },
+                          IsMasked: "no"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownFirmListData(input, {
+      locationId: "101",
+      contentDate: new Date("2025-03-15"),
+      locale: "en"
+    });
+
+    const caseItem = result.groupedListData[0].sittings[0].hearing[0].case[0];
+    expect(caseItem.defendants).toBe("Ms RequestedName");
+  });
 });

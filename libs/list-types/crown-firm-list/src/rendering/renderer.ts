@@ -1,4 +1,4 @@
-import { formatContentDate } from "@hmcts/list-types-common";
+import { formatContentDate, formatCrownLastUpdated } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
 import type {
@@ -47,17 +47,6 @@ export async function renderCrownFirmListData(jsonData: CrownFirmListData, optio
   const groupedListData = buildGroupedListData(jsonData, options.locale);
 
   return { header, openJustice, listData: null, groupedListData };
-}
-
-function formatCrownLastUpdated(isoDateTime: string, locale: string): string {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-  const date = dt.toFormat("dd MMMM yyyy");
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  return `${date} at ${hour12}${minuteStr}${period}`;
 }
 
 function formatAddress(court: CrownFirmListData["FirmList"]["CrownCourt"]): string[] {

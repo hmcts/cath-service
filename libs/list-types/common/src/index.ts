@@ -43,6 +43,7 @@ export {
   createPartyDetails,
   extractPddaSittingsSummary,
   formatContentDate,
+  formatCrownLastUpdated,
   formatPublicationDateTime,
   formatTime,
   type Party

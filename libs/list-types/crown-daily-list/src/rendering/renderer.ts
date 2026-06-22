@@ -1,6 +1,5 @@
-import { formatContentDate } from "@hmcts/list-types-common";
+import { formatContentDate, formatCrownLastUpdated } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
-import { DateTime } from "luxon";
 import type {
   CitizenName,
   CrownDailyCaseRendered,
@@ -63,17 +62,6 @@ export async function renderCrownDailyListData(jsonData: CrownDailyListData, opt
   };
 
   return { header, openJustice, listData };
-}
-
-function formatCrownLastUpdated(isoDateTime: string, locale: string): string {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-  const date = dt.toFormat("dd MMMM yyyy");
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  return `${date} at ${hour12}${minuteStr}${period}`;
 }
 
 function formatAddress(address: CrownDailyListData["DailyList"]["CrownCourt"]["CourtHouseAddress"]): string[] {

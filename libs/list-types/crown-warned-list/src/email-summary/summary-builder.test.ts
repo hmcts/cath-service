@@ -123,6 +123,40 @@ describe("extractCaseSummary", () => {
     expect(extractCaseSummary(buildTestData())).toHaveLength(0);
   });
 
+  it("should return MaskedName when IsMasked is yes and MaskedName is present", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250009",
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
+                            IsMasked: "yes",
+                            MaskedName: "Restricted"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Restricted");
+  });
+
   it("should use unmasked name when IsMasked is yes but MaskedName is absent", () => {
     const testData = buildTestData({
       CourtLists: [

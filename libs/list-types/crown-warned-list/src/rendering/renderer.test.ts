@@ -634,4 +634,92 @@ describe("renderCrownWarnedListData", () => {
     const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
     expect(group?.cases[0].defendants).toBe("Restricted");
   });
+
+  it("should use CitizenNameRequestedName for defendant when present", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "2025-11-22",
+                    Cases: [
+                      {
+                        CaseNumber: "T20250099",
+                        Defendants: [
+                          {
+                            PersonalDetails: {
+                              Name: {
+                                CitizenNameTitle: "Mr",
+                                CitizenNameForename: ["RealForename"],
+                                CitizenNameSurname: "RealSurname",
+                                CitizenNameRequestedName: "RequestedName"
+                              },
+                              IsMasked: "no" as const
+                            }
+                          }
+                        ],
+                        Hearing: [{ HearingDescription: "For Trial" }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === "For Trial");
+    expect(group?.cases[0].defendants).toBe("Mr RequestedName");
+  });
+
+  it("should place a case in multiple categories when it has multiple HearingDescriptions", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "2025-11-22",
+                    Cases: [
+                      {
+                        CaseNumber: "T20250100",
+                        Defendants: [],
+                        Hearing: [{ HearingDescription: "For Trial" }, { HearingDescription: "For Appeal" }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    expect(result.groupedCategories.find((g) => g.category === "For Trial")?.cases[0].caseNumber).toBe("T20250100");
+    expect(result.groupedCategories.find((g) => g.category === "For Appeal")?.cases[0].caseNumber).toBe("T20250100");
+  });
 });
