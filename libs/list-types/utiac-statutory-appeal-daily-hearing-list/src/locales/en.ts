@@ -10,7 +10,8 @@ export const en = {
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
   importantInformationText:
-    "We update this list by 5pm for the following day. If there are late changes to the list, we'll update no later than 9am on the day of the hearing. For details on attending a UTIAC remote hearing, please email uppertribunallistingteam@justice.gov.uk.",
+    "We update this list by 5pm for the following day. If there are late changes to the list, we'll update no later than 9am on the day of the hearing.",
+  importantInformationEmailText: "For details on attending a UTIAC remote hearing, please email uppertribunallistingteam@justice.gov.uk.",
   importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Search Cases",

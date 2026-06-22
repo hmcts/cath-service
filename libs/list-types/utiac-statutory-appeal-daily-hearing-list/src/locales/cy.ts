@@ -10,7 +10,9 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    "[WELSH TRANSLATION REQUIRED: 'We update this list by 5pm for the following day. If there are late changes to the list, we'll update no later than 9am on the day of the hearing. For details on attending a UTIAC remote hearing, please email uppertribunallistingteam@justice.gov.uk.']",
+    "[WELSH TRANSLATION REQUIRED: 'We update this list by 5pm for the following day. If there are late changes to the list, we'll update no later than 9am on the day of the hearing.']",
+  importantInformationEmailText:
+    "[WELSH TRANSLATION REQUIRED: 'For details on attending a UTIAC remote hearing, please email uppertribunallistingteam@justice.gov.uk.']",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio Achosion",
