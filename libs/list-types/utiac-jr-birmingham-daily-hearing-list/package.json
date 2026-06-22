@@ -13,9 +13,7 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:schemas",
-    "build:nunjucks": "mkdir -p dist/pdf && cd src/pdf && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pdf/$(dirname {}) && cp {} ../../dist/pdf/{}' \\;",
-    "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
