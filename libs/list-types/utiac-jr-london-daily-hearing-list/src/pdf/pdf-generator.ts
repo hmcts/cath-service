@@ -7,10 +7,10 @@ import {
   loadTranslations,
   PDF_BASE_STYLES,
   type PdfGenerationResult,
+  provenanceLabelsEn as PROVENANCE_LABELS,
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { UtiacJrLondonHearingList } from "../models/types.js";
 import { renderUtiacJrLondonDailyHearingListData } from "../rendering/renderer.js";
 

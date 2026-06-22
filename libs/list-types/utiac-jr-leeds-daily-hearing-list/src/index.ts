@@ -1,7 +1,7 @@
 import "./conversion/utiac-jr-leeds-config.js"; // Register converter on module load
 
 // Business logic exports
-export type { ValidationResult } from "@hmcts/publication";
+export type { ValidationResult } from "@hmcts/list-types-common";
 export * from "./email-summary/summary-builder.js";
 export { baseCy as utiacJrDailyHearingListBaseCy, cy as utiacJrLeedsDailyHearingListCy } from "./locales/cy.js";
 // Locale exports

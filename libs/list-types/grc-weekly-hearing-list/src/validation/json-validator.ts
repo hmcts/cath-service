@@ -1,6 +1,8 @@
-import { type ValidationResult, validateJson } from "@hmcts/publication";
-import schema from "../schemas/grc-weekly-hearing-list.json" with { type: "json" };
+import { createJsonValidator, type ValidationResult } from "@hmcts/list-types-common";
+import { schemaPath } from "../config.js";
+
+const validate = createJsonValidator(schemaPath);
 
 export function validateGrcWeeklyHearingList(jsonData: unknown): ValidationResult {
-  return validateJson(jsonData, schema, "1.0");
+  return validate(jsonData);
 }

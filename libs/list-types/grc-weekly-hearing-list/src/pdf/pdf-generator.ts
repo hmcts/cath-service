@@ -7,10 +7,10 @@ import {
   loadTranslations,
   PDF_BASE_STYLES,
   type PdfGenerationResult,
+  provenanceLabelsEn as PROVENANCE_LABELS,
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { GrcWeeklyHearingList } from "../models/types.js";
 import { renderGrcWeeklyHearingListData } from "../rendering/renderer.js";
 

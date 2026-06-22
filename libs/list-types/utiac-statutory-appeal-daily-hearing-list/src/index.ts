@@ -1,7 +1,7 @@
 import "./conversion/utiac-sa-config.js"; // Register converter on module load
 
 // Business logic exports
-export type { ValidationResult } from "@hmcts/publication";
+export type { ValidationResult } from "@hmcts/list-types-common";
 export * from "./email-summary/summary-builder.js";
 export { cy as utiacStatutoryAppealDailyHearingListCy } from "./locales/cy.js";
 // Locale exports

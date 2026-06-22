@@ -27,7 +27,6 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
-    "@hmcts/publication": "workspace:*",
     "luxon": "3.7.2",
     "nunjucks": "3.2.4"
   },
