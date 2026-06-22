@@ -23,7 +23,7 @@ cath-web:
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
     keyVaults:
-      cath-ss-kv:
+      cath:
         secrets:
           - name: storageaccount-connection-string
             alias: AZURE_STORAGE_CONNECTION_STRING
@@ -39,7 +39,7 @@ cath-api:
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
     keyVaults:
-      cath-ss-kv:
+      cath:
         secrets:
           - name: storageaccount-connection-string
             alias: AZURE_STORAGE_CONNECTION_STRING

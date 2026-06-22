@@ -24,7 +24,7 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
   keyVaults:
-    cath-ss-kv:
+    cath:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
