@@ -32,6 +32,16 @@ services:
       start_period: 10s
     command: redis-server --appendonly yes
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: cath-azurite
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite_data:/data
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000
+
 volumes:
   postgres_data:
   redis_data:
+  azurite_data:
