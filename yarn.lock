@@ -2132,10 +2132,10 @@ __metadata:
 
 "@hmcts-cft/simple-router@file:../../libs/simple-router::locator=%40hmcts%2Fweb%40workspace%3Aapps%2Fweb":
   version: 2.3.0
-  resolution: "@hmcts-cft/simple-router@file:../../libs/simple-router#../../libs/simple-router::hash=563a96&locator=%40hmcts%2Fweb%40workspace%3Aapps%2Fweb"
+  resolution: "@hmcts-cft/simple-router@file:../../libs/simple-router#../../libs/simple-router::hash=009670&locator=%40hmcts%2Fweb%40workspace%3Aapps%2Fweb"
   peerDependencies:
     express: ^5.1.0
-  checksum: 10c0/7ceb18bf44116086a4fb9ba56f1b63879156e709a60a38ac0fe9580efbcd0832f8f4dce7e235ebee1e50c6773d81f7b0a55890e106589560242cf4ce4c323669
+  checksum: 10c0/d6b9a91f290e180a91e97a290073ccff9a0e4769110538ce7d362d6c0ef07e51f223b12ddcf50f90846d095dfcf4aa4a6e76b49a7df7837bab07f7f71a91fb36
   languageName: node
   linkType: hard
 
