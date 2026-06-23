@@ -1,0 +1,104 @@
+name: One-Shot - Import Test Postgres Into State
+
+on:
+  workflow_dispatch:
+
+jobs:
+  import-test-postgres:
+    name: Import Test Postgres Into State
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Patch Test State
+        run: |
+          SUB="3eec5bde-7feb-4566-bfb6-805df6e10b90"
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          az storage blob download \
+            --account-name sdsstatetest \
+            --container-name tfstate-test \
+            --name "cath-service/test/terraform.tfstate" \
+            --file /tmp/terraform.tfstate \
+            --account-key "${STORAGE_KEY}"
+
+          python3 << 'PYEOF'
+          import json
+
+          with open('/tmp/terraform.tfstate') as f:
+              state = json.load(f)
+
+          resources = state.setdefault('resources', [])
+          sub = "3eec5bde-7feb-4566-bfb6-805df6e10b90"
+          base = f"/subscriptions/{sub}/resourceGroups/flexible-cath-test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/flexible-cath-test"
+
+          def ad_admin_entry(name, index_key, object_id):
+              entry = {
+                  "module": "module.postgresql",
+                  "mode": "managed",
+                  "type": "azurerm_postgresql_flexible_server_active_directory_administrator",
+                  "name": name,
+                  "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+                  "instances": [{
+                      "schema_version": 0,
+                      "attributes": {
+                          "id": f"{base}/administrators/{object_id}",
+                          "server_id": base,
+                          "object_id": object_id,
+                          "principal_name": "",
+                          "principal_type": "ServicePrincipal",
+                          "tenant_id": "531ff96d-0ae9-462a-8d2d-bec7c0b42082",
+                          "timeouts": None
+                      },
+                      "sensitive_attributes": [],
+                      "private": ""
+                  }]
+              }
+              if index_key is not None:
+                  entry["instances"][0]["index_key"] = index_key
+              return entry
+
+          # pgsql_principal_admin[0] - CI SP object ID
+          principal_admin_id = "69aa7255-12ea-45a3-af45-e9d249cddfe0"
+          existing = any(
+              r.get('type') == 'azurerm_postgresql_flexible_server_active_directory_administrator'
+              and r.get('name') == 'pgsql_principal_admin'
+              and r.get('module') == 'module.postgresql'
+              for r in resources
+          )
+          if not existing:
+              resources.append(ad_admin_entry("pgsql_principal_admin", 0, principal_admin_id))
+              print(f"Added module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]")
+          else:
+              print("pgsql_principal_admin[0] already in state, skipping")
+
+          state['serial'] = state.get('serial', 0) + 1
+          with open('/tmp/terraform.tfstate.new', 'w') as f:
+              json.dump(state, f, indent=2)
+          print("State file written")
+          PYEOF
+
+          az storage blob upload \
+            --account-name sdsstatetest \
+            --container-name tfstate-test \
+            --name "cath-service/test/terraform.tfstate" \
+            --file /tmp/terraform.tfstate.new \
+            --account-key "${STORAGE_KEY}" \
+            --overwrite
+          echo "Test state patched successfully"
