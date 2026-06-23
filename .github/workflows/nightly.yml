@@ -44,6 +44,17 @@ jobs:
           --health-retries 5
           --health-start-period 10s
 
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite:latest
+        ports:
+          - 10000:10000
+        options: >-
+          --health-cmd "nc -z localhost 10000"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
     env:
       # Application configuration
       BASE_URL: https://localhost:8080
@@ -52,6 +63,9 @@ jobs:
       # Database Configuration (using service containers)
       DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
       REDIS_URL: redis://localhost:6379
+
+      # Azure Blob Storage (Azurite emulator for CI)
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tO/rHnFo+UjVa7SXMRT32V7oA==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
 
       # SSO Configuration
       SSO_ALLOW_HTTP_REDIRECT: false
