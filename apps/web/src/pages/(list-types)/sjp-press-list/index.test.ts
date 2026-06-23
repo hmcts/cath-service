@@ -39,8 +39,8 @@ import { getPublicationJson } from "@hmcts/publication";
 import { validateSjpPressList } from "@hmcts/sjp-press-list";
 
 describe("SJP Press List Controller", () => {
-  const getHandler = GET;
-  const postHandler = POST;
+  const getHandler = GET as (req: Request, res: Response) => Promise<void>;
+  const postHandler = POST as (req: Request, res: Response) => Promise<void>;
 
   const mockRequest = (overrides?: Partial<Request>) =>
     ({

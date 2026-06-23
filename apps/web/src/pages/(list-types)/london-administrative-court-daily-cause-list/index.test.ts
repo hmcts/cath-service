@@ -105,7 +105,7 @@ describe("London Administrative Court page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData);
+      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
@@ -117,7 +117,7 @@ describe("London Administrative Court page controller", () => {
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("london-administrative-court-daily-cause-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
@@ -296,7 +296,7 @@ describe("London Administrative Court page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData);
+      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
@@ -339,7 +339,7 @@ describe("London Administrative Court page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData);
+      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
@@ -381,11 +381,11 @@ describe("London Administrative Court page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData);
+      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[1]).toMatchObject({
         dataSource: "List Assist"
       });
@@ -421,11 +421,11 @@ describe("London Administrative Court page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData);
+      vi.mocked(renderLondonAdminCourt).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[1]).toMatchObject({
         dataSource: "UNKNOWN_SOURCE"
       });

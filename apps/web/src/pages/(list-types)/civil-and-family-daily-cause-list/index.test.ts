@@ -191,7 +191,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         contentDate: mockArtefact.contentDate,
         locale: "en"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("civil-and-family-daily-cause-list");
       expect(renderCall[1]).toMatchObject({
         dataSource: "Manual Upload"

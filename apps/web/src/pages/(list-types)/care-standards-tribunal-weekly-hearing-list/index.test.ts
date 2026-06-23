@@ -99,7 +99,7 @@ describe("Care Standards Tribunal page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);
+      vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
@@ -113,7 +113,7 @@ describe("Care Standards Tribunal page controller", () => {
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Care Standards Tribunal Weekly Hearing List"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("care-standards-tribunal-weekly-hearing-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
@@ -282,7 +282,7 @@ describe("Care Standards Tribunal page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);
+      vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 

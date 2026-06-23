@@ -306,10 +306,15 @@ describe("non-strategic-upload-summary page", () => {
 
       vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
 
-      const session = {
+      const session: {
+        nonStrategicUploadForm?: { some: string };
+        nonStrategicUploadSubmitted?: boolean;
+        nonStrategicUploadConfirmed?: boolean;
+        save: (callback: (err?: unknown) => void) => void;
+      } = {
         nonStrategicUploadForm: { some: "data" },
         nonStrategicUploadSubmitted: true,
-        save: (callback: (err?: any) => void) => callback()
+        save: (callback: (err?: unknown) => void) => callback()
       };
 
       const req = {
