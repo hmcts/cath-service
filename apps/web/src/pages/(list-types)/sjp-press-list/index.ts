@@ -1,15 +1,12 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
-import { sjpPressListCy, sjpPressListEn, validateSjpPressList } from "@hmcts/sjp-press-list";
-import type { Request, RequestHandler, Response } from "express";
+import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
-
-const cy = sjpPressListCy;
-const en = sjpPressListEn;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,11 +55,17 @@ const getHandler = async (req: Request, res: Response) => {
     const paginatedCases = paginateCases(filteredCases, page);
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
+    const isVerifiedUser = req.user?.role === "VERIFIED";
+    const pdfExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.pdf`));
+    const excelExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.xlsx`));
+    const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+
     res.render("sjp-press-list", {
-      ...t.common,
-      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
       en,
       cy,
+      t,
+      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
+      ...t.common,
       locale,
       list: buildListMetadata(artefactId, validatedData, artefact),
       cases: paginatedCases,
@@ -77,7 +80,8 @@ const getHandler = async (req: Request, res: Response) => {
       },
       showFilter,
       errors: undefined,
-      dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance
+      dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance,
+      downloadDisclaimerUrl
     });
   } catch (error) {
     console.error("Error rendering SJP press list:", error);
@@ -208,6 +212,15 @@ function appendArrayToParams(params: URLSearchParams, key: string, values: strin
   }
 }
 
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 interface Filters {
   postcodes?: string[];
   prosecutors?: string[];
@@ -220,5 +233,38 @@ interface PressCase {
   prosecutor?: string | null;
 }
 
-export const GET: RequestHandler = getHandler;
-export const POST: RequestHandler = postHandler;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const requireVerifiedWithProvenance: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.role === "SYSTEM_ADMIN") {
+    return next();
+  }
+
+  if (req.user?.role !== "VERIFIED" || !req.user.provenance) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const artefactId = (req.query.artefactId || req.body?.artefactId) as string;
+  if (!artefactId || !UUID_REGEX.test(artefactId)) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const artefact = await prisma.artefact.findUnique({ where: { artefactId } });
+  if (!artefact) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
+  if (!dbListType || !dbListType.allowedProvenance.split(",").includes(req.user.provenance)) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect("/sign-in");
+  }
+
+  next();
+};
+
+export const GET: RequestHandler[] = [requireVerifiedWithProvenance, getHandler];
+export const POST: RequestHandler[] = [requireVerifiedWithProvenance, postHandler];
