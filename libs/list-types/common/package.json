@@ -11,8 +11,18 @@
       "production": "./dist/config.js",
       "default": "./src/config.ts"
     },
-    "./src/assets/js/sjp-filter-search.js": "./src/assets/js/sjp-filter-search.ts",
-    "./src/assets/js/table-search.js": "./src/assets/js/table-search.ts"
+    "./src/assets/js/sjp-filter-search.js": {
+      "production": "./dist/assets/js/sjp-filter-search.js",
+      "default": "./src/assets/js/sjp-filter-search.ts"
+    },
+    "./src/assets/js/table-search.js": {
+      "production": "./dist/assets/js/table-search.js",
+      "default": "./src/assets/js/table-search.ts"
+    },
+    "./src/assets/css/*": {
+      "production": "./dist/assets/css/*",
+      "default": "./src/assets/css/*"
+    }
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks",

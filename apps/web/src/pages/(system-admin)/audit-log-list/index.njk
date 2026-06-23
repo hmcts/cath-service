@@ -8,18 +8,18 @@
 
 {% block backLink %}
   <a href="/system-admin-dashboard" class="govuk-back-link">Back</a>
-{% endblock %}
+{% endblock backLink %}
 
-{% block content %}
+{% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
     <h1 class="govuk-heading-l" id="top">{{ title }}</h1>
   </div>
 </div>
 
-<div class="govuk-grid-row">
+<div class="audit-log-layout govuk-grid-row">
   <!-- Filter Panel -->
-  <div class="govuk-grid-column-one-quarter">
+  <div class="audit-log-layout__filter govuk-grid-column-one-third">
     <div style="border: 1px solid #b1b4b6;">
 
       {# Filter Panel Title #}
@@ -96,9 +96,6 @@
         {{ govukDateInput({
           id: "date",
           namePrefix: "",
-          formGroup: {
-            classes: "app-date-filter-narrow"
-          },
           fieldset: {
             legend: {
               text: dateLabel,
@@ -124,7 +121,7 @@
             },
             {
               name: "year",
-              classes: "govuk-input--width-4",
+              classes: "govuk-input--width-2",
               label: yearLabel,
               value: filters.year
             }
@@ -166,7 +163,7 @@
   </div>
 
   <!-- Main Content -->
-  <div class="govuk-grid-column-three-quarters">
+  <div class="audit-log-layout__content govuk-grid-column-three-quarters">
     {% if errorList %}
       {{ govukErrorSummary({
         titleText: "There is a problem",
@@ -179,7 +176,7 @@
       {% for log in logs %}
         {% set tableRows = (tableRows.push([
           { text: log.timestamp },
-          { text: log.userEmail },
+          { html: "<span class='audit-log-layout__word-break'>" + log.userEmail + "</span>" },
           { text: log.action },
           { html: '<a href="/audit-log-detail?id=' + log.id + '" class="govuk-link">' + viewLinkText + '</a>' }
         ]), tableRows) %}
@@ -190,7 +187,7 @@
           { text: timestampHeader },
           { text: emailHeader },
           { text: actionHeader },
-          { text: viewHeader }
+          { html: '<span class="govuk-visually-hidden">' + viewHeader + '</span>', classes: 'audit-log-layout__view-header' }
         ],
         rows: tableRows
       }) }}
@@ -233,4 +230,4 @@
     </p>
   </div>
 </div>
-{% endblock %}
+{% endblock page_content %}
