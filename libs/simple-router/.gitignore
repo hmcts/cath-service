@@ -1,2 +1,4 @@
-# Allow dist to be committed for this package (it has no src)
+# Allow dist JS files to be committed for this package (it has no src)
 !dist/
+dist/*.d.ts
+dist/*.d.ts.map

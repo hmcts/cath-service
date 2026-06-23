@@ -1,1 +1,0 @@
-{"version":3,"file":"route-discovery.d.ts","sourceRoot":"","sources":["../src/route-discovery.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,oBAAoB,CAAC;AAE1D,wBAAgB,cAAc,CAAC,QAAQ,EAAE,MAAM,GAAG,eAAe,EAAE,CAElE;AA6CD,wBAAgB,UAAU,CAAC,MAAM,EAAE,eAAe,EAAE,GAAG,eAAe,EAAE,CA2BvE"}
