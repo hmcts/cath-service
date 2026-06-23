@@ -10,6 +10,7 @@ import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCou
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { generateSscsDailyHearingListPdf, importantInformationByListType, type SscsDailyHearingList } from "@hmcts/sscs-daily-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -52,6 +53,55 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeId: p.listTypeId });
 
+const SSCS_FRIENDLY_NAMES: Record<string, { en: string; cy: string }> = {
+  SSCS_MIDLANDS_DAILY_HEARING_LIST: {
+    en: "Midlands Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr"
+  },
+  SSCS_SOUTH_EAST_DAILY_HEARING_LIST: {
+    en: "South East Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain"
+  },
+  SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: {
+    en: "Wales and South West Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr"
+  },
+  SSCS_SCOTLAND_DAILY_HEARING_LIST: {
+    en: "Scotland Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban"
+  },
+  SSCS_NORTH_EAST_DAILY_HEARING_LIST: {
+    en: "North East Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr"
+  },
+  SSCS_NORTH_WEST_DAILY_HEARING_LIST: {
+    en: "North West Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr"
+  },
+  SSCS_LONDON_DAILY_HEARING_LIST: {
+    en: "London Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain"
+  },
+  SSCS_LIVERPOOL_DAILY_HEARING_LIST: {
+    en: "Liverpool Social Security and Child Support Tribunal Daily Hearing List",
+    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl"
+  }
+};
+
+const sscsGeneratorForListType =
+  (listTypeName: string): PdfGenerator =>
+  (p) => {
+    const names = SSCS_FRIENDLY_NAMES[listTypeName];
+    const friendlyName = names ? (p.locale === "cy" ? names.cy : names.en) : listTypeName;
+    return generateSscsDailyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as SscsDailyHearingList,
+      listTitle: friendlyName,
+      courtName: friendlyName,
+      importantInformationText: importantInformationByListType[listTypeName] ?? ""
+    });
+  };
+
 const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCauseListPdf({ ...p, jsonData: p.jsonData as CauseListData }),
@@ -75,7 +125,15 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_MIDLANDS_DAILY_HEARING_LIST"),
+  SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SOUTH_EAST_DAILY_HEARING_LIST"),
+  SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST"),
+  SSCS_SCOTLAND_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SCOTLAND_DAILY_HEARING_LIST"),
+  SSCS_NORTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_NORTH_EAST_DAILY_HEARING_LIST"),
+  SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_NORTH_WEST_DAILY_HEARING_LIST"),
+  SSCS_LONDON_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_LONDON_DAILY_HEARING_LIST"),
+  SSCS_LIVERPOOL_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_LIVERPOOL_DAILY_HEARING_LIST")
 };
 
 export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {

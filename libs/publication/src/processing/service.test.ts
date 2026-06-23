@@ -7,6 +7,13 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
+  generateSscsDailyHearingListPdf: vi.fn(),
+  importantInformationByListType: {
+    SSCS_NORTH_EAST_DAILY_HEARING_LIST: "Important information for North East"
+  }
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   generateCauseListPdf: vi.fn()
 }));
@@ -46,6 +53,7 @@ vi.mock("../artefact-search-extractor.js", () => ({
 
 describe("publication-processor", async () => {
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
+  const { generateSscsDailyHearingListPdf } = await import("@hmcts/sscs-daily-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
@@ -250,6 +258,53 @@ describe("publication-processor", async () => {
         sizeBytes: 2048,
         exceedsMaxSize: false
       });
+    });
+
+    it("should generate PDF for SSCS North East Daily Hearing List with English friendly name", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+        friendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List"
+      } as any);
+      vi.mocked(generateSscsDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sscs-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 32, locale: "en" });
+
+      expect(generateSscsDailyHearingListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          listTitle: "North East Social Security and Child Support Tribunal Daily Hearing List",
+          courtName: "North East Social Security and Child Support Tribunal Daily Hearing List",
+          importantInformationText: "Important information for North East"
+        })
+      );
+      expect(result).toEqual({ pdfPath: "/path/to/sscs-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SSCS Daily Hearing List with Welsh friendly name", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+        friendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List"
+      } as any);
+      vi.mocked(generateSscsDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sscs-pdf-cy",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 32, locale: "cy" });
+
+      expect(generateSscsDailyHearingListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+          courtName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr"
+        })
+      );
+      expect(result).toEqual({ pdfPath: "/path/to/sscs-pdf-cy", sizeBytes: 1024, exceedsMaxSize: false });
     });
   });
 

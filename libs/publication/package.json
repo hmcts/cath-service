@@ -34,6 +34,7 @@
     "@hmcts/notifications": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/sscs-daily-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "ajv": "8.20.0"
   },
