@@ -180,6 +180,12 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
     deleteBlob(`${artefact.artefactId}${extension}`).catch((error) => {
       console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
     });
+    deleteBlob(`${artefact.artefactId}.pdf`).catch((error) => {
+      // 404 is expected if no PDF was generated for this artefact
+      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
+        console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
+      }
+    });
   }
 }
 
