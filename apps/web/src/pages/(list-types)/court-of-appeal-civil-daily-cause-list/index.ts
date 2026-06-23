@@ -21,14 +21,15 @@ export const GET = createSimpleListTypeHandler<CourtOfAppealCivilData>({
   logPrefix: "court-of-appeal-civil-daily-cause-list",
   guardArtefact: (artefact, res) => {
     if (artefact.listTypeId !== COURT_OF_APPEAL_CIVIL_LIST_TYPE_ID) {
-      return res.status(400).render("errors/common", {
+      res.status(400).render("errors/common", {
         en,
         cy,
         errorTitle: "Invalid List Type",
         errorMessage: "This list type is not supported by this module"
       });
+      return true;
     }
-    return undefined;
+    return false;
   },
   render: ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;

@@ -129,7 +129,7 @@ type SimpleHandlerOptions<T> = {
   cy: SimpleLocaleContent;
   validate: (data: unknown) => ValidationResult;
   logPrefix: string;
-  guardArtefact?: (artefact: Artefact, res: Response) => Response | undefined;
+  guardArtefact?: (artefact: Artefact, res: Response) => boolean;
   serverError?: { errorTitle: string; errorMessage: string };
   render: SimpleRenderCallback<T>;
 };
@@ -238,17 +238,18 @@ type MultiListHandlerOptions<T> = {
 export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T>) {
   const { en, cy, listTypeIdToName, listTypeConfig, renderFn, resolveTemplate } = opts;
 
-  const guardArtefact = (artefact: Artefact, res: Response): Response | undefined => {
+  const guardArtefact = (artefact: Artefact, res: Response): boolean => {
     const listTypeName = listTypeIdToName[artefact.listTypeId];
     if (!listTypeName || !listTypeConfig[listTypeName]) {
-      return res.status(400).render("errors/common", {
+      res.status(400).render("errors/common", {
         en,
         cy,
         errorTitle: "Invalid List Type",
         errorMessage: "This list type is not supported by this module"
       });
+      return true;
     }
-    return undefined;
+    return false;
   };
 
   const render = ({ artefact, jsonData, locale, res }: { artefact: Artefact; jsonData: T; locale: string; res: Response }): void => {

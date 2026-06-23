@@ -2130,15 +2130,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hmcts-cft/simple-router@file:../../libs/simple-router::locator=%40hmcts%2Fweb%40workspace%3Aapps%2Fweb":
-  version: 2.3.0
-  resolution: "@hmcts-cft/simple-router@file:../../libs/simple-router#../../libs/simple-router::hash=009670&locator=%40hmcts%2Fweb%40workspace%3Aapps%2Fweb"
-  peerDependencies:
-    express: ^5.1.0
-  checksum: 10c0/d6b9a91f290e180a91e97a290073ccff9a0e4769110538ce7d362d6c0ef07e51f223b12ddcf50f90846d095dfcf4aa4a6e76b49a7df7837bab07f7f71a91fb36
-  languageName: node
-  linkType: hard
-
 "@hmcts-cft/simple-router@npm:2.2.0":
   version: 2.2.0
   resolution: "@hmcts-cft/simple-router@npm:2.2.0"
@@ -2148,7 +2139,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hmcts-cft/simple-router@workspace:libs/simple-router":
+"@hmcts-cft/simple-router@workspace:*, @hmcts-cft/simple-router@workspace:libs/simple-router":
   version: 0.0.0-use.local
   resolution: "@hmcts-cft/simple-router@workspace:libs/simple-router"
   peerDependencies:
@@ -2764,7 +2755,7 @@ __metadata:
   resolution: "@hmcts/web@workspace:apps/web"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
-    "@hmcts-cft/simple-router": "file:../../libs/simple-router"
+    "@hmcts-cft/simple-router": "workspace:*"
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
