@@ -18,8 +18,8 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
