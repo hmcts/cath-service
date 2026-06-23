@@ -1,0 +1,2 @@
+# Allow dist to be committed for this package (it has no src)
+!dist/

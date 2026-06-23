@@ -1,12 +1,7 @@
-import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
-
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn()
-}));
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
@@ -20,6 +15,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
+  getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -35,7 +31,7 @@ vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", async (importOriginal) 
 });
 
 import { renderCourtOfAppealCivil } from "@hmcts/court-of-appeal-civil-daily-cause-list";
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { GET } from "./index.js";
 
 describe("Court of Appeal Civil Division page controller", () => {
@@ -107,14 +103,14 @@ describe("Court of Appeal Civil Division page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCourtOfAppealCivil).mockReturnValue(mockRenderedData);
 
       await GET(req as Request, res as Response);
 
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
-      expect(readFile).toHaveBeenCalled();
+      expect(getPublicationJson).toHaveBeenCalled();
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderCourtOfAppealCivil).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
@@ -217,7 +213,7 @@ describe("Court of Appeal Civil Division page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockRejectedValue(new Error("ENOENT: no such file or directory"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -249,7 +245,7 @@ describe("Court of Appeal Civil Division page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({
         isValid: false,
         errors: ["Missing required field: venue"]
@@ -313,7 +309,7 @@ describe("Court of Appeal Civil Division page controller", () => {
       res.locals = { locale: "cy" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCourtOfAppealCivil).mockReturnValue(mockRenderedData);
 
@@ -356,7 +352,7 @@ describe("Court of Appeal Civil Division page controller", () => {
       res.locals = {};
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCourtOfAppealCivil).mockReturnValue(mockRenderedData);
 
@@ -398,7 +394,7 @@ describe("Court of Appeal Civil Division page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCourtOfAppealCivil).mockReturnValue(mockRenderedData);
 
@@ -438,7 +434,7 @@ describe("Court of Appeal Civil Division page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCourtOfAppealCivil).mockReturnValue(mockRenderedData);
 

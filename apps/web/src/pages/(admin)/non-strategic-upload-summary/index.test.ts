@@ -69,7 +69,7 @@ vi.mock("@hmcts/admin-pages", async () => {
   return {
     ...actual,
     getNonStrategicUpload: vi.fn(),
-    saveUploadedFile: vi.fn(() => Promise.resolve("/path/to/file.json"))
+    saveUploadedFile: vi.fn(() => Promise.resolve(".xlsx"))
   };
 });
 
@@ -78,7 +78,8 @@ vi.mock("@hmcts/publication", async () => {
   return {
     ...actual,
     createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
-    processPublication: vi.fn(() => Promise.resolve({}))
+    processPublication: vi.fn(() => Promise.resolve({})),
+    updateArtefactFileExtension: vi.fn(() => Promise.resolve())
   };
 });
 

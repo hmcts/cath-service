@@ -1,6 +1,3 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   type CareStandardsTribunalHearingList,
   careStandardsTribunalWeeklyHearingListCy as cy,
@@ -9,14 +6,9 @@ import {
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { schemaPath } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { createJsonValidator } from "@hmcts/list-types-common";
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const validate = createJsonValidator(schemaPath);
 
 export const GET = async (req: Request, res: Response) => {
@@ -46,13 +38,9 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-    let jsonContent: string;
-    try {
-      jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch (error) {
-      console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
+    const jsonData: CareStandardsTribunalHearingList = (await getPublicationJson(artefactId)) as CareStandardsTribunalHearingList;
+    if (!jsonData) {
+      console.error(`[care-standards-tribunal-weekly-hearing-list] Blob not found for artefactId: ${artefactId}`);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -60,8 +48,6 @@ export const GET = async (req: Request, res: Response) => {
         errorMessage: "The requested list could not be found"
       });
     }
-
-    const jsonData: CareStandardsTribunalHearingList = JSON.parse(jsonContent);
 
     const validationResult = validate(jsonData);
     if (!validationResult.isValid) {

@@ -1,6 +1,3 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
 import {
   londonAdministrativeCourtDailyCauseListCy as cy,
@@ -9,16 +6,11 @@ import {
   renderLondonAdminCourt
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import { schemaPath } from "@hmcts/london-administrative-court-daily-cause-list/config";
-import { getArtefactById, PROVENANCE_LABELS } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 export const ROUTES = ["/london-administrative-court-daily-cause-list"];
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const validate = createJsonValidator(schemaPath);
 
 export const GET = async (req: Request, res: Response) => {
@@ -58,13 +50,9 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-    let jsonContent: string;
-    try {
-      jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch (error) {
-      console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
+    const jsonData: LondonAdminCourtData = (await getPublicationJson(artefactId)) as LondonAdminCourtData;
+    if (!jsonData) {
+      console.error(`[london-administrative-court-daily-cause-list] Blob not found for artefactId: ${artefactId}`);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -72,8 +60,6 @@ export const GET = async (req: Request, res: Response) => {
         errorMessage: "The requested list could not be found"
       });
     }
-
-    const jsonData: LondonAdminCourtData = JSON.parse(jsonContent);
 
     const validationResult = validate(jsonData);
     if (!validationResult.isValid) {

@@ -1,21 +1,12 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
 import { sjpPressListCy, sjpPressListEn, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
 
 const cy = sjpPressListCy;
 const en = sjpPressListEn;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const CASES_PER_PAGE = 1000;
 const LONDON_POSTCODE_AREAS = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
 
@@ -94,14 +85,7 @@ const postHandler = async (req: Request, res: Response) => {
 };
 
 async function loadJsonData(artefactId: string): Promise<unknown | null> {
-  const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-  try {
-    const content = await readFile(jsonFilePath, "utf-8");
-    return JSON.parse(content);
-  } catch (error) {
-    console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
-    return null;
-  }
+  return getPublicationJson(artefactId);
 }
 
 function isValidPressList(jsonData: unknown): boolean {

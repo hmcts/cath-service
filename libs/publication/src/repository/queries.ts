@@ -1,3 +1,4 @@
+import { deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
@@ -161,12 +162,31 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
 }
 
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
+  const artefacts = await prisma.artefact.findMany({
+    where: { artefactId: { in: artefactIds } },
+    select: { artefactId: true, fileExtension: true }
+  });
+
   await prisma.artefact.deleteMany({
     where: {
       artefactId: {
         in: artefactIds
       }
     }
+  });
+
+  for (const artefact of artefacts) {
+    const extension = artefact.fileExtension ?? ".pdf";
+    deleteBlob(`${artefact.artefactId}${extension}`).catch((error) => {
+      console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
+    });
+  }
+}
+
+export async function updateArtefactFileExtension(artefactId: string, fileExtension: string): Promise<void> {
+  await prisma.artefact.update({
+    where: { artefactId },
+    data: { fileExtension }
   });
 }
 

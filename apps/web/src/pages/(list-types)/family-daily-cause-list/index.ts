@@ -1,16 +1,7 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { familyDailyCauseListCy as cy, familyDailyCauseListEn as en, renderCauseListData, validateFamilyDailyCauseList } from "@hmcts/family-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -66,13 +57,9 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-    let jsonContent: string;
-    try {
-      jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch (error) {
-      console.error(`[family-daily-cause-list] Error reading JSON file at ${jsonFilePath}:`, error);
+    const jsonData = await getPublicationJson(artefactId);
+    if (!jsonData) {
+      console.error(`[family-daily-cause-list] Blob not found for artefactId: ${artefactId}`);
       return res.status(404).render("errors/common", {
         en,
         cy,
@@ -80,8 +67,6 @@ export const GET = async (req: Request, res: Response) => {
         errorMessage: t.errorMessage
       });
     }
-
-    const jsonData = JSON.parse(jsonContent);
 
     const validationResult = validateFamilyDailyCauseList(jsonData);
     if (!validationResult.isValid) {
