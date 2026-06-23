@@ -65,6 +65,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
   const locationId = validation.resolvedLocationId ?? request.court_id;
 
   try {
+    console.log("[blob-ingestion] Creating artefact in DB:", { courtId: request.court_id, locationId });
     // Create artefact in database (returns actual artefact ID - either new or existing)
     const { artefactId, isUpdate } = await createArtefact({
       artefactId: newArtefactId,
@@ -81,11 +82,15 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
       noMatch
     });
+    console.log("[blob-ingestion] Artefact created:", { artefactId, isUpdate });
 
     // Save JSON to blob storage for list display pages
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
+    console.log("[blob-ingestion] Uploading JSON to blob storage:", { artefactId, sizeBytes: jsonBuffer.length });
     const fileExtension = await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
+    console.log("[blob-ingestion] Blob upload complete, updating file extension:", { artefactId, fileExtension });
     await updateArtefactFileExtension(artefactId, fileExtension);
+    console.log("[blob-ingestion] File extension updated in DB");
 
     // Extract and store artefact search data for case number/name search
     await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
@@ -137,6 +142,13 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       message: noMatch ? "Blob ingested but location not found in reference data" : "Blob ingested and published successfully"
     };
   } catch (error) {
+    console.error("[blob-ingestion] System error during ingestion:", {
+      courtId: request.court_id,
+      provenance: request.provenance,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
     // Log system error
     await createIngestionLog({
       id: randomUUID(),
