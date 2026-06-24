@@ -9,21 +9,6 @@ nodejs:
     POSTGRES_DATABASE: cath
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
-  blobstorage:
-    enabled: true
-    resourceGroup: cath-aso-dev-rg
-    setup:
-      containers:
-        - artefact
-        - files
-        - publications
-  secrets:
-    AZURE_STORAGE_ACCOUNT_NAME:
-      secretRef: "storage-account-{{ .Release.Name }}-blobstorage"
-      key: storage_account_name
-    AZURE_STORAGE_ACCOUNT_KEY:
-      secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
-      key: accessKey
   keyVaults:
     cath-ss-kv:
       secrets:
