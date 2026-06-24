@@ -27,6 +27,13 @@
   border-bottom-color: #8eb8dc;
 }
 
+// Match OG CaTH footer size: govuk-frontend v6 bumped the footer from
+// size 16 to 19 as part of the GDS rebrand. Restore size 16 (16px at all
+// breakpoints) so the footer matches the legacy service.
+.govuk-footer {
+  @include index.govuk-font-size($size: 16);
+}
+
 .govuk-footer__copyright-logo {
   margin-bottom: 12px !important;
   padding: 4px 0 !important;
