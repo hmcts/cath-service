@@ -1,0 +1,80 @@
+{{- if .Values.blobstorage.enabled }}
+{{- $releaseName := .Release.Name }}
+{{- $storageAccountName := $releaseName | sha256sum | trunc 24 }}
+---
+apiVersion: storage.azure.com/v1api20210401
+kind: StorageAccount
+metadata:
+  name: storage-account-{{ $releaseName }}-blobstorage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  location: uksouth
+  kind: StorageV2
+  sku:
+    name: Standard_LRS
+  owner:
+    name: {{ required "blobstorage.resourceGroup is required" .Values.blobstorage.resourceGroup | quote }}
+  azureName: {{ $storageAccountName }}
+  accessTier: Hot
+  supportsHttpsTrafficOnly: true
+  tags:
+    app.kubernetes.io_name: {{ $releaseName }}
+    helm.sh_chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    application: {{ .Values.global.tags.applicationName | default "cath-service" }}
+    builtFrom: {{ .Values.global.tags.builtFrom | default "https://github.com/hmcts/cath-service" }}
+    businessArea: {{ .Values.global.tags.businessArea | default "Cross-Cutting" }}
+    environment: {{ .Values.global.tags.environment | default "dev" }}
+  operatorSpec:
+    secrets:
+      key1:
+        name: storage-secret-{{ $releaseName }}-blobstorage
+        key: accessKey
+      key2:
+        name: storage-secret-{{ $releaseName }}-blobstorage
+        key: key2
+      blobEndpoint:
+        name: storage-secret-{{ $releaseName }}-blobstorage
+        key: blobEndpoint
+---
+apiVersion: storage.azure.com/v1api20210401
+kind: StorageAccountsBlobService
+metadata:
+  name: blob-service-{{ $releaseName }}-blobstorage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  owner:
+    name: storage-account-{{ $releaseName }}-blobstorage
+{{- range .Values.blobstorage.setup.containers }}
+---
+apiVersion: storage.azure.com/v1api20210401
+kind: StorageAccountsBlobServicesContainer
+metadata:
+  name: container-{{ $releaseName }}-blobstorage-{{ . }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+spec:
+  owner:
+    name: blob-service-{{ $releaseName }}-blobstorage
+  azureName: {{ . }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-account-{{ $releaseName }}-blobstorage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+type: Opaque
+data:
+  storage_account_name: {{ $storageAccountName | b64enc | quote }}
+{{- end }}
