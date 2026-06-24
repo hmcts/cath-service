@@ -19,6 +19,7 @@ allowed-tools:
 
 Use TodoWrite to create workflow checklist:
 ```
+- [ ] Verify ticket status and mark in_progress
 - [ ] Create worktree for issue
 - [ ] Fetch issue and create checklist
 - [ ] Explore codebase for similar patterns
@@ -33,81 +34,120 @@ Use TodoWrite to create workflow checklist:
 ```
 
 ## ═══════════════════════════════════════
-## PHASE 0: WORKTREE SETUP
+## PHASE 0: VERIFICATION & WORKTREE SETUP
 ## ═══════════════════════════════════════
 
-## Step 0: Create Worktree [AGENT]
+## Step 0: Verify Ticket and Mark In Progress [AGENT]
 
-*Mark "Create worktree for issue" as in_progress*
+*Mark "Verify ticket status" as in_progress*
 
-Create isolated git worktree for this issue.
+Check requirements.db to ensure ticket is available, then mark it as in_progress.
 
 ```
 AGENT: general-purpose
-DESCRIPTION: Create worktree for issue-$ARGUMENT
+DESCRIPTION: Verify and claim ticket #$ARGUMENT
 PROMPT:
-"Create git worktree for issue #$ARGUMENT.
+"Verify ticket #$ARGUMENT is available and mark it in_progress.
 
-**Worktree Setup:**
+Database: requirements/requirements.db
 
-Branch name: issue-$ARGUMENT
-Worktree path: .claude/worktrees/issue-$ARGUMENT
+**Step 1: Query ticket status**
 
-**Steps:**
+\`\`\`bash
+sqlite3 requirements/requirements.db \"SELECT r.id, r.ref, r.title, r.status, r.issue_number FROM requirement r WHERE r.issue_number = $ARGUMENT;\"
+\`\`\`
 
-1. Check if branch exists locally or remotely:
-   \`\`\`bash
-   git branch -a | grep issue-$ARGUMENT
-   \`\`\`
+**Step 2: Verify status**
 
-2. If branch exists remotely, fetch it:
-   \`\`\`bash
-   git fetch origin issue-$ARGUMENT:issue-$ARGUMENT
-   \`\`\`
+If status is 'in_progress':
+  - STOP with error: '❌ Ticket #$ARGUMENT is already in progress. Choose another ticket from /qk-tickets.'
+  
+If status is not 'approved':
+  - STOP with error: '❌ Ticket #$ARGUMENT has status=[status]. Only approved tickets can be shipped. Use /qk-tickets to see available tickets.'
 
-3. Create worktree:
-   - If branch doesn't exist locally or remotely:
-     \`\`\`bash
-     git worktree add -b issue-$ARGUMENT .claude/worktrees/issue-$ARGUMENT master
-     \`\`\`
-   - If branch exists:
-     \`\`\`bash
-     git worktree add .claude/worktrees/issue-$ARGUMENT issue-$ARGUMENT
-     \`\`\`
+If ticket not found:
+  - STOP with error: '❌ Ticket #$ARGUMENT not found in requirements.db. Verify issue number or use /qk-tickets.'
 
-4. Verify worktree:
-   \`\`\`bash
-   cd .claude/worktrees/issue-$ARGUMENT && git status
-   \`\`\`
+**Step 3: Mark as in_progress**
 
-5. Add to VS Code:
-   \`\`\`bash
-   code --add .claude/worktrees/issue-$ARGUMENT
-   \`\`\`
+If status is 'approved':
+  \`\`\`bash
+  sqlite3 requirements/requirements.db \"UPDATE requirement SET status = 'in_progress', updated_at = datetime('now'), updated_by = 'claude-agent' WHERE issue_number = $ARGUMENT;\"
+  \`\`\`
 
-**Return:**
-- Worktree path: .claude/worktrees/issue-$ARGUMENT
-- Branch: issue-$ARGUMENT
-- Status: created/already-exists
+**Step 4: Verify update**
 
-**IMPORTANT:** All subsequent work in this session will be done in the worktree at .claude/worktrees/issue-$ARGUMENT"
+\`\`\`bash
+sqlite3 requirements/requirements.db \"SELECT r.ref, r.title, r.status FROM requirement r WHERE r.issue_number = $ARGUMENT;\"
+\`\`\`
+
+Return: '✅ Ticket #$ARGUMENT ([ref]) marked as in_progress and ready to work on'"
 
 WAIT FOR AGENT
 ```
 
+*Mark "Verify ticket status" as completed*
+
+
+## Step 1: Create Worktree
+
+*Mark "Create worktree for issue" as in_progress*
+
+Create isolated git worktree for this issue using direct bash commands (no agent needed - this is a simple 5-command task).
+
+```bash
+# Check if worktree already exists
+if [ -d ".claude/worktrees/vibe-$ARGUMENT" ]; then
+  echo "Worktree already exists at .claude/worktrees/vibe-$ARGUMENT"
+  cd .claude/worktrees/vibe-$ARGUMENT && git status
+else
+  # Check if branch exists
+  if git show-ref --verify --quiet refs/heads/vibe-$ARGUMENT; then
+    echo "Branch vibe-$ARGUMENT exists locally, creating worktree..."
+    git worktree add .claude/worktrees/vibe-$ARGUMENT vibe-$ARGUMENT
+  elif git ls-remote --heads origin vibe-$ARGUMENT | grep -q vibe-$ARGUMENT; then
+    echo "Branch vibe-$ARGUMENT exists remotely, fetching and creating worktree..."
+    git fetch origin vibe-$ARGUMENT:vibe-$ARGUMENT
+    git worktree add .claude/worktrees/vibe-$ARGUMENT vibe-$ARGUMENT
+  else
+    echo "Branch vibe-$ARGUMENT doesn't exist, creating new branch and worktree..."
+    git worktree add -b vibe-$ARGUMENT .claude/worktrees/vibe-$ARGUMENT master
+  fi
+  
+  # Create .devcontainer symlink for isolated dev container testing
+  cd .claude/worktrees/vibe-$ARGUMENT
+  ln -s ../../../.devcontainer .devcontainer
+  echo "✅ Created .devcontainer symlink for isolated container testing"
+  
+  git status
+fi
+
+echo "✅ Worktree ready at .claude/worktrees/vibe-$ARGUMENT"
+echo "💡 To test in isolated dev container: code .claude/worktrees/vibe-$ARGUMENT && reopen in container"
+```
+
 *Mark "Create worktree for issue" as completed*
 
-**From this point forward, all commands must be run in the worktree directory: .claude/worktrees/issue-$ARGUMENT**
+**From this point forward, all commands must be run in the worktree directory: .claude/worktrees/vibe-$ARGUMENT**
 
 ## ═══════════════════════════════════════
 ## PHASE 1: PLANNING
 ## ═══════════════════════════════════════
 
-## Step 1: Fetch Issue and Create Checklist [AGENT]
+## Step 2: Fetch Issue and Create Checklist [AGENT]
 
 *Mark "Fetch issue and create checklist" as in_progress*
 
 Fetch issue from GitHub and generate checklist based on acceptance criteria.
+
+After the checklist is created, **assess task complexity** to determine planning approach:
+- Count acceptance criteria
+- Estimate files to modify (UI/API/DB/config)
+- Check for new module creation
+
+**Complexity Assessment:**
+- **SIMPLE**: ≤3 ACs, ≤5 files, no new modules, no DB changes → Use Step 3b (concise plan)
+- **COMPLEX**: >3 ACs OR >5 files OR new modules OR DB changes → Use Step 3a (full exploration + detailed plan)
 
 ```
 AGENT: general-purpose
@@ -165,9 +205,13 @@ WAIT FOR AGENT
 
 *Mark "Fetch issue and create checklist" as completed*
 
-## Step 2: Explore Codebase for Similar Patterns [AGENT]
+## Step 3a: Full Planning for Complex Tasks [PARALLEL AGENTS]
+
+**USE THIS PATH IF:** >3 ACs OR >5 files OR new modules OR DB changes
 
 *Mark "Explore codebase for similar patterns" as in_progress*
+
+### Sub-step 3a.1: Explore Codebase for Similar Patterns [AGENT]
 
 Use Explore agent to find similar patterns based on acceptance criteria.
 
@@ -224,11 +268,11 @@ WAIT FOR AGENT
 
 *Mark "Explore codebase for similar patterns" as completed*
 
-## Step 3: Create High-Level Implementation Plan [AGENT]
+### Sub-step 3a.2: Create Detailed Implementation Plan [AGENT]
 
 *Mark "Create high-level implementation plan" as in_progress*
 
-Generate implementation plan based on checklist, findings, and CLAUDE.md architecture.
+Generate comprehensive implementation plan based on checklist, findings, and CLAUDE.md architecture.
 
 ```
 AGENT: full-stack-engineer
@@ -328,7 +372,7 @@ Return: 'Plan created covering [N] acceptance criteria, referencing [M] similar 
 WAIT FOR AGENT
 ```
 
-## Step 4: Present Plan and Get Developer Feedback
+## Step 5: Present Plan and Get Developer Feedback
 
 Present the plan to developer for review and feedback.
 
@@ -352,11 +396,74 @@ If developer requests changes, wait for them to edit the plan, then ask for appr
 *Mark "Create high-level implementation plan" as completed (only after developer approval)*
 *Mark "Get developer feedback on plan" as completed*
 
+## Step 3b: Concise Planning for Simple Tasks [AGENT]
+
+*Mark "Explore codebase for similar patterns" as in_progress*
+*Mark "Create high-level implementation plan" as in_progress*
+
+Create a concise, actionable plan without separate exploration.
+
+```
+AGENT: full-stack-engineer
+DESCRIPTION: Create concise implementation plan
+PROMPT:
+"Create a concise implementation plan for issue #$ARGUMENT.
+
+**Read:**
+- Ticket: docs/tickets/$ARGUMENT/ticket.md
+- Checklist: docs/tickets/$ARGUMENT/checklist.md
+
+**Task:**
+Create a brief plan at docs/tickets/$ARGUMENT/plan.md (target: 50-100 lines).
+
+# Implementation Plan: Issue #$ARGUMENT
+
+## Overview
+[1-2 sentences]
+
+## Acceptance Criteria Coverage
+For EACH AC:
+- **AC[N]**: [How to satisfy - 2-3 bullets]
+- Files: [list]
+
+## Implementation Steps
+1. [Action]
+2. [Action]
+3. [Action]
+
+## Testing
+- [What to test]
+
+**Keep it concise** - simple task, no exhaustive exploration needed.
+
+Return: 'Concise plan created covering [N] acceptance criteria'"
+
+WAIT FOR AGENT
+```
+
+### Present Concise Plan
+
+```
+ACTION: Present implementation plan
+
+1. Read docs/tickets/$ARGUMENT/plan.md
+2. Display the plan
+3. AskUserQuestion:
+   - Does plan cover all ACs?
+   - Approval to proceed?
+
+If approved, mark exploration and planning completed.
+```
+
+*Mark "Explore codebase for similar patterns" as completed*
+*Mark "Create high-level implementation plan" as completed (only after approval)*
+*Mark "Get developer feedback on plan" as completed*
+
 ## ═══════════════════════════════════════
 ## PHASE 2: IMPLEMENTATION
 ## ═══════════════════════════════════════
 
-## Step 5: Implementation [AGENT]
+## Step 6: Implementation [AGENT]
 
 *Mark "Implement" as in_progress*
 
@@ -369,7 +476,7 @@ PROMPT:
 "Implement issue #$ARGUMENT with ALL integrations complete.
 
 **CRITICAL: Worktree Isolation**
-- You are working in a git worktree at .claude/worktrees/issue-$ARGUMENT
+- You are working in a git worktree at .claude/worktrees/vibe-$ARGUMENT
 - This is a separate working directory with its own branch
 - The main repository is unaffected by your changes
 - Multiple agents can work in parallel in their own worktrees
@@ -477,7 +584,7 @@ IF checkpoint fails: Re-run implementation agent with updated prompt focusing on
 ## PHASE 3: CODE QUALITY & REVIEW
 ## ═══════════════════════════════════════
 
-## Step 6: Code Simplification
+## Step 7: Code Simplification
 
 *Mark "Simplify code" as in_progress*
 
@@ -487,7 +594,7 @@ SKILL: simplify
 
 *Mark "Simplify code" as completed*
 
-## Step 7: Security Review
+## Step 8: Security Review
 
 *Mark "Security review" as in_progress*
 
@@ -497,47 +604,35 @@ SKILL: security-review
 
 *Mark "Security review" as completed*
 
-## Step 8: Multi-Dimensional Review & Fix [PARALLEL AGENTS]
+## Step 9: Multi-Dimensional Review & Fix [PARALLEL AGENTS]
 
 *Mark "Multi-dimensional review" as in_progress*
 
+Launch three review agents in parallel. **You MUST actually invoke the Agent tool three times in ONE message block:**
+
+```typescript
+// Example of correct invocation (adapt to actual tool syntax):
+Agent({ subagent_type: "ui-ux-engineer", description: "Fix accessibility issues", prompt: "..." })
+Agent({ subagent_type: "code-reviewer", description: "Fix code quality", prompt: "..." })
+Agent({ subagent_type: "test-engineer", description: "Fix test gaps", prompt: "..." })
 ```
-AGENT: ui-ux-engineer
-DESCRIPTION: Fix accessibility and GOV.UK issues
-PROMPT:
-"Review and FIX accessibility/GOV.UK issues for #$ARGUMENT.
 
-Changes: \`git diff\`
+**Agent 1: UI/UX Engineer**
+- Review: `git diff`
+- Fix: WCAG 2.2 AA violations, keyboard navigation, screen reader issues, GOV.UK component usage, Welsh translations
+- Return: 'Fixed [N] issues' or 'No issues found'
 
-Find and fix: WCAG 2.2 AA violations, keyboard navigation, screen reader issues, GOV.UK component usage, Welsh translations.
+**Agent 2: Code Reviewer**
+- Review: `git diff`
+- Fix: TypeScript any types, missing error handling, CLAUDE.md violations, performance issues, unused code
+- Return: 'Fixed [N] issues' or 'No issues found'
 
-Return: 'Fixed [N] issues' or 'No issues found'"
+**Agent 3: Test Engineer**
+- Review: Test files and coverage (`yarn test:coverage`)
+- Fix: Coverage <80%, missing edge cases, non-AAA pattern, missing E2E tests, missing accessibility tests
+- Return: 'Added [N] tests, coverage now [%]' or 'Tests adequate'
 
-AGENT: code-reviewer  
-DESCRIPTION: Fix code quality issues
-PROMPT:
-"Review and FIX code quality issues for #$ARGUMENT.
-
-Changes: \`git diff\`
-
-Find and fix: TypeScript any types, missing error handling, CLAUDE.md violations, performance issues, unused code.
-
-Return: 'Fixed [N] issues' or 'No issues found'"
-
-AGENT: test-engineer
-DESCRIPTION: Fix test gaps
-PROMPT:
-"Review and FIX test gaps for #$ARGUMENT.
-
-Test files: [find .test.ts and .spec.ts]
-Coverage: \`yarn test:coverage\`
-
-Find and fix: Coverage <80%, missing edge cases, non-AAA pattern, missing E2E tests, missing accessibility tests.
-
-Return: 'Added [N] tests, coverage now [%]' or 'Tests adequate'"
-
-WAIT FOR ALL THREE AGENTS
-```
+Wait for all three agents to complete before continuing.
 
 *Mark "Multi-dimensional review" as completed*
 
@@ -545,7 +640,7 @@ WAIT FOR ALL THREE AGENTS
 ## PHASE 4: VERIFICATION & FINAL GUARDS
 ## ═══════════════════════════════════════
 
-## Step 9: Verification
+## Step 10: Verification
 
 *Mark "Verify (build/lint/test)" as in_progress*
 
@@ -645,7 +740,7 @@ echo ""
 
 *Mark "Verify (build/lint/test)" as completed*
 
-## Step 10: Final Guards
+## Step 11: Final Guards
 
 *Mark "Final guards" as in_progress*
 
@@ -710,7 +805,7 @@ echo ""
 
 *Mark "Final guards" as completed*
 
-## Step 11: Summary
+## Step 12: Summary
 
 ```bash
 EXECUTE:
@@ -765,11 +860,11 @@ Then proceed with CI/CD monitoring:
 ### Monitoring Process
 
 1. **Get PR number:**
-   Ask user: "What's the PR number?" OR extract from `gh pr list --head issue-$ARGUMENT`
+   Ask user: "What's the PR number?" OR extract from `gh pr list --head vibe-$ARGUMENT`
 
 2. **Initial check:**
    ```bash
-   PR_NUMBER=$(gh pr list --head issue-$ARGUMENT --json number --jq '.[0].number')
+   PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
    echo "Monitoring PR #$PR_NUMBER..."
    gh pr view $PR_NUMBER --json statusCheckRollup,url
    ```
@@ -824,7 +919,7 @@ Then proceed with CI/CD monitoring:
 
 ```bash
 # Get PR number
-PR_NUMBER=$(gh pr list --head issue-$ARGUMENT --json number --jq '.[0].number')
+PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
 
 # Initial check
 echo "Monitoring PR #$PR_NUMBER..."
@@ -837,7 +932,7 @@ gh pr checks $PR_NUMBER --required
 # After fixing:
 git add .
 git commit -m "fix: resolve E2E test selector issue"
-git push origin issue-$ARGUMENT
+git push origin vibe-$ARGUMENT
 
 # Wait and check again:
 sleep 45
@@ -853,6 +948,6 @@ gh pr checks $PR_NUMBER
 - Some CI failures need human intervention (infra, credentials, etc.)
 - Maximum 5 fix attempts - then ask for help
 - Always inform user what you're doing during monitoring
-- Fixes are committed to the feature branch (issue-$ARGUMENT)
+- Fixes are committed to the feature branch (vibe-$ARGUMENT)
 
 **If user does NOT create a PR or request monitoring, this step is skipped entirely.**

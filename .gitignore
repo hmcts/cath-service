@@ -16,6 +16,9 @@ requirements/*.db
 # Temporary storage
 apps/web/storage/temp/
 
+# Git worktrees for parallel development
+.claude/worktrees/
+
 # macOS
 .DS_Store
 
