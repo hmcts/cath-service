@@ -13,6 +13,10 @@ import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-dail
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
+import { moduleRoot as magistratesAdultDailyModuleRoot } from "@hmcts/magistrates-adult-court-list-daily/config";
+import { moduleRoot as magistratesAdultFutureModuleRoot } from "@hmcts/magistrates-adult-court-list-future/config";
+import { moduleRoot as magistratesPublicAdultDailyModuleRoot } from "@hmcts/magistrates-public-adult-court-list-daily/config";
+import { moduleRoot as magistratesPublicAdultFutureModuleRoot } from "@hmcts/magistrates-public-adult-court-list-future/config";
 import {
   apiRoutes as publicPagesApiRoutes,
   fileUploadRoutes as publicPagesFileUploadRoutes,
@@ -101,6 +105,10 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
+    magistratesPublicAdultDailyModuleRoot,
+    magistratesPublicAdultFutureModuleRoot,
+    magistratesAdultDailyModuleRoot,
+    magistratesAdultFutureModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot
   ];

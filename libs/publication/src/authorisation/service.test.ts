@@ -114,6 +114,11 @@ describe("canAccessPublication", () => {
       const user = createUser("PUBLIC", "PUBLIC");
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(false);
     });
+
+    it("should deny media-verified (PI_AAD) users (media access is scoped to Classified lists only)", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      expect(canAccessPublication(user, privateArtefact, undefined)).toBe(false);
+    });
   });
 
   describe("CLASSIFIED publications", () => {
@@ -175,6 +180,18 @@ describe("canAccessPublication", () => {
       const user = createUser("VERIFIED", "CRIME_IDAM");
       const listType = createListType("CRIME_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should allow media-verified (PI_AAD) users to access CRIME_IDAM list type", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      const listType = createListType("CRIME_IDAM");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should deny media-verified (PI_AAD) users for non-media-accessible list type", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      const listType = createListType("CFT_IDAM");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
   });
 

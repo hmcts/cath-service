@@ -1,0 +1,320 @@
+{
+  "$defs": {
+    "address": {
+      "title": "Address Details",
+      "type": "object",
+      "properties": {
+        "line": {
+          "title": "Address Line",
+          "type": "array",
+          "default": [],
+          "items": {
+            "title": "Items",
+            "type": "string",
+            "default": "",
+            "examples": ["THE LAW COURTS"],
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        },
+        "town": {
+          "title": "Town",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "county": {
+          "title": "County",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "postCode": {
+          "title": "Address Postcode",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    },
+    "venueContact": {
+      "title": "Contact Details for a venue",
+      "type": "object",
+      "properties": {
+        "venueTelephone": {
+          "title": "Venue Telephone",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "venueEmail": {
+          "title": "Venue Email",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    },
+    "judiciary": {
+      "title": "Judiciary",
+      "type": "object",
+      "properties": {
+        "johKnownAs": {
+          "title": "JOH Known As",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "isPresiding": {
+          "title": "Is Presiding",
+          "type": "boolean"
+        }
+      }
+    },
+    "offence": {
+      "title": "Offence",
+      "type": "object",
+      "properties": {
+        "offenceCode": {
+          "title": "Offence Code",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "offenceTitle": {
+          "title": "Offence Title",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "offenceWording": {
+          "title": "Offence Wording",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Magistrates Adult Court List",
+  "type": "object",
+  "required": ["document", "venue", "courtLists"],
+  "properties": {
+    "document": {
+      "title": "document",
+      "type": "object",
+      "required": ["publicationDate"],
+      "properties": {
+        "documentName": {
+          "title": "Document Name",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "publicationDate": {
+          "title": "Publication date",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        }
+      }
+    },
+    "venue": {
+      "title": "venue",
+      "type": "object",
+      "required": ["venueName", "venueAddress"],
+      "properties": {
+        "venueName": {
+          "title": "Venue Name",
+          "type": "string",
+          "default": "",
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "venueAddress": {
+          "$ref": "#/$defs/address",
+          "required": ["line", "postCode"]
+        },
+        "venueContact": {
+          "$ref": "#/$defs/venueContact"
+        }
+      }
+    },
+    "courtLists": {
+      "title": "Court Lists",
+      "type": "array",
+      "items": {
+        "title": "Court list",
+        "type": "object",
+        "required": ["courtHouse"],
+        "properties": {
+          "courtHouse": {
+            "title": "Court House",
+            "type": "object",
+            "required": ["courtRoom", "courtHouseName"],
+            "properties": {
+              "courtHouseName": {
+                "title": "Court House Name",
+                "type": "string",
+                "default": "",
+                "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+              },
+              "courtHouseAddress": {
+                "$ref": "#/$defs/address"
+              },
+              "courtRoom": {
+                "type": "array",
+                "items": {
+                  "title": "Court Room",
+                  "type": "object",
+                  "required": ["courtRoomName", "session"],
+                  "properties": {
+                    "courtRoomName": {
+                      "title": "Court Room Name",
+                      "type": "string",
+                      "default": "",
+                      "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                    },
+                    "session": {
+                      "type": "array",
+                      "items": {
+                        "title": "Session",
+                        "type": "object",
+                        "required": ["sittings"],
+                        "properties": {
+                          "judiciary": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/judiciary" }
+                          },
+                          "sessionChannel": {
+                            "type": "array",
+                            "items": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" }
+                          },
+                          "sittings": {
+                            "title": "Sittings",
+                            "type": "array",
+                            "default": [],
+                            "items": {
+                              "type": "object",
+                              "required": ["sittingStart", "hearing"],
+                              "properties": {
+                                "sittingStart": {
+                                  "title": "Sitting Start",
+                                  "type": "string",
+                                  "default": "",
+                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+                                },
+                                "sittingEnd": {
+                                  "title": "Sitting End",
+                                  "type": "string",
+                                  "default": "",
+                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
+                                },
+                                "channel": {
+                                  "type": "array",
+                                  "items": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" }
+                                },
+                                "hearing": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "title": "Hearing",
+                                    "required": ["case"],
+                                    "properties": {
+                                      "hearingType": {
+                                        "title": "Hearing Type",
+                                        "type": "string",
+                                        "default": "",
+                                        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                      },
+                                      "case": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "title": "Case",
+                                          "required": ["caseNumber"],
+                                          "properties": {
+                                            "caseName": {
+                                              "title": "Case Name",
+                                              "type": "string",
+                                              "default": "",
+                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                            },
+                                            "caseNumber": {
+                                              "title": "Case Number",
+                                              "type": "string",
+                                              "default": "",
+                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                            },
+                                            "reportingRestrictionDetail": {
+                                              "title": "Reporting Restrictions Detail",
+                                              "type": "array",
+                                              "items": { "type": "string", "default": "", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" }
+                                            },
+                                            "party": {
+                                              "title": "Party",
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "partyRole": {
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                  },
+                                                  "individualDetails": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "title": { "type": "string", "default": "" },
+                                                      "individualForenames": { "type": "string", "default": "" },
+                                                      "individualMiddleName": { "type": "string", "default": "" },
+                                                      "individualSurname": { "type": "string", "default": "" },
+                                                      "dateOfBirth": {
+                                                        "type": "string",
+                                                        "default": "",
+                                                        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                      },
+                                                      "age": { "type": "integer" },
+                                                      "individualAddress": { "$ref": "#/$defs/address" }
+                                                    }
+                                                  },
+                                                  "organisationDetails": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "organisationName": { "type": "string", "default": "" }
+                                                    }
+                                                  },
+                                                  "offence": {
+                                                    "title": "Offence",
+                                                    "type": "array",
+                                                    "items": { "$ref": "#/$defs/offence" }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
