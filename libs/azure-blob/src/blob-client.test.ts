@@ -12,13 +12,14 @@ const mockGetContainerClient = vi.fn(() => ({
   getBlobClient: mockGetBlobClient
 }));
 const mockFromConnectionString = vi.fn(() => ({ getContainerClient: mockGetContainerClient }));
+const MockStorageSharedKeyCredential = vi.fn();
 
 vi.mock("@azure/storage-blob", () => {
   function MockBlobServiceClient() {
     return { getContainerClient: mockGetContainerClient };
   }
   MockBlobServiceClient.fromConnectionString = mockFromConnectionString;
-  return { BlobServiceClient: MockBlobServiceClient };
+  return { BlobServiceClient: MockBlobServiceClient, StorageSharedKeyCredential: MockStorageSharedKeyCredential };
 });
 
 vi.mock("@azure/identity", () => ({
@@ -82,6 +83,25 @@ describe("blob-client", () => {
 
       // Assert
       expect(mockUploadData).toHaveBeenCalledWith(Buffer.from("data"), { blobHTTPHeaders: undefined });
+    });
+
+    it("should use StorageSharedKeyCredential when account key is set", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "");
+      vi.stubEnv("AZURE_STORAGE_ACCOUNT_NAME", "cathsapr123");
+      vi.stubEnv("AZURE_STORAGE_ACCOUNT_KEY", "base64key==");
+      mockCreateIfNotExists.mockResolvedValue({});
+      mockUploadData.mockResolvedValue({});
+      const { uploadBlob } = await import("./blob-client.js");
+      const { DefaultAzureCredential } = await import("@azure/identity");
+
+      // Act
+      await uploadBlob("abc123.json", Buffer.from("{}"));
+
+      // Assert
+      expect(mockFromConnectionString).not.toHaveBeenCalled();
+      expect(DefaultAzureCredential).not.toHaveBeenCalled();
+      expect(MockStorageSharedKeyCredential).toHaveBeenCalledWith("cathsapr123", "base64key==");
     });
 
     it("should use DefaultAzureCredential when connection string is not set", async () => {

@@ -1,5 +1,5 @@
 import { DefaultAzureCredential } from "@azure/identity";
-import { BlobServiceClient } from "@azure/storage-blob";
+import { BlobServiceClient, StorageSharedKeyCredential } from "@azure/storage-blob";
 
 const CONTAINER_NAME = "artefact";
 
@@ -12,6 +12,12 @@ function createBlobServiceClient(): BlobServiceClient {
   const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
   if (!accountName) {
     throw new Error("AZURE_STORAGE_ACCOUNT_NAME is required when AZURE_STORAGE_CONNECTION_STRING is not set");
+  }
+
+  const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
+  if (accountKey) {
+    const credential = new StorageSharedKeyCredential(accountName, accountKey);
+    return new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, credential);
   }
 
   const credential = new DefaultAzureCredential({

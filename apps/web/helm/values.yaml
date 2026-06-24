@@ -23,6 +23,21 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
+  blobstorage:
+    enabled: true
+    resourceGroup: cath-aso-dev-rg
+    setup:
+      containers:
+        - artefact
+        - files
+        - publications
+  secrets:
+    AZURE_STORAGE_ACCOUNT_NAME:
+      secretRef: "storage-account-{{ .Release.Name }}-blobstorage"
+      key: storage_account_name
+    AZURE_STORAGE_ACCOUNT_KEY:
+      secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
+      key: accessKey
   keyVaults:
     cath-ss-kv:
       secrets:
