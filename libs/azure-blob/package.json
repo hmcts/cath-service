@@ -17,6 +17,10 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write --unsafe ."
   },
+  "dependencies": {
+    "@azure/identity": "4.10.0",
+    "@azure/storage-blob": "12.27.0"
+  },
   "devDependencies": {
     "typescript": "6.0.3",
     "vitest": "4.1.9"
