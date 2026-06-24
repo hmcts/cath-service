@@ -90,6 +90,7 @@ cath-crons:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
+    keyVaults: null
 
 # Postgres Prisma Studio service configuration
 cath-postgres:
@@ -111,6 +112,7 @@ cath-postgres:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
+    keyVaults: null
 
 # PostgreSQL database configuration
 postgresql:
