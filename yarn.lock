@@ -2374,6 +2374,42 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/magistrates-public-list@workspace:*, @hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list"
+  dependencies:
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/magistrates-standard-list@workspace:*, @hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
+  dependencies:
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/notification@workspace:*, @hmcts/notification@workspace:libs/notification":
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
@@ -2659,6 +2695,8 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-public-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/sjp-press-list": "workspace:*"

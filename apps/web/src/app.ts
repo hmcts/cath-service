@@ -13,6 +13,8 @@ import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-dail
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
+import { moduleRoot as magistratesPublicListModuleRoot } from "@hmcts/magistrates-public-list/config";
+import { moduleRoot as magistratesStandardListModuleRoot } from "@hmcts/magistrates-standard-list/config";
 import {
   apiRoutes as publicPagesApiRoutes,
   fileUploadRoutes as publicPagesFileUploadRoutes,
@@ -102,7 +104,9 @@ export async function createApp(): Promise<Express> {
     civilAppealModuleRoot,
     adminCourtModuleRoot,
     systemAdminModuleRoot,
-    publicPagesModuleRoot
+    publicPagesModuleRoot,
+    magistratesStandardListModuleRoot,
+    magistratesPublicListModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
