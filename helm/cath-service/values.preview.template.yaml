@@ -27,7 +27,7 @@ cath-web:
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
       POSTGRES_DATABASE: "{{ .Release.Name }}"
-      AZURE_STORAGE_ACCOUNT_NAME: "cathsadev"
+      AZURE_STORAGE_ACCOUNT_NAME: "cathsastg"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
@@ -41,7 +41,6 @@ cath-web:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
-    disableKeyVaults: true
 
 # API application configuration
 cath-api:
@@ -52,7 +51,7 @@ cath-api:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-      AZURE_STORAGE_ACCOUNT_NAME: "cathsadev"
+      AZURE_STORAGE_ACCOUNT_NAME: "cathsastg"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
@@ -66,7 +65,6 @@ cath-api:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
-    disableKeyVaults: true
 
 # Crons application configuration
 cath-crons:
@@ -90,7 +88,6 @@ cath-crons:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
-    disableKeyVaults: true
 
 # Postgres Prisma Studio service configuration
 cath-postgres:
@@ -112,7 +109,6 @@ cath-postgres:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
-    disableKeyVaults: true
 
 # PostgreSQL database configuration
 postgresql:
