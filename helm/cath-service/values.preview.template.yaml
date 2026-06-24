@@ -41,6 +41,7 @@ cath-web:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
+    keyVaults: null
 
 # API application configuration
 cath-api:
@@ -65,6 +66,7 @@ cath-api:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
+    keyVaults: null
 
 # Crons application configuration
 cath-crons:
