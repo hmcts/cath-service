@@ -23,7 +23,7 @@ spec:
   tags:
     app.kubernetes.io_name: {{ $releaseName }}
     helm.sh_chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    application: {{ .Values.global.tags.applicationName | default "cath-service" }}
+    application: {{ .Values.global.tags.teamName | default "cath" }}
     builtFrom: {{ .Values.global.tags.builtFrom | default "https://github.com/hmcts/cath-service" }}
     businessArea: {{ .Values.global.tags.businessArea | default "Cross-Cutting" }}
     environment: {{ .Values.global.tags.environment | default "dev" }}
