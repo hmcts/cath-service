@@ -24,6 +24,7 @@ export interface BasePdfGenerationOptions<T = unknown> {
   artefactId: string;
   locale: string;
   locationId: string;
+  contentDate: Date;
   jsonData: T;
   provenance?: string;
 }
