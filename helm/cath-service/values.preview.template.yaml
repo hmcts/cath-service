@@ -56,7 +56,6 @@ cath-web:
       AZURE_STORAGE_ACCOUNT_KEY:
         secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
         key: accessKey
-    disableKeyVaults: true
 
 # API application configuration
 cath-api:
@@ -86,7 +85,6 @@ cath-api:
       AZURE_STORAGE_ACCOUNT_KEY:
         secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
         key: accessKey
-    disableKeyVaults: true
 
 # Crons application configuration
 cath-crons:
