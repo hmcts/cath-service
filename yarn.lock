@@ -2370,6 +2370,7 @@ __metadata:
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
   dependencies:
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
     ajv: "npm:8.20.0"
