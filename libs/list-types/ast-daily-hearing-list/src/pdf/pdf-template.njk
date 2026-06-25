@@ -14,7 +14,7 @@
 
     <p>{% for line in t.venueAddressLines %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</p>
 
-    <p><strong>{{ t.listForDate }} {{ header.listForDate }}</strong></p>
+    <p style="margin-bottom: 2px"><strong>{{ t.listForDate }} {{ header.listForDate }}</strong></p>
 
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
   </div>

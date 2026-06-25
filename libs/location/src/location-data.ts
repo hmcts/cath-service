@@ -111,6 +111,14 @@ export const locationData: {
       welshName: "Gwasanaeth Tribiwnlys Dwyrain Llundain",
       regions: [1],
       subJurisdictions: [13]
+    },
+    {
+      locationId: 16,
+      name: "Asylum Support Tribunal",
+      welshName: "Tribiwnlys Cefnogi Ceiswyr Lloches",
+      regions: [1],
+      subJurisdictions: [13],
+      provenanceLocationType: "NATIONAL"
     }
   ],
   regions: [

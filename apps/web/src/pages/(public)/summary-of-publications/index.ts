@@ -58,8 +58,6 @@ export const GET = async (req: Request, res: Response) => {
   // System admins see all publications; CTSC/Local admins see only PUBLIC; verified users see based on provenance
   const artefacts = filterPublicationsForSummary(req.user, allArtefacts, listTypes);
 
-  const weeklyListTypes = ["CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", "CIC_WEEKLY_HEARING_LIST"];
-
   // Map list types and format dates
   const publicationsWithDetails = artefacts.map((artefact: (typeof artefacts)[number]) => {
     const listType = listTypeMap.get(artefact.listTypeId);
@@ -69,7 +67,7 @@ export const GET = async (req: Request, res: Response) => {
     const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
     const formattedDate = formatDateAndLocale(artefact.contentDate.toISOString(), locale);
-    const weekCommencingText = listType?.name && weeklyListTypes.includes(listType.name) ? ` ${t.forWeekCommencing}` : "";
+    const weekCommencingText = listType?.friendlyName?.includes("Weekly Hearing List") ? ` ${t.forWeekCommencing}` : "";
     const displayName = `${listTypeName}${weekCommencingText} ${formattedDate}`;
 
     return {
