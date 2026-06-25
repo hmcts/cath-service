@@ -3,10 +3,12 @@ import {
   extractCaseSummary as extractAdminCourtSummary,
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
+import { extractCaseSummary as extractAstSummary, formatCaseSummaryForEmail as formatAstSummaryForEmail } from "@hmcts/ast-daily-hearing-list";
 import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
+import { extractCaseSummary as extractCicSummary, formatCaseSummaryForEmail as formatCicSummaryForEmail } from "@hmcts/cic-weekly-hearing-list";
 import {
   extractCaseSummary as extractCivilFamilySummary,
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
@@ -24,6 +26,7 @@ import {
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
+import { extractCaseSummary as extractSendSummary, formatCaseSummaryForEmail as formatSendSummaryForEmail } from "@hmcts/send-daily-hearing-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
@@ -73,6 +76,18 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
     extract: extractCareStandardsSummary as SummaryExtractor,
     format: formatCareStandardsSummaryForEmail
+  },
+  SEND_DAILY_HEARING_LIST: {
+    extract: extractSendSummary as SummaryExtractor,
+    format: formatSendSummaryForEmail
+  },
+  CIC_WEEKLY_HEARING_LIST: {
+    extract: extractCicSummary as SummaryExtractor,
+    format: formatCicSummaryForEmail
+  },
+  AST_DAILY_HEARING_LIST: {
+    extract: extractAstSummary as SummaryExtractor,
+    format: formatAstSummaryForEmail
   },
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardConfig,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,

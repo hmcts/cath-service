@@ -67,7 +67,7 @@ export const GET = async (req: Request, res: Response) => {
     const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
     const formattedDate = formatDateAndLocale(artefact.contentDate.toISOString(), locale);
-    const weekCommencingText = listType?.name === "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST" ? ` ${t.forWeekCommencing}` : "";
+    const weekCommencingText = listType?.friendlyName?.includes("Weekly Hearing List") ? ` ${t.forWeekCommencing}` : "";
     const displayName = `${listTypeName}${weekCommencingText} ${formattedDate}`;
 
     return {
