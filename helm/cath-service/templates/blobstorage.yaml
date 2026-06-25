@@ -26,7 +26,7 @@ spec:
     application: {{ .Values.global.tags.teamName | default "cath" }}
     builtFrom: {{ .Values.global.tags.builtFrom | default "https://github.com/hmcts/cath-service" }}
     businessArea: {{ .Values.global.tags.businessArea | default "Cross-Cutting" }}
-    environment: {{ .Values.global.tags.environment | default "dev" }}
+    environment: development
   operatorSpec:
     secrets:
       key1:
