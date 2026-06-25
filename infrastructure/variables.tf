@@ -79,3 +79,27 @@ variable "builtFrom" {
   type        = string
   default     = null
 }
+
+variable "sa_account_tier" {
+  description = "Storage account tier"
+  type        = string
+  default     = "Standard"
+}
+
+variable "sa_account_kind" {
+  description = "Storage account kind"
+  type        = string
+  default     = "StorageV2"
+}
+
+variable "sa_account_replication_type" {
+  description = "Storage account replication type"
+  type        = string
+  default     = "RAGRS"
+}
+
+variable "sa_access_tier" {
+  description = "Storage account access tier"
+  type        = string
+  default     = "Cool"
+}
