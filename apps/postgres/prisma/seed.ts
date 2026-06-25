@@ -40,24 +40,25 @@ async function seedReferenceData() {
       });
     }
     console.log(`Seeded ${locationData.jurisdictions.length} jurisdictions`);
-
-    console.log("Seeding sub-jurisdictions...");
-    for (const subJurisdiction of locationData.subJurisdictions) {
-      await prisma.subJurisdiction.upsert({
-        where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
-        create: {
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-          name: subJurisdiction.name,
-          welshName: subJurisdiction.welshName,
-          jurisdictionId: subJurisdiction.jurisdictionId
-        },
-        update: { name: subJurisdiction.name, welshName: subJurisdiction.welshName, jurisdictionId: subJurisdiction.jurisdictionId }
-      });
-    }
-    console.log(`Seeded ${locationData.subJurisdictions.length} sub-jurisdictions`);
   } else {
     console.log("Skipping location seed: tables already contain data");
   }
+
+  // Always upsert sub-jurisdictions to pick up new entries
+  console.log("Seeding sub-jurisdictions...");
+  for (const subJurisdiction of locationData.subJurisdictions) {
+    await prisma.subJurisdiction.upsert({
+      where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
+      create: {
+        subJurisdictionId: subJurisdiction.subJurisdictionId,
+        name: subJurisdiction.name,
+        welshName: subJurisdiction.welshName,
+        jurisdictionId: subJurisdiction.jurisdictionId
+      },
+      update: { name: subJurisdiction.name, welshName: subJurisdiction.welshName, jurisdictionId: subJurisdiction.jurisdictionId }
+    });
+  }
+  console.log(`Seeded ${locationData.subJurisdictions.length} sub-jurisdictions`);
 
   // Always run list type seeding to pick up new entries
   console.log("Seeding list types...");
@@ -222,6 +223,26 @@ async function main() {
   console.log("Starting seed...");
   await seedReferenceData();
   await seedTestData();
+
+  const listSearchConfigsByName = [
+    { name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST", caseNumberFieldName: "caseReference", caseNameFieldName: "caseName" },
+    { name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST", caseNumberFieldName: "caseReference", caseNameFieldName: "caseName" },
+    { name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST", caseNumberFieldName: "caseReferenceNumber", caseNameFieldName: "caseName" }
+  ];
+
+  for (const config of listSearchConfigsByName) {
+    const listType = await prisma.listType.findUnique({ where: { name: config.name } });
+    if (!listType) {
+      throw new Error(`List type not found for ListSearchConfig: "${config.name}"`);
+    }
+    await prisma.listSearchConfig.upsert({
+      where: { listTypeId: listType.id },
+      create: { listTypeId: listType.id, caseNumberFieldName: config.caseNumberFieldName, caseNameFieldName: config.caseNameFieldName },
+      update: {}
+    });
+    console.log(`Upserted ListSearchConfig for ${config.name}`);
+  }
+
   console.log("Seed completed successfully!");
 }
 
