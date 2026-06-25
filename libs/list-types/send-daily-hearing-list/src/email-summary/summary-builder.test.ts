@@ -45,4 +45,27 @@ describe("formatCaseSummaryForEmail", () => {
   it("should return no cases message for empty list", () => {
     expect(formatCaseSummaryForEmail([])).toBe("No cases scheduled.");
   });
+
+  it("should format a single case summary with field labels", () => {
+    const hearingList: SendDailyHearingList = [
+      { time: "10am", caseReferenceNumber: "SEND/2025/001", respondent: "Local Authority", hearingType: "Final", venue: "Remote", timeEstimate: "2 hours" }
+    ];
+    const result = formatCaseSummaryForEmail(extractCaseSummary(hearingList));
+
+    expect(result).toContain("Time - 10am");
+    expect(result).toContain("Case reference number - SEND/2025/001");
+    expect(result).toContain("Venue - Remote");
+  });
+
+  it("should separate multiple cases with dividers", () => {
+    const hearingList: SendDailyHearingList = [
+      { time: "10am", caseReferenceNumber: "SEND/2025/001", respondent: "LA One", hearingType: "Final", venue: "Remote", timeEstimate: "1 hour" },
+      { time: "2pm", caseReferenceNumber: "SEND/2025/002", respondent: "LA Two", hearingType: "Directions", venue: "In person", timeEstimate: "30 mins" }
+    ];
+    const result = formatCaseSummaryForEmail(extractCaseSummary(hearingList));
+
+    expect(result).toContain("Case reference number - SEND/2025/001");
+    expect(result).toContain("Case reference number - SEND/2025/002");
+    expect(result.split("---").length).toBeGreaterThan(2);
+  });
 });

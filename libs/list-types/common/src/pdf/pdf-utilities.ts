@@ -1,7 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import nunjucks from "nunjucks";
+import { PDF_BASE_STYLES } from "./pdf-styles.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,4 +72,30 @@ export async function loadTranslations(
   }
   const { en } = await importEn();
   return en;
+}
+
+export async function buildPdfFromRenderedList(params: {
+  artefactId: string;
+  templateDir: string;
+  header: unknown;
+  hearings: unknown;
+  provenanceLabel: string;
+  translations: Record<string, unknown>;
+}): Promise<PdfGenerationResult> {
+  const env = configureNunjucks(params.templateDir);
+  const html = env.render("pdf-template.njk", {
+    header: params.header,
+    hearings: params.hearings,
+    dataSource: params.provenanceLabel,
+    t: params.translations,
+    pdfStyles: PDF_BASE_STYLES
+  });
+
+  const pdfResult = await generatePdfFromHtml(html);
+
+  if (!pdfResult.success || !pdfResult.pdfBuffer) {
+    return { success: false, error: pdfResult.error || "PDF generation failed" };
+  }
+
+  return savePdfToStorage(params.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
 }

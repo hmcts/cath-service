@@ -2,14 +2,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   type BasePdfGenerationOptions,
-  configureNunjucks,
+  buildPdfFromRenderedList,
   createPdfErrorResult,
   loadTranslations,
-  PDF_BASE_STYLES,
-  type PdfGenerationResult,
-  savePdfToStorage
+  type PdfGenerationResult
 } from "@hmcts/list-types-common";
-import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { AstDailyHearingList } from "../models/types.js";
 import { renderAstDailyHearingListData } from "../rendering/renderer.js";
@@ -17,11 +14,7 @@ import { renderAstDailyHearingListData } from "../rendering/renderer.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-interface PdfGenerationOptions extends BasePdfGenerationOptions<AstDailyHearingList> {
-  contentDate: Date;
-}
-
-export async function generateAstDailyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
+export async function generateAstDailyHearingListPdf(options: BasePdfGenerationOptions<AstDailyHearingList>): Promise<PdfGenerationResult> {
   try {
     const renderedData = renderAstDailyHearingListData(options.jsonData, {
       locale: options.locale,
@@ -38,22 +31,14 @@ export async function generateAstDailyHearingListPdf(options: PdfGenerationOptio
 
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
-    const env = configureNunjucks(__dirname);
-    const html = env.render("pdf-template.njk", {
+    return await buildPdfFromRenderedList({
+      artefactId: options.artefactId,
+      templateDir: __dirname,
       header: renderedData.header,
       hearings: renderedData.hearings,
-      dataSource: provenanceLabel,
-      t: translations,
-      pdfStyles: PDF_BASE_STYLES
+      provenanceLabel,
+      translations
     });
-
-    const pdfResult = await generatePdfFromHtml(html);
-
-    if (!pdfResult.success || !pdfResult.pdfBuffer) {
-      return { success: false, error: pdfResult.error || "PDF generation failed" };
-    }
-
-    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
   } catch (error) {
     return createPdfErrorResult(error);
   }

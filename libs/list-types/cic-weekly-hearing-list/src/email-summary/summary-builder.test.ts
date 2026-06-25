@@ -60,4 +60,55 @@ describe("formatCaseSummaryForEmail", () => {
   it("should return no cases message for empty list", () => {
     expect(formatCaseSummaryForEmail([])).toBe("No cases scheduled.");
   });
+
+  it("should format a single case summary with field labels", () => {
+    const hearingList: CicWeeklyHearingList = [
+      {
+        date: "02/01/2025",
+        hearingTime: "10am",
+        caseReferenceNumber: "CIC/2025/001",
+        caseName: "Smith v CICA",
+        "venue/platform": "Remote",
+        judges: "Judge Smith",
+        members: "",
+        additionalInformation: ""
+      }
+    ];
+    const result = formatCaseSummaryForEmail(extractCaseSummary(hearingList));
+
+    expect(result).toContain("Date - 02/01/2025");
+    expect(result).toContain("Hearing time - 10am");
+    expect(result).toContain("Case reference number - CIC/2025/001");
+    expect(result).toContain("Case name - Smith v CICA");
+  });
+
+  it("should separate multiple cases with dividers", () => {
+    const hearingList: CicWeeklyHearingList = [
+      {
+        date: "02/01/2025",
+        hearingTime: "10am",
+        caseReferenceNumber: "CIC/2025/001",
+        caseName: "Smith v CICA",
+        "venue/platform": "",
+        judges: "",
+        members: "",
+        additionalInformation: ""
+      },
+      {
+        date: "03/01/2025",
+        hearingTime: "2pm",
+        caseReferenceNumber: "CIC/2025/002",
+        caseName: "Jones v CICA",
+        "venue/platform": "",
+        judges: "",
+        members: "",
+        additionalInformation: ""
+      }
+    ];
+    const result = formatCaseSummaryForEmail(extractCaseSummary(hearingList));
+
+    expect(result).toContain("Case name - Smith v CICA");
+    expect(result).toContain("Case name - Jones v CICA");
+    expect(result.split("---").length).toBeGreaterThan(2);
+  });
 });

@@ -47,4 +47,34 @@ describe("formatCaseSummaryForEmail", () => {
   it("should return no cases message for empty list", () => {
     expect(formatCaseSummaryForEmail([])).toBe("No cases scheduled.");
   });
+
+  it("should format a single case summary with field labels", () => {
+    const hearingList: AstDailyHearingList = [
+      {
+        appellant: "A Smith",
+        appealReferenceNumber: "AST/2025/001",
+        caseType: "Section 4",
+        hearingType: "Substantive",
+        hearingTime: "10am",
+        additionalInformation: ""
+      }
+    ];
+    const result = formatCaseSummaryForEmail(extractCaseSummary(hearingList));
+
+    expect(result).toContain("Appellant - A Smith");
+    expect(result).toContain("Appeal reference number - AST/2025/001");
+    expect(result).toContain("Hearing time - 10am");
+  });
+
+  it("should separate multiple cases with dividers", () => {
+    const hearingList: AstDailyHearingList = [
+      { appellant: "A Smith", appealReferenceNumber: "AST/2025/001", caseType: "", hearingType: "", hearingTime: "10am", additionalInformation: "" },
+      { appellant: "B Jones", appealReferenceNumber: "AST/2025/002", caseType: "", hearingType: "", hearingTime: "2pm", additionalInformation: "" }
+    ];
+    const result = formatCaseSummaryForEmail(extractCaseSummary(hearingList));
+
+    expect(result).toContain("Appellant - A Smith");
+    expect(result).toContain("Appellant - B Jones");
+    expect(result.split("---").length).toBeGreaterThan(2);
+  });
 });
