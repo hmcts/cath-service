@@ -1,7 +1,7 @@
 import { provenanceLabelsEn as provenanceLabels } from "@hmcts/list-types-common";
 
 export const en = {
-  pageTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List",
+  pageTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
   listForWeekCommencing: "List for week commencing",
   lastUpdated: "Last updated",
   at: "at",

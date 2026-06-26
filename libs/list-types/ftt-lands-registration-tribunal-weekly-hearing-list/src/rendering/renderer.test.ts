@@ -18,17 +18,17 @@ describe("renderFttLrtData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Lands Registration Tribunal)",
+      courtName: "First-tier Tribunal (Land Registration Tribunal)",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
-      listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List"
     };
 
     // Act
     const result = renderFttLrtData(hearingList, options);
 
     // Assert
-    expect(result.header.listTitle).toBe("First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List");
+    expect(result.header.listTitle).toBe("First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List");
     expect(result.header.weekCommencingDate).toBe("2 January 2025");
     expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
@@ -65,10 +65,10 @@ describe("renderFttLrtData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Lands Registration Tribunal)",
+      courtName: "First-tier Tribunal (Land Registration Tribunal)",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
-      listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List"
     };
 
     // Act
@@ -86,10 +86,10 @@ describe("renderFttLrtData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Lands Registration Tribunal)",
+      courtName: "First-tier Tribunal (Land Registration Tribunal)",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T09:55:00Z",
-      listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List"
     };
 
     // Act
@@ -97,7 +97,7 @@ describe("renderFttLrtData", () => {
 
     // Assert
     expect(result.hearings).toHaveLength(0);
-    expect(result.header.listTitle).toBe("First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List");
+    expect(result.header.listTitle).toBe("First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List");
   });
 
   it("should format lastUpdated time correctly", () => {
@@ -115,10 +115,10 @@ describe("renderFttLrtData", () => {
 
     const options = {
       locale: "en",
-      courtName: "First-tier Tribunal (Lands Registration Tribunal)",
+      courtName: "First-tier Tribunal (Land Registration Tribunal)",
       contentDate: new Date(2025, 0, 2),
       lastReceivedDate: "2025-01-01T14:30:00Z",
-      listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List"
     };
 
     // Act

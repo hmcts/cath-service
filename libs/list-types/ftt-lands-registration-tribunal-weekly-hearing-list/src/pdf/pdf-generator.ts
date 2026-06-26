@@ -25,10 +25,10 @@ export async function generateFttLrtWeeklyHearingListPdf(options: PdfGenerationO
   try {
     const renderedData = renderFttLrtData(options.jsonData, {
       locale: options.locale,
-      courtName: "First-tier Tribunal (Lands Registration Tribunal)",
+      courtName: "First-tier Tribunal (Land Registration Tribunal)",
       contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
-      listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List"
     });
 
     const translations = await loadTranslations(

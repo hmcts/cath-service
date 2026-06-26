@@ -1,17 +1,10 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { fttRptWeeklyHearingListCy as cy, fttRptWeeklyHearingListEn as en, type FttRptHearingList, renderFttRptData } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { schemaPath } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
 import { createJsonValidator } from "@hmcts/list-types-common";
-import { getArtefactById } from "@hmcts/publication";
-import type { Request, Response } from "express";
+import type { Artefact } from "@hmcts/publication";
+import type { Response } from "express";
+import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const validate = createJsonValidator(schemaPath);
 
 const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyTitle: string }> = {
@@ -42,72 +35,29 @@ const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyT
   }
 };
 
-export const GET = async (req: Request, res: Response) => {
-  const locale = res.locals.locale || "en";
-  const t = locale === "cy" ? cy : en;
-
-  const artefactId = req.query.artefactId as string;
-
-  if (!artefactId) {
-    return res.status(400).render("errors/common", {
+function guardArtefact(artefact: Artefact, res: Response): boolean {
+  if (!LIST_TYPE_CONFIG[artefact.listTypeId]) {
+    res.status(400).render("errors/common", {
       en,
       cy,
-      errorTitle: "Bad Request",
-      errorMessage: "Missing artefactId parameter"
+      errorTitle: "Invalid List Type",
+      errorMessage: "This list type is not supported by this module"
     });
+    return true;
   }
+  return false;
+}
 
-  try {
-    const artefact = await getArtefactById(artefactId);
-
-    if (!artefact) {
-      return res.status(404).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Not Found",
-        errorMessage: "The requested list could not be found"
-      });
-    }
-
+export const GET = createSimpleListTypeHandler<FttRptHearingList>({
+  en,
+  cy,
+  validate,
+  logPrefix: "ftt-rpt-weekly-hearing-list",
+  serverError: { errorTitle: "Server Error", errorMessage: "An error occurred while loading the list" },
+  guardArtefact,
+  render: ({ artefact, jsonData, locale, res }) => {
+    const t = locale === "cy" ? cy : en;
     const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeId];
-
-    if (!listTypeConfig) {
-      return res.status(400).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Invalid List Type",
-        errorMessage: "This list type is not supported by this module"
-      });
-    }
-
-    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-    let jsonContent: string;
-    try {
-      jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch (error) {
-      console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
-      return res.status(404).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Not Found",
-        errorMessage: "The requested list could not be found"
-      });
-    }
-
-    const jsonData: FttRptHearingList = JSON.parse(jsonContent);
-
-    const validationResult = validate(jsonData);
-    if (!validationResult.isValid) {
-      console.error("Validation errors:", validationResult.errors);
-      return res.status(400).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Invalid Data",
-        errorMessage: "The list data is invalid"
-      });
-    }
-
     const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 
     const { header, hearings } = renderFttRptData(jsonData, {
@@ -118,24 +68,8 @@ export const GET = async (req: Request, res: Response) => {
       listTitle
     });
 
-    const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
+    const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
 
-    res.render("ftt-rpt-weekly-hearing-list", {
-      en,
-      cy,
-      t,
-      title: header.listTitle,
-      header,
-      hearings,
-      dataSource
-    });
-  } catch (error) {
-    console.error("Error rendering FTT RPT Weekly Hearing List:", error);
-    return res.status(500).render("errors/common", {
-      en,
-      cy,
-      errorTitle: "Server Error",
-      errorMessage: "An error occurred while loading the list"
-    });
+    res.render("ftt-rpt-weekly-hearing-list", { en, cy, t, title: header.listTitle, header, hearings, dataSource });
   }
-};
+});

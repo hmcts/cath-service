@@ -1,8 +1,4 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
-import { getArtefactById } from "@hmcts/publication";
 import {
   siacPoacPaacWeeklyHearingListCy as cy,
   siacPoacPaacWeeklyHearingListEn as en,
@@ -10,98 +6,29 @@ import {
   type SiacPoacPaacHearingList
 } from "@hmcts/siac-poac-paac-weekly-hearing-list";
 import { schemaPath } from "@hmcts/siac-poac-paac-weekly-hearing-list/config";
-import type { Request, Response } from "express";
+import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const validate = createJsonValidator(schemaPath);
 
-export const GET = async (req: Request, res: Response) => {
-  const locale = res.locals.locale || "en";
-  const t = locale === "cy" ? cy : en;
-
-  const artefactId = req.query.artefactId as string;
-
-  if (!artefactId) {
-    return res.status(400).render("errors/common", {
-      en,
-      cy,
-      errorTitle: "Bad Request",
-      errorMessage: "Missing artefactId parameter"
-    });
-  }
-
-  try {
-    const artefact = await getArtefactById(artefactId);
-
-    if (!artefact) {
-      return res.status(404).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Not Found",
-        errorMessage: "The requested list could not be found"
-      });
-    }
-
-    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-    let jsonContent: string;
-    try {
-      jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch (error) {
-      console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
-      return res.status(404).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Not Found",
-        errorMessage: "The requested list could not be found"
-      });
-    }
-
-    const jsonData: SiacPoacPaacHearingList = JSON.parse(jsonContent);
-
-    const validationResult = validate(jsonData);
-    if (!validationResult.isValid) {
-      console.error("Validation errors:", validationResult.errors);
-      return res.status(400).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Invalid Data",
-        errorMessage: "The list data is invalid"
-      });
-    }
-
-    const courtName = "Proscribed Organisations Appeal Commission";
+export const GET = createSimpleListTypeHandler<SiacPoacPaacHearingList>({
+  en,
+  cy,
+  validate,
+  logPrefix: "poac-weekly-hearing-list",
+  serverError: { errorTitle: "Server Error", errorMessage: "An error occurred while loading the list" },
+  render: ({ artefact, jsonData, locale, res }) => {
+    const t = locale === "cy" ? cy : en;
 
     const { header, hearings } = renderSiacPoacPaacData(jsonData, {
       locale,
-      courtName,
+      courtName: "Proscribed Organisations Appeal Commission",
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: t.poacPageTitle
     });
 
-    const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
+    const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
 
-    res.render("poac-weekly-hearing-list", {
-      en,
-      cy,
-      t,
-      title: header.listTitle,
-      header,
-      hearings,
-      dataSource
-    });
-  } catch (error) {
-    console.error("Error rendering POAC Weekly Hearing List:", error);
-    return res.status(500).render("errors/common", {
-      en,
-      cy,
-      errorTitle: "Server Error",
-      errorMessage: "An error occurred while loading the list"
-    });
+    res.render("poac-weekly-hearing-list", { en, cy, t, title: header.listTitle, header, hearings, dataSource });
   }
-};
+});

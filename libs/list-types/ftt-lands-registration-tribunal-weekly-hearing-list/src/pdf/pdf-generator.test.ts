@@ -22,7 +22,7 @@ import { generateFttLrtWeeklyHearingListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
-    listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List",
+    listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
     weekCommencingDate: "01 January 2025",
     lastUpdatedDate: "12 November 2025",
     lastUpdatedTime: "9am"
@@ -141,10 +141,10 @@ describe("generateFttLrtWeeklyHearingListPdf", () => {
     // Assert
     expect(renderFttLrtData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      courtName: "First-tier Tribunal (Lands Registration Tribunal)",
+      courtName: "First-tier Tribunal (Land Registration Tribunal)",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List"
+      listTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List"
     });
   });
 });

@@ -368,8 +368,8 @@ export const listTypeData: ListTypeData[] = [
   {
     id: 32,
     name: "FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST",
-    englishFriendlyName: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List",
+    englishFriendlyName: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
     provenance: "MANUAL_UPLOAD",
     urlPath: "ftt-lands-registration-tribunal-weekly-hearing-list",
     isNonStrategic: true,
