@@ -60,6 +60,10 @@ cath-postgres:
     image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.staging.platform.hmcts.net"
 
+# Blob storage - DISABLED for stg/prod (managed by Terraform, accessed via Key Vault)
+blobstorage:
+  enabled: false
+
 # Dev dependencies - DISABLED for stg/prod (managed by Terraform)
 postgresql:
   enabled: false
