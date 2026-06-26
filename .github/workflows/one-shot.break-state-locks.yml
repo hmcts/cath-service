@@ -4,6 +4,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  break-locks-aat:
+    name: Break AAT State Lock
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+
+      - name: Break AAT State Lock
+        run: |
+          az account set --subscription "DCD-CNP-DEV"
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name mgmtstatestorenonprod \
+            --resource-group mgmt-state-store-nonprod \
+            --query "[0].value" \
+            --output tsv)
+
+          az storage blob lease break \
+            --account-name mgmtstatestorenonprod \
+            --container-name mgmtstatestorecontaineraat \
+            --blob-name "cath-service/aat/terraform.tfstate" \
+            --account-key "$STORAGE_KEY" \
+          && echo "AAT lock broken successfully" \
+          || echo "WARNING: No lock to break on aat"
+
   break-locks-stg:
     name: Break STG State Lock
     runs-on: ubuntu-latest
