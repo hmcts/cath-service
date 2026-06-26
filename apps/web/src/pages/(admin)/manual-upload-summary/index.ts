@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { getManualUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateArtefactFileExtension } from "@hmcts/publication";
 import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
@@ -108,8 +108,9 @@ const postHandler = async (req: Request, res: Response) => {
       noMatch: false
     });
 
-    // Save file to temporary storage with artefactId as filename (will overwrite if exists)
-    const savedFilePath = await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+    // Save file to blob storage with artefactId as blob name (will overwrite if exists)
+    const fileExtension = await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+    await updateArtefactFileExtension(artefactId, fileExtension);
 
     // Extract and store artefact search data for JSON files
     let jsonData: unknown;
@@ -139,7 +140,6 @@ const postHandler = async (req: Request, res: Response) => {
       displayFrom,
       displayTo,
       isUpdate,
-      flatFilePath: isFlatFile ? savedFilePath : undefined,
       logPrefix: "[Manual Upload]"
     });
 

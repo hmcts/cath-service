@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",

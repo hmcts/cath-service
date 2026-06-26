@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn()
-  }
+const { mockUploadBlob } = vi.hoisted(() => ({
+  mockUploadBlob: vi.fn()
+}));
+vi.mock("@hmcts/azure-blob", () => ({
+  uploadBlob: mockUploadBlob
 }));
 
 vi.mock("@hmcts/pdf-generation", () => ({
@@ -15,7 +15,6 @@ vi.mock("../rendering/renderer.js", () => ({
   renderCareStandardsTribunalData: vi.fn()
 }));
 
-import fs from "node:fs/promises";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
 import { generateCareStandardsTribunalWeeklyHearingListPdf } from "./pdf-generator.js";
@@ -46,8 +45,7 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
     vi.clearAllMocks();
 
     vi.mocked(renderCareStandardsTribunalData).mockReturnValue(mockRenderedData);
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+    mockUploadBlob.mockResolvedValue(undefined);
   });
 
   it("should generate PDF successfully", async () => {
