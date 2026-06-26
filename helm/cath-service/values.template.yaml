@@ -22,15 +22,6 @@ cath-web:
       BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-    keyVaults:
-      cath-ss-kv:
-        secrets:
-          - name: storageaccount-connection-string
-            alias: AZURE_STORAGE_CONNECTION_STRING
-          - name: storageaccount-name
-            alias: AZURE_STORAGE_ACCOUNT_NAME
-          - name: redis-url
-            alias: REDIS_URL
 
 # API application configuration
 cath-api:
@@ -40,13 +31,6 @@ cath-api:
     environment:
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-    keyVaults:
-      cath-ss-kv:
-        secrets:
-          - name: storageaccount-connection-string
-            alias: AZURE_STORAGE_CONNECTION_STRING
-          - name: storageaccount-name
-            alias: AZURE_STORAGE_ACCOUNT_NAME
 
 # Crons application configuration
 cath-crons:
