@@ -39,7 +39,7 @@
     "@hmcts/web-core": "workspace:*"
   },
   "devDependencies": {
-    "@types/luxon": "3.7.1",
+    "@types/luxon": "3.7.2",
     "@types/multer": "2.1.0",
     "@types/node": "24.10.4",
     "typescript": "6.0.3",
