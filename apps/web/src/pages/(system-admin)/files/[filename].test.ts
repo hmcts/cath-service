@@ -1,12 +1,11 @@
-import fs from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    access: vi.fn(),
-    readFile: vi.fn()
-  }
+const { mockDownloadBlob } = vi.hoisted(() => ({
+  mockDownloadBlob: vi.fn()
+}));
+vi.mock("@hmcts/azure-blob", () => ({
+  downloadBlob: mockDownloadBlob
 }));
 
 vi.mock("@hmcts/auth", () => ({
@@ -35,8 +34,7 @@ describe("files route", () => {
   });
 
   it("should serve a PDF file with correct headers", async () => {
-    vi.mocked(fs.access).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("fake pdf content"));
+    mockDownloadBlob.mockResolvedValue(Buffer.from("fake pdf content"));
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -50,9 +48,7 @@ describe("files route", () => {
 
   it("should serve a CSV file with correct content type", async () => {
     mockRequest.params = { filename: "data.csv" };
-
-    vi.mocked(fs.access).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("csv,content"));
+    mockDownloadBlob.mockResolvedValue(Buffer.from("csv,content"));
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -63,9 +59,7 @@ describe("files route", () => {
 
   it("should serve a JSON file with correct content type", async () => {
     mockRequest.params = { filename: "data.json" };
-
-    vi.mocked(fs.access).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from('{"key": "value"}'));
+    mockDownloadBlob.mockResolvedValue(Buffer.from('{"key": "value"}'));
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -81,7 +75,7 @@ describe("files route", () => {
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
-    expect(mockResponse.send).toHaveBeenCalledWith("Filename is required");
+    expect(mockResponse.send).toHaveBeenCalledWith("Invalid filename");
   });
 
   it("should return 400 for invalid filename with path traversal", async () => {
@@ -124,8 +118,8 @@ describe("files route", () => {
     expect(mockResponse.send).toHaveBeenCalledWith("Invalid filename");
   });
 
-  it("should return 404 when file does not exist", async () => {
-    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+  it("should return 404 when blob does not exist", async () => {
+    mockDownloadBlob.mockResolvedValue(null);
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -136,9 +130,7 @@ describe("files route", () => {
 
   it("should use application/octet-stream for unknown file types", async () => {
     mockRequest.params = { filename: "file.xyz" };
-
-    vi.mocked(fs.access).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("content"));
+    mockDownloadBlob.mockResolvedValue(Buffer.from("content"));
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -149,9 +141,7 @@ describe("files route", () => {
 
   it("should serve HTML files with attachment disposition to prevent XSS", async () => {
     mockRequest.params = { filename: "document.html" };
-
-    vi.mocked(fs.access).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("<html><body>content</body></html>"));
+    mockDownloadBlob.mockResolvedValue(Buffer.from("<html><body>content</body></html>"));
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
@@ -165,9 +155,7 @@ describe("files route", () => {
 
   it("should set no-cache headers for all file types", async () => {
     mockRequest.params = { filename: "data.csv" };
-
-    vi.mocked(fs.access).mockResolvedValue(undefined);
-    vi.mocked(fs.readFile).mockResolvedValue(Buffer.from("csv,content"));
+    mockDownloadBlob.mockResolvedValue(Buffer.from("csv,content"));
 
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());

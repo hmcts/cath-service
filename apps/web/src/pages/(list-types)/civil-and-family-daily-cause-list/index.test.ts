@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { renderCauseListData, validateCivilFamilyCauseList } from "@hmcts/civil-and-family-daily-cause-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("node:fs/promises");
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -22,6 +20,7 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
   return {
     ...actual,
     getArtefactById: vi.fn(),
+    getPublicationJson: vi.fn(),
     canAccessPublicationData: vi.fn()
   };
 });
@@ -103,7 +102,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         noMatch: false
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -130,7 +129,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         noMatch: false
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify({ invalid: "data" }));
+      vi.mocked(getPublicationJson).mockResolvedValue({ invalid: "data" });
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: false,
         errors: ["Validation error"]
@@ -174,7 +173,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         courtLists: []
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
@@ -192,7 +191,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         contentDate: mockArtefact.contentDate,
         locale: "en"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("civil-and-family-daily-cause-list");
       expect(renderCall[1]).toMatchObject({
         dataSource: "Manual Upload"
@@ -235,7 +234,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         courtLists: []
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
@@ -286,7 +285,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         courtLists: []
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
@@ -346,7 +345,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         courtLists: []
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []
@@ -396,7 +395,7 @@ describe("civil-and-family-daily-cause-list controller", () => {
         courtLists: []
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateCivilFamilyCauseList).mockReturnValue({
         isValid: true,
         errors: []

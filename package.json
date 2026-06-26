@@ -78,6 +78,8 @@
     "vite": "7.3.5"
   },
   "dependencies": {
+    "@azure/identity": "4.10.0",
+    "@azure/storage-blob": "12.27.0",
     "@microsoft/microsoft-graph-client": "3.0.7",
     "@types/passport": "1.0.17",
     "accessible-autocomplete": "^3.0.1",

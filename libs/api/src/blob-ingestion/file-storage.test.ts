@@ -1,119 +1,80 @@
-import fs from "node:fs/promises";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock fs/promises
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn()
-  }
+vi.mock("@hmcts/azure-blob", () => ({
+  uploadBlob: vi.fn()
 }));
 
 describe("file-storage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
+    vi.resetModules();
   });
 
   describe("saveUploadedFile", () => {
-    it("should save file with artefactId as filename", async () => {
+    it("should upload blob and return file extension for JSON", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
-      const artefactId = "test-artefact-123";
-      const originalFileName = "document.pdf";
-      const fileBuffer = Buffer.from("test file content");
+      // Act
+      const result = await saveUploadedFile("test-artefact-123", "upload.json", Buffer.from("{}"));
 
-      await saveUploadedFile(artefactId, originalFileName, fileBuffer);
-
-      expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining("storage/temp/uploads"), { recursive: true });
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-artefact-123.pdf"), fileBuffer);
+      // Assert
+      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123.json", Buffer.from("{}"));
+      expect(result).toBe(".json");
     });
 
-    it("should extract and preserve file extension", async () => {
+    it("should upload blob and return file extension for PDF", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
-      const artefactId = "artefact-456";
-      const originalFileName = "report.docx";
-      const fileBuffer = Buffer.from("test content");
+      // Act
+      const result = await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
 
-      await saveUploadedFile(artefactId, originalFileName, fileBuffer);
-
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("artefact-456.docx"), fileBuffer);
+      // Assert
+      expect(uploadBlob).toHaveBeenCalledWith("artefact-456.pdf", Buffer.from("pdf-content"));
+      expect(result).toBe(".pdf");
     });
 
-    it("should handle files without extension", async () => {
+    it("should extract last extension from filename with multiple dots", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
-      const artefactId = "artefact-789";
-      const originalFileName = "document";
-      const fileBuffer = Buffer.from("test content");
+      // Act
+      const result = await saveUploadedFile("multi-ext", "archive.tar.gz", Buffer.from("data"));
 
-      await saveUploadedFile(artefactId, originalFileName, fileBuffer);
-
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("artefact-789"), fileBuffer);
+      // Assert
+      expect(uploadBlob).toHaveBeenCalledWith("multi-ext.gz", Buffer.from("data"));
+      expect(result).toBe(".gz");
     });
 
-    it("should create storage directory if it doesn't exist", async () => {
+    it("should return empty string for filename without extension", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
-      const artefactId = "new-artefact";
-      const originalFileName = "file.txt";
-      const fileBuffer = Buffer.from("content");
+      // Act
+      const result = await saveUploadedFile("artefact-789", "document", Buffer.from("content"));
 
-      await saveUploadedFile(artefactId, originalFileName, fileBuffer);
-
-      expect(fs.mkdir).toHaveBeenCalledTimes(1);
-      expect(fs.mkdir).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+      // Assert
+      expect(uploadBlob).toHaveBeenCalledWith("artefact-789", Buffer.from("content"));
+      expect(result).toBe("");
     });
 
-    it("should handle multiple file extensions correctly", async () => {
+    it("should propagate uploadBlob errors", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockRejectedValue(new Error("Upload failed"));
       const { saveUploadedFile } = await import("./file-storage.js");
 
-      const artefactId = "multi-ext";
-      const originalFileName = "archive.tar.gz";
-      const fileBuffer = Buffer.from("compressed data");
-
-      await saveUploadedFile(artefactId, originalFileName, fileBuffer);
-
-      expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("multi-ext.gz"), fileBuffer);
-    });
-
-    it("should save file to correct path structure", async () => {
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      const artefactId = "path-test";
-      const originalFileName = "test.json";
-      const fileBuffer = Buffer.from("{}");
-
-      await saveUploadedFile(artefactId, originalFileName, fileBuffer);
-
-      const writeFileCall = vi.mocked(fs.writeFile).mock.calls[0][0] as string;
-      expect(writeFileCall).toContain("storage");
-      expect(writeFileCall).toContain("temp");
-      expect(writeFileCall).toContain("uploads");
-      expect(writeFileCall).toContain("path-test.json");
-    });
-
-    it("should propagate mkdir errors", async () => {
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      const mkdirError = new Error("Permission denied");
-      vi.mocked(fs.mkdir).mockRejectedValue(mkdirError);
-
-      await expect(saveUploadedFile("test", "file.txt", Buffer.from("data"))).rejects.toThrow("Permission denied");
-    });
-
-    it("should propagate writeFile errors", async () => {
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-      const writeError = new Error("Disk full");
-      vi.mocked(fs.writeFile).mockRejectedValue(writeError);
-
-      await expect(saveUploadedFile("test", "file.txt", Buffer.from("data"))).rejects.toThrow("Disk full");
+      // Act & Assert
+      await expect(saveUploadedFile("test", "file.txt", Buffer.from("data"))).rejects.toThrow("Upload failed");
     });
   });
 });
