@@ -21,6 +21,7 @@ describe("Redis Client", () => {
     connect: ReturnType<typeof vi.fn>;
     quit: ReturnType<typeof vi.fn>;
     on: ReturnType<typeof vi.fn>;
+    isOpen: boolean;
   };
 
   beforeEach(() => {
@@ -28,7 +29,8 @@ describe("Redis Client", () => {
     mockRedisClient = {
       connect: vi.fn().mockResolvedValue(undefined),
       quit: vi.fn().mockResolvedValue(undefined),
-      on: vi.fn()
+      on: vi.fn(),
+      isOpen: true
     };
 
     // Mock createClient to return our mock client
@@ -101,6 +103,20 @@ describe("Redis Client", () => {
       await closeRedisClient();
 
       // Should create a new client
+      const client2 = await getRedisClient();
+
+      expect(createClient).toHaveBeenCalledTimes(2);
+      expect(mockRedisClient.connect).toHaveBeenCalledTimes(2);
+      expect(client1).toBe(mockRedisClient);
+      expect(client2).toBe(mockRedisClient);
+    });
+
+    it("should reconnect when the existing client is closed", async () => {
+      const client1 = await getRedisClient();
+
+      // Simulate the connection being dropped
+      mockRedisClient.isOpen = false;
+
       const client2 = await getRedisClient();
 
       expect(createClient).toHaveBeenCalledTimes(2);

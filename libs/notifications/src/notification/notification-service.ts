@@ -2,7 +2,7 @@ import {
   extractCaseSummary as extractAdminCourtSummary,
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
-import { downloadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
@@ -220,7 +220,7 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
 }
 
 async function buildEmailDataWithPdf(pdfBlobKey: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
-  const pdfBuffer = await downloadBlob(pdfBlobKey);
+  const pdfBuffer = await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS);
 
   if (!pdfBuffer) {
     return { templateParameters, templateId: getSubscriptionTemplateIdForListType(listTypeId, true, false) };

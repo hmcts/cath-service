@@ -5,7 +5,8 @@ const { mockUploadBlob } = vi.hoisted(() => ({
   mockUploadBlob: vi.fn()
 }));
 vi.mock("@hmcts/azure-blob", () => ({
-  uploadBlob: mockUploadBlob
+  uploadBlob: mockUploadBlob,
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 vi.mock("@hmcts/pdf-generation", () => ({

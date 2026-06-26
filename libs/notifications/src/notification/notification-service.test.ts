@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "./notification-service.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
-  downloadBlob: vi.fn().mockResolvedValue(null)
+  downloadBlob: vi.fn().mockResolvedValue(null),
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({

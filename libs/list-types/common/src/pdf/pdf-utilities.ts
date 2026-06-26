@@ -1,4 +1,4 @@
-import { uploadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
 import nunjucks from "nunjucks";
 
 export const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
@@ -30,7 +30,7 @@ export async function savePdfToStorage(artefactId: string, pdfBuffer: Buffer, si
   const exceedsMaxSize = sizeBytes > MAX_PDF_SIZE_BYTES;
   const blobKey = `${artefactId}.pdf`;
 
-  await uploadBlob(blobKey, pdfBuffer, "application/pdf");
+  await uploadBlob(blobKey, pdfBuffer, "application/pdf", CONTAINER.PUBLICATIONS);
 
   return {
     success: true,
