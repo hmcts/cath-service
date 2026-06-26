@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.title }} - {{ header.locationName }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.title }} - {{ header.locationName }}</h1>
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <p class="bold header-date">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+  </div>
+
+  <div class="restriction-box">
+    <h2>{{ t.restrictionInformationHeading }}</h2>
+    <p>{{ t.restrictionInformationP1 }}</p>
+    <p><strong>{{ t.restrictionInformationBoldText }}</strong></p>
+    <p>{{ t.restrictionInformationP2 }}</p>
+    <ul>
+      <li>{{ t.restrictionBulletPoint1 }}</li>
+      <li>{{ t.restrictionBulletPoint2 }}</li>
+    </ul>
+    <p>{{ t.restrictionInformationP3 }}</p>
+    <p>{{ t.restrictionInformationP4 }}</p>
+  </div>
+
+  <div class="info-box">
+    <h2>{{ t.openJusticeTitle }}</h2>
+    <p>{{ t.openJusticeIntro }}</p>
+    <p>{{ t.openJusticeContact(openJustice.venueName, openJustice.email, openJustice.phone) }}</p>
+    <p>{{ t.openJusticeDecision }}</p>
+    <p>{{ t.openJusticePrivate }}</p>
+    <p>{{ t.openJusticeMoreInfo }} <a href="{{ t.openJusticeLink }}">{{ t.openJusticeLinkText }}</a>.</p>
+  </div>
+
+  {% for courtList in listData.courtLists %}
+    {% set courtHouse = courtList.courtHouse %}
+    <div class="court-section">
+      {% if courtHouse.courtHouseAddress %}
+        <h2>{{ courtHouse.courtHouseName }}</h2>
+        <div class="address">
+          {% for line in courtHouse.courtHouseAddress.line %}
+            {% if line | length %}{{ line }}<br>{% endif %}
+          {% endfor %}
+          {% if courtHouse.courtHouseAddress.town | length %}{{ courtHouse.courtHouseAddress.town }}<br>{% endif %}
+          {% if courtHouse.courtHouseAddress.county | length %}{{ courtHouse.courtHouseAddress.county }}<br>{% endif %}
+          {% if courtHouse.courtHouseAddress.postCode | length %}{{ courtHouse.courtHouseAddress.postCode }}{% endif %}
+        </div>
+      {% endif %}
+
+      {% for courtRoom in courtHouse.courtRoom %}
+        {% for session in courtRoom.session %}
+          <div class="court-room-section">
+            <div class="section-heading">{{ courtRoom.courtRoomName }}</div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col" class="no-wrap">{{ t.time }}</th>
+                  <th scope="col" class="no-wrap">{{ t.defendantName }}</th>
+                  <th scope="col" class="no-wrap">{{ t.caseNumber }}</th>
+                  <th scope="col" class="no-wrap">{{ t.offence }}</th>
+                  <th scope="col" class="no-wrap">{{ t.plea }}</th>
+                  <th scope="col" class="no-wrap">{{ t.results }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sitting in session.sittings %}
+                  {% for hearing in sitting.hearing %}
+                    {% for case in hearing.case %}
+                      <tr>
+                        <td class="no-wrap">{{ sitting.time }}</td>
+                        <td class="no-wrap">{{ case.defendantName }}</td>
+                        <td class="no-wrap">{{ case.caseNumber }}</td>
+                        <td class="no-wrap">{{ case.offence }}</td>
+                        <td class="no-wrap">{{ case.plea }}</td>
+                        <td class="no-wrap">{{ case.results }}</td>
+                      </tr>
+                      {% if case.formattedReportingRestriction | length %}
+                        <tr class="restriction-row">
+                          <td colspan="6">
+                            <strong>{{ t.restrictionInformationHeading }}:</strong> {{ case.formattedReportingRestriction }}
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>
