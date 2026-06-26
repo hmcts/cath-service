@@ -29,6 +29,8 @@ cath-web:
             alias: AZURE_STORAGE_CONNECTION_STRING
           - name: storageaccount-name
             alias: AZURE_STORAGE_ACCOUNT_NAME
+          - name: redis-url
+            alias: REDIS_URL
 
 # API application configuration
 cath-api:
