@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformation }}</h3>
+    <p>{{ t.openJusticeIntro }}</p>
+    <p>{{ t.openJusticeDecision }}</p>
+    <p>{{ t.openJusticePrivate }}</p>
+    <p>{{ t.openJusticeMoreInfo }} <a href="{{ t.openJusticeLink }}">{{ t.openJusticeLinkText }}</a>.</p>
+  </div>
+
+  {% for courtList in listData.courtLists %}
+    {% set courtHouse = courtList.courtHouse %}
+    <div class="court-section">
+      {% if courtHouse.courtHouseAddress %}
+        <h2>{{ courtHouse.courtHouseName }}</h2>
+        <div class="address">
+          {% for line in courtHouse.courtHouseAddress.line %}
+            {% if line | length %}{{ line }}<br>{% endif %}
+          {% endfor %}
+          {% if courtHouse.courtHouseAddress.town | length %}{{ courtHouse.courtHouseAddress.town }}<br>{% endif %}
+          {% if courtHouse.courtHouseAddress.county | length %}{{ courtHouse.courtHouseAddress.county }}<br>{% endif %}
+          {% if courtHouse.courtHouseAddress.postCode | length %}{{ courtHouse.courtHouseAddress.postCode }}{% endif %}
+        </div>
+      {% endif %}
+
+      {% for courtRoom in courtHouse.courtRoom %}
+        {% for session in courtRoom.session %}
+          <div class="court-room-section">
+            <div class="section-heading">
+              {{ courtRoom.courtRoomName }}{% if session.formattedJudiciaries | length %}: {{ session.formattedJudiciaries }}{% endif %}
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th class="no-wrap">{{ t.blockStart }}</th>
+                  <th>{{ t.defendantName }}</th>
+                  <th class="no-wrap">{{ t.dateOfBirth }}</th>
+                  <th>{{ t.address }}</th>
+                  <th class="no-wrap">{{ t.age }}</th>
+                  <th class="no-wrap">{{ t.caseNumber }}</th>
+                  <th class="no-wrap">{{ t.offenceCode }}</th>
+                  <th>{{ t.offenceTitle }}</th>
+                  <th>{{ t.offenceSummary }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sitting in session.sittings %}
+                  {% for hearing in sitting.hearing %}
+                    {% for case in hearing.case %}
+                      {% for defendant in case.defendants %}
+                        {% if defendant.offences | length %}
+                          {% for offence in defendant.offences %}
+                            <tr>
+                              <td class="no-wrap">{{ sitting.blockStart }}</td>
+                              <td>{{ defendant.name }}</td>
+                              <td class="no-wrap">{{ defendant.dateOfBirth }}</td>
+                              <td>{{ defendant.address }}</td>
+                              <td class="no-wrap">{{ defendant.age }}</td>
+                              <td class="no-wrap">{{ case.caseNumber }}</td>
+                              <td class="no-wrap">{{ offence.offenceCode }}</td>
+                              <td>{{ offence.offenceTitle }}</td>
+                              <td>{{ offence.offenceSummary }}</td>
+                            </tr>
+                          {% endfor %}
+                        {% else %}
+                          <tr>
+                            <td class="no-wrap">{{ sitting.blockStart }}</td>
+                            <td>{{ defendant.name }}</td>
+                            <td class="no-wrap">{{ defendant.dateOfBirth }}</td>
+                            <td>{{ defendant.address }}</td>
+                            <td class="no-wrap">{{ defendant.age }}</td>
+                            <td class="no-wrap">{{ case.caseNumber }}</td>
+                            <td class="no-wrap"></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                      {% if case.formattedReportingRestriction | length %}
+                        <tr class="restriction-row">
+                          <td colspan="9">
+                            <strong>{{ t.reportingRestrictions }}:</strong> {{ t.reportingRestrictionWarning }}
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -316,5 +316,50 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SJP Public List (New cases)",
     subJurisdictionIds: [7]
+  },
+  // Magistrates' Court Hearing Lists (Crime Portal / Libra) - all Classified, accessible by CRIME_IDAM and PI_AAD (media-verified)
+  {
+    id: 28,
+    name: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
+    englishFriendlyName: "Magistrates Adult Court List - Daily",
+    welshFriendlyName: "Rhestr Llys Ynadon Oedolion – Dyddiol",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-adult-court-list-daily",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 29,
+    name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE",
+    englishFriendlyName: "Magistrates Adult Court List - Future",
+    welshFriendlyName: "Rhestr Llys Ynadon Oedolion – Dyfodol",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-adult-court-list-future",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 30,
+    name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY",
+    englishFriendlyName: "Magistrates Public Adult Court List - Daily",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon – Oedolion",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-public-adult-court-list-daily",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 31,
+    name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE",
+    englishFriendlyName: "Magistrates Public Adult Court List - Future",
+    welshFriendlyName: "Rhestr Achosion Dyfodol Cyhoeddus y Llys Ynadon – Oedolion",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-public-adult-court-list-future",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
   }
 ];

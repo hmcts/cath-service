@@ -22,6 +22,22 @@ import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
+import {
+  extractCaseSummary as extractMagistratesAdultDailySummary,
+  formatCaseSummaryForEmail as formatMagistratesAdultDailySummaryForEmail
+} from "@hmcts/magistrates-adult-court-list-daily";
+import {
+  extractCaseSummary as extractMagistratesAdultFutureSummary,
+  formatCaseSummaryForEmail as formatMagistratesAdultFutureSummaryForEmail
+} from "@hmcts/magistrates-adult-court-list-future";
+import {
+  extractCaseSummary as extractMagistratesPublicAdultDailySummary,
+  formatCaseSummaryForEmail as formatMagistratesPublicAdultDailySummaryForEmail
+} from "@hmcts/magistrates-public-adult-court-list-daily";
+import {
+  extractCaseSummary as extractMagistratesPublicAdultFutureSummary,
+  formatCaseSummaryForEmail as formatMagistratesPublicAdultFutureSummaryForEmail
+} from "@hmcts/magistrates-public-adult-court-list-future";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
@@ -93,7 +109,23 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: {
+    extract: extractMagistratesAdultDailySummary as SummaryExtractor,
+    format: formatMagistratesAdultDailySummaryForEmail
+  },
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: {
+    extract: extractMagistratesAdultFutureSummary as SummaryExtractor,
+    format: formatMagistratesAdultFutureSummaryForEmail
+  },
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: {
+    extract: extractMagistratesPublicAdultDailySummary as SummaryExtractor,
+    format: formatMagistratesPublicAdultDailySummaryForEmail
+  },
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: {
+    extract: extractMagistratesPublicAdultFutureSummary as SummaryExtractor,
+    format: formatMagistratesPublicAdultFutureSummaryForEmail
+  }
 };
 
 export interface NotificationResult {

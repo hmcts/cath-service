@@ -7,6 +7,16 @@ import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseList
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
+import { generateMagistratesAdultCourtListDailyPdf, type MagistratesAdultListData } from "@hmcts/magistrates-adult-court-list-daily";
+import {
+  generateMagistratesAdultCourtListFuturePdf,
+  type MagistratesAdultListData as MagistratesAdultFutureData
+} from "@hmcts/magistrates-adult-court-list-future";
+import { generateMagistratesPublicAdultCourtListDailyPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-adult-court-list-daily";
+import {
+  generateMagistratesPublicAdultCourtListFuturePdf,
+  type MagistratesPublicListData as MagistratesPublicFutureData
+} from "@hmcts/magistrates-public-adult-court-list-future";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
@@ -75,7 +85,15 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) =>
+    generateMagistratesAdultCourtListDailyPdf({ ...p, jsonData: p.jsonData as MagistratesAdultListData, contentDate: p.contentDate }),
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) =>
+    generateMagistratesAdultCourtListFuturePdf({ ...p, jsonData: p.jsonData as MagistratesAdultFutureData, contentDate: p.contentDate }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>
+    generateMagistratesPublicAdultCourtListDailyPdf({ ...p, jsonData: p.jsonData as MagistratesPublicListData, contentDate: p.contentDate }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: (p) =>
+    generateMagistratesPublicAdultCourtListFuturePdf({ ...p, jsonData: p.jsonData as MagistratesPublicFutureData, contentDate: p.contentDate })
 };
 
 export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
