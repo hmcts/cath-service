@@ -17,7 +17,7 @@ crons:
 # Per-PR isolated blob storage provisioned via Azure Service Operator
 blobstorage:
   enabled: true
-  resourceGroup: cath-aso-dev-rg
+  resourceGroup: cath-aso-preview-rg
   setup:
     containers:
       - artefact
