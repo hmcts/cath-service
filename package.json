@@ -75,7 +75,7 @@
     "qs": "6.15.2",
     "tar": "7.5.16",
     "undici": "8.5.0",
-    "vite": "7.3.5"
+    "vite": "8.1.0"
   },
   "dependencies": {
     "@azure/identity": "4.10.0",
