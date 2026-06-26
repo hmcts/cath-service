@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@hmcts/azure-blob", () => ({
-  downloadBlob: vi.fn()
+  downloadBlob: vi.fn(),
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -100,7 +101,7 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toEqual(mockBuffer);
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`);
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, "artefact");
     });
 
     it("should return null when blob is not found", async () => {
@@ -132,7 +133,7 @@ describe("file-retrieval", () => {
       await getFileBuffer(artefactId);
 
       // Assert
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`);
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, "artefact");
     });
   });
 
@@ -260,7 +261,7 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toEqual(data);
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`);
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
     });
 
     it("should return null when blob is not found", async () => {

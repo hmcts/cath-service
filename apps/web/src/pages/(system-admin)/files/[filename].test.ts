@@ -5,7 +5,8 @@ const { mockDownloadBlob } = vi.hoisted(() => ({
   mockDownloadBlob: vi.fn()
 }));
 vi.mock("@hmcts/azure-blob", () => ({
-  downloadBlob: mockDownloadBlob
+  downloadBlob: mockDownloadBlob,
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 vi.mock("@hmcts/auth", () => ({

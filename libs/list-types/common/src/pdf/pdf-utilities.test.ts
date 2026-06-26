@@ -5,7 +5,8 @@ const { mockUploadBlob } = vi.hoisted(() => ({
   mockUploadBlob: vi.fn()
 }));
 vi.mock("@hmcts/azure-blob", () => ({
-  uploadBlob: mockUploadBlob
+  uploadBlob: mockUploadBlob,
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 describe("configureNunjucks", () => {
@@ -35,7 +36,7 @@ describe("savePdfToStorage", () => {
     expect(result.pdfPath).toBe(`${artefactId}.pdf`);
     expect(result.sizeBytes).toBe(sizeBytes);
     expect(result.exceedsMaxSize).toBe(false);
-    expect(mockUploadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, pdfBuffer, "application/pdf");
+    expect(mockUploadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, pdfBuffer, "application/pdf", "publications");
   });
 
   it("should flag when PDF exceeds max size", async () => {

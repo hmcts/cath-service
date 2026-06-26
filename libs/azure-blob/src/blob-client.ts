@@ -1,7 +1,12 @@
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient, StorageSharedKeyCredential } from "@azure/storage-blob";
 
-const CONTAINER_NAME = "artefact";
+export const CONTAINER = {
+  ARTEFACT: "artefact",
+  PUBLICATIONS: "publications"
+} as const;
+
+export type ContainerName = (typeof CONTAINER)[keyof typeof CONTAINER];
 
 function createBlobServiceClient(): BlobServiceClient {
   const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -26,9 +31,9 @@ function createBlobServiceClient(): BlobServiceClient {
   return new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, credential);
 }
 
-export async function uploadBlob(blobName: string, buffer: Buffer, contentType?: string): Promise<void> {
+export async function uploadBlob(blobName: string, buffer: Buffer, contentType?: string, containerName: ContainerName = CONTAINER.ARTEFACT): Promise<void> {
   const client = createBlobServiceClient();
-  const containerClient = client.getContainerClient(CONTAINER_NAME);
+  const containerClient = client.getContainerClient(containerName);
   await containerClient.createIfNotExists();
   const blobClient = containerClient.getBlockBlobClient(blobName);
   await blobClient.uploadData(buffer, {
@@ -36,9 +41,9 @@ export async function uploadBlob(blobName: string, buffer: Buffer, contentType?:
   });
 }
 
-export async function downloadBlob(blobName: string): Promise<Buffer | null> {
+export async function downloadBlob(blobName: string, containerName: ContainerName = CONTAINER.ARTEFACT): Promise<Buffer | null> {
   const client = createBlobServiceClient();
-  const containerClient = client.getContainerClient(CONTAINER_NAME);
+  const containerClient = client.getContainerClient(containerName);
   const blobClient = containerClient.getBlobClient(blobName);
 
   try {
@@ -56,9 +61,9 @@ export async function downloadBlob(blobName: string): Promise<Buffer | null> {
   }
 }
 
-export async function deleteBlob(blobName: string): Promise<void> {
+export async function deleteBlob(blobName: string, containerName: ContainerName = CONTAINER.ARTEFACT): Promise<void> {
   const client = createBlobServiceClient();
-  const containerClient = client.getContainerClient(CONTAINER_NAME);
+  const containerClient = client.getContainerClient(containerName);
   const blobClient = containerClient.getBlobClient(blobName);
 
   try {

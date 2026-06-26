@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { downloadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { getParam } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 
@@ -25,13 +25,14 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const fileContent = await downloadBlob(filename);
+    const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
+    const container = ext === ".pdf" ? CONTAINER.PUBLICATIONS : CONTAINER.ARTEFACT;
+    const fileContent = await downloadBlob(filename, container);
 
     if (!fileContent) {
       return res.status(404).send("File not found");
     }
 
-    const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
     const contentType = CONTENT_TYPES[ext] || "application/octet-stream";
     const disposition = ext === ".html" ? "attachment" : "inline";
 
