@@ -14,6 +14,34 @@ const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
 const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const validate = createJsonValidator(schemaPath);
 
+const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyTitle: string }> = {
+  33: {
+    courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+    enTitle: en.rptEasternPageTitle,
+    cyTitle: cy.rptEasternPageTitle
+  },
+  34: {
+    courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+    enTitle: en.rptLondonPageTitle,
+    cyTitle: cy.rptLondonPageTitle
+  },
+  35: {
+    courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+    enTitle: en.rptMidlandsPageTitle,
+    cyTitle: cy.rptMidlandsPageTitle
+  },
+  36: {
+    courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+    enTitle: en.rptNorthernPageTitle,
+    cyTitle: cy.rptNorthernPageTitle
+  },
+  37: {
+    courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
+    enTitle: en.rptSouthernPageTitle,
+    cyTitle: cy.rptSouthernPageTitle
+  }
+};
+
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
@@ -38,6 +66,17 @@ export const GET = async (req: Request, res: Response) => {
         cy,
         errorTitle: "Not Found",
         errorMessage: "The requested list could not be found"
+      });
+    }
+
+    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeId];
+
+    if (!listTypeConfig) {
+      return res.status(400).render("errors/common", {
+        en,
+        cy,
+        errorTitle: "Invalid List Type",
+        errorMessage: "This list type is not supported by this module"
       });
     }
 
@@ -69,12 +108,11 @@ export const GET = async (req: Request, res: Response) => {
       });
     }
 
-    const courtName = "First-tier Tribunal (Residential Property Tribunal): Eastern region";
-    const listTitle = t.rptEasternPageTitle;
+    const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 
     const { header, hearings } = renderFttRptData(jsonData, {
       locale,
-      courtName,
+      courtName: listTypeConfig.courtName,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle
@@ -82,7 +120,7 @@ export const GET = async (req: Request, res: Response) => {
 
     const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
 
-    res.render("ftt-rpt-eastern-weekly-hearing-list", {
+    res.render("ftt-rpt-weekly-hearing-list", {
       en,
       cy,
       t,
@@ -92,7 +130,7 @@ export const GET = async (req: Request, res: Response) => {
       dataSource
     });
   } catch (error) {
-    console.error("Error rendering FTT RPT Eastern Weekly Hearing List:", error);
+    console.error("Error rendering FTT RPT Weekly Hearing List:", error);
     return res.status(500).render("errors/common", {
       en,
       cy,
