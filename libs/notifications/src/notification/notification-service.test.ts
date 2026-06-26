@@ -235,6 +235,56 @@ describe("sendListTypePublicationNotifications", () => {
 
     expect(buildTemplateParameters).toHaveBeenCalledWith(expect.objectContaining({ caseValue: "AB-123" }));
   });
+
+  it("should download PDF from publications container and attach to email when pdfFilePath is set and PDF is under 2MB", async () => {
+    // Arrange
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+
+    vi.mocked(buildEnhancedTemplateParameters).mockReturnValue({
+      locations: "Test Court",
+      ListType: "Civil And Family Daily Cause List",
+      content_date: "1 January 2025",
+      start_page_link: "https://example.com",
+      subscription_page_link: "https://example.com",
+      display_summary: "yes",
+      summary_of_cases: "Case 123 - Smith v Jones"
+    });
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+    vi.mocked(downloadBlob).mockResolvedValue(Buffer.from("pdf content"));
+
+    // Act
+    await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true }, pdfFilePath: "artefact-1.pdf" });
+
+    // Assert
+    expect(downloadBlob).toHaveBeenCalledWith("artefact-1.pdf", "publications");
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ pdfBuffer: expect.any(Buffer) }));
+  });
+
+  it("should send email without PDF buffer when PDF blob is not found", async () => {
+    // Arrange
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+    vi.mocked(downloadBlob).mockResolvedValue(null);
+
+    // Act
+    const result = await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true }, pdfFilePath: "artefact-1.pdf" });
+
+    // Assert
+    expect(result.sent).toBe(1);
+  });
 });
 
 describe("sendLocationAndCaseSubscriptionNotifications", () => {

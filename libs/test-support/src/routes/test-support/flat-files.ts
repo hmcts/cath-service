@@ -40,7 +40,7 @@ export const POST = async (req: Request, res: Response) => {
     const blobName = `${artefactId}${fileExtension}`;
     const buffer = Buffer.from(content, "base64");
 
-    await uploadBlob(blobName, buffer, "application/pdf", CONTAINER.PUBLICATIONS);
+    await uploadBlob(blobName, buffer, "application/pdf", CONTAINER.ARTEFACT);
 
     console.log(`[test-support] Uploaded flat file to blob storage: ${blobName} (${buffer.length} bytes)`);
 
@@ -62,7 +62,7 @@ export const DELETE = async (req: Request, res: Response) => {
     const fileExtension = extension || ".pdf";
     const blobName = `${artefactId}${fileExtension}`;
 
-    await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
+    await deleteBlob(blobName, CONTAINER.ARTEFACT);
     console.log(`[test-support] Deleted flat file from blob storage: ${blobName}`);
 
     return res.json({ deleted: true });
