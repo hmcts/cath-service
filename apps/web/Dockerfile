@@ -13,7 +13,11 @@ RUN yarn build
 
 # ---- Runtime image ----
 FROM base AS runtime
+USER root
+RUN apk add --no-cache chromium
+USER hmcts
 COPY --from=build /opt/app/apps/web/dist ./apps/web/dist
+COPY --from=build /opt/app/apps/web/helm ./apps/web/helm
 COPY --from=build /opt/app/libs ./libs
 
 RUN yarn workspaces focus @hmcts/web --production

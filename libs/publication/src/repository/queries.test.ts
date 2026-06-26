@@ -16,6 +16,11 @@ import {
   getLocationsWithPublicationCount
 } from "./queries.js";
 
+vi.mock("@hmcts/azure-blob", () => ({
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" },
+  deleteBlob: vi.fn().mockResolvedValue(undefined)
+}));
+
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -580,7 +585,12 @@ describe("deleteArtefacts", () => {
     vi.clearAllMocks();
   });
 
-  it("should delete artefacts by their IDs", async () => {
+  it("should delete artefacts by their IDs and trigger blob deletion", async () => {
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([
+      { artefactId: "550e8400-e29b-41d4-a716-446655440000", fileExtension: ".json" },
+      { artefactId: "550e8400-e29b-41d4-a716-446655440001", fileExtension: null }
+    ] as any);
     vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 2 });
 
     await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"]);
@@ -592,9 +602,14 @@ describe("deleteArtefacts", () => {
         }
       }
     });
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.json", "artefact");
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.pdf", "publications");
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.pdf", "artefact");
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.pdf", "publications");
   });
 
   it("should delete single artefact", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([{ artefactId: "550e8400-e29b-41d4-a716-446655440000", fileExtension: ".json" }] as any);
     vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 1 });
 
     await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000"]);
@@ -609,6 +624,7 @@ describe("deleteArtefacts", () => {
   });
 
   it("should handle empty array", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([]);
     vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 });
 
     await deleteArtefacts([]);

@@ -14,6 +14,16 @@ api:
 crons:
   enabled: true
 
+# Per-PR isolated blob storage provisioned via Azure Service Operator
+blobstorage:
+  enabled: true
+  resourceGroup: cath-aso-dev-rg
+  setup:
+    containers:
+      - artefact
+      - files
+      - publications
+
 # Web application configuration
 cath-web:
   nodejs:
@@ -40,6 +50,12 @@ cath-web:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
+      AZURE_STORAGE_ACCOUNT_NAME:
+        secretRef: "storage-account-{{ .Release.Name }}-blobstorage"
+        key: storage_account_name
+      AZURE_STORAGE_ACCOUNT_KEY:
+        secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
+        key: accessKey
 
 # API application configuration
 cath-api:
@@ -63,6 +79,12 @@ cath-api:
       POSTGRES_PORT:
         secretRef: postgres
         key: PORT
+      AZURE_STORAGE_ACCOUNT_NAME:
+        secretRef: "storage-account-{{ .Release.Name }}-blobstorage"
+        key: storage_account_name
+      AZURE_STORAGE_ACCOUNT_KEY:
+        secretRef: "storage-secret-{{ .Release.Name }}-blobstorage"
+        key: accessKey
 
 # Crons application configuration
 cath-crons:
