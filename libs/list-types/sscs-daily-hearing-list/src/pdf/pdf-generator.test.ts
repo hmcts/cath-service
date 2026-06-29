@@ -44,32 +44,32 @@ const mockHearingList = [
   }
 ];
 
+const BASE_OPTIONS = {
+  artefactId: "test-artefact-123",
+  contentDate: new Date("2026-01-01"),
+  locale: "en",
+  locationId: "19",
+  jsonData: mockHearingList,
+  listTitle: "London Social Security and Child Support Tribunal Daily Hearing List",
+  courtName: "London Social Security and Child Support Tribunal",
+  importantInformationText: "Open justice is a fundamental principle."
+};
+
 describe("generateSscsDailyHearingListPdf", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
     vi.mocked(renderSscsDailyHearingListData).mockReturnValue(mockRenderedData);
     mockUploadBlob.mockResolvedValue(undefined);
   });
 
   it("should generate PDF successfully", async () => {
-    const pdfBuffer = Buffer.from("PDF content");
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
-      pdfBuffer,
+      pdfBuffer: Buffer.from("PDF content"),
       sizeBytes: 1024
     });
 
-    const result = await generateSscsDailyHearingListPdf({
-      artefactId: "test-artefact-123",
-      contentDate: new Date("2026-01-01"),
-      locale: "en",
-      locationId: "19",
-      jsonData: mockHearingList,
-      listTitle: "London Social Security and Child Support Tribunal Daily Hearing List",
-      courtName: "London Social Security and Child Support Tribunal",
-      importantInformationText: "Open justice is a fundamental principle."
-    });
+    const result = await generateSscsDailyHearingListPdf(BASE_OPTIONS);
 
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
@@ -78,76 +78,69 @@ describe("generateSscsDailyHearingListPdf", () => {
   });
 
   it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
       success: true,
-      pdfBuffer: largePdfBuffer,
+      pdfBuffer: Buffer.alloc(3 * 1024 * 1024),
       sizeBytes: 3 * 1024 * 1024
     });
 
-    const result = await generateSscsDailyHearingListPdf({
-      artefactId: "large-pdf-123",
-      contentDate: new Date("2026-01-01"),
-      locale: "en",
-      locationId: "19",
-      jsonData: mockHearingList,
-      listTitle: "London Social Security and Child Support Tribunal Daily Hearing List",
-      courtName: "London Social Security and Child Support Tribunal",
-      importantInformationText: "Open justice is a fundamental principle."
-    });
+    const result = await generateSscsDailyHearingListPdf({ ...BASE_OPTIONS, artefactId: "large-pdf-123" });
 
     expect(result.success).toBe(true);
     expect(result.exceedsMaxSize).toBe(true);
   });
 
-  it("should return error when PDF generation fails", async () => {
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: false,
-      error: "Puppeteer crashed"
-    });
+  it("should return error when PDF generation fails with error message", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: false, error: "Puppeteer crashed" });
 
-    const result = await generateSscsDailyHearingListPdf({
-      artefactId: "failed-pdf",
-      contentDate: new Date("2026-01-01"),
-      locale: "en",
-      locationId: "19",
-      jsonData: mockHearingList,
-      listTitle: "London Social Security and Child Support Tribunal Daily Hearing List",
-      courtName: "London Social Security and Child Support Tribunal",
-      importantInformationText: ""
-    });
+    const result = await generateSscsDailyHearingListPdf({ ...BASE_OPTIONS, artefactId: "failed-pdf", importantInformationText: "" });
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("Puppeteer crashed");
   });
 
+  it("should return default error message when PDF generation fails without message", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: false });
+
+    const result = await generateSscsDailyHearingListPdf({ ...BASE_OPTIONS, artefactId: "failed-pdf-no-msg", importantInformationText: "" });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+  });
+
+  it("should return error when an unexpected exception is thrown", async () => {
+    vi.mocked(generatePdfFromHtml).mockRejectedValue(new Error("Unexpected crash"));
+
+    const result = await generateSscsDailyHearingListPdf({ ...BASE_OPTIONS, artefactId: "exception-pdf", importantInformationText: "" });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Unexpected crash");
+  });
+
+  it("should use raw provenance value when not in PROVENANCE_LABELS", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    const result = await generateSscsDailyHearingListPdf({
+      ...BASE_OPTIONS,
+      artefactId: "unknown-provenance",
+      importantInformationText: "",
+      provenance: "UNKNOWN_SOURCE"
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("should pass correct render options to renderer", async () => {
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: Buffer.from("PDF"),
-      sizeBytes: 100
-    });
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
 
-    const contentDate = new Date("2026-01-01");
-    const listTitle = "London Social Security and Child Support Tribunal Daily Hearing List";
-
-    await generateSscsDailyHearingListPdf({
-      artefactId: "test-render-options",
-      contentDate,
-      locale: "cy",
-      locationId: "19",
-      jsonData: mockHearingList,
-      listTitle,
-      courtName: "London Social Security and Child Support Tribunal",
-      importantInformationText: "Open justice is a fundamental principle."
-    });
+    await generateSscsDailyHearingListPdf({ ...BASE_OPTIONS, artefactId: "test-render-options", locale: "cy" });
 
     expect(renderSscsDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
       courtName: "London Social Security and Child Support Tribunal",
-      contentDate,
+      contentDate: BASE_OPTIONS.contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle
+      listTitle: BASE_OPTIONS.listTitle
     });
   });
 });

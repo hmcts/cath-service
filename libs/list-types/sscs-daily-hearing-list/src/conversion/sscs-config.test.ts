@@ -43,22 +43,41 @@ describe("SSCS_EXCEL_CONFIG", () => {
     expect(requiredFields).toContain("respondent");
   });
 
+  it("should mark additionalInformation as not required", () => {
+    const additionalInfo = SSCS_EXCEL_CONFIG.fields.find((f) => f.fieldName === "additionalInformation");
+    expect(additionalInfo?.required).toBe(false);
+  });
+
   it("should have minRows set to 1", () => {
     expect(SSCS_EXCEL_CONFIG.minRows).toBe(1);
   });
 
-  it("should have validators that reject HTML tags", () => {
-    const venueField = SSCS_EXCEL_CONFIG.fields.find((f) => f.fieldName === "venue");
-    expect(venueField?.validators).toBeDefined();
-    expect(venueField?.validators?.length).toBeGreaterThan(0);
+  describe("field validators", () => {
+    const getValidator = (fieldName: string) => {
+      const field = SSCS_EXCEL_CONFIG.fields.find((f) => f.fieldName === fieldName);
+      return field!.validators![0];
+    };
 
-    const validator = venueField!.validators![0];
-    expect(() => validator("<script>alert('xss')</script>", 1)).toThrow("HTML tags are not allowed");
-  });
+    const validValues: Record<string, string> = {
+      venue: "Manchester Tribunal Centre",
+      appealReferenceNumber: "SC/123/2025",
+      hearingType: "Oral Hearing",
+      appellant: "Smith, John",
+      courtroom: "Room 1",
+      hearingTime: "10:00am",
+      tribunal: "SSCS",
+      respondent: "Secretary of State for Work and Pensions",
+      additionalInformation: "Video hearing"
+    };
 
-  it("should accept valid venue values without throwing", () => {
-    const venueField = SSCS_EXCEL_CONFIG.fields.find((f) => f.fieldName === "venue");
-    const validator = venueField!.validators![0];
-    expect(() => validator("Manchester Tribunal Centre", 1)).not.toThrow();
+    for (const [fieldName, validValue] of Object.entries(validValues)) {
+      it(`should accept valid value for ${fieldName}`, () => {
+        expect(() => getValidator(fieldName)(validValue, 1)).not.toThrow();
+      });
+
+      it(`should reject HTML tags in ${fieldName}`, () => {
+        expect(() => getValidator(fieldName)("<script>alert('xss')</script>", 1)).toThrow("HTML tags are not allowed");
+      });
+    }
   });
 });

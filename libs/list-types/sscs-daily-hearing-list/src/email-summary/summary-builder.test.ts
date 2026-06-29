@@ -88,4 +88,25 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary([]);
     expect(result).toHaveLength(0);
   });
+
+  it("should fall back to empty string when hearingTime or hearingType are undefined", () => {
+    const hearings = [
+      {
+        venue: "Venue",
+        appealReferenceNumber: "SC/123/2025",
+        hearingType: undefined as unknown as string,
+        appellant: "Smith",
+        courtroom: "Room 1",
+        hearingTime: undefined as unknown as string,
+        tribunal: "SSCS",
+        respondent: "Secretary of State",
+        additionalInformation: ""
+      }
+    ];
+
+    const result = extractCaseSummary(hearings);
+
+    expect(result[0][0].value).toBe("");
+    expect(result[0][1].value).toBe("");
+  });
 });

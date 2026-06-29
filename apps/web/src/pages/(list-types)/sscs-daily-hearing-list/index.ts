@@ -1,9 +1,5 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createJsonValidator } from "@hmcts/list-types-common";
 import { listTypeData } from "@hmcts/location";
-import { getArtefactById } from "@hmcts/publication";
 import {
   sscsDailyHearingListCy as cy,
   sscsDailyHearingListEn as en,
@@ -12,13 +8,8 @@ import {
   type SscsDailyHearingList
 } from "@hmcts/sscs-daily-hearing-list";
 import { schemaPath } from "@hmcts/sscs-daily-hearing-list/config";
-import type { Request, Response } from "express";
+import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const validate = createJsonValidator(schemaPath);
 
 function getListTypeName(listTypeId: number): string | undefined {
@@ -32,62 +23,13 @@ function getImportantInformationText(listTypeName: string | undefined): string {
   return "";
 }
 
-export const GET = async (req: Request, res: Response) => {
-  const locale = res.locals.locale || "en";
-  const t = locale === "cy" ? cy : en;
-
-  const artefactId = req.query.artefactId as string;
-
-  if (!artefactId) {
-    return res.status(400).render("errors/common", {
-      en,
-      cy,
-      errorTitle: "Bad Request",
-      errorMessage: "Missing artefactId parameter"
-    });
-  }
-
-  try {
-    const artefact = await getArtefactById(artefactId);
-
-    if (!artefact) {
-      return res.status(404).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Not Found",
-        errorMessage: "The requested list could not be found"
-      });
-    }
-
-    const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-    let jsonContent: string;
-    try {
-      jsonContent = await readFile(jsonFilePath, "utf-8");
-    } catch (error) {
-      console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
-      return res.status(404).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Not Found",
-        errorMessage: "The requested list could not be found"
-      });
-    }
-
-    const jsonData: SscsDailyHearingList = JSON.parse(jsonContent);
-
-    const validationResult = validate(jsonData);
-    if (!validationResult.isValid) {
-      console.error("Validation errors:", validationResult.errors);
-      return res.status(400).render("errors/common", {
-        en,
-        cy,
-        errorTitle: "Invalid Data",
-        errorMessage: "The list data is invalid"
-      });
-    }
-
-    const listTypeName = getListTypeName(artefact.listTypeId);
+export const GET = createSimpleListTypeHandler<SscsDailyHearingList>({
+  en,
+  cy,
+  validate,
+  logPrefix: "sscs-daily-hearing-list",
+  render: ({ artefact, jsonData, locale, res }) => {
+    const t = locale === "cy" ? cy : en;
     const listTypeEntry = listTypeData.find((lt) => lt.id === artefact.listTypeId);
     const listTitle =
       locale === "cy"
@@ -96,14 +38,15 @@ export const GET = async (req: Request, res: Response) => {
 
     const { header, hearings } = renderSscsDailyHearingListData(jsonData, {
       locale,
-      courtName: listTitle,
+      courtName: String(listTitle),
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
-      listTitle
+      listTitle: String(listTitle)
     });
 
+    const listTypeName = getListTypeName(artefact.listTypeId);
     const importantInformationText = getImportantInformationText(listTypeName);
-    const dataSource = t.provenanceLabels[artefact.provenance as keyof typeof t.provenanceLabels] || artefact.provenance;
+    const dataSource = resolveDataSource(artefact.provenance, t);
 
     res.render("sscs-daily-hearing-list", {
       en,
@@ -115,13 +58,5 @@ export const GET = async (req: Request, res: Response) => {
       importantInformationText,
       dataSource
     });
-  } catch (error) {
-    console.error("Error rendering SSCS Daily Hearing List:", error);
-    return res.status(500).render("errors/common", {
-      en,
-      cy,
-      errorTitle: "Server Error",
-      errorMessage: "An error occurred while loading the list"
-    });
   }
-};
+});
