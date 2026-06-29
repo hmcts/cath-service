@@ -17,31 +17,24 @@ vi.mock("@hmcts/publication", () => ({
   PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform" }
 }));
 
-vi.mock("@hmcts/location", () => ({
-  listTypeData: [
-    {
-      id: 34,
-      name: "SSCS_LONDON_DAILY_HEARING_LIST",
-      englishFriendlyName: "London Social Security and Child Support Tribunal Daily Hearing List",
-      welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
-      provenance: "MANUAL_UPLOAD",
-      urlPath: "sscs-daily-hearing-list",
-      isNonStrategic: true,
-      defaultSensitivity: "Public",
-      shortenedFriendlyName: "SSCS London Daily Hearing List",
-      subJurisdictionIds: [8]
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn()
     }
-  ]
+  }
 }));
 
-vi.mock("@hmcts/sscs-daily-hearing-list", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/sscs-daily-hearing-list")>();
-  return {
-    ...actual,
-    renderSscsDailyHearingListData: vi.fn()
-  };
-});
+vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
+  sscsDailyHearingListEn: { listForDate: "List for", provenanceLabels: {} },
+  sscsDailyHearingListCy: { listForDate: "Rhestr ar gyfer", provenanceLabels: {} },
+  importantInformationByListType: {
+    SSCS_LONDON_DAILY_HEARING_LIST: "Open justice is a fundamental principle...\nsscsa-sutton@justice.gov.uk"
+  },
+  renderSscsDailyHearingListData: vi.fn()
+}));
 
+import { prisma } from "@hmcts/postgres-prisma";
 import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { renderSscsDailyHearingListData } from "@hmcts/sscs-daily-hearing-list";
 import { GET } from "./index.js";
@@ -81,9 +74,16 @@ const mockRenderedData = {
   hearings: mockJsonData
 };
 
+const mockDbListType = {
+  name: "SSCS_LONDON_DAILY_HEARING_LIST",
+  friendlyName: "London Social Security and Child Support Tribunal Daily Hearing List",
+  welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain"
+};
+
 function setupSuccessMocks(renderedData = mockRenderedData) {
   vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
   vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
+  vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockDbListType as any);
   mockValidate.mockReturnValue({ isValid: true, errors: [] });
   vi.mocked(renderSscsDailyHearingListData).mockReturnValue(renderedData);
 }

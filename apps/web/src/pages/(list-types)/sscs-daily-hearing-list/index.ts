@@ -1,5 +1,5 @@
 import { createJsonValidator } from "@hmcts/list-types-common";
-import { listTypeData } from "@hmcts/location";
+import { prisma } from "@hmcts/postgres-prisma";
 import {
   sscsDailyHearingListCy as cy,
   sscsDailyHearingListEn as en,
@@ -11,10 +11,6 @@ import { schemaPath } from "@hmcts/sscs-daily-hearing-list/config";
 import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
 const validate = createJsonValidator(schemaPath);
-
-function getListTypeName(listTypeId: number): string | undefined {
-  return listTypeData.find((lt) => lt.id === listTypeId)?.name;
-}
 
 function getImportantInformationText(listTypeName: string | undefined): string {
   if (listTypeName && importantInformationByListType[listTypeName]) {
@@ -28,13 +24,16 @@ export const GET = createSimpleListTypeHandler<SscsDailyHearingList>({
   cy,
   validate,
   logPrefix: "sscs-daily-hearing-list",
-  render: ({ artefact, jsonData, locale, res }) => {
+  render: async ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
-    const listTypeEntry = listTypeData.find((lt) => lt.id === artefact.listTypeId);
+
+    const dbListType = await prisma.listType.findUnique({
+      where: { id: artefact.listTypeId },
+      select: { name: true, friendlyName: true, welshFriendlyName: true }
+    });
+
     const listTitle =
-      locale === "cy"
-        ? (listTypeEntry?.welshFriendlyName ?? listTypeEntry?.englishFriendlyName ?? t.listForDate)
-        : (listTypeEntry?.englishFriendlyName ?? t.listForDate);
+      locale === "cy" ? (dbListType?.welshFriendlyName ?? dbListType?.friendlyName ?? t.listForDate) : (dbListType?.friendlyName ?? t.listForDate);
 
     const { header, hearings } = renderSscsDailyHearingListData(jsonData, {
       locale,
@@ -44,8 +43,7 @@ export const GET = createSimpleListTypeHandler<SscsDailyHearingList>({
       listTitle: String(listTitle)
     });
 
-    const listTypeName = getListTypeName(artefact.listTypeId);
-    const importantInformationText = getImportantInformationText(listTypeName);
+    const importantInformationText = getImportantInformationText(dbListType?.name ?? undefined);
     const dataSource = resolveDataSource(artefact.provenance, t);
 
     res.render("sscs-daily-hearing-list", {
