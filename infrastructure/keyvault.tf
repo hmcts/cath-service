@@ -17,3 +17,11 @@ data "azurerm_key_vault" "key_vault" {
   resource_group_name = azurerm_resource_group.shared.name
   depends_on          = [module.key_vault]
 }
+
+resource "azurerm_key_vault_access_policy" "e2e_oidc_sp" {
+  key_vault_id = data.azurerm_key_vault.key_vault.id
+  tenant_id    = var.tenant_id
+  object_id    = var.e2e_oidc_object_id
+
+  secret_permissions = ["Get", "List"]
+}

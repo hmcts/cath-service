@@ -57,6 +57,12 @@ variable "builtFrom" {
   default     = null
 }
 
+variable "e2e_oidc_object_id" {
+  description = "Azure AD object ID for GitHub Actions OIDC app registration used by E2E tests"
+  type        = string
+  default     = "9a5a8d6f-c926-46e3-89d4-ed3472ea0edc"
+}
+
 variable "sa_account_tier" {
   description = "Storage account tier"
   type        = string
