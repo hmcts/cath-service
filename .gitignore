@@ -90,3 +90,6 @@ libs/postgres-prisma/generated/
 # Exception: Hand-written ambient type declarations
 !**/global.d.ts
 !types/**/*.d.ts
+
+# Lefthook local overrides
+.lefthook-local.yml
