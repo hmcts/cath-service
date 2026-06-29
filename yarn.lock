@@ -2809,7 +2809,7 @@ __metadata:
     supertest: "npm:7.2.2"
     typescript: "npm:6.0.3"
     vite: "npm:7.3.6"
-    vite-plugin-static-copy: "npm:3.4.0"
+    vite-plugin-static-copy: "npm:4.1.1"
   languageName: unknown
   linkType: soft
 
@@ -10330,7 +10330,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.15":
+"tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.15, tinyglobby@npm:^0.2.17":
   version: 0.2.17
   resolution: "tinyglobby@npm:0.2.17"
   dependencies:
@@ -10633,17 +10633,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-plugin-static-copy@npm:3.4.0":
-  version: 3.4.0
-  resolution: "vite-plugin-static-copy@npm:3.4.0"
+"vite-plugin-static-copy@npm:4.1.1":
+  version: 4.1.1
+  resolution: "vite-plugin-static-copy@npm:4.1.1"
   dependencies:
     chokidar: "npm:^3.6.0"
     p-map: "npm:^7.0.4"
     picocolors: "npm:^1.1.1"
-    tinyglobby: "npm:^0.2.15"
+    tinyglobby: "npm:^0.2.17"
   peerDependencies:
-    vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
-  checksum: 10c0/bf23c1fbd307562f6337ad2ddc1e0d9219da0ca554c9f963fe16c1c1a8ea2c6f404fb15c0a50e922fe1db38393c0c091a4742ee05ef5414d5b77443bdbd3cca0
+    vite: ^6.0.0 || ^7.0.0 || ^8.0.0
+  checksum: 10c0/71ddeeed556275ef95c13e2b1d2af081603a98921fe4d58a91e0d64afc8e122c94f1310e4eec70e0c78118b9667e94b251cbb0ca38e2eeed220be84628b4cd82
   languageName: node
   linkType: hard
 
