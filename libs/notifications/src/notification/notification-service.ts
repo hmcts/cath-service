@@ -102,8 +102,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsConfig,
   SSCS_SCOTLAND_DAILY_HEARING_LIST: sscsConfig,
   SSCS_NORTH_EAST_DAILY_HEARING_LIST: sscsConfig,
-  SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsConfig,
-  SSCS_LIVERPOOL_DAILY_HEARING_LIST: sscsConfig
+  SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsConfig
 };
 
 export interface NotificationResult {

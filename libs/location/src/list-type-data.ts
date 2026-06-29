@@ -401,17 +401,5 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SSCS London Daily Hearing List",
     subJurisdictionIds: [8]
-  },
-  {
-    id: 35,
-    name: "SSCS_LIVERPOOL_DAILY_HEARING_LIST",
-    englishFriendlyName: "Liverpool Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl",
-    provenance: "MANUAL_UPLOAD",
-    urlPath: "sscs-daily-hearing-list",
-    isNonStrategic: true,
-    defaultSensitivity: "Public",
-    shortenedFriendlyName: "SSCS Liverpool Daily Hearing List",
-    subJurisdictionIds: [8]
   }
 ];

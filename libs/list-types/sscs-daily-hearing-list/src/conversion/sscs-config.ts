@@ -71,7 +71,6 @@ registerConverter(31, sscsConverter);
 registerConverter(32, sscsConverter);
 registerConverter(33, sscsConverter);
 registerConverter(34, sscsConverter);
-registerConverter(35, sscsConverter);
 
 registerConverterByName("SSCS_MIDLANDS_DAILY_HEARING_LIST", sscsConverter);
 registerConverterByName("SSCS_SOUTH_EAST_DAILY_HEARING_LIST", sscsConverter);
@@ -80,4 +79,3 @@ registerConverterByName("SSCS_SCOTLAND_DAILY_HEARING_LIST", sscsConverter);
 registerConverterByName("SSCS_NORTH_EAST_DAILY_HEARING_LIST", sscsConverter);
 registerConverterByName("SSCS_NORTH_WEST_DAILY_HEARING_LIST", sscsConverter);
 registerConverterByName("SSCS_LONDON_DAILY_HEARING_LIST", sscsConverter);
-registerConverterByName("SSCS_LIVERPOOL_DAILY_HEARING_LIST", sscsConverter);

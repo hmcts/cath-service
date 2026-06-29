@@ -81,10 +81,6 @@ const SSCS_FRIENDLY_NAMES: Record<string, { en: string; cy: string }> = {
   SSCS_LONDON_DAILY_HEARING_LIST: {
     en: "London Social Security and Child Support Tribunal Daily Hearing List",
     cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain"
-  },
-  SSCS_LIVERPOOL_DAILY_HEARING_LIST: {
-    en: "Liverpool Social Security and Child Support Tribunal Daily Hearing List",
-    cy: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl"
   }
 };
 
@@ -132,8 +128,7 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SSCS_SCOTLAND_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SCOTLAND_DAILY_HEARING_LIST"),
   SSCS_NORTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_NORTH_EAST_DAILY_HEARING_LIST"),
   SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_NORTH_WEST_DAILY_HEARING_LIST"),
-  SSCS_LONDON_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_LONDON_DAILY_HEARING_LIST"),
-  SSCS_LIVERPOOL_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_LIVERPOOL_DAILY_HEARING_LIST")
+  SSCS_LONDON_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_LONDON_DAILY_HEARING_LIST")
 };
 
 export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
