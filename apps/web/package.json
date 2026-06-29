@@ -43,7 +43,7 @@
     "@hmcts/test-support": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
-    "config": "4.4.1",
+    "config": "4.4.2",
     "connect-redis": "9.0.0",
     "cookie-parser": "1.4.7",
     "express": "5.2.1",
