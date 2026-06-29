@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { configureNunjucks, createPdfErrorResult, loadTranslations, MAX_PDF_SIZE_BYTES, savePdfToStorage, TEMP_STORAGE_BASE } from "./pdf-utilities.js";
+import { configureNunjucks, createPdfErrorResult, loadTranslations, MAX_PDF_SIZE_BYTES, savePdfToStorage } from "./pdf-utilities.js";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined)
-  }
+const { mockUploadBlob } = vi.hoisted(() => ({
+  mockUploadBlob: vi.fn()
+}));
+vi.mock("@hmcts/azure-blob", () => ({
+  uploadBlob: mockUploadBlob,
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 describe("configureNunjucks", () => {
@@ -21,9 +22,10 @@ describe("configureNunjucks", () => {
 describe("savePdfToStorage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUploadBlob.mockResolvedValue(undefined);
   });
 
-  it("should save PDF and return success result", async () => {
+  it("should upload PDF to blob storage and return success result", async () => {
     const artefactId = "test-artefact-123";
     const pdfBuffer = Buffer.from("test pdf content");
     const sizeBytes = 1024;
@@ -31,10 +33,10 @@ describe("savePdfToStorage", () => {
     const result = await savePdfToStorage(artefactId, pdfBuffer, sizeBytes);
 
     expect(result.success).toBe(true);
-    expect(result.pdfPath).toContain(artefactId);
-    expect(result.pdfPath).toContain(".pdf");
+    expect(result.pdfPath).toBe(`${artefactId}.pdf`);
     expect(result.sizeBytes).toBe(sizeBytes);
     expect(result.exceedsMaxSize).toBe(false);
+    expect(mockUploadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, pdfBuffer, "application/pdf", "publications");
   });
 
   it("should flag when PDF exceeds max size", async () => {
@@ -60,15 +62,12 @@ describe("savePdfToStorage", () => {
     expect(result.exceedsMaxSize).toBe(false);
   });
 
-  it("should create directory and write file", async () => {
-    const fs = await import("node:fs/promises");
-    const artefactId = "write-test";
+  it("should propagate upload errors", async () => {
+    mockUploadBlob.mockRejectedValue(new Error("Blob upload failed"));
+    const artefactId = "error-artefact";
     const pdfBuffer = Buffer.from("pdf data");
 
-    await savePdfToStorage(artefactId, pdfBuffer, 100);
-
-    expect(fs.default.mkdir).toHaveBeenCalledWith(TEMP_STORAGE_BASE, { recursive: true });
-    expect(fs.default.writeFile).toHaveBeenCalledWith(expect.stringContaining(`${artefactId}.pdf`), pdfBuffer);
+    await expect(savePdfToStorage(artefactId, pdfBuffer, 100)).rejects.toThrow("Blob upload failed");
   });
 });
 
@@ -145,11 +144,5 @@ describe("loadTranslations", () => {
 describe("constants", () => {
   it("should have MAX_PDF_SIZE_BYTES set to 2MB", () => {
     expect(MAX_PDF_SIZE_BYTES).toBe(2 * 1024 * 1024);
-  });
-
-  it("should have TEMP_STORAGE_BASE path containing expected directories", () => {
-    expect(TEMP_STORAGE_BASE).toContain("storage");
-    expect(TEMP_STORAGE_BASE).toContain("temp");
-    expect(TEMP_STORAGE_BASE).toContain("uploads");
   });
 });

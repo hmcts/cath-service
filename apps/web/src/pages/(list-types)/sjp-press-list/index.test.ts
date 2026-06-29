@@ -1,9 +1,7 @@
-import { readFile } from "node:fs/promises";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
-vi.mock("node:fs/promises");
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -30,9 +28,17 @@ vi.mock("@hmcts/sjp-press-list", async () => {
     validateSjpPressList: vi.fn()
   };
 });
+vi.mock("@hmcts/publication", () => ({
+  getPublicationJson: vi.fn(),
+  PROVENANCE_LABELS: {
+    MANUAL: "Manual Upload",
+    API: "API Upload"
+  }
+}));
 
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
+import { getPublicationJson } from "@hmcts/publication";
 import { validateSjpPressList } from "@hmcts/sjp-press-list";
 
 describe("SJP Press List Controller", () => {
@@ -161,7 +167,7 @@ describe("SJP Press List Controller", () => {
         contentDate: new Date("2025-01-20"),
         provenance: "MANUAL"
       } as never);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
       vi.mocked(determineListType).mockReturnValue("public");
 
@@ -183,7 +189,7 @@ describe("SJP Press List Controller", () => {
         contentDate: new Date("2025-01-20"),
         provenance: "MANUAL_UPLOAD"
       } as never);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
       vi.mocked(determineListType).mockReturnValue("press");
       vi.mocked(extractPressCases).mockReturnValue(mockCases);
@@ -228,7 +234,7 @@ describe("SJP Press List Controller", () => {
         contentDate: new Date("2025-01-20"),
         provenance: "MANUAL"
       } as never);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
       vi.mocked(determineListType).mockReturnValue("press");
       vi.mocked(extractPressCases).mockReturnValue(mockCases);
@@ -264,7 +270,7 @@ describe("SJP Press List Controller", () => {
         contentDate: new Date("2025-01-20"),
         provenance: "MANUAL"
       } as never);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
       vi.mocked(determineListType).mockReturnValue("press");
       vi.mocked(extractPressCases).mockReturnValue(mockCases);
@@ -296,7 +302,7 @@ describe("SJP Press List Controller", () => {
         contentDate: new Date("2025-01-20"),
         provenance: "MANUAL"
       } as never);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
       vi.mocked(determineListType).mockReturnValue("press");
       vi.mocked(extractPressCases).mockReturnValue(mockCases);

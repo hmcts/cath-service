@@ -1,15 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
 import nunjucks from "nunjucks";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Navigate to monorepo root (from libs/list-types/common/src/pdf/)
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
-
-export const TEMP_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 export const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 
 export interface PdfGenerationResult {
@@ -37,14 +28,13 @@ export function configureNunjucks(templateDir: string): nunjucks.Environment {
 
 export async function savePdfToStorage(artefactId: string, pdfBuffer: Buffer, sizeBytes: number): Promise<PdfGenerationResult> {
   const exceedsMaxSize = sizeBytes > MAX_PDF_SIZE_BYTES;
+  const blobKey = `${artefactId}.pdf`;
 
-  await fs.mkdir(TEMP_STORAGE_BASE, { recursive: true });
-  const pdfPath = path.join(TEMP_STORAGE_BASE, `${artefactId}.pdf`);
-  await fs.writeFile(pdfPath, pdfBuffer);
+  await uploadBlob(blobKey, pdfBuffer, "application/pdf", CONTAINER.PUBLICATIONS);
 
   return {
     success: true,
-    pdfPath,
+    pdfPath: blobKey,
     sizeBytes,
     exceedsMaxSize
   };

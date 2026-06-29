@@ -1,9 +1,9 @@
-import { access, readFile } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
 import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
@@ -98,14 +98,7 @@ const postHandler = async (req: Request, res: Response) => {
 };
 
 async function loadJsonData(artefactId: string): Promise<unknown | null> {
-  const jsonFilePath = path.join(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-  try {
-    const content = await readFile(jsonFilePath, "utf-8");
-    return JSON.parse(content);
-  } catch (error) {
-    console.error(`Error reading JSON file at ${jsonFilePath}:`, error);
-    return null;
-  }
+  return getPublicationJson(artefactId);
 }
 
 function isValidPressList(jsonData: unknown): boolean {

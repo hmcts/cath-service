@@ -54,7 +54,8 @@
       "@hmcts/excel-generation": ["libs/excel-generation/src"],
       "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
-      "@hmcts/test-support/config": ["libs/test-support/src/config"]
+      "@hmcts/test-support/config": ["libs/test-support/src/config"],
+      "@hmcts/azure-blob": ["libs/azure-blob/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
