@@ -16,7 +16,7 @@ yarn lint:fix                    # Run Biome linter
 yarn format                     # Format code with Biome
 
 # Git Hooks (installed automatically via postinstall)
-# Pre-commit hook runs Biome --write on staged TypeScript files and re-stages fixes.
+# Pre-commit hook runs Biome --write on staged TypeScript and JSON files and re-stages fixes.
 # To skip the hook for a single commit: LEFTHOOK=0 git commit ...
 
 # Database Operations
