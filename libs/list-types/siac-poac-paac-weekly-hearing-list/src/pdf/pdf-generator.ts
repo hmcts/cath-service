@@ -1,14 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  type BasePdfGenerationOptions,
-  configureNunjucks,
-  createPdfErrorResult,
-  loadTranslations,
-  PDF_BASE_STYLES,
-  type PdfGenerationResult,
-  savePdfToStorage
-} from "@hmcts/list-types-common";
+import { type BasePdfGenerationOptions, generateFttSiacWeeklyHearingListPdf, type PdfGenerationResult } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { SiacPoacPaacHearingList } from "../models/types.js";
@@ -24,43 +16,13 @@ interface PdfGenerationOptions extends BasePdfGenerationOptions<SiacPoacPaacHear
 }
 
 export async function generateSiacPoacPaacWeeklyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
-  try {
-    const renderedData = renderSiacPoacPaacData(options.jsonData, {
-      locale: options.locale,
-      courtName: options.courtName,
-      contentDate: options.contentDate,
-      lastReceivedDate: new Date().toISOString(),
-      listTitle: options.listTitle
-    });
-
-    const translations = await loadTranslations(
-      options.locale,
-      () => import("../locales/en.js"),
-      () => import("../locales/cy.js")
-    );
-
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
-
-    const env = configureNunjucks(__dirname);
-    const html = env.render("pdf-template.njk", {
-      header: renderedData.header,
-      hearings: renderedData.hearings,
-      dataSource: provenanceLabel,
-      t: translations,
-      pdfStyles: PDF_BASE_STYLES
-    });
-
-    const pdfResult = await generatePdfFromHtml(html);
-
-    if (!pdfResult.success || !pdfResult.pdfBuffer) {
-      return {
-        success: false,
-        error: pdfResult.error || "PDF generation failed"
-      };
-    }
-
-    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
-  } catch (error) {
-    return createPdfErrorResult(error);
-  }
+  return generateFttSiacWeeklyHearingListPdf({
+    ...options,
+    moduleDir: __dirname,
+    provenanceLabel: options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "",
+    importEn: () => import("../locales/en.js"),
+    importCy: () => import("../locales/cy.js"),
+    generatePdf: generatePdfFromHtml,
+    renderData: renderSiacPoacPaacData
+  });
 }
