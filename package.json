@@ -9,9 +9,9 @@
   ],
   "scripts": {
     "postinstall": "yarn db:generate && node -e \"process.env.CI || require('child_process').execSync('lefthook install', {stdio:'inherit'})\"",
-    "test": "turbo test",
+      "test": "turbo test",
     "test:force": "turbo test --force",
-    "test:coverage": "turbo test -- --coverage",
+      "test:coverage": "turbo test -- --coverage",
     "test:changed": "turbo test --filter='...[HEAD^1]'",
     "test:e2e": "yarn workspace e2e-tests run test:e2e",
     "format": "turbo format",
