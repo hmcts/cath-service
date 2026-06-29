@@ -32,7 +32,7 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "papaparse": "5.5.3"
+    "papaparse": "5.5.4"
   },
   "devDependencies": {
     "@types/express": "5.0.6",

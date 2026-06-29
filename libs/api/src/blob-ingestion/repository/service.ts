@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
-import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateArtefactFileExtension } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
@@ -82,9 +82,10 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       noMatch
     });
 
-    // Save JSON to temp storage for list display pages
+    // Save JSON to blob storage for list display pages
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
-    await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
+    const fileExtension = await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
+    await updateArtefactFileExtension(artefactId, fileExtension);
 
     // Extract and store artefact search data for case number/name search
     await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);

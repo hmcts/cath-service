@@ -1,8 +1,8 @@
-import fs from "node:fs/promises";
 import {
   extractCaseSummary as extractAdminCourtSummary,
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
@@ -197,14 +197,6 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
-  console.log("[notification-debug] buildEmailTemplateData:", {
-    listTypeName,
-    hasConfig: !!config,
-    hasJsonData: !!event.jsonData,
-    hasPdfFilePath: !!event.pdfFilePath,
-    pdfFilePath: event.pdfFilePath
-  });
-
   if (config && event.jsonData) {
     return buildEnhancedEmailData(event, userName, config, caseValue);
   }
@@ -228,12 +220,6 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
       caseValue
     });
 
-    console.log("[notification-debug] buildEnhancedEmailData: pdfFilePath check:", {
-      listTypeId,
-      hasPdfFilePath: !!event.pdfFilePath,
-      pdfFilePath: event.pdfFilePath
-    });
-
     if (event.pdfFilePath) {
       return await buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
     }
@@ -248,22 +234,17 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
   }
 }
 
-async function buildEmailDataWithPdf(pdfFilePath: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
-  const pdfStats = await fs.stat(pdfFilePath);
-  const pdfUnder2MB = pdfStats.size < MAX_PDF_SIZE_BYTES;
+async function buildEmailDataWithPdf(pdfBlobKey: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
+  const pdfBuffer = await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS);
 
+  if (!pdfBuffer) {
+    return { templateParameters, templateId: getSubscriptionTemplateIdForListType(listTypeId, true, false) };
+  }
+
+  const pdfUnder2MB = pdfBuffer.length < MAX_PDF_SIZE_BYTES;
   const templateId = getSubscriptionTemplateIdForListType(listTypeId, true, pdfUnder2MB);
 
-  console.log("[notification-debug] buildEmailDataWithPdf:", {
-    pdfFilePath,
-    sizeBytes: pdfStats.size,
-    pdfUnder2MB,
-    templateId
-  });
-
   if (pdfUnder2MB) {
-    const pdfBuffer = await fs.readFile(pdfFilePath);
-    console.log("[notification-debug] buildEmailDataWithPdf: pdfBuffer loaded, size:", pdfBuffer.length);
     return { templateParameters, templateId, pdfBuffer };
   }
 
@@ -380,8 +361,6 @@ async function processListTypeUserNotification(
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
 
-    console.log(`email address: ${subscriber.user.email}`);
-    console.log(`Template ID used for notification: ${emailData.templateId}`);
     const emailResult = await sendEmail({
       emailAddress: subscriber.user.email,
       templateParameters: emailData.templateParameters,
