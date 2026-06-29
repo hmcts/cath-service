@@ -83,7 +83,7 @@ test.describe("Sign In Account Selection Page", () => {
   });
 
   test.describe("given user selects CaTH account", () => {
-    test("should redirect to B2C when continue is clicked with accessibility check", async ({ page }) => {
+    test("should initiate B2C sign-in when continue is clicked with accessibility check", async ({ page }) => {
       await page.goto("/sign-in");
 
       // Initial accessibility check
@@ -101,19 +101,19 @@ test.describe("Sign In Account Selection Page", () => {
       accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Intercept the /b2c-login route to prevent the full external OAuth redirect chain.
-      // The server redirects POST /sign-in → GET /b2c-login → external B2C → error → /sign-in.
-      // By fulfilling /b2c-login with a stub page we stop at that hop and can assert the URL.
-      await page.route("**/b2c-login**", (route) =>
-        route.fulfill({ status: 200, contentType: "text/html", body: "<html lang='en'><head><title>B2C Login</title></head><body>B2C</body></html>" })
-      );
+      // Capture the POST /sign-in response before clicking so we can inspect its redirect headers.
+      // page.route() and waitForRequest cannot reliably stop a server-side 302 chain once Chrome
+      // starts following it. waitForResponse fires the instant the server responds to the POST —
+      // before any redirect hops are followed — so we can assert on the 302 location header
+      // without depending on the B2C OAuth round-trip succeeding in the PR environment.
+      const signInPostResponse = page.waitForResponse((res) => res.url().includes("/sign-in") && res.request().method() === "POST");
 
-      // Click continue button
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify the app redirected to /b2c-login
-      await expect(page).toHaveURL(/\/b2c-login/);
+      const response = await signInPostResponse;
+      expect(response.status()).toBe(302);
+      expect(response.headers()["location"]).toMatch(/\/b2c-login/);
     });
   });
 
