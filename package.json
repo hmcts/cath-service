@@ -6,10 +6,10 @@
     "e2e-tests",
     "libs/*",
     "libs/list-types/*"
-    ],
-    "scripts": {
+  ],
+  "scripts": {
     "postinstall": "yarn db:generate && node -e \"process.env.CI || require('child_process').execSync('lefthook install', {stdio:'inherit'})\"",
-      "test": "turbo test",
+    "test": "turbo test",
     "test:force": "turbo test --force",
     "test:coverage": "turbo test -- --coverage",
     "test:changed": "turbo test --filter='...[HEAD^1]'",

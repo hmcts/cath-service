@@ -2,6 +2,5 @@ pre-commit:
   parallel: false
   commands:
     biome-check:
-      glob: "**/*.{ts,tsx,json}"
       run: yarn biome check --write {staged_files}
       stage_fixed: true
