@@ -1,7 +1,7 @@
 import {
+  type AstDailyHearingList,
   astDailyHearingListCy as cy,
   astDailyHearingListEn as en,
-  type AstDailyHearingList,
   renderAstDailyHearingListData
 } from "@hmcts/ast-daily-hearing-list";
 import { schemaPath } from "@hmcts/ast-daily-hearing-list/config";

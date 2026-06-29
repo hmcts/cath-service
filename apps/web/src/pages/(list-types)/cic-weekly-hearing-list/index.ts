@@ -1,7 +1,7 @@
 import {
+  type CicWeeklyHearingList,
   cicWeeklyHearingListCy as cy,
   cicWeeklyHearingListEn as en,
-  type CicWeeklyHearingList,
   renderCicWeeklyHearingListData
 } from "@hmcts/cic-weekly-hearing-list";
 import { schemaPath } from "@hmcts/cic-weekly-hearing-list/config";

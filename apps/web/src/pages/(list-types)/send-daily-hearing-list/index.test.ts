@@ -28,8 +28,8 @@ vi.mock("@hmcts/send-daily-hearing-list", async (importOriginal) => {
   };
 });
 
-import { renderSendDailyHearingListData } from "@hmcts/send-daily-hearing-list";
 import { getArtefactById, getPublicationJson } from "@hmcts/publication";
+import { renderSendDailyHearingListData } from "@hmcts/send-daily-hearing-list";
 import { GET } from "./index.js";
 
 describe("SEND Daily Hearing List page controller", () => {

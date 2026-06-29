@@ -1,11 +1,11 @@
+import { createJsonValidator } from "@hmcts/list-types-common";
 import {
   sendDailyHearingListCy as cy,
   sendDailyHearingListEn as en,
-  type SendDailyHearingList,
-  renderSendDailyHearingListData
+  renderSendDailyHearingListData,
+  type SendDailyHearingList
 } from "@hmcts/send-daily-hearing-list";
 import { schemaPath } from "@hmcts/send-daily-hearing-list/config";
-import { createJsonValidator } from "@hmcts/list-types-common";
 import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
 const validate = createJsonValidator(schemaPath);
