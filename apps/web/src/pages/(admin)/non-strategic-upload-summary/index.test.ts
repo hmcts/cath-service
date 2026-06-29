@@ -69,7 +69,7 @@ vi.mock("@hmcts/admin-pages", async () => {
   return {
     ...actual,
     getNonStrategicUpload: vi.fn(),
-    saveUploadedFile: vi.fn(() => Promise.resolve("/path/to/file.json"))
+    saveUploadedFile: vi.fn(() => Promise.resolve(".xlsx"))
   };
 });
 
@@ -78,7 +78,8 @@ vi.mock("@hmcts/publication", async () => {
   return {
     ...actual,
     createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
-    processPublication: vi.fn(() => Promise.resolve({}))
+    processPublication: vi.fn(() => Promise.resolve({})),
+    updateArtefactFileExtension: vi.fn(() => Promise.resolve())
   };
 });
 
@@ -305,10 +306,15 @@ describe("non-strategic-upload-summary page", () => {
 
       vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
 
-      const session = {
+      const session: {
+        nonStrategicUploadForm?: { some: string };
+        nonStrategicUploadSubmitted?: boolean;
+        nonStrategicUploadConfirmed?: boolean;
+        save: (callback: (err?: unknown) => void) => void;
+      } = {
         nonStrategicUploadForm: { some: "data" },
         nonStrategicUploadSubmitted: true,
-        save: (callback: (err?: any) => void) => callback()
+        save: (callback: (err?: unknown) => void) => callback()
       };
 
       const req = {

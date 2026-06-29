@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/civil-daily-cause-list": "workspace:*",
