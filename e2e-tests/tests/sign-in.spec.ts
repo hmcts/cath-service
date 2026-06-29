@@ -101,19 +101,19 @@ test.describe("Sign In Account Selection Page", () => {
       accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
-      // Block the external B2C authorization redirect so the test does not leave the app environment.
-      // /b2c-login server-redirects to the B2C tenant's authorize endpoint; we intercept it to
-      // verify the redirect was initiated without completing the full external OAuth flow.
-      await page.route("**/oauth2/v2.0/authorize**", (route) =>
-        route.fulfill({ status: 200, contentType: "text/html", body: "<html lang='en'><head><title>B2C</title></head><body>B2C</body></html>" })
+      // Intercept the /b2c-login route to prevent the full external OAuth redirect chain.
+      // The server redirects POST /sign-in → GET /b2c-login → external B2C → error → /sign-in.
+      // By fulfilling /b2c-login with a stub page we stop at that hop and can assert the URL.
+      await page.route("**/b2c-login**", (route) =>
+        route.fulfill({ status: 200, contentType: "text/html", body: "<html lang='en'><head><title>B2C Login</title></head><body>B2C</body></html>" })
       );
 
       // Click continue button
       const continueButton = page.getByRole("button", { name: /continue/i });
       await continueButton.click();
 
-      // Verify the app redirected to the B2C sign-in flow (either /b2c-login or the external B2C endpoint)
-      await expect(page).toHaveURL(/\/b2c-login|oauth2\/v2\.0\/authorize/);
+      // Verify the app redirected to /b2c-login
+      await expect(page).toHaveURL(/\/b2c-login/);
     });
   });
 
