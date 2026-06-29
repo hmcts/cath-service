@@ -5,6 +5,7 @@ import { GET } from "./list-download-files.js";
 vi.mock("@hmcts/azure-blob", () => ({
   getBlobProperties: vi.fn()
 }));
+vi.mock("@hmcts/publication", () => ({}));
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {

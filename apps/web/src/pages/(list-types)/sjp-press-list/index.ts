@@ -3,8 +3,9 @@ import { calculatePagination, determineListType, extractPressCases, type SjpJson
 import { prisma } from "@hmcts/postgres-prisma";
 import { getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
 import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
-import type { NextFunction, Request, RequestHandler, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
+import { createRequireVerifiedWithProvenance } from "./require-verified-with-provenance.js";
 
 const CASES_PER_PAGE = 1000;
 const LONDON_POSTCODE_AREAS = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
@@ -209,38 +210,7 @@ interface PressCase {
   prosecutor?: string | null;
 }
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const requireVerifiedWithProvenance: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
-  if (req.user?.role === "SYSTEM_ADMIN") {
-    return next();
-  }
-
-  if (req.user?.role !== "VERIFIED" || !req.user.provenance) {
-    req.session.returnTo = req.originalUrl;
-    return res.redirect("/sign-in");
-  }
-
-  const artefactId = (req.query.artefactId || req.body?.artefactId) as string;
-  if (!artefactId || !UUID_REGEX.test(artefactId)) {
-    req.session.returnTo = req.originalUrl;
-    return res.redirect("/sign-in");
-  }
-
-  const artefact = await prisma.artefact.findUnique({ where: { artefactId } });
-  if (!artefact) {
-    req.session.returnTo = req.originalUrl;
-    return res.redirect("/sign-in");
-  }
-
-  const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
-  if (!dbListType || !dbListType.allowedProvenance.split(",").includes(req.user.provenance)) {
-    req.session.returnTo = req.originalUrl;
-    return res.redirect("/sign-in");
-  }
-
-  next();
-};
+const requireVerifiedWithProvenance = createRequireVerifiedWithProvenance({ allowSystemAdmin: true, readBodyArtefactId: true });
 
 export const GET: RequestHandler[] = [requireVerifiedWithProvenance, getHandler];
 export const POST: RequestHandler[] = [requireVerifiedWithProvenance, postHandler];

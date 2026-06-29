@@ -1,13 +1,15 @@
-import type { Request, RequestHandler, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./list-download-files.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
   getBlobProperties: vi.fn()
 }));
+vi.mock("@hmcts/publication", () => ({}));
 
 import { getBlobProperties } from "@hmcts/azure-blob";
 
+const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
 
 describe("List Download Files Controller", () => {
@@ -117,6 +119,22 @@ describe("List Download Files Controller", () => {
     );
   });
 
+  it("should render files page with MB size label for large files", async () => {
+    const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc" } });
+    const res = mockResponse();
+
+    vi.mocked(getBlobProperties).mockResolvedValue({ size: 2097152 });
+
+    await handler(req, res, () => {});
+
+    expect(res.render).toHaveBeenCalledWith(
+      "list-download-files",
+      expect.objectContaining({
+        files: expect.arrayContaining([expect.objectContaining({ sizeLabel: "2.0MB" })])
+      })
+    );
+  });
+
   it("should use Welsh translations when locale is cy", async () => {
     const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc" } });
     const res = mockResponse();
@@ -133,5 +151,48 @@ describe("List Download Files Controller", () => {
         locale: "cy"
       })
     );
+  });
+});
+
+describe("List Download Files requireVerified middleware", () => {
+  const mockNext = vi.fn() as unknown as NextFunction;
+
+  const mockRequest = (overrides?: Partial<Request>) =>
+    ({
+      query: {},
+      originalUrl: "/sjp-public-list/list-download-files",
+      session: {},
+      ...overrides
+    }) as unknown as Request;
+
+  const mockResponse = () => {
+    const res = {} as Response;
+    res.redirect = vi.fn().mockReturnValue(res);
+    res.locals = { locale: "en" };
+    return res;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should call next when user is verified", async () => {
+    const req = mockRequest({ user: { role: "VERIFIED" } } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(mockNext).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
+  it("should redirect to sign-in when user is not verified", async () => {
+    const req = mockRequest({ user: { role: "BASIC" } } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    expect(mockNext).not.toHaveBeenCalled();
   });
 });

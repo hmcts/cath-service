@@ -1,4 +1,4 @@
-import type { Request, RequestHandler, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./download.js";
 
@@ -15,6 +15,7 @@ vi.mock("@hmcts/publication", () => ({
 
 import { downloadBlob } from "@hmcts/azure-blob";
 
+const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
 
 describe("Download Route", () => {
@@ -91,5 +92,48 @@ describe("Download Route", () => {
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ error: "File not found" });
+  });
+});
+
+describe("Download requireVerified middleware", () => {
+  const mockNext = vi.fn() as unknown as NextFunction;
+
+  const mockRequest = (overrides?: Partial<Request>) =>
+    ({
+      query: {},
+      originalUrl: "/sjp-public-list/download",
+      session: {},
+      ...overrides
+    }) as unknown as Request;
+
+  const mockResponse = () => {
+    const res = {} as Response;
+    res.redirect = vi.fn().mockReturnValue(res);
+    res.locals = { locale: "en" };
+    return res;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should call next when user is verified", async () => {
+    const req = mockRequest({ user: { role: "VERIFIED" } } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(mockNext).toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+
+  it("should redirect to sign-in when user is not verified", async () => {
+    const req = mockRequest({ user: { role: "BASIC" } } as Partial<Request>);
+    const res = mockResponse();
+
+    await middleware(req, res, mockNext);
+
+    expect(res.redirect).toHaveBeenCalledWith("/sign-in");
+    expect(mockNext).not.toHaveBeenCalled();
   });
 });
