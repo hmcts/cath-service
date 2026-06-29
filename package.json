@@ -8,7 +8,7 @@
     "libs/list-types/*"
   ],
   "scripts": {
-    "postinstall": "yarn db:generate && node -e \"process.env.CI || require('child_process').execSync('lefthook install', {stdio:'inherit'})\"",
+    "postinstall": "yarn db:generate && node scripts/install-hooks.js",
     "test": "turbo test",
     "test:force": "turbo test --force",
     "test:coverage": "turbo test -- --coverage",
