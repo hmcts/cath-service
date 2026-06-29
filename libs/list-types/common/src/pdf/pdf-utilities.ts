@@ -1,4 +1,5 @@
 import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
+import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import nunjucks from "nunjucks";
 import { PDF_BASE_STYLES } from "./pdf-styles.js";
 
