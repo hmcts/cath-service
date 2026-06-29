@@ -46,10 +46,10 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Defendant name(s)", value: "John Smith" },
-      { label: "Case reference", value: "T20250001" },
-      { label: "Prosecuting authority", value: "CPS" },
-      { label: "Hearing type", value: "Trial" }
+      { label: "Defendant Name(s)", value: "John Smith" },
+      { label: "Case Reference", value: "T20250001" },
+      { label: "Prosecuting Authority", value: "CPS" },
+      { label: "Hearing Type", value: "Trial" }
     ]);
   });
 
@@ -76,7 +76,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
   });
 
   it("should use hearingType fallback when hearingDescription is absent", () => {
@@ -101,7 +101,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Hearing type")?.value).toBe("Sentence");
+    expect(result[0].find((f) => f.label === "Hearing Type")?.value).toBe("Sentence");
   });
 
   it("should return empty array for data with no court lists", () => {
@@ -114,19 +114,19 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format case summaries for email", () => {
     const summaries = [
       [
-        { label: "Defendant name(s)", value: "John Smith" },
-        { label: "Case reference", value: "T20250001" },
-        { label: "Prosecuting authority", value: "CPS" },
-        { label: "Hearing type", value: "Trial" }
+        { label: "Defendant Name(s)", value: "John Smith" },
+        { label: "Case Reference", value: "T20250001" },
+        { label: "Prosecuting Authority", value: "CPS" },
+        { label: "Hearing Type", value: "Trial" }
       ]
     ];
 
     const result = formatCaseSummaryForEmail(summaries);
 
-    expect(result).toContain("Defendant name(s) - John Smith");
-    expect(result).toContain("Case reference - T20250001");
-    expect(result).toContain("Prosecuting authority - CPS");
-    expect(result).toContain("Hearing type - Trial");
+    expect(result).toContain("Defendant Name(s) - John Smith");
+    expect(result).toContain("Case Reference - T20250001");
+    expect(result).toContain("Prosecuting Authority - CPS");
+    expect(result).toContain("Hearing Type - Trial");
   });
 
   it("should handle empty case list", () => {

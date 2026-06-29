@@ -49,9 +49,9 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Fixed for", value: "10/02/2025" },
-      { label: "Case reference", value: "B20250001" },
-      { label: "Defendant name(s)", value: "Alice Williams" },
-      { label: "Prosecuting authority", value: "CPS" }
+      { label: "Case Reference", value: "B20250001" },
+      { label: "Defendant Name(s)", value: "Alice Williams" },
+      { label: "Prosecuting Authority", value: "CPS" }
     ]);
   });
 
@@ -88,7 +88,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Tom Hardy");
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Tom Hardy");
     expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("");
   });
 
@@ -116,7 +116,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
   });
 
   it("should return empty array when no court lists", () => {
@@ -154,7 +154,7 @@ describe("extractCaseSummary", () => {
     });
 
     const result = extractCaseSummary(testData);
-    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Restricted");
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Restricted");
   });
 
   it("should use unmasked name when IsMasked is yes but MaskedName is absent", () => {
@@ -187,7 +187,7 @@ describe("extractCaseSummary", () => {
     });
 
     const result = extractCaseSummary(testData);
-    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Bob Smith");
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Bob Smith");
   });
 
   it("should handle undefined CitizenNameForename when building defendant name", () => {
@@ -220,7 +220,7 @@ describe("extractCaseSummary", () => {
     });
 
     const result = extractCaseSummary(testData);
-    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("OnlyLastName");
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("OnlyLastName");
   });
 
   it("should handle fixedDate that is invalid ISO string", () => {
@@ -314,7 +314,7 @@ describe("extractCaseSummary", () => {
     });
 
     const result = extractCaseSummary(testData);
-    expect(result[0].find((f) => f.label === "Defendant name(s)")?.value).toBe("Alice One, Bob Two");
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Alice One, Bob Two");
   });
 });
 
@@ -323,16 +323,16 @@ describe("formatCaseSummaryForEmail", () => {
     const result = formatCaseSummaryForEmail([
       [
         { label: "Fixed for", value: "10/02/2025" },
-        { label: "Case reference", value: "B20250001" },
-        { label: "Defendant name(s)", value: "Alice Williams" },
-        { label: "Prosecuting authority", value: "CPS" }
+        { label: "Case Reference", value: "B20250001" },
+        { label: "Defendant Name(s)", value: "Alice Williams" },
+        { label: "Prosecuting Authority", value: "CPS" }
       ]
     ]);
 
     expect(result).toContain("Fixed for - 10/02/2025");
-    expect(result).toContain("Case reference - B20250001");
-    expect(result).toContain("Defendant name(s) - Alice Williams");
-    expect(result).toContain("Prosecuting authority - CPS");
+    expect(result).toContain("Case Reference - B20250001");
+    expect(result).toContain("Defendant Name(s) - Alice Williams");
+    expect(result).toContain("Prosecuting Authority - CPS");
   });
 
   it("should handle empty list", () => {

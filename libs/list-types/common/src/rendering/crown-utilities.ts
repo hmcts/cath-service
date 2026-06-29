@@ -127,11 +127,11 @@ export function extractPddaSittingsSummary(courtLists: Array<{ Sittings: PddaSit
         const fields: CaseSummary = [];
 
         if (defendants.length > 0) {
-          fields.push({ label: "Defendant name(s)", value: defendants.join(", ") });
+          fields.push({ label: "Defendant Name(s)", value: defendants.join(", ") });
         }
-        fields.push({ label: "Case reference", value: hearing.CaseNumber });
-        fields.push({ label: "Prosecuting authority", value: hearing.Prosecution?.ProsecutingAuthority || "" });
-        fields.push({ label: "Hearing type", value: hearingType });
+        fields.push({ label: "Case Reference", value: hearing.CaseNumber });
+        fields.push({ label: "Prosecuting Authority", value: hearing.Prosecution?.ProsecutingAuthority || "" });
+        fields.push({ label: "Hearing Type", value: hearingType });
 
         summaries.push(fields);
       }

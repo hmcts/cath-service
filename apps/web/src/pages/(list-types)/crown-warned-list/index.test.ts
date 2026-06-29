@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { renderCrownWarnedListData, validateCrownWarnedList } from "@hmcts/crown-warned-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("node:fs/promises");
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
@@ -19,6 +17,7 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
   return {
     ...actual,
     getArtefactById: vi.fn(),
+    getPublicationJson: vi.fn(),
     canAccessPublicationData: vi.fn()
   };
 });
@@ -119,7 +118,7 @@ describe("crown-warned-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
 
@@ -128,10 +127,10 @@ describe("crown-warned-list controller", () => {
     expect(canAccessPublicationData).toHaveBeenCalledWith(req.user, mockArtefact, undefined);
   });
 
-  it("should return 404 when JSON file cannot be read", async () => {
+  it("should return 404 when blob is not found", async () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+    vi.mocked(getPublicationJson).mockResolvedValue(null);
 
     await GET(req as Request, res as Response);
 
@@ -143,7 +142,7 @@ describe("crown-warned-list controller", () => {
   it("should return 400 when JSON validation fails", async () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: false, errors: ["Validation error"] } as any);
 
     await GET(req as Request, res as Response);
@@ -158,7 +157,7 @@ describe("crown-warned-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "en" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
 
@@ -181,7 +180,7 @@ describe("crown-warned-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "cy" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
 

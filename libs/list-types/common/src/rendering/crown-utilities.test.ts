@@ -1,14 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  createPartyDetails,
-  extractPddaSittingsSummary,
-  formatContentDate,
-  formatPddaCitizenName,
-  formatPddaDefendantName,
-  formatPddaSittingTime,
-  formatPublicationDateTime,
-  formatTime
-} from "./crown-utilities.js";
+import { createPartyDetails, extractPddaSittingsSummary, formatContentDate, formatPublicationDateTime, formatTime } from "./crown-utilities.js";
 
 describe("createPartyDetails", () => {
   it("should return individual full name with title, forenames, middle name, and surname", () => {
@@ -144,10 +135,10 @@ describe("extractPddaSittingsSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Defendant name(s)", value: "Alice Williams" },
-      { label: "Case reference", value: "T20250001" },
-      { label: "Prosecuting authority", value: "CPS" },
-      { label: "Hearing type", value: "Trial" }
+      { label: "Defendant Name(s)", value: "Alice Williams" },
+      { label: "Case Reference", value: "T20250001" },
+      { label: "Prosecuting Authority", value: "CPS" },
+      { label: "Hearing Type", value: "Trial" }
     ]);
   });
 
@@ -176,7 +167,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0][0]).toEqual({ label: "Defendant name(s)", value: "Reporting Restriction Applied" });
+    expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Reporting Restriction Applied" });
   });
 
   it("should use unmasked name when IsMasked is yes but no MaskedName", () => {
@@ -203,7 +194,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0][0]).toEqual({ label: "Defendant name(s)", value: "Bob Jones" });
+    expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Bob Jones" });
   });
 
   it("should not include defendant field when no defendants", () => {
@@ -224,8 +215,8 @@ describe("extractPddaSittingsSummary", () => {
     ]);
 
     const summary = result[0];
-    expect(summary.find((f) => f.label === "Defendant name(s)")).toBeUndefined();
-    expect(summary.find((f) => f.label === "Case reference")?.value).toBe("T20250004");
+    expect(summary.find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
+    expect(summary.find((f) => f.label === "Case Reference")?.value).toBe("T20250004");
   });
 
   it("should not include defendant field when defendants is undefined", () => {
@@ -245,7 +236,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Defendant name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
   });
 
   it("should fall back to HearingType when HearingDescription is absent", () => {
@@ -265,7 +256,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Hearing type")?.value).toBe("PCM");
+    expect(result[0].find((f) => f.label === "Hearing Type")?.value).toBe("PCM");
   });
 
   it("should use empty string for hearing type when both HearingDescription and HearingType absent", () => {
@@ -285,7 +276,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Hearing type")?.value).toBe("");
+    expect(result[0].find((f) => f.label === "Hearing Type")?.value).toBe("");
   });
 
   it("should use empty string for prosecuting authority when Prosecution is absent", () => {
@@ -305,7 +296,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Prosecuting authority")?.value).toBe("");
+    expect(result[0].find((f) => f.label === "Prosecuting Authority")?.value).toBe("");
   });
 
   it("should handle multiple defendants and join their names", () => {
@@ -338,7 +329,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0][0]).toEqual({ label: "Defendant name(s)", value: "Alice Smith, Bob Jones" });
+    expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Alice Smith, Bob Jones" });
   });
 
   it("should aggregate across multiple court lists and sittings", () => {
@@ -381,9 +372,9 @@ describe("extractPddaSittingsSummary", () => {
     ]);
 
     expect(result).toHaveLength(3);
-    expect(result[0].find((f) => f.label === "Case reference")?.value).toBe("A1");
-    expect(result[1].find((f) => f.label === "Case reference")?.value).toBe("B1");
-    expect(result[2].find((f) => f.label === "Case reference")?.value).toBe("C1");
+    expect(result[0].find((f) => f.label === "Case Reference")?.value).toBe("A1");
+    expect(result[1].find((f) => f.label === "Case Reference")?.value).toBe("B1");
+    expect(result[2].find((f) => f.label === "Case Reference")?.value).toBe("C1");
   });
 
   it("should filter out empty defendant names", () => {
@@ -410,6 +401,6 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Defendant name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
   });
 });

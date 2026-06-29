@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { renderCrownDailyListData, validateCrownDailyList } from "@hmcts/crown-daily-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("node:fs/promises");
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
@@ -19,6 +17,7 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
   return {
     ...actual,
     getArtefactById: vi.fn(),
+    getPublicationJson: vi.fn(),
     canAccessPublicationData: vi.fn()
   };
 });
@@ -114,7 +113,7 @@ describe("crown-daily-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownDailyList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownDailyListData).mockResolvedValue(mockRenderedData);
 
@@ -123,10 +122,10 @@ describe("crown-daily-list controller", () => {
     expect(canAccessPublicationData).toHaveBeenCalledWith(req.user, mockArtefact, undefined);
   });
 
-  it("should return 404 when JSON file cannot be read", async () => {
+  it("should return 404 when blob is not found", async () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+    vi.mocked(getPublicationJson).mockResolvedValue(null);
 
     await GET(req as Request, res as Response);
 
@@ -138,13 +137,13 @@ describe("crown-daily-list controller", () => {
   it("should return 400 when JSON validation fails", async () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownDailyList).mockReturnValue({ isValid: false, errors: ["Validation error"] } as any);
 
     await GET(req as Request, res as Response);
 
     expect(validateCrownDailyList).toHaveBeenCalled();
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-daily-list] Validation errors:", ["Validation error"]);
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-daily-cause-list] Validation errors:", ["Validation error"]);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
@@ -153,7 +152,7 @@ describe("crown-daily-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "en" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownDailyList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownDailyListData).mockResolvedValue(mockRenderedData);
 
@@ -177,7 +176,7 @@ describe("crown-daily-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "cy" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownDailyList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownDailyListData).mockResolvedValue(mockRenderedData);
 
@@ -194,7 +193,7 @@ describe("crown-daily-list controller", () => {
   it("should use provenance label for data source", async () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, provenance: "MANUAL_UPLOAD" });
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateCrownDailyList).mockReturnValue({ isValid: true, errors: [] } as any);
     vi.mocked(renderCrownDailyListData).mockResolvedValue(mockRenderedData);
 
@@ -209,7 +208,7 @@ describe("crown-daily-list controller", () => {
 
     await GET(req as Request, res as Response);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-daily-list] Unexpected error:", expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-daily-cause-list] Unexpected error:", expect.any(Error));
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
