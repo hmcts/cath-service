@@ -2,13 +2,18 @@ import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./download.js";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    readFile: vi.fn()
-  }
+vi.mock("@hmcts/azure-blob", () => ({
+  downloadBlob: vi.fn()
+}));
+vi.mock("@hmcts/publication", () => ({
+  getContentType: vi.fn((ext) => {
+    if (ext === ".pdf") return "application/pdf";
+    if (ext === ".xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    return "application/octet-stream";
+  })
 }));
 
-import fs from "node:fs/promises";
+import { downloadBlob } from "@hmcts/azure-blob";
 
 const handler = GET[GET.length - 1] as RequestHandler;
 
@@ -67,7 +72,7 @@ describe("Download Route", () => {
     const res = mockResponse();
     const mockBuffer = Buffer.from("pdf content");
 
-    vi.mocked(fs.readFile).mockResolvedValue(mockBuffer);
+    vi.mocked(downloadBlob).mockResolvedValue(mockBuffer);
 
     await handler(req, res, () => {});
 
@@ -80,7 +85,7 @@ describe("Download Route", () => {
     const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc", type: "pdf" } });
     const res = mockResponse();
 
-    vi.mocked(fs.readFile).mockRejectedValue(new Error("ENOENT"));
+    vi.mocked(downloadBlob).mockResolvedValue(null);
 
     await handler(req, res, () => {});
 

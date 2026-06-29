@@ -1,20 +1,9 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { downloadBlob } from "@hmcts/azure-blob";
+import { getContentType } from "@hmcts/publication";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
-const STORAGE_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_TYPES = new Set(["pdf", "xlsx"]);
-const CONTENT_TYPE_MAP: Record<string, string> = {
-  ".pdf": "application/pdf",
-  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-};
 
 const requireVerified: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   if (req.user?.role === "VERIFIED") return next();
@@ -30,27 +19,19 @@ const getHandler = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid request" });
   }
 
-  const fileName = `${artefactId}.${type}`;
-  const filePath = path.join(STORAGE_DIR, fileName);
+  const extension = `.${type}`;
+  const fileName = `${artefactId}${extension}`;
+  const fileBuffer = await downloadBlob(fileName);
 
-  // Prevent path traversal
-  const resolvedPath = path.resolve(filePath);
-  if (!resolvedPath.startsWith(path.resolve(STORAGE_DIR))) {
-    return res.status(400).json({ error: "Invalid request" });
-  }
-
-  try {
-    const fileBuffer = await fs.readFile(filePath);
-    const contentType = CONTENT_TYPE_MAP[`.${type}`] || "application/octet-stream";
-
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
-
-    return res.send(fileBuffer);
-  } catch {
+  if (!fileBuffer) {
     return res.status(404).json({ error: "File not found" });
   }
+
+  res.setHeader("Content-Type", getContentType(extension));
+  res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+  res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+
+  return res.send(fileBuffer);
 };
 
 export const GET: RequestHandler[] = [requireVerified, getHandler];

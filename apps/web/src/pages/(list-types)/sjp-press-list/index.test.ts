@@ -31,11 +31,18 @@ vi.mock("@hmcts/sjp-press-list", async () => {
 vi.mock("@hmcts/publication", () => ({
   getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
-    MANUAL: "Manual Upload",
-    API: "API Upload"
+    MANUAL_UPLOAD: "Manual Upload",
+    SNL: "SNL",
+    COMMON_PLATFORM: "Common Platform",
+    CP_CATH: "CP-CaTH",
+    PDDA: "PDDA"
   }
 }));
+vi.mock("@hmcts/azure-blob", () => ({
+  getBlobProperties: vi.fn()
+}));
 
+import { getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { getPublicationJson } from "@hmcts/publication";
@@ -132,6 +139,7 @@ describe("SJP Press List Controller", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getBlobProperties).mockResolvedValue(null);
   });
 
   describe("GET", () => {

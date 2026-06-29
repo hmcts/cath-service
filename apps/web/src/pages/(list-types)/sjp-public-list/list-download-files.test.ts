@@ -2,13 +2,11 @@ import type { Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./list-download-files.js";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    stat: vi.fn()
-  }
+vi.mock("@hmcts/azure-blob", () => ({
+  getBlobProperties: vi.fn()
 }));
 
-import fs from "node:fs/promises";
+import { getBlobProperties } from "@hmcts/azure-blob";
 
 const handler = GET[GET.length - 1] as RequestHandler;
 
@@ -30,7 +28,7 @@ describe("List Download Files Controller", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fs.stat).mockRejectedValue(new Error("ENOENT"));
+    vi.mocked(getBlobProperties).mockResolvedValue(null);
   });
 
   it("should render 400 when artefactId is missing", async () => {
@@ -66,11 +64,9 @@ describe("List Download Files Controller", () => {
     const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc" } });
     const res = mockResponse();
 
-    vi.mocked(fs.stat).mockImplementation((filePath) => {
-      if (String(filePath).endsWith(".pdf")) {
-        return Promise.resolve({ size: 52400 } as any);
-      }
-      return Promise.reject(new Error("ENOENT"));
+    vi.mocked(getBlobProperties).mockImplementation((blobName) => {
+      if (String(blobName).endsWith(".pdf")) return Promise.resolve({ size: 52400 });
+      return Promise.resolve(null);
     });
 
     await handler(req, res, () => {});
@@ -94,14 +90,10 @@ describe("List Download Files Controller", () => {
     const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc" } });
     const res = mockResponse();
 
-    vi.mocked(fs.stat).mockImplementation((filePath) => {
-      if (String(filePath).endsWith(".pdf")) {
-        return Promise.resolve({ size: 102400 } as any);
-      }
-      if (String(filePath).endsWith(".xlsx")) {
-        return Promise.resolve({ size: 37683 } as any);
-      }
-      return Promise.reject(new Error("ENOENT"));
+    vi.mocked(getBlobProperties).mockImplementation((blobName) => {
+      if (String(blobName).endsWith(".pdf")) return Promise.resolve({ size: 102400 });
+      if (String(blobName).endsWith(".xlsx")) return Promise.resolve({ size: 37683 });
+      return Promise.resolve(null);
     });
 
     await handler(req, res, () => {});
@@ -130,7 +122,7 @@ describe("List Download Files Controller", () => {
     const res = mockResponse();
     res.locals.locale = "cy";
 
-    vi.mocked(fs.stat).mockResolvedValue({ size: 1024 } as any);
+    vi.mocked(getBlobProperties).mockResolvedValue({ size: 1024 });
 
     await handler(req, res, () => {});
 

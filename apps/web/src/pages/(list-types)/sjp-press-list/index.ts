@@ -1,6 +1,4 @@
-import { access } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
@@ -8,11 +6,6 @@ import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const CASES_PER_PAGE = 1000;
 const LONDON_POSTCODE_AREAS = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
 
@@ -56,9 +49,8 @@ const getHandler = async (req: Request, res: Response) => {
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
     const isVerifiedUser = req.user?.role === "VERIFIED";
-    const pdfExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.pdf`));
-    const excelExists = await fileExists(path.join(TEMP_UPLOAD_DIR, `${artefactId}.xlsx`));
-    const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+    const [pdfProps, excelProps] = await Promise.all([getBlobProperties(`${artefactId}.pdf`), getBlobProperties(`${artefactId}.xlsx`)]);
+    const downloadDisclaimerUrl = isVerifiedUser && (pdfProps || excelProps) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
 
     res.render("sjp-press-list", {
       en,
@@ -202,15 +194,6 @@ function appendArrayToParams(params: URLSearchParams, key: string, values: strin
     if (value) {
       params.append(key, value);
     }
-  }
-}
-
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
   }
 }
 
