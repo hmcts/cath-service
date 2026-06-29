@@ -1,4 +1,4 @@
-import { deleteBlob } from "@hmcts/azure-blob";
+import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
@@ -177,10 +177,10 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
 
   for (const artefact of artefacts) {
     const extension = artefact.fileExtension ?? ".pdf";
-    deleteBlob(`${artefact.artefactId}${extension}`).catch((error) => {
+    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch((error) => {
       console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
     });
-    deleteBlob(`${artefact.artefactId}.pdf`).catch((error) => {
+    deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
       // 404 is expected if no PDF was generated for this artefact
       if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
         console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);

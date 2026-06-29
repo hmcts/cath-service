@@ -1,4 +1,4 @@
-import { downloadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
 import { getContentTypeFromExtension } from "./content-type.js";
 
@@ -12,7 +12,7 @@ export async function getFileExtension(artefactId: string): Promise<string> {
 
 export async function getFileBuffer(artefactId: string): Promise<Buffer | null> {
   const extension = await getFileExtension(artefactId);
-  return downloadBlob(`${artefactId}${extension}`);
+  return downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
 }
 
 export async function getPublicationJson(artefactId: string): Promise<unknown | null> {

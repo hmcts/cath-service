@@ -170,7 +170,13 @@ const postHandler = async (req: Request, res: Response) => {
     console.error("Upload processing error:", error);
 
     // Keep session data and render error on the same page
-    const uploadData = await getManualUpload(uploadId);
+    let uploadData: Awaited<ReturnType<typeof getManualUpload>> = null;
+    try {
+      uploadData = await getManualUpload(uploadId);
+    } catch (redisError) {
+      console.error("Failed to retrieve upload data after error:", redisError);
+    }
+
     if (!uploadData) {
       return res.status(500).send("Error processing upload");
     }
