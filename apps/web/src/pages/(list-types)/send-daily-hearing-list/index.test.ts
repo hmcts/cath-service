@@ -1,25 +1,19 @@
-import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
 
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn()
-}));
-
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
   return {
     ...actual,
-    createJsonValidator: () => mockValidate,
-    provenanceLabelsEn: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" },
-    provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" }
+    createJsonValidator: () => mockValidate
   };
 });
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
+  getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -34,8 +28,8 @@ vi.mock("@hmcts/send-daily-hearing-list", async (importOriginal) => {
   };
 });
 
-import { getArtefactById } from "@hmcts/publication";
 import { renderSendDailyHearingListData } from "@hmcts/send-daily-hearing-list";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { GET } from "./index.js";
 
 describe("SEND Daily Hearing List page controller", () => {
@@ -45,9 +39,7 @@ describe("SEND Daily Hearing List page controller", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    req = {
-      query: {}
-    };
+    req = { query: {} };
 
     res = {
       status: vi.fn().mockReturnThis(),
@@ -60,8 +52,8 @@ describe("SEND Daily Hearing List page controller", () => {
     it("should render the list successfully with valid data", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        locationId: "13",
-        listTypeId: 28,
+        locationId: "16",
+        listTypeId: 31,
         contentDate: new Date("2026-01-01"),
         displayFrom: new Date("2026-01-01"),
         displayTo: new Date("2026-01-01"),
@@ -71,29 +63,30 @@ describe("SEND Daily Hearing List page controller", () => {
 
       const mockJsonData = [
         {
-          time: "10am",
-          caseReferenceNumber: "SEND/2026/001",
-          respondent: "Local Authority",
-          hearingType: "Final",
+          appellant: "B Jones",
+          appealReferenceNumber: "SEND/2026/001",
+          hearingType: "Directions",
+          hearingTime: "2pm",
           venue: "Remote",
-          timeEstimate: "2 hours"
+          additionalInformation: "Video hearing"
         }
       ];
 
       const mockRenderedData = {
         header: {
           listTitle: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
+          listForDate: "1 January 2026",
           lastUpdatedDate: "1 January 2026",
           lastUpdatedTime: "12pm"
         },
         hearings: [
           {
-            time: "10am",
-            caseReferenceNumber: "SEND/2026/001",
-            respondent: "Local Authority",
-            hearingType: "Final",
+            appellant: "B Jones",
+            appealReferenceNumber: "SEND/2026/001",
+            hearingType: "Directions",
+            hearingTime: "2pm",
             venue: "Remote",
-            timeEstimate: "2 hours"
+            additionalInformation: "Video hearing"
           }
         ]
       };
@@ -101,16 +94,22 @@ describe("SEND Daily Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderSendDailyHearingListData).mockReturnValue(mockRenderedData);
 
       await GET(req as Request, res as Response);
 
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
-      expect(readFile).toHaveBeenCalled();
+      expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      expect(renderSendDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
+        locale: "en",
+        contentDate: mockArtefact.contentDate,
+        lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
+        listTitle: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List"
+      });
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("send-daily-hearing-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
@@ -151,11 +150,11 @@ describe("SEND Daily Hearing List page controller", () => {
       );
     });
 
-    it("should return 404 when JSON file is not found", async () => {
+    it("should return 404 when JSON blob is not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        locationId: "13",
-        listTypeId: 28,
+        locationId: "16",
+        listTypeId: 31,
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -164,7 +163,7 @@ describe("SEND Daily Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -174,8 +173,8 @@ describe("SEND Daily Hearing List page controller", () => {
     it("should return 400 when JSON validation fails", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        locationId: "13",
-        listTypeId: 28,
+        locationId: "16",
+        listTypeId: 31,
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -184,7 +183,7 @@ describe("SEND Daily Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([{ time: "invalid" }]));
+      vi.mocked(getPublicationJson).mockResolvedValue([{ hearingTime: "invalid" }]);
       mockValidate.mockReturnValue({ isValid: false, errors: ["Invalid time format"] });
 
       await GET(req as Request, res as Response);
@@ -205,15 +204,15 @@ describe("SEND Daily Hearing List page controller", () => {
     it("should use Welsh locale when specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        locationId: "13",
-        listTypeId: 28,
+        locationId: "16",
+        listTypeId: 31,
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
       };
 
       const mockRenderedData = {
-        header: { listTitle: "Welsh title", lastUpdatedDate: "1 Ionawr 2026", lastUpdatedTime: "12pm" },
+        header: { listTitle: "Welsh title", listForDate: "1 Ionawr 2026", lastUpdatedDate: "1 Ionawr 2026", lastUpdatedTime: "12pm" },
         hearings: []
       };
 
@@ -221,7 +220,7 @@ describe("SEND Daily Hearing List page controller", () => {
       res.locals = { locale: "cy" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([]));
+      vi.mocked(getPublicationJson).mockResolvedValue([]);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderSendDailyHearingListData).mockReturnValue(mockRenderedData);
 

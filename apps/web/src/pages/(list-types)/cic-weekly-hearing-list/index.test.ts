@@ -1,25 +1,19 @@
-import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
 
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn()
-}));
-
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
   return {
     ...actual,
-    createJsonValidator: () => mockValidate,
-    provenanceLabelsEn: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" },
-    provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" }
+    createJsonValidator: () => mockValidate
   };
 });
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
+  getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -35,7 +29,7 @@ vi.mock("@hmcts/cic-weekly-hearing-list", async (importOriginal) => {
 });
 
 import { renderCicWeeklyHearingListData } from "@hmcts/cic-weekly-hearing-list";
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { GET } from "./index.js";
 
 describe("CIC Weekly Hearing List page controller", () => {
@@ -45,9 +39,7 @@ describe("CIC Weekly Hearing List page controller", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    req = {
-      query: {}
-    };
+    req = { query: {} };
 
     res = {
       status: vi.fn().mockReturnThis(),
@@ -106,14 +98,14 @@ describe("CIC Weekly Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCicWeeklyHearingListData).mockReturnValue(mockRenderedData);
 
       await GET(req as Request, res as Response);
 
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
-      expect(readFile).toHaveBeenCalled();
+      expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderCicWeeklyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
@@ -121,7 +113,7 @@ describe("CIC Weekly Hearing List page controller", () => {
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Criminal Injuries Compensation Weekly Hearing List"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("cic-weekly-hearing-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
@@ -162,7 +154,7 @@ describe("CIC Weekly Hearing List page controller", () => {
       );
     });
 
-    it("should return 404 when JSON file is not found", async () => {
+    it("should return 404 when JSON blob is not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "14",
@@ -175,7 +167,7 @@ describe("CIC Weekly Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -195,7 +187,7 @@ describe("CIC Weekly Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([{ date: "invalid" }]));
+      vi.mocked(getPublicationJson).mockResolvedValue([{ date: "invalid" }]);
       mockValidate.mockReturnValue({ isValid: false, errors: ["Invalid date format"] });
 
       await GET(req as Request, res as Response);
@@ -237,7 +229,7 @@ describe("CIC Weekly Hearing List page controller", () => {
       res.locals = { locale: "cy" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([]));
+      vi.mocked(getPublicationJson).mockResolvedValue([]);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderCicWeeklyHearingListData).mockReturnValue(mockRenderedData);
 
