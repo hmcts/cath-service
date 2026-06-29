@@ -84,10 +84,7 @@ describe("FTT Land Registration Tribunal Weekly Hearing List page controller", (
 
       // Assert
       expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
-      expect(renderFttLrtData).toHaveBeenCalledWith(
-        MOCK_JSON_DATA,
-        expect.objectContaining({ courtName: "First-tier Tribunal (Land Registration Tribunal)" })
-      );
+      expect(renderFttLrtData).toHaveBeenCalledWith(MOCK_JSON_DATA, expect.objectContaining({ courtName: "First-tier Tribunal (Land Registration Tribunal)" }));
       expect(res.render).toHaveBeenCalledWith("ftt-lands-registration-tribunal-weekly-hearing-list", expect.objectContaining({ dataSource: "Manual Upload" }));
     });
 
