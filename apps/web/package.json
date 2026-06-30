@@ -1,6 +1,6 @@
 {
   "name": "@hmcts/web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@hmcts-cft/cloud-native-platform": "2.3.0",
-    "@hmcts-cft/simple-router": "2.2.0",
+    "@hmcts-cft/simple-router": "workspace:*",
     "@hmcts/admin-pages": "workspace:*",
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/auth": "workspace:*",
@@ -74,7 +74,7 @@
     "sass": "1.101.0",
     "supertest": "7.2.2",
     "typescript": "6.0.3",
-    "vite": "7.3.5",
+    "vite": "7.3.6",
     "vite-plugin-static-copy": "3.4.0"
   }
 }

@@ -58,7 +58,8 @@
       "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": ["libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list/src"],
       "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": [
         "libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/src"
-      ]
+      ],
+      "@hmcts/azure-blob": ["libs/azure-blob/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

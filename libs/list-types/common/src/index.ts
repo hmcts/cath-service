@@ -40,8 +40,7 @@ export {
   MAX_PDF_SIZE_BYTES,
   type PdfFromHtmlResult,
   type PdfGenerationResult,
-  savePdfToStorage,
-  TEMP_STORAGE_BASE
+  savePdfToStorage
 } from "./pdf/pdf-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { normaliseHearings } from "./rendering/hearing-normalisation.js";
