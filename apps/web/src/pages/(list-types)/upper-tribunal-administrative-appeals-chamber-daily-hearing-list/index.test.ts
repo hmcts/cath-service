@@ -275,5 +275,37 @@ describe("Upper Tribunal Administrative Appeals Chamber page controller", () => 
       // Assert
       expect(renderUtaacDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ locale: "cy" }));
     });
+
+    it("should use raw provenance when not in PROVENANCE_LABELS", async () => {
+      // Arrange
+      const mockArtefact = {
+        artefactId: "test-artefact-123",
+        locationId: "9001",
+        listTypeId: 30,
+        contentDate: new Date("2026-01-15"),
+        displayFrom: new Date("2026-01-15"),
+        displayTo: new Date("2026-01-15"),
+        lastReceivedDate: new Date("2026-01-15T12:00:00Z"),
+        provenance: "UNKNOWN_SOURCE"
+      };
+
+      const mockRenderedData = {
+        header: { listTitle: "Title", hearingDate: "15 January 2026", lastUpdatedDate: "15 January 2026", lastUpdatedTime: "12pm" },
+        hearings: []
+      };
+
+      req.query = { artefactId: "test-artefact-123" };
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getPublicationJson).mockResolvedValue([]);
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
+      vi.mocked(renderUtaacDailyHearingListData).mockReturnValue(mockRenderedData);
+
+      // Act
+      await GET(req as Request, res as Response);
+
+      // Assert
+      const renderCall = vi.mocked(res.render).mock.calls[0];
+      expect(renderCall[1]).toMatchObject({ dataSource: "UNKNOWN_SOURCE" });
+    });
   });
 });
