@@ -186,4 +186,71 @@ describe("generateWpafccWeeklyHearingListPdf", () => {
       listTitle: "First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List"
     });
   });
+
+  it("should return error when PDF buffer is missing", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: undefined, sizeBytes: 0 });
+
+    // Act
+    const result = await generateWpafccWeeklyHearingListPdf({
+      artefactId: "no-buffer",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+  });
+
+  it("should handle renderer errors gracefully", async () => {
+    // Arrange
+    vi.mocked(renderWpafccWeeklyHearingListData).mockImplementation(() => {
+      throw new Error("Renderer failed");
+    });
+
+    // Act
+    const result = await generateWpafccWeeklyHearingListPdf({
+      artefactId: "renderer-error",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate PDF: Renderer failed");
+  });
+
+  it("should use provenance label when provenance is provided", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "provenance-test.pdf",
+      sizeBytes: 100,
+      exceedsMaxSize: false
+    });
+
+    // Act
+    const result = await generateWpafccWeeklyHearingListPdf({
+      artefactId: "provenance-test",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      provenance: "MANUAL_UPLOAD"
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Manual Upload" }));
+  });
 });

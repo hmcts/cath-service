@@ -29,7 +29,7 @@ vi.mock("../rendering/renderer.js", () => ({
 
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderUtiacJrLeedsDailyHearingListData } from "../rendering/renderer.js";
-import { generateUtiacJrLeedsDailyHearingListPdf } from "./pdf-generator.js";
+import { createUtiacJrDailyHearingListPdfGenerator, generateUtiacJrLeedsDailyHearingListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
@@ -177,5 +177,98 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
 
     // Assert
     expect(result.success).toBe(true);
+  });
+
+  it("should return error when PDF buffer is missing", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: undefined, sizeBytes: 0 });
+
+    // Act
+    const result = await generateUtiacJrLeedsDailyHearingListPdf({
+      artefactId: "no-buffer",
+      displayFrom: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+  });
+
+  it("should handle renderer errors gracefully", async () => {
+    // Arrange
+    vi.mocked(renderUtiacJrLeedsDailyHearingListData).mockImplementation(() => {
+      throw new Error("Renderer failed");
+    });
+
+    // Act
+    const result = await generateUtiacJrLeedsDailyHearingListPdf({
+      artefactId: "renderer-error",
+      displayFrom: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate PDF: Renderer failed");
+  });
+});
+
+describe("createUtiacJrDailyHearingListPdfGenerator", () => {
+  const mockNunjucksEnv = {
+    render: vi.fn().mockReturnValue("<html>PDF HTML</html>")
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(renderUtiacJrLeedsDailyHearingListData).mockReturnValue(mockRenderedData);
+    mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
+    mockLoadTranslations.mockResolvedValue({ pageTitle: "Test Title" });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "default.pdf",
+      sizeBytes: 100,
+      exceedsMaxSize: false
+    });
+    mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
+      success: false,
+      error: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+    }));
+  });
+
+  it("should generate PDF with the provided list title", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF content"),
+      sizeBytes: 1024
+    });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "custom-title.pdf",
+      sizeBytes: 1024,
+      exceedsMaxSize: false
+    });
+
+    const customTitle = "Custom UTIAC Hearing List";
+    const generator = createUtiacJrDailyHearingListPdfGenerator(customTitle);
+
+    // Act
+    const result = await generator({
+      artefactId: "custom-title-test",
+      displayFrom: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(renderUtiacJrLeedsDailyHearingListData).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: customTitle }));
   });
 });

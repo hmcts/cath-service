@@ -157,4 +157,42 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     });
   });
+
+  it("should return error when PDF buffer is missing", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: undefined, sizeBytes: 0 });
+
+    // Act
+    const result = await generateUtiacJrLondonDailyHearingListPdf({
+      artefactId: "no-buffer",
+      displayFrom: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+  });
+
+  it("should handle renderer errors gracefully", async () => {
+    // Arrange
+    vi.mocked(renderUtiacJrLondonDailyHearingListData).mockImplementation(() => {
+      throw new Error("Renderer failed");
+    });
+
+    // Act
+    const result = await generateUtiacJrLondonDailyHearingListPdf({
+      artefactId: "renderer-error",
+      displayFrom: new Date("2025-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate PDF: Renderer failed");
+  });
 });
