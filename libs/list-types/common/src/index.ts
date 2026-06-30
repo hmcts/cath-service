@@ -32,7 +32,6 @@ export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export {
   type BasePdfGenerationOptions,
   configureNunjucks,
-  createDailyHearingListPdfGenerator,
   createPdfErrorResult,
   type DailyHearingListRenderedData,
   type DailyHearingListRenderOptions,

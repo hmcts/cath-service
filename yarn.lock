@@ -2727,14 +2727,28 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/upper-tribunal-common": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
-    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
   peerDependencies:
     express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/upper-tribunal-common@workspace:*, @hmcts/upper-tribunal-common@workspace:libs/list-types/upper-tribunal-common":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/upper-tribunal-common@workspace:libs/list-types/upper-tribunal-common"
+  dependencies:
+    "@hmcts/azure-blob": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
   languageName: unknown
   linkType: soft
 
@@ -2745,10 +2759,10 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/upper-tribunal-common": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
-    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
   peerDependencies:
@@ -2763,10 +2777,10 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/upper-tribunal-common": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
-    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.8"
   peerDependencies:

@@ -224,25 +224,6 @@ async function main() {
   await seedReferenceData();
   await seedTestData();
 
-  const listSearchConfigsByName = [
-    { name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST", caseNumberFieldName: "caseReference", caseNameFieldName: "caseName" },
-    { name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST", caseNumberFieldName: "caseReference", caseNameFieldName: "caseName" },
-    { name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST", caseNumberFieldName: "caseReferenceNumber", caseNameFieldName: "caseName" }
-  ];
-
-  for (const config of listSearchConfigsByName) {
-    const listType = await prisma.listType.findUnique({ where: { name: config.name } });
-    if (!listType) {
-      throw new Error(`List type not found for ListSearchConfig: "${config.name}"`);
-    }
-    await prisma.listSearchConfig.upsert({
-      where: { listTypeId: listType.id },
-      create: { listTypeId: listType.id, caseNumberFieldName: config.caseNumberFieldName, caseNameFieldName: config.caseNameFieldName },
-      update: {}
-    });
-    console.log(`Upserted ListSearchConfig for ${config.name}`);
-  }
-
   console.log("Seed completed successfully!");
 }
 

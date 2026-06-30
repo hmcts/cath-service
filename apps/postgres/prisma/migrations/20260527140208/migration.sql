@@ -1,3 +1,0 @@
--- This migration is intentionally empty.
--- The artefact_list_type_id_fkey constraint is applied by 20260528115459_add_third_party_push_log.
--- This file is kept to satisfy Prisma's migration history check on databases that recorded this migration.
