@@ -22,8 +22,8 @@ vi.mock("@hmcts/publication", () => ({
   }
 }));
 
-vi.mock("@hmcts/utiac-jr-manchester-daily-hearing-list", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-manchester-daily-hearing-list")>();
+vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-daily-hearing-list")>();
   return {
     ...actual,
     renderUtiacJrManchesterDailyHearingListData: vi.fn()
@@ -31,7 +31,7 @@ vi.mock("@hmcts/utiac-jr-manchester-daily-hearing-list", async (importOriginal) 
 });
 
 import { getArtefactById, getPublicationJson } from "@hmcts/publication";
-import { renderUtiacJrManchesterDailyHearingListData } from "@hmcts/utiac-jr-manchester-daily-hearing-list";
+import { renderUtiacJrManchesterDailyHearingListData } from "@hmcts/utiac-jr-daily-hearing-list";
 import { GET } from "./index.js";
 
 describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
@@ -68,13 +68,12 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
 
       const mockJsonData = [
         {
-          hearingTime: "10:00am",
-          caseTitle: "Smith v Secretary of State",
-          representative: "",
-          caseReferenceNumber: "JR/2026/001",
+          venue: "Manchester Civil Justice Centre",
           judges: "Judge Smith",
+          hearingTime: "10:00am",
+          caseReferenceNumber: "JR/2026/001",
+          caseTitle: "Smith v Secretary of State",
           hearingType: "Permission",
-          location: "Manchester Civil Justice Centre",
           additionalInformation: ""
         }
       ];
@@ -88,13 +87,12 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
         },
         hearings: [
           {
-            hearingTime: "10:00am",
-            caseTitle: "Smith v Secretary of State",
-            representative: "",
-            caseReferenceNumber: "JR/2026/001",
+            venue: "Manchester Civil Justice Centre",
             judges: "Judge Smith",
+            hearingTime: "10:00am",
+            caseReferenceNumber: "JR/2026/001",
+            caseTitle: "Smith v Secretary of State",
             hearingType: "Permission",
-            location: "Manchester Civil Justice Centre",
             additionalInformation: ""
           }
         ]
@@ -119,13 +117,14 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
-      expect(renderCall[0]).toBe("utiac-jr-daily-hearing-list");
-      expect(renderCall[1]).toMatchObject({
-        header: mockRenderedData.header,
-        hearings: mockRenderedData.hearings,
-        dataSource: "Manual Upload"
-      });
+      expect(vi.mocked(res.render)).toHaveBeenCalledWith(
+        "utiac-jr-daily-hearing-list",
+        expect.objectContaining({
+          header: mockRenderedData.header,
+          hearings: mockRenderedData.hearings,
+          dataSource: "Manual Upload"
+        })
+      );
     });
 
     it("should return 400 when artefactId is missing", async () => {

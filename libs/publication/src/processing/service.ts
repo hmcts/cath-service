@@ -11,11 +11,14 @@ import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCou
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
-import { generateUtiacJrBirminghamDailyHearingListPdf, type UtiacJrBirminghamHearingList } from "@hmcts/utiac-jr-birmingham-daily-hearing-list";
-import { generateUtiacJrCardiffDailyHearingListPdf, type UtiacJrCardiffHearingList } from "@hmcts/utiac-jr-cardiff-daily-hearing-list";
-import { generateUtiacJrLeedsDailyHearingListPdf, type UtiacJrLeedsHearingList } from "@hmcts/utiac-jr-leeds-daily-hearing-list";
-import { generateUtiacJrLondonDailyHearingListPdf, type UtiacJrLondonHearingList } from "@hmcts/utiac-jr-london-daily-hearing-list";
-import { generateUtiacJrManchesterDailyHearingListPdf, type UtiacJrManchesterHearingList } from "@hmcts/utiac-jr-manchester-daily-hearing-list";
+import {
+  createUtiacJrDailyHearingListPdfGenerator,
+  generateUtiacJrLeedsDailyHearingListPdf,
+  generateUtiacJrLondonDailyHearingListPdf,
+  type UtiacJrHearingList,
+  type UtiacJrLeedsHearingList,
+  type UtiacJrLondonHearingList
+} from "@hmcts/utiac-jr-daily-hearing-list";
 import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
@@ -105,21 +108,21 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
       displayFrom: p.displayFrom ?? p.contentDate
     }),
   UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: (p) =>
-    generateUtiacJrManchesterDailyHearingListPdf({
+    createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List")({
       ...p,
-      jsonData: p.jsonData as UtiacJrManchesterHearingList,
+      jsonData: p.jsonData as UtiacJrHearingList,
       displayFrom: p.displayFrom ?? p.contentDate
     }),
   UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: (p) =>
-    generateUtiacJrBirminghamDailyHearingListPdf({
+    createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List")({
       ...p,
-      jsonData: p.jsonData as UtiacJrBirminghamHearingList,
+      jsonData: p.jsonData as UtiacJrHearingList,
       displayFrom: p.displayFrom ?? p.contentDate
     }),
   UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: (p) =>
-    generateUtiacJrCardiffDailyHearingListPdf({
+    createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List")({
       ...p,
-      jsonData: p.jsonData as UtiacJrCardiffHearingList,
+      jsonData: p.jsonData as UtiacJrHearingList,
       displayFrom: p.displayFrom ?? p.contentDate
     })
 };

@@ -4,8 +4,8 @@ import {
   utiacJrManchesterDailyHearingListEn as en,
   renderUtiacJrManchesterDailyHearingListData,
   type UtiacJrManchesterHearingList
-} from "@hmcts/utiac-jr-manchester-daily-hearing-list";
-import { schemaPath } from "@hmcts/utiac-jr-manchester-daily-hearing-list/config";
+} from "@hmcts/utiac-jr-daily-hearing-list";
+import { schemaPath } from "@hmcts/utiac-jr-daily-hearing-list/config";
 import { createSimpleListTypeHandler, createUtiacJrRegionalDailyRender, LIST_LOAD_SERVER_ERROR } from "../list-type-handler.js";
 
 const validate = createJsonValidator(schemaPath);

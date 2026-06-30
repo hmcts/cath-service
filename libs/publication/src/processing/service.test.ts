@@ -31,15 +31,12 @@ vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
   generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn()
 }));
 
-vi.mock("@hmcts/utiac-jr-london-daily-hearing-list", () => ({
-  generateUtiacJrLondonDailyHearingListPdf: vi.fn()
-}));
-
-vi.mock("@hmcts/utiac-jr-leeds-daily-hearing-list", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-leeds-daily-hearing-list")>();
+vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-daily-hearing-list")>();
   return {
     ...actual,
-    generateUtiacJrLeedsDailyHearingListPdf: vi.fn()
+    generateUtiacJrLeedsDailyHearingListPdf: vi.fn(),
+    generateUtiacJrLondonDailyHearingListPdf: vi.fn()
   };
 });
 
@@ -76,8 +73,7 @@ describe("publication-processor", async () => {
   const { generateGrcWeeklyHearingListPdf } = await import("@hmcts/grc-weekly-hearing-list");
   const { generateWpafccWeeklyHearingListPdf } = await import("@hmcts/wpafcc-weekly-hearing-list");
   const { generateUtiacStatutoryAppealDailyHearingListPdf } = await import("@hmcts/utiac-statutory-appeal-daily-hearing-list");
-  const { generateUtiacJrLondonDailyHearingListPdf } = await import("@hmcts/utiac-jr-london-daily-hearing-list");
-  const { generateUtiacJrLeedsDailyHearingListPdf } = await import("@hmcts/utiac-jr-leeds-daily-hearing-list");
+  const { generateUtiacJrLondonDailyHearingListPdf, generateUtiacJrLeedsDailyHearingListPdf } = await import("@hmcts/utiac-jr-daily-hearing-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");

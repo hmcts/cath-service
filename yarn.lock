@@ -2528,11 +2528,7 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
-    "@hmcts/utiac-jr-birmingham-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-cardiff-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-leeds-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-london-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-manchester-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*"
     "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*"
     "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
     notifications-node-client: "npm:8.4.0"
@@ -2631,11 +2627,7 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
-    "@hmcts/utiac-jr-birmingham-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-cardiff-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-leeds-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-london-daily-hearing-list": "workspace:*"
-    "@hmcts/utiac-jr-manchester-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*"
     "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
@@ -2748,9 +2740,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/utiac-jr-birmingham-daily-hearing-list@workspace:*, @hmcts/utiac-jr-birmingham-daily-hearing-list@workspace:libs/list-types/utiac-jr-birmingham-daily-hearing-list":
+"@hmcts/utiac-jr-daily-hearing-list@workspace:*, @hmcts/utiac-jr-daily-hearing-list@workspace:libs/list-types/utiac-jr-daily-hearing-list":
   version: 0.0.0-use.local
-  resolution: "@hmcts/utiac-jr-birmingham-daily-hearing-list@workspace:libs/list-types/utiac-jr-birmingham-daily-hearing-list"
+  resolution: "@hmcts/utiac-jr-daily-hearing-list@workspace:libs/list-types/utiac-jr-daily-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
@@ -2766,63 +2758,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/utiac-jr-cardiff-daily-hearing-list@workspace:*, @hmcts/utiac-jr-cardiff-daily-hearing-list@workspace:libs/list-types/utiac-jr-cardiff-daily-hearing-list":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/utiac-jr-cardiff-daily-hearing-list@workspace:libs/list-types/utiac-jr-cardiff-daily-hearing-list"
-  dependencies:
-    "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
-    luxon: "npm:3.7.2"
-    nunjucks: "npm:3.2.4"
-    typescript: "npm:6.0.3"
-    vitest: "npm:4.1.9"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/utiac-jr-leeds-daily-hearing-list@workspace:*, @hmcts/utiac-jr-leeds-daily-hearing-list@workspace:libs/list-types/utiac-jr-leeds-daily-hearing-list":
+"@hmcts/utiac-jr-leeds-daily-hearing-list@workspace:libs/list-types/utiac-jr-leeds-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/utiac-jr-leeds-daily-hearing-list@workspace:libs/list-types/utiac-jr-leeds-daily-hearing-list"
-  dependencies:
-    "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
-    luxon: "npm:3.7.2"
-    nunjucks: "npm:3.2.4"
-    typescript: "npm:6.0.3"
-    vitest: "npm:4.1.9"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/utiac-jr-london-daily-hearing-list@workspace:*, @hmcts/utiac-jr-london-daily-hearing-list@workspace:libs/list-types/utiac-jr-london-daily-hearing-list":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/utiac-jr-london-daily-hearing-list@workspace:libs/list-types/utiac-jr-london-daily-hearing-list"
-  dependencies:
-    "@hmcts/list-types-common": "workspace:*"
-    "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.1"
-    "@types/node": "npm:24.10.4"
-    luxon: "npm:3.7.2"
-    nunjucks: "npm:3.2.4"
-    typescript: "npm:6.0.3"
-    vitest: "npm:4.1.9"
-  peerDependencies:
-    express: ^5.1.0
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/utiac-jr-manchester-daily-hearing-list@workspace:*, @hmcts/utiac-jr-manchester-daily-hearing-list@workspace:libs/list-types/utiac-jr-manchester-daily-hearing-list":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/utiac-jr-manchester-daily-hearing-list@workspace:libs/list-types/utiac-jr-manchester-daily-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"

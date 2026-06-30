@@ -26,25 +26,10 @@ import {
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import {
-  extractCaseSummary as extractUtiacJrBirminghamSummary,
-  formatCaseSummaryForEmail as formatUtiacJrBirminghamSummaryForEmail
-} from "@hmcts/utiac-jr-birmingham-daily-hearing-list";
-import {
-  extractCaseSummary as extractUtiacJrCardiffSummary,
-  formatCaseSummaryForEmail as formatUtiacJrCardiffSummaryForEmail
-} from "@hmcts/utiac-jr-cardiff-daily-hearing-list";
-import {
   extractCaseSummary as extractUtiacJrLeedsSummary,
+  extractLondonCaseSummary as extractUtiacJrLondonSummary,
   formatCaseSummaryForEmail as formatUtiacJrLeedsSummaryForEmail
-} from "@hmcts/utiac-jr-leeds-daily-hearing-list";
-import {
-  extractCaseSummary as extractUtiacJrLondonSummary,
-  formatCaseSummaryForEmail as formatUtiacJrLondonSummaryForEmail
-} from "@hmcts/utiac-jr-london-daily-hearing-list";
-import {
-  extractCaseSummary as extractUtiacJrManchesterSummary,
-  formatCaseSummaryForEmail as formatUtiacJrManchesterSummaryForEmail
-} from "@hmcts/utiac-jr-manchester-daily-hearing-list";
+} from "@hmcts/utiac-jr-daily-hearing-list";
 import {
   extractCaseSummary as extractUtiacSaSummary,
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
@@ -134,23 +119,23 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   },
   UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLondonSummary as SummaryExtractor,
-    format: formatUtiacJrLondonSummaryForEmail
+    format: formatUtiacJrLeedsSummaryForEmail
   },
   UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
   UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
-    extract: extractUtiacJrManchesterSummary as SummaryExtractor,
-    format: formatUtiacJrManchesterSummaryForEmail
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
   },
   UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
-    extract: extractUtiacJrBirminghamSummary as SummaryExtractor,
-    format: formatUtiacJrBirminghamSummaryForEmail
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
   },
   UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
-    extract: extractUtiacJrCardiffSummary as SummaryExtractor,
-    format: formatUtiacJrCardiffSummaryForEmail
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
   }
 };
 

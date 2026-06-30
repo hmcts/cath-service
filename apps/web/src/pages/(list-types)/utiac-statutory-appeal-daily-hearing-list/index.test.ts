@@ -119,13 +119,14 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
-      expect(renderCall[0]).toBe("utiac-statutory-appeal-daily-hearing-list");
-      expect(renderCall[1]).toMatchObject({
-        header: mockRenderedData.header,
-        hearings: mockRenderedData.hearings,
-        dataSource: "Manual Upload"
-      });
+      expect(vi.mocked(res.render)).toHaveBeenCalledWith(
+        "utiac-statutory-appeal-daily-hearing-list",
+        expect.objectContaining({
+          header: mockRenderedData.header,
+          hearings: mockRenderedData.hearings,
+          dataSource: "Manual Upload"
+        })
+      );
     });
 
     it("should return 400 when artefactId is missing", async () => {

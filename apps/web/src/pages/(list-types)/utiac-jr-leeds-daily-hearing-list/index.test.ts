@@ -22,8 +22,8 @@ vi.mock("@hmcts/publication", () => ({
   }
 }));
 
-vi.mock("@hmcts/utiac-jr-leeds-daily-hearing-list", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-leeds-daily-hearing-list")>();
+vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-daily-hearing-list")>();
   return {
     ...actual,
     renderUtiacJrLeedsDailyHearingListData: vi.fn()
@@ -31,7 +31,7 @@ vi.mock("@hmcts/utiac-jr-leeds-daily-hearing-list", async (importOriginal) => {
 });
 
 import { getArtefactById, getPublicationJson } from "@hmcts/publication";
-import { renderUtiacJrLeedsDailyHearingListData } from "@hmcts/utiac-jr-leeds-daily-hearing-list";
+import { renderUtiacJrLeedsDailyHearingListData } from "@hmcts/utiac-jr-daily-hearing-list";
 import { GET } from "./index.js";
 
 describe("UTIAC JR Leeds Daily Hearing List page controller", () => {
@@ -117,13 +117,14 @@ describe("UTIAC JR Leeds Daily Hearing List page controller", () => {
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
-      expect(renderCall[0]).toBe("utiac-jr-daily-hearing-list");
-      expect(renderCall[1]).toMatchObject({
-        header: mockRenderedData.header,
-        hearings: mockRenderedData.hearings,
-        dataSource: "Manual Upload"
-      });
+      expect(vi.mocked(res.render)).toHaveBeenCalledWith(
+        "utiac-jr-daily-hearing-list",
+        expect.objectContaining({
+          header: mockRenderedData.header,
+          hearings: mockRenderedData.hearings,
+          dataSource: "Manual Upload"
+        })
+      );
     });
 
     it("should return 400 when artefactId is missing", async () => {
