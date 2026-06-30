@@ -11,7 +11,8 @@ describe("validateUtiacJrDailyHearingList", () => {
         hearingTime: "10:00am",
         caseReferenceNumber: "JR/2025/003",
         caseTitle: "Smith v Secretary of State",
-        hearingType: "Permission"
+        hearingType: "Permission",
+        additionalInformation: ""
       }
     ];
 

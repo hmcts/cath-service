@@ -8,10 +8,12 @@ describe("validateUtiacJrLondonDailyHearingList", () => {
       {
         hearingTime: "10:00am",
         caseTitle: "Smith v Secretary of State",
+        representative: "",
         caseReferenceNumber: "JR/2025/001",
         judges: "Judge Smith",
         hearingType: "Permission",
-        location: "Field House, London"
+        location: "Field House, London",
+        additionalInformation: ""
       }
     ];
 

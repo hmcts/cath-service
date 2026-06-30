@@ -11,8 +11,10 @@ describe("validateGrcWeeklyHearingList", () => {
         caseReferenceNumber: "GRC/2025/001",
         caseName: "A Vs B",
         judges: "Judge Smith",
+        members: "",
         modeOfHearing: "Remote",
-        venue: "GRC Hearing Centre"
+        venue: "GRC Hearing Centre",
+        additionalInformation: ""
       }
     ];
 
