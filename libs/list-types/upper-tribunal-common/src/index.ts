@@ -1,1 +1,1 @@
-export { createUpperTribunalPdfGenerator } from "./pdf-generator.js";
+export { createUtDailyHearingListPdfGenerator, type DailyHearingListRenderedData, type DailyHearingListRenderOptions } from "./pdf-generator.js";

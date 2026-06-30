@@ -49,19 +49,6 @@ export function createPdfErrorResult(error: unknown): PdfGenerationResult {
   };
 }
 
-export interface DailyHearingListRenderOptions {
-  locale: string;
-  courtName: string;
-  contentDate: Date;
-  lastReceivedDate: string;
-  listTitle: string;
-}
-
-export interface DailyHearingListRenderedData {
-  header: { listTitle: string; hearingDate: string; lastUpdatedDate: string; lastUpdatedTime: string };
-  hearings: unknown[];
-}
-
 export interface PdfFromHtmlResult {
   success: boolean;
   pdfBuffer?: Buffer;

@@ -33,8 +33,6 @@ export {
   type BasePdfGenerationOptions,
   configureNunjucks,
   createPdfErrorResult,
-  type DailyHearingListRenderedData,
-  type DailyHearingListRenderOptions,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
   type PdfFromHtmlResult,

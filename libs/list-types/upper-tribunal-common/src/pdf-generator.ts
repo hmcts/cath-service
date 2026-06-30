@@ -2,8 +2,6 @@ import {
   type BasePdfGenerationOptions,
   configureNunjucks,
   createPdfErrorResult,
-  type DailyHearingListRenderedData,
-  type DailyHearingListRenderOptions,
   loadTranslations,
   PDF_BASE_STYLES,
   type PdfFromHtmlResult,
@@ -11,7 +9,20 @@ import {
   savePdfToStorage
 } from "@hmcts/list-types-common";
 
-export function createUpperTribunalPdfGenerator<T>(
+export interface DailyHearingListRenderOptions {
+  locale: string;
+  courtName: string;
+  contentDate: Date;
+  lastReceivedDate: string;
+  listTitle: string;
+}
+
+export interface DailyHearingListRenderedData {
+  header: { listTitle: string; hearingDate: string; lastUpdatedDate: string; lastUpdatedTime: string };
+  hearings: unknown[];
+}
+
+export function createUtDailyHearingListPdfGenerator<T>(
   courtName: string,
   listTitle: string,
   renderFn: (data: T, options: DailyHearingListRenderOptions) => DailyHearingListRenderedData,

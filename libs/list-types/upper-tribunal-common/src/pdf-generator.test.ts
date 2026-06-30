@@ -18,9 +18,9 @@ vi.mock("nunjucks", () => ({
   }
 }));
 
-import { createUpperTribunalPdfGenerator } from "./pdf-generator.js";
+import { createUtDailyHearingListPdfGenerator } from "./pdf-generator.js";
 
-describe("createUpperTribunalPdfGenerator", () => {
+describe("createUtDailyHearingListPdfGenerator", () => {
   const mockRenderFn = vi.fn();
   const mockImportEn = vi.fn().mockResolvedValue({ en: { pageTitle: "English" } });
   const mockImportCy = vi.fn().mockResolvedValue({ cy: { pageTitle: "Welsh" } });
@@ -49,7 +49,7 @@ describe("createUpperTribunalPdfGenerator", () => {
   });
 
   const makeGenerator = () =>
-    createUpperTribunalPdfGenerator(
+    createUtDailyHearingListPdfGenerator(
       "Test Court",
       "Test List Title",
       mockRenderFn,
