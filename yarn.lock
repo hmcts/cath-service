@@ -2488,6 +2488,8 @@ __metadata:
 "@hmcts/magistrates-standard-list@workspace:*, @hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
+  dependencies:
+    "@hmcts/location": "workspace:*"
   languageName: unknown
   linkType: soft
 
