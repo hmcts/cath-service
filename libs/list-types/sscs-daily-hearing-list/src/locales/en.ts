@@ -32,14 +32,14 @@ export const en = {
   searchCasesLabel: "Search by appeal reference, hearing type, appellant, or other details",
   tableHeaders: {
     venue: "Venue",
-    appealReferenceNumber: "Appeal Reference Number",
-    hearingType: "Hearing Type",
+    appealReferenceNumber: "Appeal reference number",
+    hearingType: "Hearing type",
     appellant: "Appellant",
     courtroom: "Courtroom",
-    hearingTime: "Hearing Time",
+    hearingTime: "Hearing time",
     tribunal: "Tribunal",
     respondent: "FTA/Respondent",
-    additionalInformation: "Additional Information"
+    additionalInformation: "Additional information"
   },
   dataSource: "Data source",
   backToTop: "Back to top",
