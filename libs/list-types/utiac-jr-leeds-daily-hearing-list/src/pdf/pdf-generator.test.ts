@@ -1,9 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn()
+const { mockSavePdfToStorage, mockCreatePdfErrorResult, mockConfigureNunjucks, mockLoadTranslations } = vi.hoisted(() => ({
+  mockSavePdfToStorage: vi.fn(),
+  mockCreatePdfErrorResult: vi.fn(),
+  mockConfigureNunjucks: vi.fn(),
+  mockLoadTranslations: vi.fn()
+}));
+
+vi.mock("@hmcts/list-types-common", () => ({
+  savePdfToStorage: mockSavePdfToStorage,
+  createPdfErrorResult: mockCreatePdfErrorResult,
+  configureNunjucks: mockConfigureNunjucks,
+  loadTranslations: mockLoadTranslations,
+  PDF_BASE_STYLES: "/* base styles */",
+  provenanceLabelsEn: {
+    MANUAL_UPLOAD: "Manual Upload",
+    SNL: "SNL"
   }
 }));
 
@@ -15,7 +27,6 @@ vi.mock("../rendering/renderer.js", () => ({
   renderUtiacJrLeedsDailyHearingListData: vi.fn()
 }));
 
-import fs from "node:fs/promises";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderUtiacJrLeedsDailyHearingListData } from "../rendering/renderer.js";
 import { generateUtiacJrLeedsDailyHearingListPdf } from "./pdf-generator.js";
@@ -43,12 +54,26 @@ const mockHearingList = [
 ];
 
 describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
+  const mockNunjucksEnv = {
+    render: vi.fn().mockReturnValue("<html>PDF HTML</html>")
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     vi.mocked(renderUtiacJrLeedsDailyHearingListData).mockReturnValue(mockRenderedData);
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+    mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
+    mockLoadTranslations.mockResolvedValue({ pageTitle: "Test Title" });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "default.pdf",
+      sizeBytes: 100,
+      exceedsMaxSize: false
+    });
+    mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
+      success: false,
+      error: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+    }));
   });
 
   it("should generate PDF successfully", async () => {
@@ -58,6 +83,12 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
       success: true,
       pdfBuffer,
       sizeBytes: 1024
+    });
+    mockSavePdfToStorage.mockResolvedValue({
+      success: true,
+      pdfPath: "test-artefact-123.pdf",
+      sizeBytes: 1024,
+      exceedsMaxSize: false
     });
 
     // Act
