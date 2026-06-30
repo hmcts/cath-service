@@ -27,6 +27,30 @@
   border-bottom-color: #8eb8dc;
 }
 
+// Match OG CaTH footer size: govuk-frontend v6 bumped the footer from
+// size 16 to 19 as part of the GDS rebrand. Restore size 16 (16px at all
+// breakpoints) so the footer matches the legacy service.
+//
+// The GDS rebrand also lightens the footer text/link colour. Restore the
+// legacy near-black text colour (#0b0c0c) for the footer and its links.
+.govuk-footer {
+  @include index.govuk-font-size($size: 16);
+  color: index.$govuk-text-colour;
+}
+
+// The rebrand styles footer links via :link/:visited/:hover pseudo-class
+// selectors (blue), which out-specify a plain `.govuk-footer__link` rule.
+// Match those pseudo-classes to force the legacy black link colour, while
+// leaving the :focus state (black on yellow) untouched for accessibility.
+.govuk-footer__link {
+  &:link,
+  &:visited,
+  &:hover,
+  &:active {
+    color: index.$govuk-text-colour;
+  }
+}
+
 .govuk-footer__copyright-logo {
   margin-bottom: 12px !important;
   padding: 4px 0 !important;
