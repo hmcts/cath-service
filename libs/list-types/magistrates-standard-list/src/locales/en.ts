@@ -4,20 +4,25 @@ export const en = {
   factLinkText: "Find contact details and other information about courts and tribunals",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
-  listDate: "List for",
+  listDate: "List for date:",
   lastUpdated: "Last updated:",
   publishedAt: "at",
-  restrictionInformationHeading: "Restrictions on publishing or writing about these cases",
-  restrictionInformationP1:
-    "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.",
+  restrictionInformationHeading: "Restriction information",
+  restrictionInformationP1: "Restrictions on publishing or writing about these cases",
   restrictionInformationBoldText:
     "You'll be in contempt of court if you publish any information which is protected by a reporting restriction. You could get a fine, prison sentence or both.",
-  restrictionInformationP2: "Specific restrictions ordered by the court will be mentioned on the cases listed here.",
+  restrictionInformationP2:
+    "Section 49 of the Children and Young Persons Act 1933 imposes an automatic restriction in youth court proceedings which prohibits the publication of any matter which is likely to lead members of the public to identify a child or young person as someone concerned in the proceedings. This includes:",
+  restrictionBulletPoint1: "the name, address or school of the young person",
+  restrictionBulletPoint2: "any particulars calculated to lead to the identification of the young person",
   restrictionInformationP3:
-    "However, restrictions are not always listed. Some apply automatically. For example, anonymity given to the victims of certain sexual offences.",
-  restrictionInformationP4: "To find out which reporting restrictions apply on a specific case, contact:",
-  restrictionBulletPoint1: "the court directly",
-  restrictionBulletPoint2: "HM Courts and Tribunals Service on 0330 808 4407",
+    "Section 39 of the Children and Young Persons Act 1933 gives the court a discretionary power to restrict reporting when a child or young person is involved in adult court proceedings.",
+  restrictionInformationP4:
+    "Section 4A of the Criminal Procedure (Insanity) Act 1964 imposes an automatic restriction prohibiting the publication of any matter likely to identify the defendant when a finding of insanity or disability has been made.",
+  openJusticeTitle: "Open justice",
+  openJusticeBody:
+    "This list is published in the interest of open justice. It is made available to the press and public to allow them to observe and report on proceedings.",
+  linkToTop: "Back to top",
   name: "Name: ",
   sittingAt: "Sitting at ",
   reference: "Reference: ",
@@ -33,7 +38,6 @@ export const en = {
   attendanceMethod: "Attendance Method: ",
   reportingRestrictions: "Reporting Restrictions: ",
   applicationParticulars: "Application Particulars: ",
-  offenceCode: "Offence Code",
   plea: "Plea",
   dateOfPlea: "Date of Plea",
   convictedOn: "Convicted on",

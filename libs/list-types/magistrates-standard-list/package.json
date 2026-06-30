@@ -16,7 +16,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn build:pdf-templates",
+    "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",

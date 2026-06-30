@@ -1,17 +1,5 @@
 {% extends "layouts/base-template.njk" %}
 
-{% block head %}
-  {{ super() }}
-  <style>
-    .linked-cases-heading { font-weight: 700; }
-    .offence-summary { display: inline; }
-    .add-border-bottom { border-bottom: 1px solid #b1b4b6; }
-    .restriction-list-section { background-color: #f3f2f1; padding: 5px 10px; }
-    .govuk-accordion__controls { text-align: right; }
-    .govuk-details .govuk-table__cell, .govuk-details .govuk-table__header { border-bottom: none; }
-  </style>
-{% endblock %}
-
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
@@ -38,14 +26,23 @@
           </strong>
         </div>
         <p class="govuk-body">{{ t.restrictionInformationP2 }}</p>
-        <p class="govuk-body">{{ t.restrictionInformationP3 }}</p>
-        <p class="govuk-body">{{ t.restrictionInformationP4 }}</p>
         <ul class="govuk-list govuk-list--bullet">
           <li>{{ t.restrictionBulletPoint1 }}</li>
           <li>{{ t.restrictionBulletPoint2 }}</li>
         </ul>
+        <p class="govuk-body">{{ t.restrictionInformationP3 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP4 }}</p>
       </div>
     </div>
+
+    <details class="govuk-details govuk-!-margin-bottom-5" data-module="govuk-details">
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">{{ t.openJusticeTitle }}</span>
+      </summary>
+      <div class="govuk-details__text">
+        <p class="govuk-body">{{ t.openJusticeBody }}</p>
+      </div>
+    </details>
 
     <div class="govuk-form-group govuk-!-margin-top-4">
       <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
@@ -60,14 +57,14 @@
       {% set courtRoomCount = 0 %}
       {% for room in listData %}
         {% set courtRoomCount = courtRoomCount + 1 %}
-        <div class="site-header" tabindex="0">
+        <div class="site-header">
           {% if room.courtHouseName %}
-            <h1 class="govuk-heading-l site-address" tabindex="0">{{ room.courtHouseName }}</h1>
+            <h2 class="govuk-heading-l site-address">{{ room.courtHouseName }}</h2>
           {% endif %}
           {% if room.lja %}
-            <h1 class="govuk-heading-m site-address" tabindex="0">{{ t.lja }}: {{ room.lja }}</h1>
+            <h3 class="govuk-heading-m site-address">{{ t.lja }}: {{ room.lja }}</h3>
           {% endif %}
-          <h1 class="govuk-heading-m site-address" tabindex="0">{{ room.courtRoomName }}</h1>
+          <h3 class="govuk-heading-m site-address">{{ room.courtRoomName }}</h3>
         </div>
 
         <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-{{ courtRoomCount }}">
@@ -210,8 +207,12 @@
         </div>
       {% endfor %}
 
-      <p class="govuk-body govuk-!-margin-top-6" style="font-size: 14px;">
+      <p class="govuk-body govuk-body-s govuk-!-margin-top-6">
         {{ t.dataSource }}: {{ dataSource }}
+      </p>
+
+      <p class="govuk-body govuk-!-margin-top-4">
+        <a class="govuk-link" href="#main-content">{{ t.linkToTop }}</a>
       </p>
     </div>
 
