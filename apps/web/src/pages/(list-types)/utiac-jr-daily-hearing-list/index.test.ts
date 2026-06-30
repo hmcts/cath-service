@@ -36,6 +36,19 @@ import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { renderUtiacJrDailyHearingListData, renderUtiacJrLondonDailyHearingListData } from "@hmcts/utiac-jr-daily-hearing-list";
 import { GET } from "./index.js";
 
+const makeArtefact = (overrides: Record<string, unknown> = {}) => ({
+  artefactId: "test-artefact-123",
+  locationId: "9001",
+  listTypeId: 194,
+  listTypeName: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+  contentDate: new Date("2026-01-15"),
+  displayFrom: new Date("2026-01-15"),
+  displayTo: new Date("2026-01-15"),
+  lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
+  provenance: "MANUAL_UPLOAD",
+  ...overrides
+});
+
 describe("UTIAC JR Daily Hearing List unified page controller", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
@@ -55,18 +68,9 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
   });
 
   describe("GET handler", () => {
-    it("should render Leeds list (listTypeId 32) with regional template and correct title", async () => {
+    it("should render Leeds list with regional template and correct title", async () => {
       // Arrange
-      const mockArtefact = {
-        artefactId: "test-artefact-123",
-        locationId: "9001",
-        listTypeId: 32,
-        contentDate: new Date("2026-01-15"),
-        displayFrom: new Date("2026-01-15"),
-        displayTo: new Date("2026-01-15"),
-        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
-        provenance: "MANUAL_UPLOAD"
-      };
+      const mockArtefact = makeArtefact();
 
       const mockJsonData = [
         {
@@ -118,18 +122,13 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
       );
     });
 
-    it("should render London list (listTypeId 31) with London template and London table headers", async () => {
+    it("should render London list with London template and London table headers", async () => {
       // Arrange
-      const mockArtefact = {
+      const mockArtefact = makeArtefact({
         artefactId: "test-artefact-456",
-        locationId: "9001",
-        listTypeId: 31,
-        contentDate: new Date("2026-01-15"),
-        displayFrom: new Date("2026-01-15"),
-        displayTo: new Date("2026-01-15"),
-        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
-        provenance: "MANUAL_UPLOAD"
-      };
+        listTypeId: 193,
+        listTypeName: "UTIAC_JR_LONDON_DAILY_HEARING_LIST"
+      });
 
       const mockJsonData = [
         {
@@ -226,17 +225,8 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
 
     it("should return 404 when JSON is not found in blob storage", async () => {
       // Arrange
-      const mockArtefact = {
-        artefactId: "test-artefact-123",
-        listTypeId: 32,
-        contentDate: new Date("2026-01-15"),
-        displayFrom: new Date("2026-01-15"),
-        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
-        provenance: "MANUAL_UPLOAD"
-      };
-
       req.query = { artefactId: "test-artefact-123" };
-      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(makeArtefact() as any);
       vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       // Act
@@ -255,17 +245,8 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
 
     it("should return 400 when JSON validation fails", async () => {
       // Arrange
-      const mockArtefact = {
-        artefactId: "test-artefact-123",
-        listTypeId: 32,
-        contentDate: new Date("2026-01-15"),
-        displayFrom: new Date("2026-01-15"),
-        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
-        provenance: "MANUAL_UPLOAD"
-      };
-
       req.query = { artefactId: "test-artefact-123" };
-      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(makeArtefact() as any);
       vi.mocked(getPublicationJson).mockResolvedValue([{ hearingTime: "invalid" }]);
       mockValidate.mockReturnValue({ isValid: false, errors: ["Invalid data"] });
 
@@ -304,15 +285,6 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
 
     it("should use Welsh locale and pageTitleByListTypeCy when locale is cy", async () => {
       // Arrange
-      const mockArtefact = {
-        artefactId: "test-artefact-123",
-        listTypeId: 32,
-        contentDate: new Date("2026-01-15"),
-        displayFrom: new Date("2026-01-15"),
-        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
-        provenance: "MANUAL_UPLOAD"
-      };
-
       const mockRenderedData = {
         header: { listTitle: "Welsh placeholder", listForDate: "15 Ionawr 2026", lastUpdatedDate: "14 Ionawr 2026", lastUpdatedTime: "12pm" },
         hearings: []
@@ -321,7 +293,7 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
       res.locals = { locale: "cy" };
 
-      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getArtefactById).mockResolvedValue(makeArtefact() as any);
       vi.mocked(getPublicationJson).mockResolvedValue([]);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderUtiacJrDailyHearingListData).mockReturnValue(mockRenderedData);

@@ -15,19 +15,11 @@ import {
 import type { Response } from "express";
 import { createSimpleListTypeHandler, LIST_LOAD_SERVER_ERROR, resolveDataSource } from "../list-type-handler.js";
 
-const LONDON_LIST_TYPE_ID = 31;
-
-const LIST_TYPE_ID_TO_NAME: Record<number, string> = {
-  31: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
-  32: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
-  33: "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
-  34: "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
-  35: "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST"
-};
+const LONDON_LIST_TYPE_NAME = "UTIAC_JR_LONDON_DAILY_HEARING_LIST";
 
 function renderUtiacJr({ artefact, jsonData, locale, res }: { artefact: Artefact; jsonData: unknown; locale: string; res: Response }): void {
-  const listTypeName = LIST_TYPE_ID_TO_NAME[artefact.listTypeId] ?? "";
-  const isLondon = artefact.listTypeId === LONDON_LIST_TYPE_ID;
+  const listTypeName = artefact.listTypeName ?? "";
+  const isLondon = listTypeName === LONDON_LIST_TYPE_NAME;
 
   const pageTitleMap = locale === "cy" ? pageTitleByListTypeCy : pageTitleByListType;
   const pageTitle = pageTitleMap[listTypeName] ?? listTypeName;
