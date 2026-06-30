@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
 
-const ajv = new (Ajv2020 as any)({ allErrors: true });
+const ajv = new (Ajv as any)({ allErrors: true });
 const compiledValidators = new Map<string, any>();
 
 export interface ValidationResult {
