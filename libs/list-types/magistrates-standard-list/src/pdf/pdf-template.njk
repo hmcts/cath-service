@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ t.title }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+  <style>
+    .restriction-box {
+      background-color: #f3f2f1;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 4px solid #d4351c;
+    }
+    .warning-box {
+      background-color: #fff7e6;
+      border-left: 4px solid #f47738;
+      padding: 10px 15px;
+      margin: 10px 0;
+      font-weight: 700;
+    }
+    .court-section { margin-bottom: 30px; }
+    .court-heading {
+      background-color: #f3f2f1;
+      padding: 8px 12px;
+      margin-bottom: 5px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .sitting-section { margin-bottom: 20px; }
+    .sitting-heading {
+      background-color: #1d70b8;
+      color: #fff;
+      padding: 6px 12px;
+      font-weight: 700;
+    }
+    .hearing-block {
+      border: 1px solid #b1b4b6;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .label { font-weight: 700; }
+    .header-dates { margin-bottom: 12px; }
+    .header-dates p { margin: 0 0 2px; }
+    .hearing-columns { display: grid; grid-template-columns: 2fr 1fr; gap: 0 20px; }
+    .offence-detail {
+      margin-top: 10px;
+      padding: 8px;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+    <div class="header-dates">
+      <p><strong>{{ t.listDate }}</strong> {{ header.contentDate }}</p>
+      <p>{{ t.lastUpdated }} {{ header.publishedDate }} {{ t.publishedAt }} {{ header.publishedTime }}</p>
+    </div>
+    {% if header.venueAddress.length > 0 %}
+      <p>{% for line in header.venueAddress %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</p>
+    {% endif %}
+  </div>
+
+  <div class="restriction-box">
+    <h3>{{ t.restrictionInformationHeading }}</h3>
+    <p>{{ t.restrictionInformationP1 }}</p>
+    <div class="warning-box">{{ t.restrictionInformationBoldText }}</div>
+    <p>{{ t.restrictionInformationP2 }}</p>
+    <p>{{ t.restrictionInformationP3 }}</p>
+    <p>{{ t.restrictionInformationP4 }}</p>
+    <ul>
+      <li>{{ t.restrictionBulletPoint1 }}</li>
+      <li>{{ t.restrictionBulletPoint2 }}</li>
+    </ul>
+  </div>
+
+  {% if listData.length === 0 %}
+    <p>{{ t.noHearings }}</p>
+  {% endif %}
+
+  {% for room in listData %}
+    <div class="court-section">
+      {% if room.courtHouseName %}
+        <div class="court-heading">{{ room.courtHouseName }}</div>
+      {% endif %}
+      {% if room.lja %}
+        <div class="court-heading">{{ t.lja }}: {{ room.lja }}</div>
+      {% endif %}
+      <div class="court-heading">{{ room.courtRoomName }}</div>
+
+      {% for sitting in room.sittings %}
+        <div class="sitting-section">
+          <div class="sitting-heading">{{ t.sittingAt }}{{ sitting.sittingHeading }}</div>
+
+          {% for hearing in sitting.hearings %}
+            <div class="hearing-block">
+              <div class="hearing-columns">
+                <div>
+                  <p><span class="label">{{ t.name }}</span>{{ hearing.partyInfo.name }}</p>
+                  {% if hearing.applicationParticulars %}
+                    <p><span class="label">{{ t.applicationParticulars }}</span>{{ hearing.applicationParticulars }}</p>
+                  {% endif %}
+                  {% if hearing.partyInfo.dob or hearing.partyInfo.age %}
+                    <p>
+                      <span class="label">{{ t.dobAndAge }}</span>
+                      {% if hearing.partyInfo.dob %}{{ hearing.partyInfo.dob }}{% endif %}
+                      {% if hearing.partyInfo.age %} {{ t.age }} {{ hearing.partyInfo.age }}{% endif %}
+                    </p>
+                  {% endif %}
+                  {% if hearing.partyInfo.address %}
+                    <p><span class="label">{{ t.address }}</span>{{ hearing.partyInfo.address }}</p>
+                  {% endif %}
+                  {% if hearing.prosecutingAuthority %}
+                    <p><span class="label">{{ t.prosecutingAuthority }}</span>{{ hearing.prosecutingAuthority }}</p>
+                  {% endif %}
+                  {% if hearing.attendanceMethod %}
+                    <p><span class="label">{{ t.attendanceMethod }}</span>{{ hearing.attendanceMethod }}</p>
+                  {% endif %}
+                  {% if hearing.reportingRestriction %}
+                    <p><span class="label">{{ t.reportingRestrictions }}</span>{{ hearing.reportingRestrictionDetails }}</p>
+                  {% endif %}
+                </div>
+                <div>
+                  {% if hearing.reference %}
+                    <p><span class="label">{{ t.reference }}</span>{{ hearing.reference }}</p>
+                  {% endif %}
+                  {% if hearing.applicationType %}
+                    <p><span class="label">{{ t.applicationType }}</span>{{ hearing.applicationType }}</p>
+                  {% endif %}
+                  <p><span class="label">{{ t.asn }}</span>{{ hearing.partyInfo.asn }}</p>
+                  <p><span class="label">{{ t.pncId }}</span>{{ hearing.partyInfo.pncId }}</p>
+                  {% if hearing.hearingType %}
+                    <p><span class="label">{{ t.hearingType }}</span>{{ hearing.hearingType }}</p>
+                  {% endif %}
+                  {% if hearing.panel %}
+                    <p><span class="label">{{ t.panel }}</span>{{ hearing.panel }}</p>
+                  {% endif %}
+                </div>
+              </div>
+
+              {% set offenceCount = 0 %}
+              {% for offence in hearing.offences %}
+                {% if offence.offenceTitle %}
+                  {% set offenceCount = offenceCount + 1 %}
+                  <div class="offence-detail">
+                    <p><strong>{{ offenceCount }}. {% if offence.offenceCode %}{{ offence.offenceCode }} - {% endif %}{{ offence.offenceTitle }}</strong></p>
+                    {% if offence.offenceWording %}<p>{{ offence.offenceWording }}</p>{% endif %}
+                    {% if offence.offenceLegislation %}<p><span class="label">{{ t.legislation }}:</span> {{ offence.offenceLegislation }}</p>{% endif %}
+                    {% if offence.offenceMaxPenalty %}<p><span class="label">{{ t.maxPenalty }}:</span> {{ offence.offenceMaxPenalty }}</p>{% endif %}
+                    {% if offence.plea %}<p><span class="label">{{ t.plea }}:</span> {{ offence.plea }}</p>{% endif %}
+                    {% if offence.pleaDate %}<p><span class="label">{{ t.dateOfPlea }}:</span> {{ offence.pleaDate }}</p>{% endif %}
+                    {% if offence.convictionDate %}<p><span class="label">{{ t.convictedOn }}:</span> {{ offence.convictionDate }}</p>{% endif %}
+                    {% if offence.adjournedDate %}<p><span class="label">{{ t.adjournedFrom }}:</span> {{ offence.adjournedDate }} - {{ t.adjournedText }}</p>{% endif %}
+                    {% if offence.reportingRestriction %}<p><span class="label">{{ t.reportingRestrictions }}</span> {{ offence.reportingRestrictionDetails }}</p>{% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+      <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>
