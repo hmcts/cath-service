@@ -53,7 +53,7 @@ describe("canAccessPublication", () => {
     });
 
     it("should allow authenticated users", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublication(user, publicArtefact, undefined)).toBe(true);
     });
 
@@ -81,7 +81,7 @@ describe("canAccessPublication", () => {
     });
 
     it("should allow B2C verified users", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(true);
     });
 
@@ -125,7 +125,7 @@ describe("canAccessPublication", () => {
     });
 
     it("should deny when list type is not found", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublication(user, classifiedArtefact, undefined)).toBe(false);
     });
 
@@ -142,7 +142,7 @@ describe("canAccessPublication", () => {
     });
 
     it("should deny verified user with non-matching provenance", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       const listType = createListType("CFT_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
@@ -166,7 +166,7 @@ describe("canAccessPublication", () => {
     });
 
     it("should handle B2C_IDAM with CRIME_IDAM list type", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       const listType = createListType("CRIME_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
@@ -181,7 +181,7 @@ describe("canAccessPublication", () => {
   describe("Missing sensitivity", () => {
     it("should default to CLASSIFIED (fail closed)", () => {
       const artefact = { ...createArtefact(Sensitivity.PUBLIC), sensitivity: "" };
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       const listType = createListType("CFT_IDAM");
 
       // Should deny access without provenance match since it defaults to CLASSIFIED
@@ -237,7 +237,7 @@ describe("canAccessPublicationData", () => {
     });
 
     it("should allow verified users", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublicationData(user, privateArtefact, undefined)).toBe(true);
     });
 
@@ -271,7 +271,7 @@ describe("canAccessPublicationData", () => {
     });
 
     it("should deny verified user with non-matching provenance", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublicationData(user, classifiedArtefact, listType)).toBe(false);
     });
   });
@@ -286,7 +286,7 @@ describe("canAccessPublicationMetadata", () => {
     });
 
     it("should allow all authenticated users", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublicationMetadata(user, publicArtefact)).toBe(true);
     });
   });
@@ -314,7 +314,7 @@ describe("canAccessPublicationMetadata", () => {
     });
 
     it("should allow verified users", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublicationMetadata(user, privateArtefact)).toBe(true);
     });
   });
@@ -348,7 +348,7 @@ describe("canAccessPublicationMetadata", () => {
     });
 
     it("should deny verified users with non-matching provenance", () => {
-      const user = createUser("VERIFIED", "B2C_IDAM");
+      const user = createUser("VERIFIED", "PI_AAD");
       expect(canAccessPublicationMetadata(user, classifiedArtefact, listType)).toBe(false);
     });
   });
@@ -375,7 +375,7 @@ describe("filterAccessiblePublications", () => {
   });
 
   it("should return PUBLIC and PRIVATE for verified users", () => {
-    const user = createUser("VERIFIED", "B2C_IDAM");
+    const user = createUser("VERIFIED", "PI_AAD");
     const filtered = filterAccessiblePublications(user, artefacts, listTypes);
 
     // Should get PUBLIC and PRIVATE, but not CLASSIFIED (provenance mismatch)
@@ -413,7 +413,7 @@ describe("filterAccessiblePublications", () => {
   });
 
   it("should handle empty artefacts array", () => {
-    const user = createUser("VERIFIED", "B2C_IDAM");
+    const user = createUser("VERIFIED", "PI_AAD");
     const filtered = filterAccessiblePublications(user, [], listTypes);
     expect(filtered).toHaveLength(0);
   });
@@ -449,7 +449,7 @@ describe("filterPublicationsForSummary", () => {
   });
 
   it("should return PUBLIC and PRIVATE for verified users", () => {
-    const user = createUser("VERIFIED", "B2C_IDAM");
+    const user = createUser("VERIFIED", "PI_AAD");
     const filtered = filterPublicationsForSummary(user, artefacts, listTypes);
 
     // Should get PUBLIC and PRIVATE, but not CLASSIFIED (provenance mismatch)
@@ -487,7 +487,7 @@ describe("filterPublicationsForSummary", () => {
   });
 
   it("should handle empty artefacts array", () => {
-    const user = createUser("VERIFIED", "B2C_IDAM");
+    const user = createUser("VERIFIED", "PI_AAD");
     const filtered = filterPublicationsForSummary(user, [], listTypes);
     expect(filtered).toHaveLength(0);
   });

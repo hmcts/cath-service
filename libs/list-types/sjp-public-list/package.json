@@ -24,7 +24,11 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
+    "ajv": "8.20.0",
+    "luxon": "3.7.2",
+    "nunjucks": "3.2.4"
   },
   "devDependencies": {
     "@types/node": "24.10.4",

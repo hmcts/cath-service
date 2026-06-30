@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "@hmcts/postgres-prisma";
-import { getLatestSjpArtefacts } from "@hmcts/publication";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
 
@@ -89,6 +88,21 @@ async function readSjpJson(artefactId: string): Promise<SjpJson> {
 
   const jsonContent = await readFile(jsonPath, "utf-8");
   return JSON.parse(jsonContent);
+}
+
+const SJP_LIST_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"];
+
+async function getLatestSjpArtefacts() {
+  const listTypes = await prisma.listType.findMany({
+    where: { name: { in: SJP_LIST_NAMES } },
+    select: { id: true }
+  });
+  const listTypeIds = listTypes.map((lt) => lt.id);
+  return prisma.artefact.findMany({
+    where: { listTypeId: { in: listTypeIds } },
+    orderBy: { lastReceivedDate: "desc" },
+    take: 10
+  });
 }
 
 /**

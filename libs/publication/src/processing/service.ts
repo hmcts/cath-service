@@ -3,13 +3,17 @@ import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWee
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
 import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
+import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { generateSjpPressListPdf } from "@hmcts/sjp-press-list";
+import { generateSjpPublicListPdf } from "@hmcts/sjp-public-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -20,6 +24,7 @@ const LOCALE_TO_LANGUAGE: Record<string, string> = {
 interface GeneratePdfParams {
   artefactId: string;
   listTypeId: number;
+  listTypeName: string;
   contentDate: Date;
   locale: string;
   locationId: string;
@@ -52,6 +57,10 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeId: p.listTypeId });
 
+const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p, jsonData: p.jsonData as SjpJson });
+
+const sjpPressGenerator: PdfGenerator = (p) => generateSjpPressListPdf({ ...p, jsonData: p.jsonData as SjpJson });
+
 const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCauseListPdf({ ...p, jsonData: p.jsonData as CauseListData }),
@@ -75,20 +84,48 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  SJP_PUBLIC_LIST: sjpPublicGenerator,
+  SJP_DELTA_PUBLIC_LIST: sjpPublicGenerator,
+  SJP_PRESS_LIST: sjpPressGenerator,
+  SJP_DELTA_PRESS_LIST: sjpPressGenerator
 };
 
-export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
+type ExcelGenerator = (json: SjpJson) => Promise<Buffer>;
+
+const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
+  SJP_PUBLIC_LIST: generateSjpPublicListExcel,
+  SJP_DELTA_PUBLIC_LIST: generateSjpPublicListExcel,
+  SJP_PRESS_LIST: generateSjpPressListExcel,
+  SJP_DELTA_PRESS_LIST: generateSjpPressListExcel
+};
+
+export async function generatePublicationExcel(artefactId: string, listTypeId: number, jsonData: unknown, logPrefix = "[Publication]"): Promise<void> {
+  try {
+    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+    const generator = listType ? EXCEL_GENERATOR_REGISTRY[listType.name] : undefined;
+    if (!generator) {
+      return;
+    }
+
+    const buffer = await generator(jsonData as SjpJson);
+    await saveExcelFile(artefactId, buffer);
+  } catch (error) {
+    console.error(`${logPrefix} Excel generation error:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "listTypeName">): Promise<GeneratePdfResult> {
   const { listTypeId, artefactId, logPrefix = "[Publication]" } = params;
 
   try {
     const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
     const generator = listType ? PDF_GENERATOR_REGISTRY[listType.name] : undefined;
-    if (!generator) {
+    if (!generator || !listType) {
       return {};
     }
 
-    const pdfResult = await generator(params);
+    const pdfResult = await generator({ ...params, listTypeName: listType.name });
 
     if (pdfResult.success && pdfResult.pdfPath) {
       return {
@@ -291,6 +328,8 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     result.pdfPath = pdfResult.pdfPath;
     result.pdfSizeBytes = pdfResult.sizeBytes;
     result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
+
+    await generatePublicationExcel(artefactId, listTypeId, jsonData, logPrefix);
   }
 
   if (!skipNotifications) {

@@ -15,19 +15,19 @@ import {
 
 vi.mock("node:fs/promises");
 vi.mock("./json-parser.js");
-vi.mock("@hmcts/publication", () => ({
-  getLatestSjpArtefacts: vi.fn()
-}));
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
-      findUnique: vi.fn()
+      findUnique: vi.fn(),
+      findMany: vi.fn()
+    },
+    listType: {
+      findMany: vi.fn()
     }
   }
 }));
 
 import { prisma } from "@hmcts/postgres-prisma";
-import { getLatestSjpArtefacts } from "@hmcts/publication";
 
 const mockSjpJson: SjpJson = {
   document: {
@@ -110,7 +110,8 @@ describe("getLatestSjpLists", () => {
       }
     ];
 
-    vi.mocked(getLatestSjpArtefacts).mockResolvedValue(mockArtefacts);
+    vi.mocked(prisma.listType.findMany).mockResolvedValue([{ id: 10 }, { id: 9 }, { id: 11 }, { id: 12 }] as never);
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as never);
     vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
@@ -123,7 +124,8 @@ describe("getLatestSjpLists", () => {
     expect(result[0].caseCount).toBe(100);
     expect(result[1].artefactId).toBe("list-2");
 
-    expect(getLatestSjpArtefacts).toHaveBeenCalledWith();
+    expect(prisma.listType.findMany).toHaveBeenCalled();
+    expect(prisma.artefact.findMany).toHaveBeenCalled();
   });
 
   it("should filter out artefacts with read errors", async () => {
@@ -158,7 +160,8 @@ describe("getLatestSjpLists", () => {
       }
     ];
 
-    vi.mocked(getLatestSjpArtefacts).mockResolvedValue(mockArtefacts);
+    vi.mocked(prisma.listType.findMany).mockResolvedValue([{ id: 10 }, { id: 9 }, { id: 11 }, { id: 12 }] as never);
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as never);
     vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(mockSjpJson)).mockRejectedValueOnce(new Error("File not found"));
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);

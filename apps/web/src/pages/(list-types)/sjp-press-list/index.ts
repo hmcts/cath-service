@@ -1,12 +1,12 @@
+import { getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
-import { sjpPressListCy, sjpPressListEn, validateSjpPressList } from "@hmcts/sjp-press-list";
+import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
+import { createRequireVerifiedWithProvenance } from "./require-verified-with-provenance.js";
 
-const cy = sjpPressListCy;
-const en = sjpPressListEn;
 const CASES_PER_PAGE = 1000;
 const LONDON_POSTCODE_AREAS = new Set(["E", "EC", "N", "NW", "SE", "SW", "W", "WC"]);
 
@@ -49,11 +49,16 @@ const getHandler = async (req: Request, res: Response) => {
     const paginatedCases = paginateCases(filteredCases, page);
     const { prosecutors, postcodes, hasLondonPostcodes, londonPostcodes } = extractFilterOptions(allCases);
 
+    const isVerifiedUser = req.user?.role === "VERIFIED";
+    const [pdfProps, excelProps] = await Promise.all([getBlobProperties(`${artefactId}.pdf`), getBlobProperties(`${artefactId}.xlsx`)]);
+    const downloadDisclaimerUrl = isVerifiedUser && (pdfProps || excelProps) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+
     res.render("sjp-press-list", {
-      ...t.common,
-      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
       en,
       cy,
+      t,
+      title: req.path.includes("delta") ? t.SJP_DELTA_PRESS_LIST.title : t.SJP_PRESS_LIST.title,
+      ...t.common,
       locale,
       list: buildListMetadata(artefactId, validatedData, artefact),
       cases: paginatedCases,
@@ -68,7 +73,8 @@ const getHandler = async (req: Request, res: Response) => {
       },
       showFilter,
       errors: undefined,
-      dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance
+      dataSource: PROVENANCE_LABELS[artefact.provenance] || artefact.provenance,
+      downloadDisclaimerUrl
     });
   } catch (error) {
     console.error("Error rendering SJP press list:", error);
@@ -204,5 +210,7 @@ interface PressCase {
   prosecutor?: string | null;
 }
 
-export const GET: RequestHandler = getHandler;
-export const POST: RequestHandler = postHandler;
+const requireVerifiedWithProvenance = createRequireVerifiedWithProvenance({ allowSystemAdmin: true, readBodyArtefactId: true });
+
+export const GET: RequestHandler[] = [requireVerifiedWithProvenance, getHandler];
+export const POST: RequestHandler[] = [requireVerifiedWithProvenance, postHandler];

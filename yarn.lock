@@ -2397,6 +2397,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/excel-generation@workspace:*, @hmcts/excel-generation@workspace:libs/excel-generation":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/excel-generation@workspace:libs/excel-generation"
+  dependencies:
+    "@hmcts/azure-blob": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/family-daily-cause-list@workspace:*, @hmcts/family-daily-cause-list@workspace:libs/list-types/family-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/family-daily-cause-list@workspace:libs/list-types/family-daily-cause-list"
@@ -2595,6 +2608,7 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/excel-generation": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
@@ -2604,6 +2618,8 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/sjp-press-list": "workspace:*"
+    "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
@@ -2644,8 +2660,12 @@ __metadata:
   resolution: "@hmcts/sjp-press-list@workspace:libs/list-types/sjp-press-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
+    ajv: "npm:8.20.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.9"
   peerDependencies:
@@ -2658,8 +2678,12 @@ __metadata:
   resolution: "@hmcts/sjp-public-list@workspace:libs/list-types/sjp-public-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
+    ajv: "npm:8.20.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.9"
   peerDependencies:
@@ -2764,6 +2788,7 @@ __metadata:
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
+    "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
@@ -2774,6 +2799,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/sjp-press-list": "workspace:*"
     "@hmcts/sjp-public-list": "workspace:*"

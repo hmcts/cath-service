@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
+import { generatePublicationExcel, generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
 const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
 
@@ -15,8 +15,22 @@ vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
   generateCourtOfAppealCivilDailyCauseListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/excel-generation", () => ({
+  generateSjpPublicListExcel: vi.fn().mockResolvedValue(Buffer.from("public-excel")),
+  generateSjpPressListExcel: vi.fn().mockResolvedValue(Buffer.from("press-excel")),
+  saveExcelFile: vi.fn().mockResolvedValue(undefined)
+}));
+
 vi.mock("@hmcts/london-administrative-court-daily-cause-list", () => ({
   generateLondonAdministrativeCourtDailyCauseListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/sjp-public-list", () => ({
+  generateSjpPublicListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/sjp-press-list", () => ({
+  generateSjpPressListPdf: vi.fn()
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -48,7 +62,10 @@ describe("publication-processor", async () => {
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
+  const { generateSjpPublicListExcel, generateSjpPressListExcel, saveExcelFile } = await import("@hmcts/excel-generation");
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
+  const { generateSjpPublicListPdf } = await import("@hmcts/sjp-public-list");
+  const { generateSjpPressListPdf } = await import("@hmcts/sjp-press-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");
@@ -250,6 +267,78 @@ describe("publication-processor", async () => {
         sizeBytes: 2048,
         exceedsMaxSize: false
       });
+    });
+
+    it("should generate PDF for SJP Public List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SJP_PUBLIC_LIST",
+        friendlyName: "SJP Public List"
+      } as any);
+      vi.mocked(generateSjpPublicListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sjp-public-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 25 });
+
+      expect(generateSjpPublicListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/sjp-public-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SJP Delta Public List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SJP_DELTA_PUBLIC_LIST",
+        friendlyName: "SJP Delta Public List"
+      } as any);
+      vi.mocked(generateSjpPublicListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sjp-delta-public-pdf",
+        sizeBytes: 512,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 27 });
+
+      expect(generateSjpPublicListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/sjp-delta-public-pdf", sizeBytes: 512, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SJP Press List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SJP_PRESS_LIST",
+        friendlyName: "SJP Press List"
+      } as any);
+      vi.mocked(generateSjpPressListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sjp-press-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 24 });
+
+      expect(generateSjpPressListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/sjp-press-pdf", sizeBytes: 2048, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SJP Delta Press List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SJP_DELTA_PRESS_LIST",
+        friendlyName: "SJP Delta Press List"
+      } as any);
+      vi.mocked(generateSjpPressListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sjp-delta-press-pdf",
+        sizeBytes: 1536,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 26 });
+
+      expect(generateSjpPressListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/sjp-delta-press-pdf", sizeBytes: 1536, exceedsMaxSize: false });
     });
   });
 
@@ -736,6 +825,36 @@ describe("publication-processor", async () => {
       );
     });
 
+    it("should call Excel generation for SJP public list types", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_PUBLIC_LIST", friendlyName: "SJP Public List" } as any);
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+
+      await processPublication({ ...baseParams, listTypeId: 25 });
+
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith(baseParams.jsonData);
+      expect(saveExcelFile).toHaveBeenCalledWith("test-artefact-id", expect.any(Buffer));
+    });
+
+    it("should call Excel generation for SJP press list types", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_PRESS_LIST", friendlyName: "SJP Press List" } as any);
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+
+      await processPublication({ ...baseParams, listTypeId: 24 });
+
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith(baseParams.jsonData);
+      expect(saveExcelFile).toHaveBeenCalledWith("test-artefact-id", expect.any(Buffer));
+    });
+
+    it("should not call Excel generation for non-SJP list types", async () => {
+      vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+
+      await processPublication(baseParams);
+
+      expect(generateSjpPublicListExcel).not.toHaveBeenCalled();
+      expect(generateSjpPressListExcel).not.toHaveBeenCalled();
+    });
+
     it("passes isUpdate: false by default", async () => {
       await processPublication({ ...baseParams, skipNotifications: true });
 
@@ -794,6 +913,78 @@ describe("publication-processor", async () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Third-party push failed:", expect.any(Error));
       consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe("generatePublicationExcel", () => {
+    it("should generate and save Excel for SJP_PUBLIC_LIST", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_PUBLIC_LIST", friendlyName: "SJP Public List" } as any);
+
+      await generatePublicationExcel("artefact-1", 25, { courtLists: [] });
+
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(saveExcelFile).toHaveBeenCalledWith("artefact-1", expect.any(Buffer));
+    });
+
+    it("should generate and save Excel for SJP_DELTA_PUBLIC_LIST", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "SJP Delta Public List" } as any);
+
+      await generatePublicationExcel("artefact-2", 27, { courtLists: [] });
+
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(saveExcelFile).toHaveBeenCalledWith("artefact-2", expect.any(Buffer));
+    });
+
+    it("should generate and save Excel for SJP_PRESS_LIST", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_PRESS_LIST", friendlyName: "SJP Press List" } as any);
+
+      await generatePublicationExcel("artefact-3", 24, { courtLists: [] });
+
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(saveExcelFile).toHaveBeenCalledWith("artefact-3", expect.any(Buffer));
+    });
+
+    it("should generate and save Excel for SJP_DELTA_PRESS_LIST", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_DELTA_PRESS_LIST", friendlyName: "SJP Delta Press List" } as any);
+
+      await generatePublicationExcel("artefact-4", 26, { courtLists: [] });
+
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(saveExcelFile).toHaveBeenCalledWith("artefact-4", expect.any(Buffer));
+    });
+
+    it("should not generate Excel for non-SJP list types", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil" } as any);
+
+      await generatePublicationExcel("artefact-5", 8, { courtLists: [] });
+
+      expect(generateSjpPublicListExcel).not.toHaveBeenCalled();
+      expect(generateSjpPressListExcel).not.toHaveBeenCalled();
+      expect(saveExcelFile).not.toHaveBeenCalled();
+    });
+
+    it("should log error but not throw when Excel generation fails", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SJP_PUBLIC_LIST", friendlyName: "SJP Public List" } as any);
+      vi.mocked(generateSjpPublicListExcel).mockRejectedValue(new Error("Excel generation failed"));
+
+      await generatePublicationExcel("artefact-6", 25, { courtLists: [] });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Excel generation error:", {
+        artefactId: "artefact-6",
+        error: "Excel generation failed"
+      });
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should not block when list type lookup returns null", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+
+      await generatePublicationExcel("artefact-7", 999, { courtLists: [] });
+
+      expect(generateSjpPublicListExcel).not.toHaveBeenCalled();
+      expect(generateSjpPressListExcel).not.toHaveBeenCalled();
+      expect(saveExcelFile).not.toHaveBeenCalled();
     });
   });
 });
