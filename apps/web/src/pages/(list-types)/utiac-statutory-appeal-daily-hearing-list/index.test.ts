@@ -1,12 +1,7 @@
-import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
-
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn()
-}));
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
@@ -20,6 +15,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
+  getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -34,7 +30,7 @@ vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", async (importOrigina
   };
 });
 
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { renderUtiacStatutoryAppealDailyHearingListData } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { GET } from "./index.js";
 
@@ -107,7 +103,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderUtiacStatutoryAppealDailyHearingListData).mockReturnValue(mockRenderedData);
 
@@ -188,7 +184,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
       );
     });
 
-    it("should return 404 when JSON file is not found", async () => {
+    it("should return 404 when JSON is not found in blob storage", async () => {
       // Arrange
       const mockArtefact = {
         artefactId: "test-artefact-123",
@@ -200,7 +196,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       // Act
       await GET(req as Request, res as Response);
@@ -228,7 +224,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([{ hearingTime: "invalid" }]));
+      vi.mocked(getPublicationJson).mockResolvedValue([{ hearingTime: "invalid" }]);
       mockValidate.mockReturnValue({ isValid: false, errors: ["Invalid data"] });
 
       // Act
@@ -263,7 +259,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([]));
+      vi.mocked(getPublicationJson).mockResolvedValue([]);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderUtiacStatutoryAppealDailyHearingListData).mockReturnValue(mockRenderedData);
 
@@ -272,6 +268,36 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
 
       // Assert
       expect(renderUtiacStatutoryAppealDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ displayFrom }));
+    });
+
+    it("should use Welsh locale when specified", async () => {
+      // Arrange
+      const mockArtefact = {
+        artefactId: "test-artefact-123",
+        contentDate: new Date("2026-01-15"),
+        displayFrom: new Date("2026-01-15"),
+        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
+        provenance: "MANUAL_UPLOAD"
+      };
+
+      const mockRenderedData = {
+        header: { listTitle: "Welsh placeholder", listForDate: "15 Ionawr 2026", lastUpdatedDate: "14 Ionawr 2026", lastUpdatedTime: "12pm" },
+        hearings: []
+      };
+
+      req.query = { artefactId: "test-artefact-123" };
+      res.locals = { locale: "cy" };
+
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getPublicationJson).mockResolvedValue([]);
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
+      vi.mocked(renderUtiacStatutoryAppealDailyHearingListData).mockReturnValue(mockRenderedData);
+
+      // Act
+      await GET(req as Request, res as Response);
+
+      // Assert
+      expect(renderUtiacStatutoryAppealDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ locale: "cy" }));
     });
   });
 });

@@ -1,12 +1,7 @@
-import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
-
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn()
-}));
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
@@ -20,6 +15,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
+  getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -35,7 +31,7 @@ vi.mock("@hmcts/grc-weekly-hearing-list", async (importOriginal) => {
 });
 
 import { renderGrcWeeklyHearingListData } from "@hmcts/grc-weekly-hearing-list";
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { GET } from "./index.js";
 
 describe("GRC Weekly Hearing List page controller", () => {
@@ -109,7 +105,7 @@ describe("GRC Weekly Hearing List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderGrcWeeklyHearingListData).mockReturnValue(mockRenderedData);
 
@@ -118,7 +114,7 @@ describe("GRC Weekly Hearing List page controller", () => {
 
       // Assert
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
-      expect(readFile).toHaveBeenCalled();
+      expect(getPublicationJson).toHaveBeenCalled();
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderGrcWeeklyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
@@ -173,7 +169,7 @@ describe("GRC Weekly Hearing List page controller", () => {
       );
     });
 
-    it("should return 404 when JSON file is not found", async () => {
+    it("should return 404 when JSON file is not found in blob storage", async () => {
       // Arrange
       const mockArtefact = {
         artefactId: "test-artefact-123",
@@ -184,7 +180,7 @@ describe("GRC Weekly Hearing List page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       // Act
       await GET(req as Request, res as Response);
@@ -211,7 +207,7 @@ describe("GRC Weekly Hearing List page controller", () => {
 
       req.query = { artefactId: "test-artefact-123" };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([{ date: "invalid" }]));
+      vi.mocked(getPublicationJson).mockResolvedValue([{ date: "invalid" }]);
       mockValidate.mockReturnValue({ isValid: false, errors: ["Invalid date format"] });
 
       // Act
@@ -265,7 +261,7 @@ describe("GRC Weekly Hearing List page controller", () => {
       res.locals = { locale: "cy" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify([]));
+      vi.mocked(getPublicationJson).mockResolvedValue([]);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
       vi.mocked(renderGrcWeeklyHearingListData).mockReturnValue(mockRenderedData);
 
