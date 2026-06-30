@@ -360,7 +360,7 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']",
     shortenedFriendlyName: "UTIAC JR London Daily Hearing List",
     provenance: "MANUAL_UPLOAD",
-    urlPath: "utiac-jr-london-daily-hearing-list",
+    urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
@@ -372,7 +372,7 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
     shortenedFriendlyName: "UTIAC JR Leeds Daily Hearing List",
     provenance: "MANUAL_UPLOAD",
-    urlPath: "utiac-jr-leeds-daily-hearing-list",
+    urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
@@ -384,7 +384,7 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
     shortenedFriendlyName: "UTIAC JR Manchester Daily Hearing List",
     provenance: "MANUAL_UPLOAD",
-    urlPath: "utiac-jr-manchester-daily-hearing-list",
+    urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
@@ -396,7 +396,7 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
     shortenedFriendlyName: "UTIAC JR Birmingham Daily Hearing List",
     provenance: "MANUAL_UPLOAD",
-    urlPath: "utiac-jr-birmingham-daily-hearing-list",
+    urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
@@ -408,7 +408,7 @@ export const listTypeData: ListTypeData[] = [
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",
     shortenedFriendlyName: "UTIAC JR Cardiff Daily Hearing List",
     provenance: "MANUAL_UPLOAD",
-    urlPath: "utiac-jr-cardiff-daily-hearing-list",
+    urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
