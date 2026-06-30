@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { configureNunjucks, createPdfErrorResult, loadTranslations, MAX_PDF_SIZE_BYTES, savePdfToStorage } from "./pdf-utilities.js";
 
+vi.mock("nunjucks", () => ({
+  default: {
+    configure: vi.fn().mockReturnValue({
+      render: vi.fn().mockReturnValue("<html>mock</html>"),
+      renderString: vi.fn().mockReturnValue("<html>mock</html>")
+    })
+  }
+}));
+
 const { mockUploadBlob } = vi.hoisted(() => ({
   mockUploadBlob: vi.fn()
 }));

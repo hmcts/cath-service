@@ -35,6 +35,7 @@ export {
   createPdfErrorResult,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
+  type PdfFromHtmlResult,
   type PdfGenerationResult,
   savePdfToStorage
 } from "./pdf/pdf-utilities.js";

@@ -38,7 +38,57 @@ export async function seedLocationData() {
 
   const needsSeeding = await shouldSeed();
   if (!needsSeeding) {
-    // Seed list types even for existing DBs to pick up new entries added since initial seed
+    // Upsert all reference data even for existing DBs to pick up new entries added since initial seed
+    for (const region of locationData.regions) {
+      await prisma.region.upsert({
+        where: { regionId: region.regionId },
+        create: { regionId: region.regionId, name: region.name, welshName: region.welshName },
+        update: { name: region.name, welshName: region.welshName }
+      });
+    }
+
+    for (const jurisdiction of locationData.jurisdictions) {
+      await prisma.jurisdiction.upsert({
+        where: { jurisdictionId: jurisdiction.jurisdictionId },
+        create: { jurisdictionId: jurisdiction.jurisdictionId, name: jurisdiction.name, welshName: jurisdiction.welshName },
+        update: { name: jurisdiction.name, welshName: jurisdiction.welshName }
+      });
+    }
+
+    for (const subJurisdiction of locationData.subJurisdictions) {
+      await prisma.subJurisdiction.upsert({
+        where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
+        create: {
+          subJurisdictionId: subJurisdiction.subJurisdictionId,
+          name: subJurisdiction.name,
+          welshName: subJurisdiction.welshName,
+          jurisdictionId: subJurisdiction.jurisdictionId
+        },
+        update: {
+          name: subJurisdiction.name,
+          welshName: subJurisdiction.welshName,
+          jurisdictionId: subJurisdiction.jurisdictionId
+        }
+      });
+    }
+
+    for (const location of locationData.locations) {
+      await prisma.location.upsert({
+        where: { locationId: location.locationId },
+        create: {
+          locationId: location.locationId,
+          name: location.name,
+          welshName: location.welshName,
+          email: null,
+          contactNo: null
+        },
+        update: {
+          name: location.name,
+          welshName: location.welshName
+        }
+      });
+    }
+
     await seedListTypes();
     return;
   }

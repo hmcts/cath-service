@@ -90,6 +90,27 @@ export const locationData: {
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
       subJurisdictions: [7]
+    },
+    {
+      locationId: 13,
+      name: "Upper Tribunal Tax and Chancery Chamber",
+      welshName: "Tribiwnlys Uwch Siambr Dreth a Siawnsri",
+      regions: [8],
+      subJurisdictions: [30]
+    },
+    {
+      locationId: 14,
+      name: "Upper Tribunal Lands Chamber",
+      welshName: "Tribiwnlys Uwch (Siambr Tiroedd)",
+      regions: [8],
+      subJurisdictions: [29]
+    },
+    {
+      locationId: 15,
+      name: "Upper Tribunal Administrative Appeals Chamber",
+      welshName: "Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
+      regions: [1],
+      subJurisdictions: [26]
     }
   ],
   regions: [

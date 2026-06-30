@@ -54,6 +54,12 @@
       "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
+      "@hmcts/upper-tribunal-common": ["libs/list-types/upper-tribunal-common/src"],
+      "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": ["libs/list-types/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/src"],
+      "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": ["libs/list-types/upper-tribunal-lands-chamber-daily-hearing-list/src"],
+      "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": [
+        "libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/src"
+      ],
       "@hmcts/azure-blob": ["libs/azure-blob/src"]
     },
     "esModuleInterop": true,

@@ -27,6 +27,9 @@
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*",
+    "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*",
+    "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*",
     "notifications-node-client": "8.4.0"
   },
   "peerDependencies": {

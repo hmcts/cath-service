@@ -1,5 +1,6 @@
 import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
 import nunjucks from "nunjucks";
+import { PDF_BASE_STYLES } from "./pdf-styles.js";
 
 export const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 
@@ -46,6 +47,13 @@ export function createPdfErrorResult(error: unknown): PdfGenerationResult {
     success: false,
     error: `Failed to generate PDF: ${errorMessage}`
   };
+}
+
+export interface PdfFromHtmlResult {
+  success: boolean;
+  pdfBuffer?: Buffer;
+  sizeBytes?: number;
+  error?: string;
 }
 
 export async function loadTranslations(
